@@ -7,7 +7,7 @@
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "nodenext",
+    "module": "NodeNext",
     "target": "esnext",
     // For nodejs:
     "lib": ["esnext"],
@@ -39,6 +39,7 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
+    "moduleResolution": "NodeNext",
   },
-  "include":["src", "**/*.test.ts"]
+  "include":["src", "**/*.test.ts", "src/server.ts"]
 }
