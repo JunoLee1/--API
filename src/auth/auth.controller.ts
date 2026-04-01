@@ -4,14 +4,15 @@ export default class AuthController {
         private service : AuthService 
     ){}
     async create(req: any, res:any){
-        console.log(1)
-        const result = await this.service.create(req.body)
-         console.log(12)
-        return res.status(201).json(result)
-       
+        try{
+            const result = await this.service.create(req.body)
+            return res.status(201).json(result)
+        }catch(error:any){
+            return res.status(400).json({ message:"Something Wrong" })
+        }
     }
 
-    accessAdvisor(){}
+    accessAdvisor(req:any, res: any){}
 
     accessAdvisors(){}
 
