@@ -1,13 +1,13 @@
-import express, {type Express} from "express"
+import express  = require("express")
 import APIRouter from "./index.js"
-import cors from "cors"
+import cors  = require("cors")
 import * as dotenv from "dotenv";
-import cookieParser from "cookie-parser"
+import cookieParser = require("cookie-parser")
 
 dotenv.config();
 
 const PORT = process.env.PORT
-const app: Express = express()
+const app = express()
 
 app.use(cookieParser())
 
