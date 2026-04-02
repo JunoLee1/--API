@@ -1,24 +1,44 @@
-import AuthService from "./auth.service"
+import AuthService from "./auth.service";
+import {LoginInput} from "./auth.DTO"
 export default class AuthController {
-    constructor(
-        private service : AuthService 
-    ){}
-    async create(req: any, res:any){
-        try{
-            const result = await this.service.create(req.body)
-            return res.status(201).json(result)
-        }catch(error:any){
-            return res.status(400).json({ message:"Something Wrong" })
-        }
+  constructor(private service: AuthService) {}
+  async signUp(req: any, res: any) {
+    try {
+      const result = await this.service.signUp(req.body);
+      return res.status(201).json(result);
+    } catch (error: any) {
+      return res.status(500).json({ message: "Something Wrong" });
     }
+  }
+  //=================================================================================================================================================================================
 
-    accessAdvisor(req:any, res: any){}
+  async login(req: any, res: any) {
+    try {
+      const { email, password } = req.body as LoginInput;
+      const result = await this.service.login({ email, password });
+      return res.status(200).json(result);
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ message: "Something Wrong" });
+    }
+  }
+  //=================================================================================================================================================================================
+  async findAdvisorById(req: any, res: any) {
+    try {
+        const{ id } = req.params
+        await this.service.findAdvisorById(id)
+        return res.status(200).json()
+    } catch (error) {
+      return res.status(500).json({ message: "Something Wrong" });
+    }
+  }
+  //=================================================================================================================================================================================
 
-    accessAdvisors(){}
+  async findAdvisors(req: any, res: any) {}
+  //=================================================================================================================================================================================
 
-    update(){}
+  async update() {}
+  //=================================================================================================================================================================================
 
-    delete(){}
-
-} 
-
+  async delete() {}
+}
