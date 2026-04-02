@@ -4,10 +4,11 @@ const authService = {
   login: jest.fn(),
   logout: jest.fn(),
   signUp: jest.fn(),
+  accessAdvisor:jest.fn()
 } as any; // 임시
 
 const controller = new AuthController(authService);
-describe("인증 로직 테스트 - registry service", () => {
+describe("인증 컨트롤러 테스트 - registry service", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -40,7 +41,7 @@ describe("인증 로직 테스트 - registry service", () => {
 });
 //=========================================================================
 
-describe("인증 로직 테스트 - login controller", () => {
+describe("인증 컨트롤러 테스트 - login controller", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -70,3 +71,31 @@ describe("인증 로직 테스트 - login controller", () => {
   });
 });
 //======================================================================================
+
+describe("인증 컨트롤러 테스트 - 관리자 조회", () => {
+  test("알 수 없는 에러인 경우 500에러 와 에러 메시지 던지기", async () => {
+    const req = {params:{id: 1}}
+    const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+    }
+    authService.accessAdvisor.mockRejectedValue(new Error("Something Wrong"))
+    await controller.accessAdvisor(req as any, res as any)
+    expect(res.status).toHaveBeenCalledWith(500)
+    expect(res.json).toHaveBeenCalledWith({
+         message: "Something Wrong"
+    })
+  });
+  test("해당 회원이 성공적으로 조회 했다면 200 상태 메시지와 해당 함수가 올바르게 실행되는지 확인", async() => {
+    const req = {params:{ id: 1 }}
+    const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+    }
+    authService.accessAdvisor.mockResolvedValue({id: 1})
+
+    await controller.accessAdvisor(req as any, res as any)
+    expect(res.status).toHaveBeenCalledWith(200)
+    expect(res.json).toHaveBeenCalled()
+  })
+});
