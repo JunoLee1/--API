@@ -5,6 +5,8 @@ const MockRepo = {
   create: jest.fn(),
   isEmailDuplicated: jest.fn(),
   isNicknameDuplicated: jest.fn(),
+  findUniqueEmail: jest.fn(),
+  findUnique:jest.fn()
 } as any;
 
 const service = new AuthService(MockRepo);
@@ -14,7 +16,7 @@ describe("인증 로직 테스트 - registry service", () => {
   });
   test("respond 404, when the email is emty", async () => {
     await expect(
-      service.create({ email: "", password: "1234", nickname: "jun" }),
+      service.signUp({ email: "", password: "1234", nickname: "jun" }),
     ).rejects.toThrow("INVALID_EMAIL");
   });
 
@@ -23,7 +25,7 @@ describe("인증 로직 테스트 - registry service", () => {
       email: "test@test.com",
     });
     await expect(
-      service.create({
+      service.signUp({
         email: "test@test.com",
         password: "1234",
         nickname: "jun",
@@ -33,7 +35,7 @@ describe("인증 로직 테스트 - registry service", () => {
 
   test("respond 404, when the nickname is empty", async () => {
     await expect(
-      service.create({
+      service.signUp({
         email: "email@email.com",
         password: "1234",
         nickname: "",
@@ -46,7 +48,7 @@ describe("인증 로직 테스트 - registry service", () => {
     MockRepo.isNicknameDuplicated.mockResolvedValue(true);
 
     await expect(
-      service.create({
+      service.signUp({
         email: "email1@email.com",
         password: "1234",
         nickname: "Juno",
@@ -59,12 +61,12 @@ describe("인증 로직 테스트 - registry service", () => {
     MockRepo.isNicknameDuplicated.mockResolvedValue(false);
 
     await expect(
-      service.create({ email: "email@email.com", password: "", nickname: "j" }),
+      service.signUp({ email: "email@email.com", password: "", nickname: "j" }),
     ).rejects.toThrow("INVALID_PASSWORD");
   });
   test("respons Unmatched Pwd, if confirmed password", async() => {
     await expect(
-        service.create({
+        service.signUp({
             email: "email1@email.com",
             password: "1234",
             confirmPassword: "12345",
@@ -74,3 +76,35 @@ describe("인증 로직 테스트 - registry service", () => {
   })
 });
 //===================================================================================
+
+describe("인증 로직 테스트 - login service", () => {
+    test("EMAIL이 DB에 없는 경우 NOT FOUND 에러 던지기", async() => {
+        MockRepo.findUniqueEmail.mockResolvedValue(null)
+        await expect(
+            service.login({
+                email:"test@example.com",
+                password:"1233"
+            })
+        ).rejects.toThrow("NOT FOUND")
+    })
+
+    test("비밀번호가 DB에 있는 비밀번호와 다른 경우, 401에러 던지기", async() => {
+        MockRepo.findUniqueEmail.mockResolvedValue(true)
+        
+        const fakeUser = {
+            email:"test@example.com",
+            password:"1234"
+        }
+
+        MockRepo.findUnique.mockResolvedValue(fakeUser);
+        await expect(
+            service.login({
+                email:"test@example.com",
+                password:"12345"
+            })
+        ).rejects.toThrow("Wrong Password")
+    })
+})
+
+//======================================================================================
+
