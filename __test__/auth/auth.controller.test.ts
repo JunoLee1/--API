@@ -4,7 +4,7 @@ const authService = {
   login: jest.fn(),
   logout: jest.fn(),
   signUp: jest.fn(),
-  accessAdvisor:jest.fn()
+  findAdvisor:jest.fn()
 } as any; // 임시
 
 const controller = new AuthController(authService);
@@ -79,8 +79,8 @@ describe("인증 컨트롤러 테스트 - 관리자 조회", () => {
         status: jest.fn().mockReturnThis(),
         json: jest.fn()
     }
-    authService.accessAdvisor.mockRejectedValue(new Error("Something Wrong"))
-    await controller.accessAdvisor(req as any, res as any)
+    authService.findAdvisor.mockRejectedValue(new Error("Something Wrong"))
+    await controller.findAdvisor(req as any, res as any)
     expect(res.status).toHaveBeenCalledWith(500)
     expect(res.json).toHaveBeenCalledWith({
          message: "Something Wrong"
@@ -92,9 +92,9 @@ describe("인증 컨트롤러 테스트 - 관리자 조회", () => {
         status: jest.fn().mockReturnThis(),
         json: jest.fn()
     }
-    authService.accessAdvisor.mockResolvedValue({id: 1})
+    authService.findAdvisor.mockResolvedValue({id: 1})
 
-    await controller.accessAdvisor(req as any, res as any)
+    await controller.findAdvisor(req as any, res as any)
     expect(res.status).toHaveBeenCalledWith(200)
     expect(res.json).toHaveBeenCalled()
   })
