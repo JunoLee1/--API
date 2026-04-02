@@ -6,7 +6,8 @@ const MockRepo = {
   isEmailDuplicated: jest.fn(),
   isNicknameDuplicated: jest.fn(),
   findUniqueEmail: jest.fn(),
-  findUnique:jest.fn()
+  findUnique: jest.fn(),
+  findAdvisor:jest.fn()
 } as any;
 
 const service = new AuthService(MockRepo);
@@ -64,47 +65,72 @@ describe("인증 로직 테스트 - registry service", () => {
       service.signUp({ email: "email@email.com", password: "", nickname: "j" }),
     ).rejects.toThrow("INVALID_PASSWORD");
   });
-  test("respons Unmatched Pwd, if confirmed password", async() => {
+  test("respons Unmatched Pwd, if confirmed password", async () => {
     await expect(
-        service.signUp({
-            email: "email1@email.com",
-            password: "1234",
-            confirmPassword: "12345",
-            nickname: "Juno",
-        })
+      service.signUp({
+        email: "email1@email.com",
+        password: "1234",
+        confirmPassword: "12345",
+        nickname: "Juno",
+      }),
     ).rejects.toThrow("PASSWORD_NOT_MATCH");
-  })
+  });
 });
 //===================================================================================
 
 describe("인증 로직 테스트 - login service", () => {
-    test("EMAIL이 DB에 없는 경우 NOT FOUND 에러 던지기", async() => {
-        MockRepo.findUniqueEmail.mockResolvedValue(null)
-        await expect(
-            service.login({
-                email:"test@example.com",
-                password:"1233"
-            })
-        ).rejects.toThrow("NOT FOUND")
-    })
+  test("EMAIL이 DB에 없는 경우 NOT FOUND 에러 던지기", async () => {
+    MockRepo.findUniqueEmail.mockResolvedValue(null);
+    await expect(
+      service.login({
+        email: "test@example.com",
+        password: "1233",
+      }),
+    ).rejects.toThrow("NOT FOUND");
+  });
 
-    test("비밀번호가 DB에 있는 비밀번호와 다른 경우, 401에러 던지기", async() => {
-        MockRepo.findUniqueEmail.mockResolvedValue(true)
-        
-        const fakeUser = {
-            email:"test@example.com",
-            password:"1234"
-        }
+  test("비밀번호가 DB에 있는 비밀번호와 다른 경우, 401에러 던지기", async () => {
+    MockRepo.findUniqueEmail.mockResolvedValue(true);
 
-        MockRepo.findUnique.mockResolvedValue(fakeUser);
-        await expect(
-            service.login({
-                email:"test@example.com",
-                password:"12345"
-            })
-        ).rejects.toThrow("Wrong Password")
-    })
-})
+    const fakeUser = {
+      email: "test@example.com",
+      password: "1234",
+    };
+
+    MockRepo.findUnique.mockResolvedValue(fakeUser);
+    await expect(
+      service.login({
+        email: "test@example.com",
+        password: "12345",
+      }),
+    ).rejects.toThrow("Wrong Password");
+  });
+});
 
 //======================================================================================
+describe("인증 로직 테스트 - 관리자 정보 찾기", () => {
+  //test("조회할 권한이 없는 경우 401과 unathurized 던지기", async () => {}); TODO: 인가 관련 코드 구현 및 테스트 후 해당 테스트 하기
+  test("해당 관리자가 존재하지 않는 경우 404", async () => {
 
+    MockRepo.findAdvisor.mockResolvedValue(null)
+    await expect(
+        service.findAdvisor({
+            id:1
+        })
+    ).rejects.toThrow("NOT FOUND")
+  });
+});
+
+
+/*
+//======================================================================================
+describe("인증 로직 테스트 - 회원 정보 수정", () => {
+  test("", async () => {});
+});
+//======================================================================================
+describe("인증 로직 테스트 - 회원 삭제", () => {
+  test("", async () => {});
+});
+
+//======================================================================================
+*/
