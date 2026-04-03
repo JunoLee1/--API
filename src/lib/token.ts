@@ -10,7 +10,7 @@ const generateToken = async (id: any) => {
   })
   return {accessToken, refreshToken}
 };
-
+/*
 const verifyAccessToken = async (token: any) => {
     const decode = verify(token, JWT_ACCESS_TOKEN_SECRET)
     return { sub: decode.sub };
@@ -20,5 +20,5 @@ const verifyRefreshToken = async (token: any) => {
     const decode = verify(token, JWT_REFRESH_TOKEN_SECRET)
     return { sub: decode.sub };
 };
-
-export { verifyAccessToken, verifyRefreshToken, generateToken };
+*/
+export {generateToken };

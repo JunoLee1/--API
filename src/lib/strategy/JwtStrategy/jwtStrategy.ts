@@ -17,8 +17,8 @@ const refreshTokenOptions = {
 export const jwtVerify = async (payload: JwtPayload | Error, done: any) => {
   try {
     done(null, payload);
-  } catch {
-    done(Error, false);
+  } catch(err) {
+    done(err, false);
   }
 };
 export const accessTokenStrategy = new JwtStrategy(
