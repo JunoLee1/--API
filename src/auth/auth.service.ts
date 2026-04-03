@@ -30,13 +30,12 @@ export default class AuthService {
     const user = await this.repo.findUniqueEmail(email);
 
     if (user === null) throw new Error("NOT FOUND");
-    console.log(user)
-    if (password !== user.password )throw new Error("Wrong Password");
-    console.log(1)
-    console.log(user)
-    const result  = await generateToken(user.id)
   
-    return { accessToken: result }
+    if (password !== user.password )throw new Error("Wrong Password");
+   
+    const {accessToken, refreshToken}  = await generateToken(user.id)
+  
+    return { accessToken ,refreshToken}
   }
   //=================================================================================================================================================================================
   async findAdvisorById(id: any) {

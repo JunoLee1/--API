@@ -4,7 +4,7 @@ const authService = {
   login: jest.fn(),
   logout: jest.fn(),
   signUp: jest.fn(),
-  findAdvisor:jest.fn()
+  findAdvisorById: jest.fn(),
 } as any; // 임시
 
 const controller = new AuthController(authService);
@@ -73,29 +73,51 @@ describe("인증 컨트롤러 테스트 - login controller", () => {
 //======================================================================================
 
 describe("인증 컨트롤러 테스트 - 관리자 조회", () => {
-  test("알 수 없는 에러인 경우 500에러 와 에러 메시지 던지기", async () => {
-    const req = {params:{id: 1}}
+   beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  test("조회할 권한이 없는 경우 401과 unathurized 던지기", async () => {
+    const req = {
+      user: { sub: "999" },
+      params: { id: 1 },
+    };
     const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-    }
-    authService.findAdvisor.mockRejectedValue(new Error("Something Wrong"))
-    await controller.findAdvisor(req as any, res as any)
-    expect(res.status).toHaveBeenCalledWith(500)
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+    authService.findAdvisorById.mockResolvedValue({
+      id: 1 ,
+      userId:123,
+    });
+    await controller.findAdvisorById(req, res)//.mockResolvedValue("FORBIDDEN"));
+    expect(res.status).toHaveBeenCalledWith(403)
     expect(res.json).toHaveBeenCalledWith({
-         message: "Something Wrong"
+      message:"FORBIDDEN"
     })
   });
-  test("해당 회원이 성공적으로 조회 했다면 200 상태 메시지와 해당 함수가 올바르게 실행되는지 확인", async() => {
-    const req = {params:{ id: 1 }}
+  test("알 수 없는 에러인 경우 500에러 와 에러 메시지 던지기", async () => {
+    const req = { params: { id: 1 } };
     const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-    }
-    authService.findAdvisor.mockResolvedValue({id: 1})
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+    authService.findAdvisorById.mockRejectedValue(new Error("Something Wrong"));
+    await controller.findAdvisorById(req as any, res as any);
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Something Wrong",
+    });
+  });
+  test("해당 회원이 성공적으로 조회 했다면 200 상태 메시지와 해당 함수가 올바르게 실행되는지 확인", async () => {
+    const req = { params: { id: 1 } };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+    authService.findAdvisorById.mockResolvedValue({ id: 1 });
 
-    await controller.findAdvisor(req as any, res as any)
-    expect(res.status).toHaveBeenCalledWith(200)
-    expect(res.json).toHaveBeenCalled()
-  })
+    await controller.findAdvisorById(req as any, res as any);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalled();
+  });
 });

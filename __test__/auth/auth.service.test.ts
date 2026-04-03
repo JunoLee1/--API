@@ -127,7 +127,6 @@ describe("인증 로직 테스트 - login service", () => {
     };
     const result = await service.login(fakeUser);
 
-    console.log(result);
     expect(result).toEqual({
       accessToken: "access-token",
       refreshToken: "refresh-token",
@@ -137,7 +136,6 @@ describe("인증 로직 테스트 - login service", () => {
 
 //======================================================================================
 describe("인증 로직 테스트 - 관리자 정보 찾기", () => {
-  //test("조회할 권한이 없는 경우 401과 unathurized 던지기", async () => {}); TODO: 인가 관련 코드 구현 및 테스트 후 해당 테스트 하기
   test("해당 관리자가 존재하지 않는 경우 404", async () => {
     MockRepo.findAdvisorById.mockResolvedValue(null);
     await expect(

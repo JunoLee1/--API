@@ -26,7 +26,10 @@ export default class AuthController {
   async findAdvisorById(req: any, res: any) {
     try {
         const{ id } = req.params
-        await this.service.findAdvisorById(id)
+        
+        const userId = req.user?.sub
+        const advisor = await this.service.findAdvisorById(id)
+        if(advisor.userId !== req.user?.id) return res.status(403).json({message:"FORBIDDEN"})
         return res.status(200).json()
     } catch (error) {
       return res.status(500).json({ message: "Something Wrong" });
