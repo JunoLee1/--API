@@ -12,7 +12,7 @@ export default class AuthController {
   }
   //=================================================================================================================================================================================
 
-  async login(req: any, res: any) {
+  async login(req: any, res: any) {//TODO: TYPE CONVERT
     try {
       const { email, password } = req.body as LoginInput;
       const result = await this.service.login({ email, password });
@@ -23,13 +23,16 @@ export default class AuthController {
     }
   }
   //=================================================================================================================================================================================
-  async findAdvisorById(req: any, res: any) {
+  async findAdvisorById(req: any, res: any) {//TODO: TYPE CONVERT
     try {
         const{ id } = req.params
-        
-        const userId = req.user?.sub
+        if(!req.user){
+          return res.status(401).json({message:"UNAUTHORIZED"})
+        }
         const advisor = await this.service.findAdvisorById(id)
-        if(advisor.userId !== req.user?.id) return res.status(403).json({message:"FORBIDDEN"})
+        console.log(1)
+        if(advisor.role !== "SUPER_ADMIN") return res.status(403).json("FORBIDDEN")
+        console.log("advisor.role:",  advisor.role)
         return res.status(200).json()
     } catch (error) {
       return res.status(500).json({ message: "Something Wrong" });
@@ -37,7 +40,21 @@ export default class AuthController {
   }
   //=================================================================================================================================================================================
 
-  async findAdvisors(req: any, res: any) {}
+  async findAdvisors(req: any, res: any) {//TODO: TYPE CONVERT
+    try{
+      const {take, limit} = req.query as any //TODO: TYPE CONVERT
+      if(!req.user){
+        return res.status(401).json({message:"UNAUTHORIZED"})
+      }
+      if(req.user.role !== "SUPER_ADMIN"){
+        return res.status(403).json({message:"FORBIDDEN"})
+      }
+      await this.service.findAdvisors({take, limit})
+      return res.status(200).json()
+    }catch(error){
+      return res.status(500).json({ message: "Something Wrong" });
+    }
+  }
   //=================================================================================================================================================================================
 
   async update() {}
