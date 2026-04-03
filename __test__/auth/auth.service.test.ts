@@ -1,5 +1,6 @@
 import { describe, test, jest } from "@jest/globals";
 import AuthService from "../../src/auth/auth.service";
+import * as token from "../../src/lib/token";
 
 const MockRepo = {
   create: jest.fn(),
@@ -7,13 +8,17 @@ const MockRepo = {
   isNicknameDuplicated: jest.fn(),
   findUniqueEmail: jest.fn(),
   findUnique: jest.fn(),
-  findAdvisor:jest.fn()
+  findAdvisorById: jest.fn(),
 } as any;
+
+jest.mock("../../src/lib/token", () => ({
+  generateToken: jest.fn(() => "fake.jwt.token"),
+}));
 
 const service = new AuthService(MockRepo);
 describe("인증 로직 테스트 - registry service", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
   test("respond 404, when the email is emty", async () => {
     await expect(
@@ -105,22 +110,43 @@ describe("인증 로직 테스트 - login service", () => {
       }),
     ).rejects.toThrow("Wrong Password");
   });
+  test("액세스 토큰이 생성이 되었다면 액세스토큰 토큰값들 리턴", async () => {
+    MockRepo.findUniqueEmail.mockResolvedValue({
+      email: "test@example.com",
+      password: "12345",
+    });
+    jest.spyOn(token, "generateToken").mockResolvedValue({
+      accessToken: "access-token",
+      refreshToken: "refresh-token",
+    });
+
+    const fakeUser = {
+      id: 1,
+      email: "test@example.com",
+      password: "12345",
+    };
+    const result = await service.login(fakeUser);
+
+    console.log(result);
+    expect(result).toEqual({
+      accessToken: "access-token",
+      refreshToken: "refresh-token",
+    });
+  });
 });
 
 //======================================================================================
 describe("인증 로직 테스트 - 관리자 정보 찾기", () => {
   //test("조회할 권한이 없는 경우 401과 unathurized 던지기", async () => {}); TODO: 인가 관련 코드 구현 및 테스트 후 해당 테스트 하기
   test("해당 관리자가 존재하지 않는 경우 404", async () => {
-
-    MockRepo.findAdvisor.mockResolvedValue(null)
+    MockRepo.findAdvisorById.mockResolvedValue(null);
     await expect(
-        service.findAdvisor({
-            id:1
-        })
-    ).rejects.toThrow("NOT FOUND")
+      service.findAdvisorById({
+        id: 1,
+      }),
+    ).rejects.toThrow("NOT FOUND");
   });
 });
-
 
 /*
 //======================================================================================
