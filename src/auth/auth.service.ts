@@ -1,11 +1,12 @@
 import AuthRepo from "./auth.repo";
 import { generateToken } from "../lib/token";
-import { LoginInput,Pagenation, NameType,LoginOutput} from "./auth.DTO";
+import { signUpInputDto, LoginInput, LoginOutput, Pagenation, NameType, IAuth } from "./auth.DTO";
+import  prisma from "../lib/prisma"
+
 //import bcrypt  from "bcrypt";
 export default class AuthService {
-  constructor(private repo: AuthRepo = new AuthRepo()) {}
-  async signUp({ email, password, confirmPassword, nickname }: any) {
-    //TODO: TYPE CONVERT
+  constructor(private repo: AuthRepo = new AuthRepo(prisma)) {}
+  async signUp({ email, password, confirmedPassword, nickname }: signUpInputDto) {
     if (!email) {
       throw new Error("INVALID_EMAIL");
     }
@@ -23,14 +24,14 @@ export default class AuthService {
     if (duplicatedNickname) {
       throw new Error("DUPLICATED_NICKNAME");
     }
-    if (password !== confirmPassword) throw new Error("PASSWORD_NOT_MATCH"); //TODO: hash password
+    if (password !== confirmedPassword) throw new Error("PASSWORD_NOT_MATCH"); //TODO: hash password
     //TODO: 휴대폰번호 중복검사후 암호화해서 저장하기
   }
+ 
   //=================================================================================================================================================================================
   async login({ email, password }: LoginInput):Promise<LoginOutput> {
-    const user = await this.repo.findUniqueEmail(email);
-
-    if (user === null) throw new Error("NOT FOUND");
+    const user = await this.repo.findByEmail(email);
+    if (!user) throw new Error("INVALID USER EMAIL");
 
     if (password !== user.password) throw new Error("Wrong Password");
 
@@ -39,6 +40,7 @@ export default class AuthService {
     return { accessToken, refreshToken };
   }
   //=================================================================================================================================================================================
+  
   async findAdvisorById(id: number){
     //TODO: TYPE CONVERT
     const user = await this.repo.findAdvisorById(id);
@@ -48,6 +50,7 @@ export default class AuthService {
     }
     return user;
   }
+  
   //=================================================================================================================================================================================
   async findAdvisors({ take, page }:Pagenation, {teamname, username}:NameType) {
     const where: any = {};//TODO: TYPE CONVERT
@@ -66,7 +69,9 @@ export default class AuthService {
     return advisors;
   }
   //=================================================================================================================================================================================
-  async updatesAdvisor(id:number,data:any) {
+  
+  async updatesAdvisor(data:IAuth) {
+    const {id, email, teamname, username, password, country, role} = data
     const advisor = await this.repo.findAdvisorById(id)
     if (!advisor) throw new Error("NOT FOUND");
     const result = await this.repo.updatesAdvisor(id,data)
