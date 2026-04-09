@@ -20,7 +20,7 @@ enum Type {
 enum Role {
   ADMIN
   SUPER_ADVISOR
-  player
+  PLAYER
 }
 
 enum Foot {
