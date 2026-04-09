@@ -1,6 +1,6 @@
 import AuthRepo from "./auth.repo";
 import { generateToken } from "../lib/token";
-import { LoginInput } from "./auth.DTO";
+import { LoginInput,Pagenation, NameType,LoginOutput} from "./auth.DTO";
 //import bcrypt  from "bcrypt";
 export default class AuthService {
   constructor(private repo: AuthRepo = new AuthRepo()) {}
@@ -27,7 +27,7 @@ export default class AuthService {
     //TODO: 휴대폰번호 중복검사후 암호화해서 저장하기
   }
   //=================================================================================================================================================================================
-  async login({ email, password }: LoginInput) {
+  async login({ email, password }: LoginInput):Promise<LoginOutput> {
     const user = await this.repo.findUniqueEmail(email);
 
     if (user === null) throw new Error("NOT FOUND");
@@ -39,7 +39,7 @@ export default class AuthService {
     return { accessToken, refreshToken };
   }
   //=================================================================================================================================================================================
-  async findAdvisorById(id: any) {
+  async findAdvisorById(id: number){
     //TODO: TYPE CONVERT
     const user = await this.repo.findAdvisorById(id);
 
@@ -49,8 +49,7 @@ export default class AuthService {
     return user;
   }
   //=================================================================================================================================================================================
-  async findAdvisors({ take, limit, teamname, username }: any) {
-    //TODO: TYPE CONVERT
+  async findAdvisors({ take, page }:Pagenation, {teamname, username}:NameType) {
     const where: any = {};//TODO: TYPE CONVERT
     if (teamname) {
       where.teamname = teamname;
@@ -62,18 +61,53 @@ export default class AuthService {
     const advisors = await this.repo.findAdvisors({
       where,
       take,
-      limit,
+      page,
     });
     return advisors;
   }
   //=================================================================================================================================================================================
-  async updatesAdvisor({teamname, username}:any) {
-    return null
+  async updatesAdvisor(id:number,data:any) {
+    const advisor = await this.repo.findAdvisorById(id)
+    if (!advisor) throw new Error("NOT FOUND");
+    const result = await this.repo.updatesAdvisor(id,data)
+    return result
   }
   //=================================================================================================================================================================================
-  async updateMany() {}
+  async updateAdvisorsStatus(data:{id: number, status:string}[]) {
+    const ids = data.map(item => item.id)
+    const users = await this.repo.findAdvisorsByIds(ids)
+    if(users.length === 0) throw new Error("Invalid adminstrators");
+    
+    const validIds = users.map(u =>u.id)
+    const fitered = data.filter(item => validIds.includes(item.id))
+    const result = await this.repo.updateAdvisorsStatus(fitered)
+    return result
+  }
   //=================================================================================================================================================================================
-  async delete() {}
+  async delete(id:any) {
+    
+    const user = await this.repo.findAdvisorById(id)
+    if(!user) throw new Error("NOT FOUND")
+    
+    if(user.isDeleted === true){
+      return await this.repo.delete(id)
+    }
+   return await this.repo.updatesAdvisor(id,{ isDeleted:true})
+  }
   //=================================================================================================================================================================================
-  async deleteMany() {}
+  async deleteMany(data:{id:any}[]) {
+    const ids = data.map(item=> item.id)
+    const users = await this.repo.findAdvisorsByIds(ids)
+    if(!users.length) throw new Error("NOT FOUND")
+
+      const activeUsers = users.filter(user => !user.isDeleted);
+      const updated = activeUsers.map(user => ({
+        ...user,
+        isDeleted: true
+    }))
+    return await this.repo.updateAdvisorsStatus({
+      ids: activeUsers.map(u => u.id),
+      isDeleted: true,
+    })
+  }
 }
