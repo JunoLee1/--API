@@ -14,18 +14,39 @@ router.post("/", controller.signUp)
 router.post("/login", controller.login)
 
 // 관리자 정보 조회
-router.get("/", 
+router.get("/:id", 
     controller.findAdvisorById,
     passport.authenticate("accessToken")
 )
 
 // 관리자 전체 조회
-router.get("/", controller.findAdvisors)
+router.get("/",
+    controller.findAdvisors,
+    passport.authenticate("accessToken")
+),
 
-// 유저 정보 수정
-router.patch("/me", controller.update)
 
-// 유저 삭제 
-router.delete("/")
+// 단일 관리자 정보 수정
+router.patch("/me",
+    controller.updatesAdvisor,
+    passport.authenticate("accessToken")
+)
+// 다수 관리자 상태 변경
+router.patch("/me",
+    controller.updateAdvisorsStatus,
+    passport.authenticate("accessToken")
+)
+
+// 관리자 삭제
+router.delete("/:id",
+    controller.delete,
+    passport.authenticate("accessToken")
+)
+
+//다수 관리자 삭제 
+router.delete("/",
+    controller.deleteMany,
+    passport.authenticate("accessToken")
+)
 
 export default router
