@@ -1,8 +1,10 @@
 import AuthService from "./auth.service";
-import { LoginInput } from "./auth.DTO";
+import { LoginInput , signUpInputDto, paramsType, Role} from "./auth.DTO";
+import {Request, Response } from "express-serve-static-core";
+//import { User} from "@prisma/client";
 export default class AuthController {
   constructor(private service: AuthService) {}
-  async signUp(req: any, res: any) {
+  async signUp(req: Request<{}, {}, signUpInputDto>, res: Response) {
     try {
       const result = await this.service.signUp(req.body);
       return res.status(201).json(result);
@@ -10,9 +12,9 @@ export default class AuthController {
       return res.status(500).json({ message: "SERVER INTERNAL ERROR" });
     }
   }
-  //=================================================================================================================================================================================
 
-  async login(req: any, res: any) {
+  //=================================================================================================================================================================================
+  async login(req: Request, res: Response) {
     //TODO: TYPE CONVERT
     try {
       const { email, password } = req.body as LoginInput;
@@ -22,32 +24,33 @@ export default class AuthController {
       return res.status(500).json({ message: "SERVER INTERNAL ERROR" });
     }
   }
+  
   //=================================================================================================================================================================================
-  async findAdvisorById(req: any, res: any) {
+
+  async findAdvisorById(req: Request<{id:string},{},{}>, res: Response) {
     //TODO: TYPE CONVERT
     try {
-      //const { teamName, userName } = req.query
-      console.log(req);
-
-      if (!req.user.id) {
+      const id = Number(req.params.id)
+     
+      if (!req.user?.id) {
         return res.status(401).json({ message: "UNAUTHORIZED" });
       }
-      const id = req.user.id 
-      if (req.user.role !== "SUPER_ADMIN")
+      console.log(req.user)
+      if (req.user.role !== Role.SUPER_ADMIN)
         return res.status(403).json({ message: "FORBIDDEN" });
-      await this.service.findAdvisorById(id);
-      return res.status(200).json();
+      const result = await this.service.findAdvisorById(id);
+      return res.status(200).json(result);
     } catch (error) {
       return res.status(500).json({ message: "SERVER INTERNAL ERROR" });
     }
   }
   //=================================================================================================================================================================================
 
-  async findAdvisors(req: any, res: any) {
+  async findAdvisors(req: Request, res: Response) {
     //TODO: TYPE CONVERT
     try {
       const { take, page, teamname, username } = req.query as any; //TODO: TYPE CONVERT
-      if (!req.user.id) {
+      if (!req.user?.id) {
         return res.status(401).json({ message: "UNAUTHORIZED" });
       }
       if (req.user.role !== "SUPER_ADMIN") {
@@ -67,14 +70,14 @@ export default class AuthController {
     }
   }
   //=================================================================================================================================================================================
-  async updatesAdvisor(req: any, res: any) {
+  async updatesAdvisor(req: Request, res: Response) {
     try {
-      if (!req.user.id)
+      if (!req.user?.id)
         return res.status(401).json({ message: "UNAUTHORIZED" });
-      const id = req.params;
+      const id = Number(req.params);
 
-      const { teamname, username, isDeleted } = req.body; //TODO: add fields more after test
-      await this.service.updatesAdvisor(id, { teamname, username, isDeleted });
+      const { teamname, username, email, password, country, role} = req.body; //TODO: add fields more after test
+      await this.service.updatesAdvisor({id, email, teamname, username, password, country, role});
       return res.status(200).json({
         message: "successfully modified information",
       });
@@ -83,9 +86,9 @@ export default class AuthController {
     }
   }
   //=================================================================================================================================================================================
-  async updateAdvisorsStatus(req: any, res: any) {
+  async updateAdvisorsStatus(req: Request, res: Response) {
     try {
-      if (!req.user.id)
+      if (!req.user)
         return res.status(401).json({ message: "UNAUTHORISED" });
       if (req.user.role !== "SUPER_ADMIN")
         return res.status(403).json({ message: "FORBIDDEN" });
@@ -97,9 +100,9 @@ export default class AuthController {
     }
   }
   //=================================================================================================================================================================================
-  async delete(req: any, res: any) {
+  async delete(req: Request, res: Response) {
     try {
-      if (!req.user.id)
+      if (!req.user?.id)
         return res.status(401).json({
           message: "UNAUTHORISED",
         });
@@ -118,9 +121,9 @@ export default class AuthController {
     }
   }
   //=================================================================================================================================================================================
-  async deleteMany(req: any, res: any) {
+  async deleteMany(req: Request, res: Response) {
     try {
-      if (!req.user.id) {
+      if (!req.user?.id) {
         return res.status(401).json({
           message: "UNAUTHORIZED",
         });
