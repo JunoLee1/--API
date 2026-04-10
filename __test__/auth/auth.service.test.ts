@@ -1,9 +1,10 @@
 import { describe, test, jest } from "@jest/globals";
 import AuthService from "../../src/auth/auth.service";
 import * as token from "../../src/lib/token";
+import { IAuth, Role } from "../../src/auth/auth.DTO";
 
 const MockRepo = {
-  create: jest.fn(),
+  createAdmin: jest.fn(),
   isEmailDuplicated: jest.fn(),
   isNicknameDuplicated: jest.fn(),
   findUniqueEmail: jest.fn(),
@@ -16,12 +17,14 @@ const MockRepo = {
   findAdvisorsByIds: jest.fn(),
   delete: jest.fn(),
   deleteMany: jest.fn(),
+  findByEmail:jest.fn(),
 } as any;
 
 jest.mock("../../src/lib/token", () => ({
   generateToken: jest.fn(() => "fake.jwt.token"),
 }));
 
+console.log(AuthService)
 const service = new AuthService(MockRepo);
 describe("인증 로직 테스트 - registry service", () => {
   afterEach(() => {
@@ -29,7 +32,14 @@ describe("인증 로직 테스트 - registry service", () => {
   });
   test("respond 404, when the email is emty", async () => {
     await expect(
-      service.signUp({ email: "", password: "1234", nickname: "jun" }),
+      service.signUp({
+        email: "",
+        password: "1234",
+        nickname: "jun",
+        confirmedPassword: "1234",
+        username: "junoLee",
+        countriesId: 1,
+      }),
     ).rejects.toThrow("INVALID_EMAIL");
   });
 
@@ -42,6 +52,9 @@ describe("인증 로직 테스트 - registry service", () => {
         email: "test@test.com",
         password: "1234",
         nickname: "jun",
+        username: "junoLee",
+        confirmedPassword: "1234",
+        countriesId: 1,
       }),
     ).rejects.toThrow("DUPLICATED_EMAIL");
   });
@@ -52,6 +65,9 @@ describe("인증 로직 테스트 - registry service", () => {
         email: "email@email.com",
         password: "1234",
         nickname: "",
+        username: "junoLee",
+        confirmedPassword: "1234",
+        countriesId: 1,
       }),
     ).rejects.toThrow("INVALID_NICKNAME");
   });
@@ -65,6 +81,9 @@ describe("인증 로직 테스트 - registry service", () => {
         email: "email1@email.com",
         password: "1234",
         nickname: "Juno",
+        username: "junoLee",
+        confirmedPassword: "1234",
+        countriesId: 1,
       }),
     ).rejects.toThrow("DUPLICATED_NICKNAME");
   });
@@ -74,7 +93,14 @@ describe("인증 로직 테스트 - registry service", () => {
     MockRepo.isNicknameDuplicated.mockResolvedValue(false);
 
     await expect(
-      service.signUp({ email: "email@email.com", password: "", nickname: "j" }),
+      service.signUp({
+        email: "email@email.com",
+        password: "",
+        nickname: "j",
+        username: "junoLee",
+        confirmedPassword: "1234",
+        countriesId: 1,
+      }),
     ).rejects.toThrow("INVALID_PASSWORD");
   });
   test("respons Unmatched Pwd, if confirmed password", async () => {
@@ -82,34 +108,52 @@ describe("인증 로직 테스트 - registry service", () => {
       service.signUp({
         email: "email1@email.com",
         password: "1234",
-        confirmPassword: "12345",
+        confirmedPassword: "12345",
         nickname: "Juno",
+        countriesId: 1,
+        username: "junoLee",
       }),
     ).rejects.toThrow("PASSWORD_NOT_MATCH");
   });
+  test("로그인 성공시 사용자 정보리턴", async() => {
+    MockRepo.isEmailDuplicated.mockResolvedValue(false);
+    MockRepo.isNicknameDuplicated.mockResolvedValue(false);
+    const fakeUser = {
+      id:1,
+        email: "email1@email.com",
+        password: "12345",
+        confirmedPassword: "12345",
+        nickname: "Juno",
+        countriesId: 1,
+        username: "junoLee",
+    }
+
+    MockRepo.createAdmin.mockResolvedValue(fakeUser)
+    const result = await service.signUp(fakeUser)
+
+    expect(result).toBe(fakeUser)
+  })
 });
 //===================================================================================
 
 describe("인증 로직 테스트 - login service", () => {
   test("EMAIL이 DB에 없는 경우 NOT FOUND 에러 던지기", async () => {
-    MockRepo.findUniqueEmail.mockResolvedValue(null);
+    MockRepo.findByEmail.mockResolvedValue(null);
     await expect(
       service.login({
         email: "test@example.com",
         password: "1233",
       }),
-    ).rejects.toThrow("NOT FOUND");
+    ).rejects.toThrow("INVALID USER EMAIL");
   });
 
   test("비밀번호가 DB에 있는 비밀번호와 다른 경우, 401에러 던지기", async () => {
-    MockRepo.findUniqueEmail.mockResolvedValue(true);
-
     const fakeUser = {
       email: "test@example.com",
       password: "1234",
     };
 
-    MockRepo.findUnique.mockResolvedValue(fakeUser);
+    MockRepo.findByEmail.mockResolvedValue(fakeUser.email);
     await expect(
       service.login({
         email: "test@example.com",
@@ -118,21 +162,19 @@ describe("인증 로직 테스트 - login service", () => {
     ).rejects.toThrow("Wrong Password");
   });
   test("액세스 토큰이 생성이 되었다면 액세스토큰 토큰값들 리턴", async () => {
-    MockRepo.findUniqueEmail.mockResolvedValue({
-      email: "test@example.com",
-      password: "12345",
-    });
-    jest.spyOn(token, "generateToken").mockResolvedValue({
-      accessToken: "access-token",
-      refreshToken: "refresh-token",
-    });
-
     const fakeUser = {
       id: 1,
       email: "test@example.com",
       password: "12345",
     };
-    const result = await service.login(fakeUser);
+    MockRepo.findByEmail.mockResolvedValue(fakeUser);
+    jest.spyOn(token, "generateToken").mockResolvedValue({
+      accessToken: "access-token",
+      refreshToken: "refresh-token",
+    });
+
+   
+    const result = await service.login({email:fakeUser.email, password:fakeUser.password});
 
     expect(result).toEqual({
       accessToken: "access-token",
@@ -171,7 +213,10 @@ describe("인증 로직 테스트 - 관리자들 찾기", () => {
   test("관리자 이름으로 조회 했을때 없는 경우, []", async () => {
     MockRepo.findAdvisors.mockResolvedValue([]); // 예상 되는 결과값
 
-    const result = await service.findAdvisors({ page: 1, take: 10 },{ teamname:undefined,username: "junoK" });
+    const result = await service.findAdvisors(
+      { page: 1, take: 10 },
+      { teamname: undefined, username: "junoK" },
+    );
     expect(MockRepo.findAdvisors).toHaveBeenCalled();
     expect(result).toEqual([]);
   });
@@ -284,42 +329,51 @@ describe("인증 로직 테스트 - 단일 관리자 정보 수정", () => {
       id: 2,
       teamname: "juno Fc",
       username: "juno",
+      email:"email@test.com",
+      password:"1234",
+      role:Role.ADMIN,
+      country:""
     };
     MockRepo.findAdvisorById.mockResolvedValue(null);
     MockRepo.updatesAdvisor.mockResolvedValue(null);
     //WHEN + THEN
-    await expect(service.updatesAdvisor(input.id, input)).rejects.toThrow(
+    await expect(service.updatesAdvisor(input)).rejects.toThrow(
       "NOT FOUND",
     );
   });
   //test("해당 관리자의 비밀번호 변경시 현재 비밀번호와 같은 경우 400 에러 던지기")
   test("해당 관리자 정보 변경 성공시 해당 유저 정보 반환", async () => {
     //  GIVEN
-    const input = {
+    const input:IAuth = {
       id: 2,
       username: "JunKi",
       teamname: "MK DONS",
       password: "hashed",
+      email:"example@test.com",
+      role:Role.ADMIN,
+      country: "SOUTH KOREA"
     };
-    const updatedInput = {
+    const updatedInput: IAuth= {
       id: 2,
       username: "JunKi",
       teamname: "MK DONS FC",
       password: "hashed",
+      email:"example@test.com",
+      role:Role.ADMIN,
+      country: "SOUTH KOREA"
     };
     //
     MockRepo.findAdvisorById.mockResolvedValue({
-      id: 2,
       username: "JunKi",
       teamname: "MK DONS",
       password: "hashed",
     });
     MockRepo.updatesAdvisor.mockResolvedValue(updatedInput);
     //  WHEN
-    const result = await service.updatesAdvisor(input.id, input);
+    const result = await service.updatesAdvisor( input );
     //  THEN
     expect(MockRepo.findAdvisorById).toHaveBeenCalled();
-    //expect(MockRepo.updatesAdvisor).toHaveBeenCalledWith(input);
+    expect(MockRepo.updatesAdvisor).toHaveBeenCalledWith(input);
     expect(result).toEqual(updatedInput);
   });
 });
@@ -413,10 +467,11 @@ describe("인증 로직 테스트 - 회원 삭제", () => {
       isDeleted: false,
     };
     MockRepo.findAdvisorById.mockResolvedValue(fake);
-    MockRepo.updatesAdvisor.mockResolvedValue(fake.id, { isDeleted: true });
+    MockRepo.updatesAdvisor.mockResolvedValue({ id: fake.id,isDeleted: true });
     await service.delete(fake.id);
     expect(MockRepo.findAdvisorById).toHaveBeenCalledWith(fake.id);
-    expect(MockRepo.updatesAdvisor).toHaveBeenCalledWith(fake.id, {
+    expect(MockRepo.updatesAdvisor).toHaveBeenCalledWith({
+      id:fake.id,
       isDeleted: true,
     });
   });
