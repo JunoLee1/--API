@@ -11,6 +11,14 @@ export type signUpInputDto = {
   //phoneNumber:string
   countriesId: number;
 };
+export type signUpOutputDto = {
+  email: string;
+  password: string;
+  username: string;
+  nickname: string;
+  //phoneNumber:string
+  countriesId: number;
+};
 export type Pagenation = {
   take: number;
   page: number;
