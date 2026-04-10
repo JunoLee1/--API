@@ -1,10 +1,15 @@
 import { Router } from "express"
-import AuthController  from './auth.controller';
-import AuthService from "./auth.service"
+import  AuthController   from './auth.controller';
+import  AuthService  from "./auth.service"
+import { AuthRepository } from "./auth.repo";
+import { getPrisma } from "../lib/prisma";
+
 import passport = require("passport");
 
 const router = Router()
-const service = new AuthService()
+const prisma = getPrisma();
+const repo = new AuthRepository(prisma);
+const service = new AuthService(repo)
 const controller = new AuthController(service)
 
 //유저 생성
