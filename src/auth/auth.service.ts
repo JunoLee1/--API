@@ -1,12 +1,12 @@
-import AuthRepo from "./auth.repo";
+import { AuthRepository } from "./auth.repo";
 import { generateToken } from "../lib/token";
 import { signUpInputDto, LoginInput, LoginOutput, Pagenation, NameType, IAuth } from "./auth.DTO";
-import  prisma from "../lib/prisma"
+//import  prisma from "../lib/prisma"
 
 //import bcrypt  from "bcrypt";
 export default class AuthService {
-  constructor(private repo: AuthRepo = new AuthRepo(prisma)) {}
-  async signUp({ email, password, confirmedPassword, nickname }: signUpInputDto) {
+  constructor(private repo: AuthRepository) {}
+  async signUp({ email, password, confirmedPassword, nickname, username, countriesId }: signUpInputDto) {
     if (!email) {
       throw new Error("INVALID_EMAIL");
     }
@@ -25,7 +25,11 @@ export default class AuthService {
       throw new Error("DUPLICATED_NICKNAME");
     }
     if (password !== confirmedPassword) throw new Error("PASSWORD_NOT_MATCH"); //TODO: hash password
+
     //TODO: 휴대폰번호 중복검사후 암호화해서 저장하기
+    const result = await this.repo.createAdmin({email, password, nickname, confirmedPassword, username, countriesId })
+    return result
+    
   }
  
   //=================================================================================================================================================================================
@@ -42,10 +46,9 @@ export default class AuthService {
   //=================================================================================================================================================================================
   
   async findAdvisorById(id: number){
-    //TODO: TYPE CONVERT
     const user = await this.repo.findAdvisorById(id);
 
-    if (user === null) {
+    if (!user) {
       throw new Error("NOT FOUND");
     }
     return user;
@@ -74,7 +77,7 @@ export default class AuthService {
     const {id, email, teamname, username, password, country, role} = data
     const advisor = await this.repo.findAdvisorById(id)
     if (!advisor) throw new Error("NOT FOUND");
-    const result = await this.repo.updatesAdvisor(id,data)
+    const result = await this.repo.updatesAdvisor(data)
     return result
   }
   //=================================================================================================================================================================================
@@ -89,7 +92,7 @@ export default class AuthService {
     return result
   }
   //=================================================================================================================================================================================
-  async delete(id:any) {
+  async delete(id:number) {
     
     const user = await this.repo.findAdvisorById(id)
     if(!user) throw new Error("NOT FOUND")
@@ -97,7 +100,7 @@ export default class AuthService {
     if(user.isDeleted === true){
       return await this.repo.delete(id)
     }
-   return await this.repo.updatesAdvisor(id,{ isDeleted:true})
+   return await this.repo.updatesAdvisor({id,isDeleted:true})
   }
   //=================================================================================================================================================================================
   async deleteMany(data:{id:any}[]) {
