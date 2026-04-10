@@ -1,13 +1,13 @@
-import AuthService from "./auth.service";
-import prisma from "../lib/prisma";
+//import AuthService from "./auth.service";
+//import prisma from "../lib/prisma";
 import type { PrismaClient } from "@prisma/client";
-import { LoginInput } from "./auth.DTO";
-export default class AuthRepository {
+import { LoginInput, signUpInputDto, signUpOutputDto } from "./auth.DTO";
+export class AuthRepository {
   constructor(private prisma: PrismaClient) {}
 
   //=================================================================================================================================================================================
   async findByEmail(email: string) {
-    console.log(1)
+    
     return await this.prisma.user.findUnique({
       where: { email },
     });
@@ -27,8 +27,21 @@ export default class AuthRepository {
     return !!user;
   }
   //=================================================================================================================================================================================
-  async findAdvisorById(id: any) {
-    return null;
+  async findAdvisorById(id:number) {
+    const user = await this.prisma.user.findUnique({
+      where:{id} 
+    })
+    return user
+  }
+  //=================================================================================================================================================================================
+  async createAdmin(data:signUpInputDto):Promise<signUpOutputDto>{
+    const newAdmin = await this.prisma.user.create({
+      data:{
+        email:data.email,
+        password: data.email
+      }
+    })
+    return newAdmin
   }
   //=================================================================================================================================================================================
   async findAdvisorsByIds(ids: any) {
@@ -39,7 +52,7 @@ export default class AuthRepository {
     return [];
   }
   //=================================================================================================================================================================================
-  async updatesAdvisor(id: any, { isDeleted }: any) {
+  async updatesAdvisor(data:any) {
     return null;
   }
 
