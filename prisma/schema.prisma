@@ -91,6 +91,7 @@ model User {
   nickname      String   @unique
   role          Role
 
+  isDeleted   Boolean 
   country_id  Int
   nationality Country @relation(fields: [country_id], references: [id])
 }
