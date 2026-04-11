@@ -1,7 +1,8 @@
 import { describe, test, jest } from "@jest/globals";
 import AuthService from "../../src/auth/auth.service";
 import * as token from "../../src/lib/token";
-import { IAuth, Role } from "../../src/auth/auth.DTO";
+import * as hash from "../../src/lib/hash";
+import { IAuth, Role, Status } from "../../src/auth/auth.DTO";
 
 const MockRepo = {
   createAdmin: jest.fn(),
@@ -17,14 +18,19 @@ const MockRepo = {
   findAdvisorsByIds: jest.fn(),
   delete: jest.fn(),
   deleteMany: jest.fn(),
-  findByEmail:jest.fn(),
+  findByEmail: jest.fn(),
 } as any;
 
 jest.mock("../../src/lib/token", () => ({
   generateToken: jest.fn(() => "fake.jwt.token"),
 }));
 
-console.log(AuthService)
+jest.mock("../../src/lib/hash", () => ({
+  match: jest.fn(),
+  hashedPassword: jest.fn(() => "hashed"),
+}));
+
+console.log(AuthService);
 const service = new AuthService(MockRepo);
 describe("인증 로직 테스트 - registry service", () => {
   afterEach(() => {
@@ -115,24 +121,24 @@ describe("인증 로직 테스트 - registry service", () => {
       }),
     ).rejects.toThrow("PASSWORD_NOT_MATCH");
   });
-  test("로그인 성공시 사용자 정보리턴", async() => {
+  test("로그인 성공시 사용자 정보리턴", async () => {
     MockRepo.isEmailDuplicated.mockResolvedValue(false);
     MockRepo.isNicknameDuplicated.mockResolvedValue(false);
     const fakeUser = {
-      id:1,
-        email: "email1@email.com",
-        password: "12345",
-        confirmedPassword: "12345",
-        nickname: "Juno",
-        countriesId: 1,
-        username: "junoLee",
-    }
+      id: 1,
+      email: "email1@email.com",
+      password: "12345",
+      confirmedPassword: "12345",
+      nickname: "Juno",
+      countriesId: 1,
+      username: "junoLee",
+    };
 
-    MockRepo.createAdmin.mockResolvedValue(fakeUser)
-    const result = await service.signUp(fakeUser)
+    MockRepo.createAdmin.mockResolvedValue(fakeUser);
+    const result = await service.signUp(fakeUser);
 
-    expect(result).toBe(fakeUser)
-  })
+    expect(result).toBe(fakeUser);
+  });
 });
 //===================================================================================
 
@@ -146,14 +152,23 @@ describe("인증 로직 테스트 - login service", () => {
       }),
     ).rejects.toThrow("INVALID USER EMAIL");
   });
+  test("비밀번호 암호화 성공 테스트", async () => {
+    const spy = jest
+      .spyOn(hash, "hashedPassword")
+      .mockResolvedValue("fake-hash");
+    const result = await hash.hashedPassword("1234");
 
-  test("비밀번호가 DB에 있는 비밀번호와 다른 경우, 401에러 던지기", async () => {
+    expect(result).toBe("fake-hash");
+    expect(spy).toHaveBeenCalled();
+  });
+  test("해싱화된 비밀번호가 DB에 있는 비밀번호와 다른 경우, 401에러 던지기", async () => {
     const fakeUser = {
       email: "test@example.com",
       password: "1234",
     };
 
     MockRepo.findByEmail.mockResolvedValue(fakeUser.email);
+    const spy = jest.spyOn(hash, "match").mockResolvedValue(false);
     await expect(
       service.login({
         email: "test@example.com",
@@ -162,6 +177,7 @@ describe("인증 로직 테스트 - login service", () => {
     ).rejects.toThrow("Wrong Password");
   });
   test("액세스 토큰이 생성이 되었다면 액세스토큰 토큰값들 리턴", async () => {
+    jest.spyOn(hash, "match").mockResolvedValue(true);
     const fakeUser = {
       id: 1,
       email: "test@example.com",
@@ -173,8 +189,10 @@ describe("인증 로직 테스트 - login service", () => {
       refreshToken: "refresh-token",
     });
 
-   
-    const result = await service.login({email:fakeUser.email, password:fakeUser.password});
+    const result = await service.login({
+      email: fakeUser.email,
+      password: fakeUser.password,
+    });
 
     expect(result).toEqual({
       accessToken: "access-token",
@@ -329,38 +347,36 @@ describe("인증 로직 테스트 - 단일 관리자 정보 수정", () => {
       id: 2,
       teamname: "juno Fc",
       username: "juno",
-      email:"email@test.com",
-      password:"1234",
-      role:Role.ADMIN,
-      country:""
+      email: "email@test.com",
+      password: "1234",
+      role: Role.ADMIN,
+      country: "",
     };
     MockRepo.findAdvisorById.mockResolvedValue(null);
     MockRepo.updatesAdvisor.mockResolvedValue(null);
     //WHEN + THEN
-    await expect(service.updatesAdvisor(input)).rejects.toThrow(
-      "NOT FOUND",
-    );
+    await expect(service.updatesAdvisor(input)).rejects.toThrow("NOT FOUND");
   });
   //test("해당 관리자의 비밀번호 변경시 현재 비밀번호와 같은 경우 400 에러 던지기")
   test("해당 관리자 정보 변경 성공시 해당 유저 정보 반환", async () => {
     //  GIVEN
-    const input:IAuth = {
+    const input: IAuth = {
       id: 2,
       username: "JunKi",
       teamname: "MK DONS",
       password: "hashed",
-      email:"example@test.com",
-      role:Role.ADMIN,
-      country: "SOUTH KOREA"
+      email: "example@test.com",
+      role: Role.ADMIN,
+      country: "SOUTH KOREA",
     };
-    const updatedInput: IAuth= {
+    const updatedInput: IAuth = {
       id: 2,
       username: "JunKi",
       teamname: "MK DONS FC",
       password: "hashed",
-      email:"example@test.com",
-      role:Role.ADMIN,
-      country: "SOUTH KOREA"
+      email: "example@test.com",
+      role: Role.ADMIN,
+      country: "SOUTH KOREA",
     };
     //
     MockRepo.findAdvisorById.mockResolvedValue({
@@ -370,7 +386,7 @@ describe("인증 로직 테스트 - 단일 관리자 정보 수정", () => {
     });
     MockRepo.updatesAdvisor.mockResolvedValue(updatedInput);
     //  WHEN
-    const result = await service.updatesAdvisor( input );
+    const result = await service.updatesAdvisor(input);
     //  THEN
     expect(MockRepo.findAdvisorById).toHaveBeenCalled();
     expect(MockRepo.updatesAdvisor).toHaveBeenCalledWith(input);
@@ -389,7 +405,7 @@ describe("인증로직 테스트 - 다수 관리자 상태 정보 수정", () =>
     const inputData = [
       {
         id: 1,
-        status: "INACTIVE",
+        status: Status.INACTIVE,
       },
     ];
     MockRepo.findAdvisorsByIds.mockResolvedValue(data);
@@ -415,11 +431,11 @@ describe("인증로직 테스트 - 다수 관리자 상태 정보 수정", () =>
       // 클라이언트 요청
       {
         id: 1,
-        status: "INACTIVE",
+        status: Status.INACTIVE,
       },
       {
         id: 2,
-        status: "INACTIVE",
+        status: Status.INACTIVE,
       },
     ];
     MockRepo.findAdvisorsByIds.mockResolvedValue(data);
@@ -467,11 +483,11 @@ describe("인증 로직 테스트 - 회원 삭제", () => {
       isDeleted: false,
     };
     MockRepo.findAdvisorById.mockResolvedValue(fake);
-    MockRepo.updatesAdvisor.mockResolvedValue({ id: fake.id,isDeleted: true });
+    MockRepo.updatesAdvisor.mockResolvedValue({ id: fake.id, isDeleted: true });
     await service.delete(fake.id);
     expect(MockRepo.findAdvisorById).toHaveBeenCalledWith(fake.id);
     expect(MockRepo.updatesAdvisor).toHaveBeenCalledWith({
-      id:fake.id,
+      id: fake.id,
       isDeleted: true,
     });
   });
@@ -490,14 +506,14 @@ describe("인증 로직 테스트 - 다수 회원 삭제", () => {
         role: "ADMIN",
         username: "juno",
         isDeleted: false,
-        status: "INACTIVE",
+        status: Status.INACTIVE,
       },
       {
         id: 2,
         role: "ADMIN",
         username: "jk",
         isDeleted: false,
-        status: "INACTIVE",
+        status: Status.INACTIVE,
       },
     ];
     MockRepo.findAdvisorsByIds.mockResolvedValue([]);
