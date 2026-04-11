@@ -1,12 +1,27 @@
 import { AuthRepository } from "./auth.repo";
 import { generateToken } from "../lib/token";
-import { signUpInputDto, LoginInput, LoginOutput, Pagenation, NameType, IAuth } from "./auth.DTO";
+import { hashedPassword, match} from "../lib/hash";
+import {
+  signUpInputDto,
+  LoginInput,
+  LoginOutput,
+  Pagenation,
+  NameType,
+  IAuth,
+  UpdatedUserStatusDTO,
+} from "./auth.DTO";
+import { User } from "../generated/prisma/client";
 //import  prisma from "../lib/prisma"
-
-//import bcrypt  from "bcrypt";
 export default class AuthService {
   constructor(private repo: AuthRepository) {}
-  async signUp({ email, password, confirmedPassword, nickname, username, countriesId }: signUpInputDto) {
+  async signUp({
+    email,
+    password,
+    confirmedPassword,
+    nickname,
+    username,
+    countriesId,
+  }: signUpInputDto) {
     if (!email) {
       throw new Error("INVALID_EMAIL");
     }
@@ -24,28 +39,36 @@ export default class AuthService {
     if (duplicatedNickname) {
       throw new Error("DUPLICATED_NICKNAME");
     }
-    if (password !== confirmedPassword) throw new Error("PASSWORD_NOT_MATCH"); //TODO: hash password
+
+    if (password !== confirmedPassword) {
+      throw new Error("PASSWORD_NOT_MATCH");
+    }
+    const hashPassword = await hashedPassword(password);
 
     //TODO: 휴대폰번호 중복검사후 암호화해서 저장하기
-    const result = await this.repo.createAdmin({email, password, nickname, confirmedPassword, username, countriesId })
-    return result
-    
+    const result = await this.repo.createAdmin({
+      email,
+      password: hashPassword,
+      nickname,
+      username,
+      countriesId,
+    });
+    return result;
   }
- 
+
   //=================================================================================================================================================================================
-  async login({ email, password }: LoginInput):Promise<LoginOutput> {
+  async login({ email, password }: LoginInput): Promise<LoginOutput> {
     const user = await this.repo.findByEmail(email);
     if (!user) throw new Error("INVALID USER EMAIL");
-
-    if (password !== user.password) throw new Error("Wrong Password");
-
+    const isMatched = await match(password, user.password)
+    if(!isMatched) throw new Error("Wrong Password")
     const { accessToken, refreshToken } = await generateToken(user.id);
 
     return { accessToken, refreshToken };
   }
   //=================================================================================================================================================================================
-  
-  async findAdvisorById(id: number){
+
+  async findAdvisorById(id: number) {
     const user = await this.repo.findAdvisorById(id);
 
     if (!user) {
@@ -53,10 +76,13 @@ export default class AuthService {
     }
     return user;
   }
-  
+
   //=================================================================================================================================================================================
-  async findAdvisors({ take, page }:Pagenation, {teamname, username}:NameType) {
-    const where: any = {};//TODO: TYPE CONVERT
+  async findAdvisors(
+    { take, page }: Pagenation,
+    { teamname, username }: NameType,
+  ) {
+    const where: any = {};
     if (teamname) {
       where.teamname = teamname;
     }
@@ -72,50 +98,48 @@ export default class AuthService {
     return advisors;
   }
   //=================================================================================================================================================================================
-  
-  async updatesAdvisor(data:IAuth) {
-    const {id, email, teamname, username, password, country, role} = data
-    const advisor = await this.repo.findAdvisorById(id)
-    if (!advisor) throw new Error("NOT FOUND");
-    const result = await this.repo.updatesAdvisor(data)
-    return result
-  }
-  //=================================================================================================================================================================================
-  async updateAdvisorsStatus(data:{id: number, status:string}[]) {
-    const ids = data.map(item => item.id)
-    const users = await this.repo.findAdvisorsByIds(ids)
-    if(users.length === 0) throw new Error("Invalid adminstrators");
-    
-    const validIds = users.map(u =>u.id)
-    const fitered = data.filter(item => validIds.includes(item.id))
-    const result = await this.repo.updateAdvisorsStatus(fitered)
-    return result
-  }
-  //=================================================================================================================================================================================
-  async delete(id:number) {
-    
-    const user = await this.repo.findAdvisorById(id)
-    if(!user) throw new Error("NOT FOUND")
-    
-    if(user.isDeleted === true){
-      return await this.repo.delete(id)
-    }
-   return await this.repo.updatesAdvisor({id,isDeleted:true})
-  }
-  //=================================================================================================================================================================================
-  async deleteMany(data:{id:any}[]) {
-    const ids = data.map(item=> item.id)
-    const users = await this.repo.findAdvisorsByIds(ids)
-    if(!users.length) throw new Error("NOT FOUND")
 
-      const activeUsers = users.filter(user => !user.isDeleted);
-      const updated = activeUsers.map(user => ({
-        ...user,
-        isDeleted: true
-    }))
-    return await this.repo.updateAdvisorsStatus({
-      ids: activeUsers.map(u => u.id),
+  async updatesAdvisor(data: IAuth) {
+    const { id, email, teamname, username, password, country, role } = data;
+    const advisor = await this.repo.findAdvisorById(id);
+    if (!advisor) throw new Error("NOT FOUND");
+    const result = await this.repo.updatesAdvisor(data);
+    return result;
+  }
+  //=================================================================================================================================================================================
+  async updateAdvisorsStatus(data: UpdatedUserStatusDTO) {
+    const ids = data.map((item) => item.id);
+    const users: User[] = await this.repo.findAdvisorsByIds(ids);
+    if (users.length === 0) throw new Error("Invalid adminstrators");
+    const validIds = users.map((u) => u.id);
+    const fitered = data.filter((item) => validIds.includes(item.id));
+    const result = await this.repo.updateAdvisorsStatus(fitered);
+    return result;
+  }
+  //=================================================================================================================================================================================
+  async delete(id: number) {
+    const user = await this.repo.findAdvisorById(id);
+    if (!user) throw new Error("NOT FOUND");
+
+    if (user.isDeleted === true) {
+      return await this.repo.delete(id);
+    }
+    return await this.repo.updatesAdvisor({ id, isDeleted: true });
+  }
+  //=================================================================================================================================================================================
+  async deleteMany(data: { id: any }[]) {
+    const ids = data.map((item) => item.id);
+    const users: User[] = await this.repo.findAdvisorsByIds(ids);
+    if (!users.length) throw new Error("NOT FOUND");
+
+    const activeUsers = users.filter((user) => !user.isDeleted);
+    const updated = activeUsers.map((user) => ({
+      ...user,
       isDeleted: true,
-    })
+    }));
+    return await this.repo.updateAdvisorsStatus({
+      ids: activeUsers.map((u) => u.id),
+      isDeleted: true,
+    });
   }
 }
