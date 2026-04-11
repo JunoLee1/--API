@@ -1,6 +1,7 @@
 import { AuthRepository } from "./auth.repo";
 import { generateToken } from "../lib/token";
 import { hashedPassword, match} from "../lib/hash";
+import { encrypt} from "../lib/crypto";
 import {
   signUpInputDto,
   LoginInput,
@@ -21,6 +22,7 @@ export default class AuthService {
     nickname,
     username,
     countriesId,
+    phoneNumber
   }: signUpInputDto) {
     if (!email) {
       throw new Error("INVALID_EMAIL");
@@ -45,13 +47,15 @@ export default class AuthService {
     }
     const hashPassword = await hashedPassword(password);
 
-    //TODO: 휴대폰번호 중복검사후 암호화해서 저장하기
+    
+    const encryptedPhonenumber  = await encrypt(phoneNumber)
     const result = await this.repo.createAdmin({
       email,
       password: hashPassword,
       nickname,
       username,
       countriesId,
+      phoneNumber:encryptedPhonenumber
     });
     return result;
   }
