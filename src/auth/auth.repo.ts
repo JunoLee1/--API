@@ -1,7 +1,7 @@
 //import AuthService from "./auth.service";
 //import prisma from "../lib/prisma";
 import type { PrismaClient } from "@prisma/client";
-import { LoginInput, signUpInputDto, signUpOutputDto } from "./auth.DTO";
+import { LoginInput, signUpInputDto,signUpInputServiceDto, signUpOutputDto } from "./auth.DTO";
 export class AuthRepository {
   constructor(private prisma: PrismaClient) {}
 
@@ -34,7 +34,7 @@ export class AuthRepository {
     return user
   }
   //=================================================================================================================================================================================
-  async createAdmin(data:signUpInputDto):Promise<signUpOutputDto>{
+  async createAdmin(data:signUpInputServiceDto):Promise<signUpOutputDto>{
     const newAdmin = await this.prisma.user.create({
       data:{
         email:data.email,
@@ -44,8 +44,15 @@ export class AuthRepository {
     return newAdmin
   }
   //=================================================================================================================================================================================
-  async findAdvisorsByIds(ids: any) {
-    return [];
+  async findAdvisorsByIds(ids: number[]) {
+    const admins = await this.prisma.findMany({
+      where:{
+        in:{
+          ids
+        }
+      }
+    })
+    return admins
   }
   //=================================================================================================================================================================================
   async findAdvisors({ where }: any) {

@@ -2,6 +2,17 @@ export type LoginInput = {
   email: string;
   password: string;
 };
+export type signUpSevicePasswordDto = {
+  hashedPassword: string
+};
+export type signUpInputServiceDto = {
+  email: string;
+  password: string;
+  username: string;
+  nickname: string;
+  //phoneNumber:string
+  countriesId: number;
+};
 export type signUpInputDto = {
   email: string;
   password: string;
@@ -35,6 +46,10 @@ export enum Role {
   SUPER_ADMIN = "SUPER_ADMIN",
   PLAYER = "PLAYER",
 }
+export enum Status {
+  INACTIVE = "INACTIVE",
+  ACTIVE = "ACTIVE"
+}
 export interface IAuth {
   id: number; // should change to string
   username: string;
@@ -44,8 +59,13 @@ export interface IAuth {
   //phoneNumber:string
   role: Role;
   country: string;
-  isDeleted?:boolean
+  isDeleted?:boolean;
+  status?:Status
 }
+export type UpdatedUserStatusDTO = {
+    id:number,
+    status:Status
+}[]
 export type LoginOutput = {
   accessToken: string;
   refreshToken: string;
