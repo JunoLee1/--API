@@ -1,5 +1,5 @@
 import axios from "axios";
-import Service from "../src/country/country.service";
+//import Service from "../src/country/country.service";
 import { CountryApiClient } from "../src/externalAPI";
 
 jest.mock("axios");
@@ -10,8 +10,6 @@ const mockRepo = {
 } as any;
 
 const client = new CountryApiClient();
-
-const service = new Service(mockRepo);
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 describe("외부 API 테스트", () => {
