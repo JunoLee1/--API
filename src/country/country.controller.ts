@@ -24,7 +24,7 @@ export default class Controller {
       if(!this.isUpperCase(code)){
         uppper = code.toUpperCase()
       }
-      const result = await this.service.getCountries(name, code, region)
+      const result = await this.service.getCountries({name, code, region})
       return res.status(200).json({
         message: "성공적으로 데이터를 가지고 왔습니다.",
         data: result,
