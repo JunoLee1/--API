@@ -31,6 +31,6 @@
       "@test/*": ["./test/*"]
     }
   },
-  "include":["src"],
+  "include":["src", "src/types/**/*.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

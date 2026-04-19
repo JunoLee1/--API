@@ -18,8 +18,9 @@ enum Type {
 }
 
 enum Role {
-  advisor
-  member
+  ADMIN
+  SUPER_ADVISOR
+  PLAYER
 }
 
 enum Foot {
@@ -82,7 +83,7 @@ model Country {
 }
 
 model User {
-  id            String   @id @default(cuid())
+  id            Int      @id @default(autoincrement())
   date_of_birth DateTime
   password      String
   email         String   @unique
@@ -90,6 +91,7 @@ model User {
   nickname      String   @unique
   role          Role
 
+  isDeleted   Boolean 
   country_id  Int
   nationality Country @relation(fields: [country_id], references: [id])
 }
@@ -109,8 +111,7 @@ model Team {
   team_season_stats Team_season_stats[]
   goal              Goal[]
 
-
-  teamPlayers Team_player[]
+  teamPlayers      Team_player[]
   team_match_stats Team_match_stats[]
 }
 
@@ -126,11 +127,11 @@ model Match {
   away_teams   Team @relation("AwayTeam", fields: [away_team_id], references: [id], map: "Match_away_team_fkey")
   home_teams   Team @relation("HomeTeam", fields: [home_team_id], references: [id], map: "Match_home_team_fkey")
 
-  goal               Goal[]
-  card               Card[]
-  
+  goal Goal[]
+  card Card[]
+
   player_match_stats Player_match_stats[]
-  team_match_stats Team_match_stats[]
+  team_match_stats   Team_match_stats[]
 
   @@map("match")
 }
@@ -237,22 +238,21 @@ model Team_match_stats {
   fouls            Int
   yellow_cards     Int
   red_cards        Int
-  xG            Int
-  corners       Int
-  offsides      Int
-  tackles       Int
-  interceptions Int
-  clearances    Int
-  blocked_shots Int
+  xG               Int
+  corners          Int
+  offsides         Int
+  tackles          Int
+  interceptions    Int
+  clearances       Int
+  blocked_shots    Int
 
   team_id Int
-  team Team @relation(fields:[team_id], references:[id])
+  team    Team @relation(fields: [team_id], references: [id])
 
   match_id Int
   match    Match @relation(fields: [match_id], references: [id])
 
   @@unique([team_id, match_id])
-
 }
 
 model Goal {
