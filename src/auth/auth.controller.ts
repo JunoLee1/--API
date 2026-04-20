@@ -71,8 +71,8 @@ export default class AuthController {
         return res.status(401).json({ message: "UNAUTHORIZED" });
       const id = Number(req.params);
 
-      const { teamname, username, email, password, country, role} = req.body;
-      await this.service.updatesAdvisor({id, email, teamname, username, password, country, role});
+      const { teamname, username, email, password,phoneNumber, country, role} = req.body;
+      await this.service.updatesAdvisor({id, email, teamname, username, password, country,phoneNumber, role});
       return res.status(200).json({
         message: "successfully modified information",
       });
