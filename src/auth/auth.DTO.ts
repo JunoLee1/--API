@@ -15,7 +15,7 @@ export type signUpInputServiceDto = {
   username: string;
   nickname: string;
   phoneNumber:PhoneNumberDTO
-  countriesId: number;
+  countryCode: string;
 };
 export type signUpInputDto = {
   email: string;
@@ -24,7 +24,7 @@ export type signUpInputDto = {
   username: string;
   nickname: string;
   phoneNumber:string
-  countriesId: number;
+  countryCode: string;
 };
 export type signUpOutputDto = {
   email: string;
@@ -32,7 +32,7 @@ export type signUpOutputDto = {
   username: string;
   nickname: string;
   //phoneNumber:string
-  countriesId: number;
+  countryCode: string;
 };
 export type Pagenation = {
   take: number;
@@ -60,7 +60,7 @@ export interface IAuth {
   teamname: string;
   email: string;
   password: string;
-  //phoneNumber:string
+  phoneNumber:string
   role: Role;
   country: string;
   isDeleted?:boolean;
@@ -78,3 +78,29 @@ export type paramsType = {
   id: number;
 };
 
+
+export type UpdateUserInputDTO = {
+  id: number; // should change to string
+  username: string;
+  teamname: string;
+  email: string;
+  password: string;
+  phoneNumber:string
+  role: Role;
+  country: string;
+  isDeleted?:boolean;
+  status?:Status
+}
+
+export type UpdateUserOutputDTO = {
+  id: number; // should change to string
+  username: string;
+  teamname: string;
+  email: string;
+  password: string;
+  phoneNumber:string
+  role: Role;
+  country: string;
+  isDeleted?:boolean;
+  status?:Status
+}
