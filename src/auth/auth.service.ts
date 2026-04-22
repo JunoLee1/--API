@@ -1,23 +1,24 @@
 import { AuthRepository } from "./auth.repo";
 import { generateToken } from "../lib/token";
-import { hashedPassword, match} from "../lib/hash";
-import  CountryService from "../country/country.service"
-import { encrypt} from "../lib/crypto";
+import { hashedPassword, match } from "../lib/hash";
+import CountryService from "../country/country.service";
+import { encrypt } from "../lib/crypto";
+import { IAuth } from "./dto/auth.DTO";
+
 import {
-  signUpInputDto,
-  LoginInput,
-  LoginOutput,
-  Pagenation,
-  NameType,
-  IAuth,
-  UpdatedUserStatusDTO,
-} from "./auth.DTO";
-import { User } from "../generated/prisma/client";
+  findAdvisorsServiceDto,
+  signUpInputServiceDto,
+  LoginInputServiceDto,
+  LoginOutputServiceDto,
+  findAdvisorsOutPutDto,
+  UpdatedUserStatusDTO
+} from "./dto/auth.service.dto";
+import { User } from "../generated/client";
 //import  prisma from "../lib/prisma"
 export default class AuthService {
   constructor(
     private repo: AuthRepository,
-    private countryService: CountryService
+    private countryService: CountryService,
   ) {}
   async signUp({
     email,
@@ -25,16 +26,11 @@ export default class AuthService {
     confirmedPassword,
     nickname,
     username,
-    countryCode,
-    phoneNumber
-  }: signUpInputDto) {
-    console.log( email,
-    password,
-    confirmedPassword,
-    nickname,
-    username,
-    countryCode,
-    phoneNumber)
+    country,
+    team,
+    phoneNumber,
+    date_of_birth,
+  }: signUpInputServiceDto) {
     if (!email) {
       throw new Error("INVALID_EMAIL");
     }
@@ -48,9 +44,11 @@ export default class AuthService {
     if (duplicatedEmail) {
       throw new Error("DUPLICATED_EMAIL");
     }
-    const countryCodeChecker = await this.countryService.getCountryByCode(countryCode)
-    if (!countryCodeChecker) throw new Error("국적을 선택해주세요.")
-    
+    const countryCodeChecker = await this.countryService.getCountryByCode(
+      country.code,
+    );
+    if (!countryCodeChecker) throw new Error("국적을 선택해주세요.");
+
     const duplicatedNickname = await this.repo.isNicknameDuplicated(nickname);
     if (duplicatedNickname) {
       throw new Error("DUPLICATED_NICKNAME");
@@ -61,25 +59,30 @@ export default class AuthService {
     }
     const hashPassword = await hashedPassword(password);
 
-    
-    const encryptedPhonenumber  = await encrypt(phoneNumber)
+    const encryptedPhonenumber = await encrypt(phoneNumber);
     const result = await this.repo.createAdmin({
       email,
       password: hashPassword,
       nickname,
       username,
-      countryCode,
-      phoneNumber:encryptedPhonenumber
+      team,
+      date_of_birth,
+      country,
+      phoneNumber: encryptedPhonenumber,
     });
+    console.log(result);
     return result;
   }
 
   //=================================================================================================================================================================================
-  async login({ email, password }: LoginInput): Promise<LoginOutput> {
+  async login({
+    email,
+    password,
+  }: LoginInputServiceDto): Promise<LoginOutputServiceDto> {
     const user = await this.repo.findByEmail(email);
     if (!user) throw new Error("INVALID USER EMAIL");
-    const isMatched = await match(password, user.password)
-    if(!isMatched) throw new Error("Wrong Password")
+    const isMatched = await match(password, user.password);
+    if (!isMatched) throw new Error("Wrong Password");
     const { accessToken, refreshToken } = await generateToken(user.id);
 
     return { accessToken, refreshToken };
@@ -92,14 +95,19 @@ export default class AuthService {
     if (!user) {
       throw new Error("NOT FOUND");
     }
-    return user;
+    return {
+      username: user.username,
+      email: user.email,
+      teamname: user.team.team_name,
+    };
   }
-
   //=================================================================================================================================================================================
-  async findAdvisors(
-    { take, page }: Pagenation,
-    { teamname, username }: NameType,
-  ) {
+  async findAdvisors({
+    take,
+    skip,
+    teamname,
+    username,
+  }: findAdvisorsServiceDto): Promise<findAdvisorsOutPutDto> {
     const where: any = {};
     if (teamname) {
       where.teamname = teamname;
@@ -110,18 +118,44 @@ export default class AuthService {
     }
     const advisors = await this.repo.findAdvisors({
       where,
+      include: {
+        team: true,
+      },
       take,
-      page,
+      skip,
     });
-    return advisors;
+    const result = advisors.map((a) => ({
+      email: a.email,
+      username: a.username,
+      teamname: a.team.team_name ?? null,
+      nickname: a.nickname,
+    }));
+    return result;
   }
   //=================================================================================================================================================================================
 
   async updatesAdvisor(data: IAuth) {
-    const { id, email, teamname, username, password, country, role, phoneNumber} = data;
-    const advisor = await this.repo.findAdvisorById(id);
-    if (!advisor) throw new Error("NOT FOUND");
-    const result = await this.repo.updatesAdvisor(data);
+    const {
+      id,
+      email,
+      teamname,
+      username,
+      password,
+      country,
+      role,
+      phoneNumber,
+    } = data;
+
+    const advisorId = await this.repo.findAdvisorById(id);
+    if (!advisorId) throw new Error("NOT FOUND");
+    const updatedData: any = {};
+    if (email !== undefined) updatedData.email = email;
+    if (username !== undefined) updatedData.username = username;
+    if (password !== undefined) updatedData.password = password;
+    if (role !== undefined) updatedData.role = role;
+    if(country !== undefined) updatedData.country = country
+    if (phoneNumber !== undefined) updatedData.phoneNumber = phoneNumber;
+    const result = await this.repo.updatesAdvisor(id, updatedData);
     return result;
   }
   //=================================================================================================================================================================================
@@ -142,7 +176,7 @@ export default class AuthService {
     if (user.isDeleted === true) {
       return await this.repo.delete(id);
     }
-    return await this.repo.updatesAdvisor({...user,isDeleted: true });
+    return await this.repo.updatesAdvisor(id, { isDeleted: true });
   }
   //=================================================================================================================================================================================
   async deleteMany(data: { id: any }[]) {

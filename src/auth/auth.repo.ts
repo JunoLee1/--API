@@ -1,15 +1,16 @@
 //import AuthService from "./auth.service";
 //import prisma from "../lib/prisma";
-import { PrismaClient } from "../generated/client";
+import { PrismaClient ,Prisma} from "../generated/client";
 import { Role } from "../generated/client";
 import {
-  LoginInput,
-  signUpInputDto,
-  signUpInputServiceDto,
   signUpOutputDto,
-  encryptedPhoneNumberType,
   UpdateUserInputDTO,
-} from "./auth.DTO";
+} from "./dto/auth.DTO";
+import { SignUpInputRepoDto } from "./dto/auth.repo.dto";
+
+
+type UserUpdateData =
+  Parameters<PrismaClient["user"]["update"]>[0]["data"];
 
 export class AuthRepository {
   constructor(private prisma: PrismaClient) {}
@@ -38,19 +39,27 @@ export class AuthRepository {
   async findAdvisorById(id: number) {
     const user = await this.prisma.user.findUnique({
       where: { id },
+      include:{
+        team:true
+      }
     });
     return user;
   }
   //=================================================================================================================================================================================
-  async createAdmin(data: signUpInputServiceDto): Promise<signUpOutputDto> {
+  async createAdmin(data: SignUpInputRepoDto): Promise<signUpOutputDto> {
     const newAdmin = await this.prisma.user.create({
       data: {
         email: data.email,
         password: data.password,
         nickname: data.nickname,
         username: data.username,
-        date_of_birth: data.birth_date,
+        date_of_birth: data.date_of_birth,
         role: Role.ADMIN,
+        team:{
+          connect:{
+            team_name:data.team.name
+          }
+        },
         nationality: {
           connect: {
             id: data.country.id,
@@ -80,22 +89,28 @@ export class AuthRepository {
   async findAdvisorsByIds(ids: number[]) {
     const admins = await this.prisma.user.findMany({
       where: {
-        in: {
-          ids,
-        },
+        id :{
+          in: ids,
+        }
       },
     });
     return admins;
   }
   //=================================================================================================================================================================================
   async findAdvisors({ where }: any) {
-    return [];
+    const admins = await this.prisma.user.findMany({
+      where,
+      include:{
+        team:true
+      }
+    })
+    return admins
   }
   //=================================================================================================================================================================================
-  async updatesAdvisor(data: UpdateUserInputDTO) {
+  async updatesAdvisor(id:number,data: UserUpdateData) {
     const admins = await this.prisma.user.update({
-      where: { id: data.id },
-      data: data,
+      where: { id},
+      data
     });
     return admins;
   }

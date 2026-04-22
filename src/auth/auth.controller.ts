@@ -1,5 +1,6 @@
 import AuthService from "./auth.service";
-import { LoginInput , signUpInputDto, paramsType, Role} from "./auth.DTO";
+import { Role} from "./dto/auth.DTO";
+import{ signUpInputDto, LoginInput, QueryType, paramsType }from "./dto/auth.controller.dto"
 import {Request, Response } from "express-serve-static-core";
 //import { User} from "@prisma/client";
 export default class AuthController {
@@ -44,19 +45,27 @@ export default class AuthController {
 
   async findAdvisors(req: Request, res: Response) {
     try {
-      const { take, page, teamname, username } = req.query as any; //TODO: TYPE CONVERT
+      const { take, page, teamname, username } = req.query as unknown as QueryType;
       if (!req.user?.id) {
         return res.status(401).json({ message: "UNAUTHORIZED" });
       }
       if (req.user.role !== "SUPER_ADMIN") {
         return res.status(403).json({ message: "FORBIDDEN" });
       }
+      const numTake = Number(take) || 10 
+      const numPage = Number(page) || 1
+      const skip = (numPage - 1) * numTake
+      if(skip > 0 ) throw new Error("LIMIT은 음수가 되어선 안됩니다")
+      
+
       const result = await this.service.findAdvisors(
         {
-          take,
-          page,
+          skip,
+          take:numTake,
+          teamname, 
+          username
         },
-        { teamname, username },
+
       );
 
       return res.status(200).json(result);
