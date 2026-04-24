@@ -19,6 +19,9 @@ describe("인증 컨트롤러 테스트 - registry service", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
+  afterEach(() => {
+  jest.restoreAllMocks();
+});
   test("respond 201 when registry success", async () => {
     const req = { body: { email: "test@test.com" } } as Request;
     const res = {
@@ -52,6 +55,9 @@ describe("인증 컨트롤러 테스트 - login controller", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
+  afterEach(() => {
+  jest.restoreAllMocks();
+});
   test("로그인에 성공한 경우, 200 상태코드 던지기", async () => {
     const req = { body: { email: "test@test.com", password: "12345567" } };
     const res = {
