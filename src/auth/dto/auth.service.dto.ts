@@ -1,3 +1,5 @@
+import { Status } from "./auth.DTO";
+
 export type LoginInputServiceDto = {
   email: string;
   password: string;
@@ -12,19 +14,19 @@ export type encryptedPhoneNumberType = {
 export type signUpInputServiceDto = {
   email: string;
   password: string;
-  confirmedPassword:string,
+  confirmedPassword: string;
   username: string;
   nickname: string;
   date_of_birth: Date;
   phoneNumber: string;
-  team:{
-    id:number,
-    name:string
-  }
-  country: {
+  team: {
     id: number;
     name: string;
-    code: string;
+  };
+  country?: {
+    id: number;
+    name: string;
+    code : string;
   };
 };
 
@@ -33,14 +35,26 @@ export type LoginOutputServiceDto = {
   refreshToken: string;
 };
 export type findAdvisorsServiceDto = {
-    skip:number,
-    take:number,
-    username:string| null,
-    teamname:string| null
-}
+  skip: number;
+  take: number;
+  username: string | null;
+  teamname: string | null;
+};
 export type findAdvisorsOutPutDto = {
-    username: string | null ,
-    teamname:string | null,
-    email:string,
-    nickname:string
-}[]
+  username: string | null;
+  teamname: string | null;
+  email: string;
+  nickname: string;
+}[];
+
+export type UpdatedUserStatusDTO = {
+  id: number;
+  status: Status;
+}[];
+export type UpdatedUserStatusOutputDTO = {
+  email: string;
+  username: string;
+  teamname: string;
+  status: Status;
+  nickname: string;
+};

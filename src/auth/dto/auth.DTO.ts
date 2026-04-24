@@ -37,7 +37,7 @@ export interface IAuth {
 
 
 export type UpdateUserInputDTO = {
-  id: number; // should change to string
+  id: number; //TODO: migrate the type as string
   username?: string;
   teamname?: string;
   email?: string;
