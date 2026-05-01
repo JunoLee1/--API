@@ -1,9 +1,9 @@
 
-export type paramsType = {
+export type ParamsDto = {
   id: number;
 };
 
-export type signUpInputDto = {
+export type SignUpInputDto = {
   email: string;
   password: string;
   confirmedPassword: string;
@@ -15,7 +15,7 @@ export type signUpInputDto = {
   }
   phoneNumber: string;
   date_of_birth: Date;
-  country: {
+  nationality: {
     id: number;
     name: string;
     code: string;
@@ -23,13 +23,13 @@ export type signUpInputDto = {
 };
 
 export type QueryType = {
-    take: Pagenation;
-    page: Pagenation;
+    take: Pagination;
+    page: Pagination;
     username: string | null;
     teamname:string | null
 
 }
-type Pagenation = {
+type Pagination = {
   take: number;
   page: number;
 };
@@ -37,4 +37,9 @@ type Pagenation = {
 export type LoginInput = {
   email: string;
   password: string;
+};
+export type SignUpOutputDto = {
+  email: string;
+  username: string;
+  nickname: string;
 };

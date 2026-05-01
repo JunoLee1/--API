@@ -18,10 +18,10 @@ const service = new AuthService(repo, contryService);
 const controller = new AuthController(service);
 
 //유저 생성
-router.post("/", controller.signUp);
+router.post("/signUp", controller.signUp);
 
 // 유저 로그인
-router.post("/login", controller.login);
+router.post("/login", controller.login.bind(controller));
 
 // 관리자 정보 조회
 router.get(

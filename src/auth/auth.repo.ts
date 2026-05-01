@@ -1,12 +1,9 @@
 //import AuthService from "./auth.service";
 //import prisma from "../lib/prisma";
-import { PrismaClient ,Prisma} from "../generated/client";
+import { PrismaClient ,Prisma, Status} from "../generated/client";
 import { Role } from "../generated/client";
-import {
-  signUpOutputDto,
-  UpdateUserInputDTO,
-} from "./dto/auth.DTO";
-import { SignUpInputRepoDto } from "./dto/auth.repo.dto";
+import { SignUpInputRepoDto,signUpOutputDto,
+  UpdateUserInputDTO, } from "./dto/auth.repo.dto";
 
 
 type UserUpdateData =
@@ -28,13 +25,23 @@ export class AuthRepository {
     });
     return result;
   }
-
+//=================================================================================================================================================================================
   async isEmailDuplicated(email: string) {
     const user = await this.prisma.user.findUnique({
       where: { email },
     });
     return !!user;
   }
+//=================================================================================================================================================================================
+  async isDuplicatedPhoneNumber(encrypted:string){
+    const userPH = await this.prisma.phoneNumber.findUnique({
+      where:{
+        encrypted
+      },
+    })
+    return !! userPH;
+  }
+
   //=================================================================================================================================================================================
   async findAdvisorById(id: number) {
     const user = await this.prisma.user.findUnique({
@@ -46,7 +53,7 @@ export class AuthRepository {
     return user;
   }
   //=================================================================================================================================================================================
-  async createAdmin(data: SignUpInputRepoDto): Promise<signUpOutputDto> {
+  async createAdmin(data: SignUpInputRepoDto){
     const newAdmin = await this.prisma.user.create({
       data: {
         email: data.email,
@@ -55,14 +62,15 @@ export class AuthRepository {
         username: data.username,
         date_of_birth: data.date_of_birth,
         role: Role.ADMIN,
+        status:Status.ACTIVE,
         team:{
           connect:{
-            team_name:data.team.name
+            id:data.team.id
           }
         },
         nationality: {
           connect: {
-            id: data.country.id,
+            code: data.nationality.code,
           },
         },
 
@@ -75,15 +83,12 @@ export class AuthRepository {
         },
       },
       include: {
+        team:true,
         phoneNumber: true,
         nationality: true,
       },
     });
-    return {
-      email: newAdmin.email,
-      username: newAdmin.username,
-      nickname: newAdmin.nickname,
-    };
+    return newAdmin
   }
   //=================================================================================================================================================================================
   async findAdvisorsByIds(ids: number[]) {
@@ -101,7 +106,7 @@ export class AuthRepository {
     const admins = await this.prisma.user.findMany({
       where,
       include:{
-        team:true
+        team:true,
       }
     })
     return admins
@@ -110,6 +115,11 @@ export class AuthRepository {
   async updatesAdvisor(id:number,data: UserUpdateData) {
     const admins = await this.prisma.user.update({
       where: { id},
+      include:{
+        phoneNumber:true,
+        team:true,
+        nationality:true,
+      },
       data
     });
     return admins;
@@ -119,10 +129,45 @@ export class AuthRepository {
   async delete(id: any) {
     return;
   }
-  async deleteMany(data: any) {
-    return [];
+  async deleteMany(data:{ids: number[], isDeleted:boolean}) {
+    console.log(12)
+    return await this.prisma.$transaction(async(tx) => {
+      const admins = await tx.user.findMany({
+        where: {
+          id:{in: data.ids},
+          isDeleted:false,
+          role:"ADMIN"
+        },
+       
+      })
+      await tx.user.updateMany({
+        where:{
+          id:{in:data.ids},
+          role:"ADMIN",
+          isDeleted:false
+        },
+        data:{
+           isDeleted:false,
+        }
+      })
+      return admins
+    })
   }
-  async updateAdvisorsStatus(data: any) {
-    return [];
+  async updateAdvisorStatus(data:{id:number,status:Status}[]) {
+    console.log("data:",data)
+    if (!data.length) return [];
+    
+    return await this.prisma.$transaction(
+      data.map(item  => 
+        this.prisma.user.update({
+          where:{
+            id:item.id,
+          },
+          data:{
+            status:item.status
+          }
+        })
+      )
+    )
   }
 }
