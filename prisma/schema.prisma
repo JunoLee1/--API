@@ -5,13 +5,17 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  output   = "../src/generated"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
+enum Status {
+  ACTIVE
+  UNACTIVE
+}
 enum Type {
   yellow
   red
@@ -30,8 +34,8 @@ enum Foot {
 }
 
 enum Position {
-  stricker
-  shadow_stricker
+  striker
+  shadow_striker
   winger
 
   central_attack_middle_fielder
@@ -82,6 +86,13 @@ model Country {
   league League[]
 }
 
+model PhoneNumber {
+  id        Int    @id @default(autoincrement())
+  iv        String
+  encrypted String @unique
+  users     User?
+}
+
 model User {
   id            Int      @id @default(autoincrement())
   date_of_birth DateTime
@@ -90,10 +101,14 @@ model User {
   username      String
   nickname      String   @unique
   role          Role
-
-  isDeleted   Boolean 
-  country_id  Int
-  nationality Country @relation(fields: [country_id], references: [id])
+  status        Status
+  teamId Int
+  team Team @relation(fields:[teamId],references:[id])
+  phoneNumberId Int         @unique
+  phoneNumber   PhoneNumber @relation(fields: [phoneNumberId], references: [id])
+  isDeleted     Boolean
+  countryId     Int
+  nationality   Country     @relation(fields: [countryId], references: [id])
 }
 
 model Team {
@@ -111,6 +126,7 @@ model Team {
   team_season_stats Team_season_stats[]
   goal              Goal[]
 
+  user    User[] 
   teamPlayers      Team_player[]
   team_match_stats Team_match_stats[]
 }
@@ -232,7 +248,7 @@ model Team_match_stats {
   shots            Int
   shots_on_target  Int
   shots_off_target Int
-  key_passess      Int
+  key_passes      Int
   passes           Int
   pass_accuracy    Int
   fouls            Int
