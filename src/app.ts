@@ -3,6 +3,7 @@ import cookieParser = require("cookie-parser")
 import APIRouter from "./apiRouter"
 import cors  = require("cors")
 import * as dotenv from "dotenv";
+import { errorHandler } from "./middleWare/ErrorHandler";
 
 dotenv.config()
 const PORT = process.env.PORT || '5000';
@@ -17,5 +18,6 @@ app.use(
     })
 )
 app.use("/api", APIRouter)
+app.use(errorHandler); 
 
 export default app
