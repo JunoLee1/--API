@@ -1,11 +1,4 @@
 
-export type signUpOutputDto = {
-  email: string;
-  username: string;
-  nickname: string;
-};
-
-
 export type InputData = {
   id: number;
 };
@@ -21,7 +14,11 @@ export enum Status {
 export interface IAuth {
   id: number; // should change to string
   username: string;
-  teamname: string;
+  nickname:string
+  team:{
+    id:number,
+    team_name:string
+  };
   email: string;
   password: string;
   phoneNumber: string;
@@ -35,37 +32,3 @@ export interface IAuth {
   status?: Status;
 }
 
-
-export type UpdateUserInputDTO = {
-  id: number; //TODO: migrate the type as string
-  username?: string;
-  teamname?: string;
-  email?: string;
-  password?: string;
-  phoneNumber?: string;
-  role?: Role;
-  country: {
-    id: number;
-    name: string;
-    code: string;
-  };
-  isDeleted?: boolean;
-  status?: Status;
-};
-
-export type UpdateUserOutputDTO = {
-  id: number; // should change to string
-  username: string;
-  teamname: string;
-  email: string;
-  password: string;
-  phoneNumber: string;
-  role: Role;
-  country: {
-    id: number;
-    name: string;
-    code: string;
-  };
-  isDeleted?: boolean;
-  status?: Status;
-};

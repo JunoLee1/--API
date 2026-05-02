@@ -21,9 +21,9 @@ export type signUpInputServiceDto = {
   phoneNumber: string;
   team: {
     id: number;
-    name: string;
+    teamname: string;
   };
-  country?: {
+  nationality: {
     id: number;
     name: string;
     code : string;
@@ -58,3 +58,4 @@ export type UpdatedUserStatusOutputDTO = {
   status: Status;
   nickname: string;
 };
+
