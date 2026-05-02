@@ -1,7 +1,7 @@
 import Service from "./country.service";
 
 export default class Controller {
-  constructor(private service: Service = new Service()) {}
+  constructor(private service: Service) {}
   async getCountry(req: any, res: any) {
     try {
       const { code } = req.params;

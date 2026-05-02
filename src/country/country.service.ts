@@ -3,8 +3,8 @@ import { CountryApiClient } from "../externalAPI";
 import { PrismaClient } from '@prisma/client';
 export default class Service {
   constructor(
-    private clientApi = new CountryApiClient(),
-    private repo = new Repository( new PrismaClient()),
+    private clientApi : CountryApiClient,
+    private repo: Repository,
   ) {}
 
   registerCountries = async () => {
