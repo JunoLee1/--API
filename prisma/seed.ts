@@ -2,7 +2,7 @@ import "dotenv/config";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, Role, Status } from "../src/generated/client";
-
+import * as bcrypt from "bcrypt";
 const connectionString = `${process.env.DATABASE_URL}`;
 const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
@@ -66,26 +66,14 @@ async function main() {
       email: "junmo@test.com",
       password: hashed,
       username: "이준모",
-      nationality: {
-        connect: {
-          code: "KR",
-        },
-      },
+      countryId:1,
       isDeleted: false,
       status: Status.ACTIVE,
       date_of_birth: new Date("1996-08-16"),
-      phoneNumber: {
-        connect: {
-          id: phone.id,
-        },
-      },
+      phoneNumberId:1,
       nickname: "JM",
-      team: {
-        connect: {
-          id: 1,
-        },
-      },
-      role: Role.SUPER_ADVISOR,
+      teamId:1,
+      role: "SUPER_ADVISOR",
     },
   });
 }
