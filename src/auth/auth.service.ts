@@ -30,6 +30,7 @@ export default class AuthService {
     username,
     nationality,
     team,
+    role,
     phoneNumber,
     date_of_birth,
   }: signUpInputServiceDto): Promise<signUpOutputDto>  {
@@ -78,23 +79,28 @@ export default class AuthService {
       nickname,
       username,
       team,
+      role,
       date_of_birth,
       nationality,
       phoneNumber: encryptedPhonenumber,
     });
+    console.log(newAdmin)
     return {
+      //id: newAdmin.id,
       email: newAdmin.email,
       username:newAdmin.username,
       nickname:newAdmin.nickname,
+      date_of_birth:newAdmin.date_of_birth,
       team:{
         id: newAdmin.team.id,
-        teamname: newAdmin.team.team_name
+        team_name: newAdmin.team.team_name
       },
       nationality:{
         id: newAdmin.nationality.id,
         name: newAdmin.nationality.name,
         code: newAdmin.nationality.code,
-      }
+      },
+      role:newAdmin.role,
     };
   }
 
@@ -106,13 +112,9 @@ export default class AuthService {
     const user = await this.repo.findByEmail(email);
     if (!user) throw new AppError(400,"INVALID USER EMAIL");
 
-    console.log(password)
-    console.log(user.password)
     const isMatched = await match(password,user.password);
-        console.log(isMatched)
     if (!isMatched) throw new AppError(400,"Wrong Password");
-    
-    const { accessToken, refreshToken } = await generateToken(user.id);
+    const { accessToken, refreshToken } = await generateToken(user.id, user.role);
     return { accessToken, refreshToken };
   }
   //=================================================================================================================================================================================
