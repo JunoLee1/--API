@@ -4,8 +4,15 @@ import {
   REFRESH_TOKEN_COOKIE_NAME,
   ACCESS_TOKEN_COOKIE_NAME,
 } from "../../constants";
-import type { JwtPayload } from "jsonwebtoken";
-import { Strategy as JwtStrategy } from 'passport-jwt';
+import { Strategy as JwtStrategy } from "passport-jwt";
+import { Role } from "../../../generated/enums";
+
+type Payload = {
+  sub : string | number,
+  role : Role,
+  iat?: number;
+  exp?: number;
+}
 const accessTokenOptions = {
   jwtFromRequest: (req: any) => req.cookies[ACCESS_TOKEN_COOKIE_NAME],
   secretOrKey: JWT_ACCESS_TOKEN_SECRET,
@@ -14,18 +21,20 @@ const refreshTokenOptions = {
   jwtFromRequest: (req: any) => req.cookies[REFRESH_TOKEN_COOKIE_NAME],
   secretOrKey: JWT_REFRESH_TOKEN_SECRET,
 };
-export const jwtVerify = async (payload: JwtPayload | Error, done: any) => {
+export const jwtVerify = async (payload: Payload, done:any) => {
+  console.log("🔥 토큰 인증")
   try {
-    done(null, payload);
-  } catch(err) {
+    console.log("payload:", payload);
+    done(null, { id: payload.sub, role: payload.role });
+  } catch (err) {
     done(err, false);
   }
 };
 export const accessTokenStrategy = new JwtStrategy(
-    accessTokenOptions,
-    jwtVerify
-)
+  accessTokenOptions,
+  jwtVerify,
+);
 export const refreshTokenStrategy = new JwtStrategy(
-    refreshTokenOptions,
-    jwtVerify
-)
+  refreshTokenOptions,
+  jwtVerify,
+);
