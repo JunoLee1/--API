@@ -1,10 +1,6 @@
+import { Role } from "../../generated/enums";
 import { encryptedPhoneNumberType } from "./auth.service.dto";
 
-export enum Role {
-  ADMIN = "ADMIN",
-  SUPER_ADMIN = "SUPER_ADMIN",
-  PLAYER = "PLAYER",
-}
 export enum Status {
   INACTIVE = "INACTIVE",
   ACTIVE = "ACTIVE",
@@ -16,6 +12,7 @@ export type SignUpInputRepoDto = {
   nickname: string;
   date_of_birth: Date;
   phoneNumber: encryptedPhoneNumberType;
+  role: Role
   team:{
     id:number,
     teamname:string
@@ -68,11 +65,13 @@ export type signUpOutputDto = {
   nickname: string;
   team:{
     id: number,
-    teamname: string,
+    team_name: string,
   }
   nationality: {
     id: number;
     name: string;
     code: string;
   };
+  role:Role,
+  date_of_birth:Date
 };
