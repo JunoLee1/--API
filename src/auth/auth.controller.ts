@@ -1,5 +1,5 @@
 import AuthService from "./auth.service";
-import { Role } from "./dto/auth.DTO";
+//import { Role } from "../../generated/enums";
 import {
   SignUpInputDto,
   LoginInput,
@@ -7,6 +7,8 @@ import {
   ParamsDto,
 } from "./dto/auth.controller.dto";
 import { Request, Response, NextFunction } from "express-serve-static-core";
+import { AppError } from "../lib/appError";
+import { Role } from "../generated/enums";
 //import { User} from "@prisma/client";
 export default class AuthController {
   constructor(private service: AuthService) {}
@@ -21,37 +23,36 @@ export default class AuthController {
     } catch (err) {
       next(err);
     }
-  }
+  };
 
   //=================================================================================================================================================================================
   async login(req: Request, res: Response, next: NextFunction) {
     try {
       const { email, password } = req.body as LoginInput;
-      console.log(req.body)
       const result = await this.service.login({ email, password });
       return res.status(201).json(result);
     } catch (error) {
-      //console.log(error)
       next(error);
     }
   }
 
   //=================================================================================================================================================================================
 
-  async findAdvisorById(req: Request, res: Response, next: NextFunction) {
+  findAdvisorById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!req.user?.id) {
-        return res.status(401).json({ message: "UNAUTHORIZED" });
+      if (!req.user) {
+        throw new AppError(401, "UNAUTHORIZED");
       }
-      if (req.user.role !== Role.SUPER_ADMIN)
-        return res.status(403).json({ message: "FORBIDDEN" });
+      if (req.user.role !== "SUPER_ADVISOR")
+        throw new AppError(403, "FORBIDDEN");
       const id = Number(req.params.id);
       const result = await this.service.findAdvisorById(id);
       return res.status(200).json(result);
     } catch (error) {
-      return res.status(500).json({ message: "SERVER INTERNAL ERROR" });
+      next(error);
     }
-  }
+  };
+
   //=================================================================================================================================================================================
 
   async findAdvisors(req: Request, res: Response, next: NextFunction) {
@@ -59,10 +60,10 @@ export default class AuthController {
       const { take, page, teamname, username } =
         req.query as unknown as QueryType;
       if (!req.user?.id) {
-        return res.status(401).json({ message: "UNAUTHORIZED" });
+        throw new AppError(401, "UNAUTHORIZED");
       }
-      if (req.user.role !== "SUPER_ADMIN") {
-        return res.status(403).json({ message: "FORBIDDEN" });
+      if (req.user.role !== "SUPER_ADVISOR") {
+        throw new AppError(403, "FORBIDDEN");
       }
       const numTake = Number(take) || 10;
       const numPage = Number(page) || 1;
@@ -77,14 +78,13 @@ export default class AuthController {
       });
       return res.status(200).json(result);
     } catch (error) {
-      return res.status(500).json({ message: "SERVER INTERNAL ERROR" });
+      next(error);
     }
   }
   //=================================================================================================================================================================================
   async updatesAdvisor(req: Request, res: Response, next: NextFunction) {
     try {
-      if (!req.user?.id)
-        return res.status(401).json({ message: "UNAUTHORIZED" });
+      if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
       const id = Number(req.params);
 
       const {
@@ -110,65 +110,48 @@ export default class AuthController {
         message: "successfully modified information",
       });
     } catch (error) {
-      return res.status(500).json({ message: "SERVER INTERNAL ERROR" });
+      next(error);
     }
   }
   //=================================================================================================================================================================================
   async updateAdvisorsStatus(req: Request, res: Response, next: NextFunction) {
     try {
-      if (!req.user?.id)
-        return res.status(401).json({ message: "UNAUTHORISED" });
-      if (req.user.role !== "SUPER_ADMIN")
-        return res.status(403).json({ message: "FORBIDDEN" });
+      if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
+      if (req.user.role !== "SUPER_ADVISOR") throw new AppError(403, "FORBIDDEN");
       const { data } = req.body;
       await this.service.updateAdvisorsStatus(data);
       return res.status(200).json({ message: "상태 변경 완료" });
     } catch (error) {
-      return res.status(500).json({ message: "SERVER INTERNAL ERROR" });
+      next(error);
     }
   }
   //=================================================================================================================================================================================
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
-      if (!req.user?.id)
-        return res.status(401).json({
-          message: "UNAUTHORISED",
-        });
-      if (req.user.role !== "SUPER_ADMIN")
-        return res.status(403).json({
-          message: "FORBIDDEN",
-        });
+      if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
+
+      if (req.user.role !== "SUPER_ADVISOR") throw new AppError(403, "FORBIDDEN");
+
       const id = Number(req.params);
       await this.service.delete(id);
 
       return res.status(204).send();
     } catch (error) {
-      return res.status(500).json({
-        message: "SERVER INTERNAL ERROR",
-      });
+      next(error)
     }
   }
   //=================================================================================================================================================================================
   async deleteMany(req: Request, res: Response, next: NextFunction) {
     try {
-      if (!req.user?.id) {
-        return res.status(401).json({
-          message: "UNAUTHORIZED",
-        });
-      }
-      if (req.user.role !== "SUPER_ADMIN") {
-        return res.status(403).json({
-          message: "FORBIDDEN",
-        });
-      }
+      if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
+
+      if (req.user.role !== "SUPER_ADVISOR") throw new AppError(403, "FORBIDDEN");
 
       const { data } = req.body;
       await this.service.deleteMany(data);
       res.status(204).send();
     } catch (error) {
-      return res.status(500).json({
-        message: "SERVER INTERNAL ERROR",
-      });
+      next(error)
     }
   }
 }
