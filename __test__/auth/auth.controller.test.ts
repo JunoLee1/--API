@@ -1,6 +1,6 @@
 import { describe, test, jest, expect } from "@jest/globals";
-import { Request, Response, NextFunction} from 'express';
-import AuthController  from "../../src/auth/auth.controller";
+import { Request, Response, NextFunction } from "express";
+import AuthController from "../../src/auth/auth.controller";
 const authService = {
   login: jest.fn(),
   logout: jest.fn(),
@@ -88,81 +88,101 @@ describe("인증 컨트롤러 테스트 - 관리자 조회", () => {
   });
   test("인증 안된 유저 인경우 401과 UNAUTHORIZED 던지기", async () => {
     const req = {
-      user:null,
-      params:{
-        id:"1"
-      }
-    } as unknown as Request
+      user: null,
+      params: {
+        id: 1,
+      },
+    } as unknown as Request;
     const res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
-    }as unknown as Response;
-    const next = jest.fn()
-    await controller.findAdvisorById(req as Request, res as Response, next as NextFunction);
-    expect(next).toHaveBeenCalled();
+    } as unknown as Response;
+    const next = jest.fn();
+    await controller.findAdvisorById(
+      req as Request,
+      res as Response,
+      next as NextFunction,
+    );
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 401,
+        message: "UNAUTHORIZED",
+      }),
+    );
   });
 
   test("조회할 권한이 없는 경우 403과 FORBIDDEN 던지기", async () => {
     const req = {
       user: {
-        id:1,
+        id: 1,
         role: "ADMIN",
       },
-    }as unknown as Request
+    } as unknown as Request;
     const res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
-    }as unknown as Response
-    const next = jest.fn()
+    } as unknown as Response;
+    const next = jest.fn();
     authService.findAdvisorById.mockResolvedValue();
     await controller.findAdvisorById(req, res, next);
-    expect(next).toHaveBeenCalled()
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 403,
+        message: "FORBIDDEN",
+      }),
+    );
   });
 
   test("알 수 없는 에러인 경우 500에러 와 에러 메시지 던지기", async () => {
     const req = {
       user: {
         id: 1,
-        role: "SUPER_ADMIN",
+        role: "SUPER_ADVISOR",
       },
-    }as unknown as Request;
+      params: {
+        id: 1,
+      },
+    } as unknown as Request;
     const res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
-    }as unknown as Response;
-    const next = jest.fn()
+    } as unknown as Response;
+    const next = jest.fn();
     authService.findAdvisorById.mockRejectedValue(
       new Error("SERVER INTERNAL ERROR"),
     );
     await controller.findAdvisorById(req, res, next);
-    expect(next).toHaveBeenCalledWith();
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "SERVER INTERNAL ERROR",
+      }),
+    );
   });
 
   test("해당 회원이 성공적으로 조회 했다면 200 상태 메시지와 해당 함수가 올바르게 실행되는지 확인", async () => {
     const req = {
       user: {
         id: 1,
-        role: "SUPER_ADMIN",
+        role: "SUPER_ADVISOR",
       },
-      params:{
-        id: "1"
-      }
-    }as unknown as Request;
+      params: {
+        id: 1,
+      },
+    } as unknown as Request;
     const res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
-    }as unknown as Response;
-    const next = jest.fn()
+    } as unknown as Response;
+    const next = jest.fn();
 
     authService.findAdvisorById.mockResolvedValue({
       id: 1,
-      role: "SUPER_ADMIN",
+      role: "SUPER_ADVISOR",
     });
 
     await controller.findAdvisorById(req, res, next);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalled();
-    //expect(next).NotToHaveBeenCalled()
   });
 });
 
@@ -173,22 +193,22 @@ describe("인증 컨트롤러 테스트 - 관리자들 조회", () => {
   });
   test("인증되지 않는 유저인경우 401, UNAUTHORIZED 던지기", async () => {
     const req = {
-      user: {
-        id:null
-      },
-      query: { take: 10, limit: 0 },
-    }as unknown as Request;
+      user: null,
+      query: { take: 10, page: 0 },
+    } as unknown as Request;
     const res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
     } as unknown as Response;
 
-    const next = jest.fn()
+    const next = jest.fn();
     await controller.findAdvisors(req, res, next);
-    expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith({
-      message: "UNAUTHORIZED",
-    });
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 401,
+        message: "UNAUTHORIZED",
+      }),
+    );
   });
 
   test("조회할 권한이 없다면 403, FORBIDDEN", async () => {
@@ -198,33 +218,38 @@ describe("인증 컨트롤러 테스트 - 관리자들 조회", () => {
         role: "ADMIN",
       },
       query: { take: 10, limit: 0 },
-    }as unknown as Request
+    } as unknown as Request;
     const res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
-    }as unknown as Response
-    const next = jest.fn()
+    } as unknown as Response;
+    const next = jest.fn();
     await controller.findAdvisors(req, res, next);
-    expect(next).toHaveBeenCalledWith();
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 403,
+        message: "FORBIDDEN",
+      }),
+    );
   });
 
   test("해당 서비스 로직이 호출이 된다면 200", async () => {
     const req = {
       user: {
         id: 1,
-        role: "SUPER_ADMIN",
+        role: "SUPER_ADVISOR",
       },
       query: { take: 10, skip: 0 },
-    }as unknown as Request;
+    } as unknown as Request;
     const res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
-    }as unknown as Response;
-     const next = jest.fn()
+    } as unknown as Response;
+    const next = jest.fn();
     authService.findAdvisors({
       user: {
         id: 1,
-        role: "SUPER_ADMIN",
+        role: "SUPER_ADVISOR",
       },
       query: { take: 10, skip: 0 },
     });
@@ -236,7 +261,7 @@ describe("인증 컨트롤러 테스트 - 관리자들 조회", () => {
     const req = {
       user: {
         id: 1,
-        role: "SUPER_ADMIN",
+        role: "SUPER_ADVISOR",
       },
       query: { take: 10, limit: 0 },
     } as unknown as Request;
@@ -244,14 +269,19 @@ describe("인증 컨트롤러 테스트 - 관리자들 조회", () => {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
     } as unknown as Response;
-    const next = jest.fn() as NextFunction
+    const next = jest.fn() as NextFunction;
     authService.findAdvisors.mockRejectedValue(
       new Error("SERVER INTERNAL ERROR"),
     ); // 예상 결과값
     await controller.findAdvisors(req, res, next); //해당 함수 호출
-    expect(next).toHaveBeenCalled()
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "SERVER INTERNAL ERROR",
+      }),
+    );
   });
 });
+
 //======================================================================================
 describe("인증 컨트롤러 테스트 - 단일 관리자 정보 수정", () => {
   // 로그인 되어있지 않는 경우 401
@@ -263,17 +293,19 @@ describe("인증 컨트롤러 테스트 - 단일 관리자 정보 수정", () =>
       user: {
         id: null,
       },
-    }as unknown as Request;
+    } as unknown as Request;
     const res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
-    }as unknown as Response;
-    const next = jest.fn() as NextFunction
-    await controller.updatesAdvisor(req, res,next);
-    expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith({
-      message: "UNAUTHORIZED",
-    });
+    } as unknown as Response;
+    const next = jest.fn() as NextFunction;
+    await controller.updatesAdvisor(req, res, next);
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 401,
+        message: "UNAUTHORIZED",
+      }),
+    );
   });
   // 알 수 없는 에러인경우 500
   test("서버 내부 오류 인경우 500 ", async () => {
@@ -286,18 +318,20 @@ describe("인증 컨트롤러 테스트 - 단일 관리자 정보 수정", () =>
         username: "juno",
         teamname: "mate fc",
       },
-    }as unknown as Request;
+    } as unknown as Request;
     const res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
-    }as unknown as Response;
-    authService.updatesAdvisor.mockRejectedValue("SERVER INTERNAL ERROR");
-    const next = jest.fn() as NextFunction
+    } as unknown as Response;
+    const next = jest.fn() as NextFunction;
+    authService.updatesAdvisor.mockRejectedValue(new Error("SERVER INTERNAL ERROR"),);
+   
     await controller.updatesAdvisor(req, res, next);
-    expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith({
-      message: "SERVER INTERNAL ERROR",
-    });
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "SERVER INTERNAL ERROR",
+      }),
+    );
   });
   // 성공적으로 서비스 로직 값이 호출된 경우 200
   test("성공적으로 서비스 로직 값이 호출된 경우 200 와 성공메시지 던지기", async () => {
@@ -312,12 +346,12 @@ describe("인증 컨트롤러 테스트 - 단일 관리자 정보 수정", () =>
         username: "juno",
         teamname: "mate fc",
       },
-    }as unknown as Request;
+    } as unknown as Request;
     const res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
-    }as unknown as Response;
-    const next = jest.fn() as NextFunction
+    } as unknown as Response;
+    const next = jest.fn() as NextFunction;
     authService.updatesAdvisor.mockResolvedValue({
       id: 1,
       username: "juno",
@@ -330,6 +364,7 @@ describe("인증 컨트롤러 테스트 - 단일 관리자 정보 수정", () =>
     });
   });
 });
+
 //======================================================================================
 
 describe("인증 컨트롤러 테스트 - 다수의 관리자 정보 수정", () => {
@@ -348,10 +383,12 @@ describe("인증 컨트롤러 테스트 - 다수의 관리자 정보 수정", ()
     }as unknown as Response;
         const next = jest.fn() as NextFunction
     await controller.updateAdvisorsStatus(req, res, next);
-    expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith({
-      message: "UNAUTHORISED",
-    });
+   expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status:401,
+        message:"UNAUTHORIZED"
+      })
+    );
   });
 
   test("해당 유저의 권한이 없는 경우 403과 forbidden에러 메시지 던지기", async () => {
@@ -367,10 +404,12 @@ describe("인증 컨트롤러 테스트 - 다수의 관리자 정보 수정", ()
     }as unknown as Response;
     const next = jest.fn() as NextFunction
     await controller.updateAdvisorsStatus(req, res, next);
-    expect(res.status).toHaveBeenCalledWith(403);
-    expect(res.json).toHaveBeenCalledWith({
-      message: "FORBIDDEN",
-    });
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status:403,
+        message:"FORBIDDEN"
+      })
+    );
   });
 
   test("알 수 없는 에러 발생시 500와 에러메시지 던지기", async () => {
@@ -405,7 +444,7 @@ describe("인증 컨트롤러 테스트 - 다수의 관리자 정보 수정", ()
       user: {
         id: 1,
         username: "hun",
-        role: "SUPER_ADMIN",
+        role: "SUPER_ADVISOR",
       },
       body: [{ id: 1, status: "INACTIVE" }],
 
@@ -435,15 +474,23 @@ describe("인증 컨트롤러 테스트 - 단일 관리자 삭제", () => {
       user: {
         id: null,
       },
+      params:{
+        id:1
+      }
     }as unknown as Request;
     const res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
     }as unknown as Response;
 
-     const next = jest.fn() as NextFunction
+    const next = jest.fn() as NextFunction
     await controller.delete(req, res,next);
-    expect(next).toHaveBeenCalledWith(401);
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status:401,
+        message:"UNAUTHORIZED"
+      })
+    );
   });
 
   test("권한이 없는 경우 403", async () => {
@@ -462,14 +509,19 @@ describe("인증 컨트롤러 테스트 - 단일 관리자 삭제", () => {
     }as unknown as Response;
     const next = jest.fn() as NextFunction
     await controller.delete(req, res, next);
-    expect(next).toHaveBeenCalled();
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status:403,
+        message:"FORBIDDEN"
+      })
+    );
   });
 
   test("삭제 성공할 경우 204", async () => {
     const req = {
       user: {
         id: 1,
-        role: "SUPER_ADMIN",
+        role: "SUPER_ADVISOR",
       },
       params: {
         id: 1,
@@ -493,7 +545,7 @@ describe("인증 컨트롤러 테스트 - 단일 관리자 삭제", () => {
     const req = {
       user: {
         id: 1,
-        role: "SUPER_ADMIN",
+        role: "SUPER_ADVISOR",
       },
       body: {
         isDeleted: false,
@@ -506,7 +558,11 @@ describe("인증 컨트롤러 테스트 - 단일 관리자 삭제", () => {
     const next = jest.fn() as NextFunction
     authService.delete.mockRejectedValue(new Error("SERVER INTERNAL ERROR"));
     await controller.delete(req, res, next);
-    expect(next).toHaveBeenCalledWith();
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message:"SERVER INTERNAL ERROR"
+      })
+    );
   });
 });
 //======================================================================================
@@ -523,7 +579,12 @@ describe("인증 컨트롤러 테스트 - 다수 관리자 삭제", () => {
     }as unknown as Response;
     const next = jest.fn() as NextFunction
     await controller.deleteMany(req, res, next);
-    expect(next).toHaveBeenCalled();
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status:401,
+        message:"UNAUTHORIZED"
+      })
+    );
   });
   test("권한 오류시 403 및 FORBIDDEN 반환 확인", async () => {
     const req = {
@@ -544,7 +605,7 @@ describe("인증 컨트롤러 테스트 - 다수 관리자 삭제", () => {
     const req = {
       user: {
         id: 1,
-        role: "SUPER_ADMIN",
+        role: "SUPER_ADVISOR",
       },
     }as unknown as Request;
     const res = {
@@ -563,7 +624,7 @@ describe("인증 컨트롤러 테스트 - 다수 관리자 삭제", () => {
     const req = {
       user: {
         id: 1,
-        role: "SUPER_ADMIN",
+        role: "SUPER_ADVISOR",
       },
       body: {
         isDeleted: false,
