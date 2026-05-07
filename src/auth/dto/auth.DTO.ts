@@ -2,11 +2,8 @@
 export type InputData = {
   id: number;
 };
-export enum Role {
-  ADMIN = "ADMIN",
-  SUPER_ADMIN = "SUPER_ADMIN",
-  PLAYER = "PLAYER",
-}
+import { Role } from "../../generated/enums";
+
 export enum Status {
   INACTIVE = "INACTIVE",
   ACTIVE = "ACTIVE",
