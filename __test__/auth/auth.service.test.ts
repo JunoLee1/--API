@@ -3,7 +3,9 @@ import AuthService from "../../src/auth/auth.service";
 import * as token from "../../src/lib/token";
 import * as hash from "../../src/lib/hash";
 import * as crypto from "../../src/lib/crypto";
-import { Role, Status } from "../../src/auth/dto/auth.DTO";
+import { Status } from "../../src/auth/dto/auth.DTO";
+import { Role } from "../../src/generated/enums";
+
 
 const MockRepo = {
   createAdmin: jest.fn(),
@@ -68,6 +70,7 @@ describe("인증 로직 테스트 - registry service", () => {
           name: "South Korea",
         },
         phoneNumber: "01011112222",
+        role:Role.ADMIN
       }),
     ).rejects.toThrow("INVALID_EMAIL");
   });
@@ -94,6 +97,7 @@ describe("인증 로직 테스트 - registry service", () => {
           name: "South Korea",
         },
         phoneNumber: "01011112222",
+        role:Role.ADMIN
       }),
     ).rejects.toThrow("DUPLICATED_EMAIL");
   });
@@ -103,6 +107,7 @@ describe("인증 로직 테스트 - registry service", () => {
     MockRepo.isEmailDuplicated.mockResolvedValue(false);
 
     const fakeData = {
+      id:1,
       email: "test@test.com",
       password: "1234",
       username: "junoLee",
@@ -119,6 +124,7 @@ describe("인증 로직 테스트 - registry service", () => {
         name: "south",
       },
       phoneNumber: "01011112222",
+      role:Role.ADMIN
     };
     mockCountryService.getCountryByCode(fakeData.nationality.code);
 
@@ -130,6 +136,7 @@ describe("인증 로직 테스트 - registry service", () => {
 
   test("respond 404, when the nickname is empty", async () => {
     const fakeData = {
+      id:1,
       email: "test@test.com",
       password: "1234",
       username: "junoLee",
@@ -146,6 +153,7 @@ describe("인증 로직 테스트 - registry service", () => {
         code: "US",
       },
       phoneNumber: "01011112222",
+      role:Role.ADMIN
     };
     mockCountryService.getCountryByCode(fakeData.nationality.code);
     await expect(service.signUp(fakeData)).rejects.toThrow("INVALID_NICKNAME");
@@ -153,6 +161,7 @@ describe("인증 로직 테스트 - registry service", () => {
 
   test("respond 404, when the nickname is duplicated", async () => {
     const fakeData = {
+      id:1,
       email: "email1@email.com",
       password: "1234",
       nickname: "Juno",
@@ -169,6 +178,7 @@ describe("인증 로직 테스트 - registry service", () => {
         code: "US",
       },
       phoneNumber: "01011112222",
+      role:Role.ADMIN
     };
     MockRepo.isEmailDuplicated.mockResolvedValue(false);
     mockCountryService.getCountryByCode.mockResolvedValue({
@@ -200,6 +210,7 @@ describe("인증 로직 테스트 - registry service", () => {
         code: "US",
       },
       phoneNumber: "01011112222",
+      role:Role.ADMIN
     };
     MockRepo.isEmailDuplicated.mockResolvedValue(false);
     mockCountryService.getCountryByCode(fakeData.nationality.code);
@@ -226,14 +237,40 @@ describe("인증 로직 테스트 - registry service", () => {
         },
         username: "junoLee",
         phoneNumber: "01011112222",
+        role:"ADMIN"
+
       }),
     ).rejects.toThrow("PASSWORD_NOT_MATCH");
   });
   test("성공적으로 휴대폰 번호가 암호화 되는지 확인", async () => {
+    MockRepo.isEmailDuplicated.mockResolvedValue(false);
+    mockCountryService.getCountryByCode.mockResolvedValue({
+      code: "KR",
+      name: "South Korea",
+    });
+    MockRepo.isNicknameDuplicated.mockResolvedValue(false);
     const mockEncrypt = jest.spyOn(crypto, "encrypt").mockResolvedValue({
       encrypted: "mocked",
       iv: "mocked-iv",
     });
+    MockRepo.createAdmin.mockResolvedValue({
+    email: "email1@email.com",
+    username: "junoLee",
+    nickname: "Juno",
+
+    team: {
+      id: 1,
+      team_name: "Seoul United",
+    },
+
+    nationality: {
+      id: 1,
+      name: "USA",
+      code: "US",
+    },
+
+    role: "ADMIN",
+  });
     await service.signUp({
       email: "email1@email.com",
       password: "1234",
@@ -251,6 +288,7 @@ describe("인증 로직 테스트 - registry service", () => {
       },
       username: "junoLee",
       phoneNumber: "01012345678",
+      role:"ADMIN"
     });
     expect(mockEncrypt).toHaveBeenCalledWith("01012345678");
   });
@@ -280,6 +318,7 @@ describe("인증 로직 테스트 - registry service", () => {
       },
       username: "junoLee",
       phoneNumber: "01012345678",
+      role:"ADMIN"
     })).rejects.toThrow()
   });
   test("회원가입 성공시 사용자 정보 리턴", async () => {
@@ -287,7 +326,7 @@ describe("인증 로직 테스트 - registry service", () => {
     MockRepo.isNicknameDuplicated.mockResolvedValue(false);
     MockRepo.isDuplicatedPhoneNumber.mockResolvedValue(false)
     const fakeUser = {
-      id: 1,
+      id:1,
       email: "email1@email.com",
       password: "12345",
       nickname: "Juno",
@@ -304,20 +343,37 @@ describe("인증 로직 테스트 - registry service", () => {
       },
       username: "junoLee",
       phoneNumber: "01012345678",
+      role:Role.SUPER_ADVISOR
     };
 
+    const fakeRes = {
+      email: "email1@email.com",
+      nickname: "Juno",
+      date_of_birth: new Date("2010-06-10"),
+      team: {
+        id: 1,
+        team_name: "Seoul United",
+      },
+      nationality: {
+        id: 1,
+        name: "USA",
+        code: "US",
+      },
+      username: "junoLee",
+      role:Role.SUPER_ADVISOR
+    };
     mockCountryService.getCountryByCode.mockResolvedValue({
       code: "US",
       name: "USA",
     });
-    MockRepo.createAdmin.mockResolvedValue(fakeUser);
+    MockRepo.createAdmin.mockResolvedValue(fakeRes);
     const mockEncrypt = jest.spyOn(crypto, "encrypt").mockResolvedValue({
       encrypted: "mocked",
       iv: "mocked-iv",
     });
     const result = await service.signUp(fakeUser);
 
-    expect(result).toBe(fakeUser);
+    expect(result).toEqual(fakeRes);
     expect(mockEncrypt).toHaveBeenCalledWith("01012345678");
   });
 });
