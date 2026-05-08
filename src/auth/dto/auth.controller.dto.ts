@@ -1,3 +1,4 @@
+import { Role } from "../../generated/enums";
 
 export type ParamsDto = {
   id: number;
@@ -11,7 +12,7 @@ export type SignUpInputDto = {
   nickname: string;
    team:{
     id:number,
-    name:string
+    teamname:string
   }
   phoneNumber: string;
   date_of_birth: Date;
@@ -20,6 +21,7 @@ export type SignUpInputDto = {
     name: string;
     code: string;
   };
+  role:Role
 };
 
 export type QueryType = {
