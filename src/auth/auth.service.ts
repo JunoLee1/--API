@@ -84,9 +84,7 @@ export default class AuthService {
       nationality,
       phoneNumber: encryptedPhonenumber,
     });
-    console.log(newAdmin)
     return {
-      //id: newAdmin.id,
       email: newAdmin.email,
       username:newAdmin.username,
       nickname:newAdmin.nickname,
