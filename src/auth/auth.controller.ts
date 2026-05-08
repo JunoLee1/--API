@@ -8,7 +8,6 @@ import {
 } from "./dto/auth.controller.dto";
 import { Request, Response, NextFunction } from "express-serve-static-core";
 import { AppError } from "../lib/appError";
-import { Role } from "../generated/enums";
 //import { User} from "@prisma/client";
 export default class AuthController {
   constructor(private service: AuthService) {}
@@ -129,9 +128,7 @@ export default class AuthController {
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
-
       if (req.user.role !== "SUPER_ADVISOR") throw new AppError(403, "FORBIDDEN");
-
       const id = Number(req.params);
       await this.service.delete(id);
 
@@ -144,9 +141,7 @@ export default class AuthController {
   async deleteMany(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
-
       if (req.user.role !== "SUPER_ADVISOR") throw new AppError(403, "FORBIDDEN");
-
       const { data } = req.body;
       await this.service.deleteMany(data);
       res.status(204).send();
