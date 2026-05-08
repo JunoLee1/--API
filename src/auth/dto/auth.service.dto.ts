@@ -1,5 +1,5 @@
 import { Status } from "./auth.DTO";
-
+import { Role } from "../../generated/enums";
 export type LoginInputServiceDto = {
   email: string;
   password: string;
@@ -12,6 +12,7 @@ export type encryptedPhoneNumberType = {
   iv: string;
 };
 export type signUpInputServiceDto = {
+  //id: number;
   email: string;
   password: string;
   confirmedPassword: string;
@@ -28,6 +29,7 @@ export type signUpInputServiceDto = {
     name: string;
     code : string;
   };
+  role:Role
 };
 
 export type LoginOutputServiceDto = {
