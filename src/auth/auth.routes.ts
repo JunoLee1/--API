@@ -7,6 +7,7 @@ import CountryService from "../country/country.service";
 import CountryRepo from "../country/country.repo";
 import { CountryApiClient } from "../externalAPI";
 import passport = require("passport");
+import { AppError } from "../lib/appError";
 
 const router = Router();
 const prisma = getPrisma();
@@ -24,24 +25,28 @@ router.post("/signUp", controller.signUp);
 router.post("/login", controller.login.bind(controller));
 
 // 관리자 정보 조회
-router.get(
-  "/:id",
-  passport.authenticate("accessToken"),
-  controller.findAdvisorById,
-);
+router.get("/:id", (req, res, next) => {
+  passport.authenticate("accessToken", { session: false }, (err:Error, user:any) => {
+    if (err) return next(err);
+    if (!user) return next(new AppError(401, "UNAUTHORIZED"));
+
+    req.user = user;
+    next();
+  })(req, res, next);
+}, controller.findAdvisorById);
 
 // 관리자 전체 조회
 router.get("/", passport.authenticate("accessToken"), controller.findAdvisors);
 
 // 단일 관리자 정보 수정
 router.patch(
-  "/me",
+  "/:id",
   passport.authenticate("accessToken"),
   controller.updatesAdvisor,
 );
 // 다수 관리자 상태 변경
 router.patch(
-  "/me",
+  "/",
   passport.authenticate("accessToken"),
   controller.updateAdvisorsStatus,
 );
