@@ -2,7 +2,7 @@
 //import prisma from "../lib/prisma";
 import { PrismaClient ,Prisma, Status} from "../generated/client";
 import { Role } from "../generated/client";
-import { SignUpInputRepoDto,signUpOutputDto,
+import { SignUpInputRepoDto,SignUpOutputDto,
   UpdateUserInputDTO, } from "./dto/auth.repo.dto";
 
 
@@ -61,7 +61,7 @@ export class AuthRepository {
         nickname: data.nickname,
         username: data.username,
         date_of_birth: data.date_of_birth,
-        role: Role.ADMIN,
+        role: data.role,
         status:Status.ACTIVE,
         team:{
           connect:{
@@ -70,7 +70,7 @@ export class AuthRepository {
         },
         nationality: {
           connect: {
-            code: data.nationality.code,
+            code: data.nationality!.code,
           },
         },
 

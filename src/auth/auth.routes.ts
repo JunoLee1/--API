@@ -25,16 +25,26 @@ router.post("/signUp", controller.signUp);
 router.post("/login", controller.login.bind(controller));
 
 // 관리자 정보 조회
-router.get("/:id", (req, res, next) => {
-  passport.authenticate("accessToken", { session: false }, (err:Error, user:any) => {
-    if (err) return next(err);
-    if (!user) return next(new AppError(401, "UNAUTHORIZED"));
+router.get(
+  "/:id",
+  (req, res, next) => {
+    passport.authenticate(
+      "accessToken",
+      { session: false },
+      (err, user) => {
+        if (err) return next(err);
 
-    req.user = user;
-    next();
-  })(req, res, next);
-}, controller.findAdvisorById);
+        if (!user) {
+          return next(new AppError(401, "UNAUTHORIZED"));
+        }
 
+        req.user = user;
+        next();
+      }
+    )(req, res, next);
+  },
+  controller.findAdvisorById
+);
 // 관리자 전체 조회
 router.get("/", passport.authenticate("accessToken"), controller.findAdvisors);
 

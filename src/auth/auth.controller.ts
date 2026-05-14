@@ -45,8 +45,8 @@ export default class AuthController {
       if (req.user.role !== "SUPER_ADVISOR")
         throw new AppError(403, "FORBIDDEN");
       const id = Number(req.params.id);
-      const result = await this.service.findAdvisorById(id);
-      return res.status(200).json(result);
+      const user = await this.service.findAdvisorById(id);
+      return res.status(200).json(user);
     } catch (error) {
       next(error);
     }
@@ -87,21 +87,21 @@ export default class AuthController {
       const id = Number(req.params);
 
       const {
-        teamname,
+        team,
         username,
         email,
         password,
         phoneNumber,
-        country,
+        nationality,
         role,
       } = req.body;
       await this.service.updatesAdvisor({
         id,
         email,
-        teamname,
+        team,
         username,
         password,
-        country,
+        nationality,
         phoneNumber,
         role,
       });
@@ -116,7 +116,8 @@ export default class AuthController {
   async updateAdvisorsStatus(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
-      if (req.user.role !== "SUPER_ADVISOR") throw new AppError(403, "FORBIDDEN");
+      if (req.user.role !== "SUPER_ADVISOR")
+        throw new AppError(403, "FORBIDDEN");
       const { data } = req.body;
       await this.service.updateAdvisorsStatus(data);
       return res.status(200).json({ message: "상태 변경 완료" });
@@ -128,25 +129,27 @@ export default class AuthController {
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
-      if (req.user.role !== "SUPER_ADVISOR") throw new AppError(403, "FORBIDDEN");
+      if (req.user.role !== "SUPER_ADVISOR")
+        throw new AppError(403, "FORBIDDEN");
       const id = Number(req.params);
       await this.service.delete(id);
 
       return res.status(204).send();
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
   //=================================================================================================================================================================================
   async deleteMany(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
-      if (req.user.role !== "SUPER_ADVISOR") throw new AppError(403, "FORBIDDEN");
+      if (req.user.role !== "SUPER_ADVISOR")
+        throw new AppError(403, "FORBIDDEN");
       const { data } = req.body;
       await this.service.deleteMany(data);
       res.status(204).send();
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
 }

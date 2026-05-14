@@ -3,19 +3,19 @@ import { Role } from "../../generated/enums";
 export type LoginInputServiceDto = {
   email: string;
   password: string;
-};
-export type signUpSevicePasswordDto = {
+}
+export type SignUpServicePasswordDto = {
   hashedPassword: string;
 };
-export type encryptedPhoneNumberType = {
+export type EncryptedPhoneNumberType = {
   encrypted: string;
   iv: string;
 };
-export type signUpInputServiceDto = {
+export type SignUpInputServiceDto = {
   //id: number;
   email: string;
   password: string;
-  confirmedPassword: string;
+  confirmedPassword:string;
   username: string;
   nickname: string;
   date_of_birth: Date;
@@ -29,20 +29,21 @@ export type signUpInputServiceDto = {
     name: string;
     code : string;
   };
-  role:Role
+  role:Role;
 };
 
 export type LoginOutputServiceDto = {
   accessToken: string;
   refreshToken: string;
+  role?: Role;
 };
-export type findAdvisorsServiceDto = {
+export type FindAdvisorsServiceDto = {
   skip: number;
   take: number;
   username: string | null;
   teamname: string | null;
 };
-export type findAdvisorsOutPutDto = {
+export type FindAdvisorsOutputDto = {
   username: string | null;
   teamname: string | null;
   email: string;

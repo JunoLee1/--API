@@ -6,16 +6,16 @@ import { encrypt } from "../lib/crypto"
 import { IAuth } from "./dto/auth.DTO";
 
 import {
-  findAdvisorsServiceDto,
-  signUpInputServiceDto,
+  FindAdvisorsServiceDto,
+  SignUpInputServiceDto,
   LoginInputServiceDto,
   LoginOutputServiceDto,
-  findAdvisorsOutPutDto,
+  FindAdvisorsOutputDto,
   UpdatedUserStatusDTO,
 } from "./dto/auth.service.dto";
 import { User } from "../generated/client";
 import { AppError } from "../lib/appError";
-import { signUpOutputDto } from "./dto/auth.repo.dto";
+import { SignUpOutputDto } from "./dto/auth.repo.dto";
 //import  prisma from "../lib/prisma"
 export default class AuthService {
   constructor(
@@ -25,15 +25,15 @@ export default class AuthService {
   async signUp({
     email,
     password,
-    confirmedPassword,
     nickname,
     username,
     nationality,
+    confirmedPassword,
     team,
     role,
     phoneNumber,
     date_of_birth,
-  }: signUpInputServiceDto): Promise<signUpOutputDto>  {
+  }: SignUpInputServiceDto): Promise<SignUpOutputDto>  {
     
     if (!email) {
       throw new AppError(400,"INVALID_EMAIL");
@@ -55,7 +55,7 @@ export default class AuthService {
     const countryCodeChecker = await this.countryService.getCountryByCode(
       nationality.code,
     );
-    if (!countryCodeChecker) throw new AppError(400,"국적을 선택해주세요.");
+    if (!countryCodeChecker) throw new AppError(400,"INVALID_NATIONALITY_CODE");
 
     const duplicatedNickname = await this.repo.isNicknameDuplicated(nickname);
     if (duplicatedNickname) {
@@ -91,7 +91,7 @@ export default class AuthService {
       date_of_birth:newAdmin.date_of_birth,
       team:{
         id: newAdmin.team.id,
-        team_name: newAdmin.team.team_name
+        teamname: newAdmin.team.teamname
       },
       nationality:{
         id: newAdmin.nationality.id,
@@ -126,7 +126,7 @@ export default class AuthService {
       id: user.id,
       username: user.username,
       email: user.email,
-      teamname: user.team.team_name,
+      teamname: user.team.teamname,
     };
   }
   //=================================================================================================================================================================================
@@ -135,7 +135,7 @@ export default class AuthService {
     skip,
     teamname,
     username,
-  }: findAdvisorsServiceDto): Promise<findAdvisorsOutPutDto> {
+  }: FindAdvisorsServiceDto): Promise<FindAdvisorsOutputDto> {
     const where: any = {};
     if (teamname) {
       where.teamname = teamname;
@@ -155,7 +155,7 @@ export default class AuthService {
     const result = advisors.map((a) => ({
       email: a.email,
       username: a.username,
-      teamname: a?.team.team_name ?? null,
+      teamname: a?.team.teamname ?? null,
       nickname: a.nickname,
     }));
     return result;
@@ -184,7 +184,7 @@ export default class AuthService {
     if (nickname !== undefined) updatedData.nickname = nickname;
     if (password !== undefined) updatedData.password = password;
     if (role !== undefined) updatedData.role = role;
-    if (team !== undefined) updatedData.team = team;
+    if (team !== undefined) updatedData.teamId = team.id;
     if (nationality !== undefined) updatedData.nationality = nationality;
     if (phoneNumber !== undefined) updatedData.phoneNumber = phoneNumber;
     if(isDeleted!== undefined) updatedData.isDeleted = isDeleted

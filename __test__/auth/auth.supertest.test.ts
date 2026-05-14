@@ -207,8 +207,8 @@ describe("auth routes test", () => {
   });
 
   describe("GET 단일 관리자 조회", () => {
-    test("인증되지 않는 유저 인경우 401 UNAUTHORIZED 에러 던지기", async () => {
-      const res = await request(app).get(`/api/users/1}`);
+    test("인증되지 않는 유저인경우 401 와 에러 메시지 던지기 ", async () => {
+      const res = await request(app).get(`/api/users/1`);
       expect(res.status).toBe(401);
       expect(res.body.message).toBe("UNAUTHORIZED");
     });
@@ -224,7 +224,7 @@ describe("auth routes test", () => {
         nationality: { code: "KR" },
         team: { id: 1, teamname: "PusanFc" },
         date_of_birth: new Date("2010-06-10"),
-        role: "SUPER_ADMIN",
+        role: "SUPER_ADIVISOR",
       };
       await request(app)
         .post("/api/users/signUp")
@@ -280,9 +280,7 @@ describe("auth routes test", () => {
         },
       });
       const token = loginRes.body.accessToken;
-      console.log("result:", loginRes.body);
       const targetId = createdUser!.id;
-      console.log("targetid", targetId);
       const res = await request(app)
         .get(`/api/users/${targetId}`)
         .set("Cookie", [`${ACCESS_TOKEN_COOKIE_NAME}=${token}`]);
