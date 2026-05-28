@@ -25,11 +25,11 @@ export default class AuthController {
   };
 
   //=================================================================================================================================================================================
-  async login(req: Request, res: Response, next: NextFunction) {
+  login =  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { email, password } = req.body as LoginInput;
       const result = await this.service.login({ email, password });
-      return res.status(201).json(result);
+      return res.status(200).json(result);
     } catch (error) {
       next(error);
     }
@@ -39,7 +39,7 @@ export default class AuthController {
 
   findAdvisorById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!req.user) {
+      if (!req.user?.id) {
         throw new AppError(401, "UNAUTHORIZED");
       }
       if (req.user.role !== "SUPER_ADVISOR")
@@ -67,7 +67,7 @@ export default class AuthController {
       const numTake = Number(take) || 10;
       const numPage = Number(page) || 1;
       const skip = (numPage - 1) * numTake;
-      if (skip > 0) throw new Error("LIMIT은 음수가 되어선 안됩니다");
+      if (skip < 0) throw new Error("LIMIT은 음수가 되어선 안됩니다");
 
       const result = await this.service.findAdvisors({
         skip,
@@ -81,11 +81,11 @@ export default class AuthController {
     }
   }
   //=================================================================================================================================================================================
-  async updatesAdvisor(req: Request, res: Response, next: NextFunction) {
+    updatesAdvisor = async(req: Request, res: Response, next: NextFunction) => {
     try {
       if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
-      const id = Number(req.params);
-
+      const id = Number(req.params.id);
+      console.log(id)
       const {
         team,
         username,
@@ -94,8 +94,9 @@ export default class AuthController {
         phoneNumber,
         nationality,
         role,
+        date_of_birth,
       } = req.body;
-      await this.service.updatesAdvisor({
+      const result = await this.service.updatesAdvisor({
         id,
         email,
         team,
@@ -103,17 +104,20 @@ export default class AuthController {
         password,
         nationality,
         phoneNumber,
+        date_of_birth,
         role,
       });
+      console.log("service value: ",result)
       return res.status(200).json({
         message: "successfully modified information",
+        ///data:result
       });
     } catch (error) {
       next(error);
     }
   }
   //=================================================================================================================================================================================
-  async updateAdvisorsStatus(req: Request, res: Response, next: NextFunction) {
+  updateAdvisorsStatus = async(req: Request, res: Response, next: NextFunction) => {
     try {
       if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
       if (req.user.role !== "SUPER_ADVISOR")
@@ -126,7 +130,7 @@ export default class AuthController {
     }
   }
   //=================================================================================================================================================================================
-  async delete(req: Request, res: Response, next: NextFunction) {
+  delete  = async(req: Request, res: Response, next: NextFunction) => {
     try {
       if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
       if (req.user.role !== "SUPER_ADVISOR")

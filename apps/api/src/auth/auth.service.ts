@@ -161,7 +161,6 @@ export default class AuthService {
     return result;
   }
   //=================================================================================================================================================================================
-
   async updatesAdvisor(data:any) {
     const {
       id,
@@ -172,25 +171,31 @@ export default class AuthService {
       nationality,
       role,
       phoneNumber,
+      date_of_birth,
       nickname,
       isDeleted
     } = data;
+    console.log("launched service")
+    const advisor = await this.repo.findAdvisorById(id);
+    console.log("advisor:", advisor)
+    if (!advisor) throw new AppError(404, "NOT FOUND");
 
-    const advisorId = await this.repo.findAdvisorById(id);
-    if (!advisorId) throw new AppError(404, "NOT FOUND");
+    console.log(advisor.id)
     const updatedData: any = {};
     if (email !== undefined) updatedData.email = email;
     if (username !== undefined) updatedData.username = username;
     if (nickname !== undefined) updatedData.nickname = nickname;
     if (password !== undefined) updatedData.password = password;
+    if (date_of_birth !== undefined) updatedData.date_of_birth = date_of_birth;
     if (role !== undefined) updatedData.role = role;
-    if (team !== undefined) updatedData.teamId = team.id;
+    if (team !== undefined) updatedData.team = team;
     if (nationality !== undefined) updatedData.nationality = nationality;
     if (phoneNumber !== undefined) updatedData.phoneNumber = phoneNumber;
-    if(isDeleted!== undefined) updatedData.isDeleted = isDeleted
+    if(isDeleted!== undefined) updatedData.isDeleted = false
     const admin = await this.repo.updatesAdvisor(id,updatedData);
+    console.log(admin)
     const result = {
-      id: admin.id,
+      id: advisor.id,
       email:admin.email,
       date_of_birth:admin.date_of_birth,
       password:admin.password,
@@ -202,7 +207,9 @@ export default class AuthService {
       team: admin.team,
       nationality: admin.nationality
     }
+    console.log(result)
     return result;
+
   }
   //=================================================================================================================================================================================
   async updateAdvisorsStatus(data: UpdatedUserStatusDTO) {

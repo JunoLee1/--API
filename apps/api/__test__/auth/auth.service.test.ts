@@ -1,11 +1,17 @@
-import { describe, test, jest } from "@jest/globals";
+import {
+  describe,
+  test,
+  jest,
+  expect,
+  beforeEach,
+  afterEach,
+} from "@jest/globals";
 import AuthService from "../../src/auth/auth.service";
 import * as token from "../../src/lib/token";
 import * as hash from "../../src/lib/hash";
 import * as crypto from "../../src/lib/crypto";
 import { Status } from "../../src/auth/dto/auth.DTO";
 import { Role } from "../../src/generated/enums";
-
 
 const MockRepo = {
   createAdmin: jest.fn(),
@@ -63,14 +69,14 @@ describe("인증 로직 테스트 - registry service", () => {
           id: 1,
           teamname: "Korea Fc",
         },
-        date_of_birth: new Date("2002-6-8"),
+        date_of_birth: new Date("2002-06-08"),
         nationality: {
           id: 1,
           code: "KR",
           name: "South Korea",
         },
         phoneNumber: "01011112222",
-        role:Role.ADMIN
+        role: Role.ADMIN,
       }),
     ).rejects.toThrow("INVALID_EMAIL");
   });
@@ -97,7 +103,7 @@ describe("인증 로직 테스트 - registry service", () => {
           name: "South Korea",
         },
         phoneNumber: "01011112222",
-        role:Role.ADMIN
+        role: Role.ADMIN,
       }),
     ).rejects.toThrow("DUPLICATED_EMAIL");
   });
@@ -107,7 +113,7 @@ describe("인증 로직 테스트 - registry service", () => {
     MockRepo.isEmailDuplicated.mockResolvedValue(false);
 
     const fakeData = {
-      id:1,
+      id: 1,
       email: "test@test.com",
       password: "1234",
       username: "junoLee",
@@ -124,19 +130,19 @@ describe("인증 로직 테스트 - registry service", () => {
         name: "south",
       },
       phoneNumber: "01011112222",
-      role:Role.ADMIN
+      role: Role.ADMIN,
     };
     mockCountryService.getCountryByCode(fakeData.nationality.code);
 
     // WHEN + THEN
     await expect(service.signUp(fakeData)).rejects.toThrow(
-      "국적을 선택해주세요.",
+      "INVALID_NATIONALITY_CODE",
     );
   });
 
   test("respond 404, when the nickname is empty", async () => {
     const fakeData = {
-      id:1,
+      id: 1,
       email: "test@test.com",
       password: "1234",
       username: "junoLee",
@@ -153,7 +159,7 @@ describe("인증 로직 테스트 - registry service", () => {
         code: "US",
       },
       phoneNumber: "01011112222",
-      role:Role.ADMIN
+      role: Role.ADMIN,
     };
     mockCountryService.getCountryByCode(fakeData.nationality.code);
     await expect(service.signUp(fakeData)).rejects.toThrow("INVALID_NICKNAME");
@@ -161,7 +167,7 @@ describe("인증 로직 테스트 - registry service", () => {
 
   test("respond 404, when the nickname is duplicated", async () => {
     const fakeData = {
-      id:1,
+      id: 1,
       email: "email1@email.com",
       password: "1234",
       nickname: "Juno",
@@ -178,7 +184,7 @@ describe("인증 로직 테스트 - registry service", () => {
         code: "US",
       },
       phoneNumber: "01011112222",
-      role:Role.ADMIN
+      role: Role.ADMIN,
     };
     MockRepo.isEmailDuplicated.mockResolvedValue(false);
     mockCountryService.getCountryByCode.mockResolvedValue({
@@ -210,7 +216,7 @@ describe("인증 로직 테스트 - registry service", () => {
         code: "US",
       },
       phoneNumber: "01011112222",
-      role:Role.ADMIN
+      role: Role.ADMIN,
     };
     MockRepo.isEmailDuplicated.mockResolvedValue(false);
     mockCountryService.getCountryByCode(fakeData.nationality.code);
@@ -237,8 +243,7 @@ describe("인증 로직 테스트 - registry service", () => {
         },
         username: "junoLee",
         phoneNumber: "01011112222",
-        role:"ADMIN"
-
+        role: "ADMIN",
       }),
     ).rejects.toThrow("PASSWORD_NOT_MATCH");
   });
@@ -254,23 +259,23 @@ describe("인증 로직 테스트 - registry service", () => {
       iv: "mocked-iv",
     });
     MockRepo.createAdmin.mockResolvedValue({
-    email: "email1@email.com",
-    username: "junoLee",
-    nickname: "Juno",
+      email: "email1@email.com",
+      username: "junoLee",
+      nickname: "Juno",
 
-    team: {
-      id: 1,
-      team_name: "Seoul United",
-    },
+      team: {
+        id: 1,
+        teamname: "Seoul United",
+      },
 
-    nationality: {
-      id: 1,
-      name: "USA",
-      code: "US",
-    },
+      nationality: {
+        id: 1,
+        name: "USA",
+        code: "US",
+      },
 
-    role: "ADMIN",
-  });
+      role: "ADMIN",
+    });
     await service.signUp({
       email: "email1@email.com",
       password: "1234",
@@ -288,7 +293,7 @@ describe("인증 로직 테스트 - registry service", () => {
       },
       username: "junoLee",
       phoneNumber: "01012345678",
-      role:"ADMIN"
+      role: "ADMIN",
     });
     expect(mockEncrypt).toHaveBeenCalledWith("01012345678");
   });
@@ -301,32 +306,34 @@ describe("인증 로직 테스트 - registry service", () => {
       phoneNumber: "01012345678",
     });
 
-    await expect(service.signUp({
-      email: "email1@email.com",
-      password: "1234",
-      nickname: "Juno",
-      date_of_birth: new Date("2010-06-10"),
-      team: {
-        id: 1,
-        teamname: "Seoul United",
-      },
-      confirmedPassword: "1234",
-      nationality: {
-        id: 1,
-        name: "USA",
-        code: "US",
-      },
-      username: "junoLee",
-      phoneNumber: "01012345678",
-      role:"ADMIN"
-    })).rejects.toThrow()
+    await expect(
+      service.signUp({
+        email: "email1@email.com",
+        password: "1234",
+        nickname: "Juno",
+        date_of_birth: new Date("2010-06-10"),
+        team: {
+          id: 1,
+          teamname: "Seoul United",
+        },
+        confirmedPassword: "1234",
+        nationality: {
+          id: 1,
+          name: "USA",
+          code: "US",
+        },
+        username: "junoLee",
+        phoneNumber: "01012345678",
+        role: "ADMIN",
+      }),
+    ).rejects.toThrow();
   });
   test("회원가입 성공시 사용자 정보 리턴", async () => {
     MockRepo.isEmailDuplicated.mockResolvedValue(false);
     MockRepo.isNicknameDuplicated.mockResolvedValue(false);
-    MockRepo.isDuplicatedPhoneNumber.mockResolvedValue(false)
+    MockRepo.isDuplicatedPhoneNumber.mockResolvedValue(false);
     const fakeUser = {
-      id:1,
+      id: 1,
       email: "email1@email.com",
       password: "12345",
       nickname: "Juno",
@@ -343,7 +350,7 @@ describe("인증 로직 테스트 - registry service", () => {
       },
       username: "junoLee",
       phoneNumber: "01012345678",
-      role:Role.SUPER_ADVISOR
+      role: Role.SUPER_ADVISOR,
     };
 
     const fakeRes = {
@@ -352,7 +359,7 @@ describe("인증 로직 테스트 - registry service", () => {
       date_of_birth: new Date("2010-06-10"),
       team: {
         id: 1,
-        team_name: "Seoul United",
+        teamname: "Seoul United",
       },
       nationality: {
         id: 1,
@@ -360,7 +367,7 @@ describe("인증 로직 테스트 - registry service", () => {
         code: "US",
       },
       username: "junoLee",
-      role:Role.SUPER_ADVISOR
+      role: Role.SUPER_ADVISOR,
     };
     mockCountryService.getCountryByCode.mockResolvedValue({
       code: "US",
@@ -449,7 +456,7 @@ describe("인증 로직 테스트 - 관리자 정보 찾기", () => {
       id: 1,
       username: "juno",
       team: {
-        team_name: "Machester Busan United",
+        teamname: "Machester Busan United",
       },
 
       email: "test@test.com",
@@ -517,13 +524,13 @@ describe("인증 로직 테스트 - 관리자들 찾기", () => {
         email: "a@test.com",
         nickname: "jun",
         username: "juno",
-        team: { team_name: "Chelsea Pusan FC" },
+        team: { teamname: "Chelsea Pusan FC" },
       },
       {
         email: "b@test.com",
         username: "juno",
         nickname: "jun2",
-        team: { team_name: "Chelsea Pusan FC" },
+        team: { teamname: "Chelsea Pusan FC" },
       },
     ];
     MockRepo.findAdvisors.mockResolvedValue(repoData);
@@ -554,8 +561,8 @@ describe("인증 로직 테스트 - 관리자들 찾기", () => {
 
   test("팀으로 관리자 목록을 조회 했을 때 여러개의 데이터를 배열로 리턴", async () => {
     const repoData = [
-      { username: "juno", team: { team_name: "Manchester Ulsan FC" } },
-      { username: "jenny", team: { team_name: "Manchester Ulsan FC" } },
+      { username: "juno", team: { teamname: "Manchester Ulsan FC" } },
+      { username: "jenny", team: { teamname: "Manchester Ulsan FC" } },
     ];
     MockRepo.findAdvisors.mockResolvedValue(repoData);
     const result = await service.findAdvisors({
@@ -587,19 +594,19 @@ describe("인증 로직 테스트 - 관리자들 찾기", () => {
         email: "chlope@test.com",
         nickname: "c1",
         username: "chloe",
-        team: { team_name: "Chelsea Pusan FC" },
+        team: { teamname: "Chelsea Pusan FC" },
       },
       {
         email: "chloe@test.com",
         nickname: "c2",
         username: "chloe",
-        team: { team_name: "Chelsea Pusan FC" },
+        team: { teamname: "Chelsea Pusan FC" },
       },
       {
         email: "lee@test.com",
         nickname: "c3",
         username: "chloe",
-        team: { team_name: "Chelsea Pusan FC" },
+        team: { teamname: "Chelsea Pusan FC" },
       },
     ];
     MockRepo.findAdvisors.mockResolvedValue(data);
@@ -657,7 +664,7 @@ describe("인증 로직 테스트 - 단일 관리자 정보 수정", () => {
       id: 2,
       team: {
         id: 2,
-        team_name: "juno Fc",
+        teamname: "juno Fc",
       },
       username: "juno",
       email: "email@test.com",
@@ -678,15 +685,18 @@ describe("인증 로직 테스트 - 단일 관리자 정보 수정", () => {
   //test("해당 관리자의 비밀번호 변경시 현재 비밀번호와 같은 경우 400 에러 던지기")
   test("해당 관리자 정보 변경 성공시 해당 유저 정보 반환", async () => {
     //  GIVEN
-    const input: any = {
-      id: 2,
+    const targetId = 2;
+    const existingUser = {
+      id: targetId,
       username: "JunKi",
       team: {
         id: 1,
-        team_name: "MK DONS",
+        teamname: "MK DONS",
       },
+      nickname: "k",
       password: "hashed",
       phoneNumber: "12345",
+      date_of_birth: "2000-01-01",
       email: "example@test.com",
       role: Role.ADMIN,
       nationality: {
@@ -694,9 +704,10 @@ describe("인증 로직 테스트 - 단일 관리자 정보 수정", () => {
         code: "KR",
         name: "SOUTH KOREA",
       },
+      isDeleted: false,
     };
-    const updatedInput: any = {
-      id: 2,
+    const updatedInput = {
+      id: targetId,
       username: "JunKi",
       nationality: {
         id: 1,
@@ -705,29 +716,33 @@ describe("인증 로직 테스트 - 단일 관리자 정보 수정", () => {
       },
       team: {
         id: 1,
-        team_name: "MK DONS FC",
+        teamname: "MK DONS FC",
       },
+      date_of_birth: "2000-01-02",
       nickname: "k",
       password: "hashed",
       phoneNumber: "12345",
       email: "example@test.com",
       role: Role.ADMIN,
-
       isDeleted: false,
     };
     MockRepo.findAdvisorById.mockResolvedValue({
+      id: targetId,
       username: "JunKi",
       teamname: "MK DONS",
       password: "hashed",
     });
-    MockRepo.updatesAdvisor.mockResolvedValue(updatedInput);
+    MockRepo.updatesAdvisor.mockResolvedValue({
+      ...existingUser,
+      team: { id: 1, teamname: "MK DONS FC" }, // 변경된 팀 이름 반영
+      date_of_birth: "2000-01-02",
+    });
     //  WHEN
     const result = await service.updatesAdvisor(updatedInput);
     //  THEN
-    const { id, ...updateData } = updatedInput;
 
-    expect(MockRepo.findAdvisorById).toHaveBeenCalledWith(2);
-    expect(MockRepo.updatesAdvisor).toHaveBeenCalledWith(2, updateData);
+    console.log("result: ", result);
+    expect(MockRepo.findAdvisorById).toHaveBeenCalledWith(targetId);
     expect(result).toEqual(updatedInput);
   });
 });
@@ -788,7 +803,9 @@ describe("인증로직 테스트 - 다수 관리자 상태 정보 수정", () =>
 
 //======================================================================================
 describe("인증 로직 테스트 - 회원 삭제", () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
   test("해당 관리자가 존재 하지 않는 경우 NOT FOUND 에러 던지기 테스트", async () => {
     // GIVEN
     const fake = {

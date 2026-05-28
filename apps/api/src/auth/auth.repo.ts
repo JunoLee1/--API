@@ -113,8 +113,8 @@ export class AuthRepository {
   }
   //=================================================================================================================================================================================
   async updatesAdvisor(id:number,data: UserUpdateData) {
-    const admins = await this.prisma.user.update({
-      where: { id},
+    const admin = await this.prisma.user.update({
+      where: { id },
       include:{
         phoneNumber:true,
         team:true,
@@ -122,7 +122,8 @@ export class AuthRepository {
       },
       data
     });
-    return admins;
+    console.log("repo:", admin)
+    return admin;
   }
 
   //=================================================================================================================================================================================

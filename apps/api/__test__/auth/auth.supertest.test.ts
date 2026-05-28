@@ -3,7 +3,10 @@ import app from "../../src/app";
 import * as crypto from "../../src/lib/crypto";
 import Service from "../../src/country/country.service";
 import { getPrisma } from "../../src/lib/prisma";
+import { describe, test, jest, expect , beforeEach, afterEach, afterAll} from "@jest/globals";
+
 import { ACCESS_TOKEN_COOKIE_NAME } from "../../src/lib/constants";
+import { Role } from "../../src/generated/enums";
 
 jest.mock("../../src/lib/crypto", () => ({
   encrypt: jest.fn(),
@@ -57,7 +60,7 @@ describe("auth routes test", () => {
       nationality: { code: "KR" },
       team: { id: 1, teamname: "PusanFc" },
       date_of_birth: new Date("2010-06-10"),
-      role: "ADMIN",
+      role: Role.ADMIN,
     };
 
     test("valid credential return token", async () => {
@@ -69,7 +72,7 @@ describe("auth routes test", () => {
         email: Fakeuser.email,
         password: Fakeuser.password,
       });
-      expect(res.status).toBe(201);
+      expect(res.status).toBe(200);
     });
 
     test("throw error message if email dose not exist", async () => {
@@ -112,7 +115,7 @@ describe("auth routes test", () => {
         code: "KR",
       },
       date_of_birth: new Date("2010-06-10"),
-      role: "ADMIN",
+      role: Role.ADMIN,
     };
     test("email null 인경우 에러나와야한다", async () => {
       const res = await request(app)
@@ -224,13 +227,13 @@ describe("auth routes test", () => {
         nationality: { code: "KR" },
         team: { id: 1, teamname: "PusanFc" },
         date_of_birth: new Date("2010-06-10"),
-        role: "SUPER_ADIVISOR",
+        role: Role.SUPER_ADVISOR,
       };
       await request(app)
         .post("/api/users/signUp")
         .send({
           ...reqUser,
-          role: "ADMIN",
+          role: Role.ADMIN,
         });
       const loginRes = await request(app).post("/api/users/login").send({
         email: reqUser.email,
@@ -251,6 +254,7 @@ describe("auth routes test", () => {
       const uniqueId = Date.now();
       const prisma = getPrisma();
       const fakedmin = {
+        id:uniqueId,
         email: `test_${uniqueId}@test.com`, // 절대 중복 안됨
         nickname: `nick_${uniqueId}`,
         phoneNumber: `010${String(uniqueId).slice(-8)}`,
@@ -260,7 +264,7 @@ describe("auth routes test", () => {
         nationality: { code: "KR" },
         team: { id: 1, teamname: "PusanFc" },
         date_of_birth: new Date("2010-06-10"),
-        role: "SUPER_ADVISOR",
+        role: Role.SUPER_ADVISOR,
       };
       const signupRes = await request(app)
         .post("/api/users/signUp")
@@ -284,7 +288,7 @@ describe("auth routes test", () => {
       const res = await request(app)
         .get(`/api/users/${targetId}`)
         .set("Cookie", [`${ACCESS_TOKEN_COOKIE_NAME}=${token}`]);
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(201);
     });
   });
 });

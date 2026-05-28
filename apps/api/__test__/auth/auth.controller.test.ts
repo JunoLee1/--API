@@ -1,6 +1,7 @@
-import { describe, test, jest, expect } from "@jest/globals";
+import { describe, test, jest, expect, afterEach, beforeEach} from "@jest/globals";
 import { Request, Response, NextFunction } from "express";
 import AuthController from "../../src/auth/auth.controller";
+import { Role } from "../../src/generated/enums";
 const authService = {
   login: jest.fn(),
   logout: jest.fn(),
@@ -64,7 +65,7 @@ describe("인증 컨트롤러 테스트 - login controller", () => {
 
     authService.login.mockResolvedValue({ email: "test@test.com" });
     await controller.login(req as Request, res as Response, next as NextFunction);
-    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({ email: "test@test.com" });
   });
   test("로그인에 실패한 경우, 500에러와 '알수없는 에러' 메시지 던지기", async () => {
@@ -115,7 +116,7 @@ describe("인증 컨트롤러 테스트 - 관리자 조회", () => {
     const req = {
       user: {
         id: 1,
-        role: "ADMIN",
+        role: Role.ADMIN,
       },
     } as unknown as Request;
     const res = {
@@ -137,7 +138,7 @@ describe("인증 컨트롤러 테스트 - 관리자 조회", () => {
     const req = {
       user: {
         id: 1,
-        role: "SUPER_ADVISOR",
+        role: Role.SUPER_ADVISOR,
       },
       params: {
         id: 1,
@@ -251,7 +252,7 @@ describe("인증 컨트롤러 테스트 - 관리자들 조회", () => {
         id: 1,
         role: "SUPER_ADVISOR",
       },
-      query: { take: 10, skip: 0 },
+      query: { take: 10, page: 1},
     });
     await controller.findAdvisors(req, res, next);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -263,7 +264,7 @@ describe("인증 컨트롤러 테스트 - 관리자들 조회", () => {
         id: 1,
         role: "SUPER_ADVISOR",
       },
-      query: { take: 10, limit: 0 },
+      query: { take: 10, page: 1},
     } as unknown as Request;
     const res = {
       status: jest.fn().mockReturnThis(),
@@ -312,7 +313,10 @@ describe("인증 컨트롤러 테스트 - 단일 관리자 정보 수정", () =>
     const req = {
       user: {
         id: 1,
-        role: "SUPER_ADMIN",
+        role: Role.SUPER_ADVISOR,
+      },
+      params:{
+        id:1
       },
       body: {
         username: "juno",
@@ -340,6 +344,9 @@ describe("인증 컨트롤러 테스트 - 단일 관리자 정보 수정", () =>
         id: 1,
         username: "juno",
         teamname: "mate fc",
+      },
+      params:{
+        id:1
       },
       body: {
         id: 1,
@@ -417,7 +424,7 @@ describe("인증 컨트롤러 테스트 - 다수의 관리자 정보 수정", ()
       user: {
         id: 1,
         username: "junk",
-        role: "SUPER_ADMIN",
+        role: Role.SUPER_ADVISOR,
       },
       body: {
         status: "Inactive",
