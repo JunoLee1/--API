@@ -1,6 +1,5 @@
 import Repository from "./country.repo";
 import { CountryApiClient } from "../externalAPI";
-import { PrismaClient } from '@prisma/client';
 export default class Service {
   constructor(
     private clientApi : CountryApiClient,

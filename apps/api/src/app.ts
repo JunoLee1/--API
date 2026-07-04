@@ -12,7 +12,7 @@ app.use(express.json())
 app.use(cookieParser())
 app.use(
     cors({
-        origin: PORT ?? "http://localhost:3000",
+        origin: PORT ?? "http://localhost:5175",
         methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
         credentials: true
     })

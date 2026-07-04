@@ -1,21 +1,12 @@
 import AuthService from "./auth.service";
-//import { Role } from "../../generated/enums";
-import {
-  SignUpInputDto,
-  LoginInput,
-  QueryType,
-  ParamsDto,
-} from "./dto/auth.controller.dto";
+import { SignUpInputDto, LoginInput, QueryType } from "./dto/auth.controller.dto";
 import { Request, Response, NextFunction } from "express-serve-static-core";
 import { AppError } from "../lib/appError";
-//import { User} from "@prisma/client";
+
 export default class AuthController {
   constructor(private service: AuthService) {}
-  signUp = async (
-    req: Request<{}, {}, SignUpInputDto>,
-    res: Response,
-    next: NextFunction,
-  ) => {
+
+  signUp = async (req: Request<{}, {}, SignUpInputDto>, res: Response, next: NextFunction) => {
     try {
       const result = await this.service.signUp(req.body);
       return res.status(201).json(result);
@@ -24,8 +15,7 @@ export default class AuthController {
     }
   };
 
-  //=================================================================================================================================================================================
-  login =  async (req: Request, res: Response, next: NextFunction) => {
+  login = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { email, password } = req.body as LoginInput;
       const result = await this.service.login({ email, password });
@@ -33,18 +23,13 @@ export default class AuthController {
     } catch (error) {
       next(error);
     }
-  }
-
-  //=================================================================================================================================================================================
+  };
 
   findAdvisorById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!req.user?.id) {
-        throw new AppError(401, "UNAUTHORIZED");
-      }
-      if (req.user.role !== "SUPER_ADVISOR")
-        throw new AppError(403, "FORBIDDEN");
-      const id = Number(req.params.id);
+      if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
+      if (req.user.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
+      const id = Number(req.params["id"]);
       const user = await this.service.findAdvisorById(id);
       return res.status(200).json(user);
     } catch (error) {
@@ -52,108 +37,55 @@ export default class AuthController {
     }
   };
 
-  //=================================================================================================================================================================================
-
-  async findAdvisors(req: Request, res: Response, next: NextFunction) {
+  findAdvisors = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { take, page, teamname, username } =
-        req.query as unknown as QueryType;
-      if (!req.user?.id) {
-        throw new AppError(401, "UNAUTHORIZED");
-      }
-      if (req.user.role !== "SUPER_ADVISOR") {
-        throw new AppError(403, "FORBIDDEN");
-      }
+      if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
+      if (req.user.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
+      const { take, page, username } = req.query as unknown as QueryType;
       const numTake = Number(take) || 10;
       const numPage = Number(page) || 1;
       const skip = (numPage - 1) * numTake;
-      if (skip < 0) throw new Error("LIMIT은 음수가 되어선 안됩니다");
-
-      const result = await this.service.findAdvisors({
-        skip,
-        take: numTake,
-        teamname,
-        username,
-      });
+      if (skip < 0) throw new AppError(400, "INVALID_PAGE");
+      const result = await this.service.findAdvisors({ skip, take: numTake, username });
       return res.status(200).json(result);
     } catch (error) {
       next(error);
     }
-  }
-  //=================================================================================================================================================================================
-    updatesAdvisor = async(req: Request, res: Response, next: NextFunction) => {
-    try {
-      if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
-      const id = Number(req.params.id);
-      console.log(id)
-      const {
-        team,
-        username,
-        email,
-        password,
-        phoneNumber,
-        nationality,
-        role,
-        date_of_birth,
-      } = req.body;
-      const result = await this.service.updatesAdvisor({
-        id,
-        email,
-        team,
-        username,
-        password,
-        nationality,
-        phoneNumber,
-        date_of_birth,
-        role,
-      });
-      console.log("service value: ",result)
-      return res.status(200).json({
-        message: "successfully modified information",
-        ///data:result
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-  //=================================================================================================================================================================================
-  updateAdvisorsStatus = async(req: Request, res: Response, next: NextFunction) => {
-    try {
-      if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
-      if (req.user.role !== "SUPER_ADVISOR")
-        throw new AppError(403, "FORBIDDEN");
-      const { data } = req.body;
-      await this.service.updateAdvisorsStatus(data);
-      return res.status(200).json({ message: "상태 변경 완료" });
-    } catch (error) {
-      next(error);
-    }
-  }
-  //=================================================================================================================================================================================
-  delete  = async(req: Request, res: Response, next: NextFunction) => {
-    try {
-      if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
-      if (req.user.role !== "SUPER_ADVISOR")
-        throw new AppError(403, "FORBIDDEN");
-      const id = Number(req.params);
-      await this.service.delete(id);
+  };
 
+  updatesAdvisor = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
+      const id = Number(req.params["id"]);
+      const { username, email, password, role, dateOfBirth, nickname, isDeleted } = req.body;
+      await this.service.updatesAdvisor({ id, email, username, password, role, dateOfBirth, nickname, isDeleted });
+      return res.status(200).json({ message: "successfully modified" });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  delete = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
+      if (req.user.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
+      const id = Number(req.params["id"]);
+      await this.service.delete(id);
       return res.status(204).send();
     } catch (error) {
       next(error);
     }
-  }
-  //=================================================================================================================================================================================
-  async deleteMany(req: Request, res: Response, next: NextFunction) {
+  };
+
+  deleteMany = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
-      if (req.user.role !== "SUPER_ADVISOR")
-        throw new AppError(403, "FORBIDDEN");
+      if (req.user.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
       const { data } = req.body;
       await this.service.deleteMany(data);
       res.status(204).send();
     } catch (error) {
       next(error);
     }
-  }
+  };
 }
