@@ -31,7 +31,7 @@ router.get(
     passport.authenticate(
       "accessToken",
       { session: false },
-      (err, user) => {
+      (err: any, user: any) => {
         if (err) return next(err);
 
         if (!user) {
@@ -53,12 +53,6 @@ router.patch(
   "/:id",
   passport.authenticate("accessToken"),
   controller.updatesAdvisor,
-);
-// 다수 관리자 상태 변경
-router.patch(
-  "/",
-  passport.authenticate("accessToken"),
-  controller.updateAdvisorsStatus,
 );
 
 // 관리자 삭제

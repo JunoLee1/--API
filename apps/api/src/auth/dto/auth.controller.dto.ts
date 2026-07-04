@@ -10,36 +10,25 @@ export type SignUpInputDto = {
   confirmedPassword: string;
   username: string;
   nickname: string;
-   team:{
-    id:number,
-    teamname:string
-  }
   phoneNumber: string;
-  date_of_birth: Date;
+  dateOfBirth: Date;
   nationality: {
-    id: number;
-    name: string;
     code: string;
   };
-  role:Role
+  role: Role;
 };
 
 export type QueryType = {
-    take: Pagination;
-    page: Pagination;
-    username: string | null;
-    teamname:string | null
-
-}
-type Pagination = {
   take: number;
   page: number;
+  username: string | null;
 };
 
 export type LoginInput = {
   email: string;
   password: string;
 };
+
 export type SignUpOutputDto = {
   email: string;
   username: string;

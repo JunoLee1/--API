@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated"
@@ -12,303 +7,540 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Status {
-  ACTIVE
-  UNACTIVE
-}
-enum Type {
-  yellow
-  red
-}
+// ─── Enums ───────────────────────────────────────────────────────────────────
 
 enum Role {
   ADMIN
-  SUPER_ADVISOR
+  FRONT_OFFICE
+  COACHING_STAFF
   PLAYER
+  AGENT
 }
 
-enum Foot {
-  left
-  right
-  both
+enum CoachingRole {
+  HEAD_COACH
+  ASSISTANT_COACH
+  DEFENSIVE_COACH
+  ATTACKING_COACH
+  PHYSICAL_COACH
+  SET_PIECE_COACH
+  GOALKEEPER_COACH
+  MEDICAL
+}
+
+enum PlayerLevel {
+  YOUTH
+  ROOKIE
+  SENIOR
+  VETERAN
+}
+
+enum PlayerStatus {
+  ACTIVE
+  ON_LOAN
+  RELEASED
+  RETIRED
 }
 
 enum Position {
-  striker
-  shadow_striker
-  winger
-
-  central_attack_middle_fielder
-  right_attack_middle_fielder
-  left_attack_middle_fielder
-
-  central_defensive_middle_fielder
-  left_defensive_middle_fielder
-  right_defensive_middle_fielder
-
-  center_back
-  left_wing_back
-  left_full_back
-
-  right_wing_back
-  right_full_back
+  GOALKEEPER
+  STRIKER
+  SHADOW_STRIKER
+  WINGER
+  CENTRAL_ATTACK_MIDFIELDER
+  RIGHT_ATTACK_MIDFIELDER
+  LEFT_ATTACK_MIDFIELDER
+  CENTRAL_DEFENSIVE_MIDFIELDER
+  LEFT_DEFENSIVE_MIDFIELDER
+  RIGHT_DEFENSIVE_MIDFIELDER
+  CENTER_BACK
+  LEFT_WING_BACK
+  LEFT_FULL_BACK
+  RIGHT_WING_BACK
+  RIGHT_FULL_BACK
 }
 
-model Season {
-  id         Int      @id @default(autoincrement())
-  start_date DateTime
-  end_Date   DateTime
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  team_season_stats   Team_season_stats[]
-  player_season_stats Player_season_stats[]
-  season_matches      Match[]
-  team_player         Team_player[]
+enum Foot {
+  LEFT
+  RIGHT
+  BOTH
 }
 
-model League {
-  id   Int    @id @default(autoincrement())
-  name String
-
-  nation_id Int
-  nation    Country @relation(fields: [nation_id], references: [id])
-  teams     Team[]
+enum ContractStatus {
+  ACTIVE
+  EXPIRED
+  TERMINATED
 }
+
+enum BonusMetric {
+  GOALS
+  ASSISTS
+  APPEARANCES
+  CLEAN_SHEETS
+  SAVES
+  PASS_ACCURACY
+  TACKLE_SUCCESS_RATE
+  CLEARANCES
+  INTERCEPTIONS
+  XG
+  TEAM_RANK
+  TEAM_WINS
+}
+
+enum BonusPeriod {
+  SEASON
+  MONTH
+  MATCH
+}
+
+enum TransferType {
+  PERMANENT
+  LOAN_OUT
+  LOAN_IN
+  FREE
+  RELEASE
+}
+
+enum RecallStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum InjuryCause {
+  TRAINING
+  MATCH
+  OTHER
+}
+
+enum InjuryStatus {
+  OCCURRED
+  DIAGNOSED
+  REHABILITATING
+  READY_TO_RETURN
+  RETURNED
+}
+
+enum SessionType {
+  INDIVIDUAL_SKILL
+  TACTICAL_DEFENSIVE
+  TACTICAL_ATTACKING
+  TACTICAL_FULL_TEAM
+  PHYSICAL
+  PSYCHOLOGICAL_SOCIAL
+  SET_PIECE
+}
+
+enum ContentPhase {
+  WARMUP
+  DRILL
+  TACTICAL
+  GAME
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT_UNAUTHORIZED
+  LATE_UNAUTHORIZED
+  ABSENT_AUTHORIZED
+}
+
+enum TacticalPhase {
+  PRE_MATCH
+  POST_MATCH
+}
+
+enum CompetitionType {
+  LEAGUE
+  CUP
+  FRIENDLY
+  CHAMPIONS_LEAGUE
+}
+
+enum NotificationType {
+  CONTRACT_EXPIRY
+  PERFORMANCE_BONUS_ACHIEVED
+  INJURY_READY_TO_RETURN
+  TRAINING_ATTENDANCE_WARNING
+}
+
+// ─── Core ────────────────────────────────────────────────────────────────────
 
 model Country {
   id   Int    @id @default(autoincrement())
   name String @unique
   code String @unique
 
-  users  User[]
-  player Player[]
-  league League[]
+  users   User[]
+  players Player[]
 }
 
 model PhoneNumber {
   id        Int    @id @default(autoincrement())
   iv        String
   encrypted String @unique
-  users     User?
+
+  user User?
 }
 
 model User {
-  id            Int      @id @default(autoincrement())
-  date_of_birth DateTime
-  password      String
-  email         String   @unique
-  username      String
-  nickname      String   @unique
-  role          Role
-  status        Status
-  teamId Int
-  team Team @relation(fields:[teamId],references:[id])
+  id           Int           @id @default(autoincrement())
+  email        String        @unique
+  password     String
+  username     String
+  nickname     String        @unique
+  role         Role
+  coachingRole CoachingRole?  // null unless role = COACHING_STAFF
+  isDeleted     Boolean       @default(false)
+  isOutOfOffice Boolean       @default(false)
+  dateOfBirth   DateTime
+
   phoneNumberId Int         @unique
   phoneNumber   PhoneNumber @relation(fields: [phoneNumberId], references: [id])
-  isDeleted     Boolean
-  countryId     Int
-  nationality   Country     @relation(fields: [countryId], references: [id])
-}
 
-model Team {
-  id         Int      @id @default(autoincrement())
-  team_name  String   @unique
-  founded    DateTime
-  short_name String   @unique
+  nationalityId Int
+  nationality   Country @relation(fields: [nationalityId], references: [id])
 
-  league_id Int
-  league    League @relation(fields: [league_id], references: [id])
+  player Player?
 
-  homeMatches Match[] @relation("HomeTeam")
-  awayMatches Match[] @relation("AwayTeam")
-
-  team_season_stats Team_season_stats[]
-  goal              Goal[]
-
-  user    User[] 
-  teamPlayers      Team_player[]
-  team_match_stats Team_match_stats[]
-}
-
-model Match {
-  id   Int      @id @default(autoincrement())
-  date DateTime
-
-  season_id Int
-  season    Season @relation(fields: [season_id], references: [id])
-
-  home_team_id Int
-  away_team_id Int
-  away_teams   Team @relation("AwayTeam", fields: [away_team_id], references: [id], map: "Match_away_team_fkey")
-  home_teams   Team @relation("HomeTeam", fields: [home_team_id], references: [id], map: "Match_home_team_fkey")
-
-  goal Goal[]
-  card Card[]
-
-  player_match_stats Player_match_stats[]
-  team_match_stats   Team_match_stats[]
-
-  @@map("match")
+  recallRequests   Recall[] @relation("RecallRequestedBy")
+  recallApprovals  Recall[] @relation("RecallApprovedBy")
+  managedInjuries  Injury[]
+  createdSessions  TrainingSession[] @relation("SessionCreatedBy")
+  approvedSessions TrainingSession[] @relation("SessionApprovedBy")
+  tacticalAnalyses TacticalAnalysis[]
+  notifications    Notification[]
+  managedContracts Contract[]        @relation("ContractManagedBy")
+  agentPlayers     Player[]          @relation("AgentPlayers")
 }
 
 model Player {
-  id             String   @id @default(cuid())
-  player_name    String
-  jersey_number  Int
-  position       Position //Todo: fix relation 
-  date_of_birth  DateTime
-  preferred_foot Foot
-  height         Int
-  weight         Int
-  nation_id      Int
-  nation         Country  @relation(fields: [nation_id], references: [id])
+  id            String       @id @default(cuid())
+  playerName    String
+  dateOfBirth   DateTime
+  preferredFoot Foot
+  height        Int
+  weight        Int
+  position      Position
+  level         PlayerLevel
+  status        PlayerStatus @default(ACTIVE)
+  externalId    String?      @unique
 
-  team_player        Team_player[]
-  player_match_stats Player_match_stats[]
-  goals              Goal[]               @relation(name: "scorer")
+  nationalityId Int
+  nationality   Country @relation(fields: [nationalityId], references: [id])
 
-  assist Goal[] @relation(name: "assist")
+  userId Int?  @unique
+  user   User? @relation(fields: [userId], references: [id])
 
-  player_season_stats Player_season_stats[]
-  card                Card[]
+  agentId Int?
+  agent   User? @relation("AgentPlayers", fields: [agentId], references: [id])
+
+  contracts              Contract[]
+  transfers              Transfer[]
+  injuries               Injury[]
+  trainingParticipations TrainingParticipant[]
+  trainingResults        TrainingResult[]
+  matchStats      PlayerMatchStats[]
+  tacticalLineups TacticalLineup[]
 }
 
-// 집계 테이블
-model Team_season_stats {
-  season_id Int
-  season    Season @relation(fields: [season_id], references: [id])
+model Season {
+  id        Int      @id @default(autoincrement())
+  name      String
+  startDate DateTime
+  endDate   DateTime
 
-  team_id Int
-  team    Team @relation(fields: [team_id], references: [id])
-
-  @@unique([season_id, team_id])
+  matches          Match[]
+  trainingSessions TrainingSession[]
+  tacticalAnalyses TacticalAnalysis[]
 }
 
-model Player_season_stats {
-  id Int @id @default(autoincrement())
+model Match {
+  id           Int      @id @default(autoincrement())
+  date         DateTime
+  homeTeamName String
+  awayTeamName String
+  homeScore       Int?
+  awayScore       Int?
+  competitionType CompetitionType
+  externalId      String?         @unique
 
-  avg_xG                        Int?
-  avg_xA                        Int?
-  avg_goals                     Int?
-  avg_assist                    Int?
-  avg_tackle_success_rate       Int?
-  avg_passing_accuracy          Int?
-  avg_clearance                 Int?
-  avg_sprint                    Int?
-  avg_clear_cut_chance_rate     Int?
-  games_played                  Int?
-  goals_per_game                Int?
-  avg_fouls_commited            Int?
-  avg_shot_allowed              Int?
-  avg_shot_blocked              Int?
-  avg_crosses_completed         Int?
-  avg_penalty_conversion_rate   Int?
-  avg_interception              Int?
-  avg_free_kick_conversion_rate Int?
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
 
-  season_id Int
-  season    Season @relation(fields: [season_id], references: [id])
-
-  player_id String
-  player    Player @relation(fields: [player_id], references: [id])
-
-  @@unique([season_id, player_id])
+  playerMatchStats PlayerMatchStats[]
+  teamMatchStats   TeamMatchStats?
+  tacticalAnalyses TacticalAnalysis[]
 }
 
-model Player_match_stats {
-  id                        Int  @id @default(autoincrement())
-  xG                        Int?
-  xA                        Int?
-  goals                     Int?
-  assist                    Int?
-  tackle_success_rate       Int?
-  passing_accuracy          Int?
-  clearance                 Int?
-  sprint                    Int?
-  clear_cut_chance_rate     Int?
-  fouls_commited            Int?
-  shot_allowed              Int?
-  shot_blocked              Int?
-  crosses_completed         Int?
-  penalty_conversion_rate   Int?
-  interception              Int?
-  free_kick_conversion_rate Int?
+// ─── Contract Domain ─────────────────────────────────────────────────────────
 
-  match_id Int
-  match    Match @relation(fields: [match_id], references: [id])
+model Contract {
+  id        Int            @id @default(autoincrement())
+  startDate DateTime
+  endDate   DateTime
+  salary    Int
+  status    ContractStatus @default(ACTIVE)
 
-  player_id String
-  player    Player @relation(fields: [player_id], references: [id])
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+
+  managedById Int?
+  managedBy   User? @relation("ContractManagedBy", fields: [managedById], references: [id])
+
+  buyoutClause       BuyoutClause?
+  extensionOptions   ExtensionOption[]
+  performanceBonuses PerformanceBonus[]
 }
 
-model Team_match_stats {
-  id               Int @id @default(autoincrement())
-  possesion        Int
-  shots            Int
-  shots_on_target  Int
-  shots_off_target Int
-  key_passes      Int
-  passes           Int
-  pass_accuracy    Int
-  fouls            Int
-  yellow_cards     Int
-  red_cards        Int
-  xG               Int
-  corners          Int
-  offsides         Int
-  tackles          Int
-  interceptions    Int
-  clearances       Int
-  blocked_shots    Int
+model BuyoutClause {
+  id     Int @id @default(autoincrement())
+  amount Int
 
-  team_id Int
-  team    Team @relation(fields: [team_id], references: [id])
-
-  match_id Int
-  match    Match @relation(fields: [match_id], references: [id])
-
-  @@unique([team_id, match_id])
+  contractId Int      @unique
+  contract   Contract @relation(fields: [contractId], references: [id])
 }
 
-model Goal {
-  id       Int   @id @default(autoincrement())
-  match_id Int
-  match    Match @relation(fields: [match_id], references: [id])
+model ExtensionOption {
+  id             Int    @id @default(autoincrement())
+  condition      String
+  durationMonths Int
 
-  scorer_id String
-  scorer    Player @relation(fields: [scorer_id], references: [id], name: "scorer")
-
-  assist_id String
-  assist    Player @relation(fields: [assist_id], references: [id], name: "assist")
-
-  team_id Int
-  team    Team @relation(fields: [team_id], references: [id])
+  contractId Int
+  contract   Contract @relation(fields: [contractId], references: [id])
 }
 
-model Card {
-  id      Int  @id @default(autoincrement())
-  type    Type
-  minutes Int
+model PerformanceBonus {
+  id          Int    @id @default(autoincrement())
+  amount      Int
+  description String
 
-  match_id Int
-  match    Match @relation(fields: [match_id], references: [id])
+  contractId Int
+  contract   Contract @relation(fields: [contractId], references: [id])
 
-  player_id String
-  player    Player @relation(fields: [player_id], references: [id])
+  triggers BonusTrigger[]
 }
 
-// connect
+model BonusTrigger {
+  id              Int              @id @default(autoincrement())
+  metric          BonusMetric
+  threshold       Float
+  period          BonusPeriod
+  competitionType CompetitionType? // null = 전체 대회
 
-model Team_player {
-  season_id Int
-  season    Season @relation(fields: [season_id], references: [id])
+  bonusId Int
+  bonus   PerformanceBonus @relation(fields: [bonusId], references: [id])
+}
 
-  team_id Int
-  team    Team @relation(fields: [team_id], references: [id])
+// ─── Transfer Domain ─────────────────────────────────────────────────────────
 
-  player_id String
-  player    Player @relation(fields: [player_id], references: [id])
+model Transfer {
+  id        Int          @id @default(autoincrement())
+  type      TransferType
+  date      DateTime
+  startDate DateTime?    // for loans
+  endDate   DateTime?    // for loans
+  fee       Int?
+  fromClub  String?
+  toClub    String?
 
-  @@id([team_id, player_id, season_id])
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+
+  recall Recall?
+}
+
+model Recall {
+  id          Int          @id @default(autoincrement())
+  status      RecallStatus @default(PENDING)
+  requestedAt DateTime     @default(now())
+  approvedAt  DateTime?
+
+  transferId Int      @unique
+  transfer   Transfer @relation(fields: [transferId], references: [id])
+
+  requestedById Int
+  requestedBy   User @relation("RecallRequestedBy", fields: [requestedById], references: [id])
+
+  approvedById Int?
+  approvedBy   User? @relation("RecallApprovedBy", fields: [approvedById], references: [id])
+}
+
+// ─── Injury Domain ───────────────────────────────────────────────────────────
+
+model Injury {
+  id                 Int          @id @default(autoincrement())
+  bodyPart           String
+  cause              InjuryCause
+  expectedReturnDate DateTime?
+  status             InjuryStatus @default(OCCURRED)
+  occurredAt         DateTime     @default(now())
+
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+
+  medicalStaffId Int
+  medicalStaff   User @relation(fields: [medicalStaffId], references: [id])
+}
+
+// ─── Training Domain ─────────────────────────────────────────────────────────
+
+model TrainingSession {
+  id          Int         @id @default(autoincrement())
+  date        DateTime
+  goal        String
+  sessionType SessionType
+  isApproved  Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
+
+  createdById  Int
+  createdBy    User @relation("SessionCreatedBy", fields: [createdById], references: [id])
+
+  approvedById Int?
+  approvedBy   User? @relation("SessionApprovedBy", fields: [approvedById], references: [id])
+
+  contents     TrainingContent[]
+  participants TrainingParticipant[]
+  results      TrainingResult[]
+}
+
+model TrainingContent {
+  id          Int          @id @default(autoincrement())
+  phase       ContentPhase
+  description String
+
+  sessionId Int
+  session   TrainingSession @relation(fields: [sessionId], references: [id])
+}
+
+model TrainingParticipant {
+  sessionId Int
+  session   TrainingSession @relation(fields: [sessionId], references: [id])
+
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+
+  @@id([sessionId, playerId])
+}
+
+model TrainingResult {
+  id               Int              @id @default(autoincrement())
+  attendance       AttendanceStatus
+  feedback         String?
+  performanceScore Int?
+
+  sessionId Int
+  session   TrainingSession @relation(fields: [sessionId], references: [id])
+
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+
+  @@unique([sessionId, playerId])
+}
+
+// ─── Tactical Analysis Domain ────────────────────────────────────────────────
+
+model TacticalAnalysis {
+  id               Int           @id @default(autoincrement())
+  phase            TacticalPhase
+  formation        String
+  opponentAnalysis String?
+  createdAt        DateTime      @default(now())
+
+  matchId Int
+  match   Match @relation(fields: [matchId], references: [id])
+
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
+
+  createdById Int
+  createdBy   User @relation(fields: [createdById], references: [id])
+
+  lineup TacticalLineup[]
+  media  TacticalMedia[]
+}
+
+model TacticalLineup {
+  id       Int      @id @default(autoincrement())
+  position Position
+
+  tacticalAnalysisId Int
+  tacticalAnalysis   TacticalAnalysis @relation(fields: [tacticalAnalysisId], references: [id])
+
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+}
+
+model TacticalMedia {
+  id   Int    @id @default(autoincrement())
+  url  String
+  type String // VIDEO | FILE
+
+  tacticalAnalysisId Int
+  tacticalAnalysis   TacticalAnalysis @relation(fields: [tacticalAnalysisId], references: [id])
+}
+
+// ─── Stats (external API) ────────────────────────────────────────────────────
+
+model PlayerMatchStats {
+  id                Int      @id @default(autoincrement())
+  goals             Int?
+  assists           Int?
+  xG                Float?
+  xA                Float?
+  shots             Int?
+  passAccuracy      Float?
+  keyPasses         Int?
+  tackles           Int?
+  tackleSuccessRate Float?
+  clearances        Int?
+  interceptions     Int?
+  saves             Int?
+  cleanSheet        Boolean?
+  minutesPlayed     Int?
+
+  matchId Int
+  match   Match @relation(fields: [matchId], references: [id])
+
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+
+  @@unique([matchId, playerId])
+}
+
+model TeamMatchStats {
+  id            Int   @id @default(autoincrement())
+  possession    Int
+  shots         Int
+  shotsOnTarget Int
+  passes        Int
+  passAccuracy  Float
+  fouls         Int
+  yellowCards   Int
+  redCards      Int
+  xG            Float
+  corners       Int
+  offsides      Int
+  tackles       Int
+  interceptions Int
+  clearances    Int
+
+  matchId Int @unique
+  match   Match @relation(fields: [matchId], references: [id])
+}
+
+// ─── Notifications ───────────────────────────────────────────────────────────
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  type      NotificationType
+  message   String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
 }

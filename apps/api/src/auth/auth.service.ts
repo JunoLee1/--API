@@ -2,26 +2,23 @@ import { AuthRepository } from "./auth.repo";
 import { generateToken } from "../lib/token";
 import { hashedPassword, match } from "../lib/hash";
 import CountryService from "../country/country.service";
-import { encrypt } from "../lib/crypto"
-import { IAuth } from "./dto/auth.DTO";
-
+import { encrypt } from "../lib/crypto";
 import {
   FindAdvisorsServiceDto,
   SignUpInputServiceDto,
   LoginInputServiceDto,
   LoginOutputServiceDto,
   FindAdvisorsOutputDto,
-  UpdatedUserStatusDTO,
 } from "./dto/auth.service.dto";
-import { User } from "../generated/client";
-import { AppError } from "../lib/appError";
 import { SignUpOutputDto } from "./dto/auth.repo.dto";
-//import  prisma from "../lib/prisma"
+import { AppError } from "../lib/appError";
+
 export default class AuthService {
   constructor(
     private repo: AuthRepository,
     private countryService: CountryService,
   ) {}
+
   async signUp({
     email,
     password,
@@ -29,222 +26,130 @@ export default class AuthService {
     username,
     nationality,
     confirmedPassword,
-    team,
     role,
     phoneNumber,
-    date_of_birth,
-  }: SignUpInputServiceDto): Promise<SignUpOutputDto>  {
-    
-    if (!email) {
-      throw new AppError(400,"INVALID_EMAIL");
-    }
-     
-    if (!nickname) {
-      throw new AppError(400,"INVALID_NICKNAME");
-    }
-     
-    if (!password) {
-      throw new AppError(400,"INVALID_PASSWORD");
-    }
-     
-    const duplicatedEmail = await this.repo.isEmailDuplicated(email);
-    if (duplicatedEmail) {
-      throw new AppError (409,"DUPLICATED_EMAIL");
+    dateOfBirth,
+  }: SignUpInputServiceDto): Promise<SignUpOutputDto> {
+    if (!email) throw new AppError(400, "INVALID_EMAIL");
+    if (!nickname) throw new AppError(400, "INVALID_NICKNAME");
+    if (!password) throw new AppError(400, "INVALID_PASSWORD");
+
+    if (await this.repo.isEmailDuplicated(email)) {
+      throw new AppError(409, "DUPLICATED_EMAIL");
     }
 
-    const countryCodeChecker = await this.countryService.getCountryByCode(
-      nationality.code,
-    );
-    if (!countryCodeChecker) throw new AppError(400,"INVALID_NATIONALITY_CODE");
+    const countryCodeChecker = await this.countryService.getCountryByCode(nationality.code);
+    if (!countryCodeChecker) throw new AppError(400, "INVALID_NATIONALITY_CODE");
 
-    const duplicatedNickname = await this.repo.isNicknameDuplicated(nickname);
-    if (duplicatedNickname) {
-      throw new AppError(409,"DUPLICATED_NICKNAME");
+    if (await this.repo.isNicknameDuplicated(nickname)) {
+      throw new AppError(409, "DUPLICATED_NICKNAME");
     }
 
     if (password !== confirmedPassword) {
-      throw new AppError(400,"PASSWORD_NOT_MATCH");
+      throw new AppError(400, "PASSWORD_NOT_MATCH");
     }
-    
-    const hashPassword = await hashedPassword(password);
 
-    const encryptedPhonenumber = await encrypt(phoneNumber);
-    const phoneNumberChecker = await this.repo.isDuplicatedPhoneNumber(encryptedPhonenumber.encrypted)
-    if( phoneNumberChecker ) {
-      throw new AppError(409,"DUPLICATED PHONENUMBER")
+    const hashPassword = await hashedPassword(password);
+    const encryptedPhone = await encrypt(phoneNumber);
+
+    if (await this.repo.isDuplicatedPhoneNumber(encryptedPhone.encrypted)) {
+      throw new AppError(409, "DUPLICATED_PHONENUMBER");
     }
-    const newAdmin = await this.repo.createAdmin({
+
+    const newUser = await this.repo.createAdmin({
       email,
       password: hashPassword,
       nickname,
       username,
-      team,
       role,
-      date_of_birth,
+      dateOfBirth,
       nationality,
-      phoneNumber: encryptedPhonenumber,
+      phoneNumber: encryptedPhone,
     });
+
     return {
-      email: newAdmin.email,
-      username:newAdmin.username,
-      nickname:newAdmin.nickname,
-      date_of_birth:newAdmin.date_of_birth,
-      team:{
-        id: newAdmin.team.id,
-        teamname: newAdmin.team.teamname
+      email: newUser.email,
+      username: newUser.username,
+      nickname: newUser.nickname,
+      dateOfBirth: newUser.dateOfBirth,
+      nationality: {
+        id: newUser.nationality.id,
+        name: newUser.nationality.name,
+        code: newUser.nationality.code,
       },
-      nationality:{
-        id: newAdmin.nationality.id,
-        name: newAdmin.nationality.name,
-        code: newAdmin.nationality.code,
-      },
-      role:newAdmin.role,
+      role: newUser.role,
     };
   }
 
-  //=================================================================================================================================================================================
-  async login({
-    email,
-    password,
-  }: LoginInputServiceDto): Promise<LoginOutputServiceDto> {
+  async login({ email, password }: LoginInputServiceDto): Promise<LoginOutputServiceDto> {
     const user = await this.repo.findByEmail(email);
-    if (!user) throw new AppError(400,"INVALID USER EMAIL");
+    if (!user) throw new AppError(400, "INVALID_USER_EMAIL");
 
-    const isMatched = await match(password,user.password);
-    if (!isMatched) throw new AppError(400,"Wrong Password");
-    const { accessToken, refreshToken } = await generateToken(user.id, user.role);
+    const isMatched = await match(password, user.password);
+    if (!isMatched) throw new AppError(400, "WRONG_PASSWORD");
+
+    const { accessToken, refreshToken } = await generateToken(user.id);
     return { accessToken, refreshToken };
   }
-  //=================================================================================================================================================================================
 
   async findAdvisorById(id: number) {
     const user = await this.repo.findAdvisorById(id);
-    if (!user) {
-      throw new AppError(404,"NOT FOUND");
-    }
+    if (!user) throw new AppError(404, "NOT_FOUND");
     return {
       id: user.id,
       username: user.username,
       email: user.email,
-      teamname: user.team.teamname,
     };
   }
-  //=================================================================================================================================================================================
-  async findAdvisors({
-    take,
-    skip,
-    teamname,
-    username,
-  }: FindAdvisorsServiceDto): Promise<FindAdvisorsOutputDto> {
+
+  async findAdvisors({ take, skip, username }: FindAdvisorsServiceDto): Promise<FindAdvisorsOutputDto> {
     const where: any = {};
-    if (teamname) {
-      where.teamname = teamname;
-    }
+    if (username) where.username = username;
 
-    if (username) {
-      where.username = username;
-    }
-    const advisors = await this.repo.findAdvisors({
-      where,
-      include: {
-        team: true,
-      },
-      take,
-      skip,
-    });
-    const result = advisors.map((a) => ({
-      email: a.email,
-      username: a.username,
-      teamname: a?.team.teamname ?? null,
-      nickname: a.nickname,
+    const users = await this.repo.findAdvisors({ where });
+    return users.map((u) => ({
+      email: u.email,
+      username: u.username,
+      nickname: u.nickname,
     }));
-    return result;
   }
-  //=================================================================================================================================================================================
-  async updatesAdvisor(data:any) {
-    const {
-      id,
-      email,
-      team,
-      username,
-      password,
-      nationality,
-      role,
-      phoneNumber,
-      date_of_birth,
-      nickname,
-      isDeleted
-    } = data;
-    console.log("launched service")
-    const advisor = await this.repo.findAdvisorById(id);
-    console.log("advisor:", advisor)
-    if (!advisor) throw new AppError(404, "NOT FOUND");
 
-    console.log(advisor.id)
+  async updatesAdvisor(data: any) {
+    const { id, email, username, password, role, dateOfBirth, nickname, isDeleted } = data;
+
+    const user = await this.repo.findAdvisorById(id);
+    if (!user) throw new AppError(404, "NOT_FOUND");
+
     const updatedData: any = {};
     if (email !== undefined) updatedData.email = email;
     if (username !== undefined) updatedData.username = username;
     if (nickname !== undefined) updatedData.nickname = nickname;
     if (password !== undefined) updatedData.password = password;
-    if (date_of_birth !== undefined) updatedData.date_of_birth = date_of_birth;
+    if (dateOfBirth !== undefined) updatedData.dateOfBirth = dateOfBirth;
     if (role !== undefined) updatedData.role = role;
-    if (team !== undefined) updatedData.team = team;
-    if (nationality !== undefined) updatedData.nationality = nationality;
-    if (phoneNumber !== undefined) updatedData.phoneNumber = phoneNumber;
-    if(isDeleted!== undefined) updatedData.isDeleted = false
-    const admin = await this.repo.updatesAdvisor(id,updatedData);
-    console.log(admin)
-    const result = {
-      id: advisor.id,
-      email:admin.email,
-      date_of_birth:admin.date_of_birth,
-      password:admin.password,
-      nickname:admin.nickname,
-      role:admin.role,
-      isDeleted:admin.isDeleted,
-      phoneNumber:admin.phoneNumber,
-      username:admin.username,
-      team: admin.team,
-      nationality: admin.nationality
-    }
-    console.log(result)
-    return result;
+    if (isDeleted !== undefined) updatedData.isDeleted = isDeleted;
 
+    return await this.repo.updatesAdvisor(id, updatedData);
   }
-  //=================================================================================================================================================================================
-  async updateAdvisorsStatus(data: UpdatedUserStatusDTO) {
-    
-    const ids = data.map((item) => item.id);
-    const users: User[] = await this.repo.findAdvisorsByIds(ids);
-    if (users.length === 0) throw new AppError (400, "Invalid adminstrators");
-    const validIds = users.map(u => u.id);
-    const filtered = data.filter(item=> validIds.includes(item.id));
-    const result = await this.repo.updateAdvisorStatus(filtered);
-    return result;
-  }
-  //=================================================================================================================================================================================
+
   async delete(id: number) {
     const user = await this.repo.findAdvisorById(id);
-    if (!user) throw new AppError(404,"NOT FOUND");
+    if (!user) throw new AppError(404, "NOT_FOUND");
 
-    if (user.isDeleted === true) {
-      return await this.repo.delete(id);
+    if (user.isDeleted) {
+      return await this.repo.updatesAdvisor(id, { isDeleted: false });
     }
     return await this.repo.updatesAdvisor(id, { isDeleted: true });
   }
-  //=================================================================================================================================================================================
+
   async deleteMany(data: { id: number }[]) {
     const ids = data.map((item) => item.id);
-    const users: User[] = await this.repo.findAdvisorsByIds(ids);
-    if (!users.length) throw new AppError(404, "NOT FOUND");
+    const users = await this.repo.findAdvisorsByIds(ids);
+    if (!users.length) throw new AppError(404, "NOT_FOUND");
 
-    const activeUserIds = users.filter((user) => !user.isDeleted).map(user => 
-      user.id
-    )
-    if (!activeUserIds) return[]
-    return await this.repo.deleteMany({
-      ids: activeUserIds,
-      isDeleted:true,
-    });
+    const activeIds = users.filter((u) => !u.isDeleted).map((u) => u.id);
+    if (!activeIds.length) return [];
+
+    return await this.repo.deleteMany({ ids: activeIds, isDeleted: true });
   }
 }
