@@ -2,6 +2,7 @@ import { describe, test, jest } from "@jest/globals";
 import AuthService from "../../src/auth/auth.service";
 import * as token from "../../src/lib/token";
 import * as hash from "../../src/lib/hash";
+import * as crypto from "../../src/lib/crypto";
 import { IAuth, Role, Status } from "../../src/auth/auth.DTO";
 
 const MockRepo = {
@@ -27,10 +28,13 @@ jest.mock("../../src/lib/token", () => ({
 
 jest.mock("../../src/lib/hash", () => ({
   match: jest.fn(),
-  hashedPassword: jest.fn(() => "hashed"),
+  hashedPassword: jest.fn(),
 }));
 
-console.log(AuthService);
+jest.mock("../../src/lib/crypto", () =>({
+  encrypt: jest.fn(),
+  decrypt: jest.fn()
+}))
 const service = new AuthService(MockRepo);
 describe("인증 로직 테스트 - registry service", () => {
   afterEach(() => {
@@ -45,6 +49,7 @@ describe("인증 로직 테스트 - registry service", () => {
         confirmedPassword: "1234",
         username: "junoLee",
         countriesId: 1,
+        phoneNumber : "01011112222"
       }),
     ).rejects.toThrow("INVALID_EMAIL");
   });
@@ -61,6 +66,7 @@ describe("인증 로직 테스트 - registry service", () => {
         username: "junoLee",
         confirmedPassword: "1234",
         countriesId: 1,
+        phoneNumber : "01011112222"
       }),
     ).rejects.toThrow("DUPLICATED_EMAIL");
   });
@@ -74,6 +80,7 @@ describe("인증 로직 테스트 - registry service", () => {
         username: "junoLee",
         confirmedPassword: "1234",
         countriesId: 1,
+        phoneNumber : "01011112222"
       }),
     ).rejects.toThrow("INVALID_NICKNAME");
   });
@@ -90,6 +97,7 @@ describe("인증 로직 테스트 - registry service", () => {
         username: "junoLee",
         confirmedPassword: "1234",
         countriesId: 1,
+        phoneNumber : "01011112222"
       }),
     ).rejects.toThrow("DUPLICATED_NICKNAME");
   });
@@ -106,10 +114,11 @@ describe("인증 로직 테스트 - registry service", () => {
         username: "junoLee",
         confirmedPassword: "1234",
         countriesId: 1,
+        phoneNumber : "01011112222"
       }),
     ).rejects.toThrow("INVALID_PASSWORD");
   });
-  test("respons Unmatched Pwd, if confirmed password", async () => {
+  test("response  Unmatched Pwd, if confirmed password", async () => {
     await expect(
       service.signUp({
         email: "email1@email.com",
@@ -118,9 +127,27 @@ describe("인증 로직 테스트 - registry service", () => {
         nickname: "Juno",
         countriesId: 1,
         username: "junoLee",
+        phoneNumber : "01011112222"
       }),
     ).rejects.toThrow("PASSWORD_NOT_MATCH");
   });
+  test("성공적으로 휴대폰 번호가 암호화 되는지 확인", async() =>{
+      const mockEncrypt = jest.spyOn(crypto, "encrypt").mockReturnValue({
+        encrypted: "mocked",
+        iv: "mocked-iv",
+    })
+    await service.signUp({
+        email: "email1@email.com",
+        password: "1234",
+        confirmedPassword: "1234",
+        nickname: "Juno",
+        countriesId: 1,
+        username: "junoLee",
+        phoneNumber: "01012345678",
+  })
+   expect(mockEncrypt).toHaveBeenCalledWith("01012345678");
+  })
+  //test(" 암호화된 유저의 휴대폰 번호가 이미 등록된 휴대폰 인경우, 에러 던지기", async() =>{})
   test("로그인 성공시 사용자 정보리턴", async () => {
     MockRepo.isEmailDuplicated.mockResolvedValue(false);
     MockRepo.isNicknameDuplicated.mockResolvedValue(false);
@@ -132,6 +159,7 @@ describe("인증 로직 테스트 - registry service", () => {
       nickname: "Juno",
       countriesId: 1,
       username: "junoLee",
+      phoneNumber: "01012345678",
     };
 
     MockRepo.createAdmin.mockResolvedValue(fakeUser);
@@ -168,7 +196,7 @@ describe("인증 로직 테스트 - login service", () => {
     };
 
     MockRepo.findByEmail.mockResolvedValue(fakeUser.email);
-    const spy = jest.spyOn(hash, "match").mockResolvedValue(false);
+    jest.spyOn(hash, "match").mockResolvedValue(false);
     await expect(
       service.login({
         email: "test@example.com",
