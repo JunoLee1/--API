@@ -5,12 +5,16 @@ export type LoginInput = {
 export type signUpSevicePasswordDto = {
   hashedPassword: string
 };
+export type PhoneNumberDTO = {
+  encrypted: string
+  iv: string
+}
 export type signUpInputServiceDto = {
   email: string;
   password: string;
   username: string;
   nickname: string;
-  //phoneNumber:string
+  phoneNumber:PhoneNumberDTO
   countriesId: number;
 };
 export type signUpInputDto = {
@@ -19,7 +23,7 @@ export type signUpInputDto = {
   confirmedPassword: string;
   username: string;
   nickname: string;
-  //phoneNumber:string
+  phoneNumber:string
   countriesId: number;
 };
 export type signUpOutputDto = {
