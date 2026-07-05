@@ -1,91 +1,60 @@
-import AuthService from "./auth.service";
-import { SignUpInputDto, LoginInput, QueryType } from "./dto/auth.controller.dto";
-import { Request, Response, NextFunction } from "express-serve-static-core";
+import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME } from "../lib/constants";
+import { AuthService } from "./auth.service";
 
-export default class AuthController {
+const COOKIE_OPTS = { httpOnly: true, sameSite: "strict" as const };
+
+export class AuthController {
   constructor(private service: AuthService) {}
 
-  signUp = async (req: Request<{}, {}, SignUpInputDto>, res: Response, next: NextFunction) => {
+  login = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await this.service.signUp(req.body);
-      return res.status(201).json(result);
+      const { accessToken, refreshToken } = await this.service.login(req.body);
+      res.cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, COOKIE_OPTS);
+      res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, COOKIE_OPTS);
+      res.status(200).json({ message: "OK" });
     } catch (err) {
       next(err);
     }
   };
 
-  login = async (req: Request, res: Response, next: NextFunction) => {
+  refresh = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { email, password } = req.body as LoginInput;
-      const result = await this.service.login({ email, password });
-      return res.status(200).json(result);
-    } catch (error) {
-      next(error);
+      const { id, role } = req.user!;
+      const { accessToken, refreshToken } = { accessToken: "", refreshToken: "" };
+      // re-issue both tokens using the validated refresh token payload
+      const tokens = (await import("../lib/token")).generateTokens(id, role);
+      res.cookie(ACCESS_TOKEN_COOKIE_NAME, tokens.accessToken, COOKIE_OPTS);
+      res.cookie(REFRESH_TOKEN_COOKIE_NAME, tokens.refreshToken, COOKIE_OPTS);
+      res.status(200).json({ message: "OK" });
+    } catch (err) {
+      next(err);
     }
   };
 
-  findAdvisorById = async (req: Request, res: Response, next: NextFunction) => {
+  logout = (_req: Request, res: Response) => {
+    res.clearCookie(ACCESS_TOKEN_COOKIE_NAME);
+    res.clearCookie(REFRESH_TOKEN_COOKIE_NAME);
+    res.status(200).json({ message: "OK" });
+  };
+
+  me = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
-      if (req.user.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
-      const id = Number(req.params["id"]);
-      const user = await this.service.findAdvisorById(id);
-      return res.status(200).json(user);
-    } catch (error) {
-      next(error);
+      const user = await this.service.me(req.user!.id);
+      res.status(200).json(user);
+    } catch (err) {
+      next(err);
     }
   };
 
-  findAdvisors = async (req: Request, res: Response, next: NextFunction) => {
+  createUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
-      if (req.user.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
-      const { take, page, username } = req.query as unknown as QueryType;
-      const numTake = Number(take) || 10;
-      const numPage = Number(page) || 1;
-      const skip = (numPage - 1) * numTake;
-      if (skip < 0) throw new AppError(400, "INVALID_PAGE");
-      const result = await this.service.findAdvisors({ skip, take: numTake, username });
-      return res.status(200).json(result);
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  updatesAdvisor = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
-      const id = Number(req.params["id"]);
-      const { username, email, password, role, dateOfBirth, nickname, isDeleted } = req.body;
-      await this.service.updatesAdvisor({ id, email, username, password, role, dateOfBirth, nickname, isDeleted });
-      return res.status(200).json({ message: "successfully modified" });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  delete = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
-      if (req.user.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
-      const id = Number(req.params["id"]);
-      await this.service.delete(id);
-      return res.status(204).send();
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  deleteMany = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      if (!req.user?.id) throw new AppError(401, "UNAUTHORIZED");
-      if (req.user.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
-      const { data } = req.body;
-      await this.service.deleteMany(data);
-      res.status(204).send();
-    } catch (error) {
-      next(error);
+      if (req.user!.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
+      const user = await this.service.createUser(req.body);
+      res.status(201).json(user);
+    } catch (err) {
+      next(err);
     }
   };
 }

@@ -1,24 +1,10 @@
-import { sign, verify } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { JWT_ACCESS_TOKEN_SECRET, JWT_REFRESH_TOKEN_SECRET } from "./constants";
+import { Role } from "../generated/enums";
 
-const generateToken = async (id: any) => {
-  const accessToken = sign({ sub: id }, JWT_ACCESS_TOKEN_SECRET, {
-    expiresIn: "1h",
-  });
-  const refreshToken = sign({ sub: id }, JWT_REFRESH_TOKEN_SECRET, {
-    expiresIn: "1d",
-  });
+export function generateTokens(id: number, role: Role) {
+  const payload = { id, role };
+  const accessToken = jwt.sign(payload, JWT_ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
+  const refreshToken = jwt.sign(payload, JWT_REFRESH_TOKEN_SECRET, { expiresIn: "7d" });
   return { accessToken, refreshToken };
-};
-/*
-const verifyAccessToken = async (token: any) => {
-    const decode = verify(token, JWT_ACCESS_TOKEN_SECRET)
-    return { sub: decode.sub };
-};
-
-const verifyRefreshToken = async (token: any) => {
-    const decode = verify(token, JWT_REFRESH_TOKEN_SECRET)
-    return { sub: decode.sub };
-};
-*/
-export { generateToken };
+}

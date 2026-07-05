@@ -1,40 +1,24 @@
-import {
-  JWT_ACCESS_TOKEN_SECRET,
-  JWT_REFRESH_TOKEN_SECRET,
-  REFRESH_TOKEN_COOKIE_NAME,
-  ACCESS_TOKEN_COOKIE_NAME,
-} from "../../constants";
-import { Strategy as JwtStrategy } from "passport-jwt";
-import { Role } from "../../../generated/enums";
+import { Strategy, ExtractJwt } from "passport-jwt";
+import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME, JWT_ACCESS_TOKEN_SECRET, JWT_REFRESH_TOKEN_SECRET } from "../../constants";
+import { Request } from "express";
 
-type Payload = {
-  sub : string | number,
-  role : Role,
-  iat?: number;
-  exp?: number;
-}
 const accessTokenOptions = {
-  jwtFromRequest: (req: any) => req.cookies[ACCESS_TOKEN_COOKIE_NAME],
+  jwtFromRequest: (req: Request) => req.cookies[ACCESS_TOKEN_COOKIE_NAME] as string | null,
   secretOrKey: JWT_ACCESS_TOKEN_SECRET,
 };
+
 const refreshTokenOptions = {
-  jwtFromRequest: (req: any) => req.cookies[REFRESH_TOKEN_COOKIE_NAME],
+  jwtFromRequest: (req: Request) => req.cookies[REFRESH_TOKEN_COOKIE_NAME] as string | null,
   secretOrKey: JWT_REFRESH_TOKEN_SECRET,
 };
-export const jwtVerify = async (payload: Payload, done:any) => {
-  console.log("🔥 토큰 인증")
+
+export const jwtVerify = async (payload: Express.User, done: (err: unknown, user?: Express.User | false) => void) => {
   try {
-    console.log("payload:", payload);
-    done(null, { id: payload.sub, role: payload.role });
+    done(null, payload);
   } catch (err) {
     done(err, false);
   }
 };
-export const accessTokenStrategy = new JwtStrategy(
-  accessTokenOptions,
-  jwtVerify,
-);
-export const refreshTokenStrategy = new JwtStrategy(
-  refreshTokenOptions,
-  jwtVerify,
-);
+
+export const accessTokenStrategy = new Strategy(accessTokenOptions, jwtVerify);
+export const refreshTokenStrategy = new Strategy(refreshTokenOptions, jwtVerify);

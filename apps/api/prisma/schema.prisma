@@ -7,7 +7,9 @@ datasource db {
   provider = "postgresql"
 }
 
-// ─── Enums ───────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────
 
 enum Role {
   ADMIN
@@ -164,160 +166,140 @@ enum NotificationType {
   TRAINING_ATTENDANCE_WARNING
 }
 
-// ─── Core ────────────────────────────────────────────────────────────────────
+enum SeasonStatus {
+  UPCOMING
+  ACTIVE
+  CLOSED
+}
+
+// ─────────────────────────────────────────────
+// Models
+// ─────────────────────────────────────────────
 
 model Country {
-  id   Int    @id @default(autoincrement())
-  name String @unique
-  code String @unique
+  id      Int      @id @default(autoincrement())
+  name    String
+  code    String
 
   users   User[]
   players Player[]
 }
 
 model PhoneNumber {
-  id        Int    @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   iv        String
-  encrypted String @unique
+  encrypted String
 
   user User?
 }
 
 model User {
-  id           Int           @id @default(autoincrement())
-  email        String        @unique
-  password     String
-  username     String
-  nickname     String        @unique
-  role         Role
-  coachingRole CoachingRole?  // null unless role = COACHING_STAFF
+  id            Int           @id @default(autoincrement())
+  email         String        @unique
+  password      String
+  username      String
+  nickname      String        @unique
+  role          Role
+  coachingRole  CoachingRole?
   isDeleted     Boolean       @default(false)
   isOutOfOffice Boolean       @default(false)
   dateOfBirth   DateTime
-
-  phoneNumberId Int         @unique
-  phoneNumber   PhoneNumber @relation(fields: [phoneNumberId], references: [id])
-
+  phoneNumberId Int           @unique
   nationalityId Int
-  nationality   Country @relation(fields: [nationalityId], references: [id])
 
-  player Player?
-
-  recallRequests   Recall[] @relation("RecallRequestedBy")
-  recallApprovals  Recall[] @relation("RecallApprovedBy")
+  phoneNumber      PhoneNumber          @relation(fields: [phoneNumberId], references: [id])
+  nationality      Country              @relation(fields: [nationalityId], references: [id])
+  player           Player?
+  recallRequests   Recall[]             @relation("RecallRequestedBy")
+  recallApprovals  Recall[]             @relation("RecallApprovedBy")
   managedInjuries  Injury[]
-  createdSessions  TrainingSession[] @relation("SessionCreatedBy")
-  approvedSessions TrainingSession[] @relation("SessionApprovedBy")
+  createdSessions  TrainingSession[]    @relation("TrainingSessionCreatedBy")
+  approvedSessions TrainingSession[]    @relation("TrainingSessionApprovedBy")
   tacticalAnalyses TacticalAnalysis[]
   notifications    Notification[]
-  managedContracts Contract[]        @relation("ContractManagedBy")
-  agentPlayers     Player[]          @relation("AgentPlayers")
-}
-
-model Player {
-  id            String       @id @default(cuid())
-  playerName    String
-  dateOfBirth   DateTime
-  preferredFoot Foot
-  height        Int
-  weight        Int
-  position      Position
-  level         PlayerLevel
-  status        PlayerStatus @default(ACTIVE)
-  externalId    String?      @unique
-
-  nationalityId Int
-  nationality   Country @relation(fields: [nationalityId], references: [id])
-
-  userId Int?  @unique
-  user   User? @relation(fields: [userId], references: [id])
-
-  agentId Int?
-  agent   User? @relation("AgentPlayers", fields: [agentId], references: [id])
-
-  contracts              Contract[]
-  transfers              Transfer[]
-  injuries               Injury[]
-  trainingParticipations TrainingParticipant[]
-  trainingResults        TrainingResult[]
-  matchStats      PlayerMatchStats[]
-  tacticalLineups TacticalLineup[]
+  managedContracts Contract[]
+  agentPlayers     Player[]             @relation("AgentPlayers")
 }
 
 model Season {
-  id        Int      @id @default(autoincrement())
+  id        Int          @id @default(autoincrement())
   name      String
   startDate DateTime
   endDate   DateTime
+  status    SeasonStatus @default(UPCOMING)
 
   matches          Match[]
   trainingSessions TrainingSession[]
   tacticalAnalyses TacticalAnalysis[]
 }
 
-model Match {
-  id           Int      @id @default(autoincrement())
-  date         DateTime
-  homeTeamName String
-  awayTeamName String
-  homeScore       Int?
-  awayScore       Int?
-  competitionType CompetitionType
-  externalId      String?         @unique
+model Player {
+  id          String       @id @default(uuid())
+  playerName  String
+  dateOfBirth DateTime
+  preferredFoot Foot
+  height      Int
+  weight      Int
+  position    Position
+  level       PlayerLevel
+  status      PlayerStatus @default(ACTIVE)
+  externalId  String?      @unique
+  nationalityId Int
+  userId      Int?         @unique
+  agentId     Int?
 
-  seasonId Int
-  season   Season @relation(fields: [seasonId], references: [id])
-
-  playerMatchStats PlayerMatchStats[]
-  teamMatchStats   TeamMatchStats?
-  tacticalAnalyses TacticalAnalysis[]
+  nationality          Country               @relation(fields: [nationalityId], references: [id])
+  user                 User?                 @relation(fields: [userId], references: [id])
+  agent                User?                 @relation("AgentPlayers", fields: [agentId], references: [id])
+  contracts            Contract[]
+  transfers            Transfer[]
+  injuries             Injury[]
+  trainingParticipations TrainingParticipant[]
+  trainingResults      TrainingResult[]
+  matchStats           PlayerMatchStats[]
+  tacticalLineups      TacticalLineup[]
 }
 
-// ─── Contract Domain ─────────────────────────────────────────────────────────
-
 model Contract {
-  id        Int            @id @default(autoincrement())
-  startDate DateTime
-  endDate   DateTime
-  salary    Int
-  status    ContractStatus @default(ACTIVE)
-
-  playerId String
-  player   Player @relation(fields: [playerId], references: [id])
-
+  id          Int            @id @default(autoincrement())
+  startDate   DateTime
+  endDate     DateTime
+  salary      Int
+  status      ContractStatus @default(ACTIVE)
+  playerId    String
   managedById Int?
-  managedBy   User? @relation("ContractManagedBy", fields: [managedById], references: [id])
 
-  buyoutClause       BuyoutClause?
-  extensionOptions   ExtensionOption[]
+  player            Player             @relation(fields: [playerId], references: [id])
+  managedBy         User?              @relation(fields: [managedById], references: [id])
+  buyoutClause      BuyoutClause?
+  extensionOptions  ExtensionOption[]
   performanceBonuses PerformanceBonus[]
 }
 
 model BuyoutClause {
-  id     Int @id @default(autoincrement())
-  amount Int
+  id         Int    @id @default(autoincrement())
+  amount     BigInt
+  contractId Int    @unique
 
-  contractId Int      @unique
-  contract   Contract @relation(fields: [contractId], references: [id])
+  contract Contract @relation(fields: [contractId], references: [id])
 }
 
 model ExtensionOption {
   id             Int    @id @default(autoincrement())
   condition      String
   durationMonths Int
+  contractId     Int
 
-  contractId Int
-  contract   Contract @relation(fields: [contractId], references: [id])
+  contract Contract @relation(fields: [contractId], references: [id])
 }
 
 model PerformanceBonus {
   id          Int    @id @default(autoincrement())
-  amount      Int
+  amount      BigInt
   description String
+  contractId  Int
 
-  contractId Int
-  contract   Contract @relation(fields: [contractId], references: [id])
-
+  contract Contract       @relation(fields: [contractId], references: [id])
   triggers BonusTrigger[]
 }
 
@@ -326,189 +308,93 @@ model BonusTrigger {
   metric          BonusMetric
   threshold       Float
   period          BonusPeriod
-  competitionType CompetitionType? // null = 전체 대회
+  competitionType CompetitionType?
+  bonusId         Int
 
-  bonusId Int
-  bonus   PerformanceBonus @relation(fields: [bonusId], references: [id])
+  bonus PerformanceBonus @relation(fields: [bonusId], references: [id])
 }
-
-// ─── Transfer Domain ─────────────────────────────────────────────────────────
 
 model Transfer {
   id        Int          @id @default(autoincrement())
   type      TransferType
   date      DateTime
-  startDate DateTime?    // for loans
-  endDate   DateTime?    // for loans
+  startDate DateTime?
+  endDate   DateTime?
   fee       Int?
   fromClub  String?
   toClub    String?
+  playerId  String
 
-  playerId String
-  player   Player @relation(fields: [playerId], references: [id])
-
+  player Player  @relation(fields: [playerId], references: [id])
   recall Recall?
 }
 
 model Recall {
-  id          Int          @id @default(autoincrement())
-  status      RecallStatus @default(PENDING)
-  requestedAt DateTime     @default(now())
-  approvedAt  DateTime?
-
-  transferId Int      @unique
-  transfer   Transfer @relation(fields: [transferId], references: [id])
-
+  id            Int          @id @default(autoincrement())
+  status        RecallStatus @default(PENDING)
+  requestedAt   DateTime     @default(now())
+  approvedAt    DateTime?
+  transferId    Int          @unique
   requestedById Int
-  requestedBy   User @relation("RecallRequestedBy", fields: [requestedById], references: [id])
+  approvedById  Int?
 
-  approvedById Int?
-  approvedBy   User? @relation("RecallApprovedBy", fields: [approvedById], references: [id])
+  transfer    Transfer @relation(fields: [transferId], references: [id])
+  requestedBy User     @relation("RecallRequestedBy", fields: [requestedById], references: [id])
+  approvedBy  User?    @relation("RecallApprovedBy", fields: [approvedById], references: [id])
 }
 
-// ─── Injury Domain ───────────────────────────────────────────────────────────
-
 model Injury {
-  id                 Int          @id @default(autoincrement())
+  id                 Int         @id @default(autoincrement())
   bodyPart           String
   cause              InjuryCause
   expectedReturnDate DateTime?
   status             InjuryStatus @default(OCCURRED)
-  occurredAt         DateTime     @default(now())
+  occurredAt         DateTime    @default(now())
+  playerId           String
+  medicalStaffId     Int
 
-  playerId String
-  player   Player @relation(fields: [playerId], references: [id])
-
-  medicalStaffId Int
-  medicalStaff   User @relation(fields: [medicalStaffId], references: [id])
+  player       Player @relation(fields: [playerId], references: [id])
+  medicalStaff User   @relation(fields: [medicalStaffId], references: [id])
 }
 
-// ─── Training Domain ─────────────────────────────────────────────────────────
+model Match {
+  id              Int             @id @default(autoincrement())
+  date            DateTime
+  homeTeamName    String
+  awayTeamName    String
+  homeScore       Int?
+  awayScore       Int?
+  competitionType CompetitionType
+  externalId      String?         @unique
+  seasonId        Int
 
-model TrainingSession {
-  id          Int         @id @default(autoincrement())
-  date        DateTime
-  goal        String
-  sessionType SessionType
-  isApproved  Boolean     @default(false)
-  createdAt   DateTime    @default(now())
-
-  seasonId Int
-  season   Season @relation(fields: [seasonId], references: [id])
-
-  createdById  Int
-  createdBy    User @relation("SessionCreatedBy", fields: [createdById], references: [id])
-
-  approvedById Int?
-  approvedBy   User? @relation("SessionApprovedBy", fields: [approvedById], references: [id])
-
-  contents     TrainingContent[]
-  participants TrainingParticipant[]
-  results      TrainingResult[]
+  season           Season             @relation(fields: [seasonId], references: [id])
+  playerMatchStats PlayerMatchStats[]
+  teamMatchStats   TeamMatchStats?
+  tacticalAnalyses TacticalAnalysis[]
 }
-
-model TrainingContent {
-  id          Int          @id @default(autoincrement())
-  phase       ContentPhase
-  description String
-
-  sessionId Int
-  session   TrainingSession @relation(fields: [sessionId], references: [id])
-}
-
-model TrainingParticipant {
-  sessionId Int
-  session   TrainingSession @relation(fields: [sessionId], references: [id])
-
-  playerId String
-  player   Player @relation(fields: [playerId], references: [id])
-
-  @@id([sessionId, playerId])
-}
-
-model TrainingResult {
-  id               Int              @id @default(autoincrement())
-  attendance       AttendanceStatus
-  feedback         String?
-  performanceScore Int?
-
-  sessionId Int
-  session   TrainingSession @relation(fields: [sessionId], references: [id])
-
-  playerId String
-  player   Player @relation(fields: [playerId], references: [id])
-
-  @@unique([sessionId, playerId])
-}
-
-// ─── Tactical Analysis Domain ────────────────────────────────────────────────
-
-model TacticalAnalysis {
-  id               Int           @id @default(autoincrement())
-  phase            TacticalPhase
-  formation        String
-  opponentAnalysis String?
-  createdAt        DateTime      @default(now())
-
-  matchId Int
-  match   Match @relation(fields: [matchId], references: [id])
-
-  seasonId Int
-  season   Season @relation(fields: [seasonId], references: [id])
-
-  createdById Int
-  createdBy   User @relation(fields: [createdById], references: [id])
-
-  lineup TacticalLineup[]
-  media  TacticalMedia[]
-}
-
-model TacticalLineup {
-  id       Int      @id @default(autoincrement())
-  position Position
-
-  tacticalAnalysisId Int
-  tacticalAnalysis   TacticalAnalysis @relation(fields: [tacticalAnalysisId], references: [id])
-
-  playerId String
-  player   Player @relation(fields: [playerId], references: [id])
-}
-
-model TacticalMedia {
-  id   Int    @id @default(autoincrement())
-  url  String
-  type String // VIDEO | FILE
-
-  tacticalAnalysisId Int
-  tacticalAnalysis   TacticalAnalysis @relation(fields: [tacticalAnalysisId], references: [id])
-}
-
-// ─── Stats (external API) ────────────────────────────────────────────────────
 
 model PlayerMatchStats {
-  id                Int      @id @default(autoincrement())
-  goals             Int?
-  assists           Int?
-  xG                Float?
-  xA                Float?
-  shots             Int?
-  passAccuracy      Float?
-  keyPasses         Int?
-  tackles           Int?
+  id               Int     @id @default(autoincrement())
+  goals            Int?
+  assists          Int?
+  xG               Float?
+  xA               Float?
+  shots            Int?
+  passAccuracy     Float?
+  keyPasses        Int?
+  tackles          Int?
   tackleSuccessRate Float?
-  clearances        Int?
-  interceptions     Int?
-  saves             Int?
-  cleanSheet        Boolean?
-  minutesPlayed     Int?
+  clearances       Int?
+  interceptions    Int?
+  saves            Int?
+  cleanSheet       Boolean?
+  minutesPlayed    Int?
+  matchId          Int
+  playerId         String
 
-  matchId Int
-  match   Match @relation(fields: [matchId], references: [id])
-
-  playerId String
-  player   Player @relation(fields: [playerId], references: [id])
-
-  @@unique([matchId, playerId])
+  match  Match  @relation(fields: [matchId], references: [id])
+  player Player @relation(fields: [playerId], references: [id])
 }
 
 model TeamMatchStats {
@@ -527,12 +413,96 @@ model TeamMatchStats {
   tackles       Int
   interceptions Int
   clearances    Int
+  matchId       Int   @unique
 
-  matchId Int @unique
-  match   Match @relation(fields: [matchId], references: [id])
+  match Match @relation(fields: [matchId], references: [id])
 }
 
-// ─── Notifications ───────────────────────────────────────────────────────────
+model TrainingSession {
+  id          Int         @id @default(autoincrement())
+  date        DateTime
+  goal        String
+  sessionType SessionType
+  isApproved  Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  seasonId    Int
+  createdById Int
+  approvedById Int?
+
+  season       Season               @relation(fields: [seasonId], references: [id])
+  createdBy    User                 @relation("TrainingSessionCreatedBy", fields: [createdById], references: [id])
+  approvedBy   User?                @relation("TrainingSessionApprovedBy", fields: [approvedById], references: [id])
+  contents     TrainingContent[]
+  participants TrainingParticipant[]
+  results      TrainingResult[]
+}
+
+model TrainingContent {
+  id          Int          @id @default(autoincrement())
+  phase       ContentPhase
+  description String
+  sessionId   Int
+
+  session TrainingSession @relation(fields: [sessionId], references: [id])
+}
+
+model TrainingParticipant {
+  sessionId Int
+  playerId  String
+
+  session TrainingSession @relation(fields: [sessionId], references: [id])
+  player  Player          @relation(fields: [playerId], references: [id])
+
+  @@id([sessionId, playerId])
+}
+
+model TrainingResult {
+  id               Int              @id @default(autoincrement())
+  attendance       AttendanceStatus
+  feedback         String?
+  performanceScore Int?
+  sessionId        Int
+  playerId         String
+
+  session TrainingSession @relation(fields: [sessionId], references: [id])
+  player  Player          @relation(fields: [playerId], references: [id])
+}
+
+model TacticalAnalysis {
+  id               Int           @id @default(autoincrement())
+  phase            TacticalPhase
+  formation        String
+  opponentAnalysis String?
+  createdAt        DateTime      @default(now())
+  matchId          Int
+  seasonId         Int
+  createdById      Int
+
+  match     Match            @relation(fields: [matchId], references: [id])
+  season    Season           @relation(fields: [seasonId], references: [id])
+  createdBy User             @relation(fields: [createdById], references: [id])
+  lineup    TacticalLineup[]
+  media     TacticalMedia[]
+}
+
+model TacticalLineup {
+  id                 Int      @id @default(autoincrement())
+  position           Position
+  tacticalAnalysisId Int
+  playerId           String
+
+  tacticalAnalysis TacticalAnalysis @relation(fields: [tacticalAnalysisId], references: [id])
+  player           Player           @relation(fields: [playerId], references: [id])
+}
+
+model TacticalMedia {
+  id                 Int    @id @default(autoincrement())
+  url                String
+  type               String
+  tacticalAnalysisId Int
+
+  tacticalAnalysis TacticalAnalysis @relation(fields: [tacticalAnalysisId], references: [id])
+}
 
 model Notification {
   id        Int              @id @default(autoincrement())
@@ -540,7 +510,7 @@ model Notification {
   message   String
   isRead    Boolean          @default(false)
   createdAt DateTime         @default(now())
+  userId    Int
 
-  userId Int
-  user   User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }

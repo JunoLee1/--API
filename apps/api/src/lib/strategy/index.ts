@@ -1,17 +1,7 @@
-import passport = require("passport")
-import {accessTokenStrategy,refreshTokenStrategy} from "./JwtStrategy/jwtStrategy"
-import authService from "../../auth/auth.service"
+import passport from "passport";
+import { accessTokenStrategy, refreshTokenStrategy } from "./JwtStrategy/jwtStrategy";
 
-const service = new authService()
-passport.use('access-token', accessTokenStrategy)
-passport.use('refresh-token', refreshTokenStrategy)
-/*
-passport.serializeUser (function (userId,done){
-    done(null, userId)
-})
-passport.deserializeUser(async function(id, done){
-    const user = await service.findAdvisorById(id)
-    done(null, user)
-})
-*/
-export default passport
+passport.use("accessToken", accessTokenStrategy);
+passport.use("refreshToken", refreshTokenStrategy);
+
+export default passport;
