@@ -1,0 +1,516 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  FRONT_OFFICE
+  COACHING_STAFF
+  PLAYER
+  AGENT
+}
+
+enum CoachingRole {
+  HEAD_COACH
+  ASSISTANT_COACH
+  DEFENSIVE_COACH
+  ATTACKING_COACH
+  PHYSICAL_COACH
+  SET_PIECE_COACH
+  GOALKEEPER_COACH
+  MEDICAL
+}
+
+enum PlayerLevel {
+  YOUTH
+  ROOKIE
+  SENIOR
+  VETERAN
+}
+
+enum PlayerStatus {
+  ACTIVE
+  ON_LOAN
+  RELEASED
+  RETIRED
+}
+
+enum Position {
+  GOALKEEPER
+  STRIKER
+  SHADOW_STRIKER
+  WINGER
+  CENTRAL_ATTACK_MIDFIELDER
+  RIGHT_ATTACK_MIDFIELDER
+  LEFT_ATTACK_MIDFIELDER
+  CENTRAL_DEFENSIVE_MIDFIELDER
+  LEFT_DEFENSIVE_MIDFIELDER
+  RIGHT_DEFENSIVE_MIDFIELDER
+  CENTER_BACK
+  LEFT_WING_BACK
+  LEFT_FULL_BACK
+  RIGHT_WING_BACK
+  RIGHT_FULL_BACK
+}
+
+enum Foot {
+  LEFT
+  RIGHT
+  BOTH
+}
+
+enum ContractStatus {
+  ACTIVE
+  EXPIRED
+  TERMINATED
+}
+
+enum BonusMetric {
+  GOALS
+  ASSISTS
+  APPEARANCES
+  CLEAN_SHEETS
+  SAVES
+  PASS_ACCURACY
+  TACKLE_SUCCESS_RATE
+  CLEARANCES
+  INTERCEPTIONS
+  XG
+  TEAM_RANK
+  TEAM_WINS
+}
+
+enum BonusPeriod {
+  SEASON
+  MONTH
+  MATCH
+}
+
+enum TransferType {
+  PERMANENT
+  LOAN_OUT
+  LOAN_IN
+  FREE
+  RELEASE
+}
+
+enum RecallStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum InjuryCause {
+  TRAINING
+  MATCH
+  OTHER
+}
+
+enum InjuryStatus {
+  OCCURRED
+  DIAGNOSED
+  REHABILITATING
+  READY_TO_RETURN
+  RETURNED
+}
+
+enum SessionType {
+  INDIVIDUAL_SKILL
+  TACTICAL_DEFENSIVE
+  TACTICAL_ATTACKING
+  TACTICAL_FULL_TEAM
+  PHYSICAL
+  PSYCHOLOGICAL_SOCIAL
+  SET_PIECE
+}
+
+enum ContentPhase {
+  WARMUP
+  DRILL
+  TACTICAL
+  GAME
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT_UNAUTHORIZED
+  LATE_UNAUTHORIZED
+  ABSENT_AUTHORIZED
+}
+
+enum TacticalPhase {
+  PRE_MATCH
+  POST_MATCH
+}
+
+enum CompetitionType {
+  LEAGUE
+  CUP
+  FRIENDLY
+  CHAMPIONS_LEAGUE
+}
+
+enum NotificationType {
+  CONTRACT_EXPIRY
+  PERFORMANCE_BONUS_ACHIEVED
+  INJURY_READY_TO_RETURN
+  TRAINING_ATTENDANCE_WARNING
+}
+
+enum SeasonStatus {
+  UPCOMING
+  ACTIVE
+  CLOSED
+}
+
+// ─────────────────────────────────────────────
+// Models
+// ─────────────────────────────────────────────
+
+model Country {
+  id      Int      @id @default(autoincrement())
+  name    String
+  code    String
+
+  users   User[]
+  players Player[]
+}
+
+model PhoneNumber {
+  id        Int     @id @default(autoincrement())
+  iv        String
+  encrypted String
+
+  user User?
+}
+
+model User {
+  id            Int           @id @default(autoincrement())
+  email         String        @unique
+  password      String
+  username      String
+  nickname      String        @unique
+  role          Role
+  coachingRole  CoachingRole?
+  isDeleted     Boolean       @default(false)
+  isOutOfOffice Boolean       @default(false)
+  dateOfBirth   DateTime
+  phoneNumberId Int           @unique
+  nationalityId Int
+
+  phoneNumber      PhoneNumber          @relation(fields: [phoneNumberId], references: [id])
+  nationality      Country              @relation(fields: [nationalityId], references: [id])
+  player           Player?
+  recallRequests   Recall[]             @relation("RecallRequestedBy")
+  recallApprovals  Recall[]             @relation("RecallApprovedBy")
+  managedInjuries  Injury[]
+  createdSessions  TrainingSession[]    @relation("TrainingSessionCreatedBy")
+  approvedSessions TrainingSession[]    @relation("TrainingSessionApprovedBy")
+  tacticalAnalyses TacticalAnalysis[]
+  notifications    Notification[]
+  managedContracts Contract[]
+  agentPlayers     Player[]             @relation("AgentPlayers")
+}
+
+model Season {
+  id        Int          @id @default(autoincrement())
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  status    SeasonStatus @default(UPCOMING)
+
+  matches          Match[]
+  trainingSessions TrainingSession[]
+  tacticalAnalyses TacticalAnalysis[]
+}
+
+model Player {
+  id          String       @id @default(uuid())
+  playerName  String
+  dateOfBirth DateTime
+  preferredFoot Foot
+  height      Int
+  weight      Int
+  position    Position
+  level       PlayerLevel
+  status      PlayerStatus @default(ACTIVE)
+  externalId  String?      @unique
+  nationalityId Int
+  userId      Int?         @unique
+  agentId     Int?
+
+  nationality          Country               @relation(fields: [nationalityId], references: [id])
+  user                 User?                 @relation(fields: [userId], references: [id])
+  agent                User?                 @relation("AgentPlayers", fields: [agentId], references: [id])
+  contracts            Contract[]
+  transfers            Transfer[]
+  injuries             Injury[]
+  trainingParticipations TrainingParticipant[]
+  trainingResults      TrainingResult[]
+  matchStats           PlayerMatchStats[]
+  tacticalLineups      TacticalLineup[]
+}
+
+model Contract {
+  id          Int            @id @default(autoincrement())
+  startDate   DateTime
+  endDate     DateTime
+  salary      Int
+  status      ContractStatus @default(ACTIVE)
+  playerId    String
+  managedById Int?
+
+  player            Player             @relation(fields: [playerId], references: [id])
+  managedBy         User?              @relation(fields: [managedById], references: [id])
+  buyoutClause      BuyoutClause?
+  extensionOptions  ExtensionOption[]
+  performanceBonuses PerformanceBonus[]
+}
+
+model BuyoutClause {
+  id         Int    @id @default(autoincrement())
+  amount     BigInt
+  contractId Int    @unique
+
+  contract Contract @relation(fields: [contractId], references: [id])
+}
+
+model ExtensionOption {
+  id             Int    @id @default(autoincrement())
+  condition      String
+  durationMonths Int
+  contractId     Int
+
+  contract Contract @relation(fields: [contractId], references: [id])
+}
+
+model PerformanceBonus {
+  id          Int    @id @default(autoincrement())
+  amount      BigInt
+  description String
+  contractId  Int
+
+  contract Contract       @relation(fields: [contractId], references: [id])
+  triggers BonusTrigger[]
+}
+
+model BonusTrigger {
+  id              Int              @id @default(autoincrement())
+  metric          BonusMetric
+  threshold       Float
+  period          BonusPeriod
+  competitionType CompetitionType?
+  bonusId         Int
+
+  bonus PerformanceBonus @relation(fields: [bonusId], references: [id])
+}
+
+model Transfer {
+  id        Int          @id @default(autoincrement())
+  type      TransferType
+  date      DateTime
+  startDate DateTime?
+  endDate   DateTime?
+  fee       Int?
+  fromClub  String?
+  toClub    String?
+  playerId  String
+
+  player Player  @relation(fields: [playerId], references: [id])
+  recall Recall?
+}
+
+model Recall {
+  id            Int          @id @default(autoincrement())
+  status        RecallStatus @default(PENDING)
+  requestedAt   DateTime     @default(now())
+  approvedAt    DateTime?
+  transferId    Int          @unique
+  requestedById Int
+  approvedById  Int?
+
+  transfer    Transfer @relation(fields: [transferId], references: [id])
+  requestedBy User     @relation("RecallRequestedBy", fields: [requestedById], references: [id])
+  approvedBy  User?    @relation("RecallApprovedBy", fields: [approvedById], references: [id])
+}
+
+model Injury {
+  id                 Int         @id @default(autoincrement())
+  bodyPart           String
+  cause              InjuryCause
+  expectedReturnDate DateTime?
+  status             InjuryStatus @default(OCCURRED)
+  occurredAt         DateTime    @default(now())
+  playerId           String
+  medicalStaffId     Int
+
+  player       Player @relation(fields: [playerId], references: [id])
+  medicalStaff User   @relation(fields: [medicalStaffId], references: [id])
+}
+
+model Match {
+  id              Int             @id @default(autoincrement())
+  date            DateTime
+  homeTeamName    String
+  awayTeamName    String
+  homeScore       Int?
+  awayScore       Int?
+  competitionType CompetitionType
+  externalId      String?         @unique
+  seasonId        Int
+
+  season           Season             @relation(fields: [seasonId], references: [id])
+  playerMatchStats PlayerMatchStats[]
+  teamMatchStats   TeamMatchStats?
+  tacticalAnalyses TacticalAnalysis[]
+}
+
+model PlayerMatchStats {
+  id               Int     @id @default(autoincrement())
+  goals            Int?
+  assists          Int?
+  xG               Float?
+  xA               Float?
+  shots            Int?
+  passAccuracy     Float?
+  keyPasses        Int?
+  tackles          Int?
+  tackleSuccessRate Float?
+  clearances       Int?
+  interceptions    Int?
+  saves            Int?
+  cleanSheet       Boolean?
+  minutesPlayed    Int?
+  matchId          Int
+  playerId         String
+
+  match  Match  @relation(fields: [matchId], references: [id])
+  player Player @relation(fields: [playerId], references: [id])
+}
+
+model TeamMatchStats {
+  id            Int   @id @default(autoincrement())
+  possession    Int
+  shots         Int
+  shotsOnTarget Int
+  passes        Int
+  passAccuracy  Float
+  fouls         Int
+  yellowCards   Int
+  redCards      Int
+  xG            Float
+  corners       Int
+  offsides      Int
+  tackles       Int
+  interceptions Int
+  clearances    Int
+  matchId       Int   @unique
+
+  match Match @relation(fields: [matchId], references: [id])
+}
+
+model TrainingSession {
+  id          Int         @id @default(autoincrement())
+  date        DateTime
+  goal        String
+  sessionType SessionType
+  isApproved  Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  seasonId    Int
+  createdById Int
+  approvedById Int?
+
+  season       Season               @relation(fields: [seasonId], references: [id])
+  createdBy    User                 @relation("TrainingSessionCreatedBy", fields: [createdById], references: [id])
+  approvedBy   User?                @relation("TrainingSessionApprovedBy", fields: [approvedById], references: [id])
+  contents     TrainingContent[]
+  participants TrainingParticipant[]
+  results      TrainingResult[]
+}
+
+model TrainingContent {
+  id          Int          @id @default(autoincrement())
+  phase       ContentPhase
+  description String
+  sessionId   Int
+
+  session TrainingSession @relation(fields: [sessionId], references: [id])
+}
+
+model TrainingParticipant {
+  sessionId Int
+  playerId  String
+
+  session TrainingSession @relation(fields: [sessionId], references: [id])
+  player  Player          @relation(fields: [playerId], references: [id])
+
+  @@id([sessionId, playerId])
+}
+
+model TrainingResult {
+  id               Int              @id @default(autoincrement())
+  attendance       AttendanceStatus
+  feedback         String?
+  performanceScore Int?
+  sessionId        Int
+  playerId         String
+
+  session TrainingSession @relation(fields: [sessionId], references: [id])
+  player  Player          @relation(fields: [playerId], references: [id])
+}
+
+model TacticalAnalysis {
+  id               Int           @id @default(autoincrement())
+  phase            TacticalPhase
+  formation        String
+  opponentAnalysis String?
+  createdAt        DateTime      @default(now())
+  matchId          Int
+  seasonId         Int
+  createdById      Int
+
+  match     Match            @relation(fields: [matchId], references: [id])
+  season    Season           @relation(fields: [seasonId], references: [id])
+  createdBy User             @relation(fields: [createdById], references: [id])
+  lineup    TacticalLineup[]
+  media     TacticalMedia[]
+}
+
+model TacticalLineup {
+  id                 Int      @id @default(autoincrement())
+  position           Position
+  tacticalAnalysisId Int
+  playerId           String
+
+  tacticalAnalysis TacticalAnalysis @relation(fields: [tacticalAnalysisId], references: [id])
+  player           Player           @relation(fields: [playerId], references: [id])
+}
+
+model TacticalMedia {
+  id                 Int    @id @default(autoincrement())
+  url                String
+  type               String
+  tacticalAnalysisId Int
+
+  tacticalAnalysis TacticalAnalysis @relation(fields: [tacticalAnalysisId], references: [id])
+}
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  type      NotificationType
+  message   String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  userId    Int
+
+  user User @relation(fields: [userId], references: [id])
+}

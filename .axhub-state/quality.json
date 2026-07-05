@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "last_review_at": null,
+  "review_acknowledged": false,
+  "last_reviewed_base_sha": null,
+  "last_reviewed_tree_hash": null,
+  "last_reviewed_diff_hash": null,
+  "review_commit_sha": null,
+  "lines_since_review_user": 89,
+  "files_changed_since_review": 5,
+  "test_files_count": 0,
+  "source_files_count": 4,
+  "corrupt_msg_shown": false,
+  "last_test_failure_at": null,
+  "last_debug_at": null,
+  "last_shipped_at": null,
+  "last_pull_at": null
+}

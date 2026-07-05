@@ -1,0 +1,102 @@
+import { PrismaClient } from "../generated/client";
+import { PlayerStatus } from "../generated/enums";
+import { CreatePlayerDto, UpdatePlayerDto, PlayerListQuery } from "./dto/player.dto";
+
+const PLAYER_SELECT = {
+  id: true,
+  playerName: true,
+  dateOfBirth: true,
+  preferredFoot: true,
+  height: true,
+  weight: true,
+  position: true,
+  level: true,
+  status: true,
+  externalId: true,
+  nationality: { select: { id: true, name: true, code: true } },
+} as const;
+
+export class PlayerRepository {
+  constructor(private prisma: PrismaClient) {}
+
+  findAll(query: PlayerListQuery) {
+    return this.prisma.player.findMany({
+      where: {
+        ...(query.status && { status: query.status }),
+        ...(query.position && { position: query.position }),
+        ...(query.level && { level: query.level }),
+        ...(query.nationalityId && { nationalityId: query.nationalityId }),
+      },
+      select: PLAYER_SELECT,
+      orderBy: { playerName: "asc" },
+    });
+  }
+
+  findById(id: string) {
+    return this.prisma.player.findUnique({
+      where: { id },
+      select: {
+        ...PLAYER_SELECT,
+        userId: true,
+        agentId: true,
+        contracts: {
+          select: {
+            id: true,
+            startDate: true,
+            endDate: true,
+            salary: true,
+            status: true,
+          },
+          orderBy: { startDate: "desc" },
+          take: 1,
+        },
+      },
+    });
+  }
+
+  create(data: CreatePlayerDto) {
+    return this.prisma.player.create({
+      data: {
+        playerName: data.playerName,
+        dateOfBirth: new Date(data.dateOfBirth),
+        preferredFoot: data.preferredFoot,
+        height: data.height,
+        weight: data.weight,
+        position: data.position,
+        level: data.level,
+        nationalityId: data.nationalityId,
+        ...(data.externalId && { externalId: data.externalId }),
+        ...(data.userId && { userId: data.userId }),
+        ...(data.agentId && { agentId: data.agentId }),
+      },
+      select: PLAYER_SELECT,
+    });
+  }
+
+  update(id: string, data: UpdatePlayerDto) {
+    return this.prisma.player.update({
+      where: { id },
+      data: {
+        ...(data.playerName && { playerName: data.playerName }),
+        ...(data.dateOfBirth && { dateOfBirth: new Date(data.dateOfBirth) }),
+        ...(data.preferredFoot && { preferredFoot: data.preferredFoot }),
+        ...(data.height && { height: data.height }),
+        ...(data.weight && { weight: data.weight }),
+        ...(data.position && { position: data.position }),
+        ...(data.level && { level: data.level }),
+        ...(data.nationalityId && { nationalityId: data.nationalityId }),
+        ...(data.externalId !== undefined && { externalId: data.externalId }),
+        ...(data.agentId !== undefined && { agentId: data.agentId }),
+      },
+      select: PLAYER_SELECT,
+    });
+  }
+
+  updateStatus(id: string, status: PlayerStatus) {
+    return this.prisma.player.update({
+      where: { id },
+      data: { status },
+      select: { id: true, status: true },
+    });
+  }
+}
