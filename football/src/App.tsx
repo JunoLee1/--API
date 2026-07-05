@@ -4,6 +4,8 @@ import { AppShell } from '@/layouts/AppShell'
 import { ConfirmProvider } from '@/lib/confirm-dialog'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
+import { PlayersPage } from '@/pages/players/PlayersPage'
+import { PlayerDetailPage } from '@/pages/players/PlayerDetailPage'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('accessToken')
@@ -33,8 +35,8 @@ function App() {
             }
           >
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/players" element={<PlaceholderPage title="선수 목록" />} />
-            <Route path="/players/:id" element={<PlaceholderPage title="선수 상세" />} />
+            <Route path="/players" element={<PlayersPage />} />
+            <Route path="/players/:id" element={<PlayerDetailPage />} />
             <Route path="/contracts" element={<PlaceholderPage title="계약 목록" />} />
             <Route path="/transfers" element={<PlaceholderPage title="이적 현황" />} />
             <Route path="/injuries" element={<PlaceholderPage title="부상 현황" />} />
