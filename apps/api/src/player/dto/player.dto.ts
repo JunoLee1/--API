@@ -1,18 +1,6 @@
-import { Foot, PlayerLevel, Position } from "../../generated/client";
+import { Foot, Position, PlayerLevel, PlayerStatus } from "../../generated/enums";
 
-export interface CreatePlayerRepoDto {
-  playerName: string;
-  dateOfBirth: Date;
-  preferredFoot: Foot;
-  height: number;
-  weight: number;
-  position: Position;
-  level: PlayerLevel;
-  nationalityId: number;
-  externalId?: string;
-}
-
-export interface CreatePlayerServiceDto {
+export interface CreatePlayerDto {
   playerName: string;
   dateOfBirth: string;
   preferredFoot: Foot;
@@ -22,14 +10,11 @@ export interface CreatePlayerServiceDto {
   level: PlayerLevel;
   nationalityId: number;
   externalId?: string;
+  userId?: number;
+  agentId?: number;
 }
 
-export interface LinkUserRepoDto {
-  playerId: string;
-  userId: number;
-}
-
-export interface UpdatePlayerServiceDto {
+export interface UpdatePlayerDto {
   playerName?: string;
   dateOfBirth?: string;
   preferredFoot?: Foot;
@@ -37,5 +22,18 @@ export interface UpdatePlayerServiceDto {
   weight?: number;
   position?: Position;
   level?: PlayerLevel;
+  nationalityId?: number;
   externalId?: string;
+  agentId?: number;
+}
+
+export interface UpdatePlayerStatusDto {
+  status: PlayerStatus;
+}
+
+export interface PlayerListQuery {
+  status?: PlayerStatus;
+  position?: Position;
+  level?: PlayerLevel;
+  nationalityId?: number;
 }

@@ -1,155 +1,47 @@
 import { AuthRepository } from "./auth.repo";
-import { generateToken } from "../lib/token";
-import { hashedPassword, match } from "../lib/hash";
-import CountryService from "../country/country.service";
-import { encrypt } from "../lib/crypto";
-import {
-  FindAdvisorsServiceDto,
-  SignUpInputServiceDto,
-  LoginInputServiceDto,
-  LoginOutputServiceDto,
-  FindAdvisorsOutputDto,
-} from "./dto/auth.service.dto";
-import { SignUpOutputDto } from "./dto/auth.repo.dto";
 import { AppError } from "../lib/appError";
+import { hashPassword, comparePassword } from "../lib/hash";
+import { encrypt } from "../lib/crypto";
+import { generateTokens } from "../lib/token";
+import { LoginDto, CreateUserDto } from "./dto/auth.dto";
 
-export default class AuthService {
-  constructor(
-    private repo: AuthRepository,
-    private countryService: CountryService,
-  ) {}
+export class AuthService {
+  constructor(private repo: AuthRepository) {}
 
-  async signUp({
-    email,
-    password,
-    nickname,
-    username,
-    nationality,
-    confirmedPassword,
-    role,
-    phoneNumber,
-    dateOfBirth,
-  }: SignUpInputServiceDto): Promise<SignUpOutputDto> {
-    if (!email) throw new AppError(400, "INVALID_EMAIL");
-    if (!nickname) throw new AppError(400, "INVALID_NICKNAME");
-    if (!password) throw new AppError(400, "INVALID_PASSWORD");
-
-    if (await this.repo.isEmailDuplicated(email)) {
-      throw new AppError(409, "DUPLICATED_EMAIL");
-    }
-
-    const countryCodeChecker = await this.countryService.getCountryByCode(nationality.code);
-    if (!countryCodeChecker) throw new AppError(400, "INVALID_NATIONALITY_CODE");
-
-    if (await this.repo.isNicknameDuplicated(nickname)) {
-      throw new AppError(409, "DUPLICATED_NICKNAME");
-    }
-
-    if (password !== confirmedPassword) {
-      throw new AppError(400, "PASSWORD_NOT_MATCH");
-    }
-
-    const hashPassword = await hashedPassword(password);
-    const encryptedPhone = await encrypt(phoneNumber);
-
-    if (await this.repo.isDuplicatedPhoneNumber(encryptedPhone.encrypted)) {
-      throw new AppError(409, "DUPLICATED_PHONENUMBER");
-    }
-
-    const newUser = await this.repo.createAdmin({
-      email,
-      password: hashPassword,
-      nickname,
-      username,
-      role,
-      dateOfBirth,
-      nationality,
-      phoneNumber: encryptedPhone,
-    });
-
-    return {
-      email: newUser.email,
-      username: newUser.username,
-      nickname: newUser.nickname,
-      dateOfBirth: newUser.dateOfBirth,
-      nationality: {
-        id: newUser.nationality.id,
-        name: newUser.nationality.name,
-        code: newUser.nationality.code,
-      },
-      role: newUser.role,
-    };
-  }
-
-  async login({ email, password }: LoginInputServiceDto): Promise<LoginOutputServiceDto> {
+  async login({ email, password }: LoginDto) {
     const user = await this.repo.findByEmail(email);
-    if (!user) throw new AppError(400, "INVALID_USER_EMAIL");
+    if (!user) throw new AppError(401, "INVALID_CREDENTIALS");
 
-    const isMatched = await match(password, user.password);
-    if (!isMatched) throw new AppError(400, "WRONG_PASSWORD");
+    const valid = await comparePassword(password, user.password);
+    if (!valid) throw new AppError(401, "INVALID_CREDENTIALS");
 
-    const { accessToken, refreshToken } = await generateToken(user.id);
-    return { accessToken, refreshToken };
+    return generateTokens(user.id, user.role);
   }
 
-  async findAdvisorById(id: number) {
-    const user = await this.repo.findAdvisorById(id);
-    if (!user) throw new AppError(404, "NOT_FOUND");
-    return {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-    };
+  async createUser(dto: CreateUserDto) {
+    if (dto.password !== dto.confirmedPassword) throw new AppError(400, "PASSWORD_MISMATCH");
+
+    if (await this.repo.isEmailTaken(dto.email)) throw new AppError(409, "EMAIL_TAKEN");
+    if (await this.repo.isNicknameTaken(dto.nickname)) throw new AppError(409, "NICKNAME_TAKEN");
+
+    const password = await hashPassword(dto.password);
+    const phoneNumber = encrypt(dto.phoneNumber);
+
+    return this.repo.createUser({
+      email: dto.email,
+      password,
+      username: dto.username,
+      nickname: dto.nickname,
+      role: dto.role,
+      dateOfBirth: new Date(dto.dateOfBirth),
+      nationalityId: dto.nationalityId,
+      phoneNumber,
+    });
   }
 
-  async findAdvisors({ take, skip, username }: FindAdvisorsServiceDto): Promise<FindAdvisorsOutputDto> {
-    const where: any = {};
-    if (username) where.username = username;
-
-    const users = await this.repo.findAdvisors({ where });
-    return users.map((u) => ({
-      email: u.email,
-      username: u.username,
-      nickname: u.nickname,
-    }));
-  }
-
-  async updatesAdvisor(data: any) {
-    const { id, email, username, password, role, dateOfBirth, nickname, isDeleted } = data;
-
-    const user = await this.repo.findAdvisorById(id);
-    if (!user) throw new AppError(404, "NOT_FOUND");
-
-    const updatedData: any = {};
-    if (email !== undefined) updatedData.email = email;
-    if (username !== undefined) updatedData.username = username;
-    if (nickname !== undefined) updatedData.nickname = nickname;
-    if (password !== undefined) updatedData.password = password;
-    if (dateOfBirth !== undefined) updatedData.dateOfBirth = dateOfBirth;
-    if (role !== undefined) updatedData.role = role;
-    if (isDeleted !== undefined) updatedData.isDeleted = isDeleted;
-
-    return await this.repo.updatesAdvisor(id, updatedData);
-  }
-
-  async delete(id: number) {
-    const user = await this.repo.findAdvisorById(id);
-    if (!user) throw new AppError(404, "NOT_FOUND");
-
-    if (user.isDeleted) {
-      return await this.repo.updatesAdvisor(id, { isDeleted: false });
-    }
-    return await this.repo.updatesAdvisor(id, { isDeleted: true });
-  }
-
-  async deleteMany(data: { id: number }[]) {
-    const ids = data.map((item) => item.id);
-    const users = await this.repo.findAdvisorsByIds(ids);
-    if (!users.length) throw new AppError(404, "NOT_FOUND");
-
-    const activeIds = users.filter((u) => !u.isDeleted).map((u) => u.id);
-    if (!activeIds.length) return [];
-
-    return await this.repo.deleteMany({ ids: activeIds, isDeleted: true });
+  async me(id: number) {
+    const user = await this.repo.findById(id);
+    if (!user) throw new AppError(404, "USER_NOT_FOUND");
+    return user;
   }
 }

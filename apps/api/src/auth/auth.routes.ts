@@ -1,64 +1,31 @@
 import { Router } from "express";
-import AuthController from "./auth.controller";
-import AuthService from "./auth.service";
+import passport from "passport";
+import { AuthController } from "./auth.controller";
+import { AuthService } from "./auth.service";
 import { AuthRepository } from "./auth.repo";
 import { getPrisma } from "../lib/prisma";
-import CountryService from "../country/country.service";
-import CountryRepo from "../country/country.repo";
-import { CountryApiClient } from "../externalAPI";
-import passport = require("passport");
-import { AppError } from "../lib/appError";
 
 const router = Router();
-const prisma = getPrisma();
-const client = new CountryApiClient();
-const repo = new AuthRepository(prisma);
-const countryRepo = new CountryRepo(prisma);
-const contryService = new CountryService(client, countryRepo);
-const service = new AuthService(repo, contryService);
+const repo = new AuthRepository(getPrisma());
+const service = new AuthService(repo);
 const controller = new AuthController(service);
 
-//유저 생성
-router.post("/signUp", controller.signUp);
+const auth = passport.authenticate("accessToken", { session: false });
+const refreshAuth = passport.authenticate("refreshToken", { session: false });
 
-// 유저 로그인
-router.post("/login", controller.login.bind(controller));
+// 공개
+router.post("/login", controller.login);
 
-// 관리자 정보 조회
-router.get(
-  "/:id",
-  (req, res, next) => {
-    passport.authenticate(
-      "accessToken",
-      { session: false },
-      (err: any, user: any) => {
-        if (err) return next(err);
+// refresh token으로 재발급
+router.post("/refresh", refreshAuth, controller.refresh);
 
-        if (!user) {
-          return next(new AppError(401, "UNAUTHORIZED"));
-        }
+// 로그아웃
+router.post("/logout", auth, controller.logout);
 
-        req.user = user;
-        next();
-      }
-    )(req, res, next);
-  },
-  controller.findAdvisorById
-);
-// 관리자 전체 조회
-router.get("/", passport.authenticate("accessToken"), controller.findAdvisors);
+// 내 정보
+router.get("/me", auth, controller.me);
 
-// 단일 관리자 정보 수정
-router.patch(
-  "/:id",
-  passport.authenticate("accessToken"),
-  controller.updatesAdvisor,
-);
-
-// 관리자 삭제
-router.delete("/:id", passport.authenticate("accessToken"), controller.delete);
-
-//다수 관리자 삭제
-router.delete("/", passport.authenticate("accessToken"), controller.deleteMany);
+// 유저 생성 (ADMIN 전용)
+router.post("/users", auth, controller.createUser);
 
 export default router;

@@ -1,15 +1,12 @@
-import { PrismaClient } from '../generated/client';
-import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from "../generated/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-export let prisma: PrismaClient;
+let instance: PrismaClient | null = null;
 
-export function getPrisma() {
-  if (!prisma) {
-    const adapter = new PrismaPg({
-      connectionString: process.env.DATABASE_URL,
-    });
-    prisma = new PrismaClient({ adapter });
+export function getPrisma(): PrismaClient {
+  if (!instance) {
+    const adapter = new PrismaPg({ connectionString: process.env["DATABASE_URL"] });
+    instance = new PrismaClient({ adapter } as ConstructorParameters<typeof PrismaClient>[0]);
   }
-  return prisma;
+  return instance;
 }
-export { PrismaClient };

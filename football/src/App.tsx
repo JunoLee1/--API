@@ -4,6 +4,16 @@ import { AppShell } from '@/layouts/AppShell'
 import { ConfirmProvider } from '@/lib/confirm-dialog'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
+import { PlayersPage } from '@/pages/players/PlayersPage'
+import { PlayerDetailPage } from '@/pages/players/PlayerDetailPage'
+import { ContractsPage } from '@/pages/contracts/ContractsPage'
+import { InjuriesPage } from '@/pages/injuries/InjuriesPage'
+import { TransfersPage } from '@/pages/transfers/TransfersPage'
+import { TrainingPage } from '@/pages/training/TrainingPage'
+import { TrainingDetailPage } from '@/pages/training/TrainingDetailPage'
+import { MatchesPage } from '@/pages/matches/MatchesPage'
+import { MatchDetailPage } from '@/pages/matches/MatchDetailPage'
+import { UsersPage } from '@/pages/admin/UsersPage'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('accessToken')
@@ -33,16 +43,18 @@ function App() {
             }
           >
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/players" element={<PlaceholderPage title="선수 목록" />} />
-            <Route path="/players/:id" element={<PlaceholderPage title="선수 상세" />} />
-            <Route path="/contracts" element={<PlaceholderPage title="계약 목록" />} />
-            <Route path="/transfers" element={<PlaceholderPage title="이적 현황" />} />
-            <Route path="/injuries" element={<PlaceholderPage title="부상 현황" />} />
-            <Route path="/training" element={<PlaceholderPage title="훈련 일정" />} />
+            <Route path="/players" element={<PlayersPage />} />
+            <Route path="/players/:id" element={<PlayerDetailPage />} />
+            <Route path="/contracts" element={<ContractsPage />} />
+            <Route path="/transfers" element={<TransfersPage />} />
+            <Route path="/injuries" element={<InjuriesPage />} />
+            <Route path="/training" element={<TrainingPage />} />
+            <Route path="/training/:id" element={<TrainingDetailPage />} />
             <Route path="/training/attendance" element={<PlaceholderPage title="출석 현황" />} />
-            <Route path="/matches" element={<PlaceholderPage title="경기 목록" />} />
+            <Route path="/matches" element={<MatchesPage />} />
+            <Route path="/matches/:id" element={<MatchDetailPage />} />
             <Route path="/matches/analysis" element={<PlaceholderPage title="전술 분석" />} />
-            <Route path="/admin/users" element={<PlaceholderPage title="사용자 관리" />} />
+            <Route path="/admin/users" element={<UsersPage />} />
             <Route path="/notifications" element={<PlaceholderPage title="알림 전체 목록" />} />
             <Route path="/me" element={<PlaceholderPage title="내 정보" />} />
           </Route>

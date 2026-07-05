@@ -1,17 +1,24 @@
-import {Router} from "express"
-import userAPI from "./auth/auth.routes"
-import countryAPI from "./country/country.routes"
-import playerAPI from "./player/player.routes"
-const router = Router()
+import { Router } from "express";
+import authRouter from "./auth/auth.routes";
+import contractRouter from "./contract/contract.routes";
+import injuryRouter from "./injury/injury.routes";
+import matchRouter from "./match/match.routes";
+import playerRouter from "./player/player.routes";
+import seasonRouter from "./season/season.routes";
+import tacticalRouter from "./tactical/tactical.routes";
+import trainingRouter from "./training/training.routes";
+import transferRouter from "./transfer/transfer.routes";
 
-router.get("/", (req, res) => {
-  res.status(200).json({ message: "API OK" });
-});
+const apiRouter = Router();
 
-router.use("/users", userAPI)
-router.use("/country", countryAPI)
-router.use("/players", playerAPI)
+apiRouter.use("/auth", authRouter);
+apiRouter.use("/contracts", contractRouter);
+apiRouter.use("/injuries", injuryRouter);
+apiRouter.use("/matches", matchRouter);
+apiRouter.use("/players", playerRouter);
+apiRouter.use("/seasons", seasonRouter);
+apiRouter.use("/tactical", tacticalRouter);
+apiRouter.use("/training", trainingRouter);
+apiRouter.use("/transfers", transferRouter);
 
-//시즌 CRUD (/api/seasons)
-//경기 CRUD (/api/matches)
-export default router
+export default apiRouter;

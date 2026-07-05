@@ -1,65 +1,102 @@
 import { PrismaClient } from "../generated/client";
-import { CreatePlayerRepoDto, LinkUserRepoDto, UpdatePlayerServiceDto } from "./dto/player.dto";
+import { PlayerStatus } from "../generated/enums";
+import { CreatePlayerDto, UpdatePlayerDto, PlayerListQuery } from "./dto/player.dto";
+
+const PLAYER_SELECT = {
+  id: true,
+  playerName: true,
+  dateOfBirth: true,
+  preferredFoot: true,
+  height: true,
+  weight: true,
+  position: true,
+  level: true,
+  status: true,
+  externalId: true,
+  nationality: { select: { id: true, name: true, code: true } },
+} as const;
 
 export class PlayerRepository {
   constructor(private prisma: PrismaClient) {}
 
-  async create(data: CreatePlayerRepoDto) {
-    return await this.prisma.player.create({
+  findAll(query: PlayerListQuery) {
+    return this.prisma.player.findMany({
+      where: {
+        ...(query.status && { status: query.status }),
+        ...(query.position && { position: query.position }),
+        ...(query.level && { level: query.level }),
+        ...(query.nationalityId && { nationalityId: query.nationalityId }),
+      },
+      select: PLAYER_SELECT,
+      orderBy: { playerName: "asc" },
+    });
+  }
+
+  findById(id: string) {
+    return this.prisma.player.findUnique({
+      where: { id },
+      select: {
+        ...PLAYER_SELECT,
+        userId: true,
+        agentId: true,
+        contracts: {
+          select: {
+            id: true,
+            startDate: true,
+            endDate: true,
+            salary: true,
+            status: true,
+          },
+          orderBy: { startDate: "desc" },
+          take: 1,
+        },
+      },
+    });
+  }
+
+  create(data: CreatePlayerDto) {
+    return this.prisma.player.create({
       data: {
         playerName: data.playerName,
-        dateOfBirth: data.dateOfBirth,
+        dateOfBirth: new Date(data.dateOfBirth),
         preferredFoot: data.preferredFoot,
         height: data.height,
         weight: data.weight,
         position: data.position,
         level: data.level,
-        ...(data.externalId !== undefined && { externalId: data.externalId }),
-        nationality: { connect: { id: data.nationalityId } },
+        nationalityId: data.nationalityId,
+        ...(data.externalId && { externalId: data.externalId }),
+        ...(data.userId && { userId: data.userId }),
+        ...(data.agentId && { agentId: data.agentId }),
       },
-      include: { nationality: true },
+      select: PLAYER_SELECT,
     });
   }
 
-  async findById(id: string) {
-    return await this.prisma.player.findUnique({
+  update(id: string, data: UpdatePlayerDto) {
+    return this.prisma.player.update({
       where: { id },
-      include: { nationality: true, user: true },
+      data: {
+        ...(data.playerName && { playerName: data.playerName }),
+        ...(data.dateOfBirth && { dateOfBirth: new Date(data.dateOfBirth) }),
+        ...(data.preferredFoot && { preferredFoot: data.preferredFoot }),
+        ...(data.height && { height: data.height }),
+        ...(data.weight && { weight: data.weight }),
+        ...(data.position && { position: data.position }),
+        ...(data.level && { level: data.level }),
+        ...(data.nationalityId && { nationalityId: data.nationalityId }),
+        ...(data.externalId !== undefined && { externalId: data.externalId }),
+        ...(data.agentId !== undefined && { agentId: data.agentId }),
+      },
+      select: PLAYER_SELECT,
     });
   }
 
-  async findAll(params: { skip?: number; take?: number }) {
-    return await this.prisma.player.findMany({
-      ...(params.skip !== undefined && { skip: params.skip }),
-      ...(params.take !== undefined && { take: params.take }),
-      include: { nationality: true, user: true },
-    });
-  }
-
-  async linkUser({ playerId, userId }: LinkUserRepoDto) {
-    return await this.prisma.player.update({
-      where: { id: playerId },
-      data: { user: { connect: { id: userId } } },
-      include: { nationality: true, user: true },
-    });
-  }
-
-  async unlinkUser(playerId: string) {
-    return await this.prisma.player.update({
-      where: { id: playerId },
-      data: { userId: null },
-    });
-  }
-
-  async update(id: string, data: Partial<CreatePlayerRepoDto>) {
-    return await this.prisma.player.update({
+  updateStatus(id: string, status: PlayerStatus) {
+    return this.prisma.player.update({
       where: { id },
-      data,
-      include: { nationality: true, user: true },
+      data: { status },
+      select: { id: true, status: true },
     });
-  }
-
-  async isUserAlreadyLinked(userId: number) {
-    return await this.prisma.player.findFirst({ where: { userId } });
   }
 }

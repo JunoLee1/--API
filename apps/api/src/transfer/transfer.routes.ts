@@ -1,0 +1,29 @@
+import { Router } from "express";
+import passport from "passport";
+import { TransferController } from "./transfer.controller";
+import { TransferService } from "./transfer.service";
+import { TransferRepository } from "./transfer.repo";
+import { getPrisma } from "../lib/prisma";
+
+const router = Router();
+const repo = new TransferRepository(getPrisma());
+const service = new TransferService(repo);
+const controller = new TransferController(service);
+
+const auth = passport.authenticate("accessToken", { session: false });
+
+// 선수별 이적 목록
+router.get("/player/:playerId", auth, controller.getByPlayer);
+// 이적 단건
+router.get("/:id", auth, controller.getById);
+// 이적 등록 (ADMIN, FRONT_OFFICE)
+router.post("/", auth, controller.createTransfer);
+
+// 복귀 요청 목록 (?status=PENDING|APPROVED|REJECTED)
+router.get("/recalls", auth, controller.getRecalls);
+// 복귀 요청 생성 (인증 사용자 누구나)
+router.post("/recalls", auth, controller.createRecall);
+// 복귀 요청 승인/거절 (ADMIN)
+router.patch("/recalls/:id/status", auth, controller.updateRecallStatus);
+
+export default router;

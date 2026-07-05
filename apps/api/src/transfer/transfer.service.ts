@@ -1,0 +1,40 @@
+import { TransferRepository } from "./transfer.repo";
+import { AppError } from "../lib/appError";
+import { CreateTransferDto, CreateRecallDto, UpdateRecallStatusDto } from "./dto/transfer.dto";
+import { RecallStatus } from "../generated/enums";
+
+export class TransferService {
+  constructor(private repo: TransferRepository) {}
+
+  getByPlayer(playerId: string) {
+    return this.repo.findByPlayer(playerId);
+  }
+
+  async getById(id: number) {
+    const transfer = await this.repo.findById(id);
+    if (!transfer) throw new AppError(404, "TRANSFER_NOT_FOUND");
+    return transfer;
+  }
+
+  createTransfer(dto: CreateTransferDto) {
+    return this.repo.createTransfer(dto);
+  }
+
+  getRecalls(status?: RecallStatus) {
+    return this.repo.findRecallsByStatus(status);
+  }
+
+  async createRecall(dto: CreateRecallDto, requestedById: number) {
+    const transfer = await this.repo.findById(dto.transferId);
+    if (!transfer) throw new AppError(404, "TRANSFER_NOT_FOUND");
+    if (transfer.recall) throw new AppError(409, "RECALL_ALREADY_EXISTS");
+    return this.repo.createRecall(dto, requestedById);
+  }
+
+  async updateRecallStatus(id: number, dto: UpdateRecallStatusDto, approvedById: number) {
+    const recall = await this.repo.findRecallById(id);
+    if (!recall) throw new AppError(404, "RECALL_NOT_FOUND");
+    if (recall.status !== RecallStatus.PENDING) throw new AppError(409, "RECALL_ALREADY_PROCESSED");
+    return this.repo.updateRecallStatus(id, dto.status, approvedById);
+  }
+}
