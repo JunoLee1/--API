@@ -1,3 +1,4 @@
+-- prisma-migrate-no-transaction
 -- Rename CUP -> DOMESTIC_CUP and CHAMPIONS_LEAGUE -> CONTINENTAL in CompetitionType enum
 -- Step 1: Add new enum values
 ALTER TYPE "CompetitionType" ADD VALUE IF NOT EXISTS 'DOMESTIC_CUP';

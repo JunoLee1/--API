@@ -1,5 +1,7 @@
 import { CompetitionType, Venue } from "../../generated/enums";
 
+export const VALID_COMPETITION_TYPES = Object.values(CompetitionType);
+
 export interface CreateMatchDto {
   date: string;
   homeTeamName: string;

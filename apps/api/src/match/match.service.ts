@@ -6,16 +6,19 @@ import {
   MatchListQuery,
   UpsertPlayerStatsDto,
   UpsertTeamStatsDto,
+  VALID_COMPETITION_TYPES,
 } from "./dto/match.dto";
-import { CompetitionType, Venue } from "../generated/enums";
+import { Venue } from "../generated/enums";
 
-const VALID_COMPETITION_TYPES = Object.values(CompetitionType);
 const VALID_VENUES = Object.values(Venue);
 
 export class MatchService {
   constructor(private repo: MatchRepository) {}
 
   getMatches(query: MatchListQuery) {
+    if (query.competitionType !== undefined && !VALID_COMPETITION_TYPES.includes(query.competitionType)) {
+      throw new AppError(400, "INVALID_COMPETITION_TYPE");
+    }
     return this.repo.findAll(query);
   }
 

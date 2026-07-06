@@ -1,10 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { MatchService } from "./match.service";
-import { MatchListQuery } from "./dto/match.dto";
+import { MatchListQuery, VALID_COMPETITION_TYPES } from "./dto/match.dto";
 import { CompetitionType } from "../generated/enums";
-
-const VALID_COMPETITION_TYPES = Object.values(CompetitionType);
 
 const WRITE_ROLES = ["ADMIN", "FRONT_OFFICE"] as const;
 const STATS_ROLES = ["ADMIN", "COACHING_STAFF"] as const;

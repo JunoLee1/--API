@@ -1,6 +1,5 @@
 import { describe, test, jest, expect, beforeEach } from "@jest/globals";
 import { MatchController } from "../../src/match/match.controller";
-import { AppError } from "../../src/lib/appError";
 
 const mockService = {
   getMatches: jest.fn(),
