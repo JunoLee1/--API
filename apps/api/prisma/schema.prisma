@@ -154,9 +154,16 @@ enum TacticalPhase {
 
 enum CompetitionType {
   LEAGUE
-  CUP
+  DOMESTIC_CUP
+  CONTINENTAL
+  PLAYOFF
   FRIENDLY
-  CHAMPIONS_LEAGUE
+}
+
+enum Venue {
+  HOME
+  AWAY
+  NEUTRAL
 }
 
 enum NotificationType {
@@ -365,6 +372,7 @@ model Match {
   homeScore       Int?
   awayScore       Int?
   competitionType CompetitionType
+  venue           Venue?
   externalId      String?         @unique
   seasonId        Int
 

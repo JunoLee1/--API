@@ -7,6 +7,10 @@ import {
   UpsertPlayerStatsDto,
   UpsertTeamStatsDto,
 } from "./dto/match.dto";
+import { CompetitionType, Venue } from "../generated/enums";
+
+const VALID_COMPETITION_TYPES = Object.values(CompetitionType);
+const VALID_VENUES = Object.values(Venue);
 
 export class MatchService {
   constructor(private repo: MatchRepository) {}
@@ -22,12 +26,24 @@ export class MatchService {
   }
 
   createMatch(dto: CreateMatchDto) {
+    if (!VALID_COMPETITION_TYPES.includes(dto.competitionType)) {
+      throw new AppError(400, "INVALID_COMPETITION_TYPE");
+    }
+    if (dto.venue !== undefined && !VALID_VENUES.includes(dto.venue)) {
+      throw new AppError(400, "INVALID_VENUE");
+    }
     return this.repo.create(dto);
   }
 
   async updateMatch(id: number, dto: UpdateMatchDto) {
     const match = await this.repo.findById(id);
     if (!match) throw new AppError(404, "MATCH_NOT_FOUND");
+    if (dto.competitionType !== undefined && !VALID_COMPETITION_TYPES.includes(dto.competitionType)) {
+      throw new AppError(400, "INVALID_COMPETITION_TYPE");
+    }
+    if (dto.venue !== undefined && !VALID_VENUES.includes(dto.venue)) {
+      throw new AppError(400, "INVALID_VENUE");
+    }
     return this.repo.update(id, dto);
   }
 
