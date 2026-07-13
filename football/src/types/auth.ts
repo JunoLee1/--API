@@ -19,6 +19,8 @@ export type FrontOfficeRole =
   | 'EQUIPMENT_MANAGER'
   | 'TACTICAL_ANALYST'
 
+export type FrontOfficeRole = 'GM' | 'TD' | 'CONTRACT_MANAGER' | 'SCOUT'
+
 export const ROLE_LABEL: Record<Role, string> = {
   ADMIN: '관리자',
   FRONT_OFFICE: '프런트오피스',
@@ -46,6 +48,13 @@ export const FRONT_OFFICE_ROLE_LABEL: Record<FrontOfficeRole, string> = {
   SCOUT: '스카우트',
   EQUIPMENT_MANAGER: '장비담당',
   TACTICAL_ANALYST: '전술분석관',
+}
+
+export const FRONT_OFFICE_ROLE_LABEL: Record<FrontOfficeRole, string> = {
+  GM: '단장',
+  TD: '테크니컬 디렉터',
+  CONTRACT_MANAGER: '계약 담당',
+  SCOUT: '스카우트',
 }
 
 export interface UserDto {
