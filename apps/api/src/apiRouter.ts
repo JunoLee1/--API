@@ -1,6 +1,7 @@
 import { Router } from "express";
 import authRouter from "./auth/auth.routes";
 import contractRouter from "./contract/contract.routes";
+import equipmentRouter from "./equipment/equipment.routes";
 import injuryRouter from "./injury/injury.routes";
 import matchRouter from "./match/match.routes";
 import notificationRouter from "./notification/notification.routes";
@@ -14,6 +15,7 @@ const apiRouter = Router();
 
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/contracts", contractRouter);
+apiRouter.use("/equipment", equipmentRouter);
 apiRouter.use("/injuries", injuryRouter);
 apiRouter.use("/matches", matchRouter);
 apiRouter.use("/notifications", notificationRouter);
