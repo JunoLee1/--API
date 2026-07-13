@@ -1,9 +1,15 @@
 import jwt from "jsonwebtoken";
 import { JWT_ACCESS_TOKEN_SECRET, JWT_REFRESH_TOKEN_SECRET } from "./constants";
-import { Role } from "../generated/enums";
+import { Role, CoachingRole, FrontOfficeRole } from "../generated/enums";
 
-export function generateTokens(id: number, role: Role) {
-  const payload = { id, role };
+interface TokenPayload {
+  id: number;
+  role: Role;
+  coachingRole?: CoachingRole | null;
+  frontOfficeRole?: FrontOfficeRole | null;
+}
+
+export function generateTokens(payload: TokenPayload) {
   const accessToken = jwt.sign(payload, JWT_ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
   const refreshToken = jwt.sign(payload, JWT_REFRESH_TOKEN_SECRET, { expiresIn: "7d" });
   return { accessToken, refreshToken };

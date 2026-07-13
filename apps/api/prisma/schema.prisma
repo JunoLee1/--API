@@ -28,6 +28,16 @@ enum CoachingRole {
   SET_PIECE_COACH
   GOALKEEPER_COACH
   MEDICAL
+  MEDICAL_DIRECTOR
+}
+
+enum FrontOfficeRole {
+  GM
+  TD
+  CONTRACT_MANAGER
+  SCOUT
+  EQUIPMENT_MANAGER
+  TACTICAL_ANALYST
 }
 
 enum PlayerLevel {
@@ -131,6 +141,7 @@ enum SessionType {
   PHYSICAL
   PSYCHOLOGICAL_SOCIAL
   SET_PIECE
+  GOALKEEPER
 }
 
 enum ContentPhase {
@@ -171,6 +182,13 @@ enum NotificationType {
   PERFORMANCE_BONUS_ACHIEVED
   INJURY_READY_TO_RETURN
   TRAINING_ATTENDANCE_WARNING
+  EQUIPMENT_LOW_STOCK
+  EXTENSION_OPTION_AVAILABLE
+}
+
+enum TacticalStatus {
+  DRAFT
+  CONFIRMED
 }
 
 enum SeasonStatus {
@@ -206,9 +224,10 @@ model User {
   password      String
   username      String
   nickname      String        @unique
-  role          Role
-  coachingRole  CoachingRole?
-  isDeleted     Boolean       @default(false)
+  role            Role
+  coachingRole    CoachingRole?
+  frontOfficeRole FrontOfficeRole?
+  isDeleted       Boolean          @default(false)
   isOutOfOffice Boolean       @default(false)
   dateOfBirth   DateTime
   phoneNumberId Int           @unique
@@ -481,6 +500,7 @@ model TacticalAnalysis {
   phase            TacticalPhase
   formation        String
   opponentAnalysis String?
+  status           TacticalStatus @default(DRAFT)
   createdAt        DateTime      @default(now())
   matchId          Int
   seasonId         Int
@@ -515,8 +535,9 @@ model TacticalMedia {
 model Notification {
   id        Int              @id @default(autoincrement())
   type      NotificationType
-  message   String
-  isRead    Boolean          @default(false)
+  title     String
+  body      String
+  readAt    DateTime?
   createdAt DateTime         @default(now())
   userId    Int
 
