@@ -16,12 +16,14 @@ import {
   FileText,
   type LucideIcon,
   Menu,
+  Package,
   ScrollText,
   Settings,
   Shield,
   Stethoscope,
   TrendingUp,
   Trophy,
+  UserSearch,
   Users,
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -48,6 +50,7 @@ interface NavItem {
   description?: string
 }
 
+
 const SECTION_ORDER: Array<NavItem['section'] & string> = [
   '선수 관리',
   '계약·이적',
@@ -67,6 +70,13 @@ const NAV_ITEMS: NavItem[] = [
     icon: Users,
     section: '선수 관리',
     end: true,
+    roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
+  },
+  {
+    to: '/prospects',
+    label: '영입 후보',
+    icon: UserSearch,
+    section: '선수 관리',
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
   },
 
@@ -138,6 +148,13 @@ const NAV_ITEMS: NavItem[] = [
   },
 
   // 관리
+  {
+    to: '/equipment',
+    label: '장비 관리',
+    icon: Package,
+    section: '관리',
+    roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
+  },
   {
     to: '/admin/users',
     label: '사용자 관리',

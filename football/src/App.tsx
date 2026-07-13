@@ -11,21 +11,19 @@ import { InjuriesPage } from '@/pages/injuries/InjuriesPage'
 import { TransfersPage } from '@/pages/transfers/TransfersPage'
 import { TrainingPage } from '@/pages/training/TrainingPage'
 import { TrainingDetailPage } from '@/pages/training/TrainingDetailPage'
+import { TrainingAttendancePage } from '@/pages/training/TrainingAttendancePage'
 import { MatchesPage } from '@/pages/matches/MatchesPage'
 import { MatchDetailPage } from '@/pages/matches/MatchDetailPage'
+import { TacticalAnalysisPage } from '@/pages/tactical/TacticalAnalysisPage'
+import { EquipmentPage } from '@/pages/equipment/EquipmentPage'
+import { ProspectsPage } from '@/pages/prospects/ProspectsPage'
+import { NotificationsPage } from '@/pages/notifications/NotificationsPage'
+import { MePage } from '@/pages/me/MePage'
 import { UsersPage } from '@/pages/admin/UsersPage'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('accessToken')
   return token ? <>{children}</> : <Navigate to="/login" replace />
-}
-
-function PlaceholderPage({ title }: { title: string }) {
-  return (
-    <div className="p-8">
-      <h2 className="text-xl font-semibold text-muted-foreground">{title} — 준비 중</h2>
-    </div>
-  )
 }
 
 function App() {
@@ -50,14 +48,16 @@ function App() {
             <Route path="/injuries" element={<InjuriesPage />} />
             <Route path="/injuries/stats" element={<PlaceholderPage title="부상 통계" />} />
             <Route path="/training" element={<TrainingPage />} />
+            <Route path="/training/attendance" element={<TrainingAttendancePage />} />
             <Route path="/training/:id" element={<TrainingDetailPage />} />
-            <Route path="/training/attendance" element={<PlaceholderPage title="출석 현황" />} />
             <Route path="/matches" element={<MatchesPage />} />
+            <Route path="/matches/analysis" element={<TacticalAnalysisPage />} />
             <Route path="/matches/:id" element={<MatchDetailPage />} />
-            <Route path="/matches/analysis" element={<PlaceholderPage title="전술 분석" />} />
+            <Route path="/equipment" element={<EquipmentPage />} />
+            <Route path="/prospects" element={<ProspectsPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/me" element={<MePage />} />
             <Route path="/admin/users" element={<UsersPage />} />
-            <Route path="/notifications" element={<PlaceholderPage title="알림 전체 목록" />} />
-            <Route path="/me" element={<PlaceholderPage title="내 정보" />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/login" replace />} />

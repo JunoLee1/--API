@@ -19,7 +19,7 @@ const NOTIFICATION_ROUTES: Record<string, string> = {
 
 interface Props {
   unreadCount: number
-  onUnreadCountChange: (count: number) => void
+  onUnreadCountChange: (count: number) => void // 읽지 않는 개수가 바뀔때마다 호출됨
   iconSize?: 'sm' | 'md'
 }
 
@@ -48,7 +48,7 @@ export function NotificationPopover({ unreadCount, onUnreadCountChange, iconSize
     try {
       const data = await notificationApi.my()
       setItems(data)
-      onUnreadCountChange(data.filter((n) => !n.readAt).length)
+      onUnreadCountChange(data.filter((n) => !n.readAt).length)// 읽지 않는 알림 메시지 필터링후 갯수 조회 
     } catch {
       // 조회 실패 시 기존 목록 유지
     } finally {
@@ -68,7 +68,7 @@ export function NotificationPopover({ unreadCount, onUnreadCountChange, iconSize
         n.id === id ? { ...n, readAt: new Date().toISOString() } : n,
       )
       setItems(updated)
-      onUnreadCountChange(updated.filter((n) => !n.readAt).length)
+      onUnreadCountChange(updated.filter((n) => !n.readAt).length) // 알림 메시지를 읽은 경우 나머지 읽지 않는 메시지 갯수를 찾아서 업데이트
     } catch {
       // 실패 시 무시
     }
@@ -86,7 +86,7 @@ export function NotificationPopover({ unreadCount, onUnreadCountChange, iconSize
   const bellSize = iconSize === 'md' ? 'h-5 w-5' : 'h-4 w-4'
 
   return (
-    <Popover open={open} onOpenChange={handleOpenChange}>
+    <Popover open={open} onOpenChange={handleOpenChange}> 
       <PopoverTrigger asChild>
         <div className="relative">
           <Button variant="ghost" size="icon" aria-label="알림">
