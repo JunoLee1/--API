@@ -36,16 +36,17 @@ export const COACHING_ROLE_LABEL: Record<CoachingRole, string> = {
   SET_PIECE_COACH: '세트피스코치',
   GOALKEEPER_COACH: '골키퍼코치',
   MEDICAL: '의료진',
-  MEDICAL_DIRECTOR: '의료부장',
+<<<<<<< HEAD
+  MEDICAL_DIRECTOR: '의료 디렉터',
 }
 
 export const FRONT_OFFICE_ROLE_LABEL: Record<FrontOfficeRole, string> = {
-  GM: 'GM',
-  TD: 'TD',
-  CONTRACT_MANAGER: '계약담당',
+  GM: '단장',
+  TD: '테크니컬 디렉터',
+  CONTRACT_MANAGER: '계약 담당',
   SCOUT: '스카우트',
-  EQUIPMENT_MANAGER: '장비담당',
-  TACTICAL_ANALYST: '전술분석관',
+  EQUIPMENT_MANAGER: '장비 담당',
+  TACTICAL_ANALYST: '전술 분석가',
 }
 
 export interface UserDto {
