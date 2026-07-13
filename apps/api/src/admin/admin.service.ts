@@ -5,7 +5,7 @@ import { ListUsersQuery, UpdateUserRoleDto } from "./dto/admin.dto";
 export class AdminService {
   constructor(private repo: AdminRepository) {}
 
-  listUsers(filters: ListUsersQuery) {
+  async listUsers(filters: ListUsersQuery) {
     return this.repo.listUsers(filters);
   }
 

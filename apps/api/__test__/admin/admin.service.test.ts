@@ -12,6 +12,18 @@ const mockRepo = {
 
 const service = new AdminService(mockRepo);
 
+describe("AdminService - listUsers", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test("delegates to repo with filters", async () => {
+    const filters = { role: "COACHING_STAFF" as const };
+    mockRepo.listUsers.mockResolvedValue([{ id: 1 }]);
+    const result = await service.listUsers(filters);
+    expect(mockRepo.listUsers).toHaveBeenCalledWith(filters);
+    expect(result).toHaveLength(1);
+  });
+});
+
 describe("AdminService - getUserById", () => {
   beforeEach(() => jest.clearAllMocks());
 
