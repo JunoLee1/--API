@@ -213,6 +213,12 @@ enum EquipmentUnitStatus {
   RETIRED
 }
 
+enum ProspectStatus {
+  ACTIVE
+  SIGNED
+  ARCHIVED
+}
+
 // ─────────────────────────────────────────────
 // Models
 // ─────────────────────────────────────────────
@@ -301,6 +307,7 @@ model Player {
   matchStats           PlayerMatchStats[]
   tacticalLineups      TacticalLineup[]
   equipmentAssignments EquipmentAssignment[]
+  prospects            Prospect[]            @relation("ProspectConvertedPlayer")
 }
 
 model Contract {
@@ -593,4 +600,18 @@ model EquipmentAssignment {
   player        Player         @relation(fields: [playerId], references: [id])
   equipmentItem EquipmentItem? @relation(fields: [equipmentItemId], references: [id])
   equipmentUnit EquipmentUnit? @relation(fields: [equipmentUnitId], references: [id])
+}
+
+model Prospect {
+  id                Int            @id @default(autoincrement())
+  name              String
+  nationality       String
+  position          Position
+  currentTeam       String
+  notes             String?
+  status            ProspectStatus @default(ACTIVE)
+  convertedPlayerId String?
+  createdAt         DateTime       @default(now())
+
+  convertedPlayer Player? @relation("ProspectConvertedPlayer", fields: [convertedPlayerId], references: [id])
 }
