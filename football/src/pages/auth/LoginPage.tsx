@@ -9,6 +9,7 @@ const DEV_ACCOUNTS = [
   { label: '관리자', email: 'admin@club.com' },
   { label: '코칭스태프', email: 'coach@club.com' },
   { label: '프런트오피스', email: 'fo@club.com' },
+  { label: '선수', email: 'player@club.com' },
 ] as const
 
 const DEV_PASSWORD = 'Password1!'
