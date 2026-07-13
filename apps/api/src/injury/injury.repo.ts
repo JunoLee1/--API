@@ -59,4 +59,34 @@ export class InjuryRepository {
       select: INJURY_SELECT,
     });
   }
+
+  async getStats() {
+    const [byBodyPart, byCause, withDates, activeCount] = await Promise.all([
+      this.prisma.injury.groupBy({ by: ["bodyPart"], _count: { id: true } }),
+      this.prisma.injury.groupBy({ by: ["cause"], _count: { id: true } }),
+      this.prisma.injury.findMany({
+        where: { expectedReturnDate: { not: null } },
+        select: { occurredAt: true, expectedReturnDate: true },
+      }),
+      this.prisma.injury.count({ where: { status: { not: "RETURNED" } } }),
+    ]);
+
+    const avgRecoveryDays =
+      withDates.length > 0
+        ? Math.round(
+            withDates.reduce(
+              (sum, i) =>
+                sum + (i.expectedReturnDate!.getTime() - i.occurredAt.getTime()) / 86_400_000,
+              0,
+            ) / withDates.length,
+          )
+        : null;
+
+    return {
+      activeCount,
+      byBodyPart: Object.fromEntries(byBodyPart.map((b) => [b.bodyPart, b._count.id])),
+      byCause: Object.fromEntries(byCause.map((b) => [b.cause, b._count.id])),
+      avgRecoveryDays,
+    };
+  }
 }

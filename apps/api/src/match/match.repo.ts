@@ -11,6 +11,7 @@ const MATCH_SELECT = {
   homeScore: true,
   awayScore: true,
   competitionType: true,
+  venue: true,
   seasonId: true,
   externalId: true,
 } as const;
@@ -69,6 +70,7 @@ export class MatchRepository {
         competitionType: data.competitionType,
         seasonId: data.seasonId,
         ...(data.externalId && { externalId: data.externalId }),
+        ...(data.venue && { venue: data.venue }),
       },
       select: MATCH_SELECT,
     });
@@ -84,6 +86,7 @@ export class MatchRepository {
         ...(data.homeScore !== undefined && { homeScore: data.homeScore }),
         ...(data.awayScore !== undefined && { awayScore: data.awayScore }),
         ...(data.competitionType && { competitionType: data.competitionType }),
+        ...(data.venue && { venue: data.venue }),
       },
       select: MATCH_SELECT,
     });

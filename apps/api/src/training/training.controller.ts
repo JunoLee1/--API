@@ -26,13 +26,20 @@ export class TrainingController {
   createSession = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!STAFF_ROLES.includes(req.user!.role as StaffRole)) throw new AppError(403, "FORBIDDEN");
+      if (req.body.sessionType === "GOALKEEPER") {
+        const isGK = req.user!.role === "ADMIN" || req.user!.coachingRole === "GOALKEEPER_COACH";
+        if (!isGK) throw new AppError(403, "FORBIDDEN");
+      }
       res.status(201).json(await this.service.createSession(req.body, req.user!.id));
     } catch (err) { next(err); }
   };
 
   approveSession = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (req.user!.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
+      const { role, coachingRole } = req.user!;
+      const canApprove =
+        role === "ADMIN" || (role === "COACHING_STAFF" && coachingRole === "HEAD_COACH");
+      if (!canApprove) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.approveSession(Number(req.params["id"]), req.user!.id));
     } catch (err) { next(err); }
   };

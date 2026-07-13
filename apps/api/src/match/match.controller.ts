@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { MatchService } from "./match.service";
-import { MatchListQuery } from "./dto/match.dto";
+import { MatchListQuery, VALID_COMPETITION_TYPES } from "./dto/match.dto";
 import { CompetitionType } from "../generated/enums";
 
 const WRITE_ROLES = ["ADMIN", "FRONT_OFFICE"] as const;
@@ -17,7 +17,11 @@ export class MatchController {
     try {
       const query: MatchListQuery = {};
       if (req.query["seasonId"]) query.seasonId = Number(req.query["seasonId"]);
-      if (req.query["competitionType"]) query.competitionType = req.query["competitionType"] as CompetitionType;
+      if (req.query["competitionType"]) {
+        const ct = req.query["competitionType"] as string;
+        if (!VALID_COMPETITION_TYPES.includes(ct as CompetitionType)) throw new AppError(400, "INVALID_COMPETITION_TYPE");
+        query.competitionType = ct as CompetitionType;
+      }
       res.status(200).json(await this.service.getMatches(query));
     } catch (err) {
       next(err);

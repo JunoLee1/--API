@@ -9,6 +9,15 @@ export type CoachingRole =
   | 'SET_PIECE_COACH'
   | 'GOALKEEPER_COACH'
   | 'MEDICAL'
+  | 'MEDICAL_DIRECTOR'
+
+export type FrontOfficeRole =
+  | 'GM'
+  | 'TD'
+  | 'CONTRACT_MANAGER'
+  | 'SCOUT'
+  | 'EQUIPMENT_MANAGER'
+  | 'TACTICAL_ANALYST'
 
 export const ROLE_LABEL: Record<Role, string> = {
   ADMIN: '관리자',
@@ -27,6 +36,16 @@ export const COACHING_ROLE_LABEL: Record<CoachingRole, string> = {
   SET_PIECE_COACH: '세트피스코치',
   GOALKEEPER_COACH: '골키퍼코치',
   MEDICAL: '의료진',
+  MEDICAL_DIRECTOR: '의료부장',
+}
+
+export const FRONT_OFFICE_ROLE_LABEL: Record<FrontOfficeRole, string> = {
+  GM: 'GM',
+  TD: 'TD',
+  CONTRACT_MANAGER: '계약담당',
+  SCOUT: '스카우트',
+  EQUIPMENT_MANAGER: '장비담당',
+  TACTICAL_ANALYST: '전술분석관',
 }
 
 export interface UserDto {
@@ -36,6 +55,7 @@ export interface UserDto {
   nickname: string
   role: Role
   coachingRole: CoachingRole | null
+  frontOfficeRole: FrontOfficeRole | null
   isOutOfOffice: boolean
 }
 

@@ -24,4 +24,8 @@ export class InjuryService {
     if (!injury) throw new AppError(404, "INJURY_NOT_FOUND");
     return this.repo.updateStatus(id, dto);
   }
+
+  getStats() {
+    return this.repo.getStats();
+  }
 }

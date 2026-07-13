@@ -48,4 +48,12 @@ export class TacticalRepository {
       data: { tacticalAnalysisId, url: dto.url, type: dto.type },
     });
   }
+
+  confirm(id: number) {
+    return this.prisma.tacticalAnalysis.update({
+      where: { id },
+      data: { status: "CONFIRMED" },
+      select: { id: true, status: true },
+    });
+  }
 }

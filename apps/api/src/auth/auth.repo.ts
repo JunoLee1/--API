@@ -1,5 +1,5 @@
 import { PrismaClient } from "../generated/client";
-import { Role } from "../generated/enums";
+import { Role, CoachingRole, FrontOfficeRole } from "../generated/enums";
 
 interface CreateUserData {
   email: string;
@@ -7,6 +7,8 @@ interface CreateUserData {
   username: string;
   nickname: string;
   role: Role;
+  coachingRole?: CoachingRole | null;
+  frontOfficeRole?: FrontOfficeRole | null;
   dateOfBirth: Date;
   nationalityId: number;
   phoneNumber: { encrypted: string; iv: string };
@@ -16,7 +18,10 @@ export class AuthRepository {
   constructor(private prisma: PrismaClient) {}
 
   findByEmail(email: string) {
-    return this.prisma.user.findUnique({ where: { email } });
+    return this.prisma.user.findUnique({
+      where: { email },
+      select: { id: true, email: true, username: true, nickname: true, role: true, coachingRole: true, frontOfficeRole: true, password: true },
+    });
   }
 
   isEmailTaken(email: string) {
@@ -30,7 +35,7 @@ export class AuthRepository {
   findById(id: number) {
     return this.prisma.user.findUnique({
       where: { id },
-      select: { id: true, email: true, username: true, nickname: true, role: true },
+      select: { id: true, email: true, username: true, nickname: true, role: true, coachingRole: true, frontOfficeRole: true },
     });
   }
 
@@ -45,11 +50,13 @@ export class AuthRepository {
         username: data.username,
         nickname: data.nickname,
         role: data.role,
+        coachingRole: data.coachingRole,
+        frontOfficeRole: data.frontOfficeRole,
         dateOfBirth: data.dateOfBirth,
         nationalityId: data.nationalityId,
         phoneNumberId: phone.id,
       },
-      select: { id: true, email: true, username: true, nickname: true, role: true },
+      select: { id: true, email: true, username: true, nickname: true, role: true, coachingRole: true, frontOfficeRole: true },
     });
   }
 }

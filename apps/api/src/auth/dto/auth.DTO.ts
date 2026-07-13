@@ -1,4 +1,4 @@
-import { Role } from "../../generated/enums";
+import { Role, CoachingRole, FrontOfficeRole } from "../../generated/enums";
 
 export interface LoginDto {
   email: string;
@@ -12,6 +12,8 @@ export interface CreateUserDto {
   username: string;
   nickname: string;
   role: Role;
+  coachingRole?: CoachingRole | null;
+  frontOfficeRole?: FrontOfficeRole | null;
   dateOfBirth: string;
   phoneNumber: string;
   nationalityId: number;

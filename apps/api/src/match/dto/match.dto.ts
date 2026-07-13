@@ -1,4 +1,6 @@
-import { CompetitionType } from "../../generated/enums";
+import { CompetitionType, Venue } from "../../generated/enums";
+
+export const VALID_COMPETITION_TYPES = Object.values(CompetitionType);
 
 export interface CreateMatchDto {
   date: string;
@@ -7,6 +9,7 @@ export interface CreateMatchDto {
   competitionType: CompetitionType;
   seasonId: number;
   externalId?: string;
+  venue?: Venue;
 }
 
 export interface UpdateMatchDto {
@@ -16,6 +19,7 @@ export interface UpdateMatchDto {
   homeScore?: number;
   awayScore?: number;
   competitionType?: CompetitionType;
+  venue?: Venue;
 }
 
 export interface MatchListQuery {

@@ -8,6 +8,16 @@ type MedicalRole = (typeof MEDICAL_ROLES)[number];
 export class InjuryController {
   constructor(private service: InjuryService) {}
 
+  getStats = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, coachingRole } = req.user!;
+      const isMedicalDirector =
+        role === "COACHING_STAFF" && coachingRole === "MEDICAL_DIRECTOR";
+      if (role !== "ADMIN" && !isMedicalDirector) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(await this.service.getStats());
+    } catch (err) { next(err); }
+  };
+
   getByPlayer = async (req: Request, res: Response, next: NextFunction) => {
     try {
       res.status(200).json(await this.service.getByPlayer(String(req.params["playerId"])));

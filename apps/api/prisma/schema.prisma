@@ -28,6 +28,16 @@ enum CoachingRole {
   SET_PIECE_COACH
   GOALKEEPER_COACH
   MEDICAL
+  MEDICAL_DIRECTOR
+}
+
+enum FrontOfficeRole {
+  GM
+  TD
+  CONTRACT_MANAGER
+  SCOUT
+  EQUIPMENT_MANAGER
+  TACTICAL_ANALYST
 }
 
 enum PlayerLevel {
@@ -131,6 +141,7 @@ enum SessionType {
   PHYSICAL
   PSYCHOLOGICAL_SOCIAL
   SET_PIECE
+  GOALKEEPER
 }
 
 enum ContentPhase {
@@ -154,9 +165,16 @@ enum TacticalPhase {
 
 enum CompetitionType {
   LEAGUE
-  CUP
+  DOMESTIC_CUP
+  CONTINENTAL
+  PLAYOFF
   FRIENDLY
-  CHAMPIONS_LEAGUE
+}
+
+enum Venue {
+  HOME
+  AWAY
+  NEUTRAL
 }
 
 enum NotificationType {
@@ -164,12 +182,41 @@ enum NotificationType {
   PERFORMANCE_BONUS_ACHIEVED
   INJURY_READY_TO_RETURN
   TRAINING_ATTENDANCE_WARNING
+  EQUIPMENT_LOW_STOCK
+  EXTENSION_OPTION_AVAILABLE
+}
+
+enum TacticalStatus {
+  DRAFT
+  CONFIRMED
 }
 
 enum SeasonStatus {
   UPCOMING
   ACTIVE
   CLOSED
+}
+
+enum EquipmentCategory {
+  CLOTHING
+  FOOTWEAR
+  BALL_AND_TOOLS
+  REHABILITATION
+  TACTICAL
+  OTHER
+}
+
+enum EquipmentUnitStatus {
+  AVAILABLE
+  IN_USE
+  MAINTENANCE
+  RETIRED
+}
+
+enum ProspectStatus {
+  ACTIVE
+  SIGNED
+  ARCHIVED
 }
 
 // ─────────────────────────────────────────────
@@ -199,9 +246,10 @@ model User {
   password      String
   username      String
   nickname      String        @unique
-  role          Role
-  coachingRole  CoachingRole?
-  isDeleted     Boolean       @default(false)
+  role            Role
+  coachingRole    CoachingRole?
+  frontOfficeRole FrontOfficeRole?
+  isDeleted       Boolean          @default(false)
   isOutOfOffice Boolean       @default(false)
   dateOfBirth   DateTime
   phoneNumberId Int           @unique
@@ -258,6 +306,8 @@ model Player {
   trainingResults      TrainingResult[]
   matchStats           PlayerMatchStats[]
   tacticalLineups      TacticalLineup[]
+  equipmentAssignments EquipmentAssignment[]
+  prospects            Prospect[]            @relation("ProspectConvertedPlayer")
 }
 
 model Contract {
@@ -365,6 +415,7 @@ model Match {
   homeScore       Int?
   awayScore       Int?
   competitionType CompetitionType
+  venue           Venue?
   externalId      String?         @unique
   seasonId        Int
 
@@ -473,6 +524,7 @@ model TacticalAnalysis {
   phase            TacticalPhase
   formation        String
   opponentAnalysis String?
+  status           TacticalStatus @default(DRAFT)
   createdAt        DateTime      @default(now())
   matchId          Int
   seasonId         Int
@@ -507,10 +559,59 @@ model TacticalMedia {
 model Notification {
   id        Int              @id @default(autoincrement())
   type      NotificationType
-  message   String
-  isRead    Boolean          @default(false)
+  title     String
+  body      String
+  readAt    DateTime?
   createdAt DateTime         @default(now())
   userId    Int
 
   user User @relation(fields: [userId], references: [id])
+}
+
+model EquipmentItem {
+  id                  Int               @id @default(autoincrement())
+  name                String
+  category            EquipmentCategory
+  trackedIndividually Boolean
+  quantity            Int?
+  lowStockThreshold   Int?
+
+  units       EquipmentUnit[]
+  assignments EquipmentAssignment[]
+}
+
+model EquipmentUnit {
+  id              Int                 @id @default(autoincrement())
+  status          EquipmentUnitStatus @default(AVAILABLE)
+  equipmentItemId Int
+
+  item        EquipmentItem         @relation(fields: [equipmentItemId], references: [id])
+  assignments EquipmentAssignment[]
+}
+
+model EquipmentAssignment {
+  id              Int       @id @default(autoincrement())
+  issuedAt        DateTime  @default(now())
+  returnedAt      DateTime?
+  playerId        String
+  equipmentItemId Int?
+  equipmentUnitId Int?
+
+  player        Player         @relation(fields: [playerId], references: [id])
+  equipmentItem EquipmentItem? @relation(fields: [equipmentItemId], references: [id])
+  equipmentUnit EquipmentUnit? @relation(fields: [equipmentUnitId], references: [id])
+}
+
+model Prospect {
+  id                Int            @id @default(autoincrement())
+  name              String
+  nationality       String
+  position          Position
+  currentTeam       String
+  notes             String?
+  status            ProspectStatus @default(ACTIVE)
+  convertedPlayerId String?
+  createdAt         DateTime       @default(now())
+
+  convertedPlayer Player? @relation("ProspectConvertedPlayer", fields: [convertedPlayerId], references: [id])
 }

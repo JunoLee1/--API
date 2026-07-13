@@ -20,7 +20,12 @@ export class TransferController {
 
   createTransfer = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!["ADMIN", "FRONT_OFFICE"].includes(req.user!.role)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole } = req.user!;
+      if (role !== "ADMIN" && role !== "FRONT_OFFICE") throw new AppError(403, "FORBIDDEN");
+      if (role === "FRONT_OFFICE") {
+        const allowed = ["GM", "TD", "CONTRACT_MANAGER"];
+        if (!frontOfficeRole || !allowed.includes(frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      }
       res.status(201).json(await this.service.createTransfer(req.body));
     } catch (err) { next(err); }
   };

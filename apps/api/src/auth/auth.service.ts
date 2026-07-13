@@ -15,7 +15,7 @@ export class AuthService {
     const valid = await comparePassword(password, user.password);
     if (!valid) throw new AppError(401, "INVALID_CREDENTIALS");
 
-    return generateTokens(user.id, user.role);
+    return generateTokens({ id: user.id, role: user.role, coachingRole: user.coachingRole, frontOfficeRole: user.frontOfficeRole });
   }
 
   async createUser(dto: CreateUserDto) {
@@ -33,6 +33,8 @@ export class AuthService {
       username: dto.username,
       nickname: dto.nickname,
       role: dto.role,
+      coachingRole: dto.coachingRole,
+      frontOfficeRole: dto.frontOfficeRole,
       dateOfBirth: new Date(dto.dateOfBirth),
       nationalityId: dto.nationalityId,
       phoneNumber,
