@@ -27,4 +27,7 @@ router.patch("/:id", auth, controller.updatePlayer);
 // 선수 상태 변경 (ADMIN)
 router.patch("/:id/status", auth, controller.updatePlayerStatus);
 
+// 선수 삭제 (ADMIN)
+router.delete("/:id", auth, controller.deletePlayer);
+
 export default router;

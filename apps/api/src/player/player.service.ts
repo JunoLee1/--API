@@ -30,4 +30,10 @@ export class PlayerService {
     if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
     return this.repo.updateStatus(id, status);
   }
+
+  async deletePlayer(id: string) {
+    const player = await this.repo.findById(id);
+    if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
+    await this.repo.delete(id);
+  }
 }

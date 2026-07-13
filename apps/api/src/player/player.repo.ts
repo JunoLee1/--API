@@ -99,4 +99,8 @@ export class PlayerRepository {
       select: { id: true, status: true },
     });
   }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.player.delete({ where: { id } });
+  }
 }

@@ -63,7 +63,9 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
 
   useEffect(() => {
     if (!open) return
-    api.get<Country[]>('/countries').then(setCountries).catch(() => null)
+    api.get<{ data: Country[] } | Country[]>('/countries')
+      .then((res) => setCountries(Array.isArray(res) ? res : res.data))
+      .catch(() => null)
   }, [open])
 
   useEffect(() => {
