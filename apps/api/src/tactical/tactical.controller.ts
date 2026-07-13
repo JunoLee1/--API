@@ -2,8 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { TacticalService } from "./tactical.service";
 
-const TACTICAL_ROLES = ["ADMIN", "COACHING_STAFF"] as const;
-type TacticalRole = (typeof TACTICAL_ROLES)[number];
+const STAFF_ROLES = ["ADMIN", "COACHING_STAFF"] as const;
+type StaffRole = (typeof STAFF_ROLES)[number];
 
 export class TacticalController {
   constructor(private service: TacticalService) {}
@@ -22,22 +22,37 @@ export class TacticalController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!TACTICAL_ROLES.includes(req.user!.role as TacticalRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole } = req.user!;
+      const canCreate =
+        role === "ADMIN" ||
+        role === "COACHING_STAFF" ||
+        (role === "FRONT_OFFICE" && frontOfficeRole === "TACTICAL_ANALYST");
+      if (!canCreate) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.createAnalysis(req.body, req.user!.id));
     } catch (err) { next(err); }
   };
 
   addLineup = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!TACTICAL_ROLES.includes(req.user!.role as TacticalRole)) throw new AppError(403, "FORBIDDEN");
+      if (!STAFF_ROLES.includes(req.user!.role as StaffRole)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.addLineup(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
   };
 
   addMedia = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!TACTICAL_ROLES.includes(req.user!.role as TacticalRole)) throw new AppError(403, "FORBIDDEN");
+      if (!STAFF_ROLES.includes(req.user!.role as StaffRole)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.addMedia(Number(req.params["id"]), req.body));
+    } catch (err) { next(err); }
+  };
+
+  confirm = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, coachingRole } = req.user!;
+      const canConfirm =
+        role === "ADMIN" || (role === "COACHING_STAFF" && coachingRole === "HEAD_COACH");
+      if (!canConfirm) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(await this.service.confirmAnalysis(Number(req.params["id"])));
     } catch (err) { next(err); }
   };
 }

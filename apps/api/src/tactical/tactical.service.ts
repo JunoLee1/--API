@@ -30,4 +30,11 @@ export class TacticalService {
     if (!analysis) throw new AppError(404, "ANALYSIS_NOT_FOUND");
     return this.repo.addMedia(analysisId, dto);
   }
+
+  async confirmAnalysis(id: number) {
+    const analysis = await this.repo.findById(id);
+    if (!analysis) throw new AppError(404, "ANALYSIS_NOT_FOUND");
+    if (analysis.status === "CONFIRMED") throw new AppError(409, "ALREADY_CONFIRMED");
+    return this.repo.confirm(id);
+  }
 }

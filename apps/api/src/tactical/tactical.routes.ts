@@ -22,5 +22,7 @@ router.post("/", auth, controller.create);
 router.post("/:id/lineup", auth, controller.addLineup);
 // 미디어 추가
 router.post("/:id/media", auth, controller.addMedia);
+// 전술 분석 확정 (ADMIN, HEAD_COACH)
+router.patch("/:id/confirm", auth, controller.confirm);
 
 export default router;
