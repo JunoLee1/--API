@@ -81,7 +81,7 @@ export class AdminRepository {
     });
   }
 
-  hardDelete(id: number) {
-    return this.prisma.user.delete({ where: { id } });
+  async hardDelete(id: number): Promise<void> {
+    await this.prisma.user.delete({ where: { id } });
   }
 }
