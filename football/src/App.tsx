@@ -46,7 +46,7 @@ function App() {
             <Route path="/contracts" element={<ContractsPage />} />
             <Route path="/transfers" element={<TransfersPage />} />
             <Route path="/injuries" element={<InjuriesPage />} />
-            <Route path="/injuries/stats" element={<PlaceholderPage title="부상 통계" />} />
+            <Route path="/injuries/stats" element={<InjuriesPage />} />
             <Route path="/training" element={<TrainingPage />} />
             <Route path="/training/attendance" element={<TrainingAttendancePage />} />
             <Route path="/training/:id" element={<TrainingDetailPage />} />
