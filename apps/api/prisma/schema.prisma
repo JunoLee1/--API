@@ -197,6 +197,22 @@ enum SeasonStatus {
   CLOSED
 }
 
+enum EquipmentCategory {
+  CLOTHING
+  FOOTWEAR
+  BALL_AND_TOOLS
+  REHABILITATION
+  TACTICAL
+  OTHER
+}
+
+enum EquipmentUnitStatus {
+  AVAILABLE
+  IN_USE
+  MAINTENANCE
+  RETIRED
+}
+
 // ─────────────────────────────────────────────
 // Models
 // ─────────────────────────────────────────────
@@ -284,6 +300,7 @@ model Player {
   trainingResults      TrainingResult[]
   matchStats           PlayerMatchStats[]
   tacticalLineups      TacticalLineup[]
+  equipmentAssignments EquipmentAssignment[]
 }
 
 model Contract {
@@ -542,4 +559,38 @@ model Notification {
   userId    Int
 
   user User @relation(fields: [userId], references: [id])
+}
+
+model EquipmentItem {
+  id                  Int               @id @default(autoincrement())
+  name                String
+  category            EquipmentCategory
+  trackedIndividually Boolean
+  quantity            Int?
+  lowStockThreshold   Int?
+
+  units       EquipmentUnit[]
+  assignments EquipmentAssignment[]
+}
+
+model EquipmentUnit {
+  id              Int                 @id @default(autoincrement())
+  status          EquipmentUnitStatus @default(AVAILABLE)
+  equipmentItemId Int
+
+  item        EquipmentItem         @relation(fields: [equipmentItemId], references: [id])
+  assignments EquipmentAssignment[]
+}
+
+model EquipmentAssignment {
+  id              Int       @id @default(autoincrement())
+  issuedAt        DateTime  @default(now())
+  returnedAt      DateTime?
+  playerId        String
+  equipmentItemId Int?
+  equipmentUnitId Int?
+
+  player        Player         @relation(fields: [playerId], references: [id])
+  equipmentItem EquipmentItem? @relation(fields: [equipmentItemId], references: [id])
+  equipmentUnit EquipmentUnit? @relation(fields: [equipmentUnitId], references: [id])
 }
