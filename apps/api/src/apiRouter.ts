@@ -1,4 +1,5 @@
 import { Router } from "express";
+import adminRouter from "./admin/admin.routes";
 import authRouter from "./auth/auth.routes";
 import contractRouter from "./contract/contract.routes";
 import equipmentRouter from "./equipment/equipment.routes";
@@ -14,6 +15,7 @@ import transferRouter from "./transfer/transfer.routes";
 
 const apiRouter = Router();
 
+apiRouter.use("/admin", adminRouter);
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/contracts", contractRouter);
 apiRouter.use("/equipment", equipmentRouter);
