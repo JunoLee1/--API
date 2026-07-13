@@ -105,6 +105,12 @@ describe("AdminController - deactivateUser", () => {
     await controller.deactivateUser(adminReq({ params: { id: "2" } }), res, next);
     expect(res.status).toHaveBeenCalledWith(200);
   });
+
+  test("non-ADMIN gets 403", async () => {
+    const res = mockRes();
+    await controller.deactivateUser(nonAdminReq("FRONT_OFFICE"), res, next);
+    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403, code: "FORBIDDEN" }));
+  });
 });
 
 describe("AdminController - reactivateUser", () => {
@@ -115,6 +121,12 @@ describe("AdminController - reactivateUser", () => {
     const res = mockRes();
     await controller.reactivateUser(adminReq({ params: { id: "2" } }), res, next);
     expect(res.status).toHaveBeenCalledWith(200);
+  });
+
+  test("non-ADMIN gets 403", async () => {
+    const res = mockRes();
+    await controller.reactivateUser(nonAdminReq("COACHING_STAFF"), res, next);
+    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403, code: "FORBIDDEN" }));
   });
 });
 
@@ -127,5 +139,11 @@ describe("AdminController - deleteUser", () => {
     await controller.deleteUser(adminReq({ params: { id: "2" } }), res, next);
     expect(res.status).toHaveBeenCalledWith(204);
     expect(res.send).toHaveBeenCalled();
+  });
+
+  test("non-ADMIN gets 403", async () => {
+    const res = mockRes();
+    await controller.deleteUser(nonAdminReq("PLAYER"), res, next);
+    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403, code: "FORBIDDEN" }));
   });
 });
