@@ -1,0 +1,10 @@
+# Claude Code worktrees and config
+.claude/
+
+# Superpowers plans and graphify output
+docs/
+graphify-out/
+
+# Root-level node artifacts (apps/api and football/ have their own .gitignore)
+node_modules/
+package-lock.json

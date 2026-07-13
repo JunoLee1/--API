@@ -1,0 +1,78 @@
+export type EquipmentCategory =
+  | 'CLOTHING'
+  | 'FOOTWEAR'
+  | 'BALL_AND_TOOLS'
+  | 'REHABILITATION'
+  | 'TACTICAL'
+  | 'OTHER'
+
+export type EquipmentUnitStatus = 'AVAILABLE' | 'IN_USE' | 'MAINTENANCE' | 'RETIRED'
+
+export interface EquipmentItem {
+  id: number
+  name: string
+  category: EquipmentCategory
+  trackedIndividually: boolean
+  quantity: number | null
+  lowStockThreshold: number | null
+  units?: EquipmentUnit[]
+}
+
+export interface EquipmentUnit {
+  id: number
+  equipmentItemId: number
+  status: EquipmentUnitStatus
+  assignedTo: { playerName: string } | null
+}
+
+export interface EquipmentAssignment {
+  id: number
+  playerId: string
+  equipmentItemId: number | null
+  equipmentUnitId: number | null
+  issuedAt: string
+  returnedAt: string | null
+  player: { playerName: string }
+  equipmentItem: { name: string } | null
+  equipmentUnit: { id: number } | null
+}
+
+export interface CreateEquipmentItemDto {
+  name: string
+  category: EquipmentCategory
+  trackedIndividually: boolean
+  quantity?: number
+  lowStockThreshold?: number
+}
+
+export const CATEGORY_LABEL: Record<EquipmentCategory, string> = {
+  CLOTHING: '의류',
+  FOOTWEAR: '신발',
+  BALL_AND_TOOLS: '볼·도구',
+  REHABILITATION: '재활 장비',
+  TACTICAL: '전술 장비',
+  OTHER: '기타',
+}
+
+export const CATEGORY_STYLE: Record<EquipmentCategory, string> = {
+  CLOTHING: 'bg-pink-100 text-pink-800 border-pink-200',
+  FOOTWEAR: 'bg-orange-100 text-orange-800 border-orange-200',
+  BALL_AND_TOOLS: 'bg-blue-100 text-blue-800 border-blue-200',
+  REHABILITATION: 'bg-green-100 text-green-800 border-green-200',
+  TACTICAL: 'bg-violet-100 text-violet-800 border-violet-200',
+  OTHER: 'bg-gray-100 text-gray-600 border-gray-200',
+}
+
+export const UNIT_STATUS_LABEL: Record<EquipmentUnitStatus, string> = {
+  AVAILABLE: '사용 가능',
+  IN_USE: '사용 중',
+  MAINTENANCE: '정비 중',
+  RETIRED: '폐기',
+}
+
+export const UNIT_STATUS_STYLE: Record<EquipmentUnitStatus, string> = {
+  AVAILABLE: 'bg-green-100 text-green-800 border-green-200',
+  IN_USE: 'bg-blue-100 text-blue-800 border-blue-200',
+  MAINTENANCE: 'bg-amber-100 text-amber-800 border-amber-200',
+  RETIRED: 'bg-gray-100 text-gray-500 border-gray-200',
+}
