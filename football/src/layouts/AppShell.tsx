@@ -20,13 +20,21 @@ import {
   Settings,
   Shield,
   Stethoscope,
+  TrendingUp,
   Trophy,
   Users,
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
-import { COACHING_ROLE_LABEL, ROLE_LABEL, type Role } from '@/types/auth'
+import {
+  COACHING_ROLE_LABEL,
+  FRONT_OFFICE_ROLE_LABEL,
+  ROLE_LABEL,
+  type CoachingRole,
+  type FrontOfficeRole,
+  type Role,
+} from '@/types/auth'
 
 interface NavItem {
   to: string
@@ -35,6 +43,8 @@ interface NavItem {
   end?: boolean
   section?: '선수 관리' | '계약·이적' | '부상·의료' | '훈련' | '경기·분석' | '관리'
   roles?: Role[]
+  coachingRoles?: CoachingRole[]
+  frontOfficeRoles?: FrontOfficeRole[]
   description?: string
 }
 
@@ -83,6 +93,14 @@ const NAV_ITEMS: NavItem[] = [
     icon: Stethoscope,
     section: '부상·의료',
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
+  },
+  {
+    to: '/injuries/stats',
+    label: '부상 통계',
+    icon: TrendingUp,
+    section: '부상·의료',
+    roles: ['ADMIN', 'COACHING_STAFF'],
+    coachingRoles: ['MEDICAL_DIRECTOR'],
   },
 
   // 훈련
@@ -183,9 +201,18 @@ export function AppShell() {
     clearLocalSession()
   }
 
-  const visibleNavItems = NAV_ITEMS.filter(
-    (item) => !item.roles || (user && item.roles.includes(user.role)),
-  )
+  const visibleNavItems = NAV_ITEMS.filter((item) => {
+    if (!item.roles) return true
+    if (!user) return false
+    if (!item.roles.includes(user.role)) return false
+    if (item.coachingRoles && user.role === 'COACHING_STAFF') {
+      return user.coachingRole !== null && item.coachingRoles.includes(user.coachingRole)
+    }
+    if (item.frontOfficeRoles && user.role === 'FRONT_OFFICE') {
+      return user.frontOfficeRole !== null && item.frontOfficeRoles.includes(user.frontOfficeRole)
+    }
+    return true
+  })
 
   const navGroups: Array<{ section: string | null; items: NavItem[] }> = []
   const rootItems = visibleNavItems.filter((i) => !i.section)
@@ -269,6 +296,9 @@ export function AppShell() {
     if (user.role === 'COACHING_STAFF' && user.coachingRole) {
       return COACHING_ROLE_LABEL[user.coachingRole]
     }
+    if (user.role === 'FRONT_OFFICE' && user.frontOfficeRole) {
+      return FRONT_OFFICE_ROLE_LABEL[user.frontOfficeRole]
+    }
     return ROLE_LABEL[user.role]
   }
 
@@ -347,7 +377,15 @@ export function AppShell() {
           {loading || !user ? (
             <Skeleton className="h-12 w-full" />
           ) : (
-            <div className="flex items-center gap-3 px-2">
+            <NavLink
+              to="/me"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-2 py-1.5 rounded-md transition-colors ${
+                  isActive ? 'bg-accent' : 'hover:bg-accent/50'
+                }`
+              }
+              title="내 정보"
+            >
               <Avatar className="h-8 w-8">
                 <AvatarFallback className="text-xs">{user.nickname.slice(0, 1)}</AvatarFallback>
               </Avatar>
@@ -355,7 +393,7 @@ export function AppShell() {
                 <p className="text-sm font-medium truncate">{user.nickname}</p>
                 <p className="text-xs text-muted-foreground truncate">{userSubLabel()}</p>
               </div>
-            </div>
+            </NavLink>
           )}
           <Button
             variant="ghost"
