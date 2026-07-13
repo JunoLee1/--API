@@ -22,8 +22,8 @@ import { MePage } from '@/pages/me/MePage'
 import { UsersPage } from '@/pages/admin/UsersPage'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const token = localStorage.getItem('accessToken')
-  return token ? <>{children}</> : <Navigate to="/login" replace />
+  const loggedIn = localStorage.getItem('loggedIn')
+  return loggedIn ? <>{children}</> : <Navigate to="/login" replace />
 }
 
 function App() {
