@@ -1,0 +1,93 @@
+import { EquipmentRepository } from "./equipment.repo";
+import { NotificationRepository } from "../notification/notification.repo";
+import { AppError } from "../lib/appError";
+import { CreateEquipmentItemDto, UpdateQuantityDto, UpdateUnitStatusDto, CreateAssignmentDto } from "./dto/equipment.dto";
+import { EquipmentUnitStatus } from "../generated/enums";
+
+const VALID_UNIT_TRANSITIONS: Record<EquipmentUnitStatus, EquipmentUnitStatus[]> = {
+  AVAILABLE: ["IN_USE", "MAINTENANCE"],
+  IN_USE: ["AVAILABLE", "MAINTENANCE"],
+  MAINTENANCE: ["AVAILABLE", "RETIRED"],
+  RETIRED: [],
+};
+
+export class EquipmentService {
+  constructor(
+    private repo: EquipmentRepository,
+    private notificationRepo: NotificationRepository,
+  ) {}
+
+  async getAllItems() {
+    return this.repo.findAllItems();
+  }
+
+  async getItemById(id: number) {
+    const item = await this.repo.findItemById(id);
+    if (!item) throw new AppError(404, "EQUIPMENT_ITEM_NOT_FOUND");
+    return item;
+  }
+
+  createItem(dto: CreateEquipmentItemDto) {
+    return this.repo.createItem(dto);
+  }
+
+  async adjustQuantity(id: number, dto: UpdateQuantityDto) {
+    const item = await this.repo.findItemById(id);
+    if (!item) throw new AppError(404, "EQUIPMENT_ITEM_NOT_FOUND");
+    if (item.trackedIndividually) throw new AppError(400, "ITEM_IS_TRACKED_INDIVIDUALLY");
+    const newQty = (item.quantity ?? 0) + dto.delta;
+    if (newQty < 0) throw new AppError(400, "QUANTITY_BELOW_ZERO");
+    const updated = await this.repo.adjustQuantity(id, dto.delta);
+    if (item.lowStockThreshold !== null && newQty <= item.lowStockThreshold) {
+      await this.#sendLowStockNotifications(item.name, newQty);
+    }
+    return updated;
+  }
+
+  async addUnit(itemId: number) {
+    const item = await this.repo.findItemById(itemId);
+    if (!item) throw new AppError(404, "EQUIPMENT_ITEM_NOT_FOUND");
+    if (!item.trackedIndividually) throw new AppError(400, "ITEM_NOT_TRACKED_INDIVIDUALLY");
+    return this.repo.createUnit(itemId);
+  }
+
+  async transitionUnitStatus(unitId: number, dto: UpdateUnitStatusDto) {
+    const unit = await this.repo.findUnitById(unitId);
+    if (!unit) throw new AppError(404, "EQUIPMENT_UNIT_NOT_FOUND");
+    const allowed = VALID_UNIT_TRANSITIONS[unit.status];
+    if (!allowed.includes(dto.status)) throw new AppError(409, "INVALID_STATUS_TRANSITION");
+    return this.repo.updateUnitStatus(unitId, dto.status);
+  }
+
+  async createAssignment(dto: CreateAssignmentDto) {
+    if (!dto.equipmentItemId && !dto.equipmentUnitId) {
+      throw new AppError(400, "ASSIGNMENT_REQUIRES_ITEM_OR_UNIT");
+    }
+    return this.repo.createAssignment(dto);
+  }
+
+  async getUnreturnedByPlayer(playerId: string) {
+    return this.repo.findUnreturnedByPlayer(playerId);
+  }
+
+  async returnAssignment(assignmentId: number) {
+    const assignment = await this.repo.findAssignmentById(assignmentId);
+    if (!assignment) throw new AppError(404, "ASSIGNMENT_NOT_FOUND");
+    if (assignment.returnedAt) throw new AppError(409, "ALREADY_RETURNED");
+    return this.repo.markReturned(assignmentId);
+  }
+
+  async #sendLowStockNotifications(itemName: string, quantity: number) {
+    const managers = await this.repo.findEquipmentManagers();
+    await Promise.all(
+      managers.map((m) =>
+        this.notificationRepo.create({
+          userId: m.id,
+          type: "EQUIPMENT_LOW_STOCK",
+          title: "재고 부족",
+          body: `${itemName} 재고가 ${quantity}개로 임계값 이하입니다.`,
+        }),
+      ),
+    );
+  }
+}
