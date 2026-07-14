@@ -3,7 +3,7 @@ import { AppError } from "../lib/appError";
 import { hashPassword, comparePassword } from "../lib/hash";
 import { encrypt } from "../lib/crypto";
 import { generateTokens } from "../lib/token";
-import { LoginDto, CreateUserDto } from "./dto/auth.dto";
+import { LoginDto, CreateUserDto } from "../lib/dto";
 
 export class AuthService {
   constructor(private repo: AuthRepository) {}
@@ -33,8 +33,8 @@ export class AuthService {
       username: dto.username,
       nickname: dto.nickname,
       role: dto.role,
-      coachingRole: dto.coachingRole,
-      frontOfficeRole: dto.frontOfficeRole,
+      coachingRole: dto.coachingRole ?? null,
+      frontOfficeRole: dto.frontOfficeRole ?? null,
       dateOfBirth: new Date(dto.dateOfBirth),
       nationalityId: dto.nationalityId,
       phoneNumber,
