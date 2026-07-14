@@ -84,7 +84,6 @@ function CreateInjuryDialog({ open, onOpenChange, playerId, onSaved }: CreateInj
         playerId,
         bodyPart: bodyPart.trim(),
         cause,
-        medicalStaffId: 0,
         ...(expectedReturn && { expectedReturnDate: expectedReturn }),
         ...(hospitalType && { hospitalType }),
         ...(hospitalType === 'ACCREDITED' && hospitalId && { partnerId: Number(hospitalId) }),

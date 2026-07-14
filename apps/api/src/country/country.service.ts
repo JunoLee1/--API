@@ -34,31 +34,16 @@ export default class Service {
     return mapped;
   };
   getCountries = async ({ name, code, region }: any) => {
-    const where: any = {};
-    if (name) {
-      where.name = name;
+    const total = await this.repo.getCountries({});
+    if (total.length < 50) {
+      await this.registerCountries().catch(() => null);
     }
-    if (code) {
-      where.code = code;
-    }
-    if (region) {
-      where.region = region;
-    }
-    const DB_result = await this.repo.getCountries(where);
-    if (DB_result.length > 0) return DB_result;
-    const external = await this.clientApi.getAllCountries()
-    if(!external || external.length <= 0) throw new Error("Invalid Countries")
 
-    const filtered = external.map((c:any) => ({
-        code: c.code,
-        name: c.name,
-        region: c.region
-    })).filter((c:any) => {
-        if(code && c.code !== code) return false
-        if(name && c.name !== name) return false
-        if(region && c.region !== region) return false
-        return true
-    })
-    return filtered;
+    const where: any = {};
+    if (name) where.name = name;
+    if (code) where.code = code;
+    if (region) where.region = region;
+
+    return this.repo.getCountries(where);
   };
 }

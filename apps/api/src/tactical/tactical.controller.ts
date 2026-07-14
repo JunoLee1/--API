@@ -24,7 +24,6 @@ export class TacticalController {
     try {
       const { role, frontOfficeRole } = req.user!;
       const canCreate =
-        role === "ADMIN" ||
         role === "COACHING_STAFF" ||
         (role === "FRONT_OFFICE" && frontOfficeRole === "TACTICAL_ANALYST");
       if (!canCreate) throw new AppError(403, "FORBIDDEN");

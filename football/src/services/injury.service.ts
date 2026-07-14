@@ -12,10 +12,9 @@ export const injuryApi = {
     playerId: string
     bodyPart: string
     cause: InjuryCause
-    medicalStaffId: number
     expectedReturnDate?: string
     hospitalType?: HospitalType
-    hospitalId?: number
+    partnerId?: number
     customHospitalName?: string
   }) => api.post<Injury>('/injuries', payload),
 
@@ -24,4 +23,12 @@ export const injuryApi = {
       status,
       ...(expectedReturnDate && { expectedReturnDate }),
     }),
+
+  stats: () =>
+    api.get<{
+      activeCount: number
+      byBodyPart: Record<string, number>
+      byCause: Record<string, number>
+      avgRecoveryDays: number | null
+    }>('/injuries/stats'),
 }

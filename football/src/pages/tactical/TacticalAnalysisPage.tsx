@@ -140,9 +140,8 @@ export function TacticalAnalysisPage() {
   const [createOpen, setCreateOpen] = useState(false)
 
   const canWrite =
-    user?.role === 'ADMIN' ||
-    user?.coachingRole === 'HEAD_COACH' ||
-    user?.coachingRole === 'ASSISTANT_COACH'
+    user?.role === 'COACHING_STAFF' &&
+    (user?.coachingRole === 'HEAD_COACH' || user?.coachingRole === 'ASSISTANT_COACH')
 
   const canConfirm = user?.role === 'ADMIN' || user?.coachingRole === 'HEAD_COACH'
 

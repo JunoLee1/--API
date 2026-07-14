@@ -9,6 +9,7 @@ import { NotificationPopover } from '@/components/common/NotificationPopover'
 import { connectSocket, disconnectSocket } from '@/lib/socket'
 import { usePlayerNotification } from '@/hooks/usePlayerNotification'
 import { usePartnerNotification } from '@/hooks/usePartnerNotification'
+import { useReportNotification } from '@/hooks/useReportNotification'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import {
@@ -21,6 +22,7 @@ import {
   type LucideIcon,
   Menu,
   Package,
+  Receipt,
   ScrollText,
   Settings,
   Shield,
@@ -114,7 +116,15 @@ const NAV_ITEMS: NavItem[] = [
     icon: TrendingUp,
     section: '부상·의료',
     roles: ['ADMIN', 'COACHING_STAFF'],
-    coachingRoles: ['MEDICAL_DIRECTOR'],
+    coachingRoles: ['HEAD_COACH', 'ASSISTANT_COACH', 'MEDICAL', 'MEDICAL_DIRECTOR'],
+  },
+  {
+    to: '/medical-expenses',
+    label: '의료비 결재',
+    icon: Receipt,
+    section: '부상·의료',
+    roles: ['ADMIN', 'COACHING_STAFF'],
+    coachingRoles: ['MEDICAL', 'MEDICAL_DIRECTOR'],
   },
 
   // 훈련
@@ -150,8 +160,22 @@ const NAV_ITEMS: NavItem[] = [
     section: '경기·분석',
     roles: ['ADMIN', 'COACHING_STAFF'],
   },
+  {
+    to: '/matches/rankings',
+    label: '팀 순위',
+    icon: BarChart3,
+    section: '경기·분석',
+  },
 
   // 관리
+  {
+    to: '/reports',
+    label: '보고서 결재',
+    icon: FileText,
+    section: '관리',
+    roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
+    frontOfficeRoles: ['GM'],
+  },
   {
     to: '/equipment',
     label: '장비 관리',
@@ -225,6 +249,7 @@ export function AppShell() {
 
   usePlayerNotification(refreshUnread)
   usePartnerNotification(user?.role)
+  useReportNotification(refreshUnread)
 
   const clearLocalSession = () => {
     authApi.logout()

@@ -20,6 +20,7 @@ import { Label } from '@/components/ui/label'
 import { ArrowLeft, Pencil } from 'lucide-react'
 import { POSITION_ABBR, POSITION_ZONE } from '@/types/player'
 import type { Position } from '@/types/player'
+import { cn } from '@/lib/utils'
 
 const ZONE_STYLE: Record<string, string> = {
   GK: 'bg-amber-100 text-amber-800 border-amber-200',
@@ -30,6 +31,26 @@ const ZONE_STYLE: Record<string, string> = {
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
+}
+
+interface StatCardProps {
+  label: string
+  value: string
+  sub?: string
+  accent?: boolean
+}
+
+function StatCard({ label, value, sub, accent }: StatCardProps) {
+  return (
+    <div className={cn(
+      'rounded-lg border p-4 flex flex-col items-center justify-center text-center gap-1',
+      accent ? 'bg-accent/40 border-accent' : 'bg-card',
+    )}>
+      <span className="text-2xl font-bold tabular-nums tracking-tight">{value}</span>
+      {sub && <span className="text-xs text-muted-foreground tabular-nums">{sub}</span>}
+      <span className="text-xs font-medium text-muted-foreground mt-0.5">{label}</span>
+    </div>
+  )
 }
 
 interface ScoreDialogProps {
@@ -103,7 +124,13 @@ export function MatchDetailPage() {
 
   useEffect(() => { fetchMatch() }, [id])
 
-  if (loading) return <div className="p-6 space-y-4 max-w-3xl"><Skeleton className="h-8 w-48" /><Skeleton className="h-32 w-full" /><Skeleton className="h-64 w-full" /></div>
+  if (loading) return (
+    <div className="p-6 space-y-4 max-w-3xl">
+      <Skeleton className="h-8 w-48" />
+      <Skeleton className="h-32 w-full" />
+      <Skeleton className="h-64 w-full" />
+    </div>
+  )
 
   if (!match) return (
     <div className="flex flex-col items-center justify-center h-64 gap-3 text-muted-foreground">
@@ -111,6 +138,8 @@ export function MatchDetailPage() {
       <Button variant="ghost" size="sm" onClick={() => navigate('/matches')}>목록으로</Button>
     </div>
   )
+
+  const ts = match.teamMatchStats
 
   return (
     <div className="flex flex-col h-full">
@@ -147,33 +176,39 @@ export function MatchDetailPage() {
             </div>
           </div>
 
-          {/* 팀 스탯 */}
-          {match.teamMatchStats && (
+          {/* 팀 통계 인포그래픽 */}
+          {ts && (
             <div className="rounded-lg border bg-card p-5">
-              <h3 className="text-sm font-semibold mb-2">팀 통계</h3>
-              <Separator className="mb-3" />
-              <div className="grid grid-cols-3 gap-2 text-sm">
+              <h3 className="text-sm font-semibold mb-4">팀 통계</h3>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+                <StatCard label="점유율" value={`${ts.possession}%`} accent />
+                <StatCard label="슈팅" value={String(ts.shots)} sub={`유효 ${ts.shotsOnTarget}회`} />
+                <StatCard label="패스 성공률" value={`${ts.passAccuracy}%`} sub={`총 ${ts.passes}회`} />
+                <StatCard label="xG" value={ts.xG.toFixed(2)} />
+              </div>
+
+              <Separator className="my-3" />
+
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                 {[
-                  ['점유율', `${match.teamMatchStats.possession}%`],
-                  ['슈팅', String(match.teamMatchStats.shots)],
-                  ['유효 슈팅', String(match.teamMatchStats.shotsOnTarget)],
-                  ['패스', String(match.teamMatchStats.passes)],
-                  ['패스 정확도', `${match.teamMatchStats.passAccuracy}%`],
-                  ['xG', match.teamMatchStats.xG.toFixed(2)],
-                  ['코너킥', String(match.teamMatchStats.corners)],
-                  ['파울', String(match.teamMatchStats.fouls)],
-                  ['경고', String(match.teamMatchStats.yellowCards)],
+                  ['코너킥', String(ts.corners)],
+                  ['파울', String(ts.fouls)],
+                  ['경고', String(ts.yellowCards)],
+                  ['퇴장', String(ts.redCards)],
+                  ['오프사이드', String(ts.offsides)],
+                  ['태클', String(ts.tackles)],
                 ].map(([label, value]) => (
-                  <div key={label} className="flex justify-between py-1 border-b border-border/50 last:border-0">
-                    <span className="text-muted-foreground">{label}</span>
-                    <span className="tabular-nums font-medium">{value}</span>
+                  <div key={label} className="rounded-md border bg-muted/30 px-3 py-2 text-center">
+                    <div className="text-base font-semibold tabular-nums">{value}</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">{label}</div>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* 선수 스탯 */}
+          {/* 선수 기록 */}
           {match.playerMatchStats.length > 0 && (
             <div className="rounded-lg border bg-card p-5">
               <h3 className="text-sm font-semibold mb-2">선수 기록</h3>
@@ -186,6 +221,7 @@ export function MatchDetailPage() {
                       <th className="pb-2 font-medium text-center w-12">득점</th>
                       <th className="pb-2 font-medium text-center w-12">도움</th>
                       <th className="pb-2 font-medium text-center w-12">xG</th>
+                      <th className="pb-2 font-medium text-center w-24">슈팅 (팀 기여)</th>
                       <th className="pb-2 font-medium text-center w-16">출전(분)</th>
                     </tr>
                   </thead>
@@ -193,6 +229,9 @@ export function MatchDetailPage() {
                     {match.playerMatchStats.map((s) => {
                       const pos = s.player.position as Position
                       const zone = POSITION_ZONE[pos]
+                      const shotContrib = ts && ts.shots > 0 && s.shots != null
+                        ? Math.round((s.shots / ts.shots) * 100)
+                        : null
                       return (
                         <tr key={s.id} className="border-b border-border/50 last:border-0">
                           <td className="py-2 flex items-center gap-2">
@@ -204,6 +243,23 @@ export function MatchDetailPage() {
                           <td className="text-center tabular-nums">{s.goals ?? '—'}</td>
                           <td className="text-center tabular-nums">{s.assists ?? '—'}</td>
                           <td className="text-center tabular-nums">{s.xG != null ? s.xG.toFixed(2) : '—'}</td>
+                          <td className="text-center tabular-nums">
+                            {s.shots != null ? (
+                              <span className="inline-flex items-center gap-1">
+                                <span>{s.shots}회</span>
+                                {shotContrib != null && (
+                                  <span className={cn(
+                                    'text-[10px] px-1 py-0.5 rounded font-medium',
+                                    shotContrib >= 30
+                                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+                                      : 'bg-muted text-muted-foreground',
+                                  )}>
+                                    {shotContrib}%
+                                  </span>
+                                )}
+                              </span>
+                            ) : '—'}
+                          </td>
                           <td className="text-center tabular-nums">{s.minutesPlayed ?? '—'}</td>
                         </tr>
                       )

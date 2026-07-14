@@ -1,5 +1,7 @@
 import { Router } from "express";
 import adminRouter from "./admin/admin.routes";
+import reportRouter from "./report/report.routes";
+import analysisRouter from "./analysis/analysis.routes";
 import authRouter from "./auth/auth.routes";
 import dashboardRouter from "./dashboard/dashboard.routes";
 import contractRouter from "./contract/contract.routes";
@@ -15,10 +17,12 @@ import seasonRouter from "./season/season.routes";
 import tacticalRouter from "./tactical/tactical.routes";
 import trainingRouter from "./training/training.routes";
 import transferRouter from "./transfer/transfer.routes";
+import medicalExpenseRouter from "./medical-expense/medical-expense.routes";
 
 const apiRouter = Router();
 
 apiRouter.use("/admin", adminRouter);
+apiRouter.use("/analysis", analysisRouter);
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/dashboard", dashboardRouter);
 apiRouter.use("/contracts", contractRouter);
@@ -31,6 +35,8 @@ apiRouter.use("/notifications", notificationRouter);
 apiRouter.use("/players", playerRouter);
 apiRouter.use("/prospects", prospectRouter);
 apiRouter.use("/seasons", seasonRouter);
+apiRouter.use("/reports", reportRouter);
+apiRouter.use("/medical-expenses", medicalExpenseRouter);
 apiRouter.use("/tactical", tacticalRouter);
 apiRouter.use("/training", trainingRouter);
 apiRouter.use("/transfers", transferRouter);
