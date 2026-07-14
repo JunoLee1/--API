@@ -5,6 +5,8 @@ import type {
   EquipmentAssignment,
   CreateEquipmentItemDto,
   EquipmentUnitStatus,
+  EquipmentLoan,
+  EquipmentLoanStatus,
 } from '@/types/equipment'
 
 export const equipmentApi = {
@@ -32,4 +34,26 @@ export const equipmentApi = {
 
   returnAssignment: (assignmentId: number) =>
     api.patch<EquipmentAssignment>(`/equipment/assignments/${assignmentId}/return`, {}),
+}
+
+export const loanApi = {
+  list: (status?: EquipmentLoanStatus) =>
+    api.get<EquipmentLoan[]>(`/equipment/loans${status ? `?status=${status}` : ''}`),
+
+  my: () => api.get<EquipmentLoan[]>('/equipment/loans/my'),
+
+  request: (dto: { equipmentItemId: number; notes?: string }) =>
+    api.post<EquipmentLoan>('/equipment/loans', dto),
+
+  approve: (loanId: number) =>
+    api.post<EquipmentLoan>(`/equipment/loans/${loanId}/approve`, {}),
+
+  reject: (loanId: number) =>
+    api.post<EquipmentLoan>(`/equipment/loans/${loanId}/reject`, {}),
+
+  issue: (loanId: number, equipmentUnitId?: number) =>
+    api.post<EquipmentLoan>(`/equipment/loans/${loanId}/issue`, { equipmentUnitId }),
+
+  return: (loanId: number) =>
+    api.post<EquipmentLoan>(`/equipment/loans/${loanId}/return`, {}),
 }

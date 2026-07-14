@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { injuryApi } from '@/services/injury.service'
-import { hospitalApi } from '@/services/hospital.service'
+import { partnerApi } from '@/services/partner.service'
 import type { Injury, InjuryStatus, InjuryCause, HospitalType } from '@/types/injury'
-import type { Hospital } from '@/types/hospital'
+import type { Partner } from '@/types/partner'
 import {
   CAUSE_LABEL,
   INJURY_STATUS_LABEL,
@@ -67,11 +67,11 @@ function CreateInjuryDialog({ open, onOpenChange, playerId, onSaved }: CreateInj
   const [hospitalType, setHospitalType] = useState<HospitalType | ''>('')
   const [hospitalId, setHospitalId] = useState<string>('')
   const [customHospitalName, setCustomHospitalName] = useState('')
-  const [hospitals, setHospitals] = useState<Hospital[]>([])
+  const [hospitals, setHospitals] = useState<Partner[]>([])
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    if (open) hospitalApi.list().then(setHospitals).catch(() => null)
+    if (open) partnerApi.list('HOSPITAL').then(setHospitals).catch(() => null)
   }, [open])
 
   const handleSave = async () => {
@@ -87,7 +87,7 @@ function CreateInjuryDialog({ open, onOpenChange, playerId, onSaved }: CreateInj
         medicalStaffId: 0,
         ...(expectedReturn && { expectedReturnDate: expectedReturn }),
         ...(hospitalType && { hospitalType }),
-        ...(hospitalType === 'ACCREDITED' && hospitalId && { hospitalId: Number(hospitalId) }),
+        ...(hospitalType === 'ACCREDITED' && hospitalId && { partnerId: Number(hospitalId) }),
         ...(hospitalType === 'GENERAL' && customHospitalName.trim() && { customHospitalName: customHospitalName.trim() }),
       })
       toast.success('부상이 등록됐습니다.')
