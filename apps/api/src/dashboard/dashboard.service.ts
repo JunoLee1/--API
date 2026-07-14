@@ -23,6 +23,8 @@ export class DashboardService {
         return this.repo.getPlayerStats(user.id);
       case "AGENT":
         return this.repo.getAgentStats(user.id);
+      default:
+        throw new Error(`Unknown role: ${(user as any).role}`);
     }
   }
 
@@ -41,7 +43,7 @@ export class DashboardService {
       case "TACTICAL_ANALYST":
         return this.repo.getTacticalAnalystStats(user.id);
       default:
-        return this.repo.getAdminStats();
+        throw new Error(`Unknown frontOfficeRole: ${user.frontOfficeRole}`);
     }
   }
 
@@ -57,7 +59,8 @@ export class DashboardService {
       case "MEDICAL_DIRECTOR":
         return this.repo.getMedicalDirectorStats(user.id);
       default:
-        return this.repo.getSpecialistCoachStats(user.coachingRole!, user.id);
+        if (!user.coachingRole) throw new Error(`Missing coachingRole for COACHING_STAFF user ${user.id}`);
+        return this.repo.getSpecialistCoachStats(user.coachingRole, user.id);
     }
   }
 }
