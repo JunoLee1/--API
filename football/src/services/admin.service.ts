@@ -1,5 +1,5 @@
 import { api } from './api'
-import type { AdminUserDto, ListUsersQuery, UpdateUserRoleDto } from '@/types/admin'
+import type { AdminUserDto, ListUsersQuery, UpdateUserRoleDto, PlayerWithoutAccountDto } from '@/types/admin'
 
 export const adminApi = {
   listUsers: (query: ListUsersQuery = {}): Promise<AdminUserDto[]> => {
@@ -24,4 +24,9 @@ export const adminApi = {
 
   deleteUser: (id: number): Promise<void> =>
     api.delete<void>(`/admin/users/${id}`),
+
+  listPlayersWithoutAccounts: (name?: string): Promise<PlayerWithoutAccountDto[]> => {
+    const qs = name ? `?name=${encodeURIComponent(name)}` : ''
+    return api.get<PlayerWithoutAccountDto[]>(`/admin/players-without-accounts${qs}`)
+  },
 }

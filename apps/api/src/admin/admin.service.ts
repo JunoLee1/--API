@@ -1,12 +1,16 @@
 import { AdminRepository } from "./admin.repo";
 import { AppError } from "../lib/appError";
-import { ListUsersQuery, UpdateUserRoleDto } from "./dto/admin.dto";
+import { ListUsersQuery, UpdateUserRoleDto, PlayerWithoutAccountDto } from "./dto/admin.dto";
 
 export class AdminService {
   constructor(private repo: AdminRepository) {}
 
   async listUsers(filters: ListUsersQuery) {
     return this.repo.listUsers(filters);
+  }
+
+  async getPlayersWithoutAccounts(nameFilter?: string): Promise<PlayerWithoutAccountDto[]> {
+    return this.repo.findPlayersWithoutAccounts(nameFilter);
   }
 
   async getUserById(id: number) {

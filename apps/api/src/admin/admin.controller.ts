@@ -74,4 +74,14 @@ export class AdminController {
       next(err);
     }
   };
+
+  listPlayersWithoutAccounts = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      requireAdmin(req);
+      const nameFilter = req.query["name"] as string | undefined;
+      res.status(200).json(await this.service.getPlayersWithoutAccounts(nameFilter));
+    } catch (err) {
+      next(err);
+    }
+  };
 }
