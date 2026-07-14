@@ -15,6 +15,7 @@ const NOTIFICATION_ROUTES: Record<string, string> = {
   RECALL_APPROVAL_REQUESTED: '/transfers',
   TACTICAL_ANALYSIS_CONFIRM_REQUESTED: '/matches/analysis',
   TRAINING_SESSION_CONFIRM_REQUESTED: '/training',
+  EQUIPMENT_LOW_STOCK: '/equipment',
 }
 
 interface Props {
