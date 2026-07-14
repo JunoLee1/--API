@@ -1,0 +1,109 @@
+import { PrismaClient } from "../generated/client";
+
+const userSelect = {
+  id: true,
+  nickname: true,
+  role: true,
+  coachingRole: true,
+} as const;
+
+const expenseInclude = {
+  submittedBy: { select: userSelect },
+  leaderReviewer: { select: userSelect },
+  adminReviewer: { select: userSelect },
+  injury: { select: { id: true, bodyPart: true, playerId: true } },
+} as const;
+
+export class MedicalExpenseRepository {
+  constructor(private prisma: PrismaClient) {}
+
+  findAll(submittedById: number | null) {
+    const where = submittedById !== null ? { submittedById } : {};
+    return this.prisma.medicalExpense.findMany({
+      where,
+      include: expenseInclude,
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  findById(id: number) {
+    return this.prisma.medicalExpense.findUnique({
+      where: { id },
+      include: expenseInclude,
+    });
+  }
+
+  create(data: {
+    submittedById: number;
+    receiptDate: Date;
+    costCategory: string;
+    totalAmount: number;
+    payerType: string;
+    injuryId?: number;
+    description?: string;
+    fileUrl?: string;
+    fileName?: string;
+  }) {
+    return this.prisma.medicalExpense.create({
+      data: data as any,
+      include: expenseInclude,
+    });
+  }
+
+  update(id: number, data: {
+    receiptDate?: Date;
+    costCategory?: string;
+    totalAmount?: number;
+    payerType?: string;
+    injuryId?: number | null;
+    description?: string;
+    fileUrl?: string;
+    fileName?: string;
+  }) {
+    return this.prisma.medicalExpense.update({
+      where: { id },
+      data: data as any,
+      include: expenseInclude,
+    });
+  }
+
+  submit(id: number) {
+    return this.prisma.medicalExpense.update({
+      where: { id },
+      data: { status: "SUBMITTED", submittedAt: new Date(), rejectionReason: null },
+      include: expenseInclude,
+    });
+  }
+
+  leaderApprove(id: number, leaderReviewerId: number) {
+    return this.prisma.medicalExpense.update({
+      where: { id },
+      data: { status: "LEADER_APPROVED", leaderReviewerId, leaderReviewedAt: new Date() },
+      include: expenseInclude,
+    });
+  }
+
+  leaderReject(id: number, leaderReviewerId: number, rejectionReason: string) {
+    return this.prisma.medicalExpense.update({
+      where: { id },
+      data: { status: "REJECTED", leaderReviewerId, rejectionReason, leaderReviewedAt: new Date() },
+      include: expenseInclude,
+    });
+  }
+
+  approve(id: number, adminReviewerId: number) {
+    return this.prisma.medicalExpense.update({
+      where: { id },
+      data: { status: "APPROVED", adminReviewerId, adminReviewedAt: new Date() },
+      include: expenseInclude,
+    });
+  }
+
+  reject(id: number, adminReviewerId: number, rejectionReason: string) {
+    return this.prisma.medicalExpense.update({
+      where: { id },
+      data: { status: "REJECTED", adminReviewerId, rejectionReason, adminReviewedAt: new Date() },
+      include: expenseInclude,
+    });
+  }
+}

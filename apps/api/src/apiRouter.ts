@@ -17,6 +17,7 @@ import seasonRouter from "./season/season.routes";
 import tacticalRouter from "./tactical/tactical.routes";
 import trainingRouter from "./training/training.routes";
 import transferRouter from "./transfer/transfer.routes";
+import medicalExpenseRouter from "./medical-expense/medical-expense.routes";
 
 const apiRouter = Router();
 
@@ -35,6 +36,7 @@ apiRouter.use("/players", playerRouter);
 apiRouter.use("/prospects", prospectRouter);
 apiRouter.use("/seasons", seasonRouter);
 apiRouter.use("/reports", reportRouter);
+apiRouter.use("/medical-expenses", medicalExpenseRouter);
 apiRouter.use("/tactical", tacticalRouter);
 apiRouter.use("/training", trainingRouter);
 apiRouter.use("/transfers", transferRouter);
