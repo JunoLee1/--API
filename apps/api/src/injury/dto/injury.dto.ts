@@ -7,7 +7,7 @@ export interface CreateInjuryDto {
   expectedReturnDate?: string;
   medicalStaffId: number;
   hospitalType?: HospitalType;
-  hospitalId?: number;
+  partnerId?: number;
   customHospitalName?: string;
 }
 

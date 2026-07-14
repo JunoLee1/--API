@@ -13,9 +13,9 @@ const INJURY_SELECT = {
   playerId: true,
   medicalStaffId: true,
   hospitalType: true,
-  hospitalId: true,
+  partnerId: true,
   customHospitalName: true,
-  hospital: { select: { id: true, name: true } },
+  partner: { select: { id: true, name: true } },
 } as const;
 
 export class InjuryRepository {
@@ -49,7 +49,7 @@ export class InjuryRepository {
         medicalStaffId: dto.medicalStaffId,
         expectedReturnDate: n(dto.expectedReturnDate ? new Date(dto.expectedReturnDate) : undefined),
         hospitalType: dto.hospitalType ?? null,
-        hospitalId: dto.hospitalId ?? null,
+        partnerId: dto.partnerId ?? null,
         customHospitalName: dto.customHospitalName ?? null,
       },
       select: INJURY_SELECT,
