@@ -1,4 +1,5 @@
 import { PrismaClient } from "../generated/client";
+import { CoachingRole, Position, SessionType } from "../generated/enums";
 
 const NOW = () => new Date();
 const IN_30_DAYS = () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
@@ -9,22 +10,22 @@ const START_OF_MONTH = () => {
   return d;
 };
 
-const DEFENSIVE_POSITIONS = [
-  "CENTER_BACK",
-  "LEFT_WING_BACK",
-  "RIGHT_WING_BACK",
-  "LEFT_FULL_BACK",
-  "RIGHT_FULL_BACK",
-] as const;
+const DEFENSIVE_POSITIONS: Position[] = [
+  Position.CENTER_BACK,
+  Position.LEFT_WING_BACK,
+  Position.RIGHT_WING_BACK,
+  Position.LEFT_FULL_BACK,
+  Position.RIGHT_FULL_BACK,
+];
 
-const ATTACKING_POSITIONS = [
-  "STRIKER",
-  "SHADOW_STRIKER",
-  "WINGER",
-  "CENTRAL_ATTACK_MIDFIELDER",
-  "RIGHT_ATTACK_MIDFIELDER",
-  "LEFT_ATTACK_MIDFIELDER",
-] as const;
+const ATTACKING_POSITIONS: Position[] = [
+  Position.STRIKER,
+  Position.SHADOW_STRIKER,
+  Position.WINGER,
+  Position.CENTRAL_ATTACK_MIDFIELDER,
+  Position.RIGHT_ATTACK_MIDFIELDER,
+  Position.LEFT_ATTACK_MIDFIELDER,
+];
 
 export class DashboardRepository {
   constructor(private prisma: PrismaClient) {}
@@ -138,34 +139,34 @@ export class DashboardRepository {
     return { injuredPlayerCount, thisMonthSessionCount, attendanceWarningPlayerCount };
   }
 
-  async getSpecialistCoachStats(coachingRole: string, userId: number) {
-    const positionFilter =
-      coachingRole === "DEFENSIVE_COACH"
-        ? { in: [...DEFENSIVE_POSITIONS] as string[] }
-        : coachingRole === "ATTACKING_COACH"
-          ? { in: [...ATTACKING_POSITIONS] as string[] }
-          : coachingRole === "GOALKEEPER_COACH"
-            ? { equals: "GOALKEEPER" }
+  async getSpecialistCoachStats(coachingRole: CoachingRole, userId: number) {
+    const positionFilter: Position[] | undefined =
+      coachingRole === CoachingRole.DEFENSIVE_COACH
+        ? DEFENSIVE_POSITIONS
+        : coachingRole === CoachingRole.ATTACKING_COACH
+          ? ATTACKING_POSITIONS
+          : coachingRole === CoachingRole.GOALKEEPER_COACH
+            ? [Position.GOALKEEPER]
             : undefined;
 
-    const sessionTypeFilter =
-      coachingRole === "SET_PIECE_COACH"
-        ? "SET_PIECE"
-        : coachingRole === "GOALKEEPER_COACH"
-          ? "GOALKEEPER"
+    const sessionTypeFilter: SessionType | undefined =
+      coachingRole === CoachingRole.SET_PIECE_COACH
+        ? SessionType.SET_PIECE
+        : coachingRole === CoachingRole.GOALKEEPER_COACH
+          ? SessionType.GOALKEEPER
           : undefined;
 
     const [assignedPlayerCount, myThisMonthSessionCount] = await Promise.all([
       positionFilter
         ? this.prisma.player.count({
-            where: { status: "ACTIVE", position: positionFilter as any },
+            where: { status: "ACTIVE", position: { in: positionFilter } },
           })
         : this.prisma.player.count({ where: { status: "ACTIVE" } }),
       this.prisma.trainingSession.count({
         where: {
           createdById: userId,
           date: { gte: START_OF_MONTH() },
-          ...(sessionTypeFilter ? { sessionType: sessionTypeFilter as any } : {}),
+          ...(sessionTypeFilter ? { sessionType: sessionTypeFilter } : {}),
         },
       }),
     ]);
@@ -203,11 +204,23 @@ export class DashboardRepository {
   }
 
   async getMedicalDirectorStats(userId: number) {
-    const base = await this.getMedicalStats(userId);
-    const totalInjuredPlayerCount = await this.prisma.injury.count({
-      where: { status: { notIn: ["RETURNED"] } },
-    });
-    return { ...base, totalInjuredPlayerCount };
+    const [myActiveInjuryCaseCount, thisMonthReturnReadyCount, totalInjuredPlayerCount] =
+      await Promise.all([
+        this.prisma.injury.count({
+          where: { medicalStaffId: userId, status: { notIn: ["RETURNED"] } },
+        }),
+        this.prisma.injury.count({
+          where: {
+            medicalStaffId: userId,
+            status: "READY_TO_RETURN",
+            occurredAt: { gte: START_OF_MONTH() },
+          },
+        }),
+        this.prisma.injury.count({
+          where: { status: { notIn: ["RETURNED"] } },
+        }),
+      ]);
+    return { myActiveInjuryCaseCount, thisMonthReturnReadyCount, totalInjuredPlayerCount };
   }
 
   async getPlayerStats(userId: number) {
