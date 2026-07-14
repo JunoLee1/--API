@@ -9,6 +9,7 @@ import { NotificationPopover } from '@/components/common/NotificationPopover'
 import { connectSocket, disconnectSocket } from '@/lib/socket'
 import { usePlayerNotification } from '@/hooks/usePlayerNotification'
 import { usePartnerNotification } from '@/hooks/usePartnerNotification'
+import { useReportNotification } from '@/hooks/useReportNotification'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import {
@@ -114,7 +115,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: TrendingUp,
     section: '부상·의료',
     roles: ['ADMIN', 'COACHING_STAFF'],
-    coachingRoles: ['MEDICAL_DIRECTOR'],
+    coachingRoles: ['HEAD_COACH', 'ASSISTANT_COACH', 'MEDICAL_DIRECTOR'],
   },
 
   // 훈련
@@ -158,6 +159,14 @@ const NAV_ITEMS: NavItem[] = [
   },
 
   // 관리
+  {
+    to: '/reports',
+    label: '보고서 결재',
+    icon: FileText,
+    section: '관리',
+    roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
+    frontOfficeRoles: ['GM'],
+  },
   {
     to: '/equipment',
     label: '장비 관리',
@@ -231,6 +240,7 @@ export function AppShell() {
 
   usePlayerNotification(refreshUnread)
   usePartnerNotification(user?.role)
+  useReportNotification(refreshUnread)
 
   const clearLocalSession = () => {
     authApi.logout()

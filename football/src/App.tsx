@@ -8,6 +8,7 @@ import { PlayersPage } from '@/pages/players/PlayersPage'
 import { PlayerDetailPage } from '@/pages/players/PlayerDetailPage'
 import { ContractsPage } from '@/pages/contracts/ContractsPage'
 import { InjuriesPage } from '@/pages/injuries/InjuriesPage'
+import { InjuryStatsPage } from '@/pages/injuries/InjuryStatsPage'
 import { TransfersPage } from '@/pages/transfers/TransfersPage'
 import { TrainingPage } from '@/pages/training/TrainingPage'
 import { TrainingDetailPage } from '@/pages/training/TrainingDetailPage'
@@ -22,6 +23,9 @@ import { NotificationsPage } from '@/pages/notifications/NotificationsPage'
 import { MePage } from '@/pages/me/MePage'
 import { UsersPage } from '@/pages/admin/UsersPage'
 import { PartnersPage } from '@/pages/admin/PartnersPage'
+import { ReportsPage } from '@/pages/reports/ReportsPage'
+import { ReportFormPage } from '@/pages/reports/ReportFormPage'
+import { ReportDetailPage } from '@/pages/reports/ReportDetailPage'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const loggedIn = localStorage.getItem('loggedIn')
@@ -48,7 +52,7 @@ function App() {
             <Route path="/contracts" element={<ContractsPage />} />
             <Route path="/transfers" element={<TransfersPage />} />
             <Route path="/injuries" element={<InjuriesPage />} />
-            <Route path="/injuries/stats" element={<InjuriesPage />} />
+            <Route path="/injuries/stats" element={<InjuryStatsPage />} />
             <Route path="/training" element={<TrainingPage />} />
             <Route path="/training/attendance" element={<TrainingAttendancePage />} />
             <Route path="/training/:id" element={<TrainingDetailPage />} />
@@ -60,6 +64,9 @@ function App() {
             <Route path="/prospects" element={<ProspectsPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/me" element={<MePage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/reports/new" element={<ReportFormPage />} />
+            <Route path="/reports/:id" element={<ReportDetailPage />} />
             <Route path="/admin/partners" element={<PartnersPage />} />
             <Route path="/admin/users" element={<UsersPage />} />
           </Route>

@@ -84,10 +84,44 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown): Pro
   }
 }
 
+async function requestForm<T>(method: 'POST' | 'PATCH', path: string, form: FormData): Promise<T> {
+  pendingCount++
+  notifyPending()
+  try {
+    const doForm = () =>
+      fetch(`${BASE_URL}${path}`, { method, credentials: 'include', body: form })
+    let res = await doForm()
+    if (res.status === 401) {
+      try {
+        if (!refreshingPromise) {
+          refreshingPromise = tryRefresh().finally(() => { refreshingPromise = null })
+        }
+        await refreshingPromise
+        res = await doForm()
+      } catch {
+        forceLogout()
+        throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.')
+      }
+    }
+    if (res.status === 401) { forceLogout(); throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.') }
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({ message: '서버 오류가 발생했습니다.' }))
+      throw new Error((error as { message: string }).message)
+    }
+    if (res.status === 204) return undefined as T
+    return (await res.json()) as T
+  } finally {
+    pendingCount = Math.max(0, pendingCount - 1)
+    notifyPending()
+  }
+}
+
 export const api = {
   get: <T>(path: string) => request<T>('GET', path),
   post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
+  postForm: <T>(path: string, form: FormData) => requestForm<T>('POST', path, form),
   put: <T>(path: string, body: unknown) => request<T>('PUT', path, body),
   patch: <T>(path: string, body: unknown) => request<T>('PATCH', path, body),
+  patchForm: <T>(path: string, form: FormData) => requestForm<T>('PATCH', path, form),
   delete: <T>(path: string) => request<T>('DELETE', path),
 }
