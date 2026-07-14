@@ -220,8 +220,23 @@ enum EquipmentUnitStatus {
 
 enum ProspectStatus {
   ACTIVE
+  MEDICAL_TEST
+  CONTRACT_PENDING
   SIGNED
   ARCHIVED
+}
+
+enum VisaEligibility {
+  NOT_REQUIRED
+  CONFIRMED
+  UNCERTAIN
+}
+
+enum WorkPermitStatus {
+  NOT_REQUIRED
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 // ─────────────────────────────────────────────
@@ -296,11 +311,13 @@ model Player {
   weight      Int
   position    Position
   level       PlayerLevel
-  status      PlayerStatus @default(ACTIVE)
-  externalId  String?      @unique
-  nationalityId Int
-  userId      Int?         @unique
-  agentId     Int?
+  status            PlayerStatus     @default(ACTIVE)
+  externalId        String?          @unique
+  nationalityId     Int
+  userId            Int?             @unique
+  agentId           Int?
+  workPermitStatus  WorkPermitStatus @default(NOT_REQUIRED)
+  workPermitExpiry  DateTime?
 
   nationality          Country               @relation(fields: [nationalityId], references: [id])
   user                 User?                 @relation(fields: [userId], references: [id])
@@ -629,10 +646,12 @@ model Prospect {
   position          Position?
   currentTeam       String?
   notes             String?
-  status            ProspectStatus @default(ACTIVE)
+  status            ProspectStatus  @default(ACTIVE)
   convertedPlayerId String?
-  createdAt         DateTime       @default(now())
+  createdAt         DateTime        @default(now())
   createdById       Int?
+  visaRequired      Boolean         @default(false)
+  visaEligibility   VisaEligibility?
 
   convertedPlayer Player? @relation("ProspectConvertedPlayer", fields: [convertedPlayerId], references: [id])
   createdBy       User?   @relation("ProspectCreatedBy", fields: [createdById], references: [id])

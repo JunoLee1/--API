@@ -1,6 +1,7 @@
 import { PrismaClient } from "../generated/client";
 import { ProspectStatus } from "../generated/enums";
-import { CreateProspectDto, UpdateProspectDto } from "./dto/prospect.dto";
+import { AppError } from "../lib/appError";
+import { CreateProspectDto, UpdateProspectDto, SignProspectDto } from "./dto/prospect.dto";
 
 const PROSPECT_SELECT = {
   id: true,
@@ -13,7 +14,17 @@ const PROSPECT_SELECT = {
   convertedPlayerId: true,
   createdAt: true,
   createdBy: { select: { nickname: true } },
+  visaRequired: true,
+  visaEligibility: true,
 } as const;
+
+const VALID_TRANSITIONS: Record<ProspectStatus, ProspectStatus[]> = {
+  ACTIVE:           ["MEDICAL_TEST", "ARCHIVED"],
+  MEDICAL_TEST:     ["CONTRACT_PENDING", "ARCHIVED"],
+  CONTRACT_PENDING: ["ARCHIVED"],
+  SIGNED:           [],
+  ARCHIVED:         [],
+};
 
 export class ProspectRepository {
   constructor(private prisma: PrismaClient) {}
@@ -53,16 +64,63 @@ export class ProspectRepository {
         ...(dto.position !== undefined && { position: dto.position }),
         ...(dto.currentTeam !== undefined && { currentTeam: dto.currentTeam }),
         ...(dto.notes !== undefined && { notes: dto.notes }),
+        ...(dto.visaRequired !== undefined && { visaRequired: dto.visaRequired }),
+        ...(dto.visaEligibility !== undefined && { visaEligibility: dto.visaEligibility }),
       },
       select: PROSPECT_SELECT,
     });
   }
 
-  updateStatus(id: number, status: ProspectStatus, convertedPlayerId?: string) {
-    return this.prisma.prospect.update({
-      where: { id },
-      data: { status, convertedPlayerId: convertedPlayerId ?? null },
-      select: PROSPECT_SELECT,
+  async updateStatus(id: number, status: ProspectStatus) {
+    const prospect = await this.prisma.prospect.findUnique({ where: { id }, select: { status: true } });
+    if (!prospect) throw new AppError(404, "PROSPECT_NOT_FOUND");
+    const allowed = VALID_TRANSITIONS[prospect.status];
+    if (!allowed.includes(status)) throw new AppError(409, "INVALID_STATUS_TRANSITION");
+    return this.prisma.prospect.update({ where: { id }, data: { status }, select: PROSPECT_SELECT });
+  }
+
+  async sign(prospectId: number, dto: SignProspectDto) {
+    const prospect = await this.prisma.prospect.findUnique({
+      where: { id: prospectId },
+      select: { id: true, status: true, name: true, position: true },
+    });
+    if (!prospect) throw new AppError(404, "PROSPECT_NOT_FOUND");
+    if (prospect.status !== "CONTRACT_PENDING") throw new AppError(409, "INVALID_STATUS_TRANSITION");
+
+    return this.prisma.$transaction(async (tx) => {
+      const player = await tx.player.create({
+        data: {
+          playerName: prospect.name,
+          dateOfBirth: new Date(dto.dateOfBirth),
+          preferredFoot: dto.preferredFoot ?? "RIGHT",
+          height: dto.height,
+          weight: dto.weight,
+          position: dto.position ?? prospect.position ?? "STRIKER",
+          level: "ROOKIE",
+          status: "ACTIVE",
+          nationalityId: dto.nationalityId,
+          workPermitStatus: dto.workPermitStatus ?? "NOT_REQUIRED",
+          workPermitExpiry: dto.workPermitExpiry ? new Date(dto.workPermitExpiry) : null,
+        },
+        select: { id: true },
+      });
+
+      await tx.contract.create({
+        data: {
+          playerId: player.id,
+          startDate: new Date(dto.contractStartDate),
+          endDate: new Date(dto.contractEndDate),
+          salary: dto.salary,
+          status: "ACTIVE",
+          managedById: dto.managedById ?? null,
+        },
+      });
+
+      return tx.prospect.update({
+        where: { id: prospectId },
+        data: { status: "SIGNED", convertedPlayerId: player.id },
+        select: PROSPECT_SELECT,
+      });
     });
   }
 }

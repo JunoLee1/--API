@@ -1,5 +1,5 @@
 import { api } from './api'
-import type { Prospect, CreateProspectDto, UpdateProspectDto, ProspectStatus } from '@/types/prospect'
+import type { Prospect, CreateProspectDto, UpdateProspectDto, ProspectStatus, SignProspectDto } from '@/types/prospect'
 
 export const prospectApi = {
   list: (status?: ProspectStatus) =>
@@ -11,4 +11,10 @@ export const prospectApi = {
 
   update: (id: number, dto: UpdateProspectDto) =>
     api.patch<Prospect>(`/prospects/${id}`, dto),
+
+  transition: (id: number, status: ProspectStatus) =>
+    api.patch<Prospect>(`/prospects/${id}/status`, { status }),
+
+  sign: (id: number, dto: SignProspectDto) =>
+    api.post<Prospect>(`/prospects/${id}/sign`, dto),
 }

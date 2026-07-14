@@ -1,4 +1,4 @@
-import { Position, ProspectStatus } from "../../generated/enums";
+import { Foot, Position, ProspectStatus, VisaEligibility, WorkPermitStatus } from "../../generated/enums";
 
 export interface CreateProspectDto {
   name: string;
@@ -15,9 +15,25 @@ export interface UpdateProspectDto {
   position?: Position;
   currentTeam?: string;
   notes?: string;
+  visaRequired?: boolean;
+  visaEligibility?: VisaEligibility;
 }
 
-export interface UpdateProspectStatusDto {
+export interface TransitionProspectStatusDto {
   status: ProspectStatus;
-  convertedPlayerId?: string;
+}
+
+export interface SignProspectDto {
+  dateOfBirth: string;
+  preferredFoot?: Foot;
+  height: number;
+  weight: number;
+  nationalityId: number;
+  position?: Position;
+  contractStartDate: string;
+  contractEndDate: string;
+  salary: number;
+  managedById?: number;
+  workPermitStatus?: WorkPermitStatus;
+  workPermitExpiry?: string;
 }

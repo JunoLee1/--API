@@ -2,15 +2,20 @@ import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { ProspectService } from "./prospect.service";
 import { ProspectStatus } from "../generated/enums";
+import { TransitionProspectStatusDto, SignProspectDto } from "./dto/prospect.dto";
 
 const canWrite = (role: string, frontOfficeRole: string | null | undefined): boolean =>
   role === "ADMIN" ||
-  (role === "FRONT_OFFICE" && (frontOfficeRole === "SCOUT" || frontOfficeRole === "GM"));
+  (role === "FRONT_OFFICE" && (frontOfficeRole === "SCOUT" || frontOfficeRole === "GM" || frontOfficeRole === "TD"));
 
 const canRead = (role: string, coachingRole: string | null | undefined): boolean =>
   role === "ADMIN" ||
   role === "FRONT_OFFICE" ||
   (role === "COACHING_STAFF" && coachingRole === "HEAD_COACH");
+
+const canSign = (role: string, frontOfficeRole: string | null | undefined): boolean =>
+  role === "ADMIN" ||
+  (role === "FRONT_OFFICE" && (frontOfficeRole === "GM" || frontOfficeRole === "CONTRACT_MANAGER"));
 
 export class ProspectController {
   constructor(private service: ProspectService) {}
@@ -52,7 +57,19 @@ export class ProspectController {
     try {
       const { role, frontOfficeRole } = req.user!;
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
-      res.status(200).json(await this.service.updateStatus(Number(req.params["id"]), req.body));
+      res.status(200).json(
+        await this.service.updateStatus(Number(req.params["id"]), req.body as TransitionProspectStatusDto)
+      );
+    } catch (err) { next(err); }
+  };
+
+  sign = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = req.user!;
+      if (!canSign(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(
+        await this.service.sign(Number(req.params["id"]), req.body as SignProspectDto)
+      );
     } catch (err) { next(err); }
   };
 }
