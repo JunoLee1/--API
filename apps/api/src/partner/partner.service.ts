@@ -23,7 +23,8 @@ export class PartnerService {
 
   async update(id: number, dto: UpdatePartnerDto) {
     await this.getById(id);
-    return this.repo.update(id, dto);
+    if (dto.name !== undefined && !dto.name.trim()) throw new AppError(400, "PARTNER_NAME_REQUIRED");
+    return this.repo.update(id, { ...dto, ...(dto.name !== undefined && { name: dto.name.trim() }) });
   }
 
   async createContract(partnerId: number, dto: CreatePartnerContractDto) {
@@ -36,6 +37,8 @@ export class PartnerService {
 
   async updateContract(partnerId: number, contractId: number, dto: UpdatePartnerContractDto) {
     await this.getById(partnerId);
+    const contract = await this.repo.findContractById(contractId);
+    if (!contract || contract.partnerId !== partnerId) throw new AppError(404, "CONTRACT_NOT_FOUND");
     return this.repo.updateContract(contractId, dto);
   }
 }

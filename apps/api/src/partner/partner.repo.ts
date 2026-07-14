@@ -66,7 +66,7 @@ export class PartnerRepository {
         endDate: new Date(dto.endDate),
         ...(dto.sponsorshipFee !== undefined && { sponsorshipFee: dto.sponsorshipFee }),
         ...(dto.discountRate !== undefined && { discountRate: dto.discountRate }),
-        ...(dto.notes && { notes: dto.notes }),
+        ...(dto.notes !== undefined && { notes: dto.notes }),
       },
       select: CONTRACT_SELECT,
     });
@@ -83,6 +83,13 @@ export class PartnerRepository {
         ...(dto.notes !== undefined && { notes: dto.notes }),
       },
       select: CONTRACT_SELECT,
+    });
+  }
+
+  findContractById(id: number) {
+    return this.prisma.partnerContract.findUnique({
+      where: { id },
+      select: { id: true, partnerId: true },
     });
   }
 

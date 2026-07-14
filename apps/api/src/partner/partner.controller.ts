@@ -15,8 +15,11 @@ export class PartnerController {
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!canRead(req.user!.role)) throw new AppError(403, "FORBIDDEN");
-      const type = req.query["type"] as PartnerType | undefined;
-      res.status(200).json(await this.service.list(type));
+      const rawType = req.query["type"] as string | undefined;
+      if (rawType && !Object.values(PartnerType).includes(rawType as PartnerType)) {
+        throw new AppError(400, "INVALID_PARTNER_TYPE");
+      }
+      res.status(200).json(await this.service.list(rawType as PartnerType | undefined));
     } catch (err) { next(err); }
   };
 
