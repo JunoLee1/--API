@@ -1,5 +1,6 @@
 import { Router } from "express";
 import adminRouter from "./admin/admin.routes";
+import reportRouter from "./report/report.routes";
 import analysisRouter from "./analysis/analysis.routes";
 import authRouter from "./auth/auth.routes";
 import dashboardRouter from "./dashboard/dashboard.routes";
@@ -33,6 +34,7 @@ apiRouter.use("/notifications", notificationRouter);
 apiRouter.use("/players", playerRouter);
 apiRouter.use("/prospects", prospectRouter);
 apiRouter.use("/seasons", seasonRouter);
+apiRouter.use("/reports", reportRouter);
 apiRouter.use("/tactical", tacticalRouter);
 apiRouter.use("/training", trainingRouter);
 apiRouter.use("/transfers", transferRouter);

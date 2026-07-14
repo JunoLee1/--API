@@ -1,0 +1,97 @@
+import { ReportRepository } from "./report.repo";
+import { NotificationRepository } from "../notification/notification.repo";
+import { AppError } from "../lib/appError";
+import { writeAuditLog } from "../lib/auditLog";
+import { getIO } from "../lib/io";
+import { getPrisma } from "../lib/prisma";
+
+export class ReportService {
+  constructor(
+    private repo: ReportRepository,
+    private notifRepo: NotificationRepository,
+  ) {}
+
+  list(userId: number, isGM: boolean) {
+    return this.repo.findAll(userId, isGM);
+  }
+
+  async get(id: number) {
+    const report = await this.repo.findById(id);
+    if (!report) throw new AppError(404, "REPORT_NOT_FOUND");
+    return report;
+  }
+
+  create(data: { authorId: number; type: string; title: string; content: string; fileUrl?: string; fileName?: string }) {
+    return this.repo.create(data);
+  }
+
+  async update(id: number, userId: number, data: { title?: string; content?: string; fileUrl?: string; fileName?: string }) {
+    const report = await this.repo.findById(id);
+    if (!report) throw new AppError(404, "REPORT_NOT_FOUND");
+    if (report.authorId !== userId) throw new AppError(403, "FORBIDDEN");
+    if (report.status !== "DRAFT") throw new AppError(409, "NOT_DRAFT");
+    return this.repo.update(id, data);
+  }
+
+  async submit(id: number, userId: number) {
+    const report = await this.repo.findById(id);
+    if (!report) throw new AppError(404, "REPORT_NOT_FOUND");
+    if (report.authorId !== userId) throw new AppError(403, "FORBIDDEN");
+    if (report.status !== "DRAFT") throw new AppError(409, "NOT_DRAFT");
+
+    const submitted = await this.repo.submit(id);
+
+    try {
+      getIO().to("staff-room").emit("notification:report-submitted", {
+        reportId: id,
+        title: report.title,
+        authorId: userId,
+      });
+    } catch {
+      // socket not critical
+    }
+
+    await this.notifRepo.createForGM(
+      "REPORT_SUBMITTED",
+      "새 보고서가 제출됐습니다",
+      `"${report.title}" 보고서가 결재 대기 중입니다.`,
+    );
+
+    return submitted;
+  }
+
+  async approve(id: number, reviewerId: number) {
+    const report = await this.repo.findById(id);
+    if (!report) throw new AppError(404, "REPORT_NOT_FOUND");
+    if (report.status !== "SUBMITTED") throw new AppError(409, "NOT_SUBMITTED");
+
+    const approved = await this.repo.approve(id, reviewerId);
+
+    await writeAuditLog({
+      actorId: reviewerId,
+      action: "REPORT_APPROVED",
+      targetId: id,
+      detail: { title: report.title },
+    });
+
+    return approved;
+  }
+
+  async reject(id: number, reviewerId: number, reason: string) {
+    if (!reason?.trim()) throw new AppError(400, "REJECTION_REASON_REQUIRED");
+    const report = await this.repo.findById(id);
+    if (!report) throw new AppError(404, "REPORT_NOT_FOUND");
+    if (report.status !== "SUBMITTED") throw new AppError(409, "NOT_SUBMITTED");
+
+    const rejected = await this.repo.reject(id, reviewerId, reason.trim());
+
+    await writeAuditLog({
+      actorId: reviewerId,
+      action: "REPORT_REJECTED",
+      targetId: id,
+      detail: { title: report.title, reason: reason.trim() },
+    });
+
+    return rejected;
+  }
+}

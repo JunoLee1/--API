@@ -1,4 +1,5 @@
 import { createServer } from "http";
+import path from "path";
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -16,6 +17,7 @@ app.use(cookieParser());
 app.use(passport.initialize());
 
 app.use("/api", apiRouter);
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof AppError) {
