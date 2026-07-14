@@ -312,6 +312,9 @@ model User {
   auditLogs        AuditLog[]
   authoredReports  Report[] @relation("ReportAuthor")
   reviewedReports  Report[] @relation("ReportReviewer")
+  submittedMedicalExpenses MedicalExpense[] @relation("MedicalExpenseSubmitter")
+  leaderReviewedExpenses   MedicalExpense[] @relation("MedicalExpenseLeaderReviewer")
+  adminReviewedExpenses    MedicalExpense[] @relation("MedicalExpenseAdminReviewer")
 }
 
 model Season {
@@ -500,9 +503,10 @@ model Injury {
   partnerId          Int?
   customHospitalName String?
 
-  player       Player   @relation(fields: [playerId], references: [id])
-  medicalStaff User     @relation(fields: [medicalStaffId], references: [id])
-  partner      Partner? @relation(fields: [partnerId], references: [id])
+  player          Player         @relation(fields: [playerId], references: [id])
+  medicalStaff    User           @relation(fields: [medicalStaffId], references: [id])
+  partner         Partner?       @relation(fields: [partnerId], references: [id])
+  medicalExpenses MedicalExpense[]
 }
 
 model Match {
@@ -764,4 +768,55 @@ model Report {
   updatedAt   DateTime  @updatedAt
   submittedAt DateTime?
   reviewedAt  DateTime?
+}
+
+enum ExpenseCostCategory {
+  OUTPATIENT
+  EXAMINATION
+  SURGERY
+  REHABILITATION
+  MEDICATION
+}
+
+enum ExpensePayerType {
+  CLUB
+  ASSOCIATION
+  INDIVIDUAL
+}
+
+enum MedicalExpenseStatus {
+  DRAFT
+  SUBMITTED
+  LEADER_APPROVED
+  APPROVED
+  REJECTED
+}
+
+model MedicalExpense {
+  id              Int                  @id @default(autoincrement())
+  status          MedicalExpenseStatus @default(DRAFT)
+  injuryId        Int?
+  receiptDate     DateTime
+  costCategory    ExpenseCostCategory
+  totalAmount     Int
+  payerType       ExpensePayerType
+  description     String?
+  fileUrl         String?
+  fileName        String?
+  rejectionReason String?
+
+  submittedById    Int
+  leaderReviewerId Int?
+  adminReviewerId  Int?
+
+  submittedAt      DateTime?
+  leaderReviewedAt DateTime?
+  adminReviewedAt  DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  injury         Injury? @relation(fields: [injuryId], references: [id])
+  submittedBy    User    @relation("MedicalExpenseSubmitter", fields: [submittedById], references: [id])
+  leaderReviewer User?   @relation("MedicalExpenseLeaderReviewer", fields: [leaderReviewerId], references: [id])
+  adminReviewer  User?   @relation("MedicalExpenseAdminReviewer", fields: [adminReviewerId], references: [id])
 }

@@ -46,6 +46,32 @@ export class NotificationRepository {
     });
   }
 
+  createForMedicalDirector(type: string, title: string, body: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const directors = await tx.user.findMany({
+        where: { role: "COACHING_STAFF", coachingRole: "MEDICAL_DIRECTOR" },
+        select: { id: true },
+      });
+      if (directors.length === 0) return;
+      await tx.notification.createMany({
+        data: directors.map((u) => ({ userId: u.id, type, title, body })) as any,
+      });
+    });
+  }
+
+  createForAdmin(type: string, title: string, body: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const admins = await tx.user.findMany({
+        where: { role: "ADMIN" },
+        select: { id: true },
+      });
+      if (admins.length === 0) return;
+      await tx.notification.createMany({
+        data: admins.map((u) => ({ userId: u.id, type, title, body })) as any,
+      });
+    });
+  }
+
   findExpiringContracts(withinDays: number) {
     const now = new Date();
     const threshold = new Date(now);
