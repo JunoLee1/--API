@@ -5,6 +5,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
+const DEV_ACCOUNTS = [
+  { label: '관리자', email: 'admin@club.com' },
+  { label: '코칭스태프', email: 'coach@club.com' },
+  { label: '프런트오피스', email: 'fo@club.com' },
+  { label: '선수', email: 'player@club.com' },
+] as const
+
+const DEV_PASSWORD = 'Password1!'
+
 export function LoginPage() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
@@ -12,18 +21,22 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const login = async (e: string, p: string) => {
     setError(null)
     setLoading(true)
     try {
-      await authApi.login(email, password)
+      await authApi.login(e, p)
       navigate('/dashboard', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : '로그인에 실패했습니다.')
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    void login(email, password)
   }
 
   return (
@@ -34,7 +47,7 @@ export function LoginPage() {
           <p className="text-sm text-muted-foreground mt-1">계속하려면 로그인하세요</p>
         </div>
 
-        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">이메일</Label>
             <Input
@@ -61,6 +74,24 @@ export function LoginPage() {
             {loading ? '로그인 중...' : '로그인'}
           </Button>
         </form>
+
+        <div className="space-y-2">
+          <p className="text-xs text-center text-muted-foreground">빠른 로그인 (개발용)</p>
+          <div className="flex gap-2">
+            {DEV_ACCOUNTS.map(({ label, email: e }) => (
+              <Button
+                key={e}
+                variant="outline"
+                size="sm"
+                className="flex-1 text-xs"
+                disabled={loading}
+                onClick={() => void login(e, DEV_PASSWORD)}
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   )

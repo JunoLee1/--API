@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useConfirm } from '@/lib/confirm-dialog'
@@ -6,11 +6,15 @@ import { useApiPending } from '@/lib/useApiPending'
 import { authApi } from '@/services/auth.service'
 import { notificationApi } from '@/services/notification.service'
 import { NotificationPopover } from '@/components/common/NotificationPopover'
+import { connectSocket, disconnectSocket } from '@/lib/socket'
+import { usePlayerNotification } from '@/hooks/usePlayerNotification'
+import { usePartnerNotification } from '@/hooks/usePartnerNotification'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import {
   Activity,
   BarChart3,
+  Building2,
   ChevronRight,
   ClipboardList,
   FileText,
@@ -156,6 +160,14 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
   },
   {
+    to: '/admin/partners',
+    label: '파트너 관리',
+    icon: Building2,
+    section: '관리',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['EQUIPMENT_MANAGER'],
+  },
+  {
     to: '/admin/users',
     label: '사용자 관리',
     icon: Settings,
@@ -191,17 +203,28 @@ export function AppShell() {
     }
   }, [location.pathname])
 
+  const refreshUnread = useCallback(() => {
+    notificationApi
+      .my()
+      .then((items) => setUnreadCount(items.filter((n) => !n.readAt).length))
+      .catch(() => null)
+  }, [])
+
   useEffect(() => {
     if (!user) return
-    const fetch = () =>
-      notificationApi
-        .my()
-        .then((items) => setUnreadCount(items.filter((n) => !n.readAt).length))
-        .catch(() => null)
-    void fetch()
-    const timer = setInterval(() => void fetch(), 30_000)
+    refreshUnread()
+    const timer = setInterval(refreshUnread, 30_000)
     return () => clearInterval(timer)
+  }, [user, refreshUnread])
+
+  useEffect(() => {
+    if (!user) return
+    connectSocket()
+    return () => disconnectSocket()
   }, [user])
+
+  usePlayerNotification(refreshUnread)
+  usePartnerNotification(user?.role)
 
   const clearLocalSession = () => {
     authApi.logout()

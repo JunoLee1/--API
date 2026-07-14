@@ -1,3 +1,4 @@
+import { createServer } from "http";
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -5,6 +6,7 @@ import passport from "./lib/strategy";
 import apiRouter from "./apiRouter";
 import { AppError } from "./lib/appError";
 import { Request, Response, NextFunction } from "express";
+import { initIO } from "./lib/io";
 
 const app = express();
 
@@ -24,5 +26,8 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ code: "INTERNAL_SERVER_ERROR" });
 });
 
+const httpServer = createServer(app);
+initIO(httpServer);
+
 const PORT = process.env["PORT"] ?? 3001;
-app.listen(PORT, () => console.log(`API server running on port ${PORT}`));
+httpServer.listen(PORT, () => console.log(`API server running on port ${PORT}`));

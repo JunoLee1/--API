@@ -10,6 +10,14 @@ export interface AdminUserDto {
   frontOfficeRole: FrontOfficeRole | null
   isDeleted: boolean
   isOutOfOffice: boolean
+  player: { id: string; playerName: string } | null
+}
+
+export interface PlayerWithoutAccountDto {
+  id: string
+  playerName: string
+  status: string
+  position: string | null
 }
 
 export interface ListUsersQuery {

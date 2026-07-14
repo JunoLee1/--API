@@ -20,10 +20,11 @@ import { ProspectsPage } from '@/pages/prospects/ProspectsPage'
 import { NotificationsPage } from '@/pages/notifications/NotificationsPage'
 import { MePage } from '@/pages/me/MePage'
 import { UsersPage } from '@/pages/admin/UsersPage'
+import { PartnersPage } from '@/pages/admin/PartnersPage'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const token = localStorage.getItem('accessToken')
-  return token ? <>{children}</> : <Navigate to="/login" replace />
+  const loggedIn = localStorage.getItem('loggedIn')
+  return loggedIn ? <>{children}</> : <Navigate to="/login" replace />
 }
 
 function App() {
@@ -46,7 +47,7 @@ function App() {
             <Route path="/contracts" element={<ContractsPage />} />
             <Route path="/transfers" element={<TransfersPage />} />
             <Route path="/injuries" element={<InjuriesPage />} />
-            <Route path="/injuries/stats" element={<PlaceholderPage title="부상 통계" />} />
+            <Route path="/injuries/stats" element={<InjuriesPage />} />
             <Route path="/training" element={<TrainingPage />} />
             <Route path="/training/attendance" element={<TrainingAttendancePage />} />
             <Route path="/training/:id" element={<TrainingDetailPage />} />
@@ -57,6 +58,7 @@ function App() {
             <Route path="/prospects" element={<ProspectsPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/me" element={<MePage />} />
+            <Route path="/admin/partners" element={<PartnersPage />} />
             <Route path="/admin/users" element={<UsersPage />} />
           </Route>
 

@@ -5,8 +5,8 @@ declare global {
     interface User {
       id: number;
       role: Role;
-      coachingRole?: CoachingRole | null;
-      frontOfficeRole?: FrontOfficeRole | null;
+      coachingRole: CoachingRole | null | undefined;
+      frontOfficeRole: FrontOfficeRole | null | undefined;
     }
   }
 }

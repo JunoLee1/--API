@@ -12,6 +12,7 @@ export const USER_SELECT = {
   frontOfficeRole: true,
   isDeleted: true,
   isOutOfOffice: true,
+  player: { select: { id: true, playerName: true } },
 } as const;
 
 const LINKED_COUNT_SELECT = {
@@ -83,5 +84,18 @@ export class AdminRepository {
 
   async hardDelete(id: number): Promise<void> {
     await this.prisma.user.delete({ where: { id } });
+  }
+
+  findPlayersWithoutAccounts(nameFilter?: string) {
+    return this.prisma.player.findMany({
+      where: {
+        userId: null,
+        ...(nameFilter && {
+          playerName: { contains: nameFilter, mode: "insensitive" },
+        }),
+      },
+      select: { id: true, playerName: true, status: true, position: true },
+      orderBy: { playerName: "asc" },
+    });
   }
 }

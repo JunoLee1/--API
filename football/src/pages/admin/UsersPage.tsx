@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { api } from '@/services/api'
 import { adminApi } from '@/services/admin.service'
-import type { AdminUserDto, ListUsersQuery, UpdateUserRoleDto } from '@/types/admin'
+import type { AdminUserDto, ListUsersQuery, UpdateUserRoleDto, PlayerWithoutAccountDto } from '@/types/admin'
 import type { Role, CoachingRole, FrontOfficeRole } from '@/types/auth'
 import {
   ROLE_LABEL,
@@ -65,6 +65,7 @@ export function UsersPage() {
   const confirm = useConfirm()
 
   const [users, setUsers] = useState<AdminUserDto[]>([])
+  const [playersWithoutAccounts, setPlayersWithoutAccounts] = useState<PlayerWithoutAccountDto[]>([])
   const [loading, setLoading] = useState(false)
   const [filterRole, setFilterRole] = useState<Role | ''>('')
   const [filterCoachingRole, setFilterCoachingRole] = useState<CoachingRole | ''>('')
@@ -97,8 +98,15 @@ export function UsersPage() {
       if (filterRole === 'COACHING_STAFF' && filterCoachingRole) query.coachingRole = filterCoachingRole as CoachingRole
       if (filterRole === 'FRONT_OFFICE' && filterFrontOfficeRole) query.frontOfficeRole = filterFrontOfficeRole as FrontOfficeRole
       if (showDeleted) query.isDeleted = true
-      const data = await adminApi.listUsers(query)
+
+      const [data, playersData] = await Promise.all([
+        adminApi.listUsers(query),
+        (!filterRole || filterRole === 'PLAYER') && !showDeleted
+          ? adminApi.listPlayersWithoutAccounts(filterUsername.trim() || undefined)
+          : Promise.resolve([]),
+      ])
       setUsers(data)
+      setPlayersWithoutAccounts(playersData)
     } catch {
       toast.error('사용자 목록을 불러오지 못했습니다.')
     } finally {
@@ -260,15 +268,16 @@ export function UsersPage() {
                 <TableHead>이메일</TableHead>
                 <TableHead>역할</TableHead>
                 <TableHead>서브역할</TableHead>
+                <TableHead>선수명</TableHead>
                 <TableHead>상태</TableHead>
                 <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">불러오는 중...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">불러오는 중...</TableCell></TableRow>
               ) : users.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">사용자 없음</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">사용자 없음</TableCell></TableRow>
               ) : users.map((user) => (
                 <TableRow key={user.id} className={user.isDeleted ? 'opacity-50' : ''}>
                   <TableCell className="font-medium">{user.nickname}</TableCell>
@@ -276,6 +285,9 @@ export function UsersPage() {
                   <TableCell className="text-sm text-muted-foreground">{user.email}</TableCell>
                   <TableCell><Badge variant="outline">{ROLE_LABEL[user.role]}</Badge></TableCell>
                   <TableCell className="text-sm text-muted-foreground">{subRoleLabel(user)}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {user.player?.playerName ?? '—'}
+                  </TableCell>
                   <TableCell>
                     {user.isDeleted
                       ? <Badge variant="destructive">비활성</Badge>
@@ -305,6 +317,34 @@ export function UsersPage() {
             </TableBody>
           </Table>
         </div>
+
+        {playersWithoutAccounts.length > 0 && (
+          <div>
+            <h2 className="text-sm font-semibold text-muted-foreground mb-2">계정 없는 선수 ({playersWithoutAccounts.length}명)</h2>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>선수명</TableHead>
+                    <TableHead>포지션</TableHead>
+                    <TableHead>상태</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {playersWithoutAccounts.map((p) => (
+                    <TableRow key={p.id} className="opacity-60">
+                      <TableCell className="font-medium">{p.playerName}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{p.position ?? '—'}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-muted-foreground">{p.status}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        )}
 
         <div>
           <Button

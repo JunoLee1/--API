@@ -16,6 +16,7 @@ export interface EquipmentItem {
   quantity: number | null
   lowStockThreshold: number | null
   units?: EquipmentUnit[]
+  partner: { id: number; name: string } | null
 }
 
 export interface EquipmentUnit {
@@ -75,4 +76,37 @@ export const UNIT_STATUS_STYLE: Record<EquipmentUnitStatus, string> = {
   IN_USE: 'bg-blue-100 text-blue-800 border-blue-200',
   MAINTENANCE: 'bg-amber-100 text-amber-800 border-amber-200',
   RETIRED: 'bg-gray-100 text-gray-500 border-gray-200',
+}
+
+export type EquipmentLoanStatus = 'REQUESTED' | 'APPROVED' | 'REJECTED' | 'ISSUED' | 'RETURNED'
+
+export interface EquipmentLoan {
+  id: number
+  status: EquipmentLoanStatus
+  requestedAt: string
+  issuedAt: string | null
+  returnedAt: string | null
+  notes: string | null
+  equipmentItemId: number
+  equipmentUnitId: number | null
+  requestedBy: { id: number; nickname: string }
+  approvedBy: { id: number; nickname: string } | null
+  equipmentItem: { id: number; name: string; category: EquipmentCategory }
+  equipmentUnit: { id: number } | null
+}
+
+export const LOAN_STATUS_LABEL: Record<EquipmentLoanStatus, string> = {
+  REQUESTED: '신청 중',
+  APPROVED: '승인됨',
+  REJECTED: '거절됨',
+  ISSUED: '지급됨',
+  RETURNED: '반납 완료',
+}
+
+export const LOAN_STATUS_STYLE: Record<EquipmentLoanStatus, string> = {
+  REQUESTED: 'bg-blue-100 text-blue-800 border-blue-200',
+  APPROVED: 'bg-amber-100 text-amber-800 border-amber-200',
+  REJECTED: 'bg-red-100 text-red-800 border-red-200',
+  ISSUED: 'bg-purple-100 text-purple-800 border-purple-200',
+  RETURNED: 'bg-green-100 text-green-800 border-green-200',
 }

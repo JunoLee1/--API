@@ -13,3 +13,10 @@ export interface UpdateUserRoleDto {
   coachingRole?: CoachingRole | null;
   frontOfficeRole?: FrontOfficeRole | null;
 }
+
+export interface PlayerWithoutAccountDto {
+  id: string;
+  playerName: string;
+  status: string;
+  position: string | null;
+}

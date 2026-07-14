@@ -1,8 +1,11 @@
 import { Router } from "express";
 import adminRouter from "./admin/admin.routes";
 import authRouter from "./auth/auth.routes";
+import dashboardRouter from "./dashboard/dashboard.routes";
 import contractRouter from "./contract/contract.routes";
+import countryRouter from "./country/country.routes";
 import equipmentRouter from "./equipment/equipment.routes";
+import partnerRouter from "./partner/partner.routes";
 import injuryRouter from "./injury/injury.routes";
 import matchRouter from "./match/match.routes";
 import notificationRouter from "./notification/notification.routes";
@@ -17,8 +20,11 @@ const apiRouter = Router();
 
 apiRouter.use("/admin", adminRouter);
 apiRouter.use("/auth", authRouter);
+apiRouter.use("/dashboard", dashboardRouter);
 apiRouter.use("/contracts", contractRouter);
+apiRouter.use("/countries", countryRouter);
 apiRouter.use("/equipment", equipmentRouter);
+apiRouter.use("/partners", partnerRouter);
 apiRouter.use("/injuries", injuryRouter);
 apiRouter.use("/matches", matchRouter);
 apiRouter.use("/notifications", notificationRouter);

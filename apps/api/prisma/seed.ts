@@ -35,6 +35,7 @@ async function main() {
   const adminPhone = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0001") });
   const coachPhone = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0002") });
   const foPhone = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0003") });
+  const playerPhone = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0004") });
 
   const hashed = await bcrypt.hash("Password1!", 10);
 
@@ -81,6 +82,21 @@ async function main() {
       dateOfBirth: new Date("1985-03-20"),
       nationalityId: korea.id,
       phoneNumberId: foPhone.id,
+    },
+  });
+
+  const playerUser = await prisma.user.upsert({
+    where: { email: "player@club.com" },
+    update: {},
+    create: {
+      email: "player@club.com",
+      password: hashed,
+      username: "선수",
+      nickname: "player",
+      role: "PLAYER",
+      dateOfBirth: new Date("1998-07-01"),
+      nationalityId: korea.id,
+      phoneNumberId: playerPhone.id,
     },
   });
 
@@ -372,7 +388,7 @@ async function main() {
 
   console.log("✅ Seed complete");
   console.log(`   - Countries: 2`);
-  console.log(`   - Users: 3 (admin@club.com, coach@club.com, fo@club.com) / pw: Password1!`);
+  console.log(`   - Users: 4 (admin@club.com, coach@club.com, fo@club.com, player@club.com) / pw: Password1!`);
   console.log(`   - Season: ${season.name}`);
   console.log(`   - Players: 5`);
   console.log(`   - Contracts: 3`);

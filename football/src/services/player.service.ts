@@ -32,4 +32,7 @@ export const playerApi = {
 
   updateStatus: (id: string, status: PlayerStatus) =>
     api.patch<{ id: string; status: PlayerStatus }>(`/players/${id}/status`, { status }),
+
+  delete: (id: string) =>
+    api.delete<void>(`/players/${id}`),
 }

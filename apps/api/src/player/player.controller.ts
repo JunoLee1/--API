@@ -66,4 +66,14 @@ export class PlayerController {
       next(err);
     }
   };
+
+  deletePlayer = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (req.user!.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
+      await this.service.deletePlayer(String(req.params["id"]));
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  };
 }

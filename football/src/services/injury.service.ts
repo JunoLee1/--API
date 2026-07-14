@@ -1,5 +1,5 @@
 import { api } from './api'
-import type { Injury, InjuryDetail, InjuryStatus, InjuryCause } from '@/types/injury'
+import type { Injury, InjuryDetail, InjuryStatus, InjuryCause, HospitalType } from '@/types/injury'
 
 export const injuryApi = {
   byPlayer: (playerId: string) =>
@@ -14,6 +14,9 @@ export const injuryApi = {
     cause: InjuryCause
     medicalStaffId: number
     expectedReturnDate?: string
+    hospitalType?: HospitalType
+    hospitalId?: number
+    customHospitalName?: string
   }) => api.post<Injury>('/injuries', payload),
 
   updateStatus: (id: number, status: InjuryStatus, expectedReturnDate?: string) =>

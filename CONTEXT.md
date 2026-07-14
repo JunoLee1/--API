@@ -86,6 +86,8 @@ HEAD_COACH와 동일한 시스템 권한을 상시 보유한다. "부재 시 대
 ### MEDICAL (의료진)
 담당 영역: 부상(Injury) 기록 작성·상태 변경 전담. 부상 예방 훈련은 PHYSICAL_COACH 소관이며 MEDICAL 소관이 아니다.
 
+**협진 병원:** 외부 병원 의료진은 시스템 계정을 갖지 않는다. 클럽 MEDICAL이 협진 결과를 대신 입력한다.
+
 ### MEDICAL_DIRECTOR (메디컬 관리팀장)
 MEDICAL 권한 전체 포함. 추가 권한:
 - 선수단 전체 부상 현황 통계 열람 (개별 MEDICAL은 본인이 담당한 케이스 중심)
@@ -274,7 +276,12 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 
 외부 선수 영입 후보. 현재 클럽 미소속이며 SCOUT이 등록·추적한다.
 
-**상태머신:** `ACTIVE(추적 중) → SIGNED(영입 완료) / ARCHIVED(종료)`
+**상태머신:**
+```
+ACTIVE(추적 중) → MEDICAL_TEST(메디컬 테스트) → CONTRACT_PENDING(계약 협상 중) → SIGNED(계약 성사)
+                                                                                ↘ ARCHIVED(결렬·종료)
+```
+어느 단계에서도 ARCHIVED로 전환 가능 (협상 결렬). 역방향 전환 없음.
 
 **속성:**
 - `name`, `nationality`, `position`, `currentTeam`: 기본 신원 정보
@@ -284,7 +291,19 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 **쓰기 권한:** SCOUT, GM, TD.
 **읽기 권한:** FRONT_OFFICE 전체, HEAD_COACH.
 
-**전환 흐름:** Prospect SIGNED 처리 후 FRONT_OFFICE가 Player 등록 + Transfer 생성. 생성된 Player ID를 `convertedPlayerId`에 기록.
+**비자 / 노동허가 추적:**
+- `Prospect.visaRequired`: 외국 국적 선수 여부 수동 플래그 (자동 판단 없음 — 이중국적·특례 예외 존재)
+- `Prospect.visaEligibility`: `NOT_REQUIRED | CONFIRMED | UNCERTAIN` — CONTRACT_PENDING 진입 전 취득 가능성 사전 확인
+- `Player.workPermitStatus`: `NOT_REQUIRED | PENDING | APPROVED | REJECTED` — 계약 성사 후 실제 취득 진행 상황
+- `Player.workPermitExpiry`: 노동허가 만료일. 만료 임박 시 FRONT_OFFICE 알림 (TODO)
+
+**SIGNED 전환 흐름:** `POST /prospects/:id/sign` 단일 트랜잭션으로 처리.
+1. `Player` 레코드 생성 (name·nationality·position prospect 값 기본 적용, 이후 수정 가능)
+2. `Contract` 레코드 생성 (startDate·endDate·salary 입력 필수)
+3. `Prospect.status = SIGNED`, `Prospect.convertedPlayerId = 생성된 Player.id`
+4. `visaRequired = true`이면 `Player.workPermitStatus = PENDING` 으로 초기화
+
+User 계정 연결은 별도 단계 (ADMIN이 초대 발송 후 선수가 직접 가입).
 
 ---
 

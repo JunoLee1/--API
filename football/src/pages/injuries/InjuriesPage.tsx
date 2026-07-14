@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { injuryApi } from '@/services/injury.service'
-import type { Injury, InjuryStatus, InjuryCause } from '@/types/injury'
+import { partnerApi } from '@/services/partner.service'
+import type { Injury, InjuryStatus, InjuryCause, HospitalType } from '@/types/injury'
+import type { Partner } from '@/types/partner'
 import {
   CAUSE_LABEL,
   INJURY_STATUS_LABEL,
@@ -53,22 +55,40 @@ interface CreateInjuryDialogProps {
   onSaved: () => void
 }
 
+const HOSPITAL_TYPE_LABEL: Record<HospitalType, string> = {
+  ACCREDITED: '협진 병원',
+  GENERAL: '일반/외부 병원',
+}
+
 function CreateInjuryDialog({ open, onOpenChange, playerId, onSaved }: CreateInjuryDialogProps) {
   const [bodyPart, setBodyPart] = useState('')
   const [cause, setCause] = useState<InjuryCause>('TRAINING')
   const [expectedReturn, setExpectedReturn] = useState('')
+  const [hospitalType, setHospitalType] = useState<HospitalType | ''>('')
+  const [hospitalId, setHospitalId] = useState<string>('')
+  const [customHospitalName, setCustomHospitalName] = useState('')
+  const [hospitals, setHospitals] = useState<Partner[]>([])
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (open) partnerApi.list('HOSPITAL').then(setHospitals).catch(() => null)
+  }, [open])
 
   const handleSave = async () => {
     if (!bodyPart.trim()) { toast.error('부상 부위를 입력해주세요.'); return }
+    if (hospitalType === 'ACCREDITED' && !hospitalId) { toast.error('협진 병원을 선택해주세요.'); return }
+    if (hospitalType === 'GENERAL' && !customHospitalName.trim()) { toast.error('병원명을 입력해주세요.'); return }
     setSaving(true)
     try {
       await injuryApi.create({
         playerId,
         bodyPart: bodyPart.trim(),
         cause,
-        medicalStaffId: 0, // 실제 운영 시 현재 로그인 유저 ID 사용
+        medicalStaffId: 0,
         ...(expectedReturn && { expectedReturnDate: expectedReturn }),
+        ...(hospitalType && { hospitalType }),
+        ...(hospitalType === 'ACCREDITED' && hospitalId && { partnerId: Number(hospitalId) }),
+        ...(hospitalType === 'GENERAL' && customHospitalName.trim() && { customHospitalName: customHospitalName.trim() }),
       })
       toast.success('부상이 등록됐습니다.')
       onSaved()
@@ -101,6 +121,35 @@ function CreateInjuryDialog({ open, onOpenChange, playerId, onSaved }: CreateInj
             <Label>복귀 예정일</Label>
             <Input type="date" value={expectedReturn} onChange={(e) => setExpectedReturn(e.target.value)} />
           </div>
+          <div className="space-y-1.5">
+            <Label>진료 병원</Label>
+            <Select value={hospitalType} onValueChange={(v) => { setHospitalType(v as HospitalType | ''); setHospitalId(''); setCustomHospitalName('') }}>
+              <SelectTrigger><SelectValue placeholder="선택 안 함" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">선택 안 함</SelectItem>
+                {(['ACCREDITED', 'GENERAL'] as HospitalType[]).map((t) => (
+                  <SelectItem key={t} value={t}>{HOSPITAL_TYPE_LABEL[t]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {hospitalType === 'ACCREDITED' && (
+            <div className="space-y-1.5">
+              <Label>협진 병원 선택 *</Label>
+              <Select value={hospitalId} onValueChange={setHospitalId}>
+                <SelectTrigger><SelectValue placeholder="병원 선택" /></SelectTrigger>
+                <SelectContent>
+                  {hospitals.map((h) => <SelectItem key={h.id} value={String(h.id)}>{h.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {hospitalType === 'GENERAL' && (
+            <div className="space-y-1.5">
+              <Label>병원명 *</Label>
+              <Input placeholder="예: 삼성서울병원 응급실" value={customHospitalName} onChange={(e) => setCustomHospitalName(e.target.value)} />
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>

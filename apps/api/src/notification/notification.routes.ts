@@ -14,5 +14,6 @@ const auth = passport.authenticate("accessToken", { session: false });
 
 router.get("/my", auth, controller.getMy);
 router.patch("/:id/read", auth, controller.markRead);
+router.get("/partners", auth, controller.getPartners);
 
 export default router;

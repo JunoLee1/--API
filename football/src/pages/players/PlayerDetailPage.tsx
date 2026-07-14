@@ -15,7 +15,8 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { ArrowLeft, Pencil, ShieldAlert } from 'lucide-react'
+import { ArrowLeft, Pencil, ShieldAlert, Trash2 } from 'lucide-react'
+import { useConfirm } from '@/lib/confirm-dialog'
 import { PlayerFormDialog } from './PlayerFormDialog'
 import { PlayerStatusDialog } from './PlayerStatusDialog'
 
@@ -78,8 +79,26 @@ export function PlayerDetailPage() {
   const [editOpen, setEditOpen] = useState(false)
   const [statusOpen, setStatusOpen] = useState(false)
 
+  const confirm = useConfirm()
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
   const canChangeStatus = user?.role === 'ADMIN'
+
+  const handleDelete = async () => {
+    if (!player) return
+    const ok = await confirm({
+      title: '선수 삭제',
+      description: `${player.playerName} 선수를 완전히 삭제합니다. 이 작업은 되돌릴 수 없습니다.`,
+      confirmText: '삭제',
+    })
+    if (!ok) return
+    try {
+      await playerApi.delete(player.id)
+      toast.success('선수가 삭제됐습니다.')
+      navigate('/players')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '삭제에 실패했습니다.')
+    }
+  }
 
   const fetchPlayer = () => {
     if (!id) return
@@ -143,6 +162,12 @@ export function PlayerDetailPage() {
           <Button variant="outline" size="sm" onClick={() => setStatusOpen(true)}>
             <ShieldAlert className="h-3.5 w-3.5 mr-1.5" />
             상태 변경
+          </Button>
+        )}
+        {user?.role === 'ADMIN' && (
+          <Button variant="destructive" size="sm" onClick={() => void handleDelete()}>
+            <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+            삭제
           </Button>
         )}
       </div>

@@ -16,6 +16,7 @@ router.get("/", auth, controller.list);
 router.post("/", auth, controller.create);
 router.get("/:id", auth, controller.getById);
 router.patch("/:id/status", auth, controller.updateStatus);
+router.post("/:id/sign", auth, controller.sign);
 router.patch("/:id", auth, controller.update);
 
 export default router;

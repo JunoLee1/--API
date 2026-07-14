@@ -5,6 +5,7 @@ export type InjuryStatus =
   | 'REHABILITATING'
   | 'READY_TO_RETURN'
   | 'RETURNED'
+export type HospitalType = 'ACCREDITED' | 'GENERAL'
 
 export interface Injury {
   id: number
@@ -15,6 +16,10 @@ export interface Injury {
   expectedReturnDate: string | null
   playerId: string
   medicalStaffId: number
+  hospitalType: HospitalType | null
+  hospitalId: number | null
+  customHospitalName: string | null
+  hospital: { id: number; name: string } | null
 }
 
 export interface InjuryDetail extends Injury {
