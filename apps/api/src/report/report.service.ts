@@ -3,7 +3,6 @@ import { NotificationRepository } from "../notification/notification.repo";
 import { AppError } from "../lib/appError";
 import { writeAuditLog } from "../lib/auditLog";
 import { getIO } from "../lib/io";
-import { getPrisma } from "../lib/prisma";
 
 export class ReportService {
   constructor(
@@ -29,7 +28,7 @@ export class ReportService {
     const report = await this.repo.findById(id);
     if (!report) throw new AppError(404, "REPORT_NOT_FOUND");
     if (report.authorId !== userId) throw new AppError(403, "FORBIDDEN");
-    if (report.status !== "DRAFT") throw new AppError(409, "NOT_DRAFT");
+    if (report.status !== "DRAFT" && report.status !== "REJECTED") throw new AppError(409, "INVALID_STATUS");
     return this.repo.update(id, data);
   }
 
@@ -37,7 +36,7 @@ export class ReportService {
     const report = await this.repo.findById(id);
     if (!report) throw new AppError(404, "REPORT_NOT_FOUND");
     if (report.authorId !== userId) throw new AppError(403, "FORBIDDEN");
-    if (report.status !== "DRAFT") throw new AppError(409, "NOT_DRAFT");
+    if (report.status !== "DRAFT" && report.status !== "REJECTED") throw new AppError(409, "INVALID_STATUS");
 
     const submitted = await this.repo.submit(id);
 

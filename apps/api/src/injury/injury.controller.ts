@@ -33,7 +33,7 @@ export class InjuryController {
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!MEDICAL_ROLES.includes(req.user!.role as MedicalRole)) throw new AppError(403, "FORBIDDEN");
-      res.status(201).json(await this.service.createInjury(req.body));
+      res.status(201).json(await this.service.createInjury({ ...req.body, medicalStaffId: req.user!.id }));
     } catch (err) { next(err); }
   };
 

@@ -22,6 +22,7 @@ import {
   type LucideIcon,
   Menu,
   Package,
+  Receipt,
   ScrollText,
   Settings,
   Shield,
@@ -115,7 +116,15 @@ const NAV_ITEMS: NavItem[] = [
     icon: TrendingUp,
     section: '부상·의료',
     roles: ['ADMIN', 'COACHING_STAFF'],
-    coachingRoles: ['HEAD_COACH', 'ASSISTANT_COACH', 'MEDICAL_DIRECTOR'],
+    coachingRoles: ['HEAD_COACH', 'ASSISTANT_COACH', 'MEDICAL', 'MEDICAL_DIRECTOR'],
+  },
+  {
+    to: '/medical-expenses',
+    label: '의료비 결재',
+    icon: Receipt,
+    section: '부상·의료',
+    roles: ['ADMIN', 'COACHING_STAFF'],
+    coachingRoles: ['MEDICAL', 'MEDICAL_DIRECTOR'],
   },
 
   // 훈련

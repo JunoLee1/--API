@@ -49,7 +49,7 @@ export class ReportRepository {
   submit(id: number) {
     return this.prisma.report.update({
       where: { id },
-      data: { status: "SUBMITTED", submittedAt: new Date() },
+      data: { status: "SUBMITTED", submittedAt: new Date(), rejectionReason: null },
       include: reportInclude,
     });
   }
