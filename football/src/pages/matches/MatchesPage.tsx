@@ -47,13 +47,14 @@ interface CreateMatchDialogProps {
   seasons: Season[]
   activeSeason: Season | null
   onSaved: () => void
+  friendlyOnly?: boolean
 }
 
-function CreateMatchDialog({ open, onOpenChange, seasons, activeSeason, onSaved }: CreateMatchDialogProps) {
+function CreateMatchDialog({ open, onOpenChange, seasons, activeSeason, onSaved, friendlyOnly = false }: CreateMatchDialogProps) {
   const [date, setDate] = useState('')
   const [home, setHome] = useState('')
   const [away, setAway] = useState('')
-  const [competitionType, setCompetitionType] = useState<CompetitionType>('LEAGUE')
+  const [competitionType, setCompetitionType] = useState<CompetitionType>(friendlyOnly ? 'FRIENDLY' : 'LEAGUE')
   const [seasonId, setSeasonId] = useState<string>(activeSeason ? String(activeSeason.id) : '')
   const [saving, setSaving] = useState(false)
 
@@ -95,12 +96,18 @@ function CreateMatchDialog({ open, onOpenChange, seasons, activeSeason, onSaved 
           </div>
           <div className="space-y-1.5">
             <Label>대회 *</Label>
-            <Select value={competitionType} onValueChange={(v) => setCompetitionType(v as CompetitionType)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {COMP_TYPES.map((t) => <SelectItem key={t} value={t}>{COMPETITION_LABEL[t]}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            {friendlyOnly ? (
+              <div className="flex h-9 items-center rounded-md border bg-muted/50 px-3 text-sm text-muted-foreground">
+                {COMPETITION_LABEL['FRIENDLY']}
+              </div>
+            ) : (
+              <Select value={competitionType} onValueChange={(v) => setCompetitionType(v as CompetitionType)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {COMP_TYPES.map((t) => <SelectItem key={t} value={t}>{COMPETITION_LABEL[t]}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label>시즌 *</Label>
@@ -132,7 +139,7 @@ export function MatchesPage() {
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
 
-  const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
+  const canCreateFriendly = user?.role === 'FRONT_OFFICE' || user?.role === 'COACHING_STAFF'
 
   useEffect(() => {
     seasonApi.list().then((list) => {
@@ -168,9 +175,9 @@ export function MatchesPage() {
           <h1 className="text-lg font-semibold tracking-tight">경기 목록</h1>
           <p className="text-sm text-muted-foreground mt-0.5">전체 {matches.length}경기</p>
         </div>
-        {canWrite && (
-          <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />경기 등록
+        {canCreateFriendly && (
+          <Button size="sm" variant="outline" onClick={() => setCreateOpen(true)}>
+            <Plus className="h-4 w-4 mr-1" />친선/연습경기 추가
           </Button>
         )}
       </div>
@@ -233,6 +240,7 @@ export function MatchesPage() {
         seasons={seasons}
         activeSeason={activeSeason}
         onSaved={() => { setCreateOpen(false); fetchMatches() }}
+        friendlyOnly={canCreateFriendly}
       />
     </div>
   )

@@ -133,6 +133,11 @@ enum InjuryStatus {
   RETURNED
 }
 
+enum HospitalType {
+  ACCREDITED
+  GENERAL
+}
+
 enum SessionType {
   INDIVIDUAL_SKILL
   TACTICAL_DEFENSIVE
@@ -265,8 +270,9 @@ model User {
   approvedSessions TrainingSession[]    @relation("TrainingSessionApprovedBy")
   tacticalAnalyses TacticalAnalysis[]
   notifications    Notification[]
-  managedContracts Contract[]
-  agentPlayers     Player[]             @relation("AgentPlayers")
+  managedContracts  Contract[]
+  agentPlayers      Player[]   @relation("AgentPlayers")
+  createdProspects  Prospect[] @relation("ProspectCreatedBy")
 }
 
 model Season {
@@ -393,18 +399,32 @@ model Recall {
   approvedBy  User?    @relation("RecallApprovedBy", fields: [approvedById], references: [id])
 }
 
+model Hospital {
+  id        Int      @id @default(autoincrement())
+  name      String
+  address   String?
+  phone     String?
+  createdAt DateTime @default(now())
+
+  injuries Injury[]
+}
+
 model Injury {
-  id                 Int         @id @default(autoincrement())
+  id                 Int          @id @default(autoincrement())
   bodyPart           String
   cause              InjuryCause
   expectedReturnDate DateTime?
   status             InjuryStatus @default(OCCURRED)
-  occurredAt         DateTime    @default(now())
+  occurredAt         DateTime     @default(now())
   playerId           String
   medicalStaffId     Int
+  hospitalType       HospitalType?
+  hospitalId         Int?
+  customHospitalName String?
 
-  player       Player @relation(fields: [playerId], references: [id])
-  medicalStaff User   @relation(fields: [medicalStaffId], references: [id])
+  player       Player    @relation(fields: [playerId], references: [id])
+  medicalStaff User      @relation(fields: [medicalStaffId], references: [id])
+  hospital     Hospital? @relation(fields: [hospitalId], references: [id])
 }
 
 model Match {
@@ -605,13 +625,15 @@ model EquipmentAssignment {
 model Prospect {
   id                Int            @id @default(autoincrement())
   name              String
-  nationality       String
-  position          Position
-  currentTeam       String
+  nationality       String?
+  position          Position?
+  currentTeam       String?
   notes             String?
   status            ProspectStatus @default(ACTIVE)
   convertedPlayerId String?
   createdAt         DateTime       @default(now())
+  createdById       Int?
 
   convertedPlayer Player? @relation("ProspectConvertedPlayer", fields: [convertedPlayerId], references: [id])
+  createdBy       User?   @relation("ProspectCreatedBy", fields: [createdById], references: [id])
 }

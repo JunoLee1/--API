@@ -12,6 +12,7 @@ const PROSPECT_SELECT = {
   status: true,
   convertedPlayerId: true,
   createdAt: true,
+  createdBy: { select: { nickname: true } },
 } as const;
 
 export class ProspectRepository {
@@ -33,10 +34,11 @@ export class ProspectRepository {
     return this.prisma.prospect.create({
       data: {
         name: dto.name,
-        nationality: dto.nationality,
-        position: dto.position,
-        currentTeam: dto.currentTeam,
+        nationality: dto.nationality ?? null,
+        position: dto.position ?? null,
+        currentTeam: dto.currentTeam ?? null,
         notes: dto.notes ?? null,
+        createdById: dto.createdById ?? null,
       },
       select: PROSPECT_SELECT,
     });

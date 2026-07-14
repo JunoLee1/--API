@@ -34,9 +34,9 @@ export class ProspectController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole, id } = req.user!;
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
-      res.status(201).json(await this.service.create(req.body));
+      res.status(201).json(await this.service.create({ ...req.body, createdById: id }));
     } catch (err) { next(err); }
   };
 

@@ -239,7 +239,7 @@ export function ProspectsPage() {
                     {formatDate(p.createdAt)}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
-                    {p.createdBy.nickname}
+                    {p.createdBy?.nickname ?? '—'}
                   </TableCell>
                   {canWrite && (
                     <TableCell>

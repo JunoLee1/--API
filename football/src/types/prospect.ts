@@ -12,7 +12,7 @@ export interface Prospect {
   status: ProspectStatus
   convertedPlayerId: string | null
   createdAt: string
-  createdBy: { nickname: string }
+  createdBy: { nickname: string } | null
 }
 
 export interface CreateProspectDto {

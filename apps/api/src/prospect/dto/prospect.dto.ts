@@ -2,10 +2,11 @@ import { Position, ProspectStatus } from "../../generated/enums";
 
 export interface CreateProspectDto {
   name: string;
-  nationality: string;
-  position: Position;
-  currentTeam: string;
+  nationality?: string;
+  position?: Position;
+  currentTeam?: string;
   notes?: string;
+  createdById?: number;
 }
 
 export interface UpdateProspectDto {
