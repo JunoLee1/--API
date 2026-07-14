@@ -37,16 +37,11 @@ export class NotificationRepository {
     const now = new Date();
     const threshold = new Date(now);
     threshold.setDate(threshold.getDate() + withinDays);
-    return this.prisma.contract.findMany({
-      where: {
-        status: "ACTIVE",
-        endDate: { gte: now, lte: threshold },
-      },
+    return this.prisma.partnerContract.findMany({
+      where: { status: "ACTIVE", endDate: { gte: now, lte: threshold } },
       select: {
-        id: true,
-        endDate: true,
-        player: { select: { id: true, playerName: true } },
-        managedBy: { select: { nickname: true } },
+        id: true, endDate: true, sponsorshipFee: true, discountRate: true,
+        partner: { select: { id: true, name: true, type: true } },
       },
       orderBy: { endDate: "asc" },
     });

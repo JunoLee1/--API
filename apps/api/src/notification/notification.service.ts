@@ -34,13 +34,15 @@ export class NotificationService {
       return {
         type: "CONTRACT_EXPIRY",
         title: "계약 만료 임박",
-        body: `${c.player.playerName} 선수의 계약이 ${daysLeft}일 후 만료됩니다.`,
+        body: `${c.partner.name} ${c.partner.type === "HOSPITAL" ? "병원" : "제조사"} 계약이 ${daysLeft}일 후 만료됩니다.`,
         daysLeft,
         contractId: c.id,
-        playerId: c.player.id,
-        playerName: c.player.playerName,
+        partnerId: c.partner.id,
+        partnerName: c.partner.name,
+        partnerType: c.partner.type,
         endDate: c.endDate.toISOString(),
-        managedBy: c.managedBy?.nickname ?? null,
+        sponsorshipFee: c.sponsorshipFee,
+        discountRate: c.discountRate,
       };
     });
   }
