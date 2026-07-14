@@ -32,10 +32,18 @@ async function main() {
   });
 
   // ── Users ─────────────────────────────────────────────
-  const adminPhone = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0001") });
-  const coachPhone = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0002") });
-  const foPhone = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0003") });
-  const playerPhone = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0004") });
+  const adminPhone    = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0001") });
+  const coachPhone    = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0002") });
+  const foPhone       = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0003") });
+  const playerPhone   = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0004") });
+  const assistPhone   = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0005") });
+  const defPhone      = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0006") });
+  const atkPhone      = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0007") });
+  const physPhone     = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0008") });
+  const setPhone      = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0009") });
+  const gkPhone       = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0010") });
+  const medPhone      = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0011") });
+  const meddirPhone   = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0012") });
 
   const hashed = await bcrypt.hash("Password1!", 10);
 
@@ -70,15 +78,144 @@ async function main() {
     },
   });
 
+  await prisma.user.upsert({
+    where: { email: "assistant@club.com" },
+    update: {},
+    create: {
+      email: "assistant@club.com",
+      password: hashed,
+      username: "수석코치보",
+      nickname: "assistant",
+      role: "COACHING_STAFF",
+      coachingRole: "ASSISTANT_COACH",
+      dateOfBirth: new Date("1978-03-10"),
+      nationalityId: korea.id,
+      phoneNumberId: assistPhone.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: "defensive@club.com" },
+    update: {},
+    create: {
+      email: "defensive@club.com",
+      password: hashed,
+      username: "수비코치",
+      nickname: "defcoach",
+      role: "COACHING_STAFF",
+      coachingRole: "DEFENSIVE_COACH",
+      dateOfBirth: new Date("1976-08-22"),
+      nationalityId: korea.id,
+      phoneNumberId: defPhone.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: "attacking@club.com" },
+    update: {},
+    create: {
+      email: "attacking@club.com",
+      password: hashed,
+      username: "공격코치",
+      nickname: "atkcoach",
+      role: "COACHING_STAFF",
+      coachingRole: "ATTACKING_COACH",
+      dateOfBirth: new Date("1979-05-14"),
+      nationalityId: korea.id,
+      phoneNumberId: atkPhone.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: "physical@club.com" },
+    update: {},
+    create: {
+      email: "physical@club.com",
+      password: hashed,
+      username: "피지컬코치",
+      nickname: "physcoach",
+      role: "COACHING_STAFF",
+      coachingRole: "PHYSICAL_COACH",
+      dateOfBirth: new Date("1982-11-03"),
+      nationalityId: korea.id,
+      phoneNumberId: physPhone.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: "setpiece@club.com" },
+    update: {},
+    create: {
+      email: "setpiece@club.com",
+      password: hashed,
+      username: "세트피스코치",
+      nickname: "setcoach",
+      role: "COACHING_STAFF",
+      coachingRole: "SET_PIECE_COACH",
+      dateOfBirth: new Date("1981-02-28"),
+      nationalityId: korea.id,
+      phoneNumberId: setPhone.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: "gk@club.com" },
+    update: {},
+    create: {
+      email: "gk@club.com",
+      password: hashed,
+      username: "골키퍼코치",
+      nickname: "gkcoach",
+      role: "COACHING_STAFF",
+      coachingRole: "GOALKEEPER_COACH",
+      dateOfBirth: new Date("1977-09-17"),
+      nationalityId: korea.id,
+      phoneNumberId: gkPhone.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: "medical@club.com" },
+    update: {},
+    create: {
+      email: "medical@club.com",
+      password: hashed,
+      username: "의료진",
+      nickname: "medical",
+      role: "COACHING_STAFF",
+      coachingRole: "MEDICAL",
+      dateOfBirth: new Date("1983-06-05"),
+      nationalityId: korea.id,
+      phoneNumberId: medPhone.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: "meddir@club.com" },
+    update: {},
+    create: {
+      email: "meddir@club.com",
+      password: hashed,
+      username: "메디컬팀장",
+      nickname: "meddir",
+      role: "COACHING_STAFF",
+      coachingRole: "MEDICAL_DIRECTOR",
+      dateOfBirth: new Date("1974-12-20"),
+      nationalityId: korea.id,
+      phoneNumberId: meddirPhone.id,
+    },
+  });
+
   const frontOffice = await prisma.user.upsert({
     where: { email: "fo@club.com" },
-    update: {},
+    update: { frontOfficeRole: "SCOUT" },
     create: {
       email: "fo@club.com",
       password: hashed,
       username: "프런트",
       nickname: "frontoffice",
       role: "FRONT_OFFICE",
+      frontOfficeRole: "SCOUT",
       dateOfBirth: new Date("1985-03-20"),
       nationalityId: korea.id,
       phoneNumberId: foPhone.id,
@@ -388,7 +525,19 @@ async function main() {
 
   console.log("✅ Seed complete");
   console.log(`   - Countries: 2`);
-  console.log(`   - Users: 4 (admin@club.com, coach@club.com, fo@club.com, player@club.com) / pw: Password1!`);
+  console.log(`   - Users: 12 / pw: Password1!`);
+  console.log(`     ADMIN       : admin@club.com`);
+  console.log(`     FRONT_OFFICE: fo@club.com (SCOUT)`);
+  console.log(`     PLAYER      : player@club.com`);
+  console.log(`     HEAD_COACH  : coach@club.com`);
+  console.log(`     ASSISTANT   : assistant@club.com`);
+  console.log(`     DEFENSIVE   : defensive@club.com`);
+  console.log(`     ATTACKING   : attacking@club.com`);
+  console.log(`     PHYSICAL    : physical@club.com`);
+  console.log(`     SET_PIECE   : setpiece@club.com`);
+  console.log(`     GOALKEEPER  : gk@club.com`);
+  console.log(`     MEDICAL     : medical@club.com`);
+  console.log(`     MED_DIR     : meddir@club.com`);
   console.log(`   - Season: ${season.name}`);
   console.log(`   - Players: 5`);
   console.log(`   - Contracts: 3`);

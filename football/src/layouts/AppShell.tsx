@@ -150,6 +150,12 @@ const NAV_ITEMS: NavItem[] = [
     section: '경기·분석',
     roles: ['ADMIN', 'COACHING_STAFF'],
   },
+  {
+    to: '/matches/rankings',
+    label: '팀 순위',
+    icon: BarChart3,
+    section: '경기·분석',
+  },
 
   // 관리
   {

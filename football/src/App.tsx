@@ -14,6 +14,7 @@ import { TrainingDetailPage } from '@/pages/training/TrainingDetailPage'
 import { TrainingAttendancePage } from '@/pages/training/TrainingAttendancePage'
 import { MatchesPage } from '@/pages/matches/MatchesPage'
 import { MatchDetailPage } from '@/pages/matches/MatchDetailPage'
+import { RankingsPage } from '@/pages/matches/RankingsPage'
 import { TacticalAnalysisPage } from '@/pages/tactical/TacticalAnalysisPage'
 import { EquipmentPage } from '@/pages/equipment/EquipmentPage'
 import { ProspectsPage } from '@/pages/prospects/ProspectsPage'
@@ -53,6 +54,7 @@ function App() {
             <Route path="/training/:id" element={<TrainingDetailPage />} />
             <Route path="/matches" element={<MatchesPage />} />
             <Route path="/matches/analysis" element={<TacticalAnalysisPage />} />
+            <Route path="/matches/rankings" element={<RankingsPage />} />
             <Route path="/matches/:id" element={<MatchDetailPage />} />
             <Route path="/equipment" element={<EquipmentPage />} />
             <Route path="/prospects" element={<ProspectsPage />} />

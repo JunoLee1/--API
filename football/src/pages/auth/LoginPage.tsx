@@ -5,12 +5,30 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-const DEV_ACCOUNTS = [
-  { label: '관리자', email: 'admin@club.com' },
-  { label: '코칭스태프', email: 'coach@club.com' },
-  { label: '프런트오피스', email: 'fo@club.com' },
-  { label: '선수', email: 'player@club.com' },
-] as const
+const DEV_ACCOUNTS: { group: string; accounts: { label: string; email: string }[] }[] = [
+  {
+    group: '기본',
+    accounts: [
+      { label: '관리자', email: 'admin@club.com' },
+      { label: '프런트 (SCOUT)', email: 'fo@club.com' },
+      { label: '선수', email: 'player@club.com' },
+    ],
+  },
+  {
+    group: '코칭스태프',
+    accounts: [
+      { label: '감독', email: 'coach@club.com' },
+      { label: '수석코치보', email: 'assistant@club.com' },
+      { label: '수비코치', email: 'defensive@club.com' },
+      { label: '공격코치', email: 'attacking@club.com' },
+      { label: '피지컬', email: 'physical@club.com' },
+      { label: '세트피스', email: 'setpiece@club.com' },
+      { label: 'GK코치', email: 'gk@club.com' },
+      { label: '의료진', email: 'medical@club.com' },
+      { label: '메디컬팀장', email: 'meddir@club.com' },
+    ],
+  },
+]
 
 const DEV_PASSWORD = 'Password1!'
 
@@ -75,22 +93,27 @@ export function LoginPage() {
           </Button>
         </form>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           <p className="text-xs text-center text-muted-foreground">빠른 로그인 (개발용)</p>
-          <div className="flex gap-2">
-            {DEV_ACCOUNTS.map(({ label, email: e }) => (
-              <Button
-                key={e}
-                variant="outline"
-                size="sm"
-                className="flex-1 text-xs"
-                disabled={loading}
-                onClick={() => void login(e, DEV_PASSWORD)}
-              >
-                {label}
-              </Button>
-            ))}
-          </div>
+          {DEV_ACCOUNTS.map(({ group, accounts }) => (
+            <div key={group} className="space-y-1.5">
+              <p className="text-[10px] text-muted-foreground/60 font-medium uppercase tracking-wide">{group}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {accounts.map(({ label, email: e }) => (
+                  <Button
+                    key={e}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-7 px-2.5"
+                    disabled={loading}
+                    onClick={() => void login(e, DEV_PASSWORD)}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

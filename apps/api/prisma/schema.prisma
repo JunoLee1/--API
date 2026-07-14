@@ -309,6 +309,7 @@ model User {
   createdProspects  Prospect[] @relation("ProspectCreatedBy")
   requestedLoans   EquipmentLoan[]      @relation("LoanRequestedBy")
   approvedLoans    EquipmentLoan[]      @relation("LoanApprovedBy")
+  auditLogs        AuditLog[]
 }
 
 model Season {
@@ -717,4 +718,15 @@ model Prospect {
 
   convertedPlayer Player? @relation("ProspectConvertedPlayer", fields: [convertedPlayerId], references: [id])
   createdBy       User?   @relation("ProspectCreatedBy", fields: [createdById], references: [id])
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  actorId     Int
+  action      String
+  targetId    String?
+  detail      String?
+  createdAt   DateTime @default(now())
+
+  actor User @relation(fields: [actorId], references: [id])
 }
