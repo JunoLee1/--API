@@ -2,6 +2,11 @@ import { ProspectRepository } from "./prospect.repo";
 import { AppError } from "../lib/appError";
 import { CreateProspectDto, UpdateProspectDto, TransitionProspectStatusDto, SignProspectDto } from "./dto/prospect.dto";
 import { ProspectStatus } from "../generated/enums";
+import { NotificationService } from "../notification/notification.service";
+import { NotificationRepository } from "../notification/notification.repo";
+import { getPrisma } from "../lib/prisma";
+
+const notificationService = new NotificationService(new NotificationRepository(getPrisma()));
 
 export class ProspectService {
   constructor(private repo: ProspectRepository) {}
@@ -31,7 +36,9 @@ export class ProspectService {
     return this.repo.updateStatus(id, dto.status);
   }
 
-  sign(id: number, dto: SignProspectDto) {
-    return this.repo.sign(id, dto);
+  async sign(id: number, dto: SignProspectDto) {
+    const result = await this.repo.sign(id, dto);
+    void notificationService.notifyProspectSigned(result.name).catch(console.error);
+    return result;
   }
 }
