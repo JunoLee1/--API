@@ -1,6 +1,6 @@
 import { PrismaClient } from "../generated/client";
-import { EquipmentUnitStatus } from "../generated/enums";
-import { CreateEquipmentItemDto, CreateAssignmentDto } from "./dto/equipment.dto";
+import { EquipmentUnitStatus, EquipmentLoanStatus } from "../generated/enums";
+import { CreateEquipmentItemDto, CreateAssignmentDto, CreateEquipmentLoanDto } from "./dto/equipment.dto";
 
 const ITEM_SELECT = {
   id: true,
@@ -24,6 +24,15 @@ const ASSIGNMENT_SELECT = {
   playerId: true,
   equipmentItemId: true,
   equipmentUnitId: true,
+} as const;
+
+const LOAN_SELECT = {
+  id: true, status: true, requestedAt: true, issuedAt: true, returnedAt: true,
+  notes: true, equipmentItemId: true, equipmentUnitId: true,
+  requestedBy: { select: { id: true, nickname: true } },
+  approvedBy: { select: { id: true, nickname: true } },
+  equipmentItem: { select: { id: true, name: true, category: true } },
+  equipmentUnit: { select: { id: true } },
 } as const;
 
 export class EquipmentRepository {
@@ -118,6 +127,51 @@ export class EquipmentRepository {
     return this.prisma.user.findMany({
       where: { frontOfficeRole: "EQUIPMENT_MANAGER", isDeleted: false },
       select: { id: true },
+    });
+  }
+
+  findLoanById(id: number) {
+    return this.prisma.equipmentLoan.findUnique({ where: { id }, select: LOAN_SELECT });
+  }
+
+  findAllLoans(status?: EquipmentLoanStatus) {
+    return this.prisma.equipmentLoan.findMany({
+      ...(status !== undefined && { where: { status } }),
+      select: LOAN_SELECT,
+      orderBy: { requestedAt: "desc" },
+    });
+  }
+
+  findMyLoans(userId: number) {
+    return this.prisma.equipmentLoan.findMany({
+      where: { requestedById: userId },
+      select: LOAN_SELECT,
+      orderBy: { requestedAt: "desc" },
+    });
+  }
+
+  createLoan(requestedById: number, dto: CreateEquipmentLoanDto) {
+    return this.prisma.equipmentLoan.create({
+      data: {
+        requestedById,
+        equipmentItemId: dto.equipmentItemId,
+        ...(dto.notes !== undefined && { notes: dto.notes }),
+      },
+      select: LOAN_SELECT,
+    });
+  }
+
+  updateLoan(id: number, data: {
+    status: EquipmentLoanStatus;
+    approvedById?: number;
+    equipmentUnitId?: number;
+    issuedAt?: Date;
+    returnedAt?: Date;
+  }) {
+    return this.prisma.equipmentLoan.update({
+      where: { id },
+      data,
+      select: LOAN_SELECT,
     });
   }
 }

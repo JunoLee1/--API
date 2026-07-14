@@ -81,4 +81,57 @@ export class EquipmentController {
       res.status(200).json(await this.service.returnAssignment(Number(req.params["assignmentId"])));
     } catch (err) { next(err); }
   };
+
+  listLoans = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!canRead(req.user!.role)) throw new AppError(403, "FORBIDDEN");
+      const status = req.query["status"] as any;
+      res.status(200).json(await this.service.listLoans(status));
+    } catch (err) { next(err); }
+  };
+
+  listMyLoans = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.status(200).json(await this.service.listMyLoans(req.user!.id));
+    } catch (err) { next(err); }
+  };
+
+  requestLoan = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.status(201).json(await this.service.requestLoan(req.user!.id, req.body));
+    } catch (err) { next(err); }
+  };
+
+  approveLoan = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = req.user!;
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(await this.service.approveLoan(Number(req.params["loanId"]), req.user!.id));
+    } catch (err) { next(err); }
+  };
+
+  rejectLoan = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = req.user!;
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(await this.service.rejectLoan(Number(req.params["loanId"]), req.user!.id));
+    } catch (err) { next(err); }
+  };
+
+  issueLoan = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = req.user!;
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { equipmentUnitId } = req.body as { equipmentUnitId?: number };
+      res.status(200).json(await this.service.issueLoan(Number(req.params["loanId"]), equipmentUnitId));
+    } catch (err) { next(err); }
+  };
+
+  returnLoan = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = req.user!;
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(await this.service.returnLoan(Number(req.params["loanId"])));
+    } catch (err) { next(err); }
+  };
 }

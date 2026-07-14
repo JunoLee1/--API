@@ -14,6 +14,15 @@ const controller = new EquipmentController(service);
 
 const auth = passport.authenticate("accessToken", { session: false });
 
+// Loan routes (static paths first)
+router.get("/loans", auth, controller.listLoans);
+router.get("/loans/my", auth, controller.listMyLoans);
+router.post("/loans", auth, controller.requestLoan);
+router.post("/loans/:loanId/approve", auth, controller.approveLoan);
+router.post("/loans/:loanId/reject", auth, controller.rejectLoan);
+router.post("/loans/:loanId/issue", auth, controller.issueLoan);
+router.post("/loans/:loanId/return", auth, controller.returnLoan);
+
 // static paths first to avoid shadowing by /:id
 router.post("/assignments", auth, controller.createAssignment);
 router.patch("/assignments/:assignmentId/return", auth, controller.returnAssignment);

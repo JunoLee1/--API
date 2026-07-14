@@ -21,3 +21,15 @@ export interface CreateAssignmentDto {
   equipmentItemId?: number;
   equipmentUnitId?: number;
 }
+
+import { EquipmentLoanStatus } from "../../generated/enums";
+
+export interface CreateEquipmentLoanDto {
+  equipmentItemId: number;
+  notes?: string;
+}
+
+export interface UpdateEquipmentLoanStatusDto {
+  status: EquipmentLoanStatus;
+  equipmentUnitId?: number;
+}
