@@ -1,6 +1,7 @@
 import { Router } from "express";
 import adminRouter from "./admin/admin.routes";
 import authRouter from "./auth/auth.routes";
+import dashboardRouter from "./dashboard/dashboard.routes";
 import contractRouter from "./contract/contract.routes";
 import countryRouter from "./country/country.routes";
 import equipmentRouter from "./equipment/equipment.routes";
@@ -18,6 +19,7 @@ const apiRouter = Router();
 
 apiRouter.use("/admin", adminRouter);
 apiRouter.use("/auth", authRouter);
+apiRouter.use("/dashboard", dashboardRouter);
 apiRouter.use("/contracts", contractRouter);
 apiRouter.use("/countries", countryRouter);
 apiRouter.use("/equipment", equipmentRouter);
