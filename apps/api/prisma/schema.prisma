@@ -310,6 +310,8 @@ model User {
   requestedLoans   EquipmentLoan[]      @relation("LoanRequestedBy")
   approvedLoans    EquipmentLoan[]      @relation("LoanApprovedBy")
   auditLogs        AuditLog[]
+  authoredReports  Report[] @relation("ReportAuthor")
+  reviewedReports  Report[] @relation("ReportReviewer")
 }
 
 model Season {
@@ -729,4 +731,37 @@ model AuditLog {
   createdAt   DateTime @default(now())
 
   actor User @relation(fields: [actorId], references: [id])
+}
+
+enum ReportType {
+  FINANCIAL
+  PERFORMANCE
+}
+
+enum ReportStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+model Report {
+  id              Int          @id @default(autoincrement())
+  type            ReportType
+  status          ReportStatus @default(DRAFT)
+  title           String
+  content         String       @db.Text
+  fileUrl         String?
+  fileName        String?
+  rejectionReason String?
+
+  authorId    Int
+  author      User  @relation("ReportAuthor", fields: [authorId], references: [id])
+  reviewerId  Int?
+  reviewer    User? @relation("ReportReviewer", fields: [reviewerId], references: [id])
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  submittedAt DateTime?
+  reviewedAt  DateTime?
 }
