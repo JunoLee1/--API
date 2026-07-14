@@ -26,6 +26,9 @@ import { PartnersPage } from '@/pages/admin/PartnersPage'
 import { ReportsPage } from '@/pages/reports/ReportsPage'
 import { ReportFormPage } from '@/pages/reports/ReportFormPage'
 import { ReportDetailPage } from '@/pages/reports/ReportDetailPage'
+import { MedicalExpensesPage } from '@/pages/medical-expense/MedicalExpensesPage'
+import { MedicalExpenseFormPage } from '@/pages/medical-expense/MedicalExpenseFormPage'
+import { MedicalExpenseDetailPage } from '@/pages/medical-expense/MedicalExpenseDetailPage'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const loggedIn = localStorage.getItem('loggedIn')
@@ -67,6 +70,10 @@ function App() {
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/reports/new" element={<ReportFormPage />} />
             <Route path="/reports/:id" element={<ReportDetailPage />} />
+            <Route path="/medical-expenses" element={<MedicalExpensesPage />} />
+            <Route path="/medical-expenses/new" element={<MedicalExpenseFormPage />} />
+            <Route path="/medical-expenses/:id/edit" element={<MedicalExpenseFormPage />} />
+            <Route path="/medical-expenses/:id" element={<MedicalExpenseDetailPage />} />
             <Route path="/admin/partners" element={<PartnersPage />} />
             <Route path="/admin/users" element={<UsersPage />} />
           </Route>
