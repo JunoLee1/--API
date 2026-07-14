@@ -20,6 +20,7 @@ import { ProspectsPage } from '@/pages/prospects/ProspectsPage'
 import { NotificationsPage } from '@/pages/notifications/NotificationsPage'
 import { MePage } from '@/pages/me/MePage'
 import { UsersPage } from '@/pages/admin/UsersPage'
+import { PartnersPage } from '@/pages/admin/PartnersPage'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const loggedIn = localStorage.getItem('loggedIn')
@@ -57,6 +58,7 @@ function App() {
             <Route path="/prospects" element={<ProspectsPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/me" element={<MePage />} />
+            <Route path="/admin/partners" element={<PartnersPage />} />
             <Route path="/admin/users" element={<UsersPage />} />
           </Route>
 

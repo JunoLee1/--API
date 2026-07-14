@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import {
   Activity,
   BarChart3,
+  Building2,
   ChevronRight,
   ClipboardList,
   FileText,
@@ -157,6 +158,14 @@ const NAV_ITEMS: NavItem[] = [
     icon: Package,
     section: '관리',
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
+  },
+  {
+    to: '/admin/partners',
+    label: '파트너 관리',
+    icon: Building2,
+    section: '관리',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['EQUIPMENT_MANAGER'],
   },
   {
     to: '/admin/users',
