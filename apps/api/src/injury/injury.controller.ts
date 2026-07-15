@@ -43,4 +43,20 @@ export class InjuryController {
       res.status(200).json(await this.service.updateStatus(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
   };
+
+  getReport = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const report = await this.service.getReport(Number(req.params["id"]));
+      res.status(200).json(report ?? null);
+    } catch (err) { next(err); }
+  };
+
+  saveReport = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!MEDICAL_ROLES.includes(req.user!.role as MedicalRole)) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(
+        await this.service.saveReport(Number(req.params["id"]), req.body, req.user!.id)
+      );
+    } catch (err) { next(err); }
+  };
 }
