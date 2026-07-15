@@ -92,6 +92,7 @@ HEAD_COACH와 동일한 시스템 권한을 상시 보유한다. "부재 시 대
 MEDICAL 권한 전체 포함. 추가 권한:
 - 선수단 전체 부상 현황 통계 열람 (개별 MEDICAL은 본인이 담당한 케이스 중심)
 - REHABILITATION 카테고리 장비 쓰기 권한 (EQUIPMENT_MANAGER와 동일 범위 내 해당 카테고리만)
+- 의료비 결재 1차 승인·반려 (SUBMITTED → LEADER_APPROVED / REJECTED)
 
 ---
 
@@ -461,6 +462,92 @@ HEAD_COACH 요청 → GM 최종 승인 → LOAN_OUT 종료 처리 → Player.sta
 
 ---
 
+## GM 보고서 결재 (Report)
+
+COACHING_STAFF가 작성한 보고서를 GM(FRONT_OFFICE, frontOfficeRole=GM)이 결재하는 워크플로우.
+
+**상태머신:**
+```
+DRAFT → SUBMITTED → APPROVED
+                  ↘ REJECTED → SUBMITTED (재상신)
+```
+
+**작성 권한:** COACHING_STAFF 전원 (본인이 작성자).
+
+**결재 권한:** GM.
+
+**필드:**
+- `title`: 보고서 제목
+- `content`: 본문 (텍스트)
+- `fileUrl` / `fileName`: 첨부 파일 (선택, 20MB 제한)
+- `submittedAt`: 상신일시
+- `reviewedAt`: 결재일시
+- `reviewerId`: 결재자 User ID
+- `rejectionReason`: 반려 사유
+
+**결재 흐름:**
+1. COACHING_STAFF가 DRAFT 저장 (`POST /reports`)
+2. COACHING_STAFF가 상신 (`POST /reports/:id/submit`) → SUBMITTED
+3. GM이 승인 (`POST /reports/:id/approve`) → APPROVED, 또는 반려 (`POST /reports/:id/reject`, reason 필수) → REJECTED
+4. REJECTED 상태에서 재상신 가능. 재상신 시 `rejectionReason` 초기화.
+
+**수정 권한:** 작성자 본인 + DRAFT 또는 REJECTED 상태에서만 가능.
+
+**열람 권한:** 작성자 본인(전체), GM(전체), ADMIN(전체). 그 외 COACHING_STAFF는 본인 작성분만.
+
+---
+
+## 의료비 결재 (MedicalExpense)
+
+MEDICAL 의료진이 신청한 의료비를 MEDICAL_DIRECTOR(1차) → ADMIN(최종) 2단계로 결재하는 워크플로우.
+
+**상태머신:**
+```
+DRAFT → SUBMITTED → LEADER_APPROVED → APPROVED
+                 ↘ REJECTED         ↘ REJECTED
+                 (재상신 가능)        (재상신 가능)
+```
+
+REJECTED 상태에서 원 신청자가 재상신 가능. 재상신 시 `rejectionReason` 초기화.
+
+**신청 권한:** COACHING_STAFF 중 coachingRole=MEDICAL.
+
+**1차 결재 권한:** COACHING_STAFF 중 coachingRole=MEDICAL_DIRECTOR.
+
+**최종 결재 권한:** ADMIN.
+
+**비용 항목 (ExpenseCostCategory):**
+| 값 | 의미 |
+|----|------|
+| OUTPATIENT | 외래 진료 |
+| EXAMINATION | 검사 |
+| SURGERY | 수술 |
+| REHABILITATION | 재활 |
+| MEDICATION | 약제 |
+
+**납부 주체 (ExpensePayerType):**
+| 값 | 의미 |
+|----|------|
+| CLUB | 클럽 부담 |
+| ASSOCIATION | 협회 부담 |
+| INDIVIDUAL | 개인 부담 |
+
+**필드:**
+- `receiptDate`: 영수증 날짜
+- `costCategory`: 비용 항목 (위 enum)
+- `totalAmount`: 금액
+- `payerType`: 납부 주체 (위 enum)
+- `description`: 비고 (선택)
+- `fileUrl` / `fileName`: 첨부 파일 (영수증 이미지 등, 20MB 제한)
+- `submittedAt`, `submittedById`: 상신일시·신청자
+- `leaderReviewedAt`, `leaderReviewerId`: 1차 결재일시·결재자
+- `adminReviewedAt`, `adminReviewerId`: 최종 결재일시·결재자
+- `rejectionReason`: 반려 사유
+
+**열람 권한:** 신청자 본인, MEDICAL_DIRECTOR, ADMIN.
+
+---
+
 ## 알림 (Notification)
 
 | 트리거 | 수신자 | 발생 시점 |
@@ -476,6 +563,12 @@ HEAD_COACH 요청 → GM 최종 승인 → LOAN_OUT 종료 처리 → Player.sta
 | 훈련 세션 CONFIRMED 요청 | HEAD_COACH | 작성자가 확정 요청 시 |
 | 장비 재고 부족 | EQUIPMENT_MANAGER | quantity ≤ lowStockThreshold 도달 시 |
 | 연장 옵션 행사 가능 | GM | ExtensionOption 조건 달성 시 |
+| GM 보고서 상신 | GM | COACHING_STAFF가 보고서 상신 시 |
+| GM 보고서 반려 | 보고서 작성자 | GM이 반려 처리 시 |
+| 의료비 상신 | MEDICAL_DIRECTOR 전원 | MEDICAL이 의료비 상신 시 |
+| 의료비 1차 승인 | ADMIN 전원 | MEDICAL_DIRECTOR가 1차 승인 시 |
+| 의료비 반려 | 신청자 본인 | MEDICAL_DIRECTOR 또는 ADMIN이 반려 시 |
+| 의료비 최종 승인 | 신청자 본인 | ADMIN이 최종 승인 시 |
 
 **저장 방식:** 수신자별 Notification 레코드 DB 저장. 읽음/안읽음 상태 추적. `/notifications` 목록 페이지 제공.
 
@@ -498,4 +591,10 @@ TACTICAL_ANALYSIS_CONFIRM_REQUESTED
 TRAINING_SESSION_CONFIRM_REQUESTED
 EQUIPMENT_LOW_STOCK
 EXTENSION_OPTION_AVAILABLE
+REPORT_SUBMITTED
+REPORT_REJECTED
+MEDICAL_EXPENSE_SUBMITTED
+MEDICAL_EXPENSE_LEADER_APPROVED
+MEDICAL_EXPENSE_REJECTED
+MEDICAL_EXPENSE_APPROVED
 ```
