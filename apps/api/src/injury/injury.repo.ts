@@ -18,6 +18,25 @@ const INJURY_SELECT = {
   partner: { select: { id: true, name: true } },
 } as const;
 
+const INJURY_REPORT_SELECT = {
+  id: true,
+  injuryId: true,
+  diagnosisName: true,
+  treatmentContent: true,
+  rehabStage: true,
+  trainingReturnDate: true,
+  matchAvailable: true,
+  reinjuryRisk: true,
+  medicalOpinion: true,
+  securityLevel: true,
+  createdById: true,
+  updatedById: true,
+  createdAt: true,
+  updatedAt: true,
+  createdBy: { select: { id: true, nickname: true } },
+  updatedBy: { select: { id: true, nickname: true } },
+} as const;
+
 export class InjuryRepository {
   constructor(private prisma: PrismaClient) {}
 
@@ -67,29 +86,10 @@ export class InjuryRepository {
     });
   }
 
-  private INJURY_REPORT_SELECT = {
-    id: true,
-    injuryId: true,
-    diagnosisName: true,
-    treatmentContent: true,
-    rehabStage: true,
-    trainingReturnDate: true,
-    matchAvailable: true,
-    reinjuryRisk: true,
-    medicalOpinion: true,
-    securityLevel: true,
-    createdById: true,
-    updatedById: true,
-    createdAt: true,
-    updatedAt: true,
-    createdBy: { select: { id: true, nickname: true } },
-    updatedBy: { select: { id: true, nickname: true } },
-  } as const;
-
   findReport(injuryId: number) {
     return this.prisma.injuryReport.findUnique({
       where: { injuryId },
-      select: this.INJURY_REPORT_SELECT,
+      select: INJURY_REPORT_SELECT,
     });
   }
 
@@ -102,13 +102,13 @@ export class InjuryRepository {
       matchAvailable: dto.matchAvailable ?? null,
       reinjuryRisk: dto.reinjuryRisk ?? null,
       medicalOpinion: dto.medicalOpinion ?? null,
-      securityLevel: dto.securityLevel ?? ("INTERNAL" as const),
+      securityLevel: dto.securityLevel ?? "INTERNAL",
     };
     return this.prisma.injuryReport.upsert({
       where: { injuryId },
       create: { ...data, injuryId, createdById: userId },
       update: { ...data, updatedById: userId },
-      select: this.INJURY_REPORT_SELECT,
+      select: INJURY_REPORT_SELECT,
     });
   }
 
