@@ -42,7 +42,7 @@ export class MedicalExpenseController {
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!isMedical(req)) throw new AppError(403, "FORBIDDEN");
-      const { receiptDate, costCategory, totalAmount, payerType, injuryId, description } = req.body;
+      const { receiptDate, costCategory, totalAmount, payerType, injuryId, playerId, description } = req.body;
       const file = req.file;
       res.status(201).json(
         await this.service.create({
@@ -52,6 +52,7 @@ export class MedicalExpenseController {
           totalAmount: Number(totalAmount),
           payerType,
           ...(injuryId && { injuryId: Number(injuryId) }),
+          ...(playerId && { playerId }),
           ...(description && { description }),
           ...(file && { fileUrl: `/uploads/medical-expenses/${file.filename}`, fileName: file.originalname }),
         }),
@@ -63,7 +64,7 @@ export class MedicalExpenseController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { receiptDate, costCategory, totalAmount, payerType, injuryId, description } = req.body;
+      const { receiptDate, costCategory, totalAmount, payerType, injuryId, playerId, description } = req.body;
       const file = req.file;
       res.json(
         await this.service.update(Number(req.params["id"]), req.user!.id, {
@@ -72,6 +73,7 @@ export class MedicalExpenseController {
           ...(totalAmount !== undefined && { totalAmount: Number(totalAmount) }),
           ...(payerType !== undefined && { payerType }),
           ...(injuryId !== undefined && { injuryId: injuryId ? Number(injuryId) : null }),
+          ...(playerId !== undefined && { playerId: playerId || null }),
           ...(description !== undefined && { description }),
           ...(file && { fileUrl: `/uploads/medical-expenses/${file.filename}`, fileName: file.originalname }),
         }),

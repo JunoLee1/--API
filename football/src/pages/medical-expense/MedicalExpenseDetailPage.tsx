@@ -21,7 +21,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { ArrowLeft, Download, Check, X, Pencil } from 'lucide-react'
+import { ArrowLeft, Download, Check, X, Pencil, User } from 'lucide-react'
+import { POSITION_ABBR } from '@/types/player'
 
 function formatDateTime(d: string) {
   return new Date(d).toLocaleString('ko-KR', {
@@ -195,6 +196,20 @@ export function MedicalExpenseDetailPage() {
 
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-2xl space-y-6">
+          {expense.player && (
+            <div className="flex items-center gap-3 rounded-lg border bg-muted/40 px-4 py-3">
+              <User className="h-4 w-4 text-muted-foreground shrink-0" />
+              <div className="text-sm">
+                <p className="font-medium">{expense.player.playerName}</p>
+                <p className="text-muted-foreground text-xs">
+                  {POSITION_ABBR[expense.player.position as keyof typeof POSITION_ABBR] ?? expense.player.position}
+                  {' · '}
+                  {new Date(expense.player.dateOfBirth).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' })} 생
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-muted-foreground text-xs mb-0.5">영수증 날짜</p>

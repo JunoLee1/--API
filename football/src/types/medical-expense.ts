@@ -15,11 +15,20 @@ export interface ExpenseInjury {
   playerId: string
 }
 
+export interface ExpensePlayer {
+  id: string
+  playerName: string
+  position: string
+  dateOfBirth: string
+}
+
 export interface MedicalExpense {
   id: number
   status: MedicalExpenseStatus
   injuryId: number | null
   injury: ExpenseInjury | null
+  playerId: string | null
+  player: ExpensePlayer | null
   receiptDate: string
   costCategory: ExpenseCostCategory
   totalAmount: number
@@ -47,6 +56,7 @@ export interface CreateExpenseDto {
   totalAmount: number
   payerType: ExpensePayerType
   injuryId?: number
+  playerId?: string
   description?: string
   file?: File
 }
@@ -57,6 +67,7 @@ export interface UpdateExpenseDto {
   totalAmount?: number
   payerType?: ExpensePayerType
   injuryId?: number | null
+  playerId?: string | null
   description?: string
   file?: File
 }

@@ -4,6 +4,9 @@ import { toast } from 'sonner'
 import { medicalExpenseApi } from '@/services/medical-expense.service'
 import type { ExpenseCostCategory, ExpensePayerType, MedicalExpense } from '@/types/medical-expense'
 import { COST_CATEGORY_LABEL, PAYER_TYPE_LABEL } from '@/types/medical-expense'
+import { playerApi } from '@/services/player.service'
+import type { Player } from '@/types/player'
+import { POSITION_ABBR } from '@/types/player'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -28,13 +31,19 @@ export function MedicalExpenseFormPage() {
 
   const [loading, setLoading] = useState(isEdit)
   const [saving, setSaving] = useState(false)
+  const [players, setPlayers] = useState<Player[]>([])
 
   const [receiptDate, setReceiptDate] = useState('')
   const [costCategory, setCostCategory] = useState<ExpenseCostCategory>('OUTPATIENT')
   const [totalAmount, setTotalAmount] = useState('')
   const [payerType, setPayerType] = useState<ExpensePayerType>('CLUB')
+  const [playerId, setPlayerId] = useState<string>('')
   const [description, setDescription] = useState('')
   const [file, setFile] = useState<File | undefined>()
+
+  useEffect(() => {
+    playerApi.list({ status: 'ACTIVE' }).then(setPlayers).catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (!id) return
@@ -45,6 +54,7 @@ export function MedicalExpenseFormPage() {
         setCostCategory(e.costCategory)
         setTotalAmount(String(e.totalAmount))
         setPayerType(e.payerType)
+        setPlayerId(e.playerId ?? '')
         setDescription(e.description ?? '')
       })
       .catch(() => { toast.error('불러오지 못했습니다.'); navigate('/medical-expenses') })
@@ -55,7 +65,15 @@ export function MedicalExpenseFormPage() {
     if (!receiptDate || !totalAmount) { toast.error('날짜와 금액을 입력해주세요.'); return }
     setSaving(true)
     try {
-      const dto = { receiptDate, costCategory, totalAmount: Number(totalAmount), payerType, description: description || undefined, file }
+      const dto = {
+        receiptDate,
+        costCategory,
+        totalAmount: Number(totalAmount),
+        payerType,
+        ...(playerId && { playerId }),
+        description: description || undefined,
+        file,
+      }
       let saved: MedicalExpense
       if (isEdit && id) {
         saved = await medicalExpenseApi.update(Number(id), dto)
@@ -132,6 +150,23 @@ export function MedicalExpenseFormPage() {
               <SelectContent>
                 {PAYER_TYPES.map((p) => (
                   <SelectItem key={p} value={p}>{PAYER_TYPE_LABEL[p]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>대상 선수 (선택)</Label>
+            <Select value={playerId} onValueChange={setPlayerId}>
+              <SelectTrigger>
+                <SelectValue placeholder="선수 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">선수 미지정</SelectItem>
+                {players.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.playerName} ({POSITION_ABBR[p.position]})
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>

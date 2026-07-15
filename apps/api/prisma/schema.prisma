@@ -358,6 +358,7 @@ model Player {
   tacticalLineups      TacticalLineup[]
   equipmentAssignments EquipmentAssignment[]
   prospects            Prospect[]            @relation("ProspectConvertedPlayer")
+  medicalExpenses      MedicalExpense[]
 }
 
 model Contract {
@@ -796,6 +797,7 @@ model MedicalExpense {
   id              Int                  @id @default(autoincrement())
   status          MedicalExpenseStatus @default(DRAFT)
   injuryId        Int?
+  playerId        String?
   receiptDate     DateTime
   costCategory    ExpenseCostCategory
   totalAmount     Int
@@ -816,6 +818,7 @@ model MedicalExpense {
   updatedAt        DateTime  @updatedAt
 
   injury         Injury? @relation(fields: [injuryId], references: [id])
+  player         Player? @relation(fields: [playerId], references: [id])
   submittedBy    User    @relation("MedicalExpenseSubmitter", fields: [submittedById], references: [id])
   leaderReviewer User?   @relation("MedicalExpenseLeaderReviewer", fields: [leaderReviewerId], references: [id])
   adminReviewer  User?   @relation("MedicalExpenseAdminReviewer", fields: [adminReviewerId], references: [id])

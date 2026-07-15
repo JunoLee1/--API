@@ -82,6 +82,7 @@ export function MedicalExpensesPage() {
                 <TableHead className="w-20">항목</TableHead>
                 <TableHead className="w-28 text-right">금액</TableHead>
                 <TableHead className="w-20">납부주체</TableHead>
+                <TableHead className="w-28">대상 선수</TableHead>
                 <TableHead className="w-24">상태</TableHead>
                 <TableHead className="w-24 text-muted-foreground">신청자</TableHead>
               </TableRow>
@@ -99,6 +100,9 @@ export function MedicalExpensesPage() {
                     {formatAmount(e.totalAmount)}
                   </TableCell>
                   <TableCell>{PAYER_TYPE_LABEL[e.payerType]}</TableCell>
+                  <TableCell className="text-sm">
+                    {e.player?.playerName ?? <span className="text-muted-foreground">—</span>}
+                  </TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${EXPENSE_STATUS_STYLE[e.status]}`}>
                       {EXPENSE_STATUS_LABEL[e.status]}
