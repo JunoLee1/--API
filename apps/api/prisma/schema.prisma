@@ -741,6 +741,7 @@ model AuditLog {
 enum ReportType {
   FINANCIAL
   PERFORMANCE
+  MEDICAL
 }
 
 enum ReportStatus {
