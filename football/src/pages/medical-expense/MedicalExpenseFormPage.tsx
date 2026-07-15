@@ -6,7 +6,7 @@ import type { ExpenseCostCategory, ExpensePayerType, MedicalExpense } from '@/ty
 import { COST_CATEGORY_LABEL, PAYER_TYPE_LABEL } from '@/types/medical-expense'
 import { playerApi } from '@/services/player.service'
 import type { Player } from '@/types/player'
-import { POSITION_ABBR } from '@/types/player'
+import { POSITION_LABEL } from '@/types/player'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -29,7 +29,9 @@ export function MedicalExpenseFormPage() {
   const navigate = useNavigate()
   const isEdit = Boolean(id)
 
-  const [loading, setLoading] = useState(isEdit)
+  const [expenseLoading, setExpenseLoading] = useState(isEdit)
+  const [playersLoading, setPlayersLoading] = useState(true)
+  const loading = expenseLoading || playersLoading
   const [saving, setSaving] = useState(false)
   const [players, setPlayers] = useState<Player[]>([])
 
@@ -42,7 +44,7 @@ export function MedicalExpenseFormPage() {
   const [file, setFile] = useState<File | undefined>()
 
   useEffect(() => {
-    playerApi.list({ status: 'ACTIVE' }).then(setPlayers).catch(() => {})
+    playerApi.list({ status: 'ACTIVE' }).then(setPlayers).catch(() => {}).finally(() => setPlayersLoading(false))
   }, [])
 
   useEffect(() => {
@@ -58,7 +60,7 @@ export function MedicalExpenseFormPage() {
         setDescription(e.description ?? '')
       })
       .catch(() => { toast.error('불러오지 못했습니다.'); navigate('/medical-expenses') })
-      .finally(() => setLoading(false))
+      .finally(() => setExpenseLoading(false))
   }, [id, navigate])
 
   const handleSave = async (andSubmit = false) => {
@@ -165,7 +167,7 @@ export function MedicalExpenseFormPage() {
                 <SelectItem value="">선수 미지정</SelectItem>
                 {players.map((p) => (
                   <SelectItem key={p.id} value={p.id}>
-                    {p.playerName} ({POSITION_ABBR[p.position]})
+                    {p.playerName} ({POSITION_LABEL[p.position]})
                   </SelectItem>
                 ))}
               </SelectContent>

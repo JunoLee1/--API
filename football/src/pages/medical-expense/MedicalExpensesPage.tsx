@@ -78,13 +78,13 @@ export function MedicalExpensesPage() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead>영수증 날짜</TableHead>
+                <TableHead className="w-24">영수증 날짜</TableHead>
+                <TableHead className="w-24">신청자</TableHead>
+                <TableHead className="w-28">대상 선수</TableHead>
                 <TableHead className="w-20">항목</TableHead>
                 <TableHead className="w-28 text-right">금액</TableHead>
                 <TableHead className="w-20">납부주체</TableHead>
-                <TableHead className="w-28">대상 선수</TableHead>
                 <TableHead className="w-24">상태</TableHead>
-                <TableHead className="w-24 text-muted-foreground">신청자</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -95,20 +95,20 @@ export function MedicalExpensesPage() {
                   onClick={() => navigate(`/medical-expenses/${e.id}`)}
                 >
                   <TableCell className="tabular-nums">{formatDate(e.receiptDate)}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{e.submittedBy.nickname}</TableCell>
+                  <TableCell className="text-sm">
+                    {e.player?.playerName ?? <span className="text-muted-foreground">—</span>}
+                  </TableCell>
                   <TableCell>{COST_CATEGORY_LABEL[e.costCategory]}</TableCell>
                   <TableCell className="text-right tabular-nums font-medium">
                     {formatAmount(e.totalAmount)}
                   </TableCell>
                   <TableCell>{PAYER_TYPE_LABEL[e.payerType]}</TableCell>
-                  <TableCell className="text-sm">
-                    {e.player?.playerName ?? <span className="text-muted-foreground">—</span>}
-                  </TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${EXPENSE_STATUS_STYLE[e.status]}`}>
                       {EXPENSE_STATUS_LABEL[e.status]}
                     </span>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{e.submittedBy.nickname}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

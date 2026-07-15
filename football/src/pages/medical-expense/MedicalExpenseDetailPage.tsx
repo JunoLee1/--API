@@ -22,7 +22,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { ArrowLeft, Download, Check, X, Pencil, User } from 'lucide-react'
-import { POSITION_ABBR } from '@/types/player'
+import { POSITION_LABEL } from '@/types/player'
 
 function formatDateTime(d: string) {
   return new Date(d).toLocaleString('ko-KR', {
@@ -202,7 +202,7 @@ export function MedicalExpenseDetailPage() {
               <div className="text-sm">
                 <p className="font-medium">{expense.player.playerName}</p>
                 <p className="text-muted-foreground text-xs">
-                  {POSITION_ABBR[expense.player.position as keyof typeof POSITION_ABBR] ?? expense.player.position}
+                  {POSITION_LABEL[expense.player.position as keyof typeof POSITION_LABEL] ?? expense.player.position}
                   {' · '}
                   {new Date(expense.player.dateOfBirth).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' })} 생
                 </p>
