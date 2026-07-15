@@ -210,7 +210,9 @@ export function InjuriesPage() {
         ) : (
           <Select value={selectedPlayerId} onValueChange={(v) => v && handlePlayerChange(v)}>
             <SelectTrigger className="w-56 h-8 text-sm bg-background">
-              <SelectValue placeholder="선수 선택" />
+              {selectedPlayerId
+                ? <span className="truncate">{players.find(p => p.id === selectedPlayerId)?.playerName ?? selectedPlayerId}</span>
+                : <span className="text-muted-foreground">선수 선택</span>}
             </SelectTrigger>
             <SelectContent>
               {players.map((p) => <SelectItem key={p.id} value={p.id}>{p.playerName}</SelectItem>)}
