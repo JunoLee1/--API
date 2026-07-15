@@ -16,7 +16,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ArrowLeft } from 'lucide-react'
@@ -111,7 +110,7 @@ export function MedicalExpenseFormPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h1 className="text-lg font-semibold tracking-tight">
-          {isEdit ? '의료비 수정' : '의료비 등록'}
+          {isEdit ? '의료비 수정' : '의료비 청구'}
         </h1>
       </div>
 
@@ -125,7 +124,7 @@ export function MedicalExpenseFormPage() {
           <div className="space-y-1.5">
             <Label>비용 항목 *</Label>
             <Select value={costCategory} onValueChange={(v) => setCostCategory(v as ExpenseCostCategory)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger><span>{COST_CATEGORY_LABEL[costCategory]}</span></SelectTrigger>
               <SelectContent>
                 {COST_CATEGORIES.map((c) => (
                   <SelectItem key={c} value={c}>{COST_CATEGORY_LABEL[c]}</SelectItem>
@@ -148,7 +147,7 @@ export function MedicalExpenseFormPage() {
           <div className="space-y-1.5">
             <Label>납부 주체 *</Label>
             <Select value={payerType} onValueChange={(v) => setPayerType(v as ExpensePayerType)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger><span>{PAYER_TYPE_LABEL[payerType]}</span></SelectTrigger>
               <SelectContent>
                 {PAYER_TYPES.map((p) => (
                   <SelectItem key={p} value={p}>{PAYER_TYPE_LABEL[p]}</SelectItem>
@@ -161,7 +160,9 @@ export function MedicalExpenseFormPage() {
             <Label>대상 선수 (선택)</Label>
             <Select value={playerId} onValueChange={setPlayerId}>
               <SelectTrigger>
-                <SelectValue placeholder="선수 선택" />
+                {playerId
+                  ? <span className="truncate">{players.find(p => p.id === playerId)?.playerName ?? playerId}</span>
+                  : <span className="text-muted-foreground">선수 선택</span>}
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">선수 미지정</SelectItem>

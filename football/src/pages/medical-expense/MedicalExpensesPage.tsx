@@ -96,7 +96,7 @@ export function MedicalExpensesPage() {
               <ClipboardList className="h-4 w-4 mr-1" />의무보고서 작성
             </Button>
             <Button size="sm" onClick={() => navigate('/medical-expenses/new')}>
-              <Plus className="h-4 w-4 mr-1" />비용 등록
+              <Plus className="h-4 w-4 mr-1" />비용 청구
             </Button>
           </div>
         )}
