@@ -1,4 +1,4 @@
-import { InjuryCause, InjuryStatus, HospitalType } from "../../generated/enums";
+import { InjuryCause, InjuryStatus, HospitalType, RehabStage, RiskLevel, SecurityLevel } from "../../generated/enums";
 
 export interface CreateInjuryDto {
   playerId: string;
@@ -14,4 +14,15 @@ export interface CreateInjuryDto {
 export interface UpdateInjuryStatusDto {
   status: InjuryStatus;
   expectedReturnDate?: string;
+}
+
+export interface UpsertInjuryReportDto {
+  diagnosisName?: string;
+  treatmentContent?: string;
+  rehabStage?: RehabStage;
+  trainingReturnDate?: string;
+  matchAvailable?: boolean;
+  reinjuryRisk?: RiskLevel;
+  medicalOpinion?: string;
+  securityLevel?: SecurityLevel;
 }

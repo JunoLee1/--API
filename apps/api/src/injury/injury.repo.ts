@@ -1,5 +1,5 @@
 import { PrismaClient } from "../generated/client";
-import { CreateInjuryDto, UpdateInjuryStatusDto } from "./dto/injury.dto";
+import { CreateInjuryDto, UpdateInjuryStatusDto, UpsertInjuryReportDto } from "./dto/injury.dto";
 
 const n = <T>(v: T | undefined): T | null => v ?? null;
 
@@ -64,6 +64,51 @@ export class InjuryRepository {
         expectedReturnDate: n(dto.expectedReturnDate ? new Date(dto.expectedReturnDate) : undefined),
       },
       select: INJURY_SELECT,
+    });
+  }
+
+  private INJURY_REPORT_SELECT = {
+    id: true,
+    injuryId: true,
+    diagnosisName: true,
+    treatmentContent: true,
+    rehabStage: true,
+    trainingReturnDate: true,
+    matchAvailable: true,
+    reinjuryRisk: true,
+    medicalOpinion: true,
+    securityLevel: true,
+    createdById: true,
+    updatedById: true,
+    createdAt: true,
+    updatedAt: true,
+    createdBy: { select: { id: true, nickname: true } },
+    updatedBy: { select: { id: true, nickname: true } },
+  } as const;
+
+  findReport(injuryId: number) {
+    return this.prisma.injuryReport.findUnique({
+      where: { injuryId },
+      select: this.INJURY_REPORT_SELECT,
+    });
+  }
+
+  upsertReport(injuryId: number, dto: UpsertInjuryReportDto, userId: number) {
+    const data = {
+      diagnosisName: dto.diagnosisName ?? null,
+      treatmentContent: dto.treatmentContent ?? null,
+      rehabStage: dto.rehabStage ?? null,
+      trainingReturnDate: dto.trainingReturnDate ? new Date(dto.trainingReturnDate) : null,
+      matchAvailable: dto.matchAvailable ?? null,
+      reinjuryRisk: dto.reinjuryRisk ?? null,
+      medicalOpinion: dto.medicalOpinion ?? null,
+      securityLevel: dto.securityLevel ?? ("INTERNAL" as const),
+    };
+    return this.prisma.injuryReport.upsert({
+      where: { injuryId },
+      create: { ...data, injuryId, createdById: userId },
+      update: { ...data, updatedById: userId },
+      select: this.INJURY_REPORT_SELECT,
     });
   }
 
