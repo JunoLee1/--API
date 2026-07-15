@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { injuryApi } from '@/services/injury.service'
+import { reportApi } from '@/services/report.service'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CAUSE_LABEL } from '@/types/injury'
 import type { InjuryCause } from '@/types/injury'
@@ -9,18 +10,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { toast } from 'sonner'
-import { medicalExpenseApi } from '@/services/medical-expense.service'
-import type { ExpenseCostCategory, ExpensePayerType } from '@/types/medical-expense'
-import { COST_CATEGORY_LABEL, PAYER_TYPE_LABEL } from '@/types/medical-expense'
-import { Plus } from 'lucide-react'
+import { Plus, ClipboardList } from 'lucide-react'
 
 type Stats = {
   activeCount: number
@@ -60,31 +51,52 @@ export function InjuryStatsPage() {
   const { user } = useCurrentUser()
   const [sheetOpen, setSheetOpen] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [receiptDate, setReceiptDate] = useState('')
-  const [costCategory, setCostCategory] = useState<ExpenseCostCategory>('OUTPATIENT')
-  const [totalAmount, setTotalAmount] = useState('')
-  const [payerType, setPayerType] = useState<ExpensePayerType>('CLUB')
-  const [description, setDescription] = useState('')
-  const [file, setFile] = useState<File | undefined>()
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
 
   const isMedical = user?.role === 'COACHING_STAFF' && user?.coachingRole === 'MEDICAL'
 
-  const resetForm = () => {
-    setReceiptDate(''); setCostCategory('OUTPATIENT'); setTotalAmount('')
-    setPayerType('CLUB'); setDescription(''); setFile(undefined)
+  const resetForm = () => { setTitle(''); setContent('') }
+
+  const insertStatsSnapshot = () => {
+    if (!stats) return
+    const bodyPartEntries = Object.entries(stats.byBodyPart).sort(([, a], [, b]) => b - a)
+    const causeEntries = Object.entries(stats.byCause).sort(([, a], [, b]) => b - a)
+    const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
+    const totalCount = bodyPartEntries.reduce((s, [, n]) => s + n, 0)
+
+    const lines: string[] = [
+      `## 부상 현황 요약 (${today})`,
+      `- 현재 활성 부상: ${stats.activeCount}건`,
+      `- 평균 회복 기간: ${stats.avgRecoveryDays != null ? `${stats.avgRecoveryDays}일` : '데이터 없음'}`,
+      `- 총 부상 기록: ${totalCount}건`,
+    ]
+    if (bodyPartEntries.length > 0) {
+      lines.push('', '### 부상 부위별')
+      bodyPartEntries.forEach(([part, count]) => lines.push(`- ${part}: ${count}건`))
+    }
+    if (causeEntries.length > 0) {
+      lines.push('', '### 발생 원인별')
+      causeEntries.forEach(([cause, count]) => {
+        const label = CAUSE_LABEL[cause as InjuryCause] ?? cause
+        lines.push(`- ${label}: ${count}건`)
+      })
+    }
+
+    setContent((prev) => (prev ? prev + '\n\n' + lines.join('\n') : lines.join('\n')))
   }
 
   const handleSave = async (andSubmit: boolean) => {
-    if (!receiptDate || !totalAmount) { toast.error('날짜와 금액을 입력해주세요.'); return }
+    if (!title.trim()) { toast.error('제목을 입력해주세요.'); return }
+    if (!content.trim()) { toast.error('내용을 입력해주세요.'); return }
     setSaving(true)
     try {
-      const dto = { receiptDate, costCategory, totalAmount: Number(totalAmount), payerType, description: description || undefined, file }
-      const saved = await medicalExpenseApi.create(dto)
+      const report = await reportApi.create({ type: 'MEDICAL', title: title.trim(), content: content.trim() })
       if (andSubmit) {
-        await medicalExpenseApi.submit(saved.id)
-        toast.success('의료비가 상신됐습니다.')
+        await reportApi.submit(report.id)
+        toast.success('의무보고서가 상신됐습니다.')
       } else {
-        toast.success('의료비 초안이 저장됐습니다.')
+        toast.success('의무보고서 초안이 저장됐습니다.')
       }
       setSheetOpen(false)
       resetForm()
@@ -121,7 +133,7 @@ export function InjuryStatsPage() {
         </div>
         {isMedical && (
           <Button size="sm" onClick={() => setSheetOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />의료비 등록
+            <ClipboardList className="h-4 w-4 mr-1" />의무보고서 작성
           </Button>
         )}
       </div>
@@ -189,48 +201,40 @@ export function InjuryStatsPage() {
       </div>
 
       <Sheet open={sheetOpen} onOpenChange={(v) => { setSheetOpen(v); if (!v) resetForm() }}>
-        <SheetContent className="w-[420px] sm:max-w-[420px] overflow-y-auto">
+        <SheetContent className="w-[480px] sm:max-w-[480px] overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>의료비 등록</SheetTitle>
+            <SheetTitle>의무보고서 작성</SheetTitle>
           </SheetHeader>
           <div className="space-y-4 mt-4">
             <div className="space-y-1.5">
-              <Label>영수증 날짜 *</Label>
-              <Input type="date" value={receiptDate} onChange={(e) => setReceiptDate(e.target.value)} />
+              <Label>제목 *</Label>
+              <Input
+                placeholder="예: 2026-07 부상 현황 보고"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
-              <Label>비용 항목 *</Label>
-              <Select value={costCategory} onValueChange={(v) => setCostCategory(v as ExpenseCostCategory)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {(['OUTPATIENT', 'EXAMINATION', 'SURGERY', 'REHABILITATION', 'MEDICATION'] as ExpenseCostCategory[]).map((c) => (
-                    <SelectItem key={c} value={c}>{COST_CATEGORY_LABEL[c]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>금액 (원) *</Label>
-              <Input type="number" min={0} placeholder="예: 50000" value={totalAmount} onChange={(e) => setTotalAmount(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>납부 주체 *</Label>
-              <Select value={payerType} onValueChange={(v) => setPayerType(v as ExpensePayerType)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {(['CLUB', 'ASSOCIATION', 'INDIVIDUAL'] as ExpensePayerType[]).map((p) => (
-                    <SelectItem key={p} value={p}>{PAYER_TYPE_LABEL[p]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>비고</Label>
-              <Textarea placeholder="추가 설명 (선택)" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>영수증 파일 (선택)</Label>
-              <Input type="file" onChange={(e) => setFile(e.target.files?.[0])} />
+              <div className="flex items-center justify-between">
+                <Label>내용 *</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={insertStatsSnapshot}
+                  disabled={!stats}
+                >
+                  현재 통계 삽입
+                </Button>
+              </div>
+              <Textarea
+                placeholder="부상 현황, 의견, 조치 사항 등을 입력해주세요."
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                rows={12}
+                className="font-mono text-sm"
+              />
             </div>
             <div className="flex gap-2 pt-2">
               <Button variant="outline" className="flex-1" onClick={() => handleSave(false)} disabled={saving}>
