@@ -315,6 +315,11 @@ model User {
   submittedMedicalExpenses MedicalExpense[] @relation("MedicalExpenseSubmitter")
   leaderReviewedExpenses   MedicalExpense[] @relation("MedicalExpenseLeaderReviewer")
   adminReviewedExpenses    MedicalExpense[] @relation("MedicalExpenseAdminReviewer")
+  createdInjuryReports  InjuryReport[] @relation("InjuryReportCreator")
+  updatedInjuryReports  InjuryReport[] @relation("InjuryReportUpdater")
+  coachSignedReports    InjuryReport[] @relation("InjuryReportCoachSigner")
+  trainerSignedReports  InjuryReport[] @relation("InjuryReportTrainerSigner")
+  medicalSignedReports  InjuryReport[] @relation("InjuryReportMedicalSigner")
 }
 
 model Season {
@@ -508,6 +513,7 @@ model Injury {
   medicalStaff    User           @relation(fields: [medicalStaffId], references: [id])
   partner         Partner?       @relation(fields: [partnerId], references: [id])
   medicalExpenses MedicalExpense[]
+  injuryReport    InjuryReport?
 }
 
 model Match {
@@ -823,4 +829,57 @@ model MedicalExpense {
   submittedBy    User    @relation("MedicalExpenseSubmitter", fields: [submittedById], references: [id])
   leaderReviewer User?   @relation("MedicalExpenseLeaderReviewer", fields: [leaderReviewerId], references: [id])
   adminReviewer  User?   @relation("MedicalExpenseAdminReviewer", fields: [adminReviewerId], references: [id])
+}
+
+enum RehabStage {
+  INITIAL_TREATMENT
+  ACUTE_TREATMENT
+  REHABILITATION
+  RETURN_TRAINING
+  CLEARED
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum SecurityLevel {
+  INTERNAL
+  MEDICAL
+  PRIVATE
+}
+
+model InjuryReport {
+  id                 Int            @id @default(autoincrement())
+  injuryId           Int            @unique
+  diagnosisName      String?
+  treatmentContent   String?        @db.Text
+  rehabStage         RehabStage?
+  trainingReturnDate DateTime?
+  matchAvailable     Boolean?
+  reinjuryRisk       RiskLevel?
+  medicalOpinion     String?        @db.Text
+  securityLevel      SecurityLevel  @default(INTERNAL)
+
+  // 복귀 계획 3자 서명
+  coachSignedAt      DateTime?
+  coachSignedById    Int?
+  trainerSignedAt    DateTime?
+  trainerSignedById  Int?
+  medicalSignedAt    DateTime?
+  medicalSignedById  Int?
+
+  createdById        Int
+  updatedById        Int?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  injury         Injury @relation(fields: [injuryId], references: [id], onDelete: Cascade)
+  createdBy      User   @relation("InjuryReportCreator", fields: [createdById], references: [id])
+  updatedBy      User?  @relation("InjuryReportUpdater", fields: [updatedById], references: [id])
+  coachSigner    User?  @relation("InjuryReportCoachSigner", fields: [coachSignedById], references: [id])
+  trainerSigner  User?  @relation("InjuryReportTrainerSigner", fields: [trainerSignedById], references: [id])
+  medicalSigner  User?  @relation("InjuryReportMedicalSigner", fields: [medicalSignedById], references: [id])
 }
