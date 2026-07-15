@@ -53,7 +53,7 @@ export class InjuryRepository {
       where: { id },
       select: {
         ...INJURY_SELECT,
-        player: { select: { playerName: true } },
+        player: { select: { playerName: true, position: true } },
         medicalStaff: { select: { username: true } },
       },
     });

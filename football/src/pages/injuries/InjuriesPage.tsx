@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { injuryApi } from '@/services/injury.service'
 import { partnerApi } from '@/services/partner.service'
@@ -161,6 +162,7 @@ function CreateInjuryDialog({ open, onOpenChange, playerId, onSaved }: CreateInj
 
 export function InjuriesPage() {
   const { user } = useCurrentUser()
+  const navigate = useNavigate()
   const { players, loading: playersLoading } = usePlayers()
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>('')
   const [injuries, setInjuries] = useState<Injury[]>([])
@@ -247,7 +249,7 @@ export function InjuriesPage() {
             </TableHeader>
             <TableBody>
               {injuries.map((inj) => (
-                <TableRow key={inj.id}>
+                <TableRow key={inj.id} className="cursor-pointer" onClick={() => navigate(`/injuries/${inj.id}`)}>
                   <TableCell className="font-medium">{inj.bodyPart}</TableCell>
                   <TableCell>{CAUSE_LABEL[inj.cause]}</TableCell>
                   <TableCell className="tabular-nums">{formatDate(inj.occurredAt)}</TableCell>

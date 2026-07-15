@@ -23,7 +23,7 @@ export interface Injury {
 }
 
 export interface InjuryDetail extends Injury {
-  player: { playerName: string }
+  player: { playerName: string; position: string }
   medicalStaff: { username: string }
 }
 
