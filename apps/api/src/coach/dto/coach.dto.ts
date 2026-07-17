@@ -26,7 +26,6 @@ export interface CreateCoachDto {
   notes?: string;
   hiringRoundId?: number;
   packageLeadId?: number;
-  createdById?: number;
 }
 
 export interface UpdateCoachDto {
@@ -38,7 +37,7 @@ export interface UpdateCoachDto {
 
 export interface TransitionCoachStatusDto {
   status: CoachStatus;
-  shortlistSource?: ShortlistSource;
+  shortlistSource?: ShortlistSource; // Required only when status === "SHORTLISTED"
 }
 
 // ─── Evaluation ─────────────────────────────────────────────────────────────
