@@ -9,6 +9,14 @@ const START_OF_MONTH = () => {
   d.setHours(0, 0, 0, 0);
   return d;
 };
+const START_OF_WEEK = () => {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = day === 0 ? 6 : day - 1; // 월요일 기준
+  d.setDate(d.getDate() - diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
 
 const DEFENSIVE_POSITIONS: Position[] = [
   Position.CENTER_BACK,
@@ -257,5 +265,92 @@ export class DashboardRepository {
         }),
       ]);
     return { managedPlayerCount, injuredManagedPlayerCount, expiringManagedContractCount };
+  }
+
+  async getMedicalDashboardStats() {
+    const now = NOW();
+    const in7Days = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const startOfWeek = START_OF_WEEK();
+
+    const [
+      currentInjuredPlayers,
+      weekNewInjuryCount,
+      returningIn7DaysPlayers,
+      reinjuryRiskGroups,
+      incompleteDocCount,
+      pendingApprovalCount,
+      avgRecoveryRaw,
+      injuryGroups,
+    ] = await Promise.all([
+      this.prisma.injury.findMany({
+        where: { status: { notIn: ["RETURNED"] } },
+        select: { playerId: true },
+        distinct: ["playerId"],
+      }),
+      this.prisma.injury.count({
+        where: { occurredAt: { gte: startOfWeek } },
+      }),
+      this.prisma.injury.findMany({
+        where: {
+          status: { notIn: ["RETURNED"] },
+          expectedReturnDate: { gte: now, lte: in7Days },
+        },
+        select: { playerId: true },
+        distinct: ["playerId"],
+      }),
+      this.prisma.injury.groupBy({
+        by: ["playerId"],
+        _count: { playerId: true },
+        having: { playerId: { _count: { gte: 2 } } },
+      }),
+      this.prisma.medicalExpense.count({
+        where: { OR: [{ fileUrl: null }, { status: "DRAFT" }] },
+      }),
+      this.prisma.medicalExpense.count({
+        where: { status: { in: ["SUBMITTED", "LEADER_APPROVED"] } },
+      }),
+      this.prisma.$queryRaw<{ avg_days: number | null }[]>`
+        SELECT ROUND(AVG(EXTRACT(EPOCH FROM ("updatedAt" - "occurredAt")) / 86400))::int AS avg_days
+        FROM "Injury"
+        WHERE status = 'RETURNED'
+      `,
+      this.prisma.injury.groupBy({
+        by: ["playerId"],
+        _count: { id: true },
+      }),
+    ]);
+
+    const playerIds = injuryGroups.map((g) => g.playerId);
+    const players = await this.prisma.player.findMany({
+      where: { id: { in: playerIds } },
+      select: { id: true, position: true },
+    });
+    const posMap = new Map(players.map((p) => [p.id, p.position]));
+
+    const GK_POSITIONS = ["GOALKEEPER"];
+    const DF_POSITIONS = ["CENTER_BACK", "LEFT_WING_BACK", "RIGHT_WING_BACK", "LEFT_FULL_BACK", "RIGHT_FULL_BACK"];
+    const MF_POSITIONS = ["DEFENSIVE_MIDFIELDER", "CENTRAL_MIDFIELDER", "WIDE_MIDFIELDER", "ATTACKING_MIDFIELDER", "CENTRAL_ATTACK_MIDFIELDER", "RIGHT_ATTACK_MIDFIELDER", "LEFT_ATTACK_MIDFIELDER"];
+    const FW_POSITIONS = ["STRIKER", "SHADOW_STRIKER", "WINGER"];
+
+    const injuriesByPosition = { GK: 0, DF: 0, MF: 0, FW: 0 };
+    for (const g of injuryGroups) {
+      const pos = posMap.get(g.playerId);
+      if (!pos) continue;
+      if (GK_POSITIONS.includes(pos)) injuriesByPosition.GK += g._count.id;
+      else if (DF_POSITIONS.includes(pos)) injuriesByPosition.DF += g._count.id;
+      else if (MF_POSITIONS.includes(pos)) injuriesByPosition.MF += g._count.id;
+      else if (FW_POSITIONS.includes(pos)) injuriesByPosition.FW += g._count.id;
+    }
+
+    return {
+      currentInjuredCount: currentInjuredPlayers.length,
+      weekNewInjuryCount,
+      returningIn7DaysCount: returningIn7DaysPlayers.length,
+      reinjuryRiskCount: reinjuryRiskGroups.length,
+      incompleteDocCount,
+      pendingApprovalCount,
+      avgRecoveryDays: avgRecoveryRaw[0]?.avg_days ?? null,
+      injuriesByPosition,
+    };
   }
 }

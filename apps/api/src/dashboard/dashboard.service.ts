@@ -47,17 +47,33 @@ export class DashboardService {
     }
   }
 
-  private getCoachingStats(user: UserCtx) {
+  private async getCoachingStats(user: UserCtx) {
     switch (user.coachingRole) {
-      case "HEAD_COACH":
+      case "HEAD_COACH": {
+        const [roleStats, medicalDashboard] = await Promise.all([
+          this.repo.getHeadCoachStats(),
+          this.repo.getMedicalDashboardStats(),
+        ]);
+        return { ...roleStats, medicalDashboard };
+      }
       case "ASSISTANT_COACH":
         return this.repo.getHeadCoachStats();
       case "PHYSICAL_COACH":
         return this.repo.getPhysicalCoachStats(user.id);
-      case "MEDICAL":
-        return this.repo.getMedicalStats(user.id);
-      case "MEDICAL_DIRECTOR":
-        return this.repo.getMedicalDirectorStats(user.id);
+      case "MEDICAL": {
+        const [roleStats, medicalDashboard] = await Promise.all([
+          this.repo.getMedicalStats(user.id),
+          this.repo.getMedicalDashboardStats(),
+        ]);
+        return { ...roleStats, medicalDashboard };
+      }
+      case "MEDICAL_DIRECTOR": {
+        const [roleStats, medicalDashboard] = await Promise.all([
+          this.repo.getMedicalDirectorStats(user.id),
+          this.repo.getMedicalDashboardStats(),
+        ]);
+        return { ...roleStats, medicalDashboard };
+      }
       default:
         if (!user.coachingRole) throw new Error(`Missing coachingRole for COACHING_STAFF user ${user.id}`);
         return this.repo.getSpecialistCoachStats(user.coachingRole, user.id);
