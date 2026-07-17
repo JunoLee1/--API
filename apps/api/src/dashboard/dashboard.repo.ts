@@ -276,7 +276,6 @@ export class DashboardRepository {
       currentInjuredPlayers,
       weekNewInjuryCount,
       returningIn7DaysPlayers,
-      reinjuryRiskGroups,
       incompleteDocCount,
       pendingApprovalCount,
       avgRecoveryRaw,
@@ -297,11 +296,6 @@ export class DashboardRepository {
         },
         select: { playerId: true },
         distinct: ["playerId"],
-      }),
-      this.prisma.injury.groupBy({
-        by: ["playerId"],
-        _count: { playerId: true },
-        having: { playerId: { _count: { gte: 2 } } },
       }),
       this.prisma.medicalExpense.count({
         where: { OR: [{ fileUrl: null }, { status: "DRAFT" }] },
@@ -329,7 +323,7 @@ export class DashboardRepository {
 
     const GK_POSITIONS = ["GOALKEEPER"];
     const DF_POSITIONS = ["CENTER_BACK", "LEFT_WING_BACK", "RIGHT_WING_BACK", "LEFT_FULL_BACK", "RIGHT_FULL_BACK"];
-    const MF_POSITIONS = ["DEFENSIVE_MIDFIELDER", "CENTRAL_MIDFIELDER", "WIDE_MIDFIELDER", "ATTACKING_MIDFIELDER", "CENTRAL_ATTACK_MIDFIELDER", "RIGHT_ATTACK_MIDFIELDER", "LEFT_ATTACK_MIDFIELDER"];
+    const MF_POSITIONS = ["CENTRAL_ATTACK_MIDFIELDER", "RIGHT_ATTACK_MIDFIELDER", "LEFT_ATTACK_MIDFIELDER", "CENTRAL_DEFENSIVE_MIDFIELDER", "LEFT_DEFENSIVE_MIDFIELDER", "RIGHT_DEFENSIVE_MIDFIELDER"];
     const FW_POSITIONS = ["STRIKER", "SHADOW_STRIKER", "WINGER"];
 
     const injuriesByPosition = { GK: 0, DF: 0, MF: 0, FW: 0 };
@@ -346,7 +340,7 @@ export class DashboardRepository {
       currentInjuredCount: currentInjuredPlayers.length,
       weekNewInjuryCount,
       returningIn7DaysCount: returningIn7DaysPlayers.length,
-      reinjuryRiskCount: reinjuryRiskGroups.length,
+      reinjuryRiskCount: injuryGroups.filter((g) => g._count.id >= 2).length,
       incompleteDocCount,
       pendingApprovalCount,
       avgRecoveryDays: avgRecoveryRaw[0]?.avg_days ?? null,
