@@ -33,4 +33,24 @@ export const matchApi = {
       competitionType?: CompetitionType
     },
   ) => api.patch<Match>(`/matches/${id}`, payload),
+
+  upsertTeamStats: (
+    id: number,
+    payload: {
+      possession: number
+      shots: number
+      shotsOnTarget: number
+      passes: number
+      passAccuracy: number
+      fouls: number
+      yellowCards: number
+      redCards: number
+      xG: number
+      corners: number
+      offsides: number
+      tackles: number
+      interceptions: number
+      clearances: number
+    },
+  ) => api.put(`/matches/${id}/team-stats`, payload),
 }
