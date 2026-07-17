@@ -464,10 +464,13 @@ export function MatchDetailPage() {
 
   const ts = match.teamMatchStats
 
-  const hasScore = match.homeScore != null && match.awayScore != null
+  const OUR_TEAM = '우리팀'
+  const ourIsHome = match.homeTeamName === OUR_TEAM
+  const ourScore = ourIsHome ? match.homeScore : match.awayScore
+  const oppScore = ourIsHome ? match.awayScore : match.homeScore
+  const hasScore = ourScore != null && oppScore != null
   const resultLabel = hasScore
-    ? match.homeScore! > match.awayScore! ? '승'
-      : match.homeScore! === match.awayScore! ? '무' : '패'
+    ? ourScore! > oppScore! ? '승' : ourScore! === oppScore! ? '무' : '패'
     : null
   const resultClass = resultLabel === '승' ? 'text-green-400' : resultLabel === '무' ? 'text-slate-300' : 'text-red-400'
 

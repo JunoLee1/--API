@@ -38,11 +38,15 @@ function toFeedItems(matches: Match[]): FeedItem[] {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5)
     .map((m) => {
+      const ourIsHome = m.homeTeamName === OUR_TEAM_NAME
+      const ourScore = ourIsHome ? m.homeScore! : m.awayScore!
+      const oppScore = ourIsHome ? m.awayScore! : m.homeScore!
+      const result = ourScore > oppScore ? '승' : ourScore === oppScore ? '무' : '패'
       const score = `${m.homeScore} : ${m.awayScore}`
       return {
         id: m.id,
         label: `${m.homeTeamName} vs ${m.awayTeamName}`,
-        sub: `${score} · ${COMPETITION_LABEL[m.competitionType]}`,
+        sub: `${score} · ${result} · ${COMPETITION_LABEL[m.competitionType]}`,
         date: m.date,
       }
     })
