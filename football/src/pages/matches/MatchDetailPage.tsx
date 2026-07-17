@@ -28,6 +28,35 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import {
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer,
+} from 'recharts'
+
+type PlayerStat = MatchDetail['playerMatchStats'][number]
+
+function buildRadarData(s: PlayerStat) {
+  return [
+    { axis: '득점',  value: Math.min((s.goals   ?? 0) / 3  * 100, 100) },
+    { axis: '도움',  value: Math.min((s.assists  ?? 0) / 3  * 100, 100) },
+    { axis: 'xG',   value: Math.min((s.xG       ?? 0) / 3  * 100, 100) },
+    { axis: '슈팅',  value: Math.min((s.shots    ?? 0) / 8  * 100, 100) },
+    { axis: '패스%', value: s.passAccuracy ?? 0 },
+    { axis: '키패스', value: Math.min((s.keyPasses ?? 0) / 8 * 100, 100) },
+  ]
+}
+
+function PlayerRadar({ s }: { s: PlayerStat }) {
+  const data = buildRadarData(s)
+  return (
+    <ResponsiveContainer width="100%" height={180}>
+      <RadarChart data={data} margin={{ top: 10, right: 24, bottom: 10, left: 24 }}>
+        <PolarGrid stroke="#e2e8f0" />
+        <PolarAngleAxis dataKey="axis" tick={{ fontSize: 10, fill: '#64748b' }} />
+        <Radar dataKey="value" stroke="#2563eb" fill="#2563eb" fillOpacity={0.2} dot={{ r: 2, fill: '#2563eb' }} />
+      </RadarChart>
+    </ResponsiveContainer>
+  )
+}
 
 const ZONE_STYLE: Record<string, string> = {
   GK: 'bg-amber-100 text-amber-800 border-amber-200',
@@ -433,6 +462,7 @@ export function MatchDetailPage() {
   const [scoreOpen, setScoreOpen] = useState(false)
   const [teamStatsOpen, setTeamStatsOpen] = useState(false)
   const [playerStatsOpen, setPlayerStatsOpen] = useState(false)
+  const [expandedPlayerId, setExpandedPlayerId] = useState<number | null>(null)
 
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
   const canInputStats = canWrite || user?.role === 'COACHING_STAFF'
@@ -622,30 +652,62 @@ export function MatchDetailPage() {
                     {match.playerMatchStats.map((s) => {
                       const pos = s.player.position as Position
                       const zone = POSITION_ZONE[pos]
+                      const expanded = expandedPlayerId === s.id
                       return (
-                        <tr key={s.id} className="border-b border-slate-50 last:border-0">
-                          <td className="py-1.5 flex items-center gap-1.5">
-                            <span className={`inline-flex rounded border px-1 py-0.5 text-[10px] font-mono font-semibold shrink-0 ${ZONE_STYLE[zone]}`}>
-                              {POSITION_ABBR[pos]}
-                            </span>
-                            <span className={cn('text-[11px]', (s.goals ?? 0) > 0 ? 'font-semibold text-slate-900' : 'text-slate-700')}>
-                              {s.player.playerName}
-                            </span>
-                          </td>
-                          <td className={cn('text-center tabular-nums text-[11px]', (s.goals ?? 0) > 0 ? 'font-bold text-slate-900' : 'text-slate-400')}>
-                            {s.goals ?? '—'}
-                          </td>
-                          <td className={cn('text-center tabular-nums text-[11px]', (s.assists ?? 0) > 0 ? 'font-bold text-slate-900' : 'text-slate-400')}>
-                            {s.assists ?? '—'}
-                          </td>
-                          <td className={cn('text-center tabular-nums text-[11px]',
-                            s.xG != null && s.xG >= 1.5 ? 'text-emerald-600 font-semibold' : 'text-slate-400')}>
-                            {s.xG != null ? s.xG.toFixed(2) : '—'}
-                          </td>
-                          <td className="text-center tabular-nums text-[11px] text-slate-400">
-                            {s.minutesPlayed != null ? `${s.minutesPlayed}'` : '—'}
-                          </td>
-                        </tr>
+                        <>
+                          <tr
+                            key={s.id}
+                            className="border-b border-slate-50 last:border-0 cursor-pointer hover:bg-slate-50 transition-colors"
+                            onClick={() => setExpandedPlayerId(expanded ? null : s.id)}
+                          >
+                            <td className="py-1.5 flex items-center gap-1.5">
+                              <span className={`inline-flex rounded border px-1 py-0.5 text-[10px] font-mono font-semibold shrink-0 ${ZONE_STYLE[zone]}`}>
+                                {POSITION_ABBR[pos]}
+                              </span>
+                              <span className={cn('text-[11px]', (s.goals ?? 0) > 0 ? 'font-semibold text-slate-900' : 'text-slate-700')}>
+                                {s.player.playerName}
+                              </span>
+                              <span className="ml-auto text-[9px] text-slate-300">{expanded ? '▲' : '▼'}</span>
+                            </td>
+                            <td className={cn('text-center tabular-nums text-[11px]', (s.goals ?? 0) > 0 ? 'font-bold text-slate-900' : 'text-slate-400')}>
+                              {s.goals ?? '—'}
+                            </td>
+                            <td className={cn('text-center tabular-nums text-[11px]', (s.assists ?? 0) > 0 ? 'font-bold text-slate-900' : 'text-slate-400')}>
+                              {s.assists ?? '—'}
+                            </td>
+                            <td className={cn('text-center tabular-nums text-[11px]',
+                              s.xG != null && s.xG >= 1.5 ? 'text-emerald-600 font-semibold' : 'text-slate-400')}>
+                              {s.xG != null ? s.xG.toFixed(2) : '—'}
+                            </td>
+                            <td className="text-center tabular-nums text-[11px] text-slate-400">
+                              {s.minutesPlayed != null ? `${s.minutesPlayed}'` : '—'}
+                            </td>
+                          </tr>
+                          {expanded && (
+                            <tr key={`${s.id}-radar`}>
+                              <td colSpan={5} className="pb-2 pt-1">
+                                <div className="rounded-lg bg-slate-50 border border-slate-100 px-2 py-1">
+                                  <PlayerRadar s={s} />
+                                  <div className="grid grid-cols-3 gap-1 mt-1 px-2 pb-2">
+                                    {[
+                                      { label: '슈팅', value: s.shots },
+                                      { label: '키패스', value: s.keyPasses },
+                                      { label: '패스%', value: s.passAccuracy != null ? `${s.passAccuracy}%` : null },
+                                      { label: '태클', value: s.tackles },
+                                      { label: '인터셉트', value: s.interceptions },
+                                      { label: '출전(분)', value: s.minutesPlayed != null ? `${s.minutesPlayed}'` : null },
+                                    ].map(({ label, value }) => (
+                                      <div key={label} className="text-center">
+                                        <div className="text-[11px] font-semibold text-slate-700 tabular-nums">{value ?? '—'}</div>
+                                        <div className="text-[9px] text-slate-400">{label}</div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </>
                       )
                     })}
                   </tbody>
