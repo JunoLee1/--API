@@ -207,6 +207,10 @@ export class CoachRepository {
 
   // ── TutorAssignment ────────────────────────────────────────────────────────
 
+  findTutorById(id: number) {
+    return this.prisma.coachTutorAssignment.findUnique({ where: { id } });
+  }
+
   findTutors(coachId: number) {
     return this.prisma.coachTutorAssignment.findMany({
       where: { coachId },

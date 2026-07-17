@@ -109,7 +109,9 @@ export class CoachService {
     return this.repo.createTutor(coachId, dto);
   }
 
-  updateTutor(id: number, dto: UpdateTutorAssignmentDto) {
+  async updateTutor(id: number, dto: UpdateTutorAssignmentDto) {
+    const tutor = await this.repo.findTutorById(id);
+    if (!tutor) throw new AppError(404, "TUTOR_ASSIGNMENT_NOT_FOUND");
     return this.repo.updateTutor(id, dto);
   }
 }
