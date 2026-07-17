@@ -1,6 +1,19 @@
 import { TrainingRepository } from "./training.repo";
 import { AppError } from "../lib/appError";
 import { CreateSessionDto, AddContentDto, AddParticipantsDto, UpsertResultDto, SessionListQuery } from "./dto/training.dto";
+import { NotificationService } from "../notification/notification.service";
+import { NotificationRepository } from "../notification/notification.repo";
+import { getPrisma } from "../lib/prisma";
+
+const notificationService = new NotificationService(new NotificationRepository(getPrisma()));
+
+export function calcEffectiveAbsences(absences: number, lateCount: number): number {
+  return absences + Math.floor(lateCount / 3);
+}
+
+export function shouldTriggerPenalty(effectiveAbsences: number): boolean {
+  return effectiveAbsences > 0 && effectiveAbsences % 3 === 0;
+}
 
 export class TrainingService {
   constructor(private repo: TrainingRepository) {}
@@ -42,7 +55,21 @@ export class TrainingService {
     const session = await this.repo.findById(sessionId);
     if (!session) throw new AppError(404, "SESSION_NOT_FOUND");
     const existing = await this.repo.findResult(sessionId, dto.playerId);
-    if (existing) return this.repo.updateResult(existing.id, dto);
-    return this.repo.createResult(sessionId, dto);
+    const result = existing
+      ? await this.repo.updateResult(existing.id, dto)
+      : await this.repo.createResult(sessionId, dto);
+
+    if (dto.attendance === "ABSENT_UNAUTHORIZED" || dto.attendance === "LATE_UNAUTHORIZED") {
+      const { absences, lateCount } = await this.repo.countUnexcusedAttendance(dto.playerId);
+      const effective = calcEffectiveAbsences(absences, lateCount);
+      if (shouldTriggerPenalty(effective)) {
+        const player = await this.repo.findPlayerNameById(dto.playerId);
+        if (player) {
+          void notificationService.notifyAttendancePenalty(player.playerName, effective).catch(console.error);
+        }
+      }
+    }
+
+    return result;
   }
 }
