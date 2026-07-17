@@ -140,11 +140,20 @@ export class CoachRepository {
   async updateStatus(id: number, dto: TransitionCoachStatusDto) {
     const coach = await this.prisma.coach.findUnique({
       where: { id },
-      select: { status: true, hiringRound: { select: { createdById: true } } },
+      select: { status: true, coachingRole: true, hiringRound: { select: { createdById: true } } },
     });
     if (!coach) throw new AppError(404, "COACH_NOT_FOUND");
     const allowed = VALID_TRANSITIONS[coach.status];
     if (!allowed.includes(dto.status)) throw new AppError(409, "INVALID_STATUS_TRANSITION");
+
+    if (dto.status === "CONTRACTED") {
+      const duplicate = await this.prisma.coach.findFirst({
+        where: { coachingRole: coach.coachingRole, status: "CONTRACTED", isDeleted: false, id: { not: id } },
+        select: { id: true },
+      });
+      if (duplicate) throw new AppError(409, "COACHING_ROLE_ALREADY_FILLED");
+    }
+
     return {
       coach: await this.prisma.coach.update({
         where: { id },

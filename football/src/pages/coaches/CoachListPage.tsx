@@ -150,7 +150,11 @@ export function CoachListPage() {
       toast.success(`'${COACH_STATUS_LABEL[status]}'로 변경됐습니다.`)
       void fetchCoaches()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '변경에 실패했습니다.')
+      const code = err instanceof Error ? err.message : ''
+      const msg =
+        code === 'COACHING_ROLE_ALREADY_FILLED' ? `해당 역할(${COACHING_ROLE_LABEL[coach.coachingRole]})의 코치가 이미 재직 중입니다.` :
+        code || '변경에 실패했습니다.'
+      toast.error(msg)
     }
   }
 
