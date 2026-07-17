@@ -19,6 +19,21 @@ function encryptPhone(text: string) {
 async function main() {
   console.log("🌱 Seeding...");
 
+  // ── Team ─────────────────────────────────────────────
+  const firstTeam = await prisma.team.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      name: '1군',
+      type: 'FIRST_TEAM',
+      ageGroup: null,
+      isActive: true,
+      trackStats: true,
+      requiresContract: true,
+    },
+  });
+  console.log('Seeded FIRST_TEAM:', firstTeam.id);
+
   // ── Country ──────────────────────────────────────────
   const korea = await prisma.country.upsert({
     where: { id: 1 },
@@ -492,7 +507,7 @@ async function main() {
     update: {},
     create: {
       playerId: p3.id,
-      bodyPart: "우측 햄스트링",
+      bodyPart: "THIGH_BACK",
       cause: "TRAINING",
       status: "REHABILITATING",
       expectedReturnDate: new Date("2026-05-15"),
