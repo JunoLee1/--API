@@ -3,11 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { matchApi } from '@/services/match.service'
 import type { MatchDetail } from '@/types/match'
-import { COMPETITION_LABEL, COMPETITION_STYLE } from '@/types/match'
+import { COMPETITION_LABEL } from '@/types/match'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Separator } from '@/components/ui/separator'
 import {
   Dialog,
   DialogContent,
@@ -33,22 +32,35 @@ function formatDate(d: string) {
   return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
-interface StatCardProps {
+interface StatRowProps {
   label: string
-  value: string
+  homeVal: number
+  awayVal: number | null
+  homeMax?: number
+  fmt?: (v: number) => string
+  homeColor?: string
+  awayColor?: string
   sub?: string
-  accent?: boolean
 }
 
-function StatCard({ label, value, sub, accent }: StatCardProps) {
+function StatRow({ label, homeVal, awayVal, homeMax, fmt, homeColor = '#2563eb', awayColor = '#dc2626', sub }: StatRowProps) {
+  const total = awayVal != null ? homeVal + awayVal : (homeMax ?? homeVal)
+  const homePct = total > 0 ? Math.round((homeVal / total) * 100) : 50
+  const awayPct = 100 - homePct
+  const display = fmt ?? ((v: number) => String(v))
   return (
-    <div className={cn(
-      'rounded-lg border p-4 flex flex-col items-center justify-center text-center gap-1',
-      accent ? 'bg-accent/40 border-accent' : 'bg-card',
-    )}>
-      <span className="text-2xl font-bold tabular-nums tracking-tight">{value}</span>
-      {sub && <span className="text-xs text-muted-foreground tabular-nums">{sub}</span>}
-      <span className="text-xs font-medium text-muted-foreground mt-0.5">{label}</span>
+    <div className="mb-3 last:mb-0">
+      <div className="flex justify-between items-baseline mb-1">
+        <span className="text-[11px] font-bold" style={{ color: homeColor }}>{display(homeVal)}</span>
+        <span className="text-[10px] text-slate-500">{label}{sub ? ` (${sub})` : ''}</span>
+        {awayVal != null
+          ? <span className="text-[11px] font-bold" style={{ color: awayColor }}>{display(awayVal)}</span>
+          : <span className="text-[11px] text-slate-300">—</span>}
+      </div>
+      <div className="h-1.5 rounded-full overflow-hidden flex" style={{ background: '#e2e8f0' }}>
+        <div style={{ width: `${homePct}%`, background: homeColor }} />
+        {awayVal != null && <div style={{ width: `${awayPct}%`, background: awayColor }} />}
+      </div>
     </div>
   )
 }
@@ -141,6 +153,13 @@ export function MatchDetailPage() {
 
   const ts = match.teamMatchStats
 
+  const hasScore = match.homeScore != null && match.awayScore != null
+  const resultLabel = hasScore
+    ? match.homeScore! > match.awayScore! ? '승'
+      : match.homeScore! === match.awayScore! ? '무' : '패'
+    : null
+  const resultClass = resultLabel === '승' ? 'text-green-400' : resultLabel === '무' ? 'text-slate-300' : 'text-red-400'
+
   return (
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 flex items-center gap-3 shrink-0">
@@ -156,111 +175,140 @@ export function MatchDetailPage() {
       </div>
 
       <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-4xl mx-auto space-y-5">
-          {/* 경기 헤더 */}
-          <div className="rounded-lg border bg-card p-6 text-center">
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs ${COMPETITION_STYLE[match.competitionType]}`}>
+        <div className="max-w-4xl mx-auto space-y-4">
+
+          {/* 스코어 헤더 */}
+          <div
+            className="rounded-xl text-white px-5 py-6"
+            style={{ background: 'linear-gradient(135deg, #1d4ed8 0%, #7c3aed 100%)' }}
+          >
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <span className="bg-white/15 text-blue-200 rounded px-2 py-0.5 text-[10px]">
                 {COMPETITION_LABEL[match.competitionType]}
               </span>
-              <span className="text-sm text-muted-foreground">{formatDate(match.date)}</span>
+              <span className="text-blue-300 text-[10px]">{formatDate(match.date)}</span>
             </div>
-            <div className="flex items-center justify-center gap-6">
-              <span className="text-lg font-semibold">{match.homeTeamName}</span>
-              <span className="text-3xl font-mono font-bold tabular-nums">
-                {match.homeScore != null && match.awayScore != null
-                  ? `${match.homeScore} : ${match.awayScore}`
-                  : 'vs'}
-              </span>
-              <span className="text-lg font-semibold">{match.awayTeamName}</span>
+            <div className="flex items-center justify-between px-2">
+              <div className="flex-1 text-right">
+                <div className="text-base font-bold">{match.homeTeamName}</div>
+                <div className="text-[10px] text-blue-200 mt-0.5">홈</div>
+              </div>
+              <div className="mx-5 text-center bg-white/10 rounded-xl px-5 py-2.5">
+                <div className="text-[30px] font-extrabold tabular-nums leading-none tracking-wide">
+                  {hasScore ? `${match.homeScore} : ${match.awayScore}` : 'vs'}
+                </div>
+                {hasScore && resultLabel && (
+                  <div className={cn('text-[10px] font-semibold mt-1', resultClass)}>
+                    FT · {resultLabel}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 text-left">
+                <div className="text-base font-bold">{match.awayTeamName}</div>
+                <div className="text-[10px] text-blue-200 mt-0.5">원정</div>
+              </div>
             </div>
           </div>
 
-          {/* 팀 통계 인포그래픽 */}
+          {/* 팀 통계 비교 바 */}
           {ts && (
-            <div className="rounded-lg border bg-card p-5">
-              <h3 className="text-sm font-semibold mb-4">팀 통계</h3>
+            <div className="rounded-xl border bg-white p-4">
+              <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 text-center mb-3">팀 통계</div>
+              {/* 점유율: 합=100이므로 유일한 진짜 비교 바 */}
+              <StatRow
+                label="점유율"
+                homeVal={ts.possession}
+                awayVal={100 - ts.possession}
+                fmt={(v) => `${v}%`}
+              />
+              {/* 슈팅: 홈 단일값 */}
+              <StatRow
+                label="슈팅"
+                homeVal={ts.shots}
+                awayVal={null}
+                homeMax={ts.shots}
+                sub={`유효 ${ts.shotsOnTarget}회`}
+              />
+              {/* 패스 성공률: 홈 단일값 */}
+              <StatRow
+                label="패스 성공률"
+                homeVal={ts.passAccuracy}
+                awayVal={null}
+                homeMax={100}
+                fmt={(v) => `${v}%`}
+              />
+              {/* xG: 홈 단일값, 초록 바 */}
+              <StatRow
+                label="xG"
+                homeVal={ts.xG}
+                awayVal={null}
+                homeMax={Math.max(ts.xG, 3)}
+                fmt={(v) => v.toFixed(2)}
+                homeColor="#10b981"
+              />
+            </div>
+          )}
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-                <StatCard label="점유율" value={`${ts.possession}%`} accent />
-                <StatCard label="슈팅" value={String(ts.shots)} sub={`유효 ${ts.shotsOnTarget}회`} />
-                <StatCard label="패스 성공률" value={`${ts.passAccuracy}%`} sub={`총 ${ts.passes}회`} />
-                <StatCard label="xG" value={ts.xG.toFixed(2)} />
-              </div>
-
-              <Separator className="my-3" />
-
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                {[
-                  ['코너킥', String(ts.corners)],
-                  ['파울', String(ts.fouls)],
-                  ['경고', String(ts.yellowCards)],
-                  ['퇴장', String(ts.redCards)],
-                  ['오프사이드', String(ts.offsides)],
-                  ['태클', String(ts.tackles)],
-                ].map(([label, value]) => (
-                  <div key={label} className="rounded-md border bg-muted/30 px-3 py-2 text-center">
-                    <div className="text-base font-semibold tabular-nums">{value}</div>
-                    <div className="text-[11px] text-muted-foreground mt-0.5">{label}</div>
+          {/* 보조 통계 칩 (3열) */}
+          {ts && (
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                { label: '코너킥', value: ts.corners, accent: false },
+                { label: '경고', value: ts.yellowCards, accent: true },
+                { label: '파울', value: ts.fouls, accent: false },
+              ] as const).map(({ label, value, accent }) => (
+                <div key={label} className="rounded-lg border bg-white p-3 text-center">
+                  <div className={cn('text-sm font-bold tabular-nums', accent ? 'text-amber-500' : 'text-slate-900')}>
+                    {value}
                   </div>
-                ))}
-              </div>
+                  <div className="text-[9px] text-slate-400 mt-0.5">{label}</div>
+                </div>
+              ))}
             </div>
           )}
 
           {/* 선수 기록 */}
           {match.playerMatchStats.length > 0 && (
-            <div className="rounded-lg border bg-card p-5">
-              <h3 className="text-sm font-semibold mb-2">선수 기록</h3>
-              <Separator className="mb-2" />
+            <div className="rounded-xl border bg-white p-4">
+              <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-3">선수 기록</div>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full">
                   <thead>
-                    <tr className="text-left border-b">
-                      <th className="pb-2 font-medium">선수</th>
-                      <th className="pb-2 font-medium text-center w-12">득점</th>
-                      <th className="pb-2 font-medium text-center w-12">도움</th>
-                      <th className="pb-2 font-medium text-center w-12">xG</th>
-                      <th className="pb-2 font-medium text-center w-24">슈팅 (팀 기여)</th>
-                      <th className="pb-2 font-medium text-center w-16">출전(분)</th>
+                    <tr className="border-b border-slate-100">
+                      <th className="text-left pb-2 text-[9px] font-semibold text-slate-400 uppercase tracking-wide">선수</th>
+                      <th className="pb-2 text-[9px] font-semibold text-slate-400 uppercase tracking-wide text-center w-10">득점</th>
+                      <th className="pb-2 text-[9px] font-semibold text-slate-400 uppercase tracking-wide text-center w-10">도움</th>
+                      <th className="pb-2 text-[9px] font-semibold text-slate-400 uppercase tracking-wide text-center w-12">xG</th>
+                      <th className="pb-2 text-[9px] font-semibold text-slate-400 uppercase tracking-wide text-center w-14">출전</th>
                     </tr>
                   </thead>
                   <tbody>
                     {match.playerMatchStats.map((s) => {
                       const pos = s.player.position as Position
                       const zone = POSITION_ZONE[pos]
-                      const shotContrib = ts && ts.shots > 0 && s.shots != null
-                        ? Math.round((s.shots / ts.shots) * 100)
-                        : null
                       return (
-                        <tr key={s.id} className="border-b border-border/50 last:border-0">
-                          <td className="py-2 flex items-center gap-2">
+                        <tr key={s.id} className="border-b border-slate-50 last:border-0">
+                          <td className="py-1.5 flex items-center gap-1.5">
                             <span className={`inline-flex rounded border px-1 py-0.5 text-[10px] font-mono font-semibold shrink-0 ${ZONE_STYLE[zone]}`}>
                               {POSITION_ABBR[pos]}
                             </span>
-                            {s.player.playerName}
+                            <span className={cn('text-[11px]', (s.goals ?? 0) > 0 ? 'font-semibold text-slate-900' : 'text-slate-700')}>
+                              {s.player.playerName}
+                            </span>
                           </td>
-                          <td className="text-center tabular-nums">{s.goals ?? '—'}</td>
-                          <td className="text-center tabular-nums">{s.assists ?? '—'}</td>
-                          <td className="text-center tabular-nums">{s.xG != null ? s.xG.toFixed(2) : '—'}</td>
-                          <td className="text-center tabular-nums">
-                            {s.shots != null ? (
-                              <span className="inline-flex items-center gap-1">
-                                <span>{s.shots}회</span>
-                                {shotContrib != null && (
-                                  <span className={cn(
-                                    'text-[10px] px-1 py-0.5 rounded font-medium',
-                                    shotContrib >= 30
-                                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
-                                      : 'bg-muted text-muted-foreground',
-                                  )}>
-                                    {shotContrib}%
-                                  </span>
-                                )}
-                              </span>
-                            ) : '—'}
+                          <td className={cn('text-center tabular-nums text-[11px]', (s.goals ?? 0) > 0 ? 'font-bold text-slate-900' : 'text-slate-400')}>
+                            {s.goals ?? '—'}
                           </td>
-                          <td className="text-center tabular-nums">{s.minutesPlayed ?? '—'}</td>
+                          <td className={cn('text-center tabular-nums text-[11px]', (s.assists ?? 0) > 0 ? 'font-bold text-slate-900' : 'text-slate-400')}>
+                            {s.assists ?? '—'}
+                          </td>
+                          <td className={cn('text-center tabular-nums text-[11px]',
+                            s.xG != null && s.xG >= 1.5 ? 'text-emerald-600 font-semibold' : 'text-slate-400')}>
+                            {s.xG != null ? s.xG.toFixed(2) : '—'}
+                          </td>
+                          <td className="text-center tabular-nums text-[11px] text-slate-400">
+                            {s.minutesPlayed != null ? `${s.minutesPlayed}'` : '—'}
+                          </td>
                         </tr>
                       )
                     })}
@@ -269,6 +317,7 @@ export function MatchDetailPage() {
               </div>
             </div>
           )}
+
         </div>
       </div>
 
