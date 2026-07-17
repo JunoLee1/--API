@@ -44,7 +44,7 @@ function BarRow({ label, count, max }: { label: string; count: number; max: numb
     <div className="flex items-center gap-3">
       <span className="w-10 text-sm text-right shrink-0 font-medium">{label}</span>
       <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
-        <div className="bg-primary h-2 rounded-full" style={{ width: `${pct}%` }} />
+        <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${pct}%` }} />
       </div>
       <span className="w-6 text-sm text-right tabular-nums shrink-0">{count}</span>
     </div>
