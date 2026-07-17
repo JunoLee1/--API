@@ -549,6 +549,239 @@ async function main() {
     },
   });
 
+  // ── Additional Matches (2026 시즌 일정) ───────────────
+  await prisma.match.upsert({
+    where: { id: 3 },
+    update: {},
+    create: {
+      date: new Date("2026-05-03T14:00:00"),
+      homeTeamName: "FC Seoul",
+      awayTeamName: "Suwon Samsung Bluewings",
+      homeScore: 1,
+      awayScore: 1,
+      competitionType: "LEAGUE",
+      seasonId: season.id,
+    },
+  });
+
+  await prisma.match.upsert({
+    where: { id: 4 },
+    update: {},
+    create: {
+      date: new Date("2026-05-17T16:00:00"),
+      homeTeamName: "Jeonbuk Hyundai Motors",
+      awayTeamName: "FC Seoul",
+      homeScore: 2,
+      awayScore: 0,
+      competitionType: "LEAGUE",
+      seasonId: season.id,
+    },
+  });
+
+  await prisma.match.upsert({
+    where: { id: 5 },
+    update: {},
+    create: {
+      date: new Date("2026-06-07T19:00:00"),
+      homeTeamName: "FC Seoul",
+      awayTeamName: "Daegu FC",
+      homeScore: 2,
+      awayScore: 1,
+      competitionType: "LEAGUE",
+      seasonId: season.id,
+    },
+  });
+
+  await prisma.match.upsert({
+    where: { id: 6 },
+    update: {},
+    create: {
+      date: new Date("2026-06-21T19:00:00"),
+      homeTeamName: "Ulsan HD",
+      awayTeamName: "FC Seoul",
+      homeScore: 3,
+      awayScore: 1,
+      competitionType: "LEAGUE",
+      seasonId: season.id,
+    },
+  });
+
+  await prisma.match.upsert({
+    where: { id: 7 },
+    update: {},
+    create: {
+      date: new Date("2026-07-05T19:00:00"),
+      homeTeamName: "FC Seoul",
+      awayTeamName: "Pohang Steelers",
+      homeScore: 0,
+      awayScore: 0,
+      competitionType: "LEAGUE",
+      seasonId: season.id,
+    },
+  });
+
+  // FA컵
+  await prisma.match.upsert({
+    where: { id: 8 },
+    update: {},
+    create: {
+      date: new Date("2026-07-12T14:00:00"),
+      homeTeamName: "FC Seoul",
+      awayTeamName: "Gangwon FC",
+      homeScore: 3,
+      awayScore: 0,
+      competitionType: "DOMESTIC_CUP",
+      seasonId: season.id,
+    },
+  });
+
+  // 예정 경기 (스코어 없음)
+  await prisma.match.upsert({
+    where: { id: 9 },
+    update: {},
+    create: {
+      date: new Date("2026-07-26T19:00:00"),
+      homeTeamName: "Seongnam FC",
+      awayTeamName: "FC Seoul",
+      competitionType: "LEAGUE",
+      seasonId: season.id,
+    },
+  });
+
+  await prisma.match.upsert({
+    where: { id: 10 },
+    update: {},
+    create: {
+      date: new Date("2026-08-09T19:00:00"),
+      homeTeamName: "FC Seoul",
+      awayTeamName: "Gimcheon Sangmu",
+      competitionType: "LEAGUE",
+      seasonId: season.id,
+    },
+  });
+
+  await prisma.match.upsert({
+    where: { id: 11 },
+    update: {},
+    create: {
+      date: new Date("2026-08-23T16:00:00"),
+      homeTeamName: "Jeju United",
+      awayTeamName: "FC Seoul",
+      competitionType: "LEAGUE",
+      seasonId: season.id,
+    },
+  });
+
+  await prisma.match.upsert({
+    where: { id: 12 },
+    update: {},
+    create: {
+      date: new Date("2026-09-06T19:00:00"),
+      homeTeamName: "FC Seoul",
+      awayTeamName: "Jeonbuk Hyundai Motors",
+      competitionType: "LEAGUE",
+      seasonId: season.id,
+    },
+  });
+
+  // ── TeamMatchStats ────────────────────────────────────
+  // match1: FC Seoul 3-1 Busan (홈승)
+  await prisma.teamMatchStats.upsert({
+    where: { matchId: match1.id },
+    update: {},
+    create: {
+      matchId: match1.id,
+      possession: 62, shots: 14, shotsOnTarget: 6,
+      passes: 487, passAccuracy: 87,
+      fouls: 9, yellowCards: 2, redCards: 0,
+      xG: 2.8, corners: 7, offsides: 2, tackles: 18, interceptions: 11, clearances: 8,
+    },
+  });
+  // match2: Incheon 0-2 FC Seoul (원정승)
+  await prisma.teamMatchStats.upsert({
+    where: { matchId: 2 },
+    update: {},
+    create: {
+      matchId: 2,
+      possession: 58, shots: 12, shotsOnTarget: 5,
+      passes: 421, passAccuracy: 83,
+      fouls: 11, yellowCards: 1, redCards: 0,
+      xG: 2.1, corners: 5, offsides: 3, tackles: 22, interceptions: 14, clearances: 12,
+    },
+  });
+  // match3: FC Seoul 1-1 Suwon (홈무)
+  await prisma.teamMatchStats.upsert({
+    where: { matchId: 3 },
+    update: {},
+    create: {
+      matchId: 3,
+      possession: 54, shots: 10, shotsOnTarget: 4,
+      passes: 398, passAccuracy: 81,
+      fouls: 12, yellowCards: 3, redCards: 0,
+      xG: 1.4, corners: 4, offsides: 1, tackles: 16, interceptions: 9, clearances: 15,
+    },
+  });
+  // match4: Jeonbuk 2-0 FC Seoul (원정패)
+  await prisma.teamMatchStats.upsert({
+    where: { matchId: 4 },
+    update: {},
+    create: {
+      matchId: 4,
+      possession: 41, shots: 7, shotsOnTarget: 2,
+      passes: 312, passAccuracy: 76,
+      fouls: 14, yellowCards: 2, redCards: 0,
+      xG: 0.9, corners: 3, offsides: 2, tackles: 25, interceptions: 17, clearances: 22,
+    },
+  });
+  // match5: FC Seoul 2-1 Daegu (홈승)
+  await prisma.teamMatchStats.upsert({
+    where: { matchId: 5 },
+    update: {},
+    create: {
+      matchId: 5,
+      possession: 59, shots: 13, shotsOnTarget: 5,
+      passes: 443, passAccuracy: 85,
+      fouls: 10, yellowCards: 1, redCards: 0,
+      xG: 2.3, corners: 6, offsides: 1, tackles: 19, interceptions: 12, clearances: 9,
+    },
+  });
+  // match6: Ulsan 3-1 FC Seoul (원정패)
+  await prisma.teamMatchStats.upsert({
+    where: { matchId: 6 },
+    update: {},
+    create: {
+      matchId: 6,
+      possession: 38, shots: 8, shotsOnTarget: 3,
+      passes: 287, passAccuracy: 74,
+      fouls: 15, yellowCards: 3, redCards: 1,
+      xG: 1.1, corners: 3, offsides: 4, tackles: 28, interceptions: 19, clearances: 26,
+    },
+  });
+  // match7: FC Seoul 0-0 Pohang (홈무)
+  await prisma.teamMatchStats.upsert({
+    where: { matchId: 7 },
+    update: {},
+    create: {
+      matchId: 7,
+      possession: 52, shots: 9, shotsOnTarget: 2,
+      passes: 411, passAccuracy: 82,
+      fouls: 11, yellowCards: 2, redCards: 0,
+      xG: 0.7, corners: 5, offsides: 2, tackles: 20, interceptions: 13, clearances: 14,
+    },
+  });
+  // match8: FC Seoul 3-0 Gangwon FA컵 (홈승)
+  await prisma.teamMatchStats.upsert({
+    where: { matchId: 8 },
+    update: {},
+    create: {
+      matchId: 8,
+      possession: 67, shots: 16, shotsOnTarget: 8,
+      passes: 521, passAccuracy: 89,
+      fouls: 7, yellowCards: 1, redCards: 0,
+      xG: 3.2, corners: 9, offsides: 1, tackles: 14, interceptions: 8, clearances: 5,
+    },
+  });
+
   // ── TacticalAnalysis ──────────────────────────────────
   await prisma.tacticalAnalysis.upsert({
     where: { id: 1 },
@@ -572,6 +805,33 @@ async function main() {
     },
   });
 
+  await prisma.tacticalAnalysis.upsert({
+    where: { id: 2 },
+    update: {},
+    create: {
+      matchId: match1.id,
+      seasonId: season.id,
+      phase: "POST_MATCH",
+      formation: "4-2-3-1",
+      opponentAnalysis: "2선 압박 성공. 측면 전환 속도 개선 필요.",
+      createdById: coach.id,
+      status: "CONFIRMED",
+    },
+  });
+
+  await prisma.tacticalAnalysis.upsert({
+    where: { id: 3 },
+    update: {},
+    create: {
+      matchId: match2.id,
+      seasonId: season.id,
+      phase: "PRE_MATCH",
+      formation: "4-3-3",
+      opponentAnalysis: "인천은 빌드업 회피, 롱볼 의존. 세컨볼 경합 중요.",
+      createdById: coach.id,
+    },
+  });
+
   console.log("✅ Seed complete");
   console.log(`   - Countries: 2`);
   console.log(`   - Users: 14 / pw: Password1!`);
@@ -592,7 +852,7 @@ async function main() {
   console.log(`   - Season: ${season.name}`);
   console.log(`   - Players: 5`);
   console.log(`   - Contracts: 3`);
-  console.log(`   - Matches: 2`);
+  console.log(`   - Matches: 12 (7 완료 + 1 컵 + 4 예정)`);
   console.log(`   - Training session: 1`);
   console.log(`   - Injury: 1`);
   console.log(`   - Tactical analysis: 1`);

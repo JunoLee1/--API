@@ -464,7 +464,7 @@ export function MatchDetailPage() {
 
   const ts = match.teamMatchStats
 
-  const OUR_TEAM = '우리팀'
+  const OUR_TEAM = 'FC Seoul'
   const ourIsHome = match.homeTeamName === OUR_TEAM
   const ourScore = ourIsHome ? match.homeScore : match.awayScore
   const oppScore = ourIsHome ? match.awayScore : match.homeScore

@@ -16,7 +16,7 @@ import { RecentFeedCard, type FeedItem } from '@/components/dashboard/RecentFeed
 import { RankingCard } from '@/components/dashboard/RankingCard'
 import { MedicalSection } from '@/components/dashboard/MedicalSection'
 
-const OUR_TEAM_NAME = '우리팀'
+const OUR_TEAM_NAME = 'FC Seoul'
 
 function toScheduleItems(matches: Match[]): ScheduleItem[] {
   const now = new Date()
