@@ -45,7 +45,8 @@ export function MedicalExpensesPage() {
   const [reportContent, setReportContent] = useState('')
   const [reportSaving, setReportSaving] = useState(false)
 
-  const isMedical = user?.role === 'COACHING_STAFF' && user?.coachingRole === 'MEDICAL'
+  const isMedical =
+    user?.coachingRole === 'MEDICAL' || user?.coachingRole === 'MEDICAL_DIRECTOR'
 
   const resetReportForm = () => { setReportTitle(''); setReportContent('') }
 

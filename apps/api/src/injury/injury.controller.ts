@@ -89,4 +89,30 @@ export class InjuryController {
       );
     } catch (err) { next(err); }
   };
+
+  getAssessment = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await this.service.getAssessment(Number(req.params["id"]));
+      res.status(200).json(data);
+    } catch (err) { next(err); }
+  };
+
+  processAssessment = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!MEDICAL_ROLES.includes(req.user!.role as MedicalRole)) throw new AppError(403, "FORBIDDEN");
+      const result = await this.service.processAssessment(
+        Number(req.params["id"]),
+        req.body,
+        req.user!.id
+      );
+      res.status(200).json(result);
+    } catch (err) { next(err); }
+  };
+
+  getExternalReports = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await this.service.getExternalReports(Number(req.params["id"]));
+      res.status(200).json(data);
+    } catch (err) { next(err); }
+  };
 }

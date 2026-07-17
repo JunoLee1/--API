@@ -22,4 +22,11 @@ router.put("/:id/report", auth, controller.saveReport);
 router.post("/:id/report/sign", auth, controller.signReport);
 router.delete("/:id/report/sign", auth, controller.unsignReport);
 
+// Assessment
+router.get("/:id/assessment", auth, controller.getAssessment);
+router.put("/:id/assessment", auth, controller.processAssessment);
+
+// External Reports
+router.get("/:id/external-reports", auth, controller.getExternalReports);
+
 export default router;

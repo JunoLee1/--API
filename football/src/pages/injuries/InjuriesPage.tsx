@@ -3,12 +3,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { injuryApi } from '@/services/injury.service'
 import { partnerApi } from '@/services/partner.service'
-import type { Injury, InjuryStatus, InjuryCause, HospitalType } from '@/types/injury'
+import type { Injury, InjuryStatus, InjuryCause, HospitalType, BodyPart } from '@/types/injury'
 import type { Partner } from '@/types/partner'
 import {
   CAUSE_LABEL,
   INJURY_STATUS_LABEL,
   INJURY_STATUS_STYLE,
+  BODY_PARTS,
+  BODY_PART_LABEL,
 } from '@/types/injury'
 import { usePlayers } from '@/hooks/usePlayers'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
@@ -62,7 +64,7 @@ const HOSPITAL_TYPE_LABEL: Record<HospitalType, string> = {
 }
 
 function CreateInjuryDialog({ open, onOpenChange, playerId, onSaved }: CreateInjuryDialogProps) {
-  const [bodyPart, setBodyPart] = useState('')
+  const [bodyPart, setBodyPart] = useState<BodyPart | ''>('')
   const [cause, setCause] = useState<InjuryCause>('TRAINING')
   const [expectedReturn, setExpectedReturn] = useState('')
   const [hospitalType, setHospitalType] = useState<HospitalType | ''>('')
@@ -76,14 +78,14 @@ function CreateInjuryDialog({ open, onOpenChange, playerId, onSaved }: CreateInj
   }, [open])
 
   const handleSave = async () => {
-    if (!bodyPart.trim()) { toast.error('부상 부위를 입력해주세요.'); return }
+    if (!bodyPart) { toast.error('부상 부위를 선택해주세요.'); return }
     if (hospitalType === 'ACCREDITED' && !hospitalId) { toast.error('협진 병원을 선택해주세요.'); return }
     if (hospitalType === 'GENERAL' && !customHospitalName.trim()) { toast.error('병원명을 입력해주세요.'); return }
     setSaving(true)
     try {
       await injuryApi.create({
         playerId,
-        bodyPart: bodyPart.trim(),
+        bodyPart: bodyPart as BodyPart,
         cause,
         ...(expectedReturn && { expectedReturnDate: expectedReturn }),
         ...(hospitalType && { hospitalType }),
@@ -106,7 +108,14 @@ function CreateInjuryDialog({ open, onOpenChange, playerId, onSaved }: CreateInj
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
             <Label>부상 부위 *</Label>
-            <Input placeholder="예: 왼쪽 무릎" value={bodyPart} onChange={(e) => setBodyPart(e.target.value)} />
+            <Select value={bodyPart} onValueChange={(v) => setBodyPart(v as BodyPart)}>
+              <SelectTrigger><SelectValue placeholder="부상 부위 선택" /></SelectTrigger>
+              <SelectContent>
+                {BODY_PARTS.map((bp) => (
+                  <SelectItem key={bp} value={bp}>{BODY_PART_LABEL[bp]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1.5">
             <Label>원인 *</Label>
@@ -257,7 +266,7 @@ export function InjuriesPage() {
             <TableBody>
               {injuries.map((inj) => (
                 <TableRow key={inj.id} className="cursor-pointer" onClick={() => navigate(`/injuries/${inj.id}`)}>
-                  <TableCell className="font-medium">{inj.bodyPart}</TableCell>
+                  <TableCell className="font-medium">{BODY_PART_LABEL[inj.bodyPart] ?? inj.bodyPart}</TableCell>
                   <TableCell>{CAUSE_LABEL[inj.cause]}</TableCell>
                   <TableCell className="tabular-nums">{formatDate(inj.occurredAt)}</TableCell>
                   <TableCell className="tabular-nums">

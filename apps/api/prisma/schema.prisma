@@ -119,6 +119,19 @@ enum RecallStatus {
   REJECTED
 }
 
+enum BodyPart {
+  HEAD_FACE
+  NECK_SHOULDER
+  TORSO_BACK
+  THIGH_FRONT
+  THIGH_BACK
+  KNEE
+  SHIN_CALF
+  ANKLE
+  FOOT_TOE
+  OTHER
+}
+
 enum InjuryCause {
   TRAINING
   MATCH
@@ -320,6 +333,7 @@ model User {
   coachSignedReports    InjuryReport[] @relation("InjuryReportCoachSigner")
   trainerSignedReports  InjuryReport[] @relation("InjuryReportTrainerSigner")
   medicalSignedReports  InjuryReport[] @relation("InjuryReportMedicalSigner")
+  assessedInjuries      InjuryAssessment[]
 }
 
 model Season {
@@ -498,7 +512,7 @@ model EquipmentLoan {
 
 model Injury {
   id                 Int          @id @default(autoincrement())
-  bodyPart           String
+  bodyPart           BodyPart
   cause              InjuryCause
   expectedReturnDate DateTime?
   status             InjuryStatus @default(OCCURRED)
@@ -514,6 +528,60 @@ model Injury {
   partner         Partner?       @relation(fields: [partnerId], references: [id])
   medicalExpenses MedicalExpense[]
   injuryReport    InjuryReport?
+  assessment      InjuryAssessment?
+  externalReports ExternalReport[]
+}
+
+model InjuryAssessment {
+  id                Int      @id @default(autoincrement())
+  injuryId          Int      @unique
+  painLevel         Int
+  hasSwelling       Boolean  @default(false)
+  romScore          Int
+  strengthScore     Int
+  sprintScore       Int
+  jumpScore         Int
+  psychScore        Int
+  positionRiskScore Int
+  medicalScore      Float
+  functionalScore   Float
+  modifierScore     Float
+  totalScore        Float
+  assessedAt        DateTime @default(now())
+  assessedById      Int
+
+  injury     Injury @relation(fields: [injuryId], references: [id], onDelete: Cascade)
+  assessedBy User   @relation(fields: [assessedById], references: [id])
+}
+
+enum ExternalReportTarget {
+  EDUCATION_OFFICE
+  SCHOOL_SAFETY
+  LEAGUE
+  FEDERATION
+  INSURANCE
+}
+
+enum ExternalReportStatus {
+  PENDING_SUBMISSION
+  SUBMITTED
+  SUPPLEMENT_REQUESTED
+  COMPLETED
+}
+
+model ExternalReport {
+  id         Int                  @id @default(autoincrement())
+  injuryId   Int
+  target     ExternalReportTarget
+  status     ExternalReportStatus @default(PENDING_SUBMISSION)
+  reportData Json
+  dueDate    DateTime?
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+
+  injury Injury @relation(fields: [injuryId], references: [id], onDelete: Cascade)
+
+  @@unique([injuryId, target])
 }
 
 model Match {
