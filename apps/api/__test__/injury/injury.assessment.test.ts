@@ -65,6 +65,18 @@ describe("InjuryController - processAssessment", () => {
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(mockResult);
   });
+
+  test("FRONT_OFFICE → 403", async () => {
+    const req = mockReq({
+      user: { id: 3, role: "FRONT_OFFICE", coachingRole: null, frontOfficeRole: "FINANCE" },
+      params: { id: "5" },
+      body: {},
+    });
+    const res = mockRes();
+    await controller.processAssessment(req, res, mockNext);
+    expect(mockService.processAssessment).not.toHaveBeenCalled();
+    expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403 }));
+  });
 });
 
 describe("InjuryController - getExternalReports", () => {
