@@ -2,12 +2,18 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { injuryApi } from '@/services/injury.service'
-import type { InjuryDetail, InjuryReport, RehabStage, RiskLevel, SecurityLevel } from '@/types/injury'
+import type {
+  InjuryDetail, InjuryReport, RehabStage, RiskLevel, SecurityLevel,
+  InjuryAssessment, ExternalReport,
+} from '@/types/injury'
 import {
   INJURY_STATUS_LABEL, INJURY_STATUS_STYLE,
-  CAUSE_LABEL,
+  CAUSE_LABEL, BODY_PART_LABEL,
   REHAB_STAGE_LABEL, RISK_LEVEL_LABEL, RISK_LEVEL_STYLE, SECURITY_LEVEL_LABEL,
+  EXTERNAL_REPORT_TARGET_LABEL, EXTERNAL_REPORT_STATUS_LABEL, EXTERNAL_REPORT_STATUS_STYLE,
+  type BodyPart,
 } from '@/types/injury'
+import { AssessmentForm } from '@/components/injury/AssessmentForm'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,6 +30,41 @@ const REHAB_STAGES: RehabStage[] = ['INITIAL_TREATMENT', 'ACUTE_TREATMENT', 'REH
 const RISK_LEVELS: RiskLevel[] = ['LOW', 'MEDIUM', 'HIGH']
 const SECURITY_LEVELS: SecurityLevel[] = ['INTERNAL', 'MEDICAL', 'PRIVATE']
 
+const STATUS_STEPS: InjuryDetail['status'][] = [
+  'OCCURRED', 'DIAGNOSED', 'REHABILITATING', 'READY_TO_RETURN', 'RETURNED',
+]
+
+function StatusTimeline({ current }: { current: InjuryDetail['status'] }) {
+  const currentIdx = STATUS_STEPS.indexOf(current)
+  return (
+    <div className="flex items-center gap-0 w-full">
+      {STATUS_STEPS.map((step, idx) => {
+        const done = idx < currentIdx
+        const active = idx === currentIdx
+        return (
+          <div key={step} className="flex items-center flex-1 last:flex-none">
+            <div className="flex flex-col items-center">
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 ${
+                active ? 'bg-primary border-primary text-primary-foreground' :
+                done ? 'bg-primary/20 border-primary text-primary' :
+                'bg-muted border-muted-foreground/30 text-muted-foreground'
+              }`}>
+                {done ? '✓' : idx + 1}
+              </div>
+              <span className={`text-[10px] mt-1 text-center whitespace-nowrap ${active ? 'font-semibold text-primary' : 'text-muted-foreground'}`}>
+                {INJURY_STATUS_LABEL[step]}
+              </span>
+            </div>
+            {idx < STATUS_STEPS.length - 1 && (
+              <div className={`flex-1 h-0.5 mx-1 mb-4 ${done ? 'bg-primary' : 'bg-muted-foreground/20'}`} />
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export function InjuryDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -34,6 +75,8 @@ export function InjuryDetailPage() {
 
   const [report, setReport] = useState<InjuryReport | null>(null)
   const [signing, setSigning] = useState(false)
+  const [assessment, setAssessment] = useState<InjuryAssessment | null>(null)
+  const [externalReports, setExternalReports] = useState<ExternalReport[]>([])
 
   const [diagnosisName, setDiagnosisName] = useState('')
   const [treatmentContent, setTreatmentContent] = useState('')
@@ -63,10 +106,14 @@ export function InjuryDetailPage() {
     Promise.all([
       injuryApi.get(Number(id)),
       injuryApi.getReport(Number(id)),
+      injuryApi.getAssessment(Number(id)),
+      injuryApi.getExternalReports(Number(id)),
     ])
-      .then(([inj, r]) => {
+      .then(([inj, r, assess, reports]) => {
         setInjury(inj)
         if (r) { fillForm(r); setReport(r) }
+        setAssessment(assess)
+        setExternalReports(reports)
       })
       .catch(() => { toast.error('불러오지 못했습니다.'); navigate('/injuries') })
       .finally(() => setLoading(false))
@@ -167,7 +214,7 @@ export function InjuryDetailPage() {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground text-xs mb-0.5">부상 부위</p>
-                <p className="font-medium">{injury.bodyPart}</p>
+                <p className="font-medium">{BODY_PART_LABEL[injury.bodyPart as BodyPart] ?? injury.bodyPart}</p>
               </div>
               <div>
                 <p className="text-muted-foreground text-xs mb-0.5">발생 원인</p>
@@ -318,6 +365,53 @@ export function InjuryDetailPage() {
               </div>
             </div>
           </div>
+          {/* 상태 타임라인 */}
+          {injury && (
+            <section className="border rounded-lg p-5">
+              <h2 className="text-sm font-semibold mb-4">부상 진행 상태</h2>
+              <StatusTimeline current={injury.status} />
+            </section>
+          )}
+
+          {/* 가중치 평가 */}
+          {isMedical && injury && (
+            <section className="border rounded-lg p-5">
+              <h2 className="text-sm font-semibold mb-1">가중치 평가 (RTP)</h2>
+              <p className="text-xs text-muted-foreground mb-4">
+                Medical 40% · Functional 40% · Modifier 20% — 80점 이상 시 외부 의무보고서 자동 생성
+              </p>
+              <AssessmentForm
+                injuryId={injury.id}
+                initial={assessment}
+                onSaved={({ assessment: a, triggeredReports }) => {
+                  setAssessment(a)
+                  if (triggeredReports) {
+                    injuryApi.getExternalReports(injury.id).then(setExternalReports)
+                  }
+                }}
+              />
+            </section>
+          )}
+
+          {/* 외부 의무보고서 */}
+          {externalReports.length > 0 && (
+            <section className="border rounded-lg p-5">
+              <h2 className="text-sm font-semibold mb-3">외부 의무보고서</h2>
+              <div className="space-y-2">
+                {externalReports.map((r) => (
+                  <div key={r.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                    <span className="text-sm font-medium">
+                      {EXTERNAL_REPORT_TARGET_LABEL[r.target]}
+                    </span>
+                    <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs ${EXTERNAL_REPORT_STATUS_STYLE[r.status]}`}>
+                      {EXTERNAL_REPORT_STATUS_LABEL[r.status]}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           {report && (
             <div>
               <h2 className="text-sm font-semibold mb-3">복귀 계획 조율</h2>
