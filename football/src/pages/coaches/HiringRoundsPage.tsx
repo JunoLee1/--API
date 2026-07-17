@@ -74,7 +74,11 @@ function CreateRoundDialog({ open, onOpenChange, onSaved }: CreateRoundDialogPro
           <div className="space-y-1.5">
             <Label>채용 대상 역할 *</Label>
             <Select value={targetRole} onValueChange={(v) => setTargetRole(v as CoachingRole)}>
-              <SelectTrigger><SelectValue placeholder="역할 선택" /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder="역할 선택">
+                  {(value: string | null) => value ? COACHING_ROLE_LABEL[value as CoachingRole] : null}
+                </SelectValue>
+              </SelectTrigger>
               <SelectContent>
                 {ALL_ROLES.map((r) => <SelectItem key={r} value={r}>{COACHING_ROLE_LABEL[r]}</SelectItem>)}
               </SelectContent>
@@ -91,6 +95,7 @@ function CreateRoundDialog({ open, onOpenChange, onSaved }: CreateRoundDialogPro
           <div className="space-y-1.5">
             <Label>예산 (원)</Label>
             <Input type="number" placeholder="예: 300000000" value={budget} onChange={(e) => setBudget(e.target.value)} />
+            {budget && <p className="text-xs text-muted-foreground mt-0.5">{Number(budget).toLocaleString('ko-KR')}원</p>}
           </div>
           <div className="space-y-1.5">
             <Label>메모</Label>
