@@ -1,4 +1,5 @@
 import { PrismaClient } from "../generated/client";
+import { ExternalReportTarget } from "../generated/enums";
 import { CreateInjuryDto, UpdateInjuryStatusDto, UpsertInjuryReportDto } from "./dto/injury.dto";
 
 const n = <T>(v: T | undefined): T | null => v ?? null;
@@ -62,7 +63,7 @@ export class InjuryRepository {
       where: { id },
       select: {
         ...INJURY_SELECT,
-        player: { select: { playerName: true, position: true } },
+        player: { select: { playerName: true, position: true, level: true } },
         medicalStaff: { select: { username: true } },
       },
     });
@@ -178,5 +179,37 @@ export class InjuryRepository {
       byCause: Object.fromEntries(byCause.map((b) => [b.cause, b._count.id])),
       avgRecoveryDays,
     };
+  }
+
+  getAssessment(injuryId: number) {
+    return this.prisma.injuryAssessment.findUnique({ where: { injuryId } });
+  }
+
+  upsertAssessment(
+    injuryId: number,
+    scores: {
+      painLevel: number; hasSwelling: boolean; romScore: number;
+      strengthScore: number; sprintScore: number; jumpScore: number;
+      psychScore: number; positionRiskScore: number;
+      medicalScore: number; functionalScore: number; modifierScore: number; totalScore: number;
+    },
+    assessedById: number
+  ) {
+    return this.prisma.injuryAssessment.upsert({
+      where: { injuryId },
+      create: { injuryId, assessedById, ...scores },
+      update: { assessedById, assessedAt: new Date(), ...scores },
+    });
+  }
+
+  async createExternalReports(injuryId: number, targets: ExternalReportTarget[], reportData: object) {
+    await this.prisma.externalReport.createMany({
+      data: targets.map((target) => ({ injuryId, target, reportData })),
+      skipDuplicates: true,
+    });
+  }
+
+  getExternalReports(injuryId: number) {
+    return this.prisma.externalReport.findMany({ where: { injuryId }, orderBy: { createdAt: "asc" } });
   }
 }

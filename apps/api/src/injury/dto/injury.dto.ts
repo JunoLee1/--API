@@ -1,8 +1,8 @@
-import { InjuryCause, InjuryStatus, HospitalType, RehabStage, RiskLevel, SecurityLevel } from "../../generated/enums";
+import { InjuryCause, InjuryStatus, HospitalType, RehabStage, RiskLevel, SecurityLevel, BodyPart } from "../../generated/enums";
 
 export interface CreateInjuryDto {
   playerId: string;
-  bodyPart: string;
+  bodyPart: BodyPart;
   cause: InjuryCause;
   expectedReturnDate?: string;
   medicalStaffId: number;
@@ -25,4 +25,15 @@ export interface UpsertInjuryReportDto {
   reinjuryRisk?: RiskLevel;
   medicalOpinion?: string;
   securityLevel?: SecurityLevel;
+}
+
+export interface UpsertAssessmentDto {
+  painLevel: number;
+  hasSwelling: boolean;
+  romScore: number;
+  strengthScore: number;
+  sprintScore: number;
+  jumpScore: number;
+  psychScore: number;
+  positionRiskScore: number;
 }
