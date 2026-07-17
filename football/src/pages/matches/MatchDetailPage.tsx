@@ -17,8 +17,16 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ArrowLeft, Pencil } from 'lucide-react'
+import { playerApi } from '@/services/player.service'
 import { POSITION_ABBR, POSITION_ZONE } from '@/types/player'
-import type { Position } from '@/types/player'
+import type { Player, Position } from '@/types/player'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 
 const ZONE_STYLE: Record<string, string> = {
@@ -194,6 +202,177 @@ function TeamStatsDialog({ open, onOpenChange, match, onSaved }: TeamStatsDialog
   )
 }
 
+type PlayerStatsForm = {
+  playerId: string
+  minutesPlayed: string
+  goals: string
+  assists: string
+  xG: string
+  xA: string
+  shots: string
+  passAccuracy: string
+  keyPasses: string
+  tackles: string
+  interceptions: string
+  clearances: string
+  saves: string
+  cleanSheet: boolean
+}
+
+const PLAYER_STAT_FIELDS: { key: keyof Omit<PlayerStatsForm, 'playerId' | 'cleanSheet'>; label: string; float?: boolean }[] = [
+  { key: 'minutesPlayed', label: '출전(분)' },
+  { key: 'goals', label: '득점' },
+  { key: 'assists', label: '도움' },
+  { key: 'xG', label: 'xG', float: true },
+  { key: 'xA', label: 'xA', float: true },
+  { key: 'shots', label: '슈팅' },
+  { key: 'passAccuracy', label: '패스 성공률(%)', float: true },
+  { key: 'keyPasses', label: '키패스' },
+  { key: 'tackles', label: '태클' },
+  { key: 'interceptions', label: '인터셉트' },
+  { key: 'clearances', label: '클리어링' },
+  { key: 'saves', label: '선방' },
+]
+
+const EMPTY_PLAYER_FORM: PlayerStatsForm = {
+  playerId: '', minutesPlayed: '', goals: '', assists: '', xG: '', xA: '',
+  shots: '', passAccuracy: '', keyPasses: '', tackles: '', interceptions: '',
+  clearances: '', saves: '', cleanSheet: false,
+}
+
+interface PlayerStatsDialogProps {
+  open: boolean
+  onOpenChange: (v: boolean) => void
+  match: MatchDetail
+  onSaved: () => void
+}
+
+function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDialogProps) {
+  const [players, setPlayers] = useState<Player[]>([])
+  const [form, setForm] = useState<PlayerStatsForm>(EMPTY_PLAYER_FORM)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (open) {
+      playerApi.list({ status: 'ACTIVE' }).then(setPlayers).catch(() => null)
+      setForm(EMPTY_PLAYER_FORM)
+    }
+  }, [open])
+
+  // 선수 선택 시 기존 기록 자동 채움
+  const handlePlayerChange = (playerId: string) => {
+    const existing = match.playerMatchStats.find((s) => s.playerId === playerId)
+    if (existing) {
+      setForm({
+        playerId,
+        minutesPlayed: existing.minutesPlayed != null ? String(existing.minutesPlayed) : '',
+        goals: existing.goals != null ? String(existing.goals) : '',
+        assists: existing.assists != null ? String(existing.assists) : '',
+        xG: existing.xG != null ? String(existing.xG) : '',
+        xA: existing.xA != null ? String(existing.xA) : '',
+        shots: existing.shots != null ? String(existing.shots) : '',
+        passAccuracy: existing.passAccuracy != null ? String(existing.passAccuracy) : '',
+        keyPasses: existing.keyPasses != null ? String(existing.keyPasses) : '',
+        tackles: existing.tackles != null ? String(existing.tackles) : '',
+        interceptions: existing.interceptions != null ? String(existing.interceptions) : '',
+        clearances: existing.clearances != null ? String(existing.clearances) : '',
+        saves: existing.saves != null ? String(existing.saves) : '',
+        cleanSheet: existing.cleanSheet ?? false,
+      })
+    } else {
+      setForm({ ...EMPTY_PLAYER_FORM, playerId })
+    }
+  }
+
+  const setField = (key: keyof Omit<PlayerStatsForm, 'playerId' | 'cleanSheet'>) =>
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      setForm((prev) => ({ ...prev, [key]: e.target.value }))
+
+  const num = (v: string) => v !== '' ? Number(v) : undefined
+
+  const handleSave = async () => {
+    if (!form.playerId) { toast.error('선수를 선택해주세요.'); return }
+    setSaving(true)
+    try {
+      await matchApi.upsertPlayerStats(match.id, {
+        playerId: form.playerId,
+        minutesPlayed: num(form.minutesPlayed),
+        goals: num(form.goals),
+        assists: num(form.assists),
+        xG: num(form.xG),
+        xA: num(form.xA),
+        shots: num(form.shots),
+        passAccuracy: num(form.passAccuracy),
+        keyPasses: num(form.keyPasses),
+        tackles: num(form.tackles),
+        interceptions: num(form.interceptions),
+        clearances: num(form.clearances),
+        saves: num(form.saves),
+        cleanSheet: form.cleanSheet || undefined,
+      })
+      toast.success('선수 기록이 저장됐습니다.')
+      onSaved()
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader><DialogTitle>선수 기록 입력</DialogTitle></DialogHeader>
+        <div className="space-y-3 py-1 max-h-[65vh] overflow-y-auto pr-1">
+          <div className="space-y-1">
+            <Label className="text-xs">선수</Label>
+            <Select value={form.playerId} onValueChange={handlePlayerChange}>
+              <SelectTrigger className="h-8 text-sm">
+                <SelectValue placeholder="선수 선택..." />
+              </SelectTrigger>
+              <SelectContent>
+                {players.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.playerName}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+            {PLAYER_STAT_FIELDS.map(({ key, label, float: isFloat }) => (
+              <div key={key} className="space-y-1">
+                <Label className="text-xs">{label}</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  step={isFloat ? '0.01' : '1'}
+                  value={form[key]}
+                  onChange={setField(key)}
+                  placeholder="—"
+                  className="h-8 text-sm"
+                />
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 pt-1">
+            <input
+              id="cleanSheet"
+              type="checkbox"
+              checked={form.cleanSheet}
+              onChange={(e) => setForm((prev) => ({ ...prev, cleanSheet: e.target.checked }))}
+              className="rounded border-border"
+            />
+            <Label htmlFor="cleanSheet" className="text-xs cursor-pointer">클린시트</Label>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>
+          <Button onClick={handleSave} disabled={saving}>{saving ? '저장 중...' : '저장'}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 interface ScoreDialogProps {
   open: boolean
   onOpenChange: (v: boolean) => void
@@ -253,6 +432,7 @@ export function MatchDetailPage() {
   const [loading, setLoading] = useState(true)
   const [scoreOpen, setScoreOpen] = useState(false)
   const [teamStatsOpen, setTeamStatsOpen] = useState(false)
+  const [playerStatsOpen, setPlayerStatsOpen] = useState(false)
 
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
   const canInputStats = canWrite || user?.role === 'COACHING_STAFF'
@@ -299,9 +479,14 @@ export function MatchDetailPage() {
         </Button>
         <div className="flex-1" />
         {canInputStats && (
-          <Button variant="outline" size="sm" onClick={() => setTeamStatsOpen(true)}>
-            <Pencil className="h-3.5 w-3.5 mr-1.5" />팀 통계 입력
-          </Button>
+          <>
+            <Button variant="outline" size="sm" onClick={() => setPlayerStatsOpen(true)}>
+              <Pencil className="h-3.5 w-3.5 mr-1.5" />선수 기록 입력
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setTeamStatsOpen(true)}>
+              <Pencil className="h-3.5 w-3.5 mr-1.5" />팀 통계 입력
+            </Button>
+          </>
         )}
         {canWrite && (
           <Button variant="outline" size="sm" onClick={() => setScoreOpen(true)}>
@@ -461,6 +646,7 @@ export function MatchDetailPage() {
         <>
           {canWrite && <ScoreDialog open={scoreOpen} onOpenChange={setScoreOpen} match={match} onSaved={() => { setScoreOpen(false); fetchMatch() }} />}
           {canInputStats && <TeamStatsDialog open={teamStatsOpen} onOpenChange={setTeamStatsOpen} match={match} onSaved={() => { setTeamStatsOpen(false); fetchMatch() }} />}
+          {canInputStats && <PlayerStatsDialog open={playerStatsOpen} onOpenChange={setPlayerStatsOpen} match={match} onSaved={() => { setPlayerStatsOpen(false); fetchMatch() }} />}
         </>
       )}
     </div>

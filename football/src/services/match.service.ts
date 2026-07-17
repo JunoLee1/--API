@@ -34,6 +34,26 @@ export const matchApi = {
     },
   ) => api.patch<Match>(`/matches/${id}`, payload),
 
+  upsertPlayerStats: (
+    id: number,
+    payload: {
+      playerId: string
+      goals?: number
+      assists?: number
+      xG?: number
+      xA?: number
+      shots?: number
+      passAccuracy?: number
+      keyPasses?: number
+      tackles?: number
+      interceptions?: number
+      clearances?: number
+      saves?: number
+      cleanSheet?: boolean
+      minutesPlayed?: number
+    },
+  ) => api.put(`/matches/${id}/player-stats`, payload),
+
   upsertTeamStats: (
     id: number,
     payload: {
