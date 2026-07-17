@@ -532,6 +532,18 @@ export function MatchDetailPage() {
                 <div className="text-[10px] text-blue-200 mt-0.5">원정</div>
               </div>
             </div>
+            {/* 득점자 */}
+            {hasScore && match.playerMatchStats.some((s) => (s.goals ?? 0) > 0) && (
+              <div className="flex justify-center gap-2 flex-wrap mt-4">
+                {match.playerMatchStats
+                  .filter((s) => (s.goals ?? 0) > 0)
+                  .map((s) => (
+                    <span key={s.id} className="text-xs bg-white/10 text-blue-100 rounded-full px-3 py-1">
+                      ⚽ {s.player.playerName}{(s.goals ?? 0) > 1 ? ` ×${s.goals}` : ''}
+                    </span>
+                  ))}
+              </div>
+            )}
           </div>
 
           {/* 팀 통계 비교 바 */}

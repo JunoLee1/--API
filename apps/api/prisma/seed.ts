@@ -489,6 +489,95 @@ async function main() {
     },
   });
 
+  // match2: Incheon 0-2 FC Seoul (원정승) — p1 2골
+  await prisma.playerMatchStats.upsert({
+    where: { id: 3 },
+    update: {},
+    create: { matchId: 2, playerId: p1.id, goals: 2, assists: 0, xG: 1.9, shots: 4, minutesPlayed: 90 },
+  });
+  await prisma.playerMatchStats.upsert({
+    where: { id: 4 },
+    update: {},
+    create: { matchId: 2, playerId: p3.id, goals: 0, assists: 2, xG: 0.4, shots: 2, minutesPlayed: 90 },
+  });
+
+  // match3: FC Seoul 1-1 Suwon — p2 1골
+  await prisma.playerMatchStats.upsert({
+    where: { id: 5 },
+    update: {},
+    create: { matchId: 3, playerId: p2.id, goals: 1, assists: 0, xG: 1.1, shots: 3, minutesPlayed: 90 },
+  });
+  await prisma.playerMatchStats.upsert({
+    where: { id: 6 },
+    update: {},
+    create: { matchId: 3, playerId: p1.id, goals: 0, assists: 1, xG: 0.6, shots: 3, minutesPlayed: 82 },
+  });
+
+  // match4: Jeonbuk 2-0 FC Seoul (원정패) — 무득점
+  await prisma.playerMatchStats.upsert({
+    where: { id: 7 },
+    update: {},
+    create: { matchId: 4, playerId: p1.id, goals: 0, assists: 0, xG: 0.5, shots: 2, minutesPlayed: 90 },
+  });
+  await prisma.playerMatchStats.upsert({
+    where: { id: 8 },
+    update: {},
+    create: { matchId: 4, playerId: p5.id, goals: 0, assists: 0, xG: 0.2, shots: 1, minutesPlayed: 90 },
+  });
+
+  // match5: FC Seoul 2-1 Daegu — p1 1골, p3 1골
+  await prisma.playerMatchStats.upsert({
+    where: { id: 9 },
+    update: {},
+    create: { matchId: 5, playerId: p1.id, goals: 1, assists: 0, xG: 1.4, shots: 4, minutesPlayed: 90 },
+  });
+  await prisma.playerMatchStats.upsert({
+    where: { id: 10 },
+    update: {},
+    create: { matchId: 5, playerId: p3.id, goals: 1, assists: 0, xG: 0.9, shots: 3, minutesPlayed: 90 },
+  });
+  await prisma.playerMatchStats.upsert({
+    where: { id: 11 },
+    update: {},
+    create: { matchId: 5, playerId: p2.id, goals: 0, assists: 2, xG: 0.3, keyPasses: 5, minutesPlayed: 90 },
+  });
+
+  // match6: Ulsan 3-1 FC Seoul (원정패) — p2 1골
+  await prisma.playerMatchStats.upsert({
+    where: { id: 12 },
+    update: {},
+    create: { matchId: 6, playerId: p2.id, goals: 1, assists: 0, xG: 0.8, shots: 2, minutesPlayed: 90 },
+  });
+  await prisma.playerMatchStats.upsert({
+    where: { id: 13 },
+    update: {},
+    create: { matchId: 6, playerId: p1.id, goals: 0, assists: 1, xG: 0.7, shots: 3, minutesPlayed: 90 },
+  });
+
+  // match7: FC Seoul 0-0 Pohang — 무득점
+  await prisma.playerMatchStats.upsert({
+    where: { id: 14 },
+    update: {},
+    create: { matchId: 7, playerId: p1.id, goals: 0, assists: 0, xG: 0.4, shots: 2, minutesPlayed: 90 },
+  });
+
+  // match8: FC Seoul 3-0 Gangwon FA컵 — p1 2골, p2 1골
+  await prisma.playerMatchStats.upsert({
+    where: { id: 15 },
+    update: {},
+    create: { matchId: 8, playerId: p1.id, goals: 2, assists: 0, xG: 2.1, shots: 5, minutesPlayed: 90 },
+  });
+  await prisma.playerMatchStats.upsert({
+    where: { id: 16 },
+    update: {},
+    create: { matchId: 8, playerId: p2.id, goals: 1, assists: 1, xG: 1.0, shots: 3, minutesPlayed: 90 },
+  });
+  await prisma.playerMatchStats.upsert({
+    where: { id: 17 },
+    update: {},
+    create: { matchId: 8, playerId: p3.id, goals: 0, assists: 2, xG: 0.5, shots: 2, minutesPlayed: 90 },
+  });
+
   // ── TrainingSession ───────────────────────────────────
   const ts1 = await prisma.trainingSession.upsert({
     where: { id: 1 },
