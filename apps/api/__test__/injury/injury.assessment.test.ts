@@ -12,6 +12,7 @@ const mockService = {
   getAssessment: jest.fn(),
   processAssessment: jest.fn(),
   getExternalReports: jest.fn(),
+  updateExternalReportStatus: jest.fn(),
 } as any;
 
 const controller = new InjuryController(mockService);
@@ -91,5 +92,46 @@ describe("InjuryController - getExternalReports", () => {
     expect(mockService.getExternalReports).toHaveBeenCalledWith(5);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(reports);
+  });
+});
+
+describe("InjuryController - updateExternalReportStatus", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test("MEDICAL → service 호출 후 200", async () => {
+    const mockReport = { id: 7, status: "SUBMITTED", submittedNote: "이메일 발송 완료", submittedAt: new Date().toISOString() };
+    mockService.updateExternalReportStatus.mockResolvedValue(mockReport);
+
+    const req = mockReq({ params: { id: "1", reportId: "7" }, body: { status: "SUBMITTED", note: "이메일 발송 완료" } });
+    const res = mockRes();
+    await controller.updateExternalReportStatus(req, res, mockNext);
+
+    expect(mockService.updateExternalReportStatus).toHaveBeenCalledWith(7, "SUBMITTED", "이메일 발송 완료");
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(mockReport);
+  });
+
+  test("FRONT_OFFICE → 403, service 미호출", async () => {
+    const req = mockReq({
+      user: { id: 3, role: "FRONT_OFFICE", coachingRole: null, frontOfficeRole: "GM" },
+      params: { id: "1", reportId: "7" },
+      body: { status: "SUBMITTED" },
+    });
+    const res = mockRes();
+    await controller.updateExternalReportStatus(req, res, mockNext);
+
+    expect(mockService.updateExternalReportStatus).not.toHaveBeenCalled();
+    expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403 }));
+  });
+
+  test("service가 AppError 404 던지면 next로 전달", async () => {
+    const { AppError } = await import("../../src/lib/appError");
+    mockService.updateExternalReportStatus.mockRejectedValue(new AppError(404, "EXTERNAL_REPORT_NOT_FOUND"));
+
+    const req = mockReq({ params: { id: "1", reportId: "999" }, body: { status: "SUBMITTED" } });
+    const res = mockRes();
+    await controller.updateExternalReportStatus(req, res, mockNext);
+
+    expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 404 }));
   });
 });

@@ -570,14 +570,16 @@ enum ExternalReportStatus {
 }
 
 model ExternalReport {
-  id         Int                  @id @default(autoincrement())
-  injuryId   Int
-  target     ExternalReportTarget
-  status     ExternalReportStatus @default(PENDING_SUBMISSION)
-  reportData Json
-  dueDate    DateTime?
-  createdAt  DateTime             @default(now())
-  updatedAt  DateTime             @updatedAt
+  id            Int                  @id @default(autoincrement())
+  injuryId      Int
+  target        ExternalReportTarget
+  status        ExternalReportStatus @default(PENDING_SUBMISSION)
+  reportData    Json
+  dueDate       DateTime?
+  submittedAt   DateTime?
+  submittedNote String?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
 
   injury Injury @relation(fields: [injuryId], references: [id], onDelete: Cascade)
 

@@ -115,4 +115,17 @@ export class InjuryController {
       res.status(200).json(data);
     } catch (err) { next(err); }
   };
+
+  updateExternalReportStatus = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!MEDICAL_ROLES.includes(req.user!.role as MedicalRole)) throw new AppError(403, "FORBIDDEN");
+      const { status, note } = req.body;
+      const result = await this.service.updateExternalReportStatus(
+        Number(req.params["reportId"]),
+        status,
+        note,
+      );
+      res.status(200).json(result);
+    } catch (err) { next(err); }
+  };
 }

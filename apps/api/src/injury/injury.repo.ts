@@ -1,5 +1,5 @@
 import { PrismaClient } from "../generated/client";
-import { ExternalReportTarget } from "../generated/enums";
+import { ExternalReportTarget, ExternalReportStatus } from "../generated/enums";
 import { CreateInjuryDto, UpdateInjuryStatusDto, UpsertInjuryReportDto } from "./dto/injury.dto";
 
 const n = <T>(v: T | undefined): T | null => v ?? null;
@@ -202,14 +202,33 @@ export class InjuryRepository {
     });
   }
 
-  async createExternalReports(injuryId: number, targets: ExternalReportTarget[], reportData: object) {
+  async createExternalReports(
+    injuryId: number,
+    targets: { target: ExternalReportTarget; dueDate: Date }[],
+    reportData: object
+  ) {
     await this.prisma.externalReport.createMany({
-      data: targets.map((target) => ({ injuryId, target, reportData })),
+      data: targets.map(({ target, dueDate }) => ({ injuryId, target, reportData, dueDate })),
       skipDuplicates: true,
     });
   }
 
   getExternalReports(injuryId: number) {
     return this.prisma.externalReport.findMany({ where: { injuryId }, orderBy: { createdAt: "asc" } });
+  }
+
+  findExternalReportById(id: number) {
+    return this.prisma.externalReport.findUnique({ where: { id } });
+  }
+
+  updateExternalReportStatus(reportId: number, status: ExternalReportStatus, note?: string) {
+    const data: { status: ExternalReportStatus; submittedAt?: Date; submittedNote?: string } = { status };
+    if (status === "SUBMITTED") {
+      data.submittedAt = new Date();
+    }
+    if (note !== undefined) {
+      data.submittedNote = note;
+    }
+    return this.prisma.externalReport.update({ where: { id: reportId }, data });
   }
 }
