@@ -304,9 +304,10 @@ export class DashboardRepository {
         where: { status: { in: ["SUBMITTED", "LEADER_APPROVED"] } },
       }),
       this.prisma.$queryRaw<{ avg_days: number | null }[]>`
-        SELECT ROUND(AVG(EXTRACT(EPOCH FROM ("updatedAt" - "occurredAt")) / 86400))::int AS avg_days
+        SELECT ROUND(AVG(EXTRACT(EPOCH FROM ("expectedReturnDate" - "occurredAt")) / 86400))::int AS avg_days
         FROM "Injury"
         WHERE status = 'RETURNED'
+          AND "expectedReturnDate" IS NOT NULL
       `,
       this.prisma.injury.groupBy({
         by: ["playerId"],
