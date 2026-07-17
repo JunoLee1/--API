@@ -65,6 +65,35 @@ function StatusTimeline({ current }: { current: InjuryDetail['status'] }) {
   )
 }
 
+function ReturnChecklist({ assessment }: { assessment: InjuryAssessment }) {
+  const avgFunctional = (assessment.strengthScore + assessment.sprintScore + assessment.jumpScore) / 3
+  const criteria: { label: string; met: boolean }[] = [
+    { label: '통증 정상화 (통증 단계 ≤ 2)', met: assessment.painLevel <= 2 },
+    { label: '부종 해소', met: !assessment.hasSwelling },
+    { label: 'ROM 80% 이상 회복', met: assessment.romScore >= 80 },
+    { label: '근력·기능 80% 이상 회복', met: avgFunctional >= 80 },
+    { label: '심리적 준비 (불안도 ≤ 30)', met: assessment.psychScore <= 30 },
+  ]
+  const metCount = criteria.filter((c) => c.met).length
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-sm font-medium">복귀 준비도</span>
+        <span className="text-xs text-muted-foreground">{metCount}/{criteria.length} 충족</span>
+      </div>
+      {criteria.map((c) => (
+        <div key={c.label} className="flex items-center gap-2">
+          <span className={`text-sm ${c.met ? 'text-green-600' : 'text-muted-foreground'}`}>
+            {c.met ? '✓' : '○'}
+          </span>
+          <span className={`text-sm ${c.met ? '' : 'text-muted-foreground'}`}>{c.label}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function InjuryDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -409,6 +438,14 @@ export function InjuryDetailPage() {
                   </div>
                 ))}
               </div>
+            </section>
+          )}
+
+          {/* 복귀 체크리스트 */}
+          {assessment && (
+            <section className="border rounded-lg p-5">
+              <h2 className="text-sm font-semibold mb-3">복귀 체크리스트 (RTP Criteria)</h2>
+              <ReturnChecklist assessment={assessment} />
             </section>
           )}
 
