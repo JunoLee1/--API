@@ -1,5 +1,5 @@
 import { api } from './api'
-import type { Injury, InjuryDetail, InjuryStatus, InjuryCause, HospitalType, InjuryReport, RehabStage, RiskLevel, SecurityLevel } from '@/types/injury'
+import type { Injury, InjuryDetail, InjuryStatus, InjuryCause, HospitalType, InjuryReport, RehabStage, RiskLevel, SecurityLevel, InjuryAssessment, ExternalReport, BodyPart } from '@/types/injury'
 
 export const injuryApi = {
   byPlayer: (playerId: string) =>
@@ -10,7 +10,7 @@ export const injuryApi = {
 
   create: (payload: {
     playerId: string
-    bodyPart: string
+    bodyPart: BodyPart
     cause: InjuryCause
     expectedReturnDate?: string
     hospitalType?: HospitalType
@@ -51,4 +51,21 @@ export const injuryApi = {
 
   unsignReport: (injuryId: number) =>
     api.delete<InjuryReport>(`/injuries/${injuryId}/report/sign`),
+
+  getAssessment: (injuryId: number) =>
+    api.get<InjuryAssessment | null>(`/injuries/${injuryId}/assessment`),
+
+  saveAssessment: (injuryId: number, dto: {
+    painLevel: number
+    hasSwelling: boolean
+    romScore: number
+    strengthScore: number
+    sprintScore: number
+    jumpScore: number
+    psychScore: number
+    positionRiskScore: number
+  }) => api.put<{ assessment: InjuryAssessment; triggeredReports: boolean }>(`/injuries/${injuryId}/assessment`, dto),
+
+  getExternalReports: (injuryId: number) =>
+    api.get<ExternalReport[]>(`/injuries/${injuryId}/external-reports`),
 }

@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { injuryApi } from '@/services/injury.service'
 import { reportApi } from '@/services/report.service'
 import { Skeleton } from '@/components/ui/skeleton'
-import { CAUSE_LABEL } from '@/types/injury'
-import type { InjuryCause } from '@/types/injury'
+import { CAUSE_LABEL, BODY_PART_LABEL } from '@/types/injury'
+import type { InjuryCause, BodyPart } from '@/types/injury'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
@@ -74,7 +74,7 @@ export function InjuryStatsPage() {
     ]
     if (bodyPartEntries.length > 0) {
       lines.push('', '### 부상 부위별')
-      bodyPartEntries.forEach(([part, count]) => lines.push(`- ${part}: ${count}건`))
+      bodyPartEntries.forEach(([part, count]) => lines.push(`- ${BODY_PART_LABEL[part as BodyPart] ?? part}: ${count}건`))
     }
     if (causeEntries.length > 0) {
       lines.push('', '### 발생 원인별')
@@ -171,7 +171,7 @@ export function InjuryStatsPage() {
                 <h2 className="text-sm font-semibold">부상 부위별</h2>
                 <div className="space-y-2">
                   {bodyPartEntries.map(([part, count]) => (
-                    <BarRow key={part} label={part} count={count} max={maxBodyPart} />
+                    <BarRow key={part} label={BODY_PART_LABEL[part as BodyPart] ?? part} count={count} max={maxBodyPart} />
                   ))}
                 </div>
               </div>
