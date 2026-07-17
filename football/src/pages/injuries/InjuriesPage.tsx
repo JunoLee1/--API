@@ -21,7 +21,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select'
 import {
   Table,
@@ -109,7 +108,9 @@ function CreateInjuryDialog({ open, onOpenChange, playerId, onSaved }: CreateInj
           <div className="space-y-1.5">
             <Label>부상 부위 *</Label>
             <Select value={bodyPart} onValueChange={(v) => setBodyPart(v as BodyPart)}>
-              <SelectTrigger><SelectValue placeholder="부상 부위 선택" /></SelectTrigger>
+              <SelectTrigger>
+                {bodyPart ? <span>{BODY_PART_LABEL[bodyPart as BodyPart]}</span> : <span className="text-muted-foreground">부상 부위 선택</span>}
+              </SelectTrigger>
               <SelectContent>
                 {BODY_PARTS.map((bp) => (
                   <SelectItem key={bp} value={bp}>{BODY_PART_LABEL[bp]}</SelectItem>
@@ -120,7 +121,7 @@ function CreateInjuryDialog({ open, onOpenChange, playerId, onSaved }: CreateInj
           <div className="space-y-1.5">
             <Label>원인 *</Label>
             <Select value={cause} onValueChange={(v) => setCause(v as InjuryCause)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger><span>{CAUSE_LABEL[cause]}</span></SelectTrigger>
               <SelectContent>
                 {CAUSES.map((c) => <SelectItem key={c} value={c}>{CAUSE_LABEL[c]}</SelectItem>)}
               </SelectContent>
@@ -133,7 +134,9 @@ function CreateInjuryDialog({ open, onOpenChange, playerId, onSaved }: CreateInj
           <div className="space-y-1.5">
             <Label>진료 병원</Label>
             <Select value={hospitalType} onValueChange={(v) => { setHospitalType(v as HospitalType | ''); setHospitalId(''); setCustomHospitalName('') }}>
-              <SelectTrigger><SelectValue placeholder="선택 안 함" /></SelectTrigger>
+              <SelectTrigger>
+                {hospitalType ? <span>{HOSPITAL_TYPE_LABEL[hospitalType as HospitalType]}</span> : <span className="text-muted-foreground">선택 안 함</span>}
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">선택 안 함</SelectItem>
                 {(['ACCREDITED', 'GENERAL'] as HospitalType[]).map((t) => (
@@ -146,7 +149,11 @@ function CreateInjuryDialog({ open, onOpenChange, playerId, onSaved }: CreateInj
             <div className="space-y-1.5">
               <Label>협진 병원 선택 *</Label>
               <Select value={hospitalId} onValueChange={setHospitalId}>
-                <SelectTrigger><SelectValue placeholder="병원 선택" /></SelectTrigger>
+                <SelectTrigger>
+                  {hospitalId
+                    ? <span>{hospitals.find((h) => String(h.id) === hospitalId)?.name ?? '병원 선택'}</span>
+                    : <span className="text-muted-foreground">병원 선택</span>}
+                </SelectTrigger>
                 <SelectContent>
                   {hospitals.map((h) => <SelectItem key={h.id} value={String(h.id)}>{h.name}</SelectItem>)}
                 </SelectContent>
@@ -284,7 +291,7 @@ export function InjuriesPage() {
                         onValueChange={(v) => handleStatusChange(inj.id, v as InjuryStatus)}
                       >
                         <SelectTrigger className="h-7 text-xs w-32">
-                          <SelectValue />
+                          <span>{INJURY_STATUS_LABEL[inj.status]}</span>
                         </SelectTrigger>
                         <SelectContent>
                           {STATUSES.map((s) => (

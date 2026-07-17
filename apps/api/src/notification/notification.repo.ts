@@ -17,23 +17,23 @@ export class NotificationRepository {
     });
   }
 
-  create(data: { userId: number; type: string; title: string; body: string }) {
+  create(data: { userId: number; type: string; title: string; body: string; entityId?: number }) {
     return this.prisma.notification.create({ data: data as any });
   }
 
-  createForStaff(type: string, title: string, body: string) {
+  createForStaff(type: string, title: string, body: string, entityId?: number) {
     return this.prisma.$transaction(async (tx) => {
       const staffUsers = await tx.user.findMany({
         where: { role: { in: ["ADMIN", "FRONT_OFFICE"] } },
         select: { id: true },
       });
       await tx.notification.createMany({
-        data: staffUsers.map((u) => ({ userId: u.id, type, title, body })) as any,
+        data: staffUsers.map((u) => ({ userId: u.id, type, title, body, entityId })) as any,
       });
     });
   }
 
-  createForGM(type: string, title: string, body: string) {
+  createForGM(type: string, title: string, body: string, entityId?: number) {
     return this.prisma.$transaction(async (tx) => {
       const gmUsers = await tx.user.findMany({
         where: { role: "FRONT_OFFICE", frontOfficeRole: "GM" },
@@ -41,12 +41,12 @@ export class NotificationRepository {
       });
       if (gmUsers.length === 0) return;
       await tx.notification.createMany({
-        data: gmUsers.map((u) => ({ userId: u.id, type, title, body })) as any,
+        data: gmUsers.map((u) => ({ userId: u.id, type, title, body, entityId })) as any,
       });
     });
   }
 
-  createForMedicalDirector(type: string, title: string, body: string) {
+  createForMedicalDirector(type: string, title: string, body: string, entityId?: number) {
     return this.prisma.$transaction(async (tx) => {
       const directors = await tx.user.findMany({
         where: { role: "COACHING_STAFF", coachingRole: "MEDICAL_DIRECTOR" },
@@ -54,12 +54,12 @@ export class NotificationRepository {
       });
       if (directors.length === 0) return;
       await tx.notification.createMany({
-        data: directors.map((u) => ({ userId: u.id, type, title, body })) as any,
+        data: directors.map((u) => ({ userId: u.id, type, title, body, entityId })) as any,
       });
     });
   }
 
-  createForAdmin(type: string, title: string, body: string) {
+  createForAdmin(type: string, title: string, body: string, entityId?: number) {
     return this.prisma.$transaction(async (tx) => {
       const admins = await tx.user.findMany({
         where: { role: "ADMIN" },
@@ -67,7 +67,7 @@ export class NotificationRepository {
       });
       if (admins.length === 0) return;
       await tx.notification.createMany({
-        data: admins.map((u) => ({ userId: u.id, type, title, body })) as any,
+        data: admins.map((u) => ({ userId: u.id, type, title, body, entityId })) as any,
       });
     });
   }

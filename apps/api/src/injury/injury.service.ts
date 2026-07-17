@@ -107,6 +107,7 @@ export class InjuryService {
           "EXTERNAL_REPORT_CREATED",
           "외부 의무보고서 생성됨",
           `부상 #${injuryId}에 대해 외부 의무보고서 ${targets.length}건이 생성됐습니다. 제출 기한을 확인하세요.`,
+          injuryId,
         );
       } catch {
         // 알림 실패는 치명적이지 않음

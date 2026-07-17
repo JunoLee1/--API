@@ -221,6 +221,14 @@ enum NotificationType {
   TRAINING_ATTENDANCE_WARNING
   EQUIPMENT_LOW_STOCK
   EXTENSION_OPTION_AVAILABLE
+  EXTERNAL_REPORT_CREATED
+  EXTERNAL_REPORT_DUE_SOON
+  EXTERNAL_REPORT_OVERDUE
+  MEDICAL_EXPENSE_SUBMITTED
+  MEDICAL_EXPENSE_LEADER_APPROVED
+  MEDICAL_EXPENSE_REJECTED
+  MEDICAL_EXPENSE_APPROVED
+  REPORT_SUBMITTED
 }
 
 enum TacticalStatus {
@@ -740,6 +748,7 @@ model Notification {
   type      NotificationType
   title     String
   body      String
+  entityId  Int?
   readAt    DateTime?
   createdAt DateTime         @default(now())
   userId    Int
