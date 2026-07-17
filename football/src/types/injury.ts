@@ -191,5 +191,7 @@ export interface ExternalReport {
   status: ExternalReportStatus
   reportData: Record<string, unknown>
   dueDate: string | null
+  submittedAt: string | null
+  submittedNote: string | null
   createdAt: string
 }

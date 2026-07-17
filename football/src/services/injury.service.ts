@@ -1,5 +1,5 @@
 import { api } from './api'
-import type { Injury, InjuryDetail, InjuryStatus, InjuryCause, HospitalType, InjuryReport, RehabStage, RiskLevel, SecurityLevel, InjuryAssessment, ExternalReport, BodyPart } from '@/types/injury'
+import type { Injury, InjuryDetail, InjuryStatus, InjuryCause, HospitalType, InjuryReport, RehabStage, RiskLevel, SecurityLevel, InjuryAssessment, ExternalReport, ExternalReportStatus, BodyPart } from '@/types/injury'
 
 export const injuryApi = {
   byPlayer: (playerId: string) =>
@@ -68,4 +68,10 @@ export const injuryApi = {
 
   getExternalReports: (injuryId: number) =>
     api.get<ExternalReport[]>(`/injuries/${injuryId}/external-reports`),
+
+  updateExternalReportStatus: (injuryId: number, reportId: number, status: ExternalReportStatus, note?: string) =>
+    api.patch<ExternalReport>(`/injuries/${injuryId}/external-reports/${reportId}/status`, {
+      status,
+      ...(note !== undefined && { note }),
+    }),
 }

@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { injuryApi } from '@/services/injury.service'
 import type {
   InjuryDetail, InjuryReport, RehabStage, RiskLevel, SecurityLevel,
-  InjuryAssessment, ExternalReport,
+  InjuryAssessment, ExternalReport, ExternalReportStatus,
 } from '@/types/injury'
 import {
   INJURY_STATUS_LABEL, INJURY_STATUS_STYLE,
@@ -90,6 +90,98 @@ function ReturnChecklist({ assessment }: { assessment: InjuryAssessment }) {
           <span className={`text-sm ${c.met ? '' : 'text-muted-foreground'}`}>{c.label}</span>
         </div>
       ))}
+    </div>
+  )
+}
+
+const ALL_EXTERNAL_STATUSES: ExternalReportStatus[] = ['PENDING_SUBMISSION', 'SUBMITTED', 'SUPPLEMENT_REQUESTED', 'COMPLETED']
+
+function ExternalReportRow({
+  report,
+  injuryId,
+  isMedical,
+  onUpdated,
+}: {
+  report: ExternalReport
+  injuryId: number
+  isMedical: boolean
+  onUpdated: (updated: ExternalReport) => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [newStatus, setNewStatus] = useState<ExternalReportStatus>(report.status)
+  const [note, setNote] = useState(report.submittedNote ?? '')
+  const [saving, setSaving] = useState(false)
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const updated = await injuryApi.updateExternalReportStatus(injuryId, report.id, newStatus, note || undefined)
+      onUpdated(updated)
+      setEditing(false)
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : '상태 변경에 실패했습니다.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="py-2 border-b last:border-0 space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="space-y-0.5">
+          <span className="text-sm font-medium">{EXTERNAL_REPORT_TARGET_LABEL[report.target]}</span>
+          {report.dueDate && (
+            <p className="text-xs text-muted-foreground">
+              마감: {new Date(report.dueDate).toLocaleDateString('ko-KR')}
+            </p>
+          )}
+          {report.submittedAt && (
+            <p className="text-xs text-muted-foreground">
+              제출: {new Date(report.submittedAt).toLocaleDateString('ko-KR')}
+              {report.submittedNote && ` · ${report.submittedNote}`}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs ${EXTERNAL_REPORT_STATUS_STYLE[report.status]}`}>
+            {EXTERNAL_REPORT_STATUS_LABEL[report.status]}
+          </span>
+          {isMedical && report.status !== 'COMPLETED' && !editing && (
+            <Button size="sm" variant="outline" onClick={() => { setNewStatus(report.status); setNote(report.submittedNote ?? ''); setEditing(true) }}>
+              변경
+            </Button>
+          )}
+        </div>
+      </div>
+      {editing && (
+        <div className="space-y-2 pt-1">
+          <Select value={newStatus} onValueChange={(v) => setNewStatus(v as ExternalReportStatus)}>
+            <SelectTrigger className="h-8 text-xs">
+              <span>{EXTERNAL_REPORT_STATUS_LABEL[newStatus]}</span>
+            </SelectTrigger>
+            <SelectContent>
+              {ALL_EXTERNAL_STATUSES.map((s) => (
+                <SelectItem key={s} value={s}>{EXTERNAL_REPORT_STATUS_LABEL[s]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Textarea
+            placeholder="비고 (선택)"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={2}
+            className="text-xs"
+          />
+          <div className="flex gap-2">
+            <Button size="sm" onClick={handleSave} disabled={saving}>
+              {saving ? '저장 중...' : '저장'}
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setEditing(false)} disabled={saving}>
+              취소
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -426,16 +518,17 @@ export function InjuryDetailPage() {
           {externalReports.length > 0 && (
             <section className="border rounded-lg p-5">
               <h2 className="text-sm font-semibold mb-3">외부 의무보고서</h2>
-              <div className="space-y-2">
+              <div>
                 {externalReports.map((r) => (
-                  <div key={r.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                    <span className="text-sm font-medium">
-                      {EXTERNAL_REPORT_TARGET_LABEL[r.target]}
-                    </span>
-                    <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs ${EXTERNAL_REPORT_STATUS_STYLE[r.status]}`}>
-                      {EXTERNAL_REPORT_STATUS_LABEL[r.status]}
-                    </span>
-                  </div>
+                  <ExternalReportRow
+                    key={r.id}
+                    report={r}
+                    injuryId={injury.id}
+                    isMedical={isMedical}
+                    onUpdated={(updated) =>
+                      setExternalReports((prev) => prev.map((x) => x.id === updated.id ? updated : x))
+                    }
+                  />
                 ))}
               </div>
             </section>
