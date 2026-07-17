@@ -72,6 +72,19 @@ export class NotificationRepository {
     });
   }
 
+  createForTD(type: string, title: string, body: string, entityId?: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const tdUsers = await tx.user.findMany({
+        where: { role: "FRONT_OFFICE", frontOfficeRole: "TD" },
+        select: { id: true },
+      });
+      if (tdUsers.length === 0) return;
+      await tx.notification.createMany({
+        data: tdUsers.map((u) => ({ userId: u.id, type, title, body, entityId })) as any,
+      });
+    });
+  }
+
   findExpiringContracts(withinDays: number) {
     const now = new Date();
     const threshold = new Date(now);
