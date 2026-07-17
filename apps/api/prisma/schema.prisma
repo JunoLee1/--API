@@ -236,6 +236,8 @@ enum NotificationType {
   COACH_HEAD_CONTRACTED
   COACH_ARCHIVED
   COACH_TUTOR_SUPPORT_NEEDED
+  TRAINING_LOAD_ALERT
+  PLAYER_DEVELOPMENT_PLAN_ACTIVATED
 }
 
 enum TacticalStatus {
@@ -328,6 +330,12 @@ enum LanguageProficiency {
 enum BonusTeamScope {
   ALL
   FIRST_TEAM_ONLY
+}
+
+enum PlayerDevelopmentPlanStatus {
+  DRAFT
+  ACTIVE
+  REVIEWED
 }
 
 // ─────────────────────────────────────────────
