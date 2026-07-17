@@ -59,6 +59,8 @@ async function main() {
   const gkPhone       = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0010") });
   const medPhone      = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0011") });
   const meddirPhone   = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0012") });
+  const gmPhone       = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0013") });
+  const tdPhone       = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0014") });
 
   const hashed = await bcrypt.hash("Password1!", 10);
 
@@ -234,6 +236,38 @@ async function main() {
       dateOfBirth: new Date("1985-03-20"),
       nationalityId: korea.id,
       phoneNumberId: foPhone.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: "gm@club.com" },
+    update: { frontOfficeRole: "GM" },
+    create: {
+      email: "gm@club.com",
+      password: hashed,
+      username: "단장",
+      nickname: "gm",
+      role: "FRONT_OFFICE",
+      frontOfficeRole: "GM",
+      dateOfBirth: new Date("1970-05-10"),
+      nationalityId: korea.id,
+      phoneNumberId: gmPhone.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: "td@club.com" },
+    update: { frontOfficeRole: "TD" },
+    create: {
+      email: "td@club.com",
+      password: hashed,
+      username: "기술이사",
+      nickname: "td",
+      role: "FRONT_OFFICE",
+      frontOfficeRole: "TD",
+      dateOfBirth: new Date("1972-09-25"),
+      nationalityId: korea.id,
+      phoneNumberId: tdPhone.id,
     },
   });
 
@@ -540,8 +574,10 @@ async function main() {
 
   console.log("✅ Seed complete");
   console.log(`   - Countries: 2`);
-  console.log(`   - Users: 12 / pw: Password1!`);
+  console.log(`   - Users: 14 / pw: Password1!`);
   console.log(`     ADMIN       : admin@club.com`);
+  console.log(`     FRONT_OFFICE: gm@club.com (GM)`);
+  console.log(`     FRONT_OFFICE: td@club.com (TD)`);
   console.log(`     FRONT_OFFICE: fo@club.com (SCOUT)`);
   console.log(`     PLAYER      : player@club.com`);
   console.log(`     HEAD_COACH  : coach@club.com`);

@@ -104,4 +104,19 @@ export class TrainingRepository {
       },
     });
   }
+
+  async countUnexcusedAttendance(playerId: string): Promise<{ absences: number; lateCount: number }> {
+    const rows = await this.prisma.trainingResult.groupBy({
+      by: ["attendance"],
+      where: { playerId, attendance: { in: ["ABSENT_UNAUTHORIZED", "LATE_UNAUTHORIZED"] } },
+      _count: { attendance: true },
+    });
+    const absences = rows.find((r) => r.attendance === "ABSENT_UNAUTHORIZED")?._count.attendance ?? 0;
+    const lateCount = rows.find((r) => r.attendance === "LATE_UNAUTHORIZED")?._count.attendance ?? 0;
+    return { absences, lateCount };
+  }
+
+  findPlayerNameById(playerId: string) {
+    return this.prisma.player.findUnique({ where: { id: playerId }, select: { playerName: true } });
+  }
 }

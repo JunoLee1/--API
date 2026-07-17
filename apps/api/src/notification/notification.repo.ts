@@ -85,6 +85,19 @@ export class NotificationRepository {
     });
   }
 
+  createForHeadCoach(type: string, title: string, body: string, entityId?: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const headCoaches = await tx.user.findMany({
+        where: { role: "COACHING_STAFF", coachingRole: "HEAD_COACH" },
+        select: { id: true },
+      });
+      if (headCoaches.length === 0) return;
+      await tx.notification.createMany({
+        data: headCoaches.map((u) => ({ userId: u.id, type, title, body, entityId })) as any,
+      });
+    });
+  }
+
   findExpiringContracts(withinDays: number) {
     const now = new Date();
     const threshold = new Date(now);
