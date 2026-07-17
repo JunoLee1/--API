@@ -89,4 +89,29 @@ export class InjuryController {
       );
     } catch (err) { next(err); }
   };
+
+  getAssessment = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await this.service.getAssessment(Number(req.params["id"]));
+      res.status(200).json(data);
+    } catch (e) { next(e); }
+  };
+
+  processAssessment = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await this.service.processAssessment(
+        Number(req.params["id"]),
+        req.body,
+        req.user!.id
+      );
+      res.status(200).json(result);
+    } catch (e) { next(e); }
+  };
+
+  getExternalReports = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await this.service.getExternalReports(Number(req.params["id"]));
+      res.status(200).json(data);
+    } catch (e) { next(e); }
+  };
 }
