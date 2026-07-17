@@ -54,6 +54,15 @@ export class NotificationService {
     await this.repo.create({ userId: roundCreatorId, type: "COACH_ARCHIVED", title, body, entityId: coachId });
   }
 
+  async notifyAttendancePenalty(playerName: string, effectiveAbsences: number) {
+    const title = "훈련 출결 페널티 발생";
+    const body = `${playerName} 선수의 누적 무단 결석이 ${effectiveAbsences}회에 도달했습니다.`;
+    await this.repo.createForHeadCoach("ATTENDANCE_PENALTY", title, body);
+    getIO().to("staff-room").emit("notification:attendance", {
+      type: "ATTENDANCE_PENALTY", title, body, createdAt: new Date().toISOString(),
+    });
+  }
+
   async getPartnerAlerts() {
     const contracts = await this.repo.findExpiringContracts(30);
     return contracts.map((c) => {
