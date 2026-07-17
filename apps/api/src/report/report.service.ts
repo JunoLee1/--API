@@ -54,6 +54,7 @@ export class ReportService {
       "REPORT_SUBMITTED",
       "새 보고서가 제출됐습니다",
       `"${report.title}" 보고서가 결재 대기 중입니다.`,
+      id,
     );
 
     return submitted;

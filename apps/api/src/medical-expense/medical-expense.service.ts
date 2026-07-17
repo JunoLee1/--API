@@ -66,6 +66,7 @@ export class MedicalExpenseService {
       "MEDICAL_EXPENSE_SUBMITTED",
       "의료비 결재 요청",
       "의료비 지출 건이 1차 결재를 기다리고 있습니다.",
+      id,
     );
 
     return submitted;
@@ -84,6 +85,7 @@ export class MedicalExpenseService {
       "MEDICAL_EXPENSE_LEADER_APPROVED",
       "의료비 최종 결재 요청",
       "1차 승인된 의료비 지출 건이 최종 결재를 기다리고 있습니다.",
+      id,
     );
 
     return approved;
@@ -104,6 +106,7 @@ export class MedicalExpenseService {
       type: "MEDICAL_EXPENSE_REJECTED",
       title: "의료비 신청 반려",
       body: "제출하신 의료비 지출 건이 반려됐습니다. 내용을 수정 후 재상신해주세요.",
+      entityId: id,
     });
 
     return rejected;
@@ -123,6 +126,7 @@ export class MedicalExpenseService {
       type: "MEDICAL_EXPENSE_APPROVED",
       title: "의료비 최종 승인",
       body: "제출하신 의료비 지출 건이 최종 승인됐습니다.",
+      entityId: id,
     });
 
     return approved;
@@ -143,6 +147,7 @@ export class MedicalExpenseService {
       type: "MEDICAL_EXPENSE_REJECTED",
       title: "의료비 최종 반려",
       body: "제출하신 의료비 지출 건이 반려됐습니다. 내용을 수정 후 재상신해주세요.",
+      entityId: id,
     });
 
     return rejected;
