@@ -119,4 +119,10 @@ export class InjuryService {
   getExternalReports(injuryId: number) {
     return this.repo.getExternalReports(injuryId);
   }
+
+  async updateExternalReportStatus(reportId: number, status: ExternalReportStatus, note?: string) {
+    const report = await this.repo.findExternalReportById(reportId);
+    if (!report) throw new AppError(404, "EXTERNAL_REPORT_NOT_FOUND");
+    return this.repo.updateExternalReportStatus(reportId, status, note);
+  }
 }

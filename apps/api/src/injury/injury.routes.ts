@@ -31,6 +31,6 @@ router.put("/:id/assessment", auth, controller.processAssessment);
 
 // External Reports
 router.get("/:id/external-reports", auth, controller.getExternalReports);
-// PATCH /:id/external-reports/:reportId/status — Task 3에서 controller 메서드 구현 후 활성화
+router.patch("/:id/external-reports/:reportId/status", auth, controller.updateExternalReportStatus);
 
 export default router;
