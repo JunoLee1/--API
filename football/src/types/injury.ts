@@ -76,6 +76,15 @@ export interface InjuryReport {
   updatedAt: string
   createdBy: { id: number; nickname: string }
   updatedBy: { id: number; nickname: string } | null
+  coachSignedAt: string | null
+  coachSignedById: number | null
+  coachSigner: { id: number; nickname: string } | null
+  trainerSignedAt: string | null
+  trainerSignedById: number | null
+  trainerSigner: { id: number; nickname: string } | null
+  medicalSignedAt: string | null
+  medicalSignedById: number | null
+  medicalSigner: { id: number; nickname: string } | null
 }
 
 export const REHAB_STAGE_LABEL: Record<RehabStage, string> = {

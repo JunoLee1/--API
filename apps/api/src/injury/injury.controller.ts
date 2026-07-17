@@ -59,4 +59,34 @@ export class InjuryController {
       );
     } catch (err) { next(err); }
   };
+
+  private getSignRole(user: Express.User): 'COACH' | 'TRAINER' | 'MEDICAL' | null {
+    if (user.role === 'ADMIN') return 'MEDICAL';
+    if (user.role === 'COACHING_STAFF') {
+      if (user.coachingRole === 'HEAD_COACH') return 'COACH';
+      if (user.coachingRole === 'PHYSICAL_COACH') return 'TRAINER';
+      if (user.coachingRole === 'MEDICAL' || user.coachingRole === 'MEDICAL_DIRECTOR') return 'MEDICAL';
+    }
+    return null;
+  }
+
+  signReport = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const role = this.getSignRole(req.user!);
+      if (!role) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(
+        await this.service.signReport(Number(req.params["id"]), role, req.user!.id)
+      );
+    } catch (err) { next(err); }
+  };
+
+  unsignReport = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const role = this.getSignRole(req.user!);
+      if (!role) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(
+        await this.service.unsignReport(Number(req.params["id"]), role)
+      );
+    } catch (err) { next(err); }
+  };
 }

@@ -19,5 +19,7 @@ router.post("/", auth, controller.create);
 router.patch("/:id/status", auth, controller.updateStatus);
 router.get("/:id/report", auth, controller.getReport);
 router.put("/:id/report", auth, controller.saveReport);
+router.post("/:id/report/sign", auth, controller.signReport);
+router.delete("/:id/report/sign", auth, controller.unsignReport);
 
 export default router;

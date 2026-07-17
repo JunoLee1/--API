@@ -32,6 +32,9 @@ export function InjuryDetailPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
+  const [report, setReport] = useState<InjuryReport | null>(null)
+  const [signing, setSigning] = useState(false)
+
   const [diagnosisName, setDiagnosisName] = useState('')
   const [treatmentContent, setTreatmentContent] = useState('')
   const [rehabStage, setRehabStage] = useState<RehabStage | ''>('')
@@ -61,9 +64,9 @@ export function InjuryDetailPage() {
       injuryApi.get(Number(id)),
       injuryApi.getReport(Number(id)),
     ])
-      .then(([inj, report]) => {
+      .then(([inj, r]) => {
         setInjury(inj)
-        if (report) fillForm(report)
+        if (r) { fillForm(r); setReport(r) }
       })
       .catch(() => { toast.error('불러오지 못했습니다.'); navigate('/injuries') })
       .finally(() => setLoading(false))
@@ -73,7 +76,7 @@ export function InjuryDetailPage() {
     if (!id) return
     setSaving(true)
     try {
-      await injuryApi.saveReport(Number(id), {
+      const updated = await injuryApi.saveReport(Number(id), {
         diagnosisName: diagnosisName || undefined,
         treatmentContent: treatmentContent || undefined,
         rehabStage: rehabStage || undefined,
@@ -83,11 +86,39 @@ export function InjuryDetailPage() {
         medicalOpinion: medicalOpinion || undefined,
         securityLevel,
       })
+      setReport(updated)
       toast.success('의료 보고서가 저장됐습니다.')
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const mySignRole =
+    user?.role === 'ADMIN' ? 'MEDICAL' :
+    user?.coachingRole === 'HEAD_COACH' ? 'COACH' :
+    user?.coachingRole === 'PHYSICAL_COACH' ? 'TRAINER' :
+    (user?.coachingRole === 'MEDICAL' || user?.coachingRole === 'MEDICAL_DIRECTOR') ? 'MEDICAL' :
+    null
+
+  const handleToggleSign = async () => {
+    if (!id || !mySignRole) return
+    setSigning(true)
+    try {
+      const isSigned =
+        mySignRole === 'COACH' ? !!report?.coachSignedAt :
+        mySignRole === 'TRAINER' ? !!report?.trainerSignedAt :
+        !!report?.medicalSignedAt
+      const updated = isSigned
+        ? await injuryApi.unsignReport(Number(id))
+        : await injuryApi.signReport(Number(id))
+      setReport(updated)
+      toast.success(isSigned ? '서명이 취소됐습니다.' : '서명했습니다.')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : '서명 처리에 실패했습니다.')
+    } finally {
+      setSigning(false)
     }
   }
 
@@ -287,6 +318,44 @@ export function InjuryDetailPage() {
               </div>
             </div>
           </div>
+          {report && (
+            <div>
+              <h2 className="text-sm font-semibold mb-3">복귀 계획 조율</h2>
+              <p className="text-xs text-muted-foreground mb-3">
+                감독·트레이너·의료팀 3자 모두 서명해야 복귀 계획이 확정됩니다.
+              </p>
+              <div className="space-y-2">
+                {([
+                  { role: 'COACH' as const, label: '감독', signedAt: report.coachSignedAt, signer: report.coachSigner },
+                  { role: 'TRAINER' as const, label: '트레이너', signedAt: report.trainerSignedAt, signer: report.trainerSigner },
+                  { role: 'MEDICAL' as const, label: '의료팀', signedAt: report.medicalSignedAt, signer: report.medicalSigner },
+                ]).map(({ role, label, signedAt, signer }) => (
+                  <div key={role} className={`flex items-center justify-between rounded-lg border px-4 py-2.5 ${signedAt ? 'border-green-200 bg-green-50' : 'bg-muted/30'}`}>
+                    <div className="text-sm">
+                      <span className="font-medium">{label}</span>
+                      {signedAt && signer && (
+                        <span className="text-xs text-muted-foreground ml-2">
+                          {signer.nickname} · {new Date(signedAt).toLocaleDateString('ko-KR')}
+                        </span>
+                      )}
+                      {!signedAt && <span className="text-xs text-muted-foreground ml-2">미서명</span>}
+                    </div>
+                    {mySignRole === role && (
+                      <Button
+                        size="sm"
+                        variant={signedAt ? 'outline' : 'default'}
+                        onClick={handleToggleSign}
+                        disabled={signing}
+                        className={signedAt ? 'text-red-600 border-red-300 hover:bg-red-50' : ''}
+                      >
+                        {signing ? '처리 중...' : signedAt ? '서명 취소' : '서명'}
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

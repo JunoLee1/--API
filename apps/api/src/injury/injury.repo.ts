@@ -35,6 +35,15 @@ const INJURY_REPORT_SELECT = {
   updatedAt: true,
   createdBy: { select: { id: true, nickname: true } },
   updatedBy: { select: { id: true, nickname: true } },
+  coachSignedAt: true,
+  coachSignedById: true,
+  coachSigner: { select: { id: true, nickname: true } },
+  trainerSignedAt: true,
+  trainerSignedById: true,
+  trainerSigner: { select: { id: true, nickname: true } },
+  medicalSignedAt: true,
+  medicalSignedById: true,
+  medicalSigner: { select: { id: true, nickname: true } },
 } as const;
 
 export class InjuryRepository {
@@ -108,6 +117,35 @@ export class InjuryRepository {
       where: { injuryId },
       create: { ...data, injuryId, createdById: userId },
       update: { ...data, updatedById: userId },
+      select: INJURY_REPORT_SELECT,
+    });
+  }
+
+  signReport(injuryId: number, role: 'COACH' | 'TRAINER' | 'MEDICAL', userId: number) {
+    const now = new Date();
+    const data =
+      role === 'COACH'
+        ? { coachSignedAt: now, coachSignedById: userId }
+        : role === 'TRAINER'
+          ? { trainerSignedAt: now, trainerSignedById: userId }
+          : { medicalSignedAt: now, medicalSignedById: userId };
+    return this.prisma.injuryReport.update({
+      where: { injuryId },
+      data,
+      select: INJURY_REPORT_SELECT,
+    });
+  }
+
+  unsignReport(injuryId: number, role: 'COACH' | 'TRAINER' | 'MEDICAL') {
+    const data =
+      role === 'COACH'
+        ? { coachSignedAt: null, coachSignedById: null }
+        : role === 'TRAINER'
+          ? { trainerSignedAt: null, trainerSignedById: null }
+          : { medicalSignedAt: null, medicalSignedById: null };
+    return this.prisma.injuryReport.update({
+      where: { injuryId },
+      data,
       select: INJURY_REPORT_SELECT,
     });
   }

@@ -45,4 +45,10 @@ export const injuryApi = {
     medicalOpinion?: string
     securityLevel?: SecurityLevel
   }) => api.put<InjuryReport>(`/injuries/${injuryId}/report`, payload),
+
+  signReport: (injuryId: number) =>
+    api.post<InjuryReport>(`/injuries/${injuryId}/report/sign`, {}),
+
+  unsignReport: (injuryId: number) =>
+    api.delete<InjuryReport>(`/injuries/${injuryId}/report/sign`),
 }
