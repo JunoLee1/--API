@@ -255,6 +255,7 @@ export function MatchDetailPage() {
   const [teamStatsOpen, setTeamStatsOpen] = useState(false)
 
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
+  const canInputStats = canWrite || user?.role === 'COACHING_STAFF'
 
   const fetchMatch = () => {
     if (!id) return
@@ -297,15 +298,15 @@ export function MatchDetailPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1" />
+        {canInputStats && (
+          <Button variant="outline" size="sm" onClick={() => setTeamStatsOpen(true)}>
+            <Pencil className="h-3.5 w-3.5 mr-1.5" />팀 통계 입력
+          </Button>
+        )}
         {canWrite && (
-          <>
-            <Button variant="outline" size="sm" onClick={() => setTeamStatsOpen(true)}>
-              <Pencil className="h-3.5 w-3.5 mr-1.5" />팀 통계 입력
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setScoreOpen(true)}>
-              <Pencil className="h-3.5 w-3.5 mr-1.5" />스코어 입력
-            </Button>
-          </>
+          <Button variant="outline" size="sm" onClick={() => setScoreOpen(true)}>
+            <Pencil className="h-3.5 w-3.5 mr-1.5" />스코어 입력
+          </Button>
         )}
       </div>
 
@@ -456,10 +457,10 @@ export function MatchDetailPage() {
         </div>
       </div>
 
-      {canWrite && match && (
+      {match && (
         <>
-          <ScoreDialog open={scoreOpen} onOpenChange={setScoreOpen} match={match} onSaved={() => { setScoreOpen(false); fetchMatch() }} />
-          <TeamStatsDialog open={teamStatsOpen} onOpenChange={setTeamStatsOpen} match={match} onSaved={() => { setTeamStatsOpen(false); fetchMatch() }} />
+          {canWrite && <ScoreDialog open={scoreOpen} onOpenChange={setScoreOpen} match={match} onSaved={() => { setScoreOpen(false); fetchMatch() }} />}
+          {canInputStats && <TeamStatsDialog open={teamStatsOpen} onOpenChange={setTeamStatsOpen} match={match} onSaved={() => { setTeamStatsOpen(false); fetchMatch() }} />}
         </>
       )}
     </div>
