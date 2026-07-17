@@ -54,7 +54,8 @@ export function InjuryStatsPage() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
 
-  const isMedical = user?.role === 'COACHING_STAFF' && user?.coachingRole === 'MEDICAL'
+  const isMedical =
+    user?.coachingRole === 'MEDICAL' || user?.coachingRole === 'MEDICAL_DIRECTOR'
 
   const resetForm = () => { setTitle(''); setContent('') }
 

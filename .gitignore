@@ -1,8 +1,7 @@
 # Claude Code worktrees and config
 .claude/
 
-# Superpowers plans and graphify output
-docs/
+# Superpowers graphify output
 graphify-out/
 
 # Root-level node artifacts (apps/api and football/ have their own .gitignore)
