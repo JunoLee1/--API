@@ -3,11 +3,14 @@ import passport from "passport";
 import { InjuryController } from "./injury.controller";
 import { InjuryService } from "./injury.service";
 import { InjuryRepository } from "./injury.repo";
+import { NotificationRepository } from "../notification/notification.repo";
 import { getPrisma } from "../lib/prisma";
 
 const router = Router();
-const repo = new InjuryRepository(getPrisma());
-const service = new InjuryService(repo);
+const prisma = getPrisma();
+const repo = new InjuryRepository(prisma);
+const notifRepo = new NotificationRepository(prisma);
+const service = new InjuryService(repo, notifRepo);
 const controller = new InjuryController(service);
 
 const auth = passport.authenticate("accessToken", { session: false });
@@ -28,5 +31,6 @@ router.put("/:id/assessment", auth, controller.processAssessment);
 
 // External Reports
 router.get("/:id/external-reports", auth, controller.getExternalReports);
+// PATCH /:id/external-reports/:reportId/status — Task 3에서 controller 메서드 구현 후 활성화
 
 export default router;

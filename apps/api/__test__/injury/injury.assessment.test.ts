@@ -12,6 +12,7 @@ const mockService = {
   getAssessment: jest.fn(),
   processAssessment: jest.fn(),
   getExternalReports: jest.fn(),
+  updateExternalReportStatus: jest.fn(),
 } as any;
 
 const controller = new InjuryController(mockService);
@@ -91,5 +92,14 @@ describe("InjuryController - getExternalReports", () => {
     expect(mockService.getExternalReports).toHaveBeenCalledWith(5);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(reports);
+  });
+});
+
+describe("InjuryController - updateExternalReportStatus (미구현 상태에서 실패 확인용)", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test("컨트롤러에 updateExternalReportStatus가 없으면 undefined", () => {
+    // @ts-expect-error — 아직 메서드가 없으므로 타입 오류 발생이 정상
+    expect(controller.updateExternalReportStatus).toBeUndefined();
   });
 });

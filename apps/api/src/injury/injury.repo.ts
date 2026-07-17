@@ -202,9 +202,13 @@ export class InjuryRepository {
     });
   }
 
-  async createExternalReports(injuryId: number, targets: ExternalReportTarget[], reportData: object) {
+  async createExternalReports(
+    injuryId: number,
+    targets: { target: ExternalReportTarget; dueDate: Date }[],
+    reportData: object
+  ) {
     await this.prisma.externalReport.createMany({
-      data: targets.map((target) => ({ injuryId, target, reportData })),
+      data: targets.map(({ target, dueDate }) => ({ injuryId, target, reportData, dueDate })),
       skipDuplicates: true,
     });
   }
