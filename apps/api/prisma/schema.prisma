@@ -392,37 +392,41 @@ model User {
   nationalityId   Int
   teamId          Int?
 
-  phoneNumber              PhoneNumber            @relation(fields: [phoneNumberId], references: [id])
-  nationality              Country                @relation(fields: [nationalityId], references: [id])
+  phoneNumber              PhoneNumber             @relation(fields: [phoneNumberId], references: [id])
+  nationality              Country                 @relation(fields: [nationalityId], references: [id])
   player                   Player?
-  recallRequests           Recall[]               @relation("RecallRequestedBy")
-  recallApprovals          Recall[]               @relation("RecallApprovedBy")
+  recallRequests           Recall[]                @relation("RecallRequestedBy")
+  recallApprovals          Recall[]                @relation("RecallApprovedBy")
   managedInjuries          Injury[]
-  createdSessions          TrainingSession[]      @relation("TrainingSessionCreatedBy")
-  approvedSessions         TrainingSession[]      @relation("TrainingSessionApprovedBy")
+  createdSessions          TrainingSession[]       @relation("TrainingSessionCreatedBy")
+  approvedSessions         TrainingSession[]       @relation("TrainingSessionApprovedBy")
   tacticalAnalyses         TacticalAnalysis[]
   notifications            Notification[]
   managedContracts         Contract[]
-  agentPlayers             Player[]               @relation("AgentPlayers")
-  createdProspects         Prospect[]             @relation("ProspectCreatedBy")
-  requestedLoans           EquipmentLoan[]        @relation("LoanRequestedBy")
-  approvedLoans            EquipmentLoan[]        @relation("LoanApprovedBy")
+  agentPlayers             Player[]                @relation("AgentPlayers")
+  createdProspects         Prospect[]              @relation("ProspectCreatedBy")
+  requestedLoans           EquipmentLoan[]         @relation("LoanRequestedBy")
+  approvedLoans            EquipmentLoan[]         @relation("LoanApprovedBy")
   auditLogs                AuditLog[]
-  authoredReports          Report[]               @relation("ReportAuthor")
-  reviewedReports          Report[]               @relation("ReportReviewer")
-  submittedMedicalExpenses MedicalExpense[]       @relation("MedicalExpenseSubmitter")
-  leaderReviewedExpenses   MedicalExpense[]       @relation("MedicalExpenseLeaderReviewer")
-  adminReviewedExpenses    MedicalExpense[]       @relation("MedicalExpenseAdminReviewer")
-  createdInjuryReports     InjuryReport[]         @relation("InjuryReportCreator")
-  updatedInjuryReports     InjuryReport[]         @relation("InjuryReportUpdater")
-  coachSignedReports       InjuryReport[]         @relation("InjuryReportCoachSigner")
-  trainerSignedReports     InjuryReport[]         @relation("InjuryReportTrainerSigner")
-  medicalSignedReports     InjuryReport[]         @relation("InjuryReportMedicalSigner")
+  authoredReports          Report[]                @relation("ReportAuthor")
+  reviewedReports          Report[]                @relation("ReportReviewer")
+  submittedMedicalExpenses MedicalExpense[]        @relation("MedicalExpenseSubmitter")
+  leaderReviewedExpenses   MedicalExpense[]        @relation("MedicalExpenseLeaderReviewer")
+  adminReviewedExpenses    MedicalExpense[]        @relation("MedicalExpenseAdminReviewer")
+  createdInjuryReports     InjuryReport[]          @relation("InjuryReportCreator")
+  updatedInjuryReports     InjuryReport[]          @relation("InjuryReportUpdater")
+  coachSignedReports       InjuryReport[]          @relation("InjuryReportCoachSigner")
+  trainerSignedReports     InjuryReport[]          @relation("InjuryReportTrainerSigner")
+  medicalSignedReports     InjuryReport[]          @relation("InjuryReportMedicalSigner")
   assessedInjuries         InjuryAssessment[]
-  team                     Team?                  @relation(fields: [teamId], references: [id])
-  createdHiringRounds      CoachHiringRound[]     @relation("HiringRoundCreatedBy")
-  coachProfile             Coach?                 @relation("CoachUser")
-  tutorAssignments         CoachTutorAssignment[] @relation("TutorAssignments")
+  team                     Team?                   @relation(fields: [teamId], references: [id])
+  createdHiringRounds      CoachHiringRound[]      @relation("HiringRoundCreatedBy")
+  coachProfile             Coach?                  @relation("CoachUser")
+  tutorAssignments         CoachTutorAssignment[]  @relation("TutorAssignments")
+  scoredTrainingResults    TrainingResult[]        @relation("TrainingResultScorer")
+  coachAvailabilities      CoachAvailability[]     @relation("CoachAvailabilityUser")
+  createdAvailabilities    CoachAvailability[]     @relation("CoachAvailabilityCreatedBy")
+  developmentPlans         PlayerDevelopmentPlan[] @relation("PDPCoach")
 }
 
 model Season {
@@ -435,6 +439,7 @@ model Season {
   matches          Match[]
   trainingSessions TrainingSession[]
   tacticalAnalyses TacticalAnalysis[]
+  developmentPlans PlayerDevelopmentPlan[]
 }
 
 model Player {
@@ -455,10 +460,10 @@ model Player {
   workPermitExpiry DateTime?
   teamId           Int?
 
-  nationality            Country               @relation(fields: [nationalityId], references: [id])
-  user                   User?                 @relation(fields: [userId], references: [id])
-  agent                  User?                 @relation("AgentPlayers", fields: [agentId], references: [id])
-  team                   Team?                 @relation(fields: [teamId], references: [id])
+  nationality            Country                 @relation(fields: [nationalityId], references: [id])
+  user                   User?                   @relation(fields: [userId], references: [id])
+  agent                  User?                   @relation("AgentPlayers", fields: [agentId], references: [id])
+  team                   Team?                   @relation(fields: [teamId], references: [id])
   contracts              Contract[]
   transfers              Transfer[]
   injuries               Injury[]
@@ -467,8 +472,10 @@ model Player {
   matchStats             PlayerMatchStats[]
   tacticalLineups        TacticalLineup[]
   equipmentAssignments   EquipmentAssignment[]
-  prospects              Prospect[]            @relation("ProspectConvertedPlayer")
+  prospects              Prospect[]              @relation("ProspectConvertedPlayer")
   medicalExpenses        MedicalExpense[]
+  trainingLoads          TrainingLoad[]
+  developmentPlans       PlayerDevelopmentPlan[]
 }
 
 model Contract {
@@ -754,13 +761,14 @@ model TrainingSession {
   approvedById Int?
   teamId       Int?
 
-  season       Season                @relation(fields: [seasonId], references: [id])
-  team         Team?                 @relation(fields: [teamId], references: [id])
-  createdBy    User                  @relation("TrainingSessionCreatedBy", fields: [createdById], references: [id])
-  approvedBy   User?                 @relation("TrainingSessionApprovedBy", fields: [approvedById], references: [id])
-  contents     TrainingContent[]
-  participants TrainingParticipant[]
-  results      TrainingResult[]
+  season        Season                @relation(fields: [seasonId], references: [id])
+  team          Team?                 @relation(fields: [teamId], references: [id])
+  createdBy     User                  @relation("TrainingSessionCreatedBy", fields: [createdById], references: [id])
+  approvedBy    User?                 @relation("TrainingSessionApprovedBy", fields: [approvedById], references: [id])
+  contents      TrainingContent[]
+  participants  TrainingParticipant[]
+  results       TrainingResult[]
+  trainingLoads TrainingLoad[]
 }
 
 model TrainingContent {
@@ -787,11 +795,13 @@ model TrainingResult {
   attendance       AttendanceStatus
   feedback         String?
   performanceScore Int?
+  scoredById       Int?
   sessionId        Int
   playerId         String
 
-  session TrainingSession @relation(fields: [sessionId], references: [id])
-  player  Player          @relation(fields: [playerId], references: [id])
+  session  TrainingSession @relation(fields: [sessionId], references: [id])
+  player   Player          @relation(fields: [playerId], references: [id])
+  scoredBy User?           @relation("TrainingResultScorer", fields: [scoredById], references: [id])
 }
 
 model TacticalAnalysis {
@@ -1179,4 +1189,49 @@ model CoachTutorAssignment {
 
   coach         Coach @relation(fields: [coachId], references: [id])
   internalTutor User? @relation("TutorAssignments", fields: [internalTutorId], references: [id])
+}
+
+model CoachAvailability {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  startDate   DateTime
+  endDate     DateTime
+  reason      String?
+  createdById Int
+  createdAt   DateTime @default(now())
+
+  user      User @relation("CoachAvailabilityUser", fields: [userId], references: [id])
+  createdBy User @relation("CoachAvailabilityCreatedBy", fields: [createdById], references: [id])
+}
+
+model TrainingLoad {
+  id        Int    @id @default(autoincrement())
+  playerId  String
+  sessionId Int
+  rpe       Int
+  load      Int?
+
+  player  Player          @relation(fields: [playerId], references: [id])
+  session TrainingSession @relation(fields: [sessionId], references: [id])
+
+  @@unique([playerId, sessionId])
+}
+
+model PlayerDevelopmentPlan {
+  id         Int                         @id @default(autoincrement())
+  playerId   String
+  coachId    Int
+  seasonId   Int
+  goals      String                      @db.Text
+  notes      String?                     @db.Text
+  status     PlayerDevelopmentPlanStatus @default(DRAFT)
+  reviewedAt DateTime?
+  createdAt  DateTime                    @default(now())
+  updatedAt  DateTime                    @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id])
+  coach  User   @relation("PDPCoach", fields: [coachId], references: [id])
+  season Season @relation(fields: [seasonId], references: [id])
+
+  @@unique([playerId, seasonId])
 }
