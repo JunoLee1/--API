@@ -43,4 +43,50 @@ export class InjuryController {
       res.status(200).json(await this.service.updateStatus(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
   };
+
+  getReport = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const report = await this.service.getReport(Number(req.params["id"]));
+      res.status(200).json(report ?? null);
+    } catch (err) { next(err); }
+  };
+
+  saveReport = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!MEDICAL_ROLES.includes(req.user!.role as MedicalRole)) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(
+        await this.service.saveReport(Number(req.params["id"]), req.body, req.user!.id)
+      );
+    } catch (err) { next(err); }
+  };
+
+  private getSignRole(user: Express.User): 'COACH' | 'TRAINER' | 'MEDICAL' | null {
+    if (user.role === 'ADMIN') return 'MEDICAL';
+    if (user.role === 'COACHING_STAFF') {
+      if (user.coachingRole === 'HEAD_COACH') return 'COACH';
+      if (user.coachingRole === 'PHYSICAL_COACH') return 'TRAINER';
+      if (user.coachingRole === 'MEDICAL' || user.coachingRole === 'MEDICAL_DIRECTOR') return 'MEDICAL';
+    }
+    return null;
+  }
+
+  signReport = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const role = this.getSignRole(req.user!);
+      if (!role) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(
+        await this.service.signReport(Number(req.params["id"]), role, req.user!.id)
+      );
+    } catch (err) { next(err); }
+  };
+
+  unsignReport = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const role = this.getSignRole(req.user!);
+      if (!role) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(
+        await this.service.unsignReport(Number(req.params["id"]), role)
+      );
+    } catch (err) { next(err); }
+  };
 }

@@ -4,6 +4,9 @@ import { toast } from 'sonner'
 import { medicalExpenseApi } from '@/services/medical-expense.service'
 import type { ExpenseCostCategory, ExpensePayerType, MedicalExpense } from '@/types/medical-expense'
 import { COST_CATEGORY_LABEL, PAYER_TYPE_LABEL } from '@/types/medical-expense'
+import { playerApi } from '@/services/player.service'
+import type { Player } from '@/types/player'
+import { POSITION_LABEL } from '@/types/player'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,7 +16,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ArrowLeft } from 'lucide-react'
@@ -26,15 +28,23 @@ export function MedicalExpenseFormPage() {
   const navigate = useNavigate()
   const isEdit = Boolean(id)
 
-  const [loading, setLoading] = useState(isEdit)
+  const [expenseLoading, setExpenseLoading] = useState(isEdit)
+  const [playersLoading, setPlayersLoading] = useState(true)
+  const loading = expenseLoading || playersLoading
   const [saving, setSaving] = useState(false)
+  const [players, setPlayers] = useState<Player[]>([])
 
   const [receiptDate, setReceiptDate] = useState('')
   const [costCategory, setCostCategory] = useState<ExpenseCostCategory>('OUTPATIENT')
   const [totalAmount, setTotalAmount] = useState('')
   const [payerType, setPayerType] = useState<ExpensePayerType>('CLUB')
+  const [playerId, setPlayerId] = useState<string>('')
   const [description, setDescription] = useState('')
   const [file, setFile] = useState<File | undefined>()
+
+  useEffect(() => {
+    playerApi.list({ status: 'ACTIVE' }).then(setPlayers).catch(() => {}).finally(() => setPlayersLoading(false))
+  }, [])
 
   useEffect(() => {
     if (!id) return
@@ -45,17 +55,26 @@ export function MedicalExpenseFormPage() {
         setCostCategory(e.costCategory)
         setTotalAmount(String(e.totalAmount))
         setPayerType(e.payerType)
+        setPlayerId(e.playerId ?? '')
         setDescription(e.description ?? '')
       })
       .catch(() => { toast.error('불러오지 못했습니다.'); navigate('/medical-expenses') })
-      .finally(() => setLoading(false))
+      .finally(() => setExpenseLoading(false))
   }, [id, navigate])
 
   const handleSave = async (andSubmit = false) => {
     if (!receiptDate || !totalAmount) { toast.error('날짜와 금액을 입력해주세요.'); return }
     setSaving(true)
     try {
-      const dto = { receiptDate, costCategory, totalAmount: Number(totalAmount), payerType, description: description || undefined, file }
+      const dto = {
+        receiptDate,
+        costCategory,
+        totalAmount: Number(totalAmount),
+        payerType,
+        ...(playerId && { playerId }),
+        description: description || undefined,
+        file,
+      }
       let saved: MedicalExpense
       if (isEdit && id) {
         saved = await medicalExpenseApi.update(Number(id), dto)
@@ -91,7 +110,7 @@ export function MedicalExpenseFormPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h1 className="text-lg font-semibold tracking-tight">
-          {isEdit ? '의료비 수정' : '의료비 등록'}
+          {isEdit ? '의료비 수정' : '의료비 청구'}
         </h1>
       </div>
 
@@ -105,7 +124,7 @@ export function MedicalExpenseFormPage() {
           <div className="space-y-1.5">
             <Label>비용 항목 *</Label>
             <Select value={costCategory} onValueChange={(v) => setCostCategory(v as ExpenseCostCategory)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger><span>{COST_CATEGORY_LABEL[costCategory]}</span></SelectTrigger>
               <SelectContent>
                 {COST_CATEGORIES.map((c) => (
                   <SelectItem key={c} value={c}>{COST_CATEGORY_LABEL[c]}</SelectItem>
@@ -128,10 +147,29 @@ export function MedicalExpenseFormPage() {
           <div className="space-y-1.5">
             <Label>납부 주체 *</Label>
             <Select value={payerType} onValueChange={(v) => setPayerType(v as ExpensePayerType)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger><span>{PAYER_TYPE_LABEL[payerType]}</span></SelectTrigger>
               <SelectContent>
                 {PAYER_TYPES.map((p) => (
                   <SelectItem key={p} value={p}>{PAYER_TYPE_LABEL[p]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>대상 선수 (선택)</Label>
+            <Select value={playerId} onValueChange={setPlayerId}>
+              <SelectTrigger>
+                {playerId
+                  ? <span className="truncate">{players.find(p => p.id === playerId)?.playerName ?? playerId}</span>
+                  : <span className="text-muted-foreground">선수 선택</span>}
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">선수 미지정</SelectItem>
+                {players.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.playerName} ({POSITION_LABEL[p.position]})
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>

@@ -1,6 +1,17 @@
 import { describe, test, jest, expect, beforeEach } from "@jest/globals";
 import { DashboardService } from "../../src/dashboard/dashboard.service";
 
+const mockMedicalDashboard = {
+  currentInjuredCount: 4,
+  weekNewInjuryCount: 1,
+  returningIn7DaysCount: 2,
+  reinjuryRiskCount: 3,
+  incompleteDocCount: 1,
+  pendingApprovalCount: 5,
+  avgRecoveryDays: 21,
+  injuriesByPosition: { GK: 0, DF: 2, MF: 1, FW: 1 },
+};
+
 const mockRepo = {
   getAdminStats: jest.fn(),
   getGmStats: jest.fn(),
@@ -14,6 +25,7 @@ const mockRepo = {
   getPhysicalCoachStats: jest.fn(),
   getMedicalStats: jest.fn(),
   getMedicalDirectorStats: jest.fn(),
+  getMedicalDashboardStats: jest.fn(),
   getPlayerStats: jest.fn(),
   getAgentStats: jest.fn(),
 } as any;
@@ -68,16 +80,22 @@ describe("DashboardService.getStats", () => {
     expect(mockRepo.getTacticalAnalystStats).toHaveBeenCalledWith(7);
   });
 
-  test("COACHING_STAFF + HEAD_COACH → getHeadCoachStats 호출", async () => {
-    mockRepo.getHeadCoachStats.mockResolvedValue({ injuredPlayerCount: 2 });
-    await service.getStats({ id: 8, role: "COACHING_STAFF", coachingRole: "HEAD_COACH", frontOfficeRole: null });
+  test("COACHING_STAFF + HEAD_COACH → getHeadCoachStats + getMedicalDashboardStats 병합 반환", async () => {
+    mockRepo.getHeadCoachStats.mockResolvedValue({ injuredPlayerCount: 2, thisMonthSessionCount: 5, attendanceWarningPlayerCount: 1 });
+    mockRepo.getMedicalDashboardStats.mockResolvedValue(mockMedicalDashboard);
+    const result = await service.getStats({ id: 8, role: "COACHING_STAFF", coachingRole: "HEAD_COACH", frontOfficeRole: null });
     expect(mockRepo.getHeadCoachStats).toHaveBeenCalledTimes(1);
+    expect(mockRepo.getMedicalDashboardStats).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({ injuredPlayerCount: 2, thisMonthSessionCount: 5, attendanceWarningPlayerCount: 1, medicalDashboard: mockMedicalDashboard });
   });
 
-  test("COACHING_STAFF + ASSISTANT_COACH → getHeadCoachStats 호출 (동일 대시보드)", async () => {
-    mockRepo.getHeadCoachStats.mockResolvedValue({ injuredPlayerCount: 2 });
-    await service.getStats({ id: 9, role: "COACHING_STAFF", coachingRole: "ASSISTANT_COACH", frontOfficeRole: null });
+  test("COACHING_STAFF + ASSISTANT_COACH → getHeadCoachStats만 호출 (medicalDashboard 없음)", async () => {
+    mockRepo.getHeadCoachStats.mockResolvedValue({ injuredPlayerCount: 2, thisMonthSessionCount: 5, attendanceWarningPlayerCount: 1 });
+    const result = await service.getStats({ id: 9, role: "COACHING_STAFF", coachingRole: "ASSISTANT_COACH", frontOfficeRole: null });
     expect(mockRepo.getHeadCoachStats).toHaveBeenCalledTimes(1);
+    expect(mockRepo.getMedicalDashboardStats).not.toHaveBeenCalled();
+    expect(result).toEqual({ injuredPlayerCount: 2, thisMonthSessionCount: 5, attendanceWarningPlayerCount: 1 });
+    expect((result as any).medicalDashboard).toBeUndefined();
   });
 
   test("COACHING_STAFF + DEFENSIVE_COACH → getSpecialistCoachStats(coachingRole, userId) 호출", async () => {
@@ -92,16 +110,24 @@ describe("DashboardService.getStats", () => {
     expect(mockRepo.getPhysicalCoachStats).toHaveBeenCalledWith(11);
   });
 
-  test("COACHING_STAFF + MEDICAL → getMedicalStats(userId) 호출", async () => {
-    mockRepo.getMedicalStats.mockResolvedValue({ myActiveInjuryCaseCount: 3 });
-    await service.getStats({ id: 12, role: "COACHING_STAFF", coachingRole: "MEDICAL", frontOfficeRole: null });
+  test("COACHING_STAFF + MEDICAL → getMedicalStats(userId) + getMedicalDashboardStats 병합 반환", async () => {
+    mockRepo.getMedicalStats.mockResolvedValue({ myActiveInjuryCaseCount: 3, thisMonthReturnReadyCount: 1 });
+    mockRepo.getMedicalDashboardStats.mockResolvedValue(mockMedicalDashboard);
+    const result = await service.getStats({ id: 12, role: "COACHING_STAFF", coachingRole: "MEDICAL", frontOfficeRole: null });
     expect(mockRepo.getMedicalStats).toHaveBeenCalledWith(12);
+    expect(mockRepo.getMedicalDashboardStats).toHaveBeenCalledWith();
+    expect(mockRepo.getMedicalDashboardStats).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({ myActiveInjuryCaseCount: 3, thisMonthReturnReadyCount: 1, medicalDashboard: mockMedicalDashboard });
   });
 
-  test("COACHING_STAFF + MEDICAL_DIRECTOR → getMedicalDirectorStats(userId) 호출", async () => {
-    mockRepo.getMedicalDirectorStats.mockResolvedValue({ totalInjuredPlayerCount: 5 });
-    await service.getStats({ id: 13, role: "COACHING_STAFF", coachingRole: "MEDICAL_DIRECTOR", frontOfficeRole: null });
+  test("COACHING_STAFF + MEDICAL_DIRECTOR → getMedicalDirectorStats(userId) + getMedicalDashboardStats 병합 반환", async () => {
+    mockRepo.getMedicalDirectorStats.mockResolvedValue({ myActiveInjuryCaseCount: 2, thisMonthReturnReadyCount: 0, totalInjuredPlayerCount: 5 });
+    mockRepo.getMedicalDashboardStats.mockResolvedValue(mockMedicalDashboard);
+    const result = await service.getStats({ id: 13, role: "COACHING_STAFF", coachingRole: "MEDICAL_DIRECTOR", frontOfficeRole: null });
     expect(mockRepo.getMedicalDirectorStats).toHaveBeenCalledWith(13);
+    expect(mockRepo.getMedicalDashboardStats).toHaveBeenCalledWith();
+    expect(mockRepo.getMedicalDashboardStats).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({ myActiveInjuryCaseCount: 2, thisMonthReturnReadyCount: 0, totalInjuredPlayerCount: 5, medicalDashboard: mockMedicalDashboard });
   });
 
   test("PLAYER → getPlayerStats(userId) 호출", async () => {

@@ -28,6 +28,7 @@ export class MedicalExpenseService {
     totalAmount: number;
     payerType: string;
     injuryId?: number;
+    playerId?: string;
     description?: string;
     fileUrl?: string;
     fileName?: string;
@@ -41,6 +42,7 @@ export class MedicalExpenseService {
     totalAmount?: number;
     payerType?: string;
     injuryId?: number | null;
+    playerId?: string | null;
     description?: string;
     fileUrl?: string;
     fileName?: string;

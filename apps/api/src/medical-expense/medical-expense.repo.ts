@@ -12,6 +12,7 @@ const expenseInclude = {
   leaderReviewer: { select: userSelect },
   adminReviewer: { select: userSelect },
   injury: { select: { id: true, bodyPart: true, playerId: true } },
+  player: { select: { id: true, playerName: true, position: true, dateOfBirth: true } },
 } as const;
 
 export class MedicalExpenseRepository {
@@ -40,6 +41,7 @@ export class MedicalExpenseRepository {
     totalAmount: number;
     payerType: string;
     injuryId?: number;
+    playerId?: string;
     description?: string;
     fileUrl?: string;
     fileName?: string;
@@ -56,6 +58,7 @@ export class MedicalExpenseRepository {
     totalAmount?: number;
     payerType?: string;
     injuryId?: number | null;
+    playerId?: string | null;
     description?: string;
     fileUrl?: string;
     fileName?: string;

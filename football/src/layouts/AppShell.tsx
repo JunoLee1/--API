@@ -108,6 +108,7 @@ const NAV_ITEMS: NavItem[] = [
     label: '부상 현황',
     icon: Stethoscope,
     section: '부상·의료',
+    end: true,
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
   },
   {
@@ -371,7 +372,7 @@ export function AppShell() {
     <>
       <nav
         className={`flex-1 px-3 py-4 transition-opacity ${
-          apiPending ? 'pointer-events-none opacity-50' : ''
+          apiPending ? 'opacity-50' : ''
         }`}
         aria-busy={apiPending}
       >
@@ -431,7 +432,7 @@ export function AppShell() {
 
         <nav
           className={`flex-1 px-3 py-4 transition-opacity ${
-            apiPending ? 'pointer-events-none opacity-50' : ''
+            apiPending ? 'opacity-50' : ''
           }`}
           aria-busy={apiPending}
         >

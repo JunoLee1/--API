@@ -8,6 +8,8 @@ import { StatCard } from '@/components/dashboard/StatCard'
 import { ActionQueueCard } from '@/components/dashboard/ActionQueueCard'
 import { ScheduleCard } from '@/components/dashboard/ScheduleCard'
 import { RecentFeedCard } from '@/components/dashboard/RecentFeedCard'
+import { MedicalSection } from '@/components/dashboard/MedicalSection'
+import type { MedicalDashboardStats } from '@/types/dashboard'
 
 export function DashboardPage() {
   const { user, loading: userLoading } = useCurrentUser()
@@ -52,6 +54,14 @@ export function DashboardPage() {
           />
         ))}
       </div>
+
+      {/* 의료 KPI 섹션 */}
+      {config.showMedicalSection && stats && (stats as { medicalDashboard?: MedicalDashboardStats }).medicalDashboard && (
+        <MedicalSection
+          data={(stats as { medicalDashboard?: MedicalDashboardStats }).medicalDashboard!}
+          role={user.coachingRole}
+        />
+      )}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {config.showActionQueue && (

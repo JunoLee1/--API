@@ -37,10 +37,22 @@ export interface TacticalAnalystStats {
   thisMonthMatchCount: number
 }
 
+export interface MedicalDashboardStats {
+  currentInjuredCount: number
+  weekNewInjuryCount: number
+  returningIn7DaysCount: number
+  reinjuryRiskCount: number
+  incompleteDocCount: number
+  pendingApprovalCount: number
+  avgRecoveryDays: number | null
+  injuriesByPosition: { GK: number; DF: number; MF: number; FW: number }
+}
+
 export interface HeadCoachStats {
   injuredPlayerCount: number
   thisMonthSessionCount: number
   attendanceWarningPlayerCount: number
+  medicalDashboard?: MedicalDashboardStats
 }
 
 export interface SpecialistCoachStats {
@@ -51,6 +63,7 @@ export interface SpecialistCoachStats {
 export interface MedicalStats {
   myActiveInjuryCaseCount: number
   thisMonthReturnReadyCount: number
+  medicalDashboard?: MedicalDashboardStats
 }
 
 export interface MedicalDirectorStats extends MedicalStats {

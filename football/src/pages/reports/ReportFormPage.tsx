@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/select'
 import { ArrowLeft, Paperclip, X } from 'lucide-react'
 
-const TYPES: ReportType[] = ['FINANCIAL', 'PERFORMANCE']
+const TYPES: ReportType[] = ['FINANCIAL', 'PERFORMANCE', 'MEDICAL']
 
 export function ReportFormPage() {
   const navigate = useNavigate()
