@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { injuryApi } from '@/services/injury.service'
 import { partnerApi } from '@/services/partner.service'
@@ -163,13 +163,17 @@ function CreateInjuryDialog({ open, onOpenChange, playerId, onSaved }: CreateInj
 export function InjuriesPage() {
   const { user } = useCurrentUser()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { players, loading: playersLoading } = usePlayers()
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string>('')
+  const selectedPlayerId = searchParams.get('p') ?? ''
   const [injuries, setInjuries] = useState<Injury[]>([])
   const [loadingInjuries, setLoadingInjuries] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
 
-  const isMedical = user?.role === 'ADMIN' || user?.coachingRole === 'MEDICAL'
+  const isMedical =
+    user?.role === 'ADMIN' ||
+    user?.coachingRole === 'MEDICAL' ||
+    user?.coachingRole === 'MEDICAL_DIRECTOR'
   const canWrite = isMedical
 
   const fetchInjuries = (pid: string) => {
@@ -181,10 +185,13 @@ export function InjuriesPage() {
       .finally(() => setLoadingInjuries(false))
   }
 
+  useEffect(() => {
+    if (selectedPlayerId) fetchInjuries(selectedPlayerId)
+  }, [selectedPlayerId])
+
   const handlePlayerChange = (pid: string) => {
-    setSelectedPlayerId(pid)
+    setSearchParams(pid ? { p: pid } : {}, { replace: true })
     setInjuries([])
-    fetchInjuries(pid)
   }
 
   const handleStatusChange = async (injuryId: number, status: InjuryStatus) => {
@@ -293,6 +300,7 @@ export function InjuriesPage() {
           onSaved={() => { setCreateOpen(false); fetchInjuries(selectedPlayerId) }}
         />
       )}
+
     </div>
   )
 }
