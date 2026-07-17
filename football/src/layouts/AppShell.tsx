@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import {
   Activity,
   BarChart3,
+  Briefcase,
   Building2,
   ChevronRight,
   ClipboardList,
@@ -100,6 +101,14 @@ const NAV_ITEMS: NavItem[] = [
     icon: Activity,
     section: '계약·영입',
     roles: ['ADMIN', 'FRONT_OFFICE'],
+  },
+  {
+    to: '/coaches/rounds',
+    label: '코치 채용',
+    icon: Briefcase,
+    section: '계약·영입',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['GM', 'TD'],
   },
 
   // 부상·의료

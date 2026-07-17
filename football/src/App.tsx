@@ -28,6 +28,9 @@ import { ReportsPage } from '@/pages/reports/ReportsPage'
 import { ReportFormPage } from '@/pages/reports/ReportFormPage'
 import { ReportDetailPage } from '@/pages/reports/ReportDetailPage'
 import { MedicalExpensesPage } from '@/pages/medical-expense/MedicalExpensesPage'
+import { HiringRoundsPage } from '@/pages/coaches/HiringRoundsPage'
+import { CoachListPage } from '@/pages/coaches/CoachListPage'
+import { CoachDetailPage } from '@/pages/coaches/CoachDetailPage'
 import { MedicalExpenseFormPage } from '@/pages/medical-expense/MedicalExpenseFormPage'
 import { MedicalExpenseDetailPage } from '@/pages/medical-expense/MedicalExpenseDetailPage'
 
@@ -77,6 +80,9 @@ function App() {
             <Route path="/medical-expenses/:id/edit" element={<MedicalExpenseFormPage />} />
             <Route path="/medical-expenses/:id" element={<MedicalExpenseDetailPage />} />
             <Route path="/admin/partners" element={<PartnersPage />} />
+            <Route path="/coaches/rounds" element={<HiringRoundsPage />} />
+            <Route path="/coaches" element={<CoachListPage />} />
+            <Route path="/coaches/:id" element={<CoachDetailPage />} />
             <Route path="/admin/users" element={<UsersPage />} />
           </Route>
 
