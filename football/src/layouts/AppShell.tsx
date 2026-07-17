@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import {
   Activity,
   BarChart3,
+  Briefcase,
   Building2,
   ChevronRight,
   ClipboardList,
@@ -49,7 +50,7 @@ interface NavItem {
   label: string
   icon: LucideIcon
   end?: boolean
-  section?: '선수 관리' | '계약·이적' | '부상·의료' | '훈련' | '경기·분석' | '관리'
+  section?: '선수 관리' | '계약·영입' | '부상·의료' | '훈련' | '경기·분석' | '관리'
   roles?: Role[]
   coachingRoles?: CoachingRole[]
   frontOfficeRoles?: FrontOfficeRole[]
@@ -59,7 +60,7 @@ interface NavItem {
 
 const SECTION_ORDER: Array<NavItem['section'] & string> = [
   '선수 관리',
-  '계약·이적',
+  '계약·영입',
   '부상·의료',
   '훈련',
   '경기·분석',
@@ -86,20 +87,28 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
   },
 
-  // 계약·이적
+  // 계약·영입
   {
     to: '/contracts',
     label: '계약 목록',
     icon: ScrollText,
-    section: '계약·이적',
+    section: '계약·영입',
     roles: ['ADMIN', 'FRONT_OFFICE'],
   },
   {
     to: '/transfers',
     label: '이적 현황',
     icon: Activity,
-    section: '계약·이적',
+    section: '계약·영입',
     roles: ['ADMIN', 'FRONT_OFFICE'],
+  },
+  {
+    to: '/coaches/rounds',
+    label: '코치 채용',
+    icon: Briefcase,
+    section: '계약·영입',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['GM', 'TD'],
   },
 
   // 부상·의료

@@ -8,6 +8,41 @@
 ## 시스템 범위
 
 **단일 클럽** 내부 ERP. 리그·타 클럽은 외부 참조 데이터이며 핵심 엔티티가 아니다.
+클럽 내 복수 팀(성인 1군 + 유소년팀 등)을 지원한다.
+
+### Team (팀)
+
+ADMIN이 생성·관리하는 클럽 내 팀 단위. 팀 구성은 구단마다 다르므로 하드코딩하지 않는다.
+
+**필드:** `name`(팀명), `type`(FIRST_TEAM \| YOUTH), `ageGroup`(U18·U15 등, nullable), `isActive`
+
+**Player ↔ Team:** 단일 소속. `Player.teamId → Team`. 콜업 등 팀 변경은 teamId 업데이트로 처리하며 변경 이력은 AuditLog로 추적한다.
+
+**COACHING_STAFF ↔ Team:** 단일 소속. `User.teamId → Team`. Player와 동일 원칙.
+
+**Master Policy 전파 (Club Identity Continuity):** 별도 전파 엔티티 없음. 대시보드에서 팀별 TrainingSession SessionType 비율을 집계하여 1군 비율과 비교한다. 추가 입력 없이 기존 훈련 데이터로 자동 계산.
+
+**팀 간 데이터 접근:**
+- FRONT_OFFICE (GM·TD 등): 전 팀 열람
+- 1군 COACHING_STAFF: 전 팀 열람 (콜업·유망주 모니터링)
+- 유소년 COACHING_STAFF: 본인 소속 팀만
+- PLAYER: 본인 데이터만 (팀 무관)
+
+**teamId 적용 범위:**
+- 직접 부착: `Player`, `TrainingSession`, `Match`, `Coach`
+- 간접 연결(Player 경유): `Contract`, `Injury`, `MedicalExpense`
+- 간접 연결(Match 경유): `TacticalAnalysis`
+- 클럽 전체 공유(teamId 없음): `Equipment`, `Season`
+
+**유소년팀 Match 데이터:** 기존 Match 흐름과 동일. 외부 API 커버 시 자동 인제스트, 미커버 시 수동 입력. 팀 타입별 별도 처리 없음.
+
+**PlayerMatchStats 추적:** `Team.trackStats: boolean`. ADMIN이 팀별로 스탯 추적 여부를 설정. trackStats=false인 팀은 경기 결과·출전 여부만 기록.
+
+**유소년 선수 계약:** `Team.requiresContract: boolean`. ADMIN이 팀별로 정식 Contract 필요 여부를 설정. false인 팀의 Player는 Contract 없이 소속만 관리.
+
+**성과 보너스 팀 범위:** `BonusTrigger.teamScope: ALL | FIRST_TEAM_ONLY`. 계약별로 GM이 설정. LOAN_OUT 선례와 동일하게 계약 조건에 따라 유소년 스탯 포함 여부가 달라진다.
+
+**정렬도 모니터링 대시보드:** 팀별 TrainingSession SessionType 비율을 1군 기준과 비교하여 정렬도 점수(%)를 자동 계산. 열람 권한: 1군 HEAD_COACH, GM, TD, ADMIN.
 
 ---
 
@@ -54,6 +89,82 @@ Recall 승인 권한: GM 전용.
 선수 에이전트. 담당 선수(복수 가능)의 계약·부상·훈련 출석·경기 스탯 조회 가능.
 선수 한 명에 에이전트 한 명 (`Player.agentId → User`). 에이전트 한 명이 복수 선수 담당 가능.
 성과 보너스 달성 시 담당 계약 FRONT_OFFICE 직원과 함께 알림 수신.
+
+---
+
+## 코치 (Coach)
+
+`User`와 별개 엔티티. 모든 코칭 역할(HEAD_COACH부터 GK코치까지)을 커버하며, 외부 후보 단계부터 재직·퇴임 후까지 전술 프로필과 이력을 보존한다.
+재직 중일 때만 `userId → User(coachingRole)` 로 연결되며, 퇴임 후에도 레코드는 유지된다.
+HEAD_COACH 후보는 독립 후보로 등록되며, 패키지 코치진은 해당 HEAD_COACH 후보에 연결된 별도 Coach 후보로 등록된다.
+
+**평가 지표 수집:** 외부 API(API-FOOTBALL 등)에서 코치 후보의 이전 팀 집계 데이터를 자동 수집한다. 수동 입력 없이 객관성을 유지하는 것이 원칙이다.
+
+**역할별 평가 스키마:**
+- Tier 1 (독립 스키마): `HEAD_COACH`, `DEFENSIVE_COACH`, `ATTACKING_COACH`, `GOALKEEPER_COACH`
+- Tier 2 (공통 경량 스키마): `ASSISTANT_COACH`, `PHYSICAL_COACH`, `SET_PIECE_COACH`
+
+**쓰기 권한:** GM, TD. 최종 승인(APPROVAL_PENDING → CONTRACTED)은 GM 전용.
+**읽기 권한:** GM, TD, ADMIN.
+SCOUT은 선수(Prospect) 전담이며 Coach 후보에는 접근하지 않는다.
+
+**상태머신:**
+```
+CANDIDATE → SHORTLISTED → APPROVAL_PENDING → CONTRACTED → RETIRED
+                                          ↘
+                           ARCHIVED (어느 단계에서든 탈락·결렬 시)
+```
+역방향 전환 없음. 계약 완료(CONTRACTED) 시 User 계정 생성 후 `userId` 연결.
+
+**SHORTLISTED 전환:** 자동(fitScore ≥ 설정 임계값 시 시스템 전환 + GM 알림)과 수동(GM/TD 직접 전환) 모두 허용.
+`shortlistSource: SYSTEM | MANUAL` 필드로 선정 경위를 추적한다. 후보의 알권리 및 내부 감사 근거로 활용.
+임계값은 채용 라운드(CoachHiringRound)별로 GM이 설정한다. 동일 포지션이라도 상황에 따라 기준이 달라질 수 있다.
+
+### CoachHiringRound (채용 라운드)
+
+GM이 개설하는 코치 채용 단위. Coach 후보는 `hiringRoundId`로 특정 라운드에 귀속된다.
+
+**필드:** `targetRole`(채용 대상 역할), `fitScoreThreshold`(자동 shortlist 기준), `status`(OPEN \| CLOSED \| CANCELLED), `deadline`(마감일, nullable), `budget`(예산 상한, nullable), `notes`(메모), `createdById`(개설 GM), `result`(결과 요약)
+
+**CONTRACTED 시 User 계정 생성:** 기존 초대 흐름과 동일. CONTRACTED 전환 시 ADMIN에게 알림 발송 → ADMIN이 coachingRole 지정 후 초대 이메일 발송 → 코치 본인이 수락. 합류 시점이 계약 시점과 다를 수 있으므로 ADMIN이 적절한 시점에 초대한다.
+
+### CoachTutorAssignment (튜터 배정)
+
+외국인 코치의 적응 지원을 위한 튜터 배정 단위. 내부(현직 COACHING_STAFF)와 외부(시스템 계정 없는 전문가) 모두 허용. 한 코치에 복수 배정 가능.
+
+**필드:** `type`(INTERNAL \| EXTERNAL), `internalTutorId → User`(INTERNAL 시), `externalName`, `externalContact`(EXTERNAL 시), `sessionCount`(배정 세션 횟수), `coachId → Coach`
+
+**적응도 지표:**
+- `languageProficiency`: CEFR 등급(A1 \| A2 \| B1 \| B2 \| C1 \| C2) — 외부 평가 결과 입력
+- `tacticalImplementationRate`: 담당 역할 TrainingSession의 참가자 `performanceScore` 집계로 자동 계산 (예: DEFENSIVE_COACH → 수비 세션 선수 평균 점수)
+
+**자동 지원 강도 조정:** 언어 숙련도 ≤ B1 AND 전술 이행률 ≤ 임계값 조건 충족 시 cron이 GM/TD에게 알림 발송 ("세션 증가 권고"). `sessionCount` 직접 변경은 GM/TD가 수동으로 처리한다.
+
+**삭제 정책:** 모든 Coach 레코드는 soft delete만 허용. 탈락 후보(ARCHIVED) 포함 영구 보존. 알권리 대응 및 감사 목적. Player 삭제 정책과 동일 원칙.
+
+---
+
+**알림 트리거 (Coach 도메인):**
+
+| 트리거 | 수신자 | 발생 시점 |
+|--------|--------|----------|
+| fitScore ≥ 임계값 달성 | GM | API 데이터 수집 후 자동 계산 시 |
+| SHORTLISTED 수동 전환 | TD | GM이 직접 전환 시 |
+| APPROVAL_PENDING 전환 | GM | TD가 승인 요청 시 |
+| CONTRACTED 전환 | ADMIN | GM 최종 승인 시 (계정 생성 필요 안내) |
+| HEAD_COACH CONTRACTED | GM, TD | Master Policy 갱신 안내 |
+| Coach ARCHIVED | 해당 라운드 GM | 어느 단계에서든 탈락 처리 시 |
+
+**패키지 연결:** 패키지 코치는 `packageLeadId → Coach(HEAD_COACH 후보)`로 연결된다. 한 코치는 하나의 패키지에만 속한다.
+
+**Master Policy (구단 전술 가이드라인):** 별도 엔티티 없음. 현직 HEAD_COACH의 평가 데이터(`HeadCoachEvaluation`)가 곧 구단의 기준 모델이다. 감독 교체 시 새 HEAD_COACH의 평가 데이터로 자동 대체된다.
+
+**역할별 평가 지표 (팀 집계 기준, 외부 API 수집):**
+- `HeadCoachEvaluation`: 점유율, 압박 강도, 전진패스 성공률, 활동량, 구단 철학 부합도 점수(API 유사도)
+- `DefensiveCoachEvaluation`: 태클 성공률, 클리어, 블록, 수비 실책, 볼 리커버리, 압박
+- `AttackingCoachEvaluation`: xG, xA, 찬스 메이킹, 드리블 성공률, 전진패스 성공률, 샷 전환율, 득점 관여율
+- `GoalkeeperCoachEvaluation`: PSxG, xG 대비 실점, 빌드업 패스 성공률
+- Tier 2 공통: `fitScore`(0–100), `notes`(자유 텍스트)
 
 ---
 
@@ -413,7 +524,8 @@ HEAD_COACH 요청 → GM 최종 승인 → LOAN_OUT 종료 처리 → Player.sta
 **결과 (TrainingResult, 선수별):**
 - `attendance`: 해당 세션 담당 코치가 입력
 - `feedback`: HEAD_COACH 또는 담당 코치 입력
-- `performanceScore`: HEAD_COACH 또는 해당 세션 담당 코치 입력. 담당 코치는 포지션 구분 없이 세션 참가자 전원 평가 가능. `scoredBy(userId)` 필드로 평가자 구분.
+- `performanceScore`: HEAD_COACH 또는 해당 세션 담당 코치 입력. 담당 코치는 포지션 구분 없이 세션 참가자 전원 평가 가능.
+- `scoredById → User`: 평가자 기록. 감사 및 평가자별 추적 목적.
 
 **PLAYER 열람:** 본인 출석·점수·피드백 조회 가능. 타 선수 정보 비공개.
 
@@ -431,6 +543,38 @@ HEAD_COACH 요청 → GM 최종 승인 → LOAN_OUT 종료 처리 → Player.sta
 | 심리·사회 | 팀워크, 역할 명확화, 커뮤니케이션 | HEAD_COACH |
 | 세트피스 | 코너킥, 프리킥, 스로인 | SET_PIECE_COACH |
 | 골키퍼 | 세이브, 배급, 포지셔닝 | GOALKEEPER_COACH |
+
+### CoachAvailability (코치 가용성)
+
+코치의 날짜별 불가 일정 블록. HEAD_COACH가 훈련을 계획할 때 담당 코치 가용성을 확인하는 용도.
+
+**필드:** `userId → User`, `startDate`, `endDate`, `reason?(메모)`, `createdById → User`
+
+**입력 권한:** 본인, ADMIN, HEAD_COACH.
+
+**훈련 세션 연동:** 세션 생성 시 해당 날짜 불가 코치를 경고 표시. 차단 없음 — HEAD_COACH가 최종 판단.
+
+### PlayerDevelopmentPlan (선수 발전 계획)
+
+코치가 특정 선수에 대해 시즌 단위로 작성하는 공식 발전 목표 문서.
+
+**필드:** `playerId → Player`, `coachId → User(작성자)`, `seasonId → Season`, `goals(목표 자유 텍스트)`, `notes?(메모)`, `status(DRAFT|ACTIVE|REVIEWED)`, `reviewedAt?`
+
+**상태머신:** `DRAFT → ACTIVE → REVIEWED`. 선수는 ACTIVE 이후부터 열람 가능.
+
+**제약:** `@@unique([playerId, seasonId])` — 선수 × 시즌당 1개. 공동 편집 가능하며 마지막 수정자가 `coachId`에 기록.
+
+**쓰기 권한:** HEAD_COACH, 담당 포지션 코치.
+
+**읽기 권한:** 작성자, HEAD_COACH, GM, TD, ADMIN + 해당 선수 본인(ACTIVE 이후).
+
+### TrainingLoad (훈련 부하)
+
+세션별 선수 부하 기록. PHYSICAL_COACH의 핵심 관리 지표.
+
+**필드:** `playerId → Player`, `sessionId → TrainingSession`, `rpe(Int 1–10, 선수 본인 입력)`, `load(Int, PHYSICAL_COACH 입력)`
+
+**주간 부하 알림:** 선수 주간 누적 `load` 합계가 팀 전체 고정 임계값 초과 시 PHYSICAL_COACH + HEAD_COACH에게 알림. 임계값은 서버 설정값(환경변수 또는 시스템 설정)으로 관리.
 
 ### 출석 미달 알림 기준
 아래 조건 중 하나라도 충족 시 COACHING_STAFF에 알림:
@@ -569,6 +713,8 @@ REJECTED 상태에서 원 신청자가 재상신 가능. 재상신 시 `rejectio
 | 의료비 1차 승인 | ADMIN 전원 | MEDICAL_DIRECTOR가 1차 승인 시 |
 | 의료비 반려 | 신청자 본인 | MEDICAL_DIRECTOR 또는 ADMIN이 반려 시 |
 | 의료비 최종 승인 | 신청자 본인 | ADMIN이 최종 승인 시 |
+| 훈련 부하 초과 | PHYSICAL_COACH, HEAD_COACH | 선수 주간 누적 load ≥ 임계값 시 |
+| PDP 활성화 | 해당 선수 본인 | PDP status → ACTIVE 전환 시 |
 
 **저장 방식:** 수신자별 Notification 레코드 DB 저장. 읽음/안읽음 상태 추적. `/notifications` 목록 페이지 제공.
 
@@ -597,4 +743,6 @@ MEDICAL_EXPENSE_SUBMITTED
 MEDICAL_EXPENSE_LEADER_APPROVED
 MEDICAL_EXPENSE_REJECTED
 MEDICAL_EXPENSE_APPROVED
+TRAINING_LOAD_ALERT
+PLAYER_DEVELOPMENT_PLAN_ACTIVATED
 ```
