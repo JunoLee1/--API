@@ -580,6 +580,8 @@ model ExternalReport {
   updatedAt  DateTime             @updatedAt
 
   injury Injury @relation(fields: [injuryId], references: [id], onDelete: Cascade)
+
+  @@unique([injuryId, target])
 }
 
 model Match {
