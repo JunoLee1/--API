@@ -27,6 +27,8 @@ import { NotificationsPage } from '@/pages/notifications/NotificationsPage'
 import { MePage } from '@/pages/me/MePage'
 import { UsersPage } from '@/pages/admin/UsersPage'
 import { PartnersPage } from '@/pages/admin/PartnersPage'
+import { TeamsPage } from '@/pages/admin/TeamsPage'
+import { SeasonsPage } from '@/pages/admin/SeasonsPage'
 import { ReportsPage } from '@/pages/reports/ReportsPage'
 import { ReportFormPage } from '@/pages/reports/ReportFormPage'
 import { ReportDetailPage } from '@/pages/reports/ReportDetailPage'
@@ -92,6 +94,8 @@ function App() {
             <Route path="/coaches" element={<CoachListPage />} />
             <Route path="/coaches/:id" element={<CoachDetailPage />} />
             <Route path="/admin/users" element={<UsersPage />} />
+            <Route path="/admin/teams" element={<TeamsPage />} />
+            <Route path="/admin/seasons" element={<SeasonsPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/login" replace />} />

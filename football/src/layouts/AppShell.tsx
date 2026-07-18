@@ -36,6 +36,8 @@ import {
   LayoutGrid,
   Video,
   CalendarX2,
+  Users2,
+  CalendarDays,
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -237,6 +239,20 @@ const NAV_ITEMS: NavItem[] = [
     to: '/admin/users',
     label: '사용자 관리',
     icon: Settings,
+    section: '관리',
+    roles: ['ADMIN'],
+  },
+  {
+    to: '/admin/teams',
+    label: '팀 관리',
+    icon: Users2,
+    section: '관리',
+    roles: ['ADMIN'],
+  },
+  {
+    to: '/admin/seasons',
+    label: '시즌 관리',
+    icon: CalendarDays,
     section: '관리',
     roles: ['ADMIN'],
   },
