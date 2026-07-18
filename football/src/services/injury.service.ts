@@ -2,6 +2,9 @@ import { api } from './api'
 import type { Injury, InjuryDetail, InjuryStatus, InjuryCause, HospitalType, InjuryReport, RehabStage, RiskLevel, SecurityLevel, InjuryAssessment, ExternalReport, ExternalReportStatus, BodyPart } from '@/types/injury'
 
 export const injuryApi = {
+  active: () =>
+    api.get<{ playerId: string; status: InjuryStatus }[]>('/injuries/active'),
+
   byPlayer: (playerId: string) =>
     api.get<Injury[]>(`/injuries/player/${playerId}`),
 
