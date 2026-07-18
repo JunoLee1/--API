@@ -34,6 +34,7 @@ export class TrainingService {
 
   async createSession(dto: CreateSessionDto, createdById: number) {
     const session = await this.repo.create(dto, createdById);
+    void this.repo.addAllActivePlayers(session.id, session.teamId).catch(console.error);
     if (this.notifRepo) {
       void this.notifRepo
         .createForHeadCoach(

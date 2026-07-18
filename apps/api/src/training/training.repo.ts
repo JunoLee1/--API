@@ -49,11 +49,12 @@ export class TrainingRepository {
         sessionType: dto.sessionType,
         seasonId: dto.seasonId,
         createdById,
+        ...(dto.teamId ? { teamId: dto.teamId } : {}),
         ...(dto.contents && {
           contents: { create: dto.contents },
         }),
       },
-      select: { id: true, date: true, goal: true, sessionType: true, isApproved: true, seasonId: true },
+      select: { id: true, date: true, goal: true, sessionType: true, isApproved: true, seasonId: true, teamId: true },
     });
   }
 
@@ -74,6 +75,21 @@ export class TrainingRepository {
   addParticipants(sessionId: number, dto: AddParticipantsDto) {
     return this.prisma.trainingParticipant.createMany({
       data: dto.playerIds.map((playerId) => ({ sessionId, playerId })),
+      skipDuplicates: true,
+    });
+  }
+
+  async addAllActivePlayers(sessionId: number, teamId?: number | null) {
+    const players = await this.prisma.player.findMany({
+      where: {
+        status: "ACTIVE",
+        ...(teamId ? { teamId } : {}),
+      },
+      select: { id: true },
+    });
+    if (players.length === 0) return;
+    await this.prisma.trainingParticipant.createMany({
+      data: players.map((p) => ({ sessionId, playerId: p.id })),
       skipDuplicates: true,
     });
   }
