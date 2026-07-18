@@ -78,26 +78,17 @@ export class TrainingRepository {
     });
   }
 
-  findResult(sessionId: number, playerId: string) {
-    return this.prisma.trainingResult.findFirst({ where: { sessionId, playerId } });
-  }
-
-  createResult(sessionId: number, dto: UpsertResultDto) {
-    return this.prisma.trainingResult.create({
-      data: {
+  upsertResult(sessionId: number, dto: UpsertResultDto) {
+    return this.prisma.trainingResult.upsert({
+      where: { sessionId_playerId: { sessionId, playerId: dto.playerId } },
+      create: {
         sessionId,
         playerId: dto.playerId,
         attendance: dto.attendance,
         feedback: n(dto.feedback),
         performanceScore: n(dto.performanceScore),
       },
-    });
-  }
-
-  updateResult(id: number, dto: UpsertResultDto) {
-    return this.prisma.trainingResult.update({
-      where: { id },
-      data: {
+      update: {
         attendance: dto.attendance,
         feedback: n(dto.feedback),
         performanceScore: n(dto.performanceScore),

@@ -812,6 +812,8 @@ model TrainingResult {
   session  TrainingSession @relation(fields: [sessionId], references: [id])
   player   Player          @relation(fields: [playerId], references: [id])
   scoredBy User?           @relation("TrainingResultScorer", fields: [scoredById], references: [id])
+
+  @@unique([sessionId, playerId])
 }
 
 model TacticalAnalysis {

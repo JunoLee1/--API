@@ -68,10 +68,7 @@ export class TrainingService {
   async upsertResult(sessionId: number, dto: UpsertResultDto) {
     const session = await this.repo.findById(sessionId);
     if (!session) throw new AppError(404, "SESSION_NOT_FOUND");
-    const existing = await this.repo.findResult(sessionId, dto.playerId);
-    const result = existing
-      ? await this.repo.updateResult(existing.id, dto)
-      : await this.repo.createResult(sessionId, dto);
+    const result = await this.repo.upsertResult(sessionId, dto);
 
     if (dto.attendance === "ABSENT_UNAUTHORIZED" || dto.attendance === "LATE_UNAUTHORIZED") {
       const { absences, lateCount } = await this.repo.countUnexcusedAttendance(dto.playerId);
