@@ -119,4 +119,42 @@ export class TrainingRepository {
   findPlayerNameById(playerId: string) {
     return this.prisma.player.findUnique({ where: { id: playerId }, select: { playerName: true } });
   }
+
+  findResults(filters: {
+    from?: string
+    to?: string
+    sessionType?: string
+    playerId?: string
+  }) {
+    const where: Record<string, unknown> = {}
+
+    if (filters.from || filters.to) {
+      where.session = {
+        date: {
+          ...(filters.from ? { gte: new Date(filters.from) } : {}),
+          ...(filters.to ? { lte: new Date(filters.to + 'T23:59:59Z') } : {}),
+        },
+      }
+    }
+
+    if (filters.sessionType) {
+      where.session = {
+        ...(where.session as object ?? {}),
+        sessionType: filters.sessionType,
+      }
+    }
+
+    if (filters.playerId) {
+      where.playerId = filters.playerId
+    }
+
+    return this.prisma.trainingResult.findMany({
+      where: where as any,
+      include: {
+        session: { select: { id: true, date: true, sessionType: true, goal: true } },
+        player: { select: { id: true, playerName: true, position: true } },
+      },
+      orderBy: { session: { date: 'desc' } },
+    })
+  }
 }
