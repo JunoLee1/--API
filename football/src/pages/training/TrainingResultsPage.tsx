@@ -13,6 +13,9 @@ import {
 } from '@/components/ui/table'
 import { Download } from 'lucide-react'
 import Papa from 'papaparse'
+import { Pagination } from '@/components/ui/pagination'
+
+const PAGE_SIZE = 10
 
 const ATTENDANCE_LABEL: Record<string, string> = {
   PRESENT: '출석',
@@ -30,9 +33,11 @@ export function TrainingResultsPage() {
   const [filters, setFilters] = useState<TrainingResultFilters>({ from: '', to: '', sessionType: '' })
   const [rows, setRows] = useState<TrainingResultRow[]>([])
   const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(1)
 
   const fetchData = async () => {
     setLoading(true)
+    setPage(1)
     try {
       const data = await trainingApi.getResults(filters)
       setRows(data)
@@ -62,6 +67,9 @@ export function TrainingResultsPage() {
     a.click()
     URL.revokeObjectURL(url)
   }
+
+  const totalPages = Math.ceil(rows.length / PAGE_SIZE)
+  const paged = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div className="flex flex-col h-full">
@@ -117,7 +125,7 @@ export function TrainingResultsPage() {
         </Button>
       </div>
 
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto min-h-0">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
@@ -134,7 +142,7 @@ export function TrainingResultsPage() {
               <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">로딩 중...</TableCell></TableRow>
             ) : rows.length === 0 ? (
               <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">데이터가 없습니다.</TableCell></TableRow>
-            ) : rows.map(r => (
+            ) : paged.map(r => (
               <TableRow key={r.id}>
                 <TableCell className="tabular-nums">{formatDate(r.session.date)}</TableCell>
                 <TableCell>{SESSION_TYPE_LABEL[r.session.sessionType] ?? r.session.sessionType}</TableCell>
@@ -147,6 +155,13 @@ export function TrainingResultsPage() {
           </TableBody>
         </Table>
       </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={rows.length}
+        pageSize={PAGE_SIZE}
+        onPageChange={setPage}
+      />
     </div>
   )
 }

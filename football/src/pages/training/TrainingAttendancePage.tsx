@@ -6,6 +6,9 @@ import type { TrainingSessionDetail, AttendanceStatus } from '@/types/training'
 import { ATTENDANCE_LABEL, ATTENDANCE_STYLE } from '@/types/training'
 import type { Season } from '@/types/season'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Pagination } from '@/components/ui/pagination'
+
+const PAGE_SIZE = 10
 import {
   Select,
   SelectContent,
@@ -48,6 +51,7 @@ export function TrainingAttendancePage() {
   const [loading, setLoading] = useState(false)
   const [stats, setStats] = useState<PlayerStat[]>([])
   const [sessionCount, setSessionCount] = useState(0)
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     seasonApi.list().then((list) => {
@@ -62,6 +66,7 @@ export function TrainingAttendancePage() {
     if (!selectedSeasonId) return
     const seasonId = Number(selectedSeasonId)
     setLoading(true)
+    setPage(1)
     setStats([])
 
     trainingApi
@@ -116,6 +121,9 @@ export function TrainingAttendancePage() {
       .catch(() => toast.error('출석 현황을 불러오지 못했습니다.'))
       .finally(() => setLoading(false))
   }, [selectedSeasonId])
+
+  const totalPages = Math.ceil(stats.length / PAGE_SIZE)
+  const paged = stats.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   const attendanceRate = (stat: PlayerStat) => {
     if (stat.total === 0) return '—'
@@ -182,7 +190,7 @@ export function TrainingAttendancePage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {stats.map((s) => (
+              {paged.map((s) => (
                 <TableRow key={s.playerId}>
                   <TableCell className="font-medium">{s.playerName}</TableCell>
                   <TableCell className="text-center tabular-nums">{s.present}</TableCell>
@@ -197,6 +205,13 @@ export function TrainingAttendancePage() {
           </Table>
         )}
       </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={stats.length}
+        pageSize={PAGE_SIZE}
+        onPageChange={setPage}
+      />
     </div>
   )
 }
