@@ -10,11 +10,19 @@ import {
   ATTENDANCE_LABEL,
   ATTENDANCE_STYLE,
 } from '@/types/training'
+import { trainingReferenceApi } from '@/services/training-reference.service'
+import type { TrainingReference, ReferenceSource } from '@/types/training-reference'
+import { REFERENCE_SOURCE_LABEL } from '@/types/training-reference'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
-import { ArrowLeft, CheckCircle, Clock } from 'lucide-react'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
+import { ArrowLeft, CheckCircle, Clock, ExternalLink, Trash2, Plus } from 'lucide-react'
 import { POSITION_ABBR, POSITION_ZONE } from '@/types/player'
 import type { Position } from '@/types/player'
 
@@ -37,11 +45,26 @@ export function TrainingDetailPage() {
   const [loading, setLoading] = useState(true)
 
   const canApprove = user?.role === 'ADMIN' || user?.coachingRole === 'HEAD_COACH'
+  const canAddRef = user?.role === 'ADMIN' || user?.role === 'COACHING_STAFF'
+
+  const [refs, setRefs] = useState<TrainingReference[]>([])
+  const [refLoading, setRefLoading] = useState(false)
+  const [newRefTitle, setNewRefTitle] = useState('')
+  const [newRefUrl, setNewRefUrl] = useState('')
+  const [newRefSource, setNewRefSource] = useState<ReferenceSource>('EXTERNAL')
+  const [newRefTags, setNewRefTags] = useState('')
+  const [addingRef, setAddingRef] = useState(false)
+
+  const fetchRefs = (s: TrainingSessionDetail) => {
+    trainingReferenceApi.list({ sessionType: s.sessionType })
+      .then(setRefs)
+      .catch(() => null)
+  }
 
   useEffect(() => {
     if (!id) return
     trainingApi.get(Number(id))
-      .then(setSession)
+      .then((s) => { setSession(s); fetchRefs(s) })
       .catch(() => toast.error('훈련 세션을 불러오지 못했습니다.'))
       .finally(() => setLoading(false))
   }, [id])
@@ -174,6 +197,103 @@ export function TrainingDetailPage() {
               </div>
             </div>
           )}
+
+          {/* 훈련 레퍼런스 */}
+          <div className="border rounded-lg p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold">훈련 레퍼런스</h3>
+              {canAddRef && (
+                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setAddingRef(v => !v)}>
+                  <Plus className="h-3 w-3 mr-1" />추가
+                </Button>
+              )}
+            </div>
+
+            {addingRef && (
+              <div className="space-y-2 border-t pt-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">제목 *</Label>
+                    <Input value={newRefTitle} onChange={e => setNewRefTitle(e.target.value)} className="h-8 text-sm" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">URL *</Label>
+                    <Input value={newRefUrl} onChange={e => setNewRefUrl(e.target.value)} className="h-8 text-sm" placeholder="https://" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">출처</Label>
+                    <Select
+                      value={newRefSource}
+                      onValueChange={v => setNewRefSource(v as ReferenceSource)}
+                      items={REFERENCE_SOURCE_LABEL}
+                    >
+                      <SelectTrigger className="h-8 text-sm bg-background"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(REFERENCE_SOURCE_LABEL) as ReferenceSource[]).map(s => (
+                          <SelectItem key={s} value={s}>{REFERENCE_SOURCE_LABEL[s]}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">태그 (쉼표 구분)</Label>
+                    <Input value={newRefTags} onChange={e => setNewRefTags(e.target.value)} className="h-8 text-sm" placeholder="압박, 빌드업" />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setAddingRef(false)}>취소</Button>
+                  <Button size="sm" className="h-7 text-xs" disabled={refLoading} onClick={async () => {
+                    if (!newRefTitle.trim() || !newRefUrl.trim()) return
+                    setRefLoading(true)
+                    try {
+                      await trainingReferenceApi.create({
+                        sessionType: session.sessionType,
+                        title: newRefTitle.trim(),
+                        url: newRefUrl.trim(),
+                        source: newRefSource,
+                        tags: newRefTags.split(',').map(t => t.trim()).filter(Boolean),
+                      })
+                      setNewRefTitle(''); setNewRefUrl(''); setNewRefTags(''); setAddingRef(false)
+                      fetchRefs(session)
+                      toast.success('레퍼런스가 등록됐습니다.')
+                    } catch { toast.error('등록에 실패했습니다.') }
+                    finally { setRefLoading(false) }
+                  }}>등록</Button>
+                </div>
+              </div>
+            )}
+
+            {refs.length === 0 ? (
+              <p className="text-xs text-muted-foreground">등록된 레퍼런스가 없습니다.</p>
+            ) : (
+              <ul className="space-y-1.5">
+                {refs.map(r => (
+                  <li key={r.id} className="flex items-start gap-2 text-sm">
+                    <a href={r.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:underline flex-1 min-w-0">
+                      <ExternalLink className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{r.title}</span>
+                    </a>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span className="text-xs text-muted-foreground">{REFERENCE_SOURCE_LABEL[r.source]}</span>
+                      {r.tags.map(t => (
+                        <span key={t} className="text-xs border rounded px-1">{t}</span>
+                      ))}
+                      {canAddRef && (user?.id === r.addedBy.id || user?.role === 'ADMIN') && (
+                        <Button size="icon" variant="ghost" className="h-5 w-5" onClick={async () => {
+                          await trainingReferenceApi.delete(r.id)
+                          fetchRefs(session)
+                        }}>
+                          <Trash2 className="h-3 w-3 text-destructive" />
+                        </Button>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
     </div>
