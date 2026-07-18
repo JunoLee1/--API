@@ -3,8 +3,10 @@ import { toast } from 'sonner'
 import { playerApi } from '@/services/player.service'
 import { injuryApi } from '@/services/injury.service'
 import { tacticalApi } from '@/services/tactical.service'
-import type { Player } from '@/types/player'
+import type { Player, PositionZone } from '@/types/player'
+import { POSITION_ZONE } from '@/types/player'
 import type { InjuryStatus } from '@/types/injury'
+import { AlertTriangle } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -20,6 +22,11 @@ import {
 import { getCandidates, buildInitialPlacement } from '@/components/squad/squad-utils'
 
 type ViewMode = 'formation' | 'grid'
+
+const ZONE_MIN: Record<PositionZone, number> = { GK: 2, DEF: 4, MID: 3, FWD: 2 }
+const ZONE_LABEL_KR: Record<PositionZone, string> = {
+  GK: '골키퍼', DEF: '수비', MID: '미드필더', FWD: '공격',
+}
 
 interface ActiveInjury {
   playerId: string
@@ -45,6 +52,14 @@ export function SquadPlannerPage() {
     ),
     [allPlayers, injuredIds],
   )
+
+  const squadWarnings = useMemo(() => {
+    const counts: Record<PositionZone, number> = { GK: 0, DEF: 0, MID: 0, FWD: 0 }
+    availablePlayers.forEach((p) => { counts[POSITION_ZONE[p.position]]++ })
+    return (['GK', 'DEF', 'MID', 'FWD'] as PositionZone[])
+      .filter((z) => counts[z] < ZONE_MIN[z])
+      .map((z) => ({ zone: z, count: counts[z], min: ZONE_MIN[z] }))
+  }, [availablePlayers])
 
   useEffect(() => {
     Promise.all([
@@ -132,6 +147,19 @@ export function SquadPlannerPage() {
               <span className="ml-2 text-red-400 font-medium">빈 슬롯 {voidCount}개</span>
             )}
           </p>
+          {squadWarnings.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {squadWarnings.map(({ zone, count, min }) => (
+                <span
+                  key={zone}
+                  className="inline-flex items-center gap-1 rounded border border-red-300 bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-400"
+                >
+                  <AlertTriangle className="size-3 shrink-0" />
+                  {ZONE_LABEL_KR[zone]} 가용 {count}명 (최소 {min}명)
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Select value={formation} onValueChange={handleFormationChange}>
