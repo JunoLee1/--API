@@ -476,6 +476,8 @@ model Player {
   medicalExpenses        MedicalExpense[]
   trainingLoads          TrainingLoad[]
   developmentPlans       PlayerDevelopmentPlan[]
+  momAnalyses            TacticalAnalysis[]      @relation("MomPlayer")
+  improvementAnalyses    TacticalAnalysis[]      @relation("ImprovementPlayer")
 }
 
 model Contract {
@@ -815,11 +817,26 @@ model TacticalAnalysis {
   seasonId         Int
   createdById      Int
 
-  match     Match            @relation(fields: [matchId], references: [id])
-  season    Season           @relation(fields: [seasonId], references: [id])
-  createdBy User             @relation(fields: [createdById], references: [id])
-  lineup    TacticalLineup[]
-  media     TacticalMedia[]
+  // PRE_MATCH
+  opponentFormation   String?
+  opponentKeyThreat   String? @db.Text
+  opponentWeakness    String? @db.Text
+  opponentKeyPlayer   String?
+  // POST_MATCH
+  tacticalCompliance  String? @db.Text
+  concededAnalysis    String? @db.Text
+  momPlayerId         String?
+  momNote             String?
+  improvementPlayerId String?
+  improvementNote     String?
+
+  match             Match            @relation(fields: [matchId], references: [id])
+  season            Season           @relation(fields: [seasonId], references: [id])
+  createdBy         User             @relation(fields: [createdById], references: [id])
+  lineup            TacticalLineup[]
+  media             TacticalMedia[]
+  momPlayer         Player?          @relation("MomPlayer", fields: [momPlayerId], references: [id])
+  improvementPlayer Player?          @relation("ImprovementPlayer", fields: [improvementPlayerId], references: [id])
 }
 
 model TacticalLineup {
