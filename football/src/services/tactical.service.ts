@@ -1,5 +1,11 @@
 import { api } from './api'
-import type { TacticalAnalysis, TacticalMedia, CreateTacticalDto, TacticalPhase } from '@/types/tactical'
+import type {
+  TacticalAnalysis,
+  TacticalMedia,
+  CreateTacticalDto,
+  UpdateTacticalDto,
+  TacticalPhase,
+} from '@/types/tactical'
 
 export const tacticalApi = {
   list: (params?: { matchId?: number; phase?: TacticalPhase }) => {
@@ -15,7 +21,7 @@ export const tacticalApi = {
   create: (dto: CreateTacticalDto) =>
     api.post<TacticalAnalysis>('/tactical', dto),
 
-  update: (id: number, dto: Partial<CreateTacticalDto>) =>
+  update: (id: number, dto: UpdateTacticalDto) =>
     api.patch<TacticalAnalysis>(`/tactical/${id}`, dto),
 
   confirm: (id: number) =>
