@@ -1,4 +1,4 @@
-export type CompetitionType = 'LEAGUE' | 'CUP' | 'FRIENDLY' | 'CHAMPIONS_LEAGUE'
+export type CompetitionType = 'LEAGUE' | 'DOMESTIC_CUP' | 'CONTINENTAL' | 'PLAYOFF' | 'FRIENDLY'
 
 export interface Match {
   id: number
@@ -57,14 +57,16 @@ export interface MatchDetail extends Match {
 
 export const COMPETITION_LABEL: Record<CompetitionType, string> = {
   LEAGUE: '리그',
-  CUP: '컵',
+  DOMESTIC_CUP: 'FA컵',
+  CONTINENTAL: 'ACL',
+  PLAYOFF: '플레이오프',
   FRIENDLY: '친선',
-  CHAMPIONS_LEAGUE: 'UCL',
 }
 
 export const COMPETITION_STYLE: Record<CompetitionType, string> = {
   LEAGUE: 'bg-blue-100 text-blue-800 border-blue-200',
-  CUP: 'bg-amber-100 text-amber-800 border-amber-200',
+  DOMESTIC_CUP: 'bg-amber-100 text-amber-800 border-amber-200',
+  CONTINENTAL: 'bg-purple-100 text-purple-800 border-purple-200',
+  PLAYOFF: 'bg-orange-100 text-orange-800 border-orange-200',
   FRIENDLY: 'bg-gray-100 text-gray-600 border-gray-200',
-  CHAMPIONS_LEAGUE: 'bg-purple-100 text-purple-800 border-purple-200',
 }
