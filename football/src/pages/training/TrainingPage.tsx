@@ -35,8 +35,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Plus, CheckCircle, Clock } from 'lucide-react'
+import { Pagination } from '@/components/ui/pagination'
 
 const SESSION_TYPES = Object.keys(SESSION_TYPE_LABEL) as SessionType[]
+const PAGE_SIZE = 10
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' })
@@ -124,6 +126,7 @@ export function TrainingPage() {
   const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>('ALL')
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
+  const [page, setPage] = useState(1)
 
   const canCreate = user?.role === 'ADMIN' || user?.role === 'COACHING_STAFF'
   const canApprove = user?.role === 'ADMIN' || user?.coachingRole === 'HEAD_COACH'
@@ -139,6 +142,7 @@ export function TrainingPage() {
 
   const fetchSessions = (seasonId?: number) => {
     setLoading(true)
+    setPage(1)
     trainingApi.list(seasonId)
       .then(setSessions)
       .catch(() => toast.error('훈련 목록을 불러오지 못했습니다.'))
@@ -160,6 +164,9 @@ export function TrainingPage() {
       toast.error(err instanceof Error ? err.message : '승인에 실패했습니다.')
     }
   }
+
+  const totalPages = Math.ceil(sessions.length / PAGE_SIZE)
+  const paged = sessions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div className="flex flex-col h-full">
@@ -202,7 +209,7 @@ export function TrainingPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sessions.map((s) => (
+              {paged.map((s) => (
                 <TableRow key={s.id} className="cursor-pointer" onClick={() => navigate(`/training/${s.id}`)}>
                   <TableCell className="tabular-nums">{formatDate(s.date)}</TableCell>
                   <TableCell className="max-w-xs truncate">{s.goal}</TableCell>
@@ -231,6 +238,14 @@ export function TrainingPage() {
           </Table>
         )}
       </div>
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={sessions.length}
+        pageSize={PAGE_SIZE}
+        onPageChange={setPage}
+      />
 
       <CreateSessionDialog
         open={createOpen}
