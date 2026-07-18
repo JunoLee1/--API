@@ -33,6 +33,7 @@ import { CoachListPage } from '@/pages/coaches/CoachListPage'
 import { CoachDetailPage } from '@/pages/coaches/CoachDetailPage'
 import { MedicalExpenseFormPage } from '@/pages/medical-expense/MedicalExpenseFormPage'
 import { MedicalExpenseDetailPage } from '@/pages/medical-expense/MedicalExpenseDetailPage'
+import { SquadPlannerPage } from '@/pages/squad/SquadPlannerPage'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const loggedIn = localStorage.getItem('loggedIn')
@@ -66,6 +67,7 @@ function App() {
             <Route path="/training/:id" element={<TrainingDetailPage />} />
             <Route path="/matches" element={<MatchesPage />} />
             <Route path="/matches/analysis" element={<TacticalAnalysisPage />} />
+            <Route path="/squad" element={<SquadPlannerPage />} />
             <Route path="/matches/rankings" element={<RankingsPage />} />
             <Route path="/matches/:id" element={<MatchDetailPage />} />
             <Route path="/equipment" element={<EquipmentPage />} />

@@ -32,6 +32,7 @@ import {
   Trophy,
   UserSearch,
   Users,
+  LayoutGrid,
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -175,6 +176,13 @@ const NAV_ITEMS: NavItem[] = [
     label: '팀 순위',
     icon: BarChart3,
     section: '경기·분석',
+  },
+  {
+    to: '/squad',
+    label: '팀 빌더',
+    icon: LayoutGrid,
+    section: '경기·분석',
+    roles: ['ADMIN', 'COACHING_STAFF'],
   },
 
   // 관리
