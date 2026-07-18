@@ -86,4 +86,8 @@ export class TrainingService {
 
     return result;
   }
+
+  getResults(filters: { from?: string; to?: string; sessionType?: string; playerId?: string }) {
+    return this.repo.findResults(filters)
+  }
 }

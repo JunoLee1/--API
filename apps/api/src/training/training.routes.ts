@@ -15,6 +15,7 @@ const controller = new TrainingController(service);
 const auth = passport.authenticate("accessToken", { session: false });
 
 router.get("/", auth, controller.getSessions);
+router.get("/results", auth, controller.getResults);
 router.get("/:id", auth, controller.getSessionById);
 router.post("/", auth, controller.createSession);
 router.patch("/:id/approve", auth, controller.approveSession);

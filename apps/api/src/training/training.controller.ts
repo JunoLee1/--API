@@ -64,4 +64,16 @@ export class TrainingController {
       res.status(200).json(await this.service.upsertResult(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
   };
+
+  getResults = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const q = req.query as Record<string, string | undefined>
+      const filters: { from?: string; to?: string; sessionType?: string; playerId?: string } = {}
+      if (q["from"]) filters.from = q["from"]
+      if (q["to"]) filters.to = q["to"]
+      if (q["sessionType"]) filters.sessionType = q["sessionType"]
+      if (q["playerId"]) filters.playerId = q["playerId"]
+      res.status(200).json(await this.service.getResults(filters))
+    } catch (err) { next(err) }
+  }
 }
