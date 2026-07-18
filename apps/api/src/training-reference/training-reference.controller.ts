@@ -14,12 +14,10 @@ export class TrainingReferenceController {
       if (!(READ_ROLES as readonly string[]).includes(req.user!.role))
         throw new AppError(403, "FORBIDDEN");
       const q = req.query as Record<string, string | undefined>;
-      res.status(200).json(
-        await this.service.list({
-          sessionType: q["sessionType"] as SessionType | undefined,
-          tag: q["tag"],
-        }),
-      );
+      const listQuery: { sessionType?: SessionType; tag?: string } = {};
+      if (q["sessionType"]) listQuery.sessionType = q["sessionType"] as SessionType;
+      if (q["tag"]) listQuery.tag = q["tag"];
+      res.status(200).json(await this.service.list(listQuery));
     } catch (err) { next(err); }
   };
 
