@@ -71,4 +71,19 @@ export class AdminService {
 
     await this.repo.hardDelete(id);
   }
+
+  async getAuditLogs(filters: {
+    actorId?: number;
+    action?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const [logs, total] = await Promise.all([
+      this.repo.listAuditLogs(filters),
+      this.repo.countAuditLogs(filters),
+    ]);
+    return { logs, total };
+  }
 }

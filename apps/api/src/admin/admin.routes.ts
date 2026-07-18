@@ -12,6 +12,7 @@ const controller = new AdminController(service);
 
 const auth = passport.authenticate("accessToken", { session: false });
 
+router.get("/audit-logs", auth, controller.listAuditLogs);
 router.get("/users", auth, controller.listUsers);
 router.get("/players-without-accounts", auth, controller.listPlayersWithoutAccounts);
 router.get("/users/:id", auth, controller.getUser);
