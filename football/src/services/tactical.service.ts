@@ -1,5 +1,5 @@
 import { api } from './api'
-import type { TacticalAnalysis, CreateTacticalDto, TacticalPhase } from '@/types/tactical'
+import type { TacticalAnalysis, TacticalMedia, CreateTacticalDto, TacticalPhase } from '@/types/tactical'
 
 export const tacticalApi = {
   list: (params?: { matchId?: number; phase?: TacticalPhase }) => {
@@ -20,4 +20,10 @@ export const tacticalApi = {
 
   confirm: (id: number) =>
     api.patch<TacticalAnalysis>(`/tactical/${id}/confirm`, {}),
+
+  addMedia: (id: number, files: File[]) => {
+    const form = new FormData()
+    files.forEach((f) => form.append('files', f))
+    return api.postForm<TacticalMedia[]>(`/tactical/${id}/media`, form)
+  },
 }

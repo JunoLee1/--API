@@ -1,5 +1,13 @@
 export type TacticalPhase = 'PRE_MATCH' | 'POST_MATCH'
 export type TacticalStatus = 'DRAFT' | 'CONFIRMED'
+export type TacticalMediaType = 'image' | 'video'
+
+export interface TacticalMedia {
+  id: number
+  url: string
+  type: TacticalMediaType
+  tacticalAnalysisId: number
+}
 
 export interface TacticalAnalysis {
   id: number
@@ -18,6 +26,7 @@ export interface TacticalAnalysis {
     awayScore: number | null
   }
   createdBy: { nickname: string }
+  media?: TacticalMedia[]
 }
 
 export interface CreateTacticalDto {
@@ -25,6 +34,25 @@ export interface CreateTacticalDto {
   phase: TacticalPhase
   formation?: string
   opponentAnalysis?: string
+}
+
+export const FORMATION_OPTIONS = [
+  '4-3-3',
+  '4-4-2',
+  '4-2-3-1',
+  '4-1-4-1',
+  '4-5-1',
+  '3-5-2',
+  '3-4-3',
+  '3-4-2-1',
+  '5-3-2',
+  '5-4-1',
+  '4-3-2-1',
+] as const
+
+export const MEDIA_TYPE_LABEL: Record<TacticalMediaType, string> = {
+  image: '사진',
+  video: '영상',
 }
 
 export const PHASE_LABEL: Record<TacticalPhase, string> = {

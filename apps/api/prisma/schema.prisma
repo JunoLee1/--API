@@ -807,7 +807,7 @@ model TrainingResult {
 model TacticalAnalysis {
   id               Int            @id @default(autoincrement())
   phase            TacticalPhase
-  formation        String
+  formation        String?
   opponentAnalysis String?
   status           TacticalStatus @default(DRAFT)
   createdAt        DateTime       @default(now())

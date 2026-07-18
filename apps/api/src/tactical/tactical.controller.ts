@@ -52,7 +52,18 @@ export class TacticalController {
   addMedia = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!STAFF_ROLES.includes(req.user!.role as StaffRole)) throw new AppError(403, "FORBIDDEN");
-      res.status(201).json(await this.service.addMedia(Number(req.params["id"]), req.body));
+      const analysisId = Number(req.params["id"]);
+      const files = req.files as Express.Multer.File[];
+      if (!files || files.length === 0) throw new AppError(400, "NO_FILES");
+      const results = await Promise.all(
+        files.map((file) =>
+          this.service.addMedia(analysisId, {
+            url: `/uploads/tactical-media/${file.filename}`,
+            type: file.mimetype.startsWith("video/") ? "video" : "image",
+          })
+        )
+      );
+      res.status(201).json(results);
     } catch (err) { next(err); }
   };
 

@@ -59,7 +59,7 @@ export class TacticalRepository {
         matchId: dto.matchId,
         seasonId: dto.seasonId,
         phase: dto.phase,
-        formation: dto.formation,
+        formation: n(dto.formation),
         opponentAnalysis: n(dto.opponentAnalysis),
         createdById,
       },

@@ -4,7 +4,7 @@ export interface CreateAnalysisDto {
   matchId: number;
   seasonId: number;
   phase: TacticalPhase;
-  formation: string;
+  formation?: string;
   opponentAnalysis?: string;
 }
 
