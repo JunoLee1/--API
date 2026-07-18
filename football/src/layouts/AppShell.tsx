@@ -14,6 +14,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button'
 import {
   Activity,
+  ArrowUpCircle,
   BarChart2,
   BarChart3,
   Briefcase,
@@ -38,7 +39,6 @@ import {
   CalendarX2,
   Users2,
   CalendarDays,
-  ClipboardList,
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -108,6 +108,14 @@ const NAV_ITEMS: NavItem[] = [
     icon: Activity,
     section: '계약·영입',
     roles: ['ADMIN', 'FRONT_OFFICE'],
+  },
+  {
+    to: '/player-callups',
+    label: '유소년 콜업',
+    icon: ArrowUpCircle,
+    section: '계약·영입',
+    roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
+    coachingRoles: ['HEAD_COACH'],
   },
   {
     to: '/coaches/rounds',

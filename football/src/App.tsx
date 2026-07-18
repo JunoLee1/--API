@@ -11,6 +11,7 @@ import { InjuriesPage } from '@/pages/injuries/InjuriesPage'
 import { InjuryDetailPage } from '@/pages/injuries/InjuryDetailPage'
 import { InjuryStatsPage } from '@/pages/injuries/InjuryStatsPage'
 import { TransfersPage } from '@/pages/transfers/TransfersPage'
+import { PlayerCallupPage } from '@/pages/transfers/PlayerCallupPage'
 import { TrainingPage } from '@/pages/training/TrainingPage'
 import { TrainingDetailPage } from '@/pages/training/TrainingDetailPage'
 import { TrainingAttendancePage } from '@/pages/training/TrainingAttendancePage'
@@ -67,6 +68,7 @@ function App() {
             <Route path="/contracts" element={<ContractsPage />} />
             <Route path="/contracts/:id" element={<ContractDetailPage />} />
             <Route path="/transfers" element={<TransfersPage />} />
+            <Route path="/player-callups" element={<PlayerCallupPage />} />
             <Route path="/injuries" element={<InjuriesPage />} />
             <Route path="/injuries/:id" element={<InjuryDetailPage />} />
             <Route path="/injuries/stats" element={<InjuryStatsPage />} />
