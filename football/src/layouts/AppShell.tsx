@@ -39,6 +39,7 @@ import {
   CalendarX2,
   Users2,
   CalendarDays,
+  History,
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -269,6 +270,13 @@ const NAV_ITEMS: NavItem[] = [
     to: '/admin/audit-logs',
     label: '감사 로그',
     icon: ClipboardList,
+    section: '관리',
+    roles: ['ADMIN'],
+  },
+  {
+    to: '/admin/login-history',
+    label: '로그인 이력',
+    icon: History,
     section: '관리',
     roles: ['ADMIN'],
   },

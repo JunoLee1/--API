@@ -451,6 +451,7 @@ model User {
   trainingReferences       TrainingReference[]
   requestedCallups         PlayerCallup[]          @relation("CallupRequestedBy")
   approvedCallups          PlayerCallup[]          @relation("CallupApprovedBy")
+  loginHistory             LoginHistory[]
 }
 
 model Season {
@@ -1356,4 +1357,16 @@ model PlayerCallup {
   toTeam      Team   @relation("CallupToTeam", fields: [toTeamId], references: [id])
   requestedBy User   @relation("CallupRequestedBy", fields: [requestedById], references: [id])
   approvedBy  User?  @relation("CallupApprovedBy", fields: [approvedById], references: [id])
+}
+
+model LoginHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  email     String
+  ip        String
+  userAgent String
+  success   Boolean
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
 }
