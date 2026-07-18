@@ -148,4 +148,18 @@ export class TrainingRepository {
       orderBy: { session: { date: 'desc' } },
     })
   }
+
+  findResultById(id: number) {
+    return this.prisma.trainingResult.findUnique({
+      where: { id },
+      select: { id: true, attendance: true, playerId: true, sessionId: true },
+    });
+  }
+
+  updateAttendance(id: number, attendance: string) {
+    return this.prisma.trainingResult.update({
+      where: { id },
+      data: { attendance: attendance as any },
+    });
+  }
 }

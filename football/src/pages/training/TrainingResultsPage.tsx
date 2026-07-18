@@ -2,16 +2,22 @@ import { useState, useEffect } from 'react'
 import { trainingApi } from '@/services/training.service'
 import type { TrainingResultRow, SessionType, TrainingResultFilters } from '@/types/training'
 import { SESSION_TYPE_LABEL } from '@/types/training'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog'
 import { Download } from 'lucide-react'
+import { toast } from 'sonner'
 import Papa from 'papaparse'
 import { Pagination } from '@/components/ui/pagination'
 
@@ -30,10 +36,33 @@ function formatDate(d: string) {
 }
 
 export function TrainingResultsPage() {
+  const { user } = useCurrentUser()
+  const isAdmin = user?.role === 'ADMIN'
   const [filters, setFilters] = useState<TrainingResultFilters>({ from: '', to: '', sessionType: '' })
   const [rows, setRows] = useState<TrainingResultRow[]>([])
   const [loading, setLoading] = useState(false)
   const [page, setPage] = useState(1)
+  const [correctTarget, setCorrectTarget] = useState<TrainingResultRow | null>(null)
+  const [correctAttendance, setCorrectAttendance] = useState('')
+  const [correctReason, setCorrectReason] = useState('')
+  const [correcting, setCorrecting] = useState(false)
+
+  const handleCorrect = async () => {
+    if (!correctTarget || !correctAttendance || !correctReason.trim()) return
+    setCorrecting(true)
+    try {
+      await trainingApi.correctAttendance(correctTarget.id, correctAttendance, correctReason)
+      toast.success('출석이 정정됐습니다.')
+      setCorrectTarget(null)
+      setCorrectAttendance('')
+      setCorrectReason('')
+      await fetchData()
+    } catch {
+      toast.error('정정에 실패했습니다.')
+    } finally {
+      setCorrecting(false)
+    }
+  }
 
   const fetchData = async () => {
     setLoading(true)
@@ -135,13 +164,14 @@ export function TrainingResultsPage() {
               <TableHead className="w-24">포지션</TableHead>
               <TableHead className="w-28">출석</TableHead>
               <TableHead className="w-20 text-right">달성도</TableHead>
+              {isAdmin && <TableHead className="w-16" />}
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">로딩 중...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-8 text-muted-foreground">로딩 중...</TableCell></TableRow>
             ) : rows.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">데이터가 없습니다.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-8 text-muted-foreground">데이터가 없습니다.</TableCell></TableRow>
             ) : paged.map(r => (
               <TableRow key={r.id}>
                 <TableCell className="tabular-nums">{formatDate(r.session.date)}</TableCell>
@@ -150,6 +180,18 @@ export function TrainingResultsPage() {
                 <TableCell>{r.player.position}</TableCell>
                 <TableCell>{ATTENDANCE_LABEL[r.attendance] ?? r.attendance}</TableCell>
                 <TableCell className="text-right tabular-nums">{r.performanceScore ?? '—'}</TableCell>
+                {isAdmin && (
+                  <TableCell>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-xs"
+                      onClick={() => { setCorrectTarget(r); setCorrectAttendance(r.attendance) }}
+                    >
+                      정정
+                    </Button>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>
@@ -162,6 +204,47 @@ export function TrainingResultsPage() {
         pageSize={PAGE_SIZE}
         onPageChange={setPage}
       />
+
+      <Dialog open={!!correctTarget} onOpenChange={(v) => !v && setCorrectTarget(null)}>
+        <DialogContent className="max-w-xs">
+          <DialogHeader><DialogTitle>출석 정정 (ADMIN)</DialogTitle></DialogHeader>
+          <div className="space-y-3 py-1">
+            <div className="space-y-1.5">
+              <Label className="text-xs">선수</Label>
+              <p className="text-sm font-medium">{correctTarget?.player.playerName}</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">출석 상태</Label>
+              <Select value={correctAttendance} onValueChange={setCorrectAttendance}>
+                <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(ATTENDANCE_LABEL).map(([v, l]) => (
+                    <SelectItem key={v} value={v}>{l}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">정정 사유 *</Label>
+              <Textarea
+                placeholder="정정 사유를 입력해주세요."
+                value={correctReason}
+                onChange={(e) => setCorrectReason(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCorrectTarget(null)} disabled={correcting}>취소</Button>
+            <Button
+              onClick={handleCorrect}
+              disabled={correcting || !correctAttendance || !correctReason.trim()}
+            >
+              {correcting ? '정정 중...' : '정정'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
