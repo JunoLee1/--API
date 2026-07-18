@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { contractApi } from '@/services/contract.service'
 import type { ContractSummary, ContractStatus } from '@/types/contract'
@@ -117,6 +118,7 @@ function CreateContractDialog({ open, onOpenChange, playerId, onSaved }: CreateC
 
 export function ContractsPage() {
   const { user } = useCurrentUser()
+  const navigate = useNavigate()
   const { players, loading: playersLoading } = usePlayers()
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>('')
   const [contracts, setContracts] = useState<ContractSummary[]>([])
@@ -211,7 +213,7 @@ export function ContractsPage() {
             </TableHeader>
             <TableBody>
               {contracts.map((c) => (
-                <TableRow key={c.id}>
+                <TableRow key={c.id} className="cursor-pointer" onClick={() => navigate(`/contracts/${c.id}`)}>
                   <TableCell className="tabular-nums">{formatDate(c.startDate)}</TableCell>
                   <TableCell className="tabular-nums">{formatDate(c.endDate)}</TableCell>
                   <TableCell className="tabular-nums font-medium">{formatSalary(c.salary)}</TableCell>

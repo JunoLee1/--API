@@ -1,5 +1,8 @@
 import { api } from './api'
-import type { ContractSummary, ContractDetail, ContractStatus } from '@/types/contract'
+import type {
+  ContractSummary, ContractDetail, ContractStatus,
+  CreateExtensionDto, CreateBonusDto,
+} from '@/types/contract'
 
 export const contractApi = {
   byPlayer: (playerId: string) =>
@@ -18,4 +21,13 @@ export const contractApi = {
 
   updateStatus: (id: number, status: ContractStatus) =>
     api.patch<ContractDetail>(`/contracts/${id}/status`, { status }),
+
+  addBuyout: (contractId: number, amount: number) =>
+    api.post<ContractDetail>(`/contracts/${contractId}/buyout`, { amount }),
+
+  addExtension: (contractId: number, dto: CreateExtensionDto) =>
+    api.post<ContractDetail>(`/contracts/${contractId}/extensions`, dto),
+
+  addBonus: (contractId: number, dto: CreateBonusDto) =>
+    api.post<ContractDetail>(`/contracts/${contractId}/bonuses`, dto),
 }

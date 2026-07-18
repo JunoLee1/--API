@@ -29,6 +29,8 @@ import { UsersPage } from '@/pages/admin/UsersPage'
 import { PartnersPage } from '@/pages/admin/PartnersPage'
 import { TeamsPage } from '@/pages/admin/TeamsPage'
 import { SeasonsPage } from '@/pages/admin/SeasonsPage'
+import { AuditLogPage } from '@/pages/admin/AuditLogPage'
+import { ContractDetailPage } from '@/pages/contracts/ContractDetailPage'
 import { ReportsPage } from '@/pages/reports/ReportsPage'
 import { ReportFormPage } from '@/pages/reports/ReportFormPage'
 import { ReportDetailPage } from '@/pages/reports/ReportDetailPage'
@@ -63,6 +65,7 @@ function App() {
             <Route path="/players" element={<PlayersPage />} />
             <Route path="/players/:id" element={<PlayerDetailPage />} />
             <Route path="/contracts" element={<ContractsPage />} />
+            <Route path="/contracts/:id" element={<ContractDetailPage />} />
             <Route path="/transfers" element={<TransfersPage />} />
             <Route path="/injuries" element={<InjuriesPage />} />
             <Route path="/injuries/:id" element={<InjuryDetailPage />} />
@@ -96,6 +99,7 @@ function App() {
             <Route path="/admin/users" element={<UsersPage />} />
             <Route path="/admin/teams" element={<TeamsPage />} />
             <Route path="/admin/seasons" element={<SeasonsPage />} />
+            <Route path="/admin/audit-logs" element={<AuditLogPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/login" replace />} />
