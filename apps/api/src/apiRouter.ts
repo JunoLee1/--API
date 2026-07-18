@@ -19,6 +19,7 @@ import trainingRouter from "./training/training.routes";
 import transferRouter from "./transfer/transfer.routes";
 import medicalExpenseRouter from "./medical-expense/medical-expense.routes";
 import coachRouter from "./coach/coach.routes";
+import videoRouter from "./video/video.routes";
 
 const apiRouter = Router();
 
@@ -42,5 +43,6 @@ apiRouter.use("/coaches", coachRouter);
 apiRouter.use("/tactical", tacticalRouter);
 apiRouter.use("/training", trainingRouter);
 apiRouter.use("/transfers", transferRouter);
+apiRouter.use("/videos", videoRouter);
 
 export default apiRouter;
