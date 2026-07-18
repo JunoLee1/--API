@@ -22,6 +22,8 @@ import coachRouter from "./coach/coach.routes";
 import videoRouter from "./video/video.routes";
 import trainingReferenceRouter from "./training-reference/training-reference.routes";
 import developmentPlanRouter from "./development-plan/development-plan.routes";
+import coachAvailabilityRouter from "./coach-availability/coach-availability.routes";
+import trainingLoadRouter from "./training-load/training-load.routes";
 
 const apiRouter = Router();
 
@@ -48,5 +50,7 @@ apiRouter.use("/transfers", transferRouter);
 apiRouter.use("/videos", videoRouter);
 apiRouter.use("/training-references", trainingReferenceRouter);
 apiRouter.use("/development-plans", developmentPlanRouter);
+apiRouter.use("/coach-availabilities", coachAvailabilityRouter);
+apiRouter.use("/training-loads", trainingLoadRouter);
 
 export default apiRouter;
