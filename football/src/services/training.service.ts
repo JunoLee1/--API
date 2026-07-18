@@ -5,6 +5,8 @@ import type {
   SessionType,
   ContentPhase,
   AttendanceStatus,
+  TrainingResultRow,
+  TrainingResultFilters,
 } from '@/types/training'
 
 export const trainingApi = {
@@ -42,4 +44,13 @@ export const trainingApi = {
       performanceScore?: number
     },
   ) => api.put<unknown>(`/training/${id}/results`, payload),
+
+  getResults: (filters: TrainingResultFilters) => {
+    const params = new URLSearchParams()
+    if (filters.from) params.set('from', filters.from)
+    if (filters.to) params.set('to', filters.to)
+    if (filters.sessionType) params.set('sessionType', filters.sessionType)
+    if (filters.playerId) params.set('playerId', filters.playerId)
+    return api.get<TrainingResultRow[]>(`/training/results?${params.toString()}`)
+  },
 }

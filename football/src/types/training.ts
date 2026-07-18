@@ -90,3 +90,30 @@ export const ATTENDANCE_STYLE: Record<AttendanceStatus, string> = {
   LATE_UNAUTHORIZED: 'bg-orange-100 text-orange-800 border-orange-200',
   ABSENT_AUTHORIZED: 'bg-gray-100 text-gray-600 border-gray-200',
 }
+
+export interface TrainingResultRow {
+  id: number
+  attendance: AttendanceStatus
+  feedback: string | null
+  performanceScore: number | null
+  playerId: string
+  sessionId: number
+  session: {
+    id: number
+    date: string
+    sessionType: SessionType
+    goal: string
+  }
+  player: {
+    id: string
+    playerName: string
+    position: string
+  }
+}
+
+export interface TrainingResultFilters {
+  from?: string
+  to?: string
+  sessionType?: SessionType | ''
+  playerId?: string
+}
