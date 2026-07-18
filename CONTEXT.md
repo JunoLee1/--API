@@ -16,7 +16,7 @@ ADMIN이 생성·관리하는 클럽 내 팀 단위. 팀 구성은 구단마다 
 
 **필드:** `name`(팀명), `type`(FIRST_TEAM \| YOUTH), `ageGroup`(U18·U15 등, nullable), `isActive`
 
-**Player ↔ Team:** 단일 소속. `Player.teamId → Team`. 콜업 등 팀 변경은 teamId 업데이트로 처리하며 변경 이력은 AuditLog로 추적한다.
+**Player ↔ Team:** 단일 소속. `Player.teamId → Team`. 유소년 콜업은 `PlayerCallup` 워크플로우(HEAD_COACH 요청 → GM 승인)를 거쳐 `teamId`를 업데이트하며, 변경 이력은 `AuditLog`로 추적한다.
 
 **COACHING_STAFF ↔ Team:** 단일 소속. `User.teamId → Team`. Player와 동일 원칙.
 
@@ -477,6 +477,22 @@ HEAD_COACH 요청 → GM 최종 승인 → LOAN_OUT 종료 처리 → Player.sta
 
 임대 클럽 통보는 FRONT_OFFICE가 시스템 외부에서 처리한다. 이 ERP의 범위 밖이다.
 
+### 유소년 콜업 (PlayerCallup)
+
+유소년 선수를 1군으로 임시 합류시키는 워크플로우. `teamId` 직접 변경이 아닌 승인 흐름을 거친다.
+
+**상태머신:**
+```
+REQUESTED → APPROVED → ACTIVE (teamId 업데이트)
+           ↘ REJECTED
+```
+
+**필드:** `playerId → Player`, `fromTeamId → Team`(출신 유소년 팀), `toTeamId → Team`(1군), `requestedById → User`(HEAD_COACH), `approvedById → User`(GM), `reason`(콜업 사유), `status`(REQUESTED \| APPROVED \| REJECTED \| COMPLETED), `startDate`, `endDate`(nullable — 미지정 시 영구 이적으로 간주)
+
+**흐름:** HEAD_COACH 요청 → GM 승인 → `Player.teamId` 자동 업데이트 + `AuditLog` 기록. 거절 시 `reason` 필수.
+
+**완료(COMPLETED):** `endDate` 도래 시 HEAD_COACH 또는 GM이 수동으로 COMPLETED 처리. `Player.teamId` 원복은 수동. 자동 복귀 없음.
+
 ---
 
 ## 부상 (Injury)
@@ -505,6 +521,24 @@ HEAD_COACH 요청 → GM 최종 승인 → LOAN_OUT 종료 처리 → Player.sta
 
 ## 훈련 (Training)
 
+### TrainingVideo (훈련 영상)
+
+클럽 전체 공유 영상 자산. `teamId` 없음 — 어느 팀 코치든 업로드·열람 가능.
+
+**필드:** `title`, `url`(영상 링크 또는 스토리지 경로), `tags`(전술 키워드 배열), `sessionType`(nullable, 관련 SessionType), `uploadedById → User`, `createdAt`
+
+**열람 권한:** COACHING_STAFF 전원, HEAD_COACH, GM, ADMIN. PLAYER는 `VideoAssignment`를 통해 할당된 영상만 열람.
+
+### VideoAssignment (영상 과제 할당)
+
+특정 선수에게 `TrainingVideo`를 과제로 할당하는 단위.
+
+**필드:** `videoId → TrainingVideo`, `playerId → Player`, `assignedById → User`, `dueDate`(nullable), `progressRate`(0–100, 선수 본인 업데이트), `note`(할당 사유·지시사항)
+
+**알림:** 할당 시 해당 선수에게 알림 발송. `dueDate` 초과 시 담당 코치에게 알림.
+
+**체화도 연결:** `progressRate` 100% 달성 후 해당 선수의 다음 `TrainingResult.performanceScore`가 코치 판단의 참고 지표로 활용된다. 자동 반영은 없음 — 코치가 직접 평가.
+
 ### TrainingSession (훈련 세션)
 
 **훈련 계획:**
@@ -524,7 +558,12 @@ HEAD_COACH 요청 → GM 최종 승인 → LOAN_OUT 종료 처리 → Player.sta
 **결과 (TrainingResult, 선수별):**
 - `attendance`: 해당 세션 담당 코치가 입력
 - `feedback`: HEAD_COACH 또는 담당 코치 입력
-- `performanceScore`: HEAD_COACH 또는 해당 세션 담당 코치 입력. 담당 코치는 포지션 구분 없이 세션 참가자 전원 평가 가능.
+- `performanceScore`: 최종 1–10 합산 점수. HEAD_COACH 또는 해당 세션 담당 코치 입력. 담당 코치는 포지션 구분 없이 세션 참가자 전원 평가 가능. `technicalScore`, `tacticalScore`, `physicalScore` 서브스코어를 SessionType별 가중치로 합산하여 앱 레이어에서 계산하거나, 코치가 직접 입력할 수 있다.
+- `technicalScore`: 기술적 서브스코어 (nullable). 패스 성공률·볼 점유 효율·의사결정 속도 기준.
+- `tacticalScore`: 전술적 서브스코어 (nullable). 압박 트리거 반응률·공간 점유율·전환 시 복귀 시간 기준.
+- `physicalScore`: 피지컬 서브스코어 (nullable). HSR·가속/감속 횟수·RPE 기준.
+
+**서브스코어 가중치:** SessionType별 w₁(기술)·w₂(전술)·w₃(피지컬) 가중치는 코드/환경변수 고정값. DB에 저장하지 않으며 변경 시 배포가 필요하다.
 - `scoredById → User`: 평가자 기록. 감사 및 평가자별 추적 목적.
 
 **PLAYER 열람:** 본인 출석·점수·피드백 조회 가능. 타 선수 정보 비공개.
@@ -568,6 +607,16 @@ HEAD_COACH 요청 → GM 최종 승인 → LOAN_OUT 종료 처리 → Player.sta
 
 **읽기 권한:** 작성자, HEAD_COACH, GM, TD, ADMIN + 해당 선수 본인(ACTIVE 이후).
 
+### TrainingReference (훈련 레퍼런스)
+
+훈련 관련 외부 자료(영상·문서 링크) 및 세션 추천의 관리 단위.
+
+**필드:** `sessionType`(연결 SessionType), `title`, `url`(외부 링크), `source`(INTERNAL \| EXTERNAL), `tags`(태그 배열), `addedById → User`
+
+**세션 자동 추천:** 동일 `sessionType` 내에서 `TrainingResult.performanceScore` 평균 상위 N개 세션을 추천. 세션 유형이 다른 세션 간 비교는 하지 않는다.
+
+**태그 기반 검색:** `tags` 필드로 수비조직·압박·빌드업 등 전술 키워드 필터링.
+
 ### TrainingLoad (훈련 부하)
 
 세션별 선수 부하 기록. PHYSICAL_COACH의 핵심 관리 지표.
@@ -580,6 +629,12 @@ HEAD_COACH 요청 → GM 최종 승인 → LOAN_OUT 종료 처리 → Player.sta
 아래 조건 중 하나라도 충족 시 COACHING_STAFF에 알림:
 - 결석 점수(결석수 + 지각수 ÷ 3) ≥ 3 — 지각 3회를 결석 1회로 환산한 통합 기준
 - 월 출석률 80% 미만
+
+### 출석 데이터 수동 정정
+
+비정상 출석 데이터(예: 지각 17회인데 출석률 33% 산출) 발생 시 ADMIN만 원본 로그를 정정할 수 있다. 담당 코치는 정정 불가.
+
+**정정 조건:** 정정 시 `AuditLog`에 `before`(정정 전 값), `after`(정정 후 값), `reason`(정정 사유 텍스트)을 필수 기록. 사유 없는 정정은 시스템이 거부한다.
 
 ---
 
@@ -606,9 +661,13 @@ HEAD_COACH 요청 → GM 최종 승인 → LOAN_OUT 종료 처리 → Player.sta
 
 ---
 
-## GM 보고서 결재 (Report)
+## 보고서 결재 (Report)
 
-COACHING_STAFF가 작성한 보고서를 GM(FRONT_OFFICE, frontOfficeRole=GM)이 결재하는 워크플로우.
+COACHING_STAFF가 작성한 보고서를 결재하는 워크플로우. 보고서 유형(`reportType`)에 따라 결재권자가 다르다.
+
+**reportType:**
+- `TRAINING`: 훈련 관련 보고서 — HEAD_COACH가 결재.
+- `OPERATIONS`: 계약·운영·기타 보고서 — GM이 결재.
 
 **상태머신:**
 ```
@@ -618,26 +677,27 @@ DRAFT → SUBMITTED → APPROVED
 
 **작성 권한:** COACHING_STAFF 전원 (본인이 작성자).
 
-**결재 권한:** GM.
+**결재 권한:** `reportType`이 TRAINING이면 HEAD_COACH, OPERATIONS이면 GM.
 
 **필드:**
+- `reportType`: TRAINING \| OPERATIONS
 - `title`: 보고서 제목
 - `content`: 본문 (텍스트)
 - `fileUrl` / `fileName`: 첨부 파일 (선택, 20MB 제한)
 - `submittedAt`: 상신일시
 - `reviewedAt`: 결재일시
-- `reviewerId`: 결재자 User ID
+- `reviewerId → User`: 결재자 (HEAD_COACH 또는 GM)
 - `rejectionReason`: 반려 사유
 
 **결재 흐름:**
-1. COACHING_STAFF가 DRAFT 저장 (`POST /reports`)
-2. COACHING_STAFF가 상신 (`POST /reports/:id/submit`) → SUBMITTED
-3. GM이 승인 (`POST /reports/:id/approve`) → APPROVED, 또는 반려 (`POST /reports/:id/reject`, reason 필수) → REJECTED
+1. COACHING_STAFF가 DRAFT 저장
+2. COACHING_STAFF가 상신 → SUBMITTED
+3. 해당 결재권자가 승인 → APPROVED, 또는 반려(사유 필수) → REJECTED
 4. REJECTED 상태에서 재상신 가능. 재상신 시 `rejectionReason` 초기화.
 
 **수정 권한:** 작성자 본인 + DRAFT 또는 REJECTED 상태에서만 가능.
 
-**열람 권한:** 작성자 본인(전체), GM(전체), ADMIN(전체). 그 외 COACHING_STAFF는 본인 작성분만.
+**열람 권한:** 작성자 본인(전체), HEAD_COACH(TRAINING 유형 전체), GM(OPERATIONS 유형 전체), ADMIN(전체). 그 외 COACHING_STAFF는 본인 작성분만.
 
 ---
 
