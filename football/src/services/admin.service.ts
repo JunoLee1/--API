@@ -1,5 +1,6 @@
 import { api } from './api'
 import type { AdminUserDto, ListUsersQuery, UpdateUserRoleDto, PlayerWithoutAccountDto } from '@/types/admin'
+import type { AuditLogListResponse, AuditLogFilters } from '@/types/auditLog'
 
 export const adminApi = {
   listUsers: (query: ListUsersQuery = {}): Promise<AdminUserDto[]> => {
@@ -28,5 +29,18 @@ export const adminApi = {
   listPlayersWithoutAccounts: (name?: string): Promise<PlayerWithoutAccountDto[]> => {
     const qs = name ? `?name=${encodeURIComponent(name)}` : ''
     return api.get<PlayerWithoutAccountDto[]>(`/admin/players-without-accounts${qs}`)
+  },
+}
+
+export const auditLogApi = {
+  list: (filters: AuditLogFilters = {}) => {
+    const params = new URLSearchParams()
+    if (filters.actorId) params.set('actorId', String(filters.actorId))
+    if (filters.action) params.set('action', filters.action)
+    if (filters.from) params.set('from', filters.from)
+    if (filters.to) params.set('to', filters.to)
+    if (filters.page) params.set('page', String(filters.page))
+    if (filters.limit) params.set('limit', String(filters.limit))
+    return api.get<AuditLogListResponse>(`/admin/audit-logs?${params.toString()}`)
   },
 }

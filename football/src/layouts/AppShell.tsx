@@ -14,6 +14,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button'
 import {
   Activity,
+  ArrowUpCircle,
   BarChart2,
   BarChart3,
   Briefcase,
@@ -34,6 +35,10 @@ import {
   UserSearch,
   Users,
   LayoutGrid,
+  Video,
+  CalendarX2,
+  Users2,
+  CalendarDays,
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -105,6 +110,14 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'FRONT_OFFICE'],
   },
   {
+    to: '/player-callups',
+    label: '유소년 콜업',
+    icon: ArrowUpCircle,
+    section: '계약·영입',
+    roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
+    coachingRoles: ['HEAD_COACH'],
+  },
+  {
     to: '/coaches/rounds',
     label: '코치 채용',
     icon: Briefcase,
@@ -159,6 +172,20 @@ const NAV_ITEMS: NavItem[] = [
     to: '/training/results',
     label: '훈련 결과',
     icon: BarChart2,
+    section: '훈련',
+    roles: ['ADMIN', 'COACHING_STAFF'],
+  },
+  {
+    to: '/training/videos',
+    label: '훈련 영상',
+    icon: Video,
+    section: '훈련',
+    roles: ['ADMIN', 'COACHING_STAFF'],
+  },
+  {
+    to: '/training/coach-availability',
+    label: '코치 가용성',
+    icon: CalendarX2,
     section: '훈련',
     roles: ['ADMIN', 'COACHING_STAFF'],
   },
@@ -221,6 +248,27 @@ const NAV_ITEMS: NavItem[] = [
     to: '/admin/users',
     label: '사용자 관리',
     icon: Settings,
+    section: '관리',
+    roles: ['ADMIN'],
+  },
+  {
+    to: '/admin/teams',
+    label: '팀 관리',
+    icon: Users2,
+    section: '관리',
+    roles: ['ADMIN'],
+  },
+  {
+    to: '/admin/seasons',
+    label: '시즌 관리',
+    icon: CalendarDays,
+    section: '관리',
+    roles: ['ADMIN'],
+  },
+  {
+    to: '/admin/audit-logs',
+    label: '감사 로그',
+    icon: ClipboardList,
     section: '관리',
     roles: ['ADMIN'],
   },

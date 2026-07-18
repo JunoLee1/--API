@@ -14,6 +14,8 @@ const auth = passport.authenticate("accessToken", { session: false });
 
 // 선수별 이적 목록
 router.get("/player/:playerId", auth, controller.getByPlayer);
+// LOAN_IN 데이터 export (ADMIN, GM, TD)
+router.get("/:id/export", auth, controller.exportLoanIn);
 // 이적 단건
 router.get("/:id", auth, controller.getById);
 // 이적 등록 (ADMIN, FRONT_OFFICE)

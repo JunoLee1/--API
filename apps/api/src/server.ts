@@ -9,6 +9,9 @@ import { AppError } from "./lib/appError";
 import { Request, Response, NextFunction } from "express";
 import { initIO } from "./lib/io";
 import { startExternalReportReminderJob } from "./jobs/externalReportReminder";
+import { startVideoAssignmentOverdueJob } from "./jobs/videoAssignmentOverdue";
+import { startMonthlyAttendanceCheckJob } from "./jobs/monthlyAttendanceCheck";
+import { startWorkPermitExpiryCheckJob } from "./jobs/workPermitExpiryCheck";
 
 const app = express();
 
@@ -35,3 +38,6 @@ initIO(httpServer);
 const PORT = process.env["PORT"] ?? 3001;
 httpServer.listen(PORT, () => console.log(`API server running on port ${PORT}`));
 startExternalReportReminderJob();
+startVideoAssignmentOverdueJob();
+startMonthlyAttendanceCheckJob();
+startWorkPermitExpiryCheckJob();

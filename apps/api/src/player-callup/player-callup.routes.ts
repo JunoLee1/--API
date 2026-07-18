@@ -1,0 +1,25 @@
+import { Router } from "express";
+import passport from "passport";
+import { PlayerCallupController } from "./player-callup.controller";
+import { PlayerCallupService } from "./player-callup.service";
+import { PlayerCallupRepository } from "./player-callup.repo";
+import { NotificationRepository } from "../notification/notification.repo";
+import { getPrisma } from "../lib/prisma";
+
+const router = Router();
+const prisma = getPrisma();
+const repo = new PlayerCallupRepository(prisma);
+const notifRepo = new NotificationRepository(prisma);
+const service = new PlayerCallupService(repo, notifRepo);
+const controller = new PlayerCallupController(service);
+
+const auth = passport.authenticate("accessToken", { session: false });
+
+router.get("/", auth, controller.getAll);
+router.get("/:id", auth, controller.getById);
+router.post("/", auth, controller.create);
+router.patch("/:id/approve", auth, controller.approve);
+router.patch("/:id/reject", auth, controller.reject);
+router.patch("/:id/complete", auth, controller.complete);
+
+export default router;

@@ -19,6 +19,13 @@ import trainingRouter from "./training/training.routes";
 import transferRouter from "./transfer/transfer.routes";
 import medicalExpenseRouter from "./medical-expense/medical-expense.routes";
 import coachRouter from "./coach/coach.routes";
+import videoRouter from "./video/video.routes";
+import trainingReferenceRouter from "./training-reference/training-reference.routes";
+import developmentPlanRouter from "./development-plan/development-plan.routes";
+import coachAvailabilityRouter from "./coach-availability/coach-availability.routes";
+import trainingLoadRouter from "./training-load/training-load.routes";
+import teamRouter from "./team/team.routes";
+import playerCallupRouter from "./player-callup/player-callup.routes";
 
 const apiRouter = Router();
 
@@ -42,5 +49,12 @@ apiRouter.use("/coaches", coachRouter);
 apiRouter.use("/tactical", tacticalRouter);
 apiRouter.use("/training", trainingRouter);
 apiRouter.use("/transfers", transferRouter);
+apiRouter.use("/videos", videoRouter);
+apiRouter.use("/training-references", trainingReferenceRouter);
+apiRouter.use("/development-plans", developmentPlanRouter);
+apiRouter.use("/coach-availabilities", coachAvailabilityRouter);
+apiRouter.use("/training-loads", trainingLoadRouter);
+apiRouter.use("/teams", teamRouter);
+apiRouter.use("/player-callups", playerCallupRouter);
 
 export default apiRouter;

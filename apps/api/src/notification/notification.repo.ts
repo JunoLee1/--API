@@ -111,6 +111,25 @@ export class NotificationRepository {
     });
   }
 
+  createForPhysicalCoach(type: string, title: string, body: string, entityId?: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const users = await tx.user.findMany({
+        where: { role: "COACHING_STAFF", coachingRole: "PHYSICAL_COACH" },
+        select: { id: true },
+      });
+      if (users.length === 0) return;
+      await tx.notification.createMany({
+        data: users.map((u) => ({ userId: u.id, type, title, body, entityId })) as any,
+      });
+    });
+  }
+
+  createForUser(userId: number, type: string, title: string, body: string, entityId?: number) {
+    return this.prisma.notification.create({
+      data: { userId, type, title, body, ...(entityId && { entityId }) } as any,
+    });
+  }
+
   findExpiringContracts(withinDays: number) {
     const now = new Date();
     const threshold = new Date(now);

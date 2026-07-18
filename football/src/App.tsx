@@ -11,10 +11,13 @@ import { InjuriesPage } from '@/pages/injuries/InjuriesPage'
 import { InjuryDetailPage } from '@/pages/injuries/InjuryDetailPage'
 import { InjuryStatsPage } from '@/pages/injuries/InjuryStatsPage'
 import { TransfersPage } from '@/pages/transfers/TransfersPage'
+import { PlayerCallupPage } from '@/pages/transfers/PlayerCallupPage'
 import { TrainingPage } from '@/pages/training/TrainingPage'
 import { TrainingDetailPage } from '@/pages/training/TrainingDetailPage'
 import { TrainingAttendancePage } from '@/pages/training/TrainingAttendancePage'
 import { TrainingResultsPage } from '@/pages/training/TrainingResultsPage'
+import { TrainingVideoPage } from '@/pages/training/TrainingVideoPage'
+import { CoachAvailabilityPage } from '@/pages/training/CoachAvailabilityPage'
 import { MatchesPage } from '@/pages/matches/MatchesPage'
 import { MatchDetailPage } from '@/pages/matches/MatchDetailPage'
 import { RankingsPage } from '@/pages/matches/RankingsPage'
@@ -25,6 +28,10 @@ import { NotificationsPage } from '@/pages/notifications/NotificationsPage'
 import { MePage } from '@/pages/me/MePage'
 import { UsersPage } from '@/pages/admin/UsersPage'
 import { PartnersPage } from '@/pages/admin/PartnersPage'
+import { TeamsPage } from '@/pages/admin/TeamsPage'
+import { SeasonsPage } from '@/pages/admin/SeasonsPage'
+import { AuditLogPage } from '@/pages/admin/AuditLogPage'
+import { ContractDetailPage } from '@/pages/contracts/ContractDetailPage'
 import { ReportsPage } from '@/pages/reports/ReportsPage'
 import { ReportFormPage } from '@/pages/reports/ReportFormPage'
 import { ReportDetailPage } from '@/pages/reports/ReportDetailPage'
@@ -59,13 +66,17 @@ function App() {
             <Route path="/players" element={<PlayersPage />} />
             <Route path="/players/:id" element={<PlayerDetailPage />} />
             <Route path="/contracts" element={<ContractsPage />} />
+            <Route path="/contracts/:id" element={<ContractDetailPage />} />
             <Route path="/transfers" element={<TransfersPage />} />
+            <Route path="/player-callups" element={<PlayerCallupPage />} />
             <Route path="/injuries" element={<InjuriesPage />} />
             <Route path="/injuries/:id" element={<InjuryDetailPage />} />
             <Route path="/injuries/stats" element={<InjuryStatsPage />} />
             <Route path="/training" element={<TrainingPage />} />
             <Route path="/training/attendance" element={<TrainingAttendancePage />} />
             <Route path="/training/results" element={<TrainingResultsPage />} />
+            <Route path="/training/videos" element={<TrainingVideoPage />} />
+            <Route path="/training/coach-availability" element={<CoachAvailabilityPage />} />
             <Route path="/training/:id" element={<TrainingDetailPage />} />
             <Route path="/matches" element={<MatchesPage />} />
             <Route path="/matches/analysis" element={<TacticalAnalysisPage />} />
@@ -88,6 +99,9 @@ function App() {
             <Route path="/coaches" element={<CoachListPage />} />
             <Route path="/coaches/:id" element={<CoachDetailPage />} />
             <Route path="/admin/users" element={<UsersPage />} />
+            <Route path="/admin/teams" element={<TeamsPage />} />
+            <Route path="/admin/seasons" element={<SeasonsPage />} />
+            <Route path="/admin/audit-logs" element={<AuditLogPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/login" replace />} />

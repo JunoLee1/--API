@@ -98,4 +98,52 @@ export class AdminRepository {
       orderBy: { playerName: "asc" },
     });
   }
+
+  listAuditLogs(filters: {
+    actorId?: number;
+    action?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const limit = filters.limit ?? 50;
+    const page = filters.page ?? 1;
+    const where: Record<string, unknown> = {};
+    if (filters.actorId) where["actorId"] = filters.actorId;
+    if (filters.action) where["action"] = filters.action;
+    if (filters.from || filters.to) {
+      const createdAt: Record<string, Date> = {};
+      if (filters.from) createdAt["gte"] = new Date(filters.from);
+      if (filters.to) createdAt["lte"] = new Date(filters.to + "T23:59:59");
+      where["createdAt"] = createdAt;
+    }
+    return this.prisma.auditLog.findMany({
+      where,
+      select: {
+        id: true,
+        action: true,
+        targetId: true,
+        detail: true,
+        createdAt: true,
+        actor: { select: { id: true, username: true, nickname: true, role: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+  }
+
+  countAuditLogs(filters: { actorId?: number; action?: string; from?: string; to?: string }) {
+    const where: Record<string, unknown> = {};
+    if (filters.actorId) where["actorId"] = filters.actorId;
+    if (filters.action) where["action"] = filters.action;
+    if (filters.from || filters.to) {
+      const createdAt: Record<string, Date> = {};
+      if (filters.from) createdAt["gte"] = new Date(filters.from);
+      if (filters.to) createdAt["lte"] = new Date(filters.to + "T23:59:59");
+      where["createdAt"] = createdAt;
+    }
+    return this.prisma.auditLog.count({ where });
+  }
 }

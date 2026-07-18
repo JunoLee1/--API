@@ -37,4 +37,10 @@ export class TransferService {
     if (recall.status !== RecallStatus.PENDING) throw new AppError(409, "RECALL_ALREADY_PROCESSED");
     return this.repo.updateRecallStatus(id, dto.status, approvedById);
   }
+
+  async exportLoanIn(transferId: number) {
+    const data = await this.repo.exportLoanInData(transferId);
+    if (!data) throw new AppError(404, "TRANSFER_NOT_FOUND_OR_NOT_LOAN_IN");
+    return data;
+  }
 }
