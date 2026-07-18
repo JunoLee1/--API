@@ -92,6 +92,16 @@ export class ReportService {
       detail: { title: report.title, reason: reason.trim() },
     });
 
+    void this.notifRepo
+      .createForUser(
+        report.authorId,
+        "REPORT_REJECTED",
+        "보고서가 반려됐습니다",
+        `"${report.title}" 보고서가 반려됐습니다. 사유: ${reason.trim()}`,
+        id,
+      )
+      .catch(console.error);
+
     return rejected;
   }
 }
