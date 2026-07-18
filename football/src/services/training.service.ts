@@ -53,4 +53,7 @@ export const trainingApi = {
     if (filters.playerId) params.set('playerId', filters.playerId)
     return api.get<TrainingResultRow[]>(`/training/results?${params.toString()}`)
   },
+
+  correctAttendance: (resultId: number, attendance: string, reason: string) =>
+    api.patch<unknown>(`/training/results/${resultId}/correct`, { attendance, reason }),
 }

@@ -76,4 +76,14 @@ export class TrainingController {
       res.status(200).json(await this.service.getResults(filters))
     } catch (err) { next(err) }
   }
+
+  correctAttendance = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (req.user!.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
+      const { attendance, reason } = req.body;
+      res.status(200).json(
+        await this.service.correctAttendance(Number(req.params["resultId"]), req.user!.id, attendance, reason)
+      );
+    } catch (err) { next(err); }
+  };
 }

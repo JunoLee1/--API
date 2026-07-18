@@ -2,6 +2,7 @@ import { TrainingRepository } from "./training.repo";
 import { AppError } from "../lib/appError";
 import { CreateSessionDto, AddContentDto, AddParticipantsDto, UpsertResultDto, SessionListQuery } from "./dto/training.dto";
 import { NotificationRepository } from "../notification/notification.repo";
+import { writeAuditLog } from "../lib/auditLog";
 import { NotificationService } from "../notification/notification.service";
 import { getPrisma } from "../lib/prisma";
 
@@ -86,5 +87,19 @@ export class TrainingService {
 
   getResults(filters: { from?: string; to?: string; sessionType?: string; playerId?: string }) {
     return this.repo.findResults(filters)
+  }
+
+  async correctAttendance(resultId: number, adminId: number, attendance: string, reason: string) {
+    if (!reason?.trim()) throw new AppError(400, "REASON_REQUIRED");
+    const result = await this.repo.findResultById(resultId);
+    if (!result) throw new AppError(404, "RESULT_NOT_FOUND");
+    const updated = await this.repo.updateAttendance(resultId, attendance);
+    await writeAuditLog({
+      actorId: adminId,
+      action: "ATTENDANCE_CORRECTED",
+      targetId: resultId,
+      detail: { before: result.attendance, after: attendance, reason: reason.trim() },
+    });
+    return updated;
   }
 }

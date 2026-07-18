@@ -2,9 +2,13 @@ import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME, COOKIE_OPTIONS } from "../lib/constants";
 import { AuthService } from "./auth.service";
+import { AuthRepository } from "./auth.repo";
 
 export class AuthController {
-  constructor(private service: AuthService) {}
+  constructor(
+    private service: AuthService,
+    private repo: AuthRepository,
+  ) {}
 
 
   // 나중에 lib나 미들웨어로 이사 고려
@@ -22,12 +26,17 @@ export class AuthController {
   }
 
   login = async (req: Request, res: Response, next: NextFunction) => {
+    const ip = req.ip ?? req.socket.remoteAddress ?? "unknown";
+    const userAgent = req.get("user-agent") ?? "unknown";
+    const email: string = req.body?.email ?? "";
     try {
-      const { accessToken, refreshToken } = await this.service.login(req.body);
+      const { accessToken, refreshToken, userId } = await this.service.login(req.body);
+      void this.repo.createLoginHistory({ userId, email, ip, userAgent, success: true }).catch(console.error);
       res.cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, COOKIE_OPTIONS);
       res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, COOKIE_OPTIONS);
       res.status(200).json({ message: "OK" });
     } catch (err) {
+      void this.repo.createLoginHistory({ email, ip, userAgent, success: false }).catch(console.error);
       next(err);
     }
   };
@@ -71,6 +80,20 @@ export class AuthController {
       if (userInfo.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
       const user = await this.service.createUser(req.body);
       res.status(201).json(user);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  loginHistory = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userInfo = this.getAuthenticatedUser(req);
+      if (userInfo.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
+      const userId = req.params["userId"] ? Number(req.params["userId"]) : undefined;
+      const history = userId
+        ? await this.repo.listLoginHistory(userId)
+        : await this.repo.listAllLoginHistory();
+      res.status(200).json(history);
     } catch (err) {
       next(err);
     }

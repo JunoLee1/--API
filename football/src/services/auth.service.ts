@@ -18,4 +18,17 @@ export const authApi = {
       localStorage.removeItem('loggedIn')
     }
   },
+
+  getLoginHistory: (userId?: number) =>
+    api.get<LoginHistoryEntry[]>(userId ? `/auth/login-history/${userId}` : '/auth/login-history'),
+}
+
+export interface LoginHistoryEntry {
+  id: number
+  email: string
+  ip: string
+  userAgent: string
+  success: boolean
+  createdAt: string
+  user?: { id: number; nickname: string } | null
 }

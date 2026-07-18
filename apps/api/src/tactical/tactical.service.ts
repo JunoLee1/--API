@@ -1,10 +1,14 @@
 import { TacticalRepository } from "./tactical.repo";
+import { NotificationRepository } from "../notification/notification.repo";
 import { AppError } from "../lib/appError";
 import { CreateAnalysisDto, UpdateAnalysisDto, AddLineupDto, AddMediaDto } from "./dto/tactical.dto";
 import { getPrisma } from "../lib/prisma";
 
 export class TacticalService {
-  constructor(private repo: TacticalRepository) {}
+  constructor(
+    private repo: TacticalRepository,
+    private notifRepo?: NotificationRepository,
+  ) {}
 
   list(filters?: { matchId?: number; phase?: string }) {
     return this.repo.findAll(filters);
@@ -26,7 +30,18 @@ export class TacticalService {
       select: { seasonId: true },
     });
     if (!match) throw new AppError(404, "MATCH_NOT_FOUND");
-    return this.repo.create({ ...dto, seasonId: match.seasonId }, createdById);
+    const analysis = await this.repo.create({ ...dto, seasonId: match.seasonId }, createdById);
+    if (this.notifRepo) {
+      void this.notifRepo
+        .createForHeadCoach(
+          "TACTICAL_ANALYSIS_CONFIRM_REQUESTED",
+          "전술 분석 확정 요청",
+          `새 전술 분석(${dto.phase})이 등록되어 확정이 필요합니다.`,
+          analysis.id,
+        )
+        .catch(console.error);
+    }
+    return analysis;
   }
 
   async addLineup(analysisId: number, dto: AddLineupDto) {

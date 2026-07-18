@@ -22,5 +22,6 @@ router.patch("/:id/approve", auth, controller.approveSession);
 router.post("/:id/contents", auth, controller.addContent);
 router.post("/:id/participants", auth, controller.addParticipants);
 router.put("/:id/results", auth, controller.upsertResult);
+router.patch("/results/:resultId/correct", auth, controller.correctAttendance);
 
 export default router;

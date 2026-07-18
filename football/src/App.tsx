@@ -31,6 +31,7 @@ import { PartnersPage } from '@/pages/admin/PartnersPage'
 import { TeamsPage } from '@/pages/admin/TeamsPage'
 import { SeasonsPage } from '@/pages/admin/SeasonsPage'
 import { AuditLogPage } from '@/pages/admin/AuditLogPage'
+import { LoginHistoryPage } from '@/pages/admin/LoginHistoryPage'
 import { ContractDetailPage } from '@/pages/contracts/ContractDetailPage'
 import { ReportsPage } from '@/pages/reports/ReportsPage'
 import { ReportFormPage } from '@/pages/reports/ReportFormPage'
@@ -102,6 +103,7 @@ function App() {
             <Route path="/admin/teams" element={<TeamsPage />} />
             <Route path="/admin/seasons" element={<SeasonsPage />} />
             <Route path="/admin/audit-logs" element={<AuditLogPage />} />
+            <Route path="/admin/login-history" element={<LoginHistoryPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/login" replace />} />

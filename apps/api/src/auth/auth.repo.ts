@@ -39,6 +39,38 @@ export class AuthRepository {
     });
   }
 
+  createLoginHistory(data: { userId?: number; email: string; ip: string; userAgent: string; success: boolean }) {
+    return this.prisma.loginHistory.create({
+      data: {
+        userId: data.userId ?? null,
+        email: data.email,
+        ip: data.ip,
+        userAgent: data.userAgent,
+        success: data.success,
+      },
+    });
+  }
+
+  listLoginHistory(userId: number, limit = 50) {
+    return this.prisma.loginHistory.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      select: { id: true, email: true, ip: true, userAgent: true, success: true, createdAt: true },
+    });
+  }
+
+  listAllLoginHistory(limit = 100) {
+    return this.prisma.loginHistory.findMany({
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      select: {
+        id: true, email: true, ip: true, userAgent: true, success: true, createdAt: true,
+        user: { select: { id: true, nickname: true } },
+      },
+    });
+  }
+
   async createUser(data: CreateUserData) {
     const phone = await this.prisma.phoneNumber.create({
       data: { encrypted: data.phoneNumber.encrypted, iv: data.phoneNumber.iv },

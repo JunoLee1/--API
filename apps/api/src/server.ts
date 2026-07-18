@@ -12,6 +12,8 @@ import { startExternalReportReminderJob } from "./jobs/externalReportReminder";
 import { startVideoAssignmentOverdueJob } from "./jobs/videoAssignmentOverdue";
 import { startMonthlyAttendanceCheckJob } from "./jobs/monthlyAttendanceCheck";
 import { startWorkPermitExpiryCheckJob } from "./jobs/workPermitExpiryCheck";
+import { startLoanOutExpiryJob } from "./jobs/loanOutExpiry";
+import { startContractExpiryJob } from "./jobs/contractExpiry";
 
 const app = express();
 
@@ -41,3 +43,5 @@ startExternalReportReminderJob();
 startVideoAssignmentOverdueJob();
 startMonthlyAttendanceCheckJob();
 startWorkPermitExpiryCheckJob();
+startLoanOutExpiryJob();
+startContractExpiryJob();
