@@ -19,8 +19,9 @@ export class PlayerCallupRepository {
   constructor(private prisma: PrismaClient) {}
 
   findAll(query: CallupListQuery) {
+    const where = query.status ? { status: query.status as any } : {};
     return this.prisma.playerCallup.findMany({
-      where: query.status ? { status: query.status as any } : undefined,
+      where,
       select: SELECT,
       orderBy: { createdAt: "desc" },
     });
