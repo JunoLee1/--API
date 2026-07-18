@@ -246,6 +246,8 @@ enum NotificationType {
   PLAYER_CONTRACT_SIGNED
   ATTENDANCE_PENALTY
   TRAINING_SESSION_PENDING
+  VIDEO_ASSIGNED
+  VIDEO_ASSIGNMENT_OVERDUE
 }
 
 enum TacticalStatus {
@@ -435,6 +437,8 @@ model User {
   coachAvailabilities      CoachAvailability[]     @relation("CoachAvailabilityUser")
   createdAvailabilities    CoachAvailability[]     @relation("CoachAvailabilityCreatedBy")
   developmentPlans         PlayerDevelopmentPlan[] @relation("PDPCoach")
+  uploadedVideos           TrainingVideo[]         @relation("VideoUploader")
+  videoAssignments         VideoAssignment[]       @relation("VideoAssigner")
 }
 
 model Season {
@@ -486,6 +490,7 @@ model Player {
   developmentPlans       PlayerDevelopmentPlan[]
   momAnalyses            TacticalAnalysis[]      @relation("MomPlayer")
   improvementAnalyses    TacticalAnalysis[]      @relation("ImprovementPlayer")
+  videoAssignments       VideoAssignment[]
 }
 
 model Contract {
@@ -1262,4 +1267,34 @@ model PlayerDevelopmentPlan {
   season Season @relation(fields: [seasonId], references: [id])
 
   @@unique([playerId, seasonId])
+}
+
+model TrainingVideo {
+  id           Int          @id @default(autoincrement())
+  title        String
+  url          String
+  tags         String[]
+  sessionType  SessionType?
+  uploadedById Int
+  createdAt    DateTime     @default(now())
+
+  uploader    User              @relation("VideoUploader", fields: [uploadedById], references: [id])
+  assignments VideoAssignment[]
+}
+
+model VideoAssignment {
+  id           Int       @id @default(autoincrement())
+  videoId      Int
+  playerId     String
+  assignedById Int
+  dueDate      DateTime?
+  progressRate Int       @default(0)
+  note         String?
+  createdAt    DateTime  @default(now())
+
+  video      TrainingVideo @relation(fields: [videoId], references: [id])
+  player     Player        @relation(fields: [playerId], references: [id])
+  assignedBy User          @relation("VideoAssigner", fields: [assignedById], references: [id])
+
+  @@unique([videoId, playerId])
 }
