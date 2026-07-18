@@ -6,6 +6,10 @@ function isGM(req: Request): boolean {
   return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "GM";
 }
 
+function isHeadCoach(req: Request): boolean {
+  return req.user?.role === "COACHING_STAFF" && req.user?.coachingRole === "HEAD_COACH";
+}
+
 const AUTHOR_ROLES = ["ADMIN", "COACHING_STAFF", "FRONT_OFFICE"] as const;
 
 export class ReportController {
@@ -13,7 +17,7 @@ export class ReportController {
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      res.json(await this.service.list(req.user!.id, isGM(req)));
+      res.json(await this.service.list(req.user!.id, isGM(req), isHeadCoach(req)));
     } catch (err) {
       next(err);
     }
@@ -22,7 +26,8 @@ export class ReportController {
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const report = await this.service.get(Number(req.params["id"]));
-      if (!isGM(req) && report.authorId !== req.user!.id) throw new AppError(403, "FORBIDDEN");
+      const canView = isGM(req) || isHeadCoach(req) || report.authorId === req.user!.id;
+      if (!canView) throw new AppError(403, "FORBIDDEN");
       res.json(report);
     } catch (err) {
       next(err);
@@ -75,7 +80,9 @@ export class ReportController {
 
   approve = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!isGM(req)) throw new AppError(403, "FORBIDDEN");
+      const reportToApprove = await this.service.get(Number(req.params["id"]));
+      const canApprove = reportToApprove.type === "TRAINING" ? isHeadCoach(req) : isGM(req);
+      if (!canApprove) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.approve(Number(req.params["id"]), req.user!.id));
     } catch (err) {
       next(err);
@@ -84,7 +91,9 @@ export class ReportController {
 
   reject = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!isGM(req)) throw new AppError(403, "FORBIDDEN");
+      const reportToReject = await this.service.get(Number(req.params["id"]));
+      const canReject = reportToReject.type === "TRAINING" ? isHeadCoach(req) : isGM(req);
+      if (!canReject) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.reject(Number(req.params["id"]), req.user!.id, req.body.reason));
     } catch (err) {
       next(err);

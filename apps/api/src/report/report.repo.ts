@@ -16,9 +16,14 @@ const reportInclude = {
 export class ReportRepository {
   constructor(private prisma: PrismaClient) {}
 
-  findAll(userId: number, isGM: boolean) {
+  findAll(userId: number, isGM: boolean, isHeadCoach: boolean = false) {
+    const where = isGM
+      ? {}
+      : isHeadCoach
+      ? { OR: [{ authorId: userId }, { type: "TRAINING" as const }] }
+      : { authorId: userId }
     return this.prisma.report.findMany({
-      where: isGM ? {} : { authorId: userId },
+      where,
       include: reportInclude,
       orderBy: { createdAt: "desc" },
     });

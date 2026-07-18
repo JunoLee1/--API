@@ -245,6 +245,7 @@ enum NotificationType {
   PLAYER_DEVELOPMENT_PLAN_ACTIVATED
   PLAYER_CONTRACT_SIGNED
   ATTENDANCE_PENALTY
+  TRAINING_SESSION_PENDING
 }
 
 enum TacticalStatus {
@@ -811,6 +812,8 @@ model TrainingResult {
   session  TrainingSession @relation(fields: [sessionId], references: [id])
   player   Player          @relation(fields: [playerId], references: [id])
   scoredBy User?           @relation("TrainingResultScorer", fields: [scoredById], references: [id])
+
+  @@unique([sessionId, playerId])
 }
 
 model TacticalAnalysis {
@@ -949,6 +952,7 @@ enum ReportType {
   FINANCIAL
   PERFORMANCE
   MEDICAL
+  TRAINING
 }
 
 enum ReportStatus {

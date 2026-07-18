@@ -1,8 +1,8 @@
 import { TrainingRepository } from "./training.repo";
 import { AppError } from "../lib/appError";
 import { CreateSessionDto, AddContentDto, AddParticipantsDto, UpsertResultDto, SessionListQuery } from "./dto/training.dto";
-import { NotificationService } from "../notification/notification.service";
 import { NotificationRepository } from "../notification/notification.repo";
+import { NotificationService } from "../notification/notification.service";
 import { getPrisma } from "../lib/prisma";
 
 const notificationService = new NotificationService(new NotificationRepository(getPrisma()));
@@ -16,7 +16,10 @@ export function shouldTriggerPenalty(effectiveAbsences: number): boolean {
 }
 
 export class TrainingService {
-  constructor(private repo: TrainingRepository) {}
+  constructor(
+    private repo: TrainingRepository,
+    private notifRepo?: NotificationRepository,
+  ) {}
 
   getSessions(query: SessionListQuery) {
     return this.repo.findAll(query);
@@ -28,8 +31,19 @@ export class TrainingService {
     return session;
   }
 
-  createSession(dto: CreateSessionDto, createdById: number) {
-    return this.repo.create(dto, createdById);
+  async createSession(dto: CreateSessionDto, createdById: number) {
+    const session = await this.repo.create(dto, createdById);
+    if (this.notifRepo) {
+      void this.notifRepo
+        .createForHeadCoach(
+          "TRAINING_SESSION_PENDING",
+          "훈련 세션 승인 요청",
+          `${new Date(dto.date).toLocaleDateString("ko-KR")} 훈련 세션(${dto.sessionType})이 등록되어 승인이 필요합니다.`,
+          session.id,
+        )
+        .catch(console.error);
+    }
+    return session;
   }
 
   async approveSession(id: number, approvedById: number) {
@@ -54,10 +68,7 @@ export class TrainingService {
   async upsertResult(sessionId: number, dto: UpsertResultDto) {
     const session = await this.repo.findById(sessionId);
     if (!session) throw new AppError(404, "SESSION_NOT_FOUND");
-    const existing = await this.repo.findResult(sessionId, dto.playerId);
-    const result = existing
-      ? await this.repo.updateResult(existing.id, dto)
-      : await this.repo.createResult(sessionId, dto);
+    const result = await this.repo.upsertResult(sessionId, dto);
 
     if (dto.attendance === "ABSENT_UNAUTHORIZED" || dto.attendance === "LATE_UNAUTHORIZED") {
       const { absences, lateCount } = await this.repo.countUnexcusedAttendance(dto.playerId);
@@ -71,5 +82,9 @@ export class TrainingService {
     }
 
     return result;
+  }
+
+  getResults(filters: { from?: string; to?: string; sessionType?: string; playerId?: string }) {
+    return this.repo.findResults(filters)
   }
 }

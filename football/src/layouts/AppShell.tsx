@@ -14,6 +14,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button'
 import {
   Activity,
+  BarChart2,
   BarChart3,
   Briefcase,
   Building2,
@@ -151,6 +152,13 @@ const NAV_ITEMS: NavItem[] = [
     to: '/training/attendance',
     label: '출석 현황',
     icon: Shield,
+    section: '훈련',
+    roles: ['ADMIN', 'COACHING_STAFF'],
+  },
+  {
+    to: '/training/results',
+    label: '훈련 결과',
+    icon: BarChart2,
     section: '훈련',
     roles: ['ADMIN', 'COACHING_STAFF'],
   },
