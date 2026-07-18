@@ -18,6 +18,12 @@ export class InjuryController {
     } catch (err) { next(err); }
   };
 
+  getActive = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.status(200).json(await this.service.getActive());
+    } catch (err) { next(err); }
+  };
+
   getByPlayer = async (req: Request, res: Response, next: NextFunction) => {
     try {
       res.status(200).json(await this.service.getByPlayer(String(req.params["playerId"])));

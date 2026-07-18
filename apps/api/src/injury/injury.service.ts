@@ -67,6 +67,10 @@ export class InjuryService {
     return this.repo.getStats();
   }
 
+  getActive() {
+    return this.repo.findActive();
+  }
+
   getAssessment(injuryId: number) {
     return this.repo.getAssessment(injuryId);
   }

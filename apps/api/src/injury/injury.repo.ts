@@ -181,6 +181,13 @@ export class InjuryRepository {
     };
   }
 
+  findActive() {
+    return this.prisma.injury.findMany({
+      where: { status: { in: ["OCCURRED", "DIAGNOSED", "REHABILITATING"] } },
+      select: { playerId: true, status: true },
+    });
+  }
+
   getAssessment(injuryId: number) {
     return this.prisma.injuryAssessment.findUnique({ where: { injuryId } });
   }

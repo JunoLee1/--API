@@ -9,6 +9,9 @@ const mockService = {
   getStats: jest
     .fn<() => Promise<any>>()
     .mockResolvedValue({ activeCount: 3, byBodyPart: {}, byCause: {}, avgRecoveryDays: 14 }),
+  getActive: jest.fn<() => Promise<any[]>>().mockResolvedValue([
+    { playerId: 'player-1', status: 'REHABILITATING' },
+  ]),
 } as any;
 
 const controller = new InjuryController(mockService);
@@ -73,6 +76,27 @@ describe("InjuryController - getStats (MEDICAL_DIRECTOR)", () => {
     expect(mockNext).toHaveBeenCalledWith(
       expect.objectContaining({ statusCode: 403, code: "FORBIDDEN" }),
     );
+  });
+});
+
+describe("InjuryController - getActive", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test("ADMIN can get active injuries → 200", async () => {
+    const req = mockReq({});
+    const res = mockRes();
+    await controller.getActive(req, res, mockNext);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(mockService.getActive).toHaveBeenCalled();
+  });
+
+  test("returns active injury list", async () => {
+    const req = mockReq({});
+    const res = mockRes();
+    await controller.getActive(req, res, mockNext);
+    expect(res.json).toHaveBeenCalledWith([
+      { playerId: 'player-1', status: 'REHABILITATING' },
+    ]);
   });
 });
 
