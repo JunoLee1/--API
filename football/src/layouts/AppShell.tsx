@@ -35,6 +35,7 @@ import {
   Users,
   LayoutGrid,
   Video,
+  CalendarX2,
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -167,6 +168,13 @@ const NAV_ITEMS: NavItem[] = [
     to: '/training/videos',
     label: '훈련 영상',
     icon: Video,
+    section: '훈련',
+    roles: ['ADMIN', 'COACHING_STAFF'],
+  },
+  {
+    to: '/training/coach-availability',
+    label: '코치 가용성',
+    icon: CalendarX2,
     section: '훈련',
     roles: ['ADMIN', 'COACHING_STAFF'],
   },

@@ -13,6 +13,11 @@ import {
 import { trainingReferenceApi } from '@/services/training-reference.service'
 import type { TrainingReference, ReferenceSource } from '@/types/training-reference'
 import { REFERENCE_SOURCE_LABEL } from '@/types/training-reference'
+import { trainingLoadApi } from '@/services/training-load.service'
+import type { TrainingLoad } from '@/types/training-load'
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -47,6 +52,9 @@ export function TrainingDetailPage() {
   const canApprove = user?.role === 'ADMIN' || user?.coachingRole === 'HEAD_COACH'
   const canAddRef = user?.role === 'ADMIN' || user?.role === 'COACHING_STAFF'
 
+  const [loads, setLoads] = useState<TrainingLoad[]>([])
+  const [loadInputs, setLoadInputs] = useState<Record<string, { rpe: string; load: string }>>({})
+
   const [refs, setRefs] = useState<TrainingReference[]>([])
   const [refLoading, setRefLoading] = useState(false)
   const [newRefTitle, setNewRefTitle] = useState('')
@@ -64,7 +72,11 @@ export function TrainingDetailPage() {
   useEffect(() => {
     if (!id) return
     trainingApi.get(Number(id))
-      .then((s) => { setSession(s); fetchRefs(s) })
+      .then((s) => {
+        setSession(s)
+        fetchRefs(s)
+        trainingLoadApi.list({ sessionId: Number(id) }).then(setLoads).catch(() => null)
+      })
       .catch(() => toast.error('훈련 세션을 불러오지 못했습니다.'))
       .finally(() => setLoading(false))
   }, [id])
@@ -195,6 +207,104 @@ export function TrainingDetailPage() {
                   )
                 })}
               </div>
+            </div>
+          )}
+
+          {/* 훈련 부하 */}
+          {session.participants.length > 0 && (
+            <div className="rounded-lg border bg-card p-5">
+              <h3 className="text-sm font-semibold mb-2">훈련 부하</h3>
+              <Separator className="mb-2" />
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead>선수</TableHead>
+                    <TableHead className="w-28 text-center">RPE (1–10)</TableHead>
+                    <TableHead className="w-28 text-center">부하</TableHead>
+                    <TableHead className="w-16" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {session.participants.map((p) => {
+                    const existing = loads.find((l) => l.playerId === p.playerId)
+                    const input = loadInputs[p.playerId] ?? {
+                      rpe: existing ? String(existing.rpe) : '',
+                      load: existing?.load != null ? String(existing.load) : '',
+                    }
+                    const isOwnRpe = user?.role === 'PLAYER' && String(user.id) === p.playerId
+                    const canSetLoad =
+                      user?.role === 'ADMIN' ||
+                      user?.coachingRole === 'PHYSICAL_COACH' ||
+                      user?.coachingRole === 'HEAD_COACH'
+                    return (
+                      <TableRow key={p.playerId}>
+                        <TableCell className="font-medium">{p.player.playerName}</TableCell>
+                        <TableCell className="text-center">
+                          {isOwnRpe ? (
+                            <Input
+                              type="number" min={1} max={10}
+                              className="w-16 h-7 text-center text-sm"
+                              value={input.rpe}
+                              onChange={(e) =>
+                                setLoadInputs((prev) => ({
+                                  ...prev,
+                                  [p.playerId]: { ...input, rpe: e.target.value },
+                                }))
+                              }
+                            />
+                          ) : (
+                            <span className="tabular-nums text-sm">{existing?.rpe ?? '—'}</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {canSetLoad ? (
+                            <Input
+                              type="number" min={0}
+                              className="w-20 h-7 text-center text-sm"
+                              value={input.load}
+                              onChange={(e) =>
+                                setLoadInputs((prev) => ({
+                                  ...prev,
+                                  [p.playerId]: { ...input, load: e.target.value },
+                                }))
+                              }
+                            />
+                          ) : (
+                            <span className="tabular-nums text-sm">{existing?.load ?? '—'}</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {(isOwnRpe || canSetLoad) && (
+                            <Button
+                              size="sm" variant="outline" className="h-7 text-xs"
+                              onClick={async () => {
+                                try {
+                                  const payload: {
+                                    playerId: string
+                                    sessionId: number
+                                    rpe?: number
+                                    load?: number
+                                  } = { playerId: p.playerId, sessionId: session.id }
+                                  if (isOwnRpe && input.rpe) payload.rpe = Number(input.rpe)
+                                  if (canSetLoad && input.load) payload.load = Number(input.load)
+                                  await trainingLoadApi.upsert(payload)
+                                  toast.success('저장됐습니다.')
+                                  const updated = await trainingLoadApi.list({ sessionId: session.id })
+                                  setLoads(updated)
+                                } catch (err) {
+                                  toast.error(err instanceof Error ? err.message : '저장 실패')
+                                }
+                              }}
+                            >
+                              저장
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
             </div>
           )}
 

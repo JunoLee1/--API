@@ -16,6 +16,7 @@ import { TrainingDetailPage } from '@/pages/training/TrainingDetailPage'
 import { TrainingAttendancePage } from '@/pages/training/TrainingAttendancePage'
 import { TrainingResultsPage } from '@/pages/training/TrainingResultsPage'
 import { TrainingVideoPage } from '@/pages/training/TrainingVideoPage'
+import { CoachAvailabilityPage } from '@/pages/training/CoachAvailabilityPage'
 import { MatchesPage } from '@/pages/matches/MatchesPage'
 import { MatchDetailPage } from '@/pages/matches/MatchDetailPage'
 import { RankingsPage } from '@/pages/matches/RankingsPage'
@@ -68,6 +69,7 @@ function App() {
             <Route path="/training/attendance" element={<TrainingAttendancePage />} />
             <Route path="/training/results" element={<TrainingResultsPage />} />
             <Route path="/training/videos" element={<TrainingVideoPage />} />
+            <Route path="/training/coach-availability" element={<CoachAvailabilityPage />} />
             <Route path="/training/:id" element={<TrainingDetailPage />} />
             <Route path="/matches" element={<MatchesPage />} />
             <Route path="/matches/analysis" element={<TacticalAnalysisPage />} />
