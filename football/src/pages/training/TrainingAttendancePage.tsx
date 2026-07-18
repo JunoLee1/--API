@@ -31,6 +31,7 @@ interface PlayerStat {
   absentAuthorized: number
   total: number
   score: number
+  effectiveAbsences: number
 }
 
 const ATTENDANCE_WEIGHT: Record<AttendanceStatus, number> = {
@@ -92,6 +93,7 @@ export function TrainingAttendancePage() {
                 absentAuthorized: 0,
                 total: 0,
                 score: 0,
+                effectiveAbsences: 0,
               })
             }
 
@@ -105,6 +107,9 @@ export function TrainingAttendancePage() {
           }
         }
 
+        for (const stat of playerMap.values()) {
+          stat.effectiveAbsences = stat.absentUnauthorized + Math.floor(stat.lateUnauthorized / 3)
+        }
         const sorted = Array.from(playerMap.values()).sort((a, b) => b.score / (b.total || 1) - a.score / (a.total || 1))
         setStats(sorted)
       })
@@ -172,6 +177,7 @@ export function TrainingAttendancePage() {
                   </span>
                 </TableHead>
                 <TableHead className="w-24 text-center">공결</TableHead>
+                <TableHead className="w-24 text-center">환산결석</TableHead>
                 <TableHead className="w-24 text-right">출석률</TableHead>
               </TableRow>
             </TableHeader>
@@ -183,6 +189,7 @@ export function TrainingAttendancePage() {
                   <TableCell className="text-center tabular-nums">{s.lateUnauthorized || '—'}</TableCell>
                   <TableCell className="text-center tabular-nums">{s.absentUnauthorized || '—'}</TableCell>
                   <TableCell className="text-center tabular-nums">{s.absentAuthorized || '—'}</TableCell>
+                  <TableCell className="text-center tabular-nums font-medium">{s.effectiveAbsences || '—'}</TableCell>
                   <TableCell className="text-right tabular-nums font-medium">{attendanceRate(s)}</TableCell>
                 </TableRow>
               ))}
