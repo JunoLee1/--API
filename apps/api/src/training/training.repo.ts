@@ -85,13 +85,33 @@ export class TrainingRepository {
         status: "ACTIVE",
         ...(teamId ? { teamId } : {}),
       },
-      select: { id: true },
+      select: {
+        id: true,
+        injuries: {
+          where: { status: { notIn: ["RETURNED"] } },
+          select: { id: true },
+          take: 1,
+        },
+      },
     });
     if (players.length === 0) return;
+
     await this.prisma.trainingParticipant.createMany({
       data: players.map((p) => ({ sessionId, playerId: p.id })),
       skipDuplicates: true,
     });
+
+    const injuredIds = players.filter((p) => p.injuries.length > 0).map((p) => p.id);
+    if (injuredIds.length > 0) {
+      await this.prisma.trainingResult.createMany({
+        data: injuredIds.map((playerId) => ({
+          sessionId,
+          playerId,
+          attendance: "ABSENT_AUTHORIZED" as const,
+        })),
+        skipDuplicates: true,
+      });
+    }
   }
 
   upsertResult(sessionId: number, dto: UpsertResultDto) {
