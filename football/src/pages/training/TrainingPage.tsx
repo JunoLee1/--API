@@ -89,7 +89,7 @@ function CreateSessionDialog({ open, onOpenChange, seasons, activeSeason, onSave
           </div>
           <div className="space-y-1.5">
             <Label>유형 *</Label>
-            <Select value={sessionType} onValueChange={(v) => setSessionType(v as SessionType)}>
+            <Select value={sessionType} onValueChange={(v) => setSessionType(v as SessionType)} items={SESSION_TYPE_LABEL}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {SESSION_TYPES.map((t) => <SelectItem key={t} value={t}>{SESSION_TYPE_LABEL[t]}</SelectItem>)}
@@ -98,7 +98,7 @@ function CreateSessionDialog({ open, onOpenChange, seasons, activeSeason, onSave
           </div>
           <div className="space-y-1.5">
             <Label>시즌 *</Label>
-            <Select value={seasonId} onValueChange={(v) => { if (v) setSeasonId(v) }}>
+            <Select value={seasonId} onValueChange={(v) => { if (v) setSeasonId(v) }} items={Object.fromEntries(seasons.map((s) => [String(s.id), s.name]))}>
               <SelectTrigger><SelectValue placeholder="시즌 선택" /></SelectTrigger>
               <SelectContent>
                 {seasons.map((s) => <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>)}
@@ -176,7 +176,7 @@ export function TrainingPage() {
       </div>
 
       <div className="border-b px-6 py-3 flex items-center gap-3 shrink-0 bg-muted/30">
-        <Select value={selectedSeasonId ?? 'ALL'} onValueChange={(v) => setSelectedSeasonId(v ?? 'ALL')}>
+        <Select value={selectedSeasonId ?? 'ALL'} onValueChange={(v) => setSelectedSeasonId(v ?? 'ALL')} items={{ ALL: '전체 시즌', ...Object.fromEntries(seasons.map((s) => [String(s.id), s.name])) }}>
           <SelectTrigger className="w-36 h-8 text-sm bg-background"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">전체 시즌</SelectItem>
