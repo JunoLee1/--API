@@ -4,7 +4,9 @@ import { TacticalController } from "../../src/tactical/tactical.controller";
 const mockService = {
   getByMatch: jest.fn(),
   getById: jest.fn(),
+  list: jest.fn<() => Promise<[]>>().mockResolvedValue([]),
   createAnalysis: jest.fn<() => Promise<{ id: number }>>().mockResolvedValue({ id: 1 }),
+  updateAnalysis: jest.fn<() => Promise<{ id: number }>>().mockResolvedValue({ id: 1 }),
   addLineup: jest.fn(),
   addMedia: jest.fn(),
   confirmAnalysis: jest
@@ -83,6 +85,46 @@ describe("TacticalController - create (TACTICAL_ANALYST)", () => {
     expect(mockNext).toHaveBeenCalledWith(
       expect.objectContaining({ statusCode: 403, code: "FORBIDDEN" }),
     );
+  });
+});
+
+describe("TacticalController - update", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test("ADMIN can update TacticalAnalysis → 200", async () => {
+    const req = mockReq({
+      params: { id: "1" },
+      body: { formation: "4-3-3", opponentKeyThreat: "High press" },
+    });
+    const res = mockRes();
+    await controller.update(req, res, mockNext);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(mockService.updateAnalysis).toHaveBeenCalledWith(1, {
+      formation: "4-3-3",
+      opponentKeyThreat: "High press",
+    });
+  });
+
+  test("PLAYER cannot update TacticalAnalysis → 403 via next", async () => {
+    const req = mockReq({
+      user: { id: 5, role: "PLAYER", coachingRole: null, frontOfficeRole: null },
+      params: { id: "1" },
+      body: {},
+    });
+    const res = mockRes();
+    await controller.update(req, res, mockNext);
+    expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403 }));
+  });
+
+  test("TACTICAL_ANALYST can update TacticalAnalysis → 200", async () => {
+    const req = mockReq({
+      user: { id: 6, role: "FRONT_OFFICE", coachingRole: null, frontOfficeRole: "TACTICAL_ANALYST" },
+      params: { id: "2" },
+      body: { concededAnalysis: "압박 부족" },
+    });
+    const res = mockRes();
+    await controller.update(req, res, mockNext);
+    expect(res.status).toHaveBeenCalledWith(200);
   });
 });
 

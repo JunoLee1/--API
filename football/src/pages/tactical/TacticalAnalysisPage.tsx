@@ -1,18 +1,27 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { tacticalApi } from '@/services/tactical.service'
 import { matchApi } from '@/services/match.service'
-import type { TacticalAnalysis, TacticalPhase, CreateTacticalDto } from '@/types/tactical'
+import { playerApi } from '@/services/player.service'
+import type {
+  TacticalAnalysis,
+  TacticalPhase,
+  CreateTacticalDto,
+  UpdateTacticalDto,
+} from '@/types/tactical'
 import {
+  FORMATION_OPTIONS,
   PHASE_LABEL,
   PHASE_STYLE,
   STATUS_LABEL,
   STATUS_STYLE,
 } from '@/types/tactical'
 import type { Match } from '@/types/match'
+import type { Player } from '@/types/player'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Input } from '@/components/ui/input'
 import {
   Dialog,
   DialogContent,
@@ -36,9 +45,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Plus, Check } from 'lucide-react'
+import { Check, ImagePlus, Plus, X } from 'lucide-react'
 
 const PHASES: TacticalPhase[] = ['PRE_MATCH', 'POST_MATCH']
 
@@ -50,32 +58,219 @@ function matchLabel(m: Match) {
   return `${formatDate(m.date)} ${m.homeTeamName} vs ${m.awayTeamName}`
 }
 
-interface CreateDialogProps {
+// ─── FormationSelect (재사용) ──────────────────────────────────────────────────
+
+function FormationSelect({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label>{label}</Label>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger>
+          <SelectValue placeholder="선택">{value || undefined}</SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {FORMATION_OPTIONS.map((f) => (
+            <SelectItem key={f} value={f}>{f}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  )
+}
+
+// ─── PlayerSelectRow (MOM / 보완 필요) ───────────────────────────────────────
+
+function PlayerSelectRow({
+  label,
+  players,
+  playerId,
+  note,
+  onPlayerChange,
+  onNoteChange,
+}: {
+  label: string
+  players: Player[]
+  playerId: string
+  note: string
+  onPlayerChange: (v: string) => void
+  onNoteChange: (v: string) => void
+}) {
+  const selected = players.find((p) => p.id === playerId)
+  return (
+    <div className="space-y-1.5">
+      <Label>{label}</Label>
+      <Select value={playerId} onValueChange={onPlayerChange}>
+        <SelectTrigger>
+          <SelectValue placeholder="선수 선택">
+            {selected?.playerName ?? undefined}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {players.map((p) => (
+            <SelectItem key={p.id} value={p.id}>{p.playerName}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Input
+        placeholder="코멘트 (선택)"
+        value={note}
+        onChange={(e) => onNoteChange(e.target.value)}
+      />
+    </div>
+  )
+}
+
+// ─── AnalysisFormDialog (create + edit 통합) ──────────────────────────────────
+
+type FormMode = 'create' | 'edit'
+
+interface AnalysisFormDialogProps {
+  mode: FormMode
   open: boolean
   onOpenChange: (v: boolean) => void
   matches: Match[]
+  players: Player[]
+  initial?: TacticalAnalysis
   onSaved: () => void
 }
 
-function CreateAnalysisDialog({ open, onOpenChange, matches, onSaved }: CreateDialogProps) {
-  const [matchId, setMatchId] = useState<string>('')
-  const [phase, setPhase] = useState<TacticalPhase>('PRE_MATCH')
-  const [formation, setFormation] = useState('')
-  const [opponentAnalysis, setOpponentAnalysis] = useState('')
+function AnalysisFormDialog({
+  mode,
+  open,
+  onOpenChange,
+  matches,
+  players,
+  initial,
+  onSaved,
+}: AnalysisFormDialogProps) {
+  // ── common ──
+  const [matchId, setMatchId] = useState(initial ? String(initial.matchId) : '')
+  const [phase, setPhase] = useState<TacticalPhase>(initial?.phase ?? 'PRE_MATCH')
+  const [opponentAnalysis, setOpponentAnalysis] = useState(initial?.opponentAnalysis ?? '')
+  // ── PRE_MATCH ──
+  const [formation, setFormation] = useState(initial?.formation ?? '')
+  const [opponentFormation, setOpponentFormation] = useState(initial?.opponentFormation ?? '')
+  const [opponentKeyThreat, setOpponentKeyThreat] = useState(initial?.opponentKeyThreat ?? '')
+  const [opponentWeakness, setOpponentWeakness] = useState(initial?.opponentWeakness ?? '')
+  const [opponentKeyPlayer, setOpponentKeyPlayer] = useState(initial?.opponentKeyPlayer ?? '')
+  // ── POST_MATCH ──
+  const [tacticalCompliance, setTacticalCompliance] = useState(initial?.tacticalCompliance ?? '')
+  const [concededAnalysis, setConcededAnalysis] = useState(initial?.concededAnalysis ?? '')
+  const [momPlayerId, setMomPlayerId] = useState(initial?.momPlayerId ?? '')
+  const [momNote, setMomNote] = useState(initial?.momNote ?? '')
+  const [improvementPlayerId, setImprovementPlayerId] = useState(initial?.improvementPlayerId ?? '')
+  const [improvementNote, setImprovementNote] = useState(initial?.improvementNote ?? '')
+  // ── files (create 모드) ──
+  const [files, setFiles] = useState<File[]>([])
+  const [previews, setPreviews] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const reset = () => {
+    setMatchId('')
+    setPhase('PRE_MATCH')
+    setFormation('')
+    setOpponentFormation('')
+    setOpponentKeyThreat('')
+    setOpponentWeakness('')
+    setOpponentKeyPlayer('')
+    setOpponentAnalysis('')
+    setTacticalCompliance('')
+    setConcededAnalysis('')
+    setMomPlayerId('')
+    setMomNote('')
+    setImprovementPlayerId('')
+    setImprovementNote('')
+    setFiles([])
+    setPreviews([])
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(e.target.files ?? [])
+    if (!selected.length) return
+    setFiles((prev) => [...prev, ...selected])
+    selected.forEach((f) => {
+      if (f.type.startsWith('image/')) {
+        const reader = new FileReader()
+        reader.onload = (ev) => setPreviews((prev) => [...prev, ev.target!.result as string])
+        reader.readAsDataURL(f)
+      } else {
+        setPreviews((prev) => [...prev, ''])
+      }
+    })
+    e.target.value = ''
+  }
+
+  const removeFile = (idx: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== idx))
+    setPreviews((prev) => prev.filter((_, i) => i !== idx))
+  }
+
+  const buildPreDto = (): Omit<CreateTacticalDto, 'matchId' | 'phase'> => ({
+    formation: formation || undefined,
+    opponentFormation: opponentFormation || undefined,
+    opponentKeyThreat: opponentKeyThreat || undefined,
+    opponentWeakness: opponentWeakness || undefined,
+    opponentKeyPlayer: opponentKeyPlayer || undefined,
+    opponentAnalysis: opponentAnalysis || undefined,
+  })
+
+  const buildPostDto = (): Omit<CreateTacticalDto, 'matchId' | 'phase'> => ({
+    formation: formation || undefined,
+    tacticalCompliance: tacticalCompliance || undefined,
+    concededAnalysis: concededAnalysis || undefined,
+    momPlayerId: momPlayerId || undefined,
+    momNote: momNote || undefined,
+    improvementPlayerId: improvementPlayerId || undefined,
+    improvementNote: improvementNote || undefined,
+    opponentAnalysis: opponentAnalysis || undefined,
+  })
 
   const handleSave = async () => {
-    if (!matchId) { toast.error('경기를 선택해주세요.'); return }
     setSaving(true)
     try {
-      const dto: CreateTacticalDto = {
-        matchId: Number(matchId),
-        phase,
-        ...(formation.trim() && { formation: formation.trim() }),
-        ...(opponentAnalysis.trim() && { opponentAnalysis: opponentAnalysis.trim() }),
+      if (mode === 'create') {
+        if (!matchId) { toast.error('경기를 선택해주세요.'); setSaving(false); return }
+        const phaseDto = phase === 'PRE_MATCH' ? buildPreDto() : buildPostDto()
+        const result = await tacticalApi.create({ matchId: Number(matchId), phase, ...phaseDto })
+        if (files.length > 0) {
+          await tacticalApi.addMedia(result.id, files).catch(() => {
+            toast.error('분석은 등록됐지만 파일 업로드에 실패했습니다.')
+          })
+        }
+        toast.success('전술 분석이 등록됐습니다.')
+      } else {
+        const phaseDto: UpdateTacticalDto = phase === 'PRE_MATCH'
+          ? {
+              formation,
+              opponentFormation,
+              opponentKeyThreat,
+              opponentWeakness,
+              opponentKeyPlayer,
+              opponentAnalysis,
+            }
+          : {
+              formation,
+              tacticalCompliance,
+              concededAnalysis,
+              momPlayerId,
+              momNote,
+              improvementPlayerId,
+              improvementNote,
+              opponentAnalysis,
+            }
+        await tacticalApi.update(initial!.id, phaseDto)
+        toast.success('전술 분석이 수정됐습니다.')
       }
-      await tacticalApi.create(dto)
-      toast.success('전술 분석이 등록됐습니다.')
+      reset()
       onSaved()
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
@@ -84,15 +279,27 @@ function CreateAnalysisDialog({ open, onOpenChange, matches, onSaved }: CreateDi
     }
   }
 
+  const title = mode === 'create'
+    ? '전술 분석 등록'
+    : phase === 'PRE_MATCH'
+      ? '🛡️ 사전 전력 분석 수정'
+      : '⚔️ 사후 경기 리뷰 수정'
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>전술 분석 등록</DialogTitle></DialogHeader>
-        <div className="space-y-3 py-2">
+    <Dialog open={open} onOpenChange={(v) => { if (!v) { reset(); onOpenChange(false) } }}>
+      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
+        <DialogHeader><DialogTitle>{title}</DialogTitle></DialogHeader>
+
+        <div className="flex-1 overflow-y-auto space-y-3 py-2 pr-1">
+          {/* ── 공통: 경기 + 시점 ── */}
           <div className="space-y-1.5">
             <Label>경기 *</Label>
-            <Select value={matchId} onValueChange={(v) => { if (v) setMatchId(v) }}>
-              <SelectTrigger><SelectValue placeholder="경기 선택" /></SelectTrigger>
+            <Select value={matchId} onValueChange={setMatchId} disabled={mode === 'edit'}>
+              <SelectTrigger>
+                <SelectValue placeholder="경기 선택">
+                  {matchId ? matchLabel(matches.find((m) => String(m.id) === matchId)!) : undefined}
+                </SelectValue>
+              </SelectTrigger>
               <SelectContent>
                 {matches.map((m) => (
                   <SelectItem key={m.id} value={String(m.id)}>{matchLabel(m)}</SelectItem>
@@ -102,46 +309,199 @@ function CreateAnalysisDialog({ open, onOpenChange, matches, onSaved }: CreateDi
           </div>
           <div className="space-y-1.5">
             <Label>분석 시점 *</Label>
-            <Select value={phase} onValueChange={(v) => setPhase(v as TacticalPhase)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select value={phase} onValueChange={(v) => setPhase(v as TacticalPhase)} disabled={mode === 'edit'}>
+              <SelectTrigger>
+                <SelectValue>{PHASE_LABEL[phase]}</SelectValue>
+              </SelectTrigger>
               <SelectContent>
-                {PHASES.map((p) => <SelectItem key={p} value={p}>{PHASE_LABEL[p]}</SelectItem>)}
+                {PHASES.map((p) => (
+                  <SelectItem key={p} value={p}>{PHASE_LABEL[p]}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
-            <Label>포메이션</Label>
-            <Input placeholder="예: 4-3-3" value={formation} onChange={(e) => setFormation(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>상대 분석</Label>
-            <Textarea
-              placeholder="상대팀 분석 내용"
-              value={opponentAnalysis}
-              onChange={(e) => setOpponentAnalysis(e.target.value)}
-              rows={3}
-            />
-          </div>
+
+          {/* ── PRE_MATCH: 🛡️ 사전 전력 분석 ── */}
+          {phase === 'PRE_MATCH' && (
+            <div className="space-y-3 rounded-lg border border-blue-100 bg-blue-50/40 p-3">
+              <p className="text-xs font-semibold text-blue-700">🛡️ 사전 전력 분석 — 상대팀 파악</p>
+              <FormationSelect
+                label="우리 팀 계획 포메이션"
+                value={formation}
+                onChange={setFormation}
+              />
+              <FormationSelect
+                label="상대 팀 예상 포메이션"
+                value={opponentFormation}
+                onChange={setOpponentFormation}
+              />
+              <div className="space-y-1.5">
+                <Label>상대 팀 빌드업/공격 전개 특징 (Key Threat)</Label>
+                <Textarea
+                  placeholder="예: 좌측 윙백의 오버래핑, 전방 압박 강도"
+                  value={opponentKeyThreat}
+                  onChange={(e) => setOpponentKeyThreat(e.target.value)}
+                  rows={2}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>상대 팀 수비 취약점 및 공략 포인트</Label>
+                <Textarea
+                  placeholder="예: 백라인 뒷공간, 세트피스 허용률"
+                  value={opponentWeakness}
+                  onChange={(e) => setOpponentWeakness(e.target.value)}
+                  rows={2}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>요주의 인물 (Opponent Key Player)</Label>
+                <Input
+                  placeholder="예: 10번 공격형 미드필더"
+                  value={opponentKeyPlayer}
+                  onChange={(e) => setOpponentKeyPlayer(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>기타 메모</Label>
+                <Textarea
+                  placeholder="추가 분석 내용"
+                  value={opponentAnalysis}
+                  onChange={(e) => setOpponentAnalysis(e.target.value)}
+                  rows={2}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* ── POST_MATCH: ⚔️ 사후 경기 리뷰 ── */}
+          {phase === 'POST_MATCH' && (
+            <div className="space-y-3 rounded-lg border border-purple-100 bg-purple-50/40 p-3">
+              <p className="text-xs font-semibold text-purple-700">⚔️ 사후 경기 리뷰 — 우리 팀 수행도</p>
+              <FormationSelect
+                label="우리 팀 실제 가동 포메이션"
+                value={formation}
+                onChange={setFormation}
+              />
+              <div className="space-y-1.5">
+                <Label>전술 지시 이행도 평가</Label>
+                <Textarea
+                  placeholder="예: 전방 압박 이행 80%, 측면 전환 부족"
+                  value={tacticalCompliance}
+                  onChange={(e) => setTacticalCompliance(e.target.value)}
+                  rows={2}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>실점/위기 발생 원인 분석</Label>
+                <Textarea
+                  placeholder="예: 코너킥 수비 마크 이탈, 2선 압박 타이밍 지연"
+                  value={concededAnalysis}
+                  onChange={(e) => setConcededAnalysis(e.target.value)}
+                  rows={2}
+                />
+              </div>
+              <PlayerSelectRow
+                label="수훈 선수 (MOM)"
+                players={players}
+                playerId={momPlayerId}
+                note={momNote}
+                onPlayerChange={setMomPlayerId}
+                onNoteChange={setMomNote}
+              />
+              <PlayerSelectRow
+                label="보완 필요 선수"
+                players={players}
+                playerId={improvementPlayerId}
+                note={improvementNote}
+                onPlayerChange={setImprovementPlayerId}
+                onNoteChange={setImprovementNote}
+              />
+              <div className="space-y-1.5">
+                <Label>기타 메모</Label>
+                <Textarea
+                  placeholder="추가 리뷰 내용"
+                  value={opponentAnalysis}
+                  onChange={(e) => setOpponentAnalysis(e.target.value)}
+                  rows={2}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* ── 파일 업로드 (create 모드만) ── */}
+          {mode === 'create' && (
+            <div className="space-y-1.5">
+              <Label>사진 / 영상</Label>
+              <input
+                ref={inputRef}
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                className="hidden"
+                onChange={handleFileChange}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => inputRef.current?.click()}
+              >
+                <ImagePlus className="h-4 w-4 mr-1.5" />파일 선택
+              </Button>
+              {files.length > 0 && (
+                <div className="space-y-1 mt-1">
+                  {files.map((f, idx) => (
+                    <div key={idx} className="flex items-center gap-2 text-sm bg-muted/50 rounded px-2 py-1">
+                      {previews[idx] ? (
+                        <img src={previews[idx]} alt="" className="h-7 w-10 object-cover rounded shrink-0" />
+                      ) : (
+                        <span className="text-muted-foreground text-xs shrink-0">▶</span>
+                      )}
+                      <span className="flex-1 truncate text-xs">{f.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeFile(idx)}
+                        className="shrink-0 text-muted-foreground hover:text-destructive"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? '저장 중...' : '등록'}</Button>
+
+        <DialogFooter className="border-t pt-3">
+          <Button variant="outline" onClick={() => { reset(); onOpenChange(false) }} disabled={saving}>
+            취소
+          </Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? '저장 중...' : mode === 'create' ? '등록' : '저장'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   )
 }
 
+// ─── 메인 페이지 ───────────────────────────────────────────────────────────────
+
 export function TacticalAnalysisPage() {
   const { user } = useCurrentUser()
   const [analyses, setAnalyses] = useState<TacticalAnalysis[]>([])
   const [matches, setMatches] = useState<Match[]>([])
+  const [players, setPlayers] = useState<Player[]>([])
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
+  const [editTarget, setEditTarget] = useState<TacticalAnalysis | null>(null)
 
   const canWrite =
-    user?.role === 'COACHING_STAFF' &&
-    (user?.coachingRole === 'HEAD_COACH' || user?.coachingRole === 'ASSISTANT_COACH')
+    user?.role === 'ADMIN' ||
+    user?.role === 'COACHING_STAFF' ||
+    (user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'TACTICAL_ANALYST')
 
   const canConfirm = user?.role === 'ADMIN' || user?.coachingRole === 'HEAD_COACH'
 
@@ -155,9 +515,11 @@ export function TacticalAnalysisPage() {
   useEffect(() => {
     void fetchAnalyses()
     matchApi.list().then(setMatches).catch(() => null)
+    playerApi.list().then(setPlayers).catch(() => null)
   }, [])
 
-  const handleConfirm = async (id: number) => {
+  const handleConfirm = async (id: number, e: React.MouseEvent) => {
+    e.stopPropagation()
     try {
       await tacticalApi.confirm(id)
       toast.success('전술 분석이 확정됐습니다.')
@@ -165,6 +527,11 @@ export function TacticalAnalysisPage() {
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : '확정에 실패했습니다.')
     }
+  }
+
+  const handleRowClick = (a: TacticalAnalysis) => {
+    if (!canWrite) return
+    setEditTarget(a)
   }
 
   return (
@@ -187,7 +554,9 @@ export function TacticalAnalysisPage() {
             {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
           </div>
         ) : analyses.length === 0 ? (
-          <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">등록된 전술 분석이 없습니다.</div>
+          <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
+            등록된 전술 분석이 없습니다.
+          </div>
         ) : (
           <Table>
             <TableHeader>
@@ -202,14 +571,14 @@ export function TacticalAnalysisPage() {
             </TableHeader>
             <TableBody>
               {analyses.map((a) => (
-                <TableRow key={a.id}>
+                <TableRow
+                  key={a.id}
+                  className={canWrite ? 'cursor-pointer' : ''}
+                  onClick={() => handleRowClick(a)}
+                >
                   <TableCell>
-                    <div className="text-sm">
-                      {a.match.homeTeamName} vs {a.match.awayTeamName}
-                    </div>
-                    <div className="text-xs text-muted-foreground tabular-nums">
-                      {formatDate(a.match.date)}
-                    </div>
+                    <div className="text-sm">{a.match.homeTeamName} vs {a.match.awayTeamName}</div>
+                    <div className="text-xs text-muted-foreground tabular-nums">{formatDate(a.match.date)}</div>
                   </TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${PHASE_STYLE[a.phase]}`}>
@@ -226,7 +595,12 @@ export function TacticalAnalysisPage() {
                   {canConfirm && (
                     <TableCell>
                       {a.status === 'DRAFT' && (
-                        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleConfirm(a.id)}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs"
+                          onClick={(e) => handleConfirm(a.id, e)}
+                        >
                           <Check className="h-3 w-3 mr-1" />확정
                         </Button>
                       )}
@@ -239,12 +613,30 @@ export function TacticalAnalysisPage() {
         )}
       </div>
 
-      <CreateAnalysisDialog
+      {/* 등록 다이얼로그 */}
+      <AnalysisFormDialog
+        mode="create"
         open={createOpen}
         onOpenChange={setCreateOpen}
         matches={matches}
+        players={players}
         onSaved={() => {
           setCreateOpen(false)
+          setLoading(true)
+          void fetchAnalyses()
+        }}
+      />
+
+      {/* 수정 다이얼로그 */}
+      <AnalysisFormDialog
+        mode="edit"
+        open={!!editTarget}
+        onOpenChange={(v) => { if (!v) setEditTarget(null) }}
+        matches={matches}
+        players={players}
+        initial={editTarget ?? undefined}
+        onSaved={() => {
+          setEditTarget(null)
           setLoading(true)
           void fetchAnalyses()
         }}

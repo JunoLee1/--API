@@ -2,21 +2,66 @@ import { useState, useEffect } from 'react'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { dashboardApi } from '@/services/dashboard.service'
 import { notificationApi, type NotificationItem } from '@/services/notification.service'
-import type { DashboardStats } from '@/types/dashboard'
+import { matchApi } from '@/services/match.service'
+import { analysisApi, type TeamRanking } from '@/services/analysis.service'
+import { seasonApi } from '@/services/season.service'
+import type { Match } from '@/types/match'
+import { COMPETITION_LABEL } from '@/types/match'
+import type { DashboardStats, MedicalDashboardStats } from '@/types/dashboard'
 import { getDashboardConfig } from './dashboardConfig'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { ActionQueueCard } from '@/components/dashboard/ActionQueueCard'
-import { ScheduleCard } from '@/components/dashboard/ScheduleCard'
-import { RecentFeedCard } from '@/components/dashboard/RecentFeedCard'
+import { ScheduleCard, type ScheduleItem } from '@/components/dashboard/ScheduleCard'
+import { RecentFeedCard, type FeedItem } from '@/components/dashboard/RecentFeedCard'
+import { RankingCard } from '@/components/dashboard/RankingCard'
 import { MedicalSection } from '@/components/dashboard/MedicalSection'
-import type { MedicalDashboardStats } from '@/types/dashboard'
+
+const OUR_TEAM_NAME = 'FC Seoul'
+
+function toScheduleItems(matches: Match[]): ScheduleItem[] {
+  const now = new Date()
+  return matches
+    .filter((m) => new Date(m.date) >= now)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(0, 3)
+    .map((m) => ({
+      id: m.id,
+      label: `${m.homeTeamName} vs ${m.awayTeamName}`,
+      date: m.date,
+    }))
+}
+
+function toFeedItems(matches: Match[]): FeedItem[] {
+  const now = new Date()
+  return matches
+    .filter((m) => new Date(m.date) < now && m.homeScore != null && m.awayScore != null)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5)
+    .map((m) => {
+      const ourIsHome = m.homeTeamName === OUR_TEAM_NAME
+      const ourScore = ourIsHome ? m.homeScore! : m.awayScore!
+      const oppScore = ourIsHome ? m.awayScore! : m.homeScore!
+      const result = ourScore > oppScore ? '승' : ourScore === oppScore ? '무' : '패'
+      const score = `${m.homeScore} : ${m.awayScore}`
+      return {
+        id: m.id,
+        label: `${m.homeTeamName} vs ${m.awayTeamName}`,
+        sub: `${score} · ${result} · ${COMPETITION_LABEL[m.competitionType]}`,
+        date: m.date,
+      }
+    })
+}
 
 export function DashboardPage() {
   const { user, loading: userLoading } = useCurrentUser()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
+  const [matches, setMatches] = useState<Match[]>([])
+  const [myRanking, setMyRanking] = useState<TeamRanking | null>(null)
   const [statsLoading, setStatsLoading] = useState(true)
   const [notiLoading, setNotiLoading] = useState(true)
+  const [matchesLoading, setMatchesLoading] = useState(true)
+  const [rankingLoading, setRankingLoading] = useState(true)
 
   useEffect(() => {
     if (!user) return
@@ -26,6 +71,18 @@ export function DashboardPage() {
     notificationApi.my()
       .then(setNotifications)
       .finally(() => setNotiLoading(false))
+    matchApi.list()
+      .then(setMatches)
+      .catch(() => null)
+      .finally(() => setMatchesLoading(false))
+    seasonApi.active()
+      .then((season) => {
+        if (!season) return
+        return analysisApi.getRankings({ seasonId: season.id, competitionType: 'LEAGUE' })
+          .then((rows) => setMyRanking(rows.find((r) => r.teamName === OUR_TEAM_NAME) ?? null))
+      })
+      .catch(() => null)
+      .finally(() => setRankingLoading(false))
   }, [user])
 
   if (userLoading) {
@@ -70,12 +127,15 @@ export function DashboardPage() {
         {config.recentFeedTitle && (
           <RecentFeedCard
             title={config.recentFeedTitle}
-            items={[]}
-            loading={false}
+            items={toFeedItems(matches)}
+            loading={matchesLoading}
           />
         )}
         {config.showSchedule && (
-          <ScheduleCard items={[]} loading={false} />
+          <ScheduleCard items={toScheduleItems(matches)} loading={matchesLoading} />
+        )}
+        {config.showRanking && (
+          <RankingCard ranking={myRanking} loading={rankingLoading} />
         )}
       </div>
     </div>

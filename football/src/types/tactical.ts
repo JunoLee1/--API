@@ -1,5 +1,13 @@
 export type TacticalPhase = 'PRE_MATCH' | 'POST_MATCH'
 export type TacticalStatus = 'DRAFT' | 'CONFIRMED'
+export type TacticalMediaType = 'image' | 'video'
+
+export interface TacticalMedia {
+  id: number
+  url: string
+  type: TacticalMediaType
+  tacticalAnalysisId: number
+}
 
 export interface TacticalAnalysis {
   id: number
@@ -10,6 +18,18 @@ export interface TacticalAnalysis {
   opponentAnalysis: string | null
   createdById: number
   createdAt: string
+  // PRE_MATCH
+  opponentFormation: string | null
+  opponentKeyThreat: string | null
+  opponentWeakness: string | null
+  opponentKeyPlayer: string | null
+  // POST_MATCH
+  tacticalCompliance: string | null
+  concededAnalysis: string | null
+  momPlayerId: string | null
+  momNote: string | null
+  improvementPlayerId: string | null
+  improvementNote: string | null
   match: {
     homeTeamName: string
     awayTeamName: string
@@ -18,6 +38,9 @@ export interface TacticalAnalysis {
     awayScore: number | null
   }
   createdBy: { nickname: string }
+  momPlayer: { playerName: string } | null
+  improvementPlayer: { playerName: string } | null
+  media?: TacticalMedia[]
 }
 
 export interface CreateTacticalDto {
@@ -25,7 +48,46 @@ export interface CreateTacticalDto {
   phase: TacticalPhase
   formation?: string
   opponentAnalysis?: string
+  opponentFormation?: string
+  opponentKeyThreat?: string
+  opponentWeakness?: string
+  opponentKeyPlayer?: string
+  tacticalCompliance?: string
+  concededAnalysis?: string
+  momPlayerId?: string
+  momNote?: string
+  improvementPlayerId?: string
+  improvementNote?: string
 }
+
+export interface UpdateTacticalDto {
+  formation?: string
+  opponentAnalysis?: string
+  opponentFormation?: string
+  opponentKeyThreat?: string
+  opponentWeakness?: string
+  opponentKeyPlayer?: string
+  tacticalCompliance?: string
+  concededAnalysis?: string
+  momPlayerId?: string
+  momNote?: string
+  improvementPlayerId?: string
+  improvementNote?: string
+}
+
+export const FORMATION_OPTIONS = [
+  '4-3-3',
+  '4-4-2',
+  '4-2-3-1',
+  '4-1-4-1',
+  '4-5-1',
+  '3-5-2',
+  '3-4-3',
+  '3-4-2-1',
+  '5-3-2',
+  '5-4-1',
+  '4-3-2-1',
+] as const
 
 export const PHASE_LABEL: Record<TacticalPhase, string> = {
   PRE_MATCH: '경기 전',
@@ -45,4 +107,9 @@ export const STATUS_LABEL: Record<TacticalStatus, string> = {
 export const STATUS_STYLE: Record<TacticalStatus, string> = {
   DRAFT: 'bg-amber-100 text-amber-800 border-amber-200',
   CONFIRMED: 'bg-green-100 text-green-800 border-green-200',
+}
+
+export const MEDIA_TYPE_LABEL: Record<TacticalMediaType, string> = {
+  image: '사진',
+  video: '영상',
 }

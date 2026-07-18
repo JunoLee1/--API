@@ -33,4 +33,44 @@ export const matchApi = {
       competitionType?: CompetitionType
     },
   ) => api.patch<Match>(`/matches/${id}`, payload),
+
+  upsertPlayerStats: (
+    id: number,
+    payload: {
+      playerId: string
+      goals?: number
+      assists?: number
+      xG?: number
+      xA?: number
+      shots?: number
+      passAccuracy?: number
+      keyPasses?: number
+      tackles?: number
+      interceptions?: number
+      clearances?: number
+      saves?: number
+      cleanSheet?: boolean
+      minutesPlayed?: number
+    },
+  ) => api.put(`/matches/${id}/player-stats`, payload),
+
+  upsertTeamStats: (
+    id: number,
+    payload: {
+      possession: number
+      shots: number
+      shotsOnTarget: number
+      passes: number
+      passAccuracy: number
+      fouls: number
+      yellowCards: number
+      redCards: number
+      xG: number
+      corners: number
+      offsides: number
+      tackles: number
+      interceptions: number
+      clearances: number
+    },
+  ) => api.put(`/matches/${id}/team-stats`, payload),
 }

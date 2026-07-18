@@ -1,10 +1,14 @@
 import { TacticalRepository } from "./tactical.repo";
 import { AppError } from "../lib/appError";
-import { CreateAnalysisDto, AddLineupDto, AddMediaDto } from "./dto/tactical.dto";
+import { CreateAnalysisDto, UpdateAnalysisDto, AddLineupDto, AddMediaDto } from "./dto/tactical.dto";
 import { getPrisma } from "../lib/prisma";
 
 export class TacticalService {
   constructor(private repo: TacticalRepository) {}
+
+  list(filters?: { matchId?: number; phase?: string }) {
+    return this.repo.findAll(filters);
+  }
 
   getByMatch(matchId: number) {
     return this.repo.findByMatch(matchId);
@@ -35,6 +39,12 @@ export class TacticalService {
     const analysis = await this.repo.findById(analysisId);
     if (!analysis) throw new AppError(404, "ANALYSIS_NOT_FOUND");
     return this.repo.addMedia(analysisId, dto);
+  }
+
+  async updateAnalysis(id: number, dto: UpdateAnalysisDto) {
+    const analysis = await this.repo.findById(id);
+    if (!analysis) throw new AppError(404, "ANALYSIS_NOT_FOUND");
+    return this.repo.update(id, dto);
   }
 
   async confirmAnalysis(id: number) {

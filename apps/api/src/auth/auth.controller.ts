@@ -34,10 +34,13 @@ export class AuthController {
 
   refresh = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id, role } = this.getAuthenticatedUser(req);
-      const { accessToken, refreshToken } = { accessToken: "", refreshToken: "" };
-      // re-issue both tokens using the validated refresh token payload
-      const tokens = (await import("../lib/token")).generateTokens({ id, role: role as any });
+      const user = req.user!;
+      const tokens = (await import("../lib/token")).generateTokens({
+        id: user.id,
+        role: user.role,
+        coachingRole: user.coachingRole ?? null,
+        frontOfficeRole: user.frontOfficeRole ?? null,
+      });
       res.cookie(ACCESS_TOKEN_COOKIE_NAME, tokens.accessToken, COOKIE_OPTIONS);
       res.cookie(REFRESH_TOKEN_COOKIE_NAME, tokens.refreshToken, COOKIE_OPTIONS);
       res.status(200).json({ message: "OK" });

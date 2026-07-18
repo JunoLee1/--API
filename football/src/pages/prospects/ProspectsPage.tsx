@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { prospectApi } from '@/services/prospect.service'
 import { api } from '@/services/api'
@@ -322,7 +323,11 @@ export function ProspectsPage() {
   const { user } = useCurrentUser()
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchParams] = useSearchParams()
   const [statusFilter, setStatusFilter] = useState<ProspectStatus | 'ALL'>('ACTIVE')
+  const [position, setPosition] = useState<Position | ''>(
+    (searchParams.get('position') as Position) ?? ''
+  )
   const [createOpen, setCreateOpen] = useState(false)
   const [signTarget, setSignTarget] = useState<Prospect | null>(null)
 
@@ -439,6 +444,15 @@ export function ProspectsPage() {
             ))}
           </SelectContent>
         </Select>
+        <Select value={position || 'ALL'} onValueChange={(v) => setPosition(v === 'ALL' ? '' : v as Position)}>
+          <SelectTrigger className="w-40 h-8 text-sm bg-background"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">전체 포지션</SelectItem>
+            {POSITIONS.map((p) => (
+              <SelectItem key={p} value={p}>{POSITION_LABEL[p]}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="flex-1 overflow-auto">
@@ -466,7 +480,7 @@ export function ProspectsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {prospects.map((p) => (
+              {(position ? prospects.filter((p) => p.position === position) : prospects).map((p) => (
                 <TableRow key={p.id}>
                   <TableCell className="font-medium">{p.name}</TableCell>
                   <TableCell className="font-mono text-sm">{p.position ? POSITION_LABEL[p.position] : '—'}</TableCell>

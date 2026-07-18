@@ -8,6 +8,16 @@ type StaffRole = (typeof STAFF_ROLES)[number];
 export class TacticalController {
   constructor(private service: TacticalService) {}
 
+  list = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const filters = {
+        ...(req.query["matchId"] && { matchId: Number(req.query["matchId"]) }),
+        ...(req.query["phase"] && { phase: req.query["phase"] as string }),
+      };
+      res.status(200).json(await this.service.list(filters));
+    } catch (err) { next(err); }
+  };
+
   getByMatch = async (req: Request, res: Response, next: NextFunction) => {
     try {
       res.status(200).json(await this.service.getByMatch(Number(req.params["matchId"])));
@@ -24,6 +34,7 @@ export class TacticalController {
     try {
       const { role, frontOfficeRole } = req.user!;
       const canCreate =
+        role === "ADMIN" ||
         role === "COACHING_STAFF" ||
         (role === "FRONT_OFFICE" && frontOfficeRole === "TACTICAL_ANALYST");
       if (!canCreate) throw new AppError(403, "FORBIDDEN");
@@ -41,7 +52,32 @@ export class TacticalController {
   addMedia = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!STAFF_ROLES.includes(req.user!.role as StaffRole)) throw new AppError(403, "FORBIDDEN");
-      res.status(201).json(await this.service.addMedia(Number(req.params["id"]), req.body));
+      const analysisId = Number(req.params["id"]);
+      const files = req.files as Express.Multer.File[];
+      if (!files || files.length === 0) throw new AppError(400, "NO_FILES");
+      const results = await Promise.all(
+        files.map((file) =>
+          this.service.addMedia(analysisId, {
+            url: `/uploads/tactical-media/${file.filename}`,
+            type: file.mimetype.startsWith("video/") ? "video" : "image",
+          })
+        )
+      );
+      res.status(201).json(results);
+    } catch (err) { next(err); }
+  };
+
+  update = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = req.user!;
+      const canUpdate =
+        role === "ADMIN" ||
+        role === "COACHING_STAFF" ||
+        (role === "FRONT_OFFICE" && frontOfficeRole === "TACTICAL_ANALYST");
+      if (!canUpdate) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(
+        await this.service.updateAnalysis(Number(req.params["id"]), req.body)
+      );
     } catch (err) { next(err); }
   };
 

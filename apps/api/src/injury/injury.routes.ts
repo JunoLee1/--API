@@ -16,6 +16,7 @@ const controller = new InjuryController(service);
 const auth = passport.authenticate("accessToken", { session: false });
 
 router.get("/stats", auth, controller.getStats);
+router.get("/active", auth, controller.getActive);
 router.get("/player/:playerId", auth, controller.getByPlayer);
 router.get("/:id", auth, controller.getById);
 router.post("/", auth, controller.create);

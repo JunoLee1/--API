@@ -17,6 +17,7 @@ export interface DashboardConfig {
   statCards: StatCardConfig[]
   showActionQueue: boolean
   showSchedule: boolean
+  showRanking: boolean
   recentFeedTitle?: string
   showMedicalSection: boolean
 }
@@ -34,7 +35,8 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
       ],
       showActionQueue: true,
       showSchedule: true,
-      showMedicalSection: false,
+      showRanking: false,
+        showMedicalSection: false,
     }
   }
 
@@ -49,6 +51,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         showActionQueue: true,
         showSchedule: true,
         recentFeedTitle: '최근 이적 내역',
+        showRanking: false,
         showMedicalSection: false,
       }
     }
@@ -62,6 +65,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         showActionQueue: true,
         showSchedule: true,
         recentFeedTitle: '최근 Prospect',
+        showRanking: false,
         showMedicalSection: false,
       }
     }
@@ -74,6 +78,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         showActionQueue: true,
         showSchedule: false,
         recentFeedTitle: '최근 계약 현황',
+        showRanking: false,
         showMedicalSection: false,
       }
     }
@@ -86,6 +91,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         showActionQueue: true,
         showSchedule: true,
         recentFeedTitle: '최근 Prospect 목록',
+        showRanking: false,
         showMedicalSection: false,
       }
     }
@@ -98,6 +104,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         showActionQueue: true,
         showSchedule: false,
         recentFeedTitle: '최근 장비 지급 내역',
+        showRanking: false,
         showMedicalSection: false,
       }
     }
@@ -110,6 +117,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         showActionQueue: true,
         showSchedule: true,
         recentFeedTitle: '최근 경기 결과',
+        showRanking: false,
         showMedicalSection: false,
       }
     }
@@ -125,6 +133,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         ],
         showActionQueue: true,
         showSchedule: true,
+        showRanking: true,
         recentFeedTitle: '최근 경기 결과',
         showMedicalSection: true,
       }
@@ -138,6 +147,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         ],
         showActionQueue: true,
         showSchedule: true,
+        showRanking: true,
         recentFeedTitle: '최근 경기 결과',
         showMedicalSection: false,
       }
@@ -152,6 +162,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         showActionQueue: true,
         showSchedule: false,
         recentFeedTitle: '최근 부상 업데이트',
+        showRanking: false,
         showMedicalSection: true,
       }
     }
@@ -164,6 +175,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         showActionQueue: true,
         showSchedule: false,
         recentFeedTitle: '최근 부상 업데이트',
+        showRanking: false,
         showMedicalSection: true,
       }
     }
@@ -176,7 +188,8 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
       showActionQueue: true,
       showSchedule: true,
       recentFeedTitle: '최근 훈련 세션',
-      showMedicalSection: false,
+      showRanking: false,
+        showMedicalSection: false,
     }
   }
 
@@ -189,7 +202,8 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
       showActionQueue: true,
       showSchedule: true,
       recentFeedTitle: '최근 출전 경기',
-      showMedicalSection: false,
+      showRanking: false,
+        showMedicalSection: false,
     }
   }
 
@@ -203,6 +217,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
     showActionQueue: true,
     showSchedule: true,
     recentFeedTitle: '담당 선수 최근 경기',
-    showMedicalSection: false,
+    showRanking: false,
+        showMedicalSection: false,
   }
 }

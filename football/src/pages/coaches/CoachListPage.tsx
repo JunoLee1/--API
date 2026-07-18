@@ -84,7 +84,11 @@ function CreateCoachDialog({ roundId, open, onOpenChange, onSaved }: CreateCoach
           <div className="space-y-1.5">
             <Label>역할 *</Label>
             <Select value={coachingRole} onValueChange={(v) => setCoachingRole(v as CoachingRole)}>
-              <SelectTrigger><SelectValue placeholder="역할 선택" /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder="역할 선택">
+                  {(value: string | null) => value ? COACHING_ROLE_LABEL[value as CoachingRole] : null}
+                </SelectValue>
+              </SelectTrigger>
               <SelectContent>
                 {ALL_ROLES.map((r) => <SelectItem key={r} value={r}>{COACHING_ROLE_LABEL[r]}</SelectItem>)}
               </SelectContent>
@@ -146,7 +150,11 @@ export function CoachListPage() {
       toast.success(`'${COACH_STATUS_LABEL[status]}'로 변경됐습니다.`)
       void fetchCoaches()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '변경에 실패했습니다.')
+      const code = err instanceof Error ? err.message : ''
+      const msg =
+        code === 'COACHING_ROLE_ALREADY_FILLED' ? `해당 역할(${COACHING_ROLE_LABEL[coach.coachingRole]})의 코치가 이미 재직 중입니다.` :
+        code || '변경에 실패했습니다.'
+      toast.error(msg)
     }
   }
 
@@ -232,7 +240,11 @@ export function CoachListPage() {
 
       <div className="border-b px-6 py-3 flex items-center gap-3 shrink-0 bg-muted/30">
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as CoachStatus | 'ALL')}>
-          <SelectTrigger className="w-36 h-8 text-sm bg-background"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-36 h-8 text-sm bg-background">
+            <SelectValue>
+              {(value: string | null) => value === 'ALL' ? '전체' : value ? COACH_STATUS_LABEL[value as CoachStatus] : null}
+            </SelectValue>
+          </SelectTrigger>
           <SelectContent>
             {ALL_STATUSES.map((s) => (
               <SelectItem key={s} value={s}>{s === 'ALL' ? '전체' : COACH_STATUS_LABEL[s]}</SelectItem>

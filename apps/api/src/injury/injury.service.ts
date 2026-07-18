@@ -4,6 +4,7 @@ import { CreateInjuryDto, UpdateInjuryStatusDto, UpsertInjuryReportDto, UpsertAs
 import { calculateTotalScore, SCORE_THRESHOLD } from "./injury.score";
 import { ExternalReportTarget, ExternalReportStatus } from "../generated/enums";
 import { NotificationRepository } from "../notification/notification.repo";
+import { getIO } from "../lib/io";
 
 const DUE_DAYS: Record<ExternalReportTarget, number> = {
   EDUCATION_OFFICE: 3,
@@ -29,14 +30,70 @@ export class InjuryService {
     return injury;
   }
 
-  createInjury(dto: CreateInjuryDto) {
-    return this.repo.create(dto);
+  async createInjury(dto: CreateInjuryDto) {
+    const result = await this.repo.create(dto);
+    try {
+      const player = await this.repo.getPlayerName(dto.playerId);
+      const playerName = player?.playerName ?? "선수";
+      const title = "부상 발생";
+      const body = `${playerName} 선수에게 부상이 발생했습니다. 부상 기록을 확인하세요.`;
+      await this.notifRepo.createForCoachingStaff("INJURY_OCCURRED", title, body, result.id);
+      getIO().to("staff-room").emit("notification:injury", {
+        type: "INJURY_OCCURRED", title, body, createdAt: new Date().toISOString(),
+      });
+      await this.checkAndNotifySquadDepth(result.id);
+    } catch {
+      // 알림 실패는 치명적이지 않음
+    }
+    return result;
   }
 
   async updateStatus(id: number, dto: UpdateInjuryStatusDto) {
     const injury = await this.repo.findById(id);
     if (!injury) throw new AppError(404, "INJURY_NOT_FOUND");
-    return this.repo.updateStatus(id, dto);
+    const result = await this.repo.updateStatus(id, dto);
+    try {
+      const player = await this.repo.getPlayerName(injury.playerId);
+      const playerName = player?.playerName ?? "선수";
+      if (dto.status === "READY_TO_RETURN") {
+        const title = "선수 복귀 준비 완료";
+        const body = `${playerName} 선수가 복귀 준비 단계에 들어섰습니다. 최종 복귀 여부를 검토하세요.`;
+        await this.notifRepo.createForCoachingStaff("INJURY_READY_TO_RETURN", title, body, id);
+        getIO().to("staff-room").emit("notification:injury", {
+          type: "INJURY_READY_TO_RETURN", title, body, createdAt: new Date().toISOString(),
+        });
+      } else if (dto.status === "RETURNED") {
+        const title = "선수 부상 복귀";
+        const body = `${playerName} 선수가 부상에서 복귀하여 훈련에 합류했습니다.`;
+        await this.notifRepo.createForCoachingStaff("INJURY_RETURNED", title, body, id);
+        getIO().to("staff-room").emit("notification:injury", {
+          type: "INJURY_RETURNED", title, body, createdAt: new Date().toISOString(),
+        });
+        await this.checkAndNotifySquadDepth(id);
+      }
+    } catch {
+      // 알림 실패는 치명적이지 않음
+    }
+    return result;
+  }
+
+  private async checkAndNotifySquadDepth(entityId: number) {
+    const ZONE_MIN = { GK: 2, DEF: 4, MID: 3, FWD: 2 } as const;
+    const ZONE_LABEL = { GK: "골키퍼", DEF: "수비", MID: "미드필더", FWD: "공격" } as const;
+    const counts = await this.repo.countAvailableByZone();
+    const shortZones = (["GK", "DEF", "MID", "FWD"] as const).filter(
+      (z) => counts[z] < ZONE_MIN[z],
+    );
+    if (shortZones.length === 0) return;
+    const lines = shortZones.map(
+      (z) => `${ZONE_LABEL[z]} ${counts[z]}명 (최소 ${ZONE_MIN[z]}명)`,
+    );
+    const title = "스쿼드 가용 인원 부족";
+    const body = `가용 인원이 부족한 포지션이 있습니다 — ${lines.join(", ")}. 영입 또는 포지션 조정을 검토하세요.`;
+    await this.notifRepo.createForHeadCoach("SQUAD_DEPTH_LOW", title, body, entityId);
+    getIO().to("staff-room").emit("notification:squad-depth", {
+      type: "SQUAD_DEPTH_LOW", title, body, createdAt: new Date().toISOString(),
+    });
   }
 
   async getReport(injuryId: number) {
@@ -65,6 +122,10 @@ export class InjuryService {
 
   getStats() {
     return this.repo.getStats();
+  }
+
+  getActive() {
+    return this.repo.findActive();
   }
 
   getAssessment(injuryId: number) {

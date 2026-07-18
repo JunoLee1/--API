@@ -24,9 +24,9 @@ import {
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
 
-const OUR_TEAM_NAME = '우리팀'
+const OUR_TEAM_NAME = 'FC Seoul'
 
-const RANKABLE_TYPES: CompetitionType[] = ['LEAGUE', 'CUP', 'CHAMPIONS_LEAGUE']
+const RANKABLE_TYPES: CompetitionType[] = ['LEAGUE', 'DOMESTIC_CUP', 'CONTINENTAL', 'PLAYOFF']
 
 export function RankingsPage() {
   const [rankings, setRankings] = useState<TeamRanking[]>([])
@@ -44,9 +44,10 @@ export function RankingsPage() {
   }, [])
 
   useEffect(() => {
+    if (selectedSeasonId === 'ALL') return
     setLoading(true)
     analysisApi.getRankings({
-      seasonId: selectedSeasonId !== 'ALL' ? Number(selectedSeasonId) : undefined,
+      seasonId: Number(selectedSeasonId),
       competitionType: compType,
     })
       .then(setRankings)

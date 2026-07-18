@@ -47,8 +47,43 @@ const INJURY_REPORT_SELECT = {
   medicalSigner: { select: { id: true, nickname: true } },
 } as const;
 
+const GK_POSITIONS = ["GOALKEEPER"] as const;
+const DEF_POSITIONS = ["CENTER_BACK", "LEFT_WING_BACK", "LEFT_FULL_BACK", "RIGHT_WING_BACK", "RIGHT_FULL_BACK"] as const;
+const MID_POSITIONS = ["CENTRAL_DEFENSIVE_MIDFIELDER", "LEFT_DEFENSIVE_MIDFIELDER", "RIGHT_DEFENSIVE_MIDFIELDER", "CENTRAL_ATTACK_MIDFIELDER", "RIGHT_ATTACK_MIDFIELDER", "LEFT_ATTACK_MIDFIELDER"] as const;
+const FWD_POSITIONS = ["STRIKER", "SHADOW_STRIKER", "WINGER"] as const;
+
 export class InjuryRepository {
   constructor(private prisma: PrismaClient) {}
+
+  getPlayerName(playerId: string) {
+    return this.prisma.player.findUnique({
+      where: { id: playerId },
+      select: { playerName: true, position: true },
+    });
+  }
+
+  async countAvailableByZone() {
+    const [activeInjuries, activePlayers] = await Promise.all([
+      this.prisma.injury.findMany({
+        where: { status: { in: ["OCCURRED", "DIAGNOSED", "REHABILITATING"] } },
+        select: { playerId: true },
+      }),
+      this.prisma.player.findMany({
+        where: { status: "ACTIVE", level: { not: "YOUTH" } },
+        select: { id: true, position: true },
+      }),
+    ]);
+    const injuredIds = new Set(activeInjuries.map((i) => i.playerId));
+    const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
+    for (const p of activePlayers) {
+      if (injuredIds.has(p.id)) continue;
+      if ((GK_POSITIONS as readonly string[]).includes(p.position)) counts.GK++;
+      else if ((DEF_POSITIONS as readonly string[]).includes(p.position)) counts.DEF++;
+      else if ((MID_POSITIONS as readonly string[]).includes(p.position)) counts.MID++;
+      else if ((FWD_POSITIONS as readonly string[]).includes(p.position)) counts.FWD++;
+    }
+    return counts;
+  }
 
   findByPlayer(playerId: string) {
     return this.prisma.injury.findMany({
@@ -179,6 +214,13 @@ export class InjuryRepository {
       byCause: Object.fromEntries(byCause.map((b) => [b.cause, b._count.id])),
       avgRecoveryDays,
     };
+  }
+
+  findActive() {
+    return this.prisma.injury.findMany({
+      where: { status: { in: ["OCCURRED", "DIAGNOSED", "REHABILITATING"] } },
+      select: { playerId: true, status: true },
+    });
   }
 
   getAssessment(injuryId: number) {

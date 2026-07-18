@@ -217,7 +217,10 @@ enum Venue {
 enum NotificationType {
   CONTRACT_EXPIRY
   PERFORMANCE_BONUS_ACHIEVED
+  INJURY_OCCURRED
   INJURY_READY_TO_RETURN
+  INJURY_RETURNED
+  SQUAD_DEPTH_LOW
   TRAINING_ATTENDANCE_WARNING
   EQUIPMENT_LOW_STOCK
   EXTENSION_OPTION_AVAILABLE
@@ -231,13 +234,17 @@ enum NotificationType {
   REPORT_SUBMITTED
   COACH_AUTO_SHORTLISTED
   COACH_MANUALLY_SHORTLISTED
+  COACH_SHORTLISTED
   COACH_APPROVAL_REQUESTED
+  COACH_APPROVAL_PENDING
   COACH_CONTRACTED
   COACH_HEAD_CONTRACTED
   COACH_ARCHIVED
   COACH_TUTOR_SUPPORT_NEEDED
   TRAINING_LOAD_ALERT
   PLAYER_DEVELOPMENT_PLAN_ACTIVATED
+  PLAYER_CONTRACT_SIGNED
+  ATTENDANCE_PENALTY
 }
 
 enum TacticalStatus {
@@ -476,6 +483,8 @@ model Player {
   medicalExpenses        MedicalExpense[]
   trainingLoads          TrainingLoad[]
   developmentPlans       PlayerDevelopmentPlan[]
+  momAnalyses            TacticalAnalysis[]      @relation("MomPlayer")
+  improvementAnalyses    TacticalAnalysis[]      @relation("ImprovementPlayer")
 }
 
 model Contract {
@@ -807,7 +816,7 @@ model TrainingResult {
 model TacticalAnalysis {
   id               Int            @id @default(autoincrement())
   phase            TacticalPhase
-  formation        String
+  formation        String?
   opponentAnalysis String?
   status           TacticalStatus @default(DRAFT)
   createdAt        DateTime       @default(now())
@@ -815,11 +824,26 @@ model TacticalAnalysis {
   seasonId         Int
   createdById      Int
 
-  match     Match            @relation(fields: [matchId], references: [id])
-  season    Season           @relation(fields: [seasonId], references: [id])
-  createdBy User             @relation(fields: [createdById], references: [id])
-  lineup    TacticalLineup[]
-  media     TacticalMedia[]
+  // PRE_MATCH
+  opponentFormation   String?
+  opponentKeyThreat   String? @db.Text
+  opponentWeakness    String? @db.Text
+  opponentKeyPlayer   String?
+  // POST_MATCH
+  tacticalCompliance  String? @db.Text
+  concededAnalysis    String? @db.Text
+  momPlayerId         String?
+  momNote             String?
+  improvementPlayerId String?
+  improvementNote     String?
+
+  match             Match            @relation(fields: [matchId], references: [id])
+  season            Season           @relation(fields: [seasonId], references: [id])
+  createdBy         User             @relation(fields: [createdById], references: [id])
+  lineup            TacticalLineup[]
+  media             TacticalMedia[]
+  momPlayer         Player?          @relation("MomPlayer", fields: [momPlayerId], references: [id])
+  improvementPlayer Player?          @relation("ImprovementPlayer", fields: [improvementPlayerId], references: [id])
 }
 
 model TacticalLineup {

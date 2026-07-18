@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { matchApi } from '@/services/match.service'
@@ -101,7 +101,7 @@ function CreateMatchDialog({ open, onOpenChange, seasons, activeSeason, onSaved,
                 {COMPETITION_LABEL['FRIENDLY']}
               </div>
             ) : (
-              <Select value={competitionType} onValueChange={(v) => setCompetitionType(v as CompetitionType)}>
+              <Select value={competitionType} onValueChange={(v) => setCompetitionType(v as CompetitionType)} items={COMPETITION_LABEL}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {COMP_TYPES.map((t) => <SelectItem key={t} value={t}>{COMPETITION_LABEL[t]}</SelectItem>)}
@@ -111,7 +111,7 @@ function CreateMatchDialog({ open, onOpenChange, seasons, activeSeason, onSaved,
           </div>
           <div className="space-y-1.5">
             <Label>시즌 *</Label>
-            <Select value={seasonId} onValueChange={(v) => { if (v) setSeasonId(v) }}>
+            <Select value={seasonId} onValueChange={(v) => { if (v) setSeasonId(v) }} items={Object.fromEntries(seasons.map((s) => [String(s.id), s.name]))}>
               <SelectTrigger><SelectValue placeholder="시즌 선택" /></SelectTrigger>
               <SelectContent>
                 {seasons.map((s) => <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>)}
@@ -140,6 +140,14 @@ export function MatchesPage() {
   const [createOpen, setCreateOpen] = useState(false)
 
   const canCreateFriendly = user?.role === 'FRONT_OFFICE' || user?.role === 'COACHING_STAFF'
+
+  const seasonFilterItems = useMemo(() => {
+    const map: Record<string, string> = { ALL: '전체 시즌' }
+    seasons.forEach((s) => { map[String(s.id)] = s.name })
+    return map
+  }, [seasons])
+
+  const compFilterItems = useMemo(() => ({ ALL: '전체 대회', ...COMPETITION_LABEL }), [])
 
   useEffect(() => {
     seasonApi.list().then((list) => {
@@ -183,14 +191,14 @@ export function MatchesPage() {
       </div>
 
       <div className="border-b px-6 py-3 flex items-center gap-3 shrink-0 bg-muted/30">
-        <Select value={selectedSeasonId} onValueChange={(v) => { if (v) setSelectedSeasonId(v) }}>
+        <Select value={selectedSeasonId} onValueChange={(v) => { if (v) setSelectedSeasonId(v) }} items={seasonFilterItems}>
           <SelectTrigger className="w-36 h-8 text-sm bg-background"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">전체 시즌</SelectItem>
             {seasons.map((s) => <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Select value={compFilter} onValueChange={(v) => setCompFilter(v as CompetitionType | 'ALL')}>
+        <Select value={compFilter} onValueChange={(v) => setCompFilter(v as CompetitionType | 'ALL')} items={compFilterItems}>
           <SelectTrigger className="w-32 h-8 text-sm bg-background"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">전체 대회</SelectItem>
