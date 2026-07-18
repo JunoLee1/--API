@@ -67,6 +67,20 @@ export class TacticalController {
     } catch (err) { next(err); }
   };
 
+  update = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = req.user!;
+      const canUpdate =
+        role === "ADMIN" ||
+        role === "COACHING_STAFF" ||
+        (role === "FRONT_OFFICE" && frontOfficeRole === "TACTICAL_ANALYST");
+      if (!canUpdate) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(
+        await this.service.updateAnalysis(Number(req.params["id"]), req.body)
+      );
+    } catch (err) { next(err); }
+  };
+
   confirm = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, coachingRole } = req.user!;

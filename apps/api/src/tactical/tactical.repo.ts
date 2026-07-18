@@ -1,7 +1,42 @@
-import { PrismaClient } from "../generated/client";
-import { CreateAnalysisDto, AddLineupDto, AddMediaDto } from "./dto/tactical.dto";
+import { PrismaClient, Prisma } from "../generated/client";
+import { CreateAnalysisDto, UpdateAnalysisDto, AddLineupDto, AddMediaDto } from "./dto/tactical.dto";
 
 const n = <T>(v: T | undefined): T | null => v ?? null;
+// "" → null, value → trimmed (use inside defined-guard for update data)
+const snv = (v: string): string | null => v.trim() === "" ? null : v.trim();
+
+const ANALYSIS_SELECT = {
+  id: true,
+  matchId: true,
+  phase: true,
+  status: true,
+  formation: true,
+  opponentAnalysis: true,
+  createdById: true,
+  createdAt: true,
+  opponentFormation: true,
+  opponentKeyThreat: true,
+  opponentWeakness: true,
+  opponentKeyPlayer: true,
+  tacticalCompliance: true,
+  concededAnalysis: true,
+  momPlayerId: true,
+  momNote: true,
+  improvementPlayerId: true,
+  improvementNote: true,
+  match: {
+    select: {
+      homeTeamName: true,
+      awayTeamName: true,
+      date: true,
+      homeScore: true,
+      awayScore: true,
+    },
+  },
+  createdBy: { select: { nickname: true } },
+  momPlayer: { select: { playerName: true } },
+  improvementPlayer: { select: { playerName: true } },
+} as const;
 
 export class TacticalRepository {
   constructor(private prisma: PrismaClient) {}
@@ -12,26 +47,7 @@ export class TacticalRepository {
         ...(filters?.matchId && { matchId: filters.matchId }),
         ...(filters?.phase && { phase: filters.phase as "PRE_MATCH" | "POST_MATCH" }),
       },
-      select: {
-        id: true,
-        matchId: true,
-        phase: true,
-        status: true,
-        formation: true,
-        opponentAnalysis: true,
-        createdById: true,
-        createdAt: true,
-        match: {
-          select: {
-            homeTeamName: true,
-            awayTeamName: true,
-            date: true,
-            homeScore: true,
-            awayScore: true,
-          },
-        },
-        createdBy: { select: { nickname: true } },
-      },
+      select: ANALYSIS_SELECT,
       orderBy: { createdAt: "desc" },
     });
   }
@@ -49,6 +65,8 @@ export class TacticalRepository {
       include: {
         lineup: { include: { player: { select: { playerName: true } } } },
         media: true,
+        momPlayer: { select: { playerName: true } },
+        improvementPlayer: { select: { playerName: true } },
       },
     });
   }
@@ -61,9 +79,40 @@ export class TacticalRepository {
         phase: dto.phase,
         formation: n(dto.formation),
         opponentAnalysis: n(dto.opponentAnalysis),
+        opponentFormation: n(dto.opponentFormation),
+        opponentKeyThreat: n(dto.opponentKeyThreat),
+        opponentWeakness: n(dto.opponentWeakness),
+        opponentKeyPlayer: n(dto.opponentKeyPlayer),
+        tacticalCompliance: n(dto.tacticalCompliance),
+        concededAnalysis: n(dto.concededAnalysis),
+        momPlayerId: n(dto.momPlayerId),
+        momNote: n(dto.momNote),
+        improvementPlayerId: n(dto.improvementPlayerId),
+        improvementNote: n(dto.improvementNote),
         createdById,
       },
       select: { id: true, phase: true, formation: true, opponentAnalysis: true, createdAt: true },
+    });
+  }
+
+  update(id: number, dto: UpdateAnalysisDto) {
+    const data: Prisma.TacticalAnalysisUncheckedUpdateInput = {};
+    if (dto.formation !== undefined) data.formation = snv(dto.formation);
+    if (dto.opponentAnalysis !== undefined) data.opponentAnalysis = snv(dto.opponentAnalysis);
+    if (dto.opponentFormation !== undefined) data.opponentFormation = snv(dto.opponentFormation);
+    if (dto.opponentKeyThreat !== undefined) data.opponentKeyThreat = snv(dto.opponentKeyThreat);
+    if (dto.opponentWeakness !== undefined) data.opponentWeakness = snv(dto.opponentWeakness);
+    if (dto.opponentKeyPlayer !== undefined) data.opponentKeyPlayer = snv(dto.opponentKeyPlayer);
+    if (dto.tacticalCompliance !== undefined) data.tacticalCompliance = snv(dto.tacticalCompliance);
+    if (dto.concededAnalysis !== undefined) data.concededAnalysis = snv(dto.concededAnalysis);
+    if (dto.momPlayerId !== undefined) data.momPlayerId = dto.momPlayerId || null;
+    if (dto.momNote !== undefined) data.momNote = snv(dto.momNote);
+    if (dto.improvementPlayerId !== undefined) data.improvementPlayerId = dto.improvementPlayerId || null;
+    if (dto.improvementNote !== undefined) data.improvementNote = snv(dto.improvementNote);
+    return this.prisma.tacticalAnalysis.update({
+      where: { id },
+      data,
+      select: ANALYSIS_SELECT,
     });
   }
 

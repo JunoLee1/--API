@@ -50,6 +50,8 @@ router.post("/", auth, controller.create);
 router.post("/:id/lineup", auth, controller.addLineup);
 // 미디어 추가 (이미지/동영상 멀티파일)
 router.post("/:id/media", auth, upload.array("files", 10), controller.addMedia);
+// 전술 분석 수정 (ADMIN, COACHING_STAFF, TACTICAL_ANALYST)
+router.patch("/:id", auth, controller.update);
 // 전술 분석 확정 (ADMIN, HEAD_COACH)
 router.patch("/:id/confirm", auth, controller.confirm);
 
