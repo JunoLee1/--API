@@ -439,6 +439,7 @@ model User {
   developmentPlans         PlayerDevelopmentPlan[] @relation("PDPCoach")
   uploadedVideos           TrainingVideo[]         @relation("VideoUploader")
   videoAssignments         VideoAssignment[]       @relation("VideoAssigner")
+  trainingReferences       TrainingReference[]
 }
 
 model Season {
@@ -1297,4 +1298,22 @@ model VideoAssignment {
   assignedBy User          @relation("VideoAssigner", fields: [assignedById], references: [id])
 
   @@unique([videoId, playerId])
+}
+
+model TrainingReference {
+  id          Int             @id @default(autoincrement())
+  sessionType SessionType
+  title       String
+  url         String
+  source      ReferenceSource
+  tags        String[]
+  addedById   Int
+  createdAt   DateTime        @default(now())
+
+  addedBy User @relation(fields: [addedById], references: [id])
+}
+
+enum ReferenceSource {
+  INTERNAL
+  EXTERNAL
 }
