@@ -37,7 +37,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Plus } from 'lucide-react'
+import { Download, Plus } from 'lucide-react'
 
 const TYPES: TransferType[] = ['PERMANENT', 'LOAN_OUT', 'LOAN_IN', 'FREE', 'RELEASE']
 
@@ -143,6 +143,9 @@ export function TransfersPage() {
 
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
   const canApproveRecall = user?.role === 'ADMIN'
+  const canExport =
+    user?.role === 'ADMIN' ||
+    (user?.role === 'FRONT_OFFICE' && ['GM', 'TD'].includes(user?.frontOfficeRole ?? ''))
 
   useEffect(() => {
     transferApi
@@ -159,6 +162,22 @@ export function TransfersPage() {
       .then(setTransfers)
       .catch(() => toast.error('이적 이력을 불러오지 못했습니다.'))
       .finally(() => setLoadingTransfers(false))
+  }
+
+  const handleExport = async (id: number, playerName: string) => {
+    try {
+      const data = await transferApi.exportLoanIn(id)
+      const json = JSON.stringify(data, null, 2)
+      const blob = new Blob([json], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `loan_in_export_${playerName}_${id}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      toast.error('데이터 내보내기에 실패했습니다.')
+    }
   }
 
   const handleRecallAction = async (id: number, status: 'APPROVED' | 'REJECTED') => {
@@ -230,6 +249,7 @@ export function TransfersPage() {
                       <TableHead>도착 클럽</TableHead>
                       <TableHead>이적료</TableHead>
                       <TableHead>복귀 요청</TableHead>
+                      {canExport && <TableHead className="w-24">내보내기</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -251,6 +271,20 @@ export function TransfersPage() {
                             </span>
                           ) : '—'}
                         </TableCell>
+                        {canExport && (
+                          <TableCell>
+                            {t.type === 'LOAN_IN' ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs"
+                                onClick={(e) => { e.stopPropagation(); handleExport(t.id, '') }}
+                              >
+                                <Download className="h-3 w-3 mr-1" />내보내기
+                              </Button>
+                            ) : '—'}
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>

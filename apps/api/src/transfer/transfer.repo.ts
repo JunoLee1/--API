@@ -80,4 +80,42 @@ export class TransferRepository {
       orderBy: { requestedAt: "desc" },
     });
   }
+
+  async exportLoanInData(transferId: number) {
+    const transfer = await this.prisma.transfer.findUnique({
+      where: { id: transferId },
+      select: { id: true, type: true, fromClub: true, toClub: true, startDate: true, endDate: true, playerId: true },
+    });
+    if (!transfer || transfer.type !== "LOAN_IN") return null;
+
+    const [player, trainingResults, injuries, matchStats] = await Promise.all([
+      this.prisma.player.findUnique({
+        where: { id: transfer.playerId },
+        select: { id: true, playerName: true, position: true, nationality: true, dateOfBirth: true },
+      }),
+      this.prisma.trainingResult.findMany({
+        where: { playerId: transfer.playerId },
+        select: {
+          session: { select: { date: true, sessionType: true } },
+          attendance: true, performanceScore: true, feedback: true,
+        },
+        orderBy: { session: { date: "asc" } },
+      }),
+      this.prisma.injury.findMany({
+        where: { playerId: transfer.playerId },
+        select: { bodyPart: true, cause: true, status: true, occurredAt: true, expectedReturnDate: true },
+        orderBy: { occurredAt: "asc" },
+      }),
+      this.prisma.playerMatchStats.findMany({
+        where: { playerId: transfer.playerId },
+        select: {
+          match: { select: { date: true, homeTeamName: true, awayTeamName: true, homeScore: true, awayScore: true } },
+          goals: true, assists: true, minutesPlayed: true, xG: true, xA: true,
+        },
+        orderBy: { match: { date: "asc" } },
+      }),
+    ]);
+
+    return { transfer, player, trainingResults, injuries, matchStats };
+  }
 }

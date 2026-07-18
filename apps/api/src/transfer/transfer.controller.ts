@@ -53,4 +53,14 @@ export class TransferController {
       );
     } catch (err) { next(err); }
   };
+
+  exportLoanIn = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = req.user!;
+      const isAdmin = role === "ADMIN";
+      const isFrontOffice = role === "FRONT_OFFICE" && ["GM", "TD"].includes(frontOfficeRole ?? "");
+      if (!isAdmin && !isFrontOffice) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(await this.service.exportLoanIn(Number(req.params["id"])));
+    } catch (err) { next(err); }
+  };
 }

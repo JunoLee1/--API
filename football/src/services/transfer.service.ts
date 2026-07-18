@@ -27,4 +27,7 @@ export const transferApi = {
 
   updateRecallStatus: (id: number, status: 'APPROVED' | 'REJECTED') =>
     api.patch<Recall>(`/transfers/recalls/${id}/status`, { status }),
+
+  exportLoanIn: (id: number) =>
+    api.get<unknown>(`/transfers/${id}/export`),
 }
