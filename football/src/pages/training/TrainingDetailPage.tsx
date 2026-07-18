@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { trainingApi } from '@/services/training.service'
-import type { TrainingSessionDetail } from '@/types/training'
+import type { TrainingSessionDetail, AttendanceStatus } from '@/types/training'
 import {
   SESSION_TYPE_LABEL,
   SESSION_TYPE_STYLE,
@@ -27,7 +27,7 @@ import { Separator } from '@/components/ui/separator'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
-import { ArrowLeft, CheckCircle, Clock, ExternalLink, Trash2, Plus } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Clock, ExternalLink, Trash2, Plus, Save } from 'lucide-react'
 import { POSITION_ABBR, POSITION_ZONE } from '@/types/player'
 import type { Position } from '@/types/player'
 
@@ -51,6 +51,11 @@ export function TrainingDetailPage() {
 
   const canApprove = user?.role === 'ADMIN' || user?.coachingRole === 'HEAD_COACH'
   const canAddRef = user?.role === 'ADMIN' || user?.role === 'COACHING_STAFF'
+  const canScore = user?.role === 'ADMIN' || user?.role === 'COACHING_STAFF'
+
+  type ResultInput = { attendance: AttendanceStatus; performanceScore: string; feedback: string }
+  const [resultInputs, setResultInputs] = useState<Record<string, ResultInput>>({})
+  const [saving, setSaving] = useState(false)
 
   const [loads, setLoads] = useState<TrainingLoad[]>([])
   const [loadInputs, setLoadInputs] = useState<Record<string, { rpe: string; load: string }>>({})
@@ -76,6 +81,16 @@ export function TrainingDetailPage() {
         setSession(s)
         fetchRefs(s)
         trainingLoadApi.list({ sessionId: Number(id) }).then(setLoads).catch(() => null)
+        const init: Record<string, ResultInput> = {}
+        for (const p of s.participants) {
+          const existing = s.results.find((r) => r.playerId === p.playerId)
+          init[p.playerId] = {
+            attendance: existing?.attendance ?? 'PRESENT',
+            performanceScore: existing?.performanceScore != null ? String(existing.performanceScore) : '',
+            feedback: existing?.feedback ?? '',
+          }
+        }
+        setResultInputs(init)
       })
       .catch(() => toast.error('훈련 세션을 불러오지 못했습니다.'))
       .finally(() => setLoading(false))
@@ -89,6 +104,30 @@ export function TrainingDetailPage() {
       setSession((prev) => prev ? { ...prev, isApproved: true } : prev)
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : '승인에 실패했습니다.')
+    }
+  }
+
+  const handleSaveAll = async () => {
+    if (!session) return
+    setSaving(true)
+    try {
+      await Promise.all(
+        Object.entries(resultInputs).map(([playerId, input]) =>
+          trainingApi.upsertResult(session.id, {
+            playerId,
+            attendance: input.attendance,
+            ...(input.performanceScore !== '' ? { performanceScore: Number(input.performanceScore) } : {}),
+            ...(input.feedback.trim() !== '' ? { feedback: input.feedback.trim() } : {}),
+          })
+        )
+      )
+      toast.success('평가가 저장됐습니다.')
+      const updated = await trainingApi.get(session.id)
+      setSession(updated)
+    } catch {
+      toast.error('저장에 실패했습니다.')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -112,6 +151,11 @@ export function TrainingDetailPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1" />
+        {canScore && Object.keys(resultInputs).length > 0 && (
+          <Button size="sm" variant="outline" onClick={handleSaveAll} disabled={saving}>
+            <Save className="h-3.5 w-3.5 mr-1" />{saving ? '저장 중...' : '평가 저장'}
+          </Button>
+        )}
         {canApprove && !session.isApproved && (
           <Button size="sm" onClick={handleApprove}>승인</Button>
         )}
@@ -137,76 +181,130 @@ export function TrainingDetailPage() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
-            {/* 세션 구성 */}
-            {session.contents.length > 0 && (
-              <div className="rounded-lg border bg-card p-5">
-                <h3 className="text-sm font-semibold mb-2">세션 구성</h3>
-                <Separator className="mb-2" />
-                <div className="space-y-2">
-                  {session.contents.map((c) => (
-                    <div key={c.id} className="flex gap-3">
-                      <span className="text-xs text-muted-foreground bg-muted rounded px-1.5 py-0.5 shrink-0 self-start mt-0.5">
-                        {PHASE_LABEL[c.phase]}
-                      </span>
-                      <p className="text-sm">{c.description}</p>
-                    </div>
-                  ))}
-                </div>
+          {/* 세션 구성 */}
+          {session.contents.length > 0 && (
+            <div className="rounded-lg border bg-card p-5">
+              <h3 className="text-sm font-semibold mb-2">세션 구성</h3>
+              <Separator className="mb-2" />
+              <div className="space-y-2">
+                {session.contents.map((c) => (
+                  <div key={c.id} className="flex gap-3">
+                    <span className="text-xs text-muted-foreground bg-muted rounded px-1.5 py-0.5 shrink-0 self-start mt-0.5">
+                      {PHASE_LABEL[c.phase]}
+                    </span>
+                    <p className="text-sm">{c.description}</p>
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {/* 참가자 */}
-            {session.participants.length > 0 && (
-              <div className="rounded-lg border bg-card p-5">
-                <h3 className="text-sm font-semibold mb-2">참가 선수 ({session.participants.length}명)</h3>
-                <Separator className="mb-2" />
-                <div className="space-y-1.5">
+          {/* 출석 · 평가 */}
+          {session.participants.length > 0 && (
+            <div className="rounded-lg border bg-card p-5">
+              <h3 className="text-sm font-semibold mb-3">
+                출석 · 평가
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  {session.participants.length}명
+                </span>
+              </h3>
+              <Separator className="mb-3" />
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-8" />
+                    <TableHead>선수</TableHead>
+                    <TableHead className="w-36">출석</TableHead>
+                    <TableHead className="w-24 text-center">점수 (1–10)</TableHead>
+                    <TableHead>피드백</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {session.participants.map((p) => {
                     const pos = p.player.position as Position
                     const zone = POSITION_ZONE[pos]
+                    const input = resultInputs[p.playerId]
+                    const hasResult = session.results.some((r) => r.playerId === p.playerId)
                     return (
-                      <div key={p.playerId} className="flex items-center gap-2">
-                        <span className={`inline-flex rounded border px-1 py-0.5 text-[10px] font-mono font-semibold ${ZONE_ABBR_STYLE[zone]}`}>
-                          {POSITION_ABBR[pos]}
-                        </span>
-                        <span className="text-sm">{p.player.playerName}</span>
-                      </div>
+                      <TableRow key={p.playerId}>
+                        <TableCell>
+                          <span className={`inline-flex rounded border px-1 py-0.5 text-[10px] font-mono font-semibold ${ZONE_ABBR_STYLE[zone]}`}>
+                            {POSITION_ABBR[pos]}
+                          </span>
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {p.player.playerName}
+                          {hasResult && <span className="ml-1.5 text-[10px] text-green-600">●</span>}
+                        </TableCell>
+                        <TableCell>
+                          {canScore && input ? (
+                            <Select
+                              value={input.attendance}
+                              onValueChange={(v) =>
+                                setResultInputs((prev) => ({
+                                  ...prev,
+                                  [p.playerId]: { ...prev[p.playerId]!, attendance: v as AttendanceStatus },
+                                }))
+                              }
+                            >
+                              <SelectTrigger className="h-7 text-xs w-full">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {(Object.keys(ATTENDANCE_LABEL) as AttendanceStatus[]).map((s) => (
+                                  <SelectItem key={s} value={s}>{ATTENDANCE_LABEL[s]}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            input && (
+                              <span className={`inline-flex rounded border px-1.5 py-0.5 text-xs ${ATTENDANCE_STYLE[input.attendance]}`}>
+                                {ATTENDANCE_LABEL[input.attendance]}
+                              </span>
+                            )
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {canScore && input ? (
+                            <Input
+                              type="number" min={1} max={10}
+                              className="w-16 h-7 text-center text-sm mx-auto"
+                              value={input.performanceScore}
+                              onChange={(e) =>
+                                setResultInputs((prev) => ({
+                                  ...prev,
+                                  [p.playerId]: { ...prev[p.playerId]!, performanceScore: e.target.value },
+                                }))
+                              }
+                            />
+                          ) : (
+                            <span className="tabular-nums text-sm">
+                              {input?.performanceScore || '—'}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {canScore && input ? (
+                            <Input
+                              className="h-7 text-sm"
+                              placeholder="피드백 (선택)"
+                              value={input.feedback}
+                              onChange={(e) =>
+                                setResultInputs((prev) => ({
+                                  ...prev,
+                                  [p.playerId]: { ...prev[p.playerId]!, feedback: e.target.value },
+                                }))
+                              }
+                            />
+                          ) : (
+                            <span className="text-sm text-muted-foreground">{input?.feedback || '—'}</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
                     )
                   })}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* 결과 / 출석 */}
-          {session.results.length > 0 && (
-            <div className="rounded-lg border bg-card p-5">
-              <h3 className="text-sm font-semibold mb-2">출석 · 평가</h3>
-              <Separator className="mb-2" />
-              <div className="space-y-2">
-                {session.results.map((r) => {
-                  const participant = session.participants.find((p) => p.playerId === r.playerId)
-                  return (
-                    <div key={r.id} className="flex items-center gap-3 py-1">
-                      <span className="text-sm font-medium w-28 truncate">
-                        {participant?.player.playerName ?? r.playerId}
-                      </span>
-                      <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${ATTENDANCE_STYLE[r.attendance]}`}>
-                        {ATTENDANCE_LABEL[r.attendance]}
-                      </span>
-                      {r.performanceScore != null && (
-                        <span className="text-sm tabular-nums text-muted-foreground">
-                          {r.performanceScore}점
-                        </span>
-                      )}
-                      {r.feedback && (
-                        <span className="text-sm text-muted-foreground truncate">{r.feedback}</span>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
+                </TableBody>
+              </Table>
             </div>
           )}
 
