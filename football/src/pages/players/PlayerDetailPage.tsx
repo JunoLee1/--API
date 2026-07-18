@@ -17,8 +17,10 @@ import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { ArrowLeft, Pencil, ShieldAlert, Trash2 } from 'lucide-react'
 import { useConfirm } from '@/lib/confirm-dialog'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PlayerFormDialog } from './PlayerFormDialog'
 import { PlayerStatusDialog } from './PlayerStatusDialog'
+import { PlayerDevelopmentPlanTab } from './PlayerDevelopmentPlanTab'
 
 const ZONE_STYLE: Record<PositionZone, { badge: string; avatar: string }> = {
   GK: { badge: 'bg-amber-100 text-amber-800 border-amber-300', avatar: 'bg-amber-100 text-amber-800' },
@@ -172,84 +174,97 @@ export function PlayerDetailPage() {
         )}
       </div>
 
-      <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-3xl mx-auto space-y-6">
-          {/* 프로필 카드 */}
-          <div className="rounded-lg border bg-card p-5 flex items-start gap-5">
-            <Avatar className={`h-16 w-16 text-xl font-semibold ${zoneStyle.avatar}`}>
-              <AvatarFallback className={zoneStyle.avatar}>
-                {player.playerName.slice(0, 1)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-xl font-semibold tracking-tight">{player.playerName}</h2>
-                <span
-                  className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-mono font-bold ${zoneStyle.badge}`}
-                >
-                  {POSITION_ABBR[player.position]}
-                </span>
-                <span
-                  className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${STATUS_STYLE[player.status]}`}
-                >
-                  {STATUS_LABEL[player.status]}
-                </span>
-              </div>
-              <p className="text-sm text-muted-foreground mt-0.5">{POSITION_LABEL[player.position]}</p>
-              <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
-                <span>{player.nationality.name}</span>
-                <span>·</span>
-                <span>{LEVEL_LABEL[player.level]}</span>
-                <span>·</span>
-                <span>{calcAge(player.dateOfBirth)}세</span>
-              </div>
-            </div>
+      <div className="flex-1 overflow-auto">
+        <Tabs defaultValue="info" className="h-full flex flex-col">
+          <div className="px-6 pt-4 border-b shrink-0">
+            <TabsList>
+              <TabsTrigger value="info">기본 정보</TabsTrigger>
+              <TabsTrigger value="pdp">발전 계획</TabsTrigger>
+            </TabsList>
           </div>
+          <TabsContent value="info" className="flex-1 overflow-auto p-6 mt-0">
+            <div className="max-w-3xl mx-auto space-y-6">
+              {/* 프로필 카드 */}
+              <div className="rounded-lg border bg-card p-5 flex items-start gap-5">
+                <Avatar className={`h-16 w-16 text-xl font-semibold ${zoneStyle.avatar}`}>
+                  <AvatarFallback className={zoneStyle.avatar}>
+                    {player.playerName.slice(0, 1)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-xl font-semibold tracking-tight">{player.playerName}</h2>
+                    <span
+                      className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-mono font-bold ${zoneStyle.badge}`}
+                    >
+                      {POSITION_ABBR[player.position]}
+                    </span>
+                    <span
+                      className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${STATUS_STYLE[player.status]}`}
+                    >
+                      {STATUS_LABEL[player.status]}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-0.5">{POSITION_LABEL[player.position]}</p>
+                  <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
+                    <span>{player.nationality.name}</span>
+                    <span>·</span>
+                    <span>{LEVEL_LABEL[player.level]}</span>
+                    <span>·</span>
+                    <span>{calcAge(player.dateOfBirth)}세</span>
+                  </div>
+                </div>
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* 신체 정보 */}
-            <div className="rounded-lg border bg-card p-5">
-              <h3 className="text-sm font-semibold text-foreground mb-1">신체 정보</h3>
-              <Separator className="mb-1" />
-              <StatRow label="생년월일" value={formatDate(player.dateOfBirth)} />
-              <Separator />
-              <StatRow label="나이" value={`${calcAge(player.dateOfBirth)}세`} />
-              <Separator />
-              <StatRow label="신장" value={`${player.height} cm`} />
-              <Separator />
-              <StatRow label="체중" value={`${player.weight} kg`} />
-              <Separator />
-              <StatRow label="주발" value={player.preferredFoot === 'LEFT' ? '왼발' : '오른발'} />
-              {player.externalId && (
-                <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 신체 정보 */}
+                <div className="rounded-lg border bg-card p-5">
+                  <h3 className="text-sm font-semibold text-foreground mb-1">신체 정보</h3>
+                  <Separator className="mb-1" />
+                  <StatRow label="생년월일" value={formatDate(player.dateOfBirth)} />
                   <Separator />
-                  <StatRow label="외부 ID" value={player.externalId} />
-                </>
-              )}
-            </div>
+                  <StatRow label="나이" value={`${calcAge(player.dateOfBirth)}세`} />
+                  <Separator />
+                  <StatRow label="신장" value={`${player.height} cm`} />
+                  <Separator />
+                  <StatRow label="체중" value={`${player.weight} kg`} />
+                  <Separator />
+                  <StatRow label="주발" value={player.preferredFoot === 'LEFT' ? '왼발' : '오른발'} />
+                  {player.externalId && (
+                    <>
+                      <Separator />
+                      <StatRow label="외부 ID" value={player.externalId} />
+                    </>
+                  )}
+                </div>
 
-            {/* 최근 계약 */}
-            <div className="rounded-lg border bg-card p-5">
-              <h3 className="text-sm font-semibold text-foreground mb-1">최근 계약</h3>
-              <Separator className="mb-1" />
-              {latestContract ? (
-                <>
-                  <StatRow label="계약 시작" value={formatDate(latestContract.startDate)} />
-                  <Separator />
-                  <StatRow label="계약 만료" value={formatDate(latestContract.endDate)} />
-                  <Separator />
-                  <StatRow label="연봉" value={formatSalary(latestContract.salary)} />
-                  <Separator />
-                  <StatRow label="계약 상태" value={latestContract.status} />
-                </>
-              ) : (
-                <p className="text-sm text-muted-foreground py-4 text-center">
-                  등록된 계약이 없습니다.
-                </p>
-              )}
+                {/* 최근 계약 */}
+                <div className="rounded-lg border bg-card p-5">
+                  <h3 className="text-sm font-semibold text-foreground mb-1">최근 계약</h3>
+                  <Separator className="mb-1" />
+                  {latestContract ? (
+                    <>
+                      <StatRow label="계약 시작" value={formatDate(latestContract.startDate)} />
+                      <Separator />
+                      <StatRow label="계약 만료" value={formatDate(latestContract.endDate)} />
+                      <Separator />
+                      <StatRow label="연봉" value={formatSalary(latestContract.salary)} />
+                      <Separator />
+                      <StatRow label="계약 상태" value={latestContract.status} />
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground py-4 text-center">
+                      등록된 계약이 없습니다.
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </TabsContent>
+          <TabsContent value="pdp" className="flex-1 overflow-auto mt-0">
+            <PlayerDevelopmentPlanTab playerId={player.id} />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {canWrite && (
