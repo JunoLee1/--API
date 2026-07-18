@@ -34,6 +34,7 @@ import {
   UserSearch,
   Users,
   LayoutGrid,
+  Video,
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -159,6 +160,13 @@ const NAV_ITEMS: NavItem[] = [
     to: '/training/results',
     label: '훈련 결과',
     icon: BarChart2,
+    section: '훈련',
+    roles: ['ADMIN', 'COACHING_STAFF'],
+  },
+  {
+    to: '/training/videos',
+    label: '훈련 영상',
+    icon: Video,
     section: '훈련',
     roles: ['ADMIN', 'COACHING_STAFF'],
   },
