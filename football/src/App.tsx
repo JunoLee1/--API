@@ -14,6 +14,7 @@ import { TransfersPage } from '@/pages/transfers/TransfersPage'
 import { TrainingPage } from '@/pages/training/TrainingPage'
 import { TrainingDetailPage } from '@/pages/training/TrainingDetailPage'
 import { TrainingAttendancePage } from '@/pages/training/TrainingAttendancePage'
+import { TrainingResultsPage } from '@/pages/training/TrainingResultsPage'
 import { MatchesPage } from '@/pages/matches/MatchesPage'
 import { MatchDetailPage } from '@/pages/matches/MatchDetailPage'
 import { RankingsPage } from '@/pages/matches/RankingsPage'
@@ -64,6 +65,7 @@ function App() {
             <Route path="/injuries/stats" element={<InjuryStatsPage />} />
             <Route path="/training" element={<TrainingPage />} />
             <Route path="/training/attendance" element={<TrainingAttendancePage />} />
+            <Route path="/training/results" element={<TrainingResultsPage />} />
             <Route path="/training/:id" element={<TrainingDetailPage />} />
             <Route path="/matches" element={<MatchesPage />} />
             <Route path="/matches/analysis" element={<TacticalAnalysisPage />} />
