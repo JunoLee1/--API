@@ -248,6 +248,10 @@ enum NotificationType {
   TRAINING_SESSION_PENDING
   VIDEO_ASSIGNED
   VIDEO_ASSIGNMENT_OVERDUE
+  WORK_PERMIT_EXPIRY_SOON
+  CALLUP_REQUESTED
+  CALLUP_APPROVED
+  CALLUP_REJECTED
 }
 
 enum TacticalStatus {
@@ -367,6 +371,8 @@ model Team {
   trainingSessions TrainingSession[]
   matches          Match[]
   coaches          Coach[]
+  callupsFrom      PlayerCallup[]    @relation("CallupFromTeam")
+  callupsTo        PlayerCallup[]    @relation("CallupToTeam")
 }
 
 model Country {
@@ -440,6 +446,8 @@ model User {
   uploadedVideos           TrainingVideo[]         @relation("VideoUploader")
   videoAssignments         VideoAssignment[]       @relation("VideoAssigner")
   trainingReferences       TrainingReference[]
+  requestedCallups         PlayerCallup[]          @relation("CallupRequestedBy")
+  approvedCallups          PlayerCallup[]          @relation("CallupApprovedBy")
 }
 
 model Season {
@@ -492,6 +500,7 @@ model Player {
   momAnalyses            TacticalAnalysis[]      @relation("MomPlayer")
   improvementAnalyses    TacticalAnalysis[]      @relation("ImprovementPlayer")
   videoAssignments       VideoAssignment[]
+  callups                PlayerCallup[]
 }
 
 model Contract {
@@ -1316,4 +1325,32 @@ model TrainingReference {
 enum ReferenceSource {
   INTERNAL
   EXTERNAL
+}
+
+enum PlayerCallupStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+model PlayerCallup {
+  id            Int                @id @default(autoincrement())
+  playerId      String
+  fromTeamId    Int
+  toTeamId      Int
+  requestedById Int
+  approvedById  Int?
+  reason        String
+  status        PlayerCallupStatus @default(REQUESTED)
+  startDate     DateTime
+  endDate       DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  player      Player @relation(fields: [playerId], references: [id])
+  fromTeam    Team   @relation("CallupFromTeam", fields: [fromTeamId], references: [id])
+  toTeam      Team   @relation("CallupToTeam", fields: [toTeamId], references: [id])
+  requestedBy User   @relation("CallupRequestedBy", fields: [requestedById], references: [id])
+  approvedBy  User?  @relation("CallupApprovedBy", fields: [approvedById], references: [id])
 }
