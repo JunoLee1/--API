@@ -384,6 +384,261 @@ async function main() {
     },
   });
 
+  const p6 = await prisma.player.upsert({
+    where: { id: "player-006" },
+    update: {},
+    create: {
+      id: "player-006",
+      playerName: "최재원",
+      dateOfBirth: new Date("1995-02-14"),
+      preferredFoot: "RIGHT",
+      height: 187,
+      weight: 81,
+      position: "CENTER_BACK",
+      level: "VETERAN",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+    },
+  });
+
+  const p7 = await prisma.player.upsert({
+    where: { id: "player-007" },
+    update: {},
+    create: {
+      id: "player-007",
+      playerName: "한동민",
+      dateOfBirth: new Date("2000-08-05"),
+      preferredFoot: "LEFT",
+      height: 176,
+      weight: 70,
+      position: "LEFT_FULL_BACK",
+      level: "SENIOR",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+    },
+  });
+
+  const p8 = await prisma.player.upsert({
+    where: { id: "player-008" },
+    update: {},
+    create: {
+      id: "player-008",
+      playerName: "오승환",
+      dateOfBirth: new Date("1999-05-21"),
+      preferredFoot: "RIGHT",
+      height: 178,
+      weight: 73,
+      position: "RIGHT_FULL_BACK",
+      level: "SENIOR",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+    },
+  });
+
+  const p9 = await prisma.player.upsert({
+    where: { id: "player-009" },
+    update: {},
+    create: {
+      id: "player-009",
+      playerName: "김태영",
+      dateOfBirth: new Date("1994-11-08"),
+      preferredFoot: "RIGHT",
+      height: 182,
+      weight: 78,
+      position: "CENTRAL_DEFENSIVE_MIDFIELDER",
+      level: "VETERAN",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+    },
+  });
+
+  const p10 = await prisma.player.upsert({
+    where: { id: "player-010" },
+    update: {},
+    create: {
+      id: "player-010",
+      playerName: "류현진",
+      dateOfBirth: new Date("2001-03-30"),
+      preferredFoot: "RIGHT",
+      height: 180,
+      weight: 75,
+      position: "CENTRAL_DEFENSIVE_MIDFIELDER",
+      level: "SENIOR",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+    },
+  });
+
+  const p11 = await prisma.player.upsert({
+    where: { id: "player-011" },
+    update: {},
+    create: {
+      id: "player-011",
+      playerName: "박상원",
+      dateOfBirth: new Date("1999-09-15"),
+      preferredFoot: "RIGHT",
+      height: 177,
+      weight: 71,
+      position: "LEFT_ATTACK_MIDFIELDER",
+      level: "SENIOR",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+    },
+  });
+
+  const p12 = await prisma.player.upsert({
+    where: { id: "player-012" },
+    update: {},
+    create: {
+      id: "player-012",
+      playerName: "윤대성",
+      dateOfBirth: new Date("1997-06-02"),
+      preferredFoot: "BOTH",
+      height: 174,
+      weight: 68,
+      position: "RIGHT_ATTACK_MIDFIELDER",
+      level: "SENIOR",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+    },
+  });
+
+  const p13 = await prisma.player.upsert({
+    where: { id: "player-013" },
+    update: {},
+    create: {
+      id: "player-013",
+      playerName: "이강인",
+      dateOfBirth: new Date("2003-01-19"),
+      preferredFoot: "LEFT",
+      height: 173,
+      weight: 66,
+      position: "WINGER",
+      level: "ROOKIE",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+    },
+  });
+
+  const p14 = await prisma.player.upsert({
+    where: { id: "player-014" },
+    update: {},
+    create: {
+      id: "player-014",
+      playerName: "황희찬",
+      dateOfBirth: new Date("1996-01-26"),
+      preferredFoot: "RIGHT",
+      height: 177,
+      weight: 72,
+      position: "SHADOW_STRIKER",
+      level: "VETERAN",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+    },
+  });
+
+  const p15 = await prisma.player.upsert({
+    where: { id: "player-015" },
+    update: {},
+    create: {
+      id: "player-015",
+      playerName: "조현우",
+      dateOfBirth: new Date("1991-09-25"),
+      preferredFoot: "RIGHT",
+      height: 189,
+      weight: 83,
+      position: "GOALKEEPER",
+      level: "VETERAN",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+    },
+  });
+
+  await prisma.player.upsert({
+    where: { id: "player-016" },
+    update: {},
+    create: {
+      id: "player-016",
+      playerName: "권창훈",
+      dateOfBirth: new Date("1994-09-30"),
+      preferredFoot: "RIGHT",
+      height: 175,
+      weight: 70,
+      position: "WINGER",
+      level: "VETERAN",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+    },
+  });
+
+  await prisma.player.upsert({
+    where: { id: "player-017" },
+    update: {},
+    create: {
+      id: "player-017",
+      playerName: "이재성",
+      dateOfBirth: new Date("1992-08-10"),
+      preferredFoot: "RIGHT",
+      height: 178,
+      weight: 74,
+      position: "CENTRAL_ATTACK_MIDFIELDER",
+      level: "VETERAN",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+    },
+  });
+
+  await prisma.player.upsert({
+    where: { id: "player-018" },
+    update: {},
+    create: {
+      id: "player-018",
+      playerName: "송민규",
+      dateOfBirth: new Date("1999-09-12"),
+      preferredFoot: "BOTH",
+      height: 174,
+      weight: 68,
+      position: "STRIKER",
+      level: "SENIOR",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+    },
+  });
+
+  await prisma.player.upsert({
+    where: { id: "player-019" },
+    update: {},
+    create: {
+      id: "player-019",
+      playerName: "Mateus Costa",
+      dateOfBirth: new Date("2000-11-14"),
+      preferredFoot: "LEFT",
+      height: 171,
+      weight: 65,
+      position: "LEFT_DEFENSIVE_MIDFIELDER",
+      level: "ROOKIE",
+      status: "ACTIVE",
+      nationalityId: brazil.id,
+    },
+  });
+
+  await prisma.player.upsert({
+    where: { id: "player-020" },
+    update: {},
+    create: {
+      id: "player-020",
+      playerName: "김영권",
+      dateOfBirth: new Date("1990-02-27"),
+      preferredFoot: "RIGHT",
+      height: 185,
+      weight: 80,
+      position: "CENTER_BACK",
+      level: "VETERAN",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+    },
+  });
+
   // ── Contracts ─────────────────────────────────────────
   const contract1 = await prisma.contract.upsert({
     where: { id: 1 },
@@ -939,7 +1194,7 @@ async function main() {
   console.log(`     MEDICAL     : medical@club.com`);
   console.log(`     MED_DIR     : meddir@club.com`);
   console.log(`   - Season: ${season.name}`);
-  console.log(`   - Players: 5`);
+  console.log(`   - Players: 20`);
   console.log(`   - Contracts: 3`);
   console.log(`   - Matches: 12 (7 완료 + 1 컵 + 4 예정)`);
   console.log(`   - Training session: 1`);
