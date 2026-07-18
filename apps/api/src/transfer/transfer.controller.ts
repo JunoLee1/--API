@@ -45,7 +45,9 @@ export class TransferController {
 
   updateRecallStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (req.user!.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole } = req.user!;
+      const isGM = role === "FRONT_OFFICE" && frontOfficeRole === "GM";
+      if (!isGM) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(
         await this.service.updateRecallStatus(Number(req.params["id"]), req.body, req.user!.id),
       );
