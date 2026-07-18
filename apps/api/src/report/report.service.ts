@@ -10,8 +10,8 @@ export class ReportService {
     private notifRepo: NotificationRepository,
   ) {}
 
-  list(userId: number, isGM: boolean) {
-    return this.repo.findAll(userId, isGM);
+  list(userId: number, isGM: boolean, isHeadCoach: boolean = false) {
+    return this.repo.findAll(userId, isGM, isHeadCoach);
   }
 
   async get(id: number) {
