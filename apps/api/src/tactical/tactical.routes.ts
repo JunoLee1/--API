@@ -12,6 +12,8 @@ const controller = new TacticalController(service);
 
 const auth = passport.authenticate("accessToken", { session: false });
 
+// 전술 분석 목록 (전체, 쿼리: matchId, phase)
+router.get("/", auth, controller.list);
 // 경기별 전술 분석 목록
 router.get("/match/:matchId", auth, controller.getByMatch);
 // 전술 분석 단건 (라인업 + 미디어 포함)

@@ -6,6 +6,36 @@ const n = <T>(v: T | undefined): T | null => v ?? null;
 export class TacticalRepository {
   constructor(private prisma: PrismaClient) {}
 
+  findAll(filters?: { matchId?: number; phase?: string }) {
+    return this.prisma.tacticalAnalysis.findMany({
+      where: {
+        ...(filters?.matchId && { matchId: filters.matchId }),
+        ...(filters?.phase && { phase: filters.phase as "PRE_MATCH" | "POST_MATCH" }),
+      },
+      select: {
+        id: true,
+        matchId: true,
+        phase: true,
+        status: true,
+        formation: true,
+        opponentAnalysis: true,
+        createdById: true,
+        createdAt: true,
+        match: {
+          select: {
+            homeTeamName: true,
+            awayTeamName: true,
+            date: true,
+            homeScore: true,
+            awayScore: true,
+          },
+        },
+        createdBy: { select: { nickname: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
   findByMatch(matchId: number) {
     return this.prisma.tacticalAnalysis.findMany({
       where: { matchId },

@@ -8,6 +8,16 @@ type StaffRole = (typeof STAFF_ROLES)[number];
 export class TacticalController {
   constructor(private service: TacticalService) {}
 
+  list = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const filters = {
+        ...(req.query["matchId"] && { matchId: Number(req.query["matchId"]) }),
+        ...(req.query["phase"] && { phase: req.query["phase"] as string }),
+      };
+      res.status(200).json(await this.service.list(filters));
+    } catch (err) { next(err); }
+  };
+
   getByMatch = async (req: Request, res: Response, next: NextFunction) => {
     try {
       res.status(200).json(await this.service.getByMatch(Number(req.params["matchId"])));
@@ -24,6 +34,7 @@ export class TacticalController {
     try {
       const { role, frontOfficeRole } = req.user!;
       const canCreate =
+        role === "ADMIN" ||
         role === "COACHING_STAFF" ||
         (role === "FRONT_OFFICE" && frontOfficeRole === "TACTICAL_ANALYST");
       if (!canCreate) throw new AppError(403, "FORBIDDEN");

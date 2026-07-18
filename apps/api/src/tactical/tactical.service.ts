@@ -6,6 +6,10 @@ import { getPrisma } from "../lib/prisma";
 export class TacticalService {
   constructor(private repo: TacticalRepository) {}
 
+  list(filters?: { matchId?: number; phase?: string }) {
+    return this.repo.findAll(filters);
+  }
+
   getByMatch(matchId: number) {
     return this.repo.findByMatch(matchId);
   }
