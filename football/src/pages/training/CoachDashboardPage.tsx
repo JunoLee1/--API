@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { trainingApi } from '@/services/training.service'
-import type { TrainingResultRow, SessionType } from '@/types/training'
-import { SESSION_TYPE_LABEL } from '@/types/training'
+import type { TrainingResultRow } from '@/types/training'
 import type { Position } from '@/types/player'
 import { POSITION_LABEL } from '@/types/player'
 import { COACHING_ROLE_LABEL } from '@/types/auth'
@@ -379,13 +378,6 @@ export function CoachDashboardPage() {
         )}
       </div>
 
-      {/* 전역 인쇄 스타일 */}
-      <style>{`
-        @media print {
-          .print\\:hidden { display: none !important; }
-          .hidden.print\\:block { display: block !important; }
-        }
-      `}</style>
     </div>
   )
 }
