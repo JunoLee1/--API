@@ -31,6 +31,8 @@ import {
 import { ArrowLeft, CheckCircle, Clock, ExternalLink, Trash2, Plus, Save } from 'lucide-react'
 import { POSITION_ABBR, POSITION_ZONE } from '@/types/player'
 import type { Position } from '@/types/player'
+import { getCoachPositions } from '@/lib/coachPositionMap'
+import { Switch } from '@/components/ui/switch'
 
 const ZONE_ABBR_STYLE: Record<string, string> = {
   GK: 'bg-amber-100 text-amber-800 border-amber-200',
@@ -47,6 +49,24 @@ export function TrainingDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user } = useCurrentUser()
+
+  const coachPositions = getCoachPositions(user?.coachingRole)
+  const hasPositionFilter = coachPositions !== null
+
+  const [showAll, setShowAll] = useState(() => {
+    try { return localStorage.getItem('trainingDetail_showAll') === 'true' } catch { return false }
+  })
+
+  const handleShowAllToggle = (v: boolean) => {
+    setShowAll(v)
+    try { localStorage.setItem('trainingDetail_showAll', String(v)) } catch { /* ignore */ }
+  }
+
+  const isOwnerPos = (pos: string): boolean => {
+    if (!hasPositionFilter || showAll) return true
+    return coachPositions!.includes(pos as Position)
+  }
+
   const [session, setSession] = useState<TrainingSessionDetail | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -263,12 +283,20 @@ export function TrainingDetailPage() {
           {/* 출석 · 평가 */}
           {session.participants.length > 0 && (
             <div className="rounded-lg border bg-card p-5">
-              <h3 className="text-sm font-semibold mb-3">
-                출석 · 평가
-                <span className="ml-2 text-xs font-normal text-muted-foreground">
-                  {session.participants.length}명
-                </span>
-              </h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold">
+                  출석 · 평가
+                  <span className="ml-2 text-xs font-normal text-muted-foreground">
+                    {session.participants.length}명
+                  </span>
+                </h3>
+                {hasPositionFilter && (
+                  <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
+                    <Switch checked={showAll} onCheckedChange={handleShowAllToggle} className="scale-75" />
+                    전체 보기
+                  </label>
+                )}
+              </div>
               <Separator className="mb-3" />
               <Table>
                 <TableHeader>
@@ -286,8 +314,12 @@ export function TrainingDetailPage() {
                     const zone = POSITION_ZONE[pos]
                     const input = resultInputs[p.playerId]
                     const hasResult = session.results.some((r) => r.playerId === p.playerId)
+                    const isOwner = isOwnerPos(pos)
                     return (
-                      <TableRow key={p.playerId}>
+                      <TableRow
+                        key={p.playerId}
+                        className={!isOwner ? 'opacity-40 pointer-events-none' : undefined}
+                      >
                         <TableCell>
                           <span className={`inline-flex rounded border px-1 py-0.5 text-[10px] font-mono font-semibold ${ZONE_ABBR_STYLE[zone]}`}>
                             {POSITION_ABBR[pos]}
@@ -298,7 +330,7 @@ export function TrainingDetailPage() {
                           {hasResult && <span className="ml-1.5 text-[10px] text-green-600">●</span>}
                         </TableCell>
                         <TableCell>
-                          {canScore && input ? (
+                          {canScore && input && isOwner ? (
                             <Select
                               value={input.attendance}
                               onValueChange={(v) =>
@@ -326,7 +358,7 @@ export function TrainingDetailPage() {
                           )}
                         </TableCell>
                         <TableCell className="text-center">
-                          {canScore && input ? (
+                          {canScore && input && isOwner ? (
                             <Input
                               type="number" min={1} max={10}
                               className="w-16 h-7 text-center text-sm mx-auto"
@@ -345,7 +377,7 @@ export function TrainingDetailPage() {
                           )}
                         </TableCell>
                         <TableCell>
-                          {canScore && input ? (
+                          {canScore && input && isOwner ? (
                             <Input
                               className="h-7 text-sm"
                               placeholder="피드백 (선택)"
