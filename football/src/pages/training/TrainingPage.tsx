@@ -35,9 +35,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Plus, CheckCircle, Clock, Trash2 } from 'lucide-react'
+import { Plus, CheckCircle, Clock, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Pagination } from '@/components/ui/pagination'
-import { MiniCalendar } from '@/components/ui/mini-calendar'
+import { cn } from '@/lib/utils'
 
 const SESSION_TYPES = Object.keys(SESSION_TYPE_LABEL) as SessionType[]
 const PHASES = Object.keys(PHASE_LABEL) as ContentPhase[]
@@ -250,6 +250,8 @@ export function TrainingPage() {
   const [createOpen, setCreateOpen] = useState(false)
   const [page, setPage] = useState(1)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [viewYear, setViewYear] = useState(() => new Date().getFullYear())
+  const [viewMonth, setViewMonth] = useState(() => new Date().getMonth())
 
   const canCreate = user?.role === 'ADMIN' || user?.role === 'COACHING_STAFF'
   const canApprove = user?.role === 'ADMIN' || user?.coachingRole === 'HEAD_COACH'
@@ -288,21 +290,42 @@ export function TrainingPage() {
     }
   }
 
-  const sessionDates = [...new Set(sessions.map(s => s.date.slice(0, 10)))]
+  const sessionDates = new Set(sessions.map(s => s.date.slice(0, 10)))
 
   const filteredSessions = selectedDate
     ? sessions.filter(s => s.date.slice(0, 10) === selectedDate)
-    : sessions
+    : []
 
   const totalPages = Math.ceil(filteredSessions.length / PAGE_SIZE)
   const paged = filteredSessions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  const todayStr = (() => {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  })()
+  const calFirstDay = new Date(viewYear, viewMonth, 1)
+  const calLastDay = new Date(viewYear, viewMonth + 1, 0)
+  const calCells: (number | null)[] = [
+    ...Array.from({ length: calFirstDay.getDay() }, () => null),
+    ...Array.from({ length: calLastDay.getDate() }, (_, i) => i + 1),
+  ]
+  const toCalDateStr = (day: number) =>
+    `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+  const monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' })
+  const prevMonth = () => viewMonth === 0 ? (setViewYear(y => y - 1), setViewMonth(11)) : setViewMonth(m => m - 1)
+  const nextMonth = () => viewMonth === 11 ? (setViewYear(y => y + 1), setViewMonth(0)) : setViewMonth(m => m + 1)
+  const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 
   return (
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 flex items-center justify-between gap-4 shrink-0">
         <div>
           <h1 className="text-lg font-semibold tracking-tight">훈련 일정</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">전체 {sessions.length}개 세션</p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {selectedDate
+              ? `${new Date(selectedDate + 'T00:00:00').toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })} · ${filteredSessions.length}개 세션`
+              : '날짜를 선택하세요'}
+          </p>
         </div>
         {canCreate && (
           <Button size="sm" onClick={() => setCreateOpen(true)}>
@@ -321,79 +344,111 @@ export function TrainingPage() {
         </Select>
       </div>
 
-      <div className="flex-1 overflow-auto flex gap-4 p-4 min-h-0">
-        <MiniCalendar
-          sessionDates={sessionDates}
-          selectedDate={selectedDate}
-          onSelect={(d) => { setSelectedDate(d); setPage(1) }}
-        />
-
-        <div className="flex-1 min-w-0 overflow-auto">
-          {selectedDate && (
-            <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
-              <span>
-                {new Date(selectedDate + 'T00:00:00').toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })} 세션
-                {filteredSessions.length === 0 && ' — 없음'}
-              </span>
-              <button className="text-xs underline" onClick={() => setSelectedDate(null)}>초기화</button>
-            </div>
-          )}
-          {loading ? (
-            <div className="space-y-3">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
-          ) : filteredSessions.length === 0 ? (
-            <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-              {selectedDate ? '해당 날짜에 훈련 세션이 없습니다.' : '등록된 훈련 세션이 없습니다.'}
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead>날짜</TableHead>
-                  <TableHead>목표</TableHead>
-                  <TableHead className="w-32">유형</TableHead>
-                  <TableHead className="w-24 text-center">승인</TableHead>
-                  {canApprove && <TableHead className="w-24" />}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paged.map((s) => (
-                  <TableRow key={s.id} className="cursor-pointer" onClick={() => navigate(`/training/${s.id}`)}>
-                    <TableCell className="tabular-nums">{formatDate(s.date)}</TableCell>
-                    <TableCell className="max-w-xs truncate">{s.goal}</TableCell>
-                    <TableCell>
-                      <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${SESSION_TYPE_STYLE[s.sessionType]}`}>
-                        {SESSION_TYPE_LABEL[s.sessionType]}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {s.isApproved
-                        ? <CheckCircle className="h-4 w-4 text-green-600 mx-auto" />
-                        : <Clock className="h-4 w-4 text-muted-foreground mx-auto" />}
-                    </TableCell>
-                    {canApprove && (
-                      <TableCell>
-                        {!s.isApproved && (
-                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={(e) => handleApprove(s.id, e)}>
-                            승인
-                          </Button>
-                        )}
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+      {/* 아이폰 캘린더 스타일 — 상단 그리드 */}
+      <div className="shrink-0 border-b px-4 pt-3 pb-4 select-none">
+        <div className="flex items-center justify-between mb-3">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={prevMonth}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm font-semibold">{monthLabel}</span>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={nextMonth}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="grid grid-cols-7 mb-1">
+          {DAY_LABELS.map(d => (
+            <span key={d} className="text-center text-[11px] text-muted-foreground py-0.5">{d}</span>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-y-1">
+          {calCells.map((day, i) => {
+            if (!day) return <span key={`e-${i}`} />
+            const dateStr = toCalDateStr(day)
+            const hasSession = sessionDates.has(dateStr)
+            const isSelected = selectedDate === dateStr
+            const isToday = todayStr === dateStr
+            return (
+              <button
+                key={dateStr}
+                onClick={() => { setSelectedDate(isSelected ? null : dateStr); setPage(1) }}
+                className="flex flex-col items-center gap-0.5 py-0.5"
+              >
+                <span className={cn(
+                  'h-8 w-8 flex items-center justify-center rounded-full text-sm transition-colors',
+                  isSelected
+                    ? 'bg-primary text-primary-foreground font-semibold'
+                    : isToday
+                    ? 'text-primary font-semibold hover:bg-muted'
+                    : 'hover:bg-muted',
+                )}>
+                  {day}
+                </span>
+                <span className={cn(
+                  'h-1 w-1 rounded-full',
+                  hasSession
+                    ? isSelected ? 'bg-primary-foreground' : 'bg-primary'
+                    : 'invisible',
+                )} />
+              </button>
+            )
+          })}
         </div>
       </div>
 
-      <Pagination
-        page={page}
-        totalPages={totalPages}
-        totalItems={filteredSessions.length}
-        pageSize={PAGE_SIZE}
-        onPageChange={setPage}
-      />
+      {/* 하단 세션 리스트 */}
+      <div className="flex-1 overflow-auto">
+        {!selectedDate ? (
+          <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+            날짜를 선택하면 세션이 표시됩니다
+          </div>
+        ) : loading ? (
+          <div className="p-4 space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
+          </div>
+        ) : filteredSessions.length === 0 ? (
+          <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
+            해당 날짜에 훈련 세션이 없습니다.
+          </div>
+        ) : (
+          <div className="divide-y">
+            {paged.map((s) => (
+              <div
+                key={s.id}
+                className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => navigate(`/training/${s.id}`)}
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{s.goal}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    <span className={`inline-flex items-center rounded border px-1.5 py-0.5 ${SESSION_TYPE_STYLE[s.sessionType]}`}>
+                      {SESSION_TYPE_LABEL[s.sessionType]}
+                    </span>
+                  </p>
+                </div>
+                <div className="shrink-0 flex items-center gap-2">
+                  {s.isApproved
+                    ? <CheckCircle className="h-4 w-4 text-green-600" />
+                    : <Clock className="h-4 w-4 text-muted-foreground" />}
+                  {canApprove && !s.isApproved && (
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={(e) => handleApprove(s.id, e)}>
+                      승인
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+            {totalPages > 1 && (
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                totalItems={filteredSessions.length}
+                pageSize={PAGE_SIZE}
+                onPageChange={setPage}
+              />
+            )}
+          </div>
+        )}
+      </div>
 
       <CreateSessionDialog
         open={createOpen}
