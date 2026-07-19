@@ -249,11 +249,7 @@ export function TrainingPage() {
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
   const [page, setPage] = useState(1)
-  const todayStr = (() => {
-    const d = new Date()
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  })()
-  const [selectedDate, setSelectedDate] = useState<string | null>(todayStr)
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
   const canCreate = user?.role === 'ADMIN' || user?.role === 'COACHING_STAFF'
   const canApprove = user?.role === 'ADMIN' || user?.coachingRole === 'HEAD_COACH'
@@ -307,7 +303,7 @@ export function TrainingPage() {
         <div>
           <h1 className="text-lg font-semibold tracking-tight">훈련 일정</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {selectedDate ? `${filteredSessions.length}개 세션` : `전체 ${sessions.length}개 세션`}
+            {selectedDate ? `${filteredSessions.length}개 세션` : '날짜를 선택하세요'}
           </p>
         </div>
         {canCreate && (
@@ -334,80 +330,75 @@ export function TrainingPage() {
           onSelect={(d) => { setSelectedDate(d); setPage(1) }}
         />
 
-        <div className="flex-1 min-w-0 overflow-auto">
-          <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
-            <span>
-              {selectedDate
-                ? `${new Date(selectedDate + 'T00:00:00').toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })} 세션${filteredSessions.length === 0 ? ' — 없음' : ''}`
-                : '전체 세션'}
-            </span>
-            {selectedDate && (
+        {selectedDate && (
+          <div className="flex-1 min-w-0 flex flex-col overflow-auto">
+            <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground shrink-0">
+              <span>
+                {new Date(selectedDate + 'T00:00:00').toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })} 세션
+                {filteredSessions.length === 0 ? ' — 없음' : ` ${filteredSessions.length}개`}
+              </span>
               <button className="text-xs underline" onClick={() => { setSelectedDate(null); setPage(1) }}>
-                전체 목록 보기
+                닫기
               </button>
+            </div>
+            {loading ? (
+              <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+            ) : filteredSessions.length === 0 ? (
+              <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
+                해당 날짜에 훈련 세션이 없습니다.
+              </div>
+            ) : (
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead>날짜</TableHead>
+                      <TableHead>목표</TableHead>
+                      <TableHead className="w-32">유형</TableHead>
+                      <TableHead className="w-24 text-center">승인</TableHead>
+                      {canApprove && <TableHead className="w-24" />}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paged.map((s) => (
+                      <TableRow key={s.id} className="cursor-pointer" onClick={() => navigate(`/training/${s.id}`)}>
+                        <TableCell className="tabular-nums">{formatDate(s.date)}</TableCell>
+                        <TableCell className="max-w-xs truncate">{s.goal}</TableCell>
+                        <TableCell>
+                          <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${SESSION_TYPE_STYLE[s.sessionType]}`}>
+                            {SESSION_TYPE_LABEL[s.sessionType]}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {s.isApproved
+                            ? <CheckCircle className="h-4 w-4 text-green-600 mx-auto" />
+                            : <Clock className="h-4 w-4 text-muted-foreground mx-auto" />}
+                        </TableCell>
+                        {canApprove && (
+                          <TableCell>
+                            {!s.isApproved && (
+                              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={(e) => handleApprove(s.id, e)}>
+                                승인
+                              </Button>
+                            )}
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  totalItems={filteredSessions.length}
+                  pageSize={PAGE_SIZE}
+                  onPageChange={setPage}
+                />
+              </>
             )}
           </div>
-          {loading ? (
-            <div className="space-y-3">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
-          ) : filteredSessions.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-48 gap-3 text-sm text-muted-foreground">
-              <span>{selectedDate ? '오늘 훈련 세션이 없습니다.' : '등록된 훈련 세션이 없습니다.'}</span>
-              {selectedDate && (
-                <button className="text-xs underline" onClick={() => { setSelectedDate(null); setPage(1) }}>
-                  전체 목록 보기
-                </button>
-              )}
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead>날짜</TableHead>
-                  <TableHead>목표</TableHead>
-                  <TableHead className="w-32">유형</TableHead>
-                  <TableHead className="w-24 text-center">승인</TableHead>
-                  {canApprove && <TableHead className="w-24" />}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paged.map((s) => (
-                  <TableRow key={s.id} className="cursor-pointer" onClick={() => navigate(`/training/${s.id}`)}>
-                    <TableCell className="tabular-nums">{formatDate(s.date)}</TableCell>
-                    <TableCell className="max-w-xs truncate">{s.goal}</TableCell>
-                    <TableCell>
-                      <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${SESSION_TYPE_STYLE[s.sessionType]}`}>
-                        {SESSION_TYPE_LABEL[s.sessionType]}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {s.isApproved
-                        ? <CheckCircle className="h-4 w-4 text-green-600 mx-auto" />
-                        : <Clock className="h-4 w-4 text-muted-foreground mx-auto" />}
-                    </TableCell>
-                    {canApprove && (
-                      <TableCell>
-                        {!s.isApproved && (
-                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={(e) => handleApprove(s.id, e)}>
-                            승인
-                          </Button>
-                        )}
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </div>
+        )}
       </div>
-
-      <Pagination
-        page={page}
-        totalPages={totalPages}
-        totalItems={filteredSessions.length}
-        pageSize={PAGE_SIZE}
-        onPageChange={setPage}
-      />
 
       <CreateSessionDialog
         open={createOpen}
