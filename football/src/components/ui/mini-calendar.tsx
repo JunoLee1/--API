@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 interface MiniCalendarProps {
   sessionDates: string[]        // 'YYYY-MM-DD' 배열
@@ -71,16 +72,14 @@ export function MiniCalendar({ sessionDates, selectedDate, onSelect }: MiniCalen
             <button
               key={dateStr}
               onClick={() => onSelect(isSelected ? null : dateStr)}
-              className={[
+              className={cn(
                 'flex flex-col items-center justify-start rounded text-[11px] py-0.5 leading-none transition-colors',
-                isSelected
-                  ? 'bg-primary text-primary-foreground font-semibold'
-                  : 'hover:bg-muted',
-              ].join(' ')}
+                isSelected ? 'bg-primary text-primary-foreground font-semibold' : 'hover:bg-muted',
+              )}
             >
               <span>{day}</span>
               {hasSession && (
-                <span className={`mt-0.5 h-1 w-1 rounded-full ${isSelected ? 'bg-primary-foreground' : 'bg-primary'}`} />
+                <span className={cn('mt-0.5 h-1 w-1 rounded-full', isSelected ? 'bg-primary-foreground' : 'bg-primary')} />
               )}
             </button>
           )
