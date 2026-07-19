@@ -249,7 +249,11 @@ export function TrainingPage() {
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
   const [page, setPage] = useState(1)
-  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const todayStr = (() => {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  })()
+  const [selectedDate, setSelectedDate] = useState<string | null>(todayStr)
 
   const canCreate = user?.role === 'ADMIN' || user?.role === 'COACHING_STAFF'
   const canApprove = user?.role === 'ADMIN' || user?.coachingRole === 'HEAD_COACH'
@@ -302,7 +306,9 @@ export function TrainingPage() {
       <div className="border-b px-6 py-4 flex items-center justify-between gap-4 shrink-0">
         <div>
           <h1 className="text-lg font-semibold tracking-tight">훈련 일정</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">전체 {sessions.length}개 세션</p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {selectedDate ? `${filteredSessions.length}개 세션` : `전체 ${sessions.length}개 세션`}
+          </p>
         </div>
         {canCreate && (
           <Button size="sm" onClick={() => setCreateOpen(true)}>
@@ -329,20 +335,28 @@ export function TrainingPage() {
         />
 
         <div className="flex-1 min-w-0 overflow-auto">
-          {selectedDate && (
-            <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
-              <span>
-                {new Date(selectedDate + 'T00:00:00').toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })} 세션
-                {filteredSessions.length === 0 && ' — 없음'}
-              </span>
-              <button className="text-xs underline" onClick={() => setSelectedDate(null)}>초기화</button>
-            </div>
-          )}
+          <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
+            <span>
+              {selectedDate
+                ? `${new Date(selectedDate + 'T00:00:00').toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })} 세션${filteredSessions.length === 0 ? ' — 없음' : ''}`
+                : '전체 세션'}
+            </span>
+            {selectedDate && (
+              <button className="text-xs underline" onClick={() => { setSelectedDate(null); setPage(1) }}>
+                전체 목록 보기
+              </button>
+            )}
+          </div>
           {loading ? (
             <div className="space-y-3">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
           ) : filteredSessions.length === 0 ? (
-            <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-              {selectedDate ? '해당 날짜에 훈련 세션이 없습니다.' : '등록된 훈련 세션이 없습니다.'}
+            <div className="flex flex-col items-center justify-center h-48 gap-3 text-sm text-muted-foreground">
+              <span>{selectedDate ? '오늘 훈련 세션이 없습니다.' : '등록된 훈련 세션이 없습니다.'}</span>
+              {selectedDate && (
+                <button className="text-xs underline" onClick={() => { setSelectedDate(null); setPage(1) }}>
+                  전체 목록 보기
+                </button>
+              )}
             </div>
           ) : (
             <Table>
