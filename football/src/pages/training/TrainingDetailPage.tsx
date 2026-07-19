@@ -11,6 +11,7 @@ import {
   ATTENDANCE_STYLE,
 } from '@/types/training'
 import { trainingReferenceApi } from '@/services/training-reference.service'
+import type { ContentPhase } from '@/types/training'
 import type { TrainingReference, ReferenceSource } from '@/types/training-reference'
 import { REFERENCE_SOURCE_LABEL } from '@/types/training-reference'
 import { trainingLoadApi } from '@/services/training-load.service'
@@ -56,6 +57,28 @@ export function TrainingDetailPage() {
   type ResultInput = { attendance: AttendanceStatus; performanceScore: string; feedback: string }
   const [resultInputs, setResultInputs] = useState<Record<string, ResultInput>>({})
   const [saving, setSaving] = useState(false)
+
+  const [addingContent, setAddingContent] = useState(false)
+  const [newContentPhase, setNewContentPhase] = useState<ContentPhase>('WARMUP')
+  const [newContentDesc, setNewContentDesc] = useState('')
+  const [savingContent, setSavingContent] = useState(false)
+
+  const handleAddContent = async () => {
+    if (!session || !newContentDesc.trim()) return
+    setSavingContent(true)
+    try {
+      await trainingApi.addContent(session.id, newContentPhase, newContentDesc.trim())
+      toast.success('세션 구성이 추가됐습니다.')
+      const updated = await trainingApi.get(session.id)
+      setSession(updated)
+      setNewContentDesc('')
+      setAddingContent(false)
+    } catch {
+      toast.error('추가에 실패했습니다.')
+    } finally {
+      setSavingContent(false)
+    }
+  }
 
   const [loads, setLoads] = useState<TrainingLoad[]>([])
   const [loadInputs, setLoadInputs] = useState<Record<string, { rpe: string; load: string }>>({})
@@ -182,22 +205,60 @@ export function TrainingDetailPage() {
           </div>
 
           {/* 세션 구성 */}
-          {session.contents.length > 0 && (
-            <div className="rounded-lg border bg-card p-5">
-              <h3 className="text-sm font-semibold mb-2">세션 구성</h3>
-              <Separator className="mb-2" />
-              <div className="space-y-2">
-                {session.contents.map((c) => (
-                  <div key={c.id} className="flex gap-3">
-                    <span className="text-xs text-muted-foreground bg-muted rounded px-1.5 py-0.5 shrink-0 self-start mt-0.5">
-                      {PHASE_LABEL[c.phase]}
-                    </span>
-                    <p className="text-sm">{c.description}</p>
-                  </div>
-                ))}
-              </div>
+          <div className="rounded-lg border bg-card p-5">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold">세션 구성</h3>
+              {canAddRef && !addingContent && (
+                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setAddingContent(true)}>
+                  <Plus className="h-3 w-3 mr-1" />추가
+                </Button>
+              )}
             </div>
-          )}
+            <Separator className="mb-3" />
+            {session.contents.length === 0 && !addingContent && (
+              <p className="text-xs text-muted-foreground">등록된 세션 구성이 없습니다.</p>
+            )}
+            <div className="space-y-2">
+              {session.contents.map((c) => (
+                <div key={c.id} className="flex gap-3">
+                  <span className="text-xs text-muted-foreground bg-muted rounded px-1.5 py-0.5 shrink-0 self-start mt-0.5">
+                    {PHASE_LABEL[c.phase]}
+                  </span>
+                  <p className="text-sm">{c.description}</p>
+                </div>
+              ))}
+            </div>
+            {addingContent && (
+              <div className="mt-3 space-y-2 border-t pt-3">
+                <div className="flex gap-2">
+                  <Select value={newContentPhase} onValueChange={(v) => setNewContentPhase(v as ContentPhase)}>
+                    <SelectTrigger className="w-24 h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(PHASE_LABEL) as ContentPhase[]).map((p) => (
+                        <SelectItem key={p} value={p}>{PHASE_LABEL[p]}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    className="flex-1 h-8 text-sm"
+                    placeholder="내용 입력"
+                    value={newContentDesc}
+                    onChange={(e) => setNewContentDesc(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleAddContent() }}
+                    autoFocus
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setAddingContent(false); setNewContentDesc('') }}>취소</Button>
+                  <Button size="sm" className="h-7 text-xs" onClick={handleAddContent} disabled={savingContent || !newContentDesc.trim()}>
+                    {savingContent ? '추가 중...' : '추가'}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* 출석 · 평가 */}
           {session.participants.length > 0 && (
