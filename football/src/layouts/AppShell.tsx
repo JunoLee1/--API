@@ -190,6 +190,13 @@ const NAV_ITEMS: NavItem[] = [
     section: '훈련',
     roles: ['ADMIN', 'COACHING_STAFF'],
   },
+  {
+    to: '/training/dashboard',
+    label: '코치 대시보드',
+    icon: BarChart2,
+    section: '훈련',
+    roles: ['COACHING_STAFF'],
+  },
 
   // 경기·분석
   {
