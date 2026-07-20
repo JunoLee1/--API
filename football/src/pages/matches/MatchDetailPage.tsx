@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { matchApi } from '@/services/match.service'
-import type { MatchDetail } from '@/types/match'
-import { COMPETITION_LABEL } from '@/types/match'
+import type { MatchDetail, ShotEvent, ShotResult } from '@/types/match'
+import { COMPETITION_LABEL, SHOT_RESULT_LABEL, SHOT_RESULT_STYLE } from '@/types/match'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -16,9 +16,9 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ArrowLeft, Pencil } from 'lucide-react'
+import { ArrowLeft, Pencil, Trash2, Plus } from 'lucide-react'
 import { playerApi } from '@/services/player.service'
-import { POSITION_ABBR, POSITION_ZONE } from '@/types/player'
+import { POSITION_ABBR, POSITION_ZONE, POSITION_LABEL } from '@/types/player'
 import type { Player, Position } from '@/types/player'
 import {
   Select,
@@ -297,10 +297,11 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
         minutesPlayed: existing.minutesPlayed != null ? String(existing.minutesPlayed) : '',
         goals: existing.goals != null ? String(existing.goals) : '',
         assists: existing.assists != null ? String(existing.assists) : '',
-        xG: existing.xG != null ? String(existing.xG) : '',
-        xA: existing.xA != null ? String(existing.xA) : '',
+        // xG/xA=0은 미입력과 동일하게 처리 (0.00 그대로 저장 방지)
+        xG: (existing.xG != null && existing.xG > 0) ? String(existing.xG) : '',
+        xA: (existing.xA != null && existing.xA > 0) ? String(existing.xA) : '',
         shots: existing.shots != null ? String(existing.shots) : '',
-        passAccuracy: existing.passAccuracy != null ? String(existing.passAccuracy) : '',
+        passAccuracy: (existing.passAccuracy != null && existing.passAccuracy > 0) ? String(existing.passAccuracy) : '',
         keyPasses: existing.keyPasses != null ? String(existing.keyPasses) : '',
         tackles: existing.tackles != null ? String(existing.tackles) : '',
         interceptions: existing.interceptions != null ? String(existing.interceptions) : '',
@@ -318,9 +319,33 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
       setForm((prev) => ({ ...prev, [key]: e.target.value }))
 
   const num = (v: string) => v !== '' ? Number(v) : undefined
+  const numPos = (v: string) => { const n = Number(v); return v !== '' && n > 0 ? n : undefined }
+
+  const [warnShown, setWarnShown] = useState(false)
+
+  const assistsVal  = Number(form.assists)      || 0
+  const goalsVal    = Number(form.goals)        || 0
+  const minutesVal  = Number(form.minutesPlayed) || 0
+
+  const fieldWarn = (key: string): boolean => {
+    if (key === 'xA'          && assistsVal > 0 && !form.xA)          return true
+    if (key === 'xG'          && goalsVal   > 0 && !form.xG)          return true
+    if (key === 'passAccuracy' && minutesVal > 0 && !form.passAccuracy) return true
+    return false
+  }
 
   const handleSave = async () => {
     if (!form.playerId) { toast.error('선수를 선택해주세요.'); return }
+    const missing: string[] = []
+    if (assistsVal > 0 && !form.xA)          missing.push('xA')
+    if (goalsVal   > 0 && !form.xG)          missing.push('xG')
+    if (minutesVal > 0 && !form.passAccuracy) missing.push('패스 성공률')
+    if (missing.length > 0 && !warnShown) {
+      toast.warning(`${missing.join(', ')} 값이 비어 있습니다. 그대로 저장하려면 한 번 더 누르세요.`)
+      setWarnShown(true)
+      return
+    }
+    setWarnShown(false)
     setSaving(true)
     try {
       await matchApi.upsertPlayerStats(match.id, {
@@ -328,10 +353,10 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
         minutesPlayed: num(form.minutesPlayed),
         goals: num(form.goals),
         assists: num(form.assists),
-        xG: num(form.xG),
-        xA: num(form.xA),
+        xG: numPos(form.xG),
+        xA: numPos(form.xA),
         shots: num(form.shots),
-        passAccuracy: num(form.passAccuracy),
+        passAccuracy: numPos(form.passAccuracy),
         keyPasses: num(form.keyPasses),
         tackles: num(form.tackles),
         interceptions: num(form.interceptions),
@@ -367,20 +392,25 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
             </Select>
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
-            {PLAYER_STAT_FIELDS.map(({ key, label, float: isFloat }) => (
-              <div key={key} className="space-y-1">
-                <Label className="text-xs">{label}</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  step={isFloat ? '0.01' : '1'}
-                  value={form[key]}
-                  onChange={setField(key)}
-                  placeholder="—"
-                  className="h-8 text-sm"
-                />
-              </div>
-            ))}
+            {PLAYER_STAT_FIELDS.map(({ key, label, float: isFloat }) => {
+              const warn = fieldWarn(key)
+              return (
+                <div key={key} className="space-y-1">
+                  <Label className={cn('text-xs', warn && 'text-orange-600')}>
+                    {label}{warn ? ' ⚠' : ''}
+                  </Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step={isFloat ? '0.01' : '1'}
+                    value={form[key]}
+                    onChange={(e) => { setWarnShown(false); setField(key)(e) }}
+                    placeholder="—"
+                    className={cn('h-8 text-sm', warn && 'border-orange-400 focus-visible:ring-orange-400')}
+                  />
+                </div>
+              )
+            })}
           </div>
           <div className="flex items-center gap-2 pt-1">
             <input
@@ -453,6 +483,177 @@ function ScoreDialog({ open, onOpenChange, match, onSaved }: ScoreDialogProps) {
   )
 }
 
+const SHOT_RESULTS: ShotResult[] = ['GOAL', 'ON_TARGET', 'OFF_TARGET', 'BLOCKED']
+const ALL_POSITIONS = [
+  'STRIKER','SHADOW_STRIKER','WINGER',
+  'CENTRAL_ATTACK_MIDFIELDER','RIGHT_ATTACK_MIDFIELDER','LEFT_ATTACK_MIDFIELDER',
+  'CENTRAL_DEFENSIVE_MIDFIELDER','LEFT_DEFENSIVE_MIDFIELDER','RIGHT_DEFENSIVE_MIDFIELDER',
+  'CENTER_BACK','LEFT_WING_BACK','LEFT_FULL_BACK','RIGHT_WING_BACK','RIGHT_FULL_BACK','GOALKEEPER',
+] as const
+
+function AddShotDialog({
+  open,
+  onOpenChange,
+  matchId,
+  players,
+  onSaved,
+}: {
+  open: boolean
+  onOpenChange: (v: boolean) => void
+  matchId: number
+  players: { id: string; playerName: string; position: string }[]
+  onSaved: () => void
+}) {
+  const [shooterId, setShooterId] = useState('')
+  const [assisterId, setAssisterId] = useState('')
+  const [assisterPositionOverride, setAssisterPositionOverride] = useState('')
+  const [xG, setXg] = useState('')
+  const [result, setResult] = useState<ShotResult>('ON_TARGET')
+  const [minute, setMinute] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const assisterDefaultPos = players.find(p => p.id === assisterId)?.position ?? ''
+
+  const reset = () => {
+    setShooterId(''); setAssisterId(''); setAssisterPositionOverride('')
+    setXg(''); setResult('ON_TARGET'); setMinute('')
+  }
+
+  const handleSave = async () => {
+    if (!shooterId) { toast.error('슈터를 선택하세요.'); return }
+    const xgVal = parseFloat(xG)
+    if (isNaN(xgVal) || xgVal < 0 || xgVal > 1) { toast.error('xG는 0~1 사이 숫자를 입력하세요.'); return }
+    setSaving(true)
+    try {
+      await matchApi.createShot(matchId, {
+        shooterId,
+        assisterId: assisterId || undefined,
+        assisterPositionOverride:
+          assisterId && assisterPositionOverride && assisterPositionOverride !== assisterDefaultPos
+            ? assisterPositionOverride
+            : undefined,
+        xG: xgVal,
+        result,
+        minute: minute ? Number(minute) : undefined,
+      })
+      toast.success('슈팅 이벤트가 저장되었습니다.')
+      reset()
+      onOpenChange(false)
+      onSaved()
+    } catch {
+      toast.error('저장에 실패했습니다.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v) }}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="text-base">슈팅 이벤트 추가</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div className="space-y-1">
+            <Label className="text-xs">슈터 *</Label>
+            <Select value={shooterId} onValueChange={setShooterId}>
+              <SelectTrigger className="h-8 text-sm">
+                {shooterId
+                  ? <span>{players.find(p => p.id === shooterId)?.playerName ?? shooterId}</span>
+                  : <span className="text-muted-foreground">선수 선택</span>}
+              </SelectTrigger>
+              <SelectContent>
+                {players.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.playerName}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">어시스터</Label>
+            <Select value={assisterId} onValueChange={(v) => { setAssisterId(v); setAssisterPositionOverride('') }}>
+              <SelectTrigger className="h-8 text-sm">
+                {assisterId
+                  ? <span>{players.find(p => p.id === assisterId)?.playerName ?? assisterId}</span>
+                  : <span className="text-muted-foreground">없음</span>}
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">없음</SelectItem>
+                {players.filter(p => p.id !== shooterId).map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.playerName}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {assisterId && (
+            <div className="space-y-1">
+              <Label className="text-xs">
+                어시스터 포지션 오버라이드
+                <span className="ml-1 text-muted-foreground font-normal">(기본: {POSITION_ABBR[assisterDefaultPos as Position] ?? assisterDefaultPos})</span>
+              </Label>
+              <Select
+                value={assisterPositionOverride || assisterDefaultPos}
+                onValueChange={setAssisterPositionOverride}
+              >
+                <SelectTrigger className="h-8 text-sm">
+                  <span>{POSITION_ABBR[(assisterPositionOverride || assisterDefaultPos) as Position] ?? (assisterPositionOverride || assisterDefaultPos)}</span>
+                </SelectTrigger>
+                <SelectContent>
+                  {ALL_POSITIONS.map((pos) => (
+                    <SelectItem key={pos} value={pos}>
+                      <span className="font-mono text-xs">{POSITION_ABBR[pos as Position]}</span>
+                      <span className="ml-2 text-muted-foreground">{POSITION_LABEL[pos as Position]}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs">xG (0~1) *</Label>
+              <Input
+                className="h-8 text-sm"
+                placeholder="0.35"
+                value={xG}
+                onChange={(e) => setXg(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">분 (선택)</Label>
+              <Input
+                className="h-8 text-sm"
+                placeholder="67"
+                value={minute}
+                onChange={(e) => setMinute(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">결과 *</Label>
+            <Select value={result} onValueChange={(v) => setResult(v as ShotResult)}>
+              <SelectTrigger className="h-8 text-sm">
+                <span>{SHOT_RESULT_LABEL[result]}</span>
+              </SelectTrigger>
+              <SelectContent>
+                {SHOT_RESULTS.map((r) => (
+                  <SelectItem key={r} value={r}>{SHOT_RESULT_LABEL[r]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>취소</Button>
+          <Button size="sm" disabled={saving} onClick={handleSave}>
+            {saving ? '저장 중...' : '저장'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export function MatchDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -463,6 +664,9 @@ export function MatchDetailPage() {
   const [teamStatsOpen, setTeamStatsOpen] = useState(false)
   const [playerStatsOpen, setPlayerStatsOpen] = useState(false)
   const [expandedPlayerId, setExpandedPlayerId] = useState<number | null>(null)
+  const [shotEvents, setShotEvents] = useState<ShotEvent[]>([])
+  const [shotOpen, setShotOpen] = useState(false)
+  const [deletingShot, setDeletingShot] = useState<number | null>(null)
 
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
   const canInputStats = canWrite || user?.role === 'COACHING_STAFF'
@@ -475,7 +679,28 @@ export function MatchDetailPage() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { fetchMatch() }, [id])
+  const fetchShots = () => {
+    if (!id) return
+    matchApi.getShots(Number(id))
+      .then(setShotEvents)
+      .catch(() => {})
+  }
+
+  const handleDeleteShot = async (eventId: number) => {
+    setDeletingShot(eventId)
+    try {
+      await matchApi.deleteShot(Number(id), eventId)
+      fetchShots()
+      fetchMatch()
+      toast.success('슈팅 이벤트가 삭제되었습니다.')
+    } catch {
+      toast.error('삭제에 실패했습니다.')
+    } finally {
+      setDeletingShot(null)
+    }
+  }
+
+  useEffect(() => { fetchMatch(); fetchShots() }, [id])
 
   if (loading) return (
     <div className="p-6 space-y-4 max-w-3xl">
@@ -633,6 +858,50 @@ export function MatchDetailPage() {
             </div>
           )}
 
+          {/* 슈팅 이벤트 */}
+          {(shotEvents.length > 0 || canInputStats) && (
+            <div className="rounded-xl border bg-white p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">슈팅 이벤트</div>
+                {canInputStats && (
+                  <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => setShotOpen(true)}>
+                    <Plus className="h-3 w-3 mr-1" />추가
+                  </Button>
+                )}
+              </div>
+              {shotEvents.length === 0 ? (
+                <p className="text-xs text-slate-400 text-center py-2">슈팅 이벤트가 없습니다.</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {shotEvents.map((e) => (
+                    <div key={e.id} className="flex items-center gap-2 text-[11px]">
+                      <span className="text-slate-400 w-6 text-right shrink-0">
+                        {e.minute != null ? `${e.minute}'` : '—'}
+                      </span>
+                      <span className={`inline-flex rounded border px-1.5 py-0.5 text-[10px] font-semibold shrink-0 ${SHOT_RESULT_STYLE[e.result]}`}>
+                        {SHOT_RESULT_LABEL[e.result]}
+                      </span>
+                      <span className="font-medium text-slate-800 shrink-0">{e.shooter.playerName}</span>
+                      {e.assister && (
+                        <span className="text-slate-400">→ {e.assister.playerName}</span>
+                      )}
+                      <span className="ml-auto text-slate-400 shrink-0">xG {e.xG.toFixed(2)}</span>
+                      {canInputStats && (
+                        <button
+                          className="text-slate-300 hover:text-red-400 transition-colors shrink-0 disabled:opacity-40"
+                          disabled={deletingShot === e.id}
+                          onClick={() => handleDeleteShot(e.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 선수 기록 */}
           {match.playerMatchStats.length > 0 && (
             <div className="rounded-xl border bg-white p-4">
@@ -677,7 +946,11 @@ export function MatchDetailPage() {
                             </td>
                             <td className={cn('text-center tabular-nums text-[11px]',
                               s.xG != null && s.xG >= 1.5 ? 'text-emerald-600 font-semibold' : 'text-slate-400')}>
-                              {s.xG != null ? s.xG.toFixed(2) : '—'}
+                              {(s.xG != null && s.xG > 0)
+                                ? s.xG.toFixed(2)
+                                : ((s.goals ?? 0) > 0)
+                                  ? <span className="text-orange-500 font-bold">⚠</span>
+                                  : '—'}
                             </td>
                             <td className="text-center tabular-nums text-[11px] text-slate-400">
                               {s.minutesPlayed != null ? `${s.minutesPlayed}'` : '—'}
@@ -724,6 +997,15 @@ export function MatchDetailPage() {
           {canWrite && <ScoreDialog open={scoreOpen} onOpenChange={setScoreOpen} match={match} onSaved={() => { setScoreOpen(false); fetchMatch() }} />}
           {canInputStats && <TeamStatsDialog open={teamStatsOpen} onOpenChange={setTeamStatsOpen} match={match} onSaved={() => { setTeamStatsOpen(false); fetchMatch() }} />}
           {canInputStats && <PlayerStatsDialog open={playerStatsOpen} onOpenChange={setPlayerStatsOpen} match={match} onSaved={() => { setPlayerStatsOpen(false); fetchMatch() }} />}
+          {canInputStats && (
+            <AddShotDialog
+              open={shotOpen}
+              onOpenChange={setShotOpen}
+              matchId={match.id}
+              players={match.playerMatchStats.map(s => s.player as { id: string; playerName: string; position: string })}
+              onSaved={() => { fetchShots(); fetchMatch() }}
+            />
+          )}
         </>
       )}
     </div>
