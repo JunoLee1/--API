@@ -65,4 +65,7 @@ router.get("/:id/match-stats", auth, controller.getMatchStats);
 // 훈련 결과 조회 (?from=&to=)
 router.get("/:id/training-results", auth, controller.getTrainingResults);
 
+// 레이더 차트 데이터 + 강점/약점 태그
+router.get("/:id/radar", auth, controller.getRadar);
+
 export default router;

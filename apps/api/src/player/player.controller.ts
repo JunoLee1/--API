@@ -3,6 +3,7 @@ import { AppError } from "../lib/appError";
 import { PlayerService } from "./player.service";
 import { PlayerListQuery } from "./dto/player.dto";
 import { PlayerStatus, Position, PlayerLevel } from "../generated/enums";
+import { getPlayerRadarData } from "./radar.service";
 
 const WRITE_ROLES = ["ADMIN", "FRONT_OFFICE"] as const;
 
@@ -118,6 +119,17 @@ export class PlayerController {
         to,
       );
       res.json(results);
+    } catch (err) { next(err); }
+  };
+
+  getRadar = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const playerId = String(req.params["id"]);
+      const player = await this.service.getPlayerById(playerId);
+      const stats = await this.service.getMatchStats(playerId);
+      const radar = await getPlayerRadarData(player.position, stats as any);
+      if (!radar) return res.json({ scores: {}, strengths: [], weaknesses: [], message: "데이터 부족" });
+      res.json(radar);
     } catch (err) { next(err); }
   };
 }
