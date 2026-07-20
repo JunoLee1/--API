@@ -21,6 +21,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PlayerFormDialog } from './PlayerFormDialog'
 import { PlayerStatusDialog } from './PlayerStatusDialog'
 import { PlayerDevelopmentPlanTab } from './PlayerDevelopmentPlanTab'
+import { StatsTab } from './tabs/StatsTab'
+import { JerseyTab } from './tabs/JerseyTab'
+import { MotivationTab } from './tabs/MotivationTab'
 
 const ZONE_STYLE: Record<PositionZone, { badge: string; avatar: string }> = {
   GK: { badge: 'bg-amber-100 text-amber-800 border-amber-300', avatar: 'bg-amber-100 text-amber-800' },
@@ -84,6 +87,11 @@ export function PlayerDetailPage() {
   const confirm = useConfirm()
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
   const canChangeStatus = user?.role === 'ADMIN'
+  const isOwnProfile = user?.role === 'PLAYER' && player?.userId === user?.id
+  const canSeeMarketValue = ['GM', 'TD', 'ADMIN'].includes(user?.role ?? '')
+  const canAssignJersey = ['GM', 'ADMIN', 'FRONT_OFFICE'].includes(user?.role ?? '')
+  const canRetireJersey = ['GM', 'ADMIN'].includes(user?.role ?? '')
+  const canReactivateJersey = user?.role === 'ADMIN'
 
   const handleDelete = async () => {
     if (!player) return
@@ -179,6 +187,9 @@ export function PlayerDetailPage() {
           <div className="px-6 pt-4 border-b shrink-0">
             <TabsList>
               <TabsTrigger value="info">기본 정보</TabsTrigger>
+              <TabsTrigger value="stats">스탯</TabsTrigger>
+              <TabsTrigger value="jersey">등번호</TabsTrigger>
+              {isOwnProfile && <TabsTrigger value="motivation">동기부여</TabsTrigger>}
               <TabsTrigger value="pdp">발전 계획</TabsTrigger>
             </TabsList>
           </div>
@@ -206,6 +217,13 @@ export function PlayerDetailPage() {
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground mt-0.5">{POSITION_LABEL[player.position]}</p>
+                  {player.playStyle ? (
+                    <span className="inline-flex items-center text-xs bg-violet-100 text-violet-800 px-2 py-0.5 rounded-full mt-1">
+                      {player.playStyle}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center text-xs text-muted-foreground mt-1">미분류</span>
+                  )}
                   <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
                     <span>{player.nationality.name}</span>
                     <span>·</span>
@@ -264,6 +282,23 @@ export function PlayerDetailPage() {
           <TabsContent value="pdp" className="flex-1 overflow-auto mt-0">
             <PlayerDevelopmentPlanTab playerId={player.id} />
           </TabsContent>
+          <TabsContent value="stats" className="flex-1 overflow-auto mt-0">
+            <StatsTab playerId={player.id} />
+          </TabsContent>
+          <TabsContent value="jersey" className="flex-1 overflow-auto mt-0">
+            <JerseyTab
+              playerId={player.id}
+              teamId={player.teamId ?? null}
+              canAssign={canAssignJersey}
+              canRetire={canRetireJersey}
+              canReactivate={canReactivateJersey}
+            />
+          </TabsContent>
+          {isOwnProfile && (
+            <TabsContent value="motivation" className="flex-1 overflow-auto mt-0">
+              <MotivationTab playerId={player.id} />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 
