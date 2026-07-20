@@ -1,4 +1,5 @@
 import { PrismaClient } from "../generated/client";
+import { ShotResult } from "../generated/enums";
 import { CreateMatchDto, UpdateMatchDto, MatchListQuery, UpsertPlayerStatsDto, UpsertTeamStatsDto, CreateShotEventDto } from "./dto/match.dto";
 
 const n = <T>(v: T | undefined): T | null => v ?? null;
@@ -188,7 +189,7 @@ export class MatchRepository {
         assisterId:               dto.assisterId ?? null,
         assisterPositionOverride: dto.assisterPositionOverride ?? null,
         xG:                       dto.xG,
-        result:                   dto.result as any,
+        result:                   dto.result as ShotResult,
         minute:                   dto.minute ?? null,
       },
       include: {
