@@ -214,6 +214,7 @@ export class MatchRepository {
 
     const xgMap: Record<string, number> = {};
     const xaMap: Record<string, number> = {};
+    const keyPassMap: Record<string, number> = {};
 
     for (const shot of shots) {
       xgMap[shot.shooterId] = (xgMap[shot.shooterId] ?? 0) + shot.xG;
@@ -221,18 +222,20 @@ export class MatchRepository {
         const effectivePosition = shot.assisterPositionOverride ?? shot.assister.position;
         const weight = XA_WEIGHT[effectivePosition] ?? 0.7;
         xaMap[shot.assisterId] = (xaMap[shot.assisterId] ?? 0) + shot.xG * weight;
+        keyPassMap[shot.assisterId] = (keyPassMap[shot.assisterId] ?? 0) + 1;
       }
     }
 
-    const playerIds = new Set([...Object.keys(xgMap), ...Object.keys(xaMap)]);
+    const playerIds = new Set([...Object.keys(xgMap), ...Object.keys(xaMap), ...Object.keys(keyPassMap)]);
     for (const playerId of playerIds) {
       const stat = await this.prisma.playerMatchStats.findFirst({ where: { matchId, playerId } });
       if (stat) {
         await this.prisma.playerMatchStats.update({
           where: { id: stat.id },
           data: {
-            xG: xgMap[playerId] != null ? Math.round(xgMap[playerId] * 100) / 100 : null,
-            xA: xaMap[playerId] != null ? Math.round(xaMap[playerId] * 100) / 100 : null,
+            xG:        xgMap[playerId]       != null ? Math.round(xgMap[playerId] * 100) / 100       : null,
+            xA:        xaMap[playerId]       != null ? Math.round(xaMap[playerId] * 100) / 100       : null,
+            keyPasses: keyPassMap[playerId]  ?? null,
           },
         });
       }
