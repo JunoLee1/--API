@@ -355,6 +355,18 @@ enum PlayerDevelopmentPlanStatus {
   REVIEWED
 }
 
+enum JerseyNumberStatus {
+  AVAILABLE
+  OCCUPIED
+  RETIRED
+  RESERVED
+}
+
+enum MarketValueSource {
+  MANUAL
+  EXTERNAL_API
+}
+
 // ─────────────────────────────────────────────
 // Models
 // ─────────────────────────────────────────────
@@ -376,6 +388,7 @@ model Team {
   coaches          Coach[]
   callupsFrom      PlayerCallup[]    @relation("CallupFromTeam")
   callupsTo        PlayerCallup[]    @relation("CallupToTeam")
+  jerseyNumbers    JerseyNumber[]
 }
 
 model Country {
@@ -452,6 +465,7 @@ model User {
   requestedCallups         PlayerCallup[]          @relation("CallupRequestedBy")
   approvedCallups          PlayerCallup[]          @relation("CallupApprovedBy")
   loginHistory             LoginHistory[]
+  recordedMarketValues     MarketValueHistory[]
 }
 
 model Season {
@@ -505,6 +519,10 @@ model Player {
   improvementAnalyses    TacticalAnalysis[]      @relation("ImprovementPlayer")
   videoAssignments       VideoAssignment[]
   callups                PlayerCallup[]
+  playStyle              String?
+  currentMarketValue     Float?
+  jerseyNumbers          JerseyNumber[]
+  marketValueHistory     MarketValueHistory[]
 }
 
 model Contract {
@@ -748,9 +766,17 @@ model PlayerMatchStats {
   clearances        Int?
   interceptions     Int?
   saves             Int?
-  cleanSheet        Boolean?
-  minutesPlayed     Int?
-  matchId           Int
+  cleanSheet             Boolean?
+  minutesPlayed          Int?
+  aerialDuelSuccessRate  Float?
+  sprint                 Float?
+  clearCutChanceRate     Float?
+  penaltyConversionRate  Float?
+  freeKickConversionRate Float?
+  foulsCommitted         Int?
+  crossesCompleted       Int?
+  shotAllowed            Int?
+  matchId                Int
   playerId          String
 
   match  Match  @relation(fields: [matchId], references: [id])
@@ -1369,4 +1395,29 @@ model LoginHistory {
   createdAt DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id])
+}
+
+model JerseyNumber {
+  id       Int                @id @default(autoincrement())
+  number   Int
+  status   JerseyNumberStatus @default(AVAILABLE)
+  teamId   Int
+  playerId String?
+
+  team   Team    @relation(fields: [teamId], references: [id])
+  player Player? @relation(fields: [playerId], references: [id])
+
+  @@unique([number, teamId])
+}
+
+model MarketValueHistory {
+  id           Int               @id @default(autoincrement())
+  value        Float
+  source       MarketValueSource
+  recordedAt   DateTime          @default(now())
+  recordedById Int?
+  playerId     String
+
+  player     Player @relation(fields: [playerId], references: [id])
+  recordedBy User?  @relation(fields: [recordedById], references: [id])
 }
