@@ -520,6 +520,7 @@ model Player {
   videoAssignments       VideoAssignment[]
   callups                PlayerCallup[]
   playStyle              String?
+  // 최신값 캐시 — MarketValueHistory 항목 생성 시 항상 동시 업데이트할 것 (service 레이어에서 트랜잭션 보장)
   currentMarketValue     Float?
   jerseyNumbers          JerseyNumber[]
   marketValueHistory     MarketValueHistory[]
@@ -775,7 +776,7 @@ model PlayerMatchStats {
   freeKickConversionRate Float?
   foulsCommitted         Int?
   crossesCompleted       Int?
-  shotAllowed            Int?
+  shotsAllowed           Int?
   matchId                Int
   playerId          String
 
@@ -1408,6 +1409,7 @@ model JerseyNumber {
   player Player? @relation(fields: [playerId], references: [id])
 
   @@unique([number, teamId])
+  @@index([playerId])
 }
 
 model MarketValueHistory {
@@ -1420,4 +1422,6 @@ model MarketValueHistory {
 
   player     Player @relation(fields: [playerId], references: [id])
   recordedBy User?  @relation(fields: [recordedById], references: [id])
+
+  @@index([playerId, recordedAt])
 }
