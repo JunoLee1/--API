@@ -1,9 +1,11 @@
 import { PlayerRepository } from "./player.repo";
 import { AppError } from "../lib/appError";
 import { CreatePlayerDto, UpdatePlayerDto, UpdatePlayerStatusDto, PlayerListQuery } from "./dto/player.dto";
+import { MarketValueRepository } from "./market-value.repo";
+import { UpdateMarketValueDto } from "./dto/market-value.dto";
 
 export class PlayerService {
-  constructor(private repo: PlayerRepository) {}
+  constructor(private repo: PlayerRepository, private mvRepo?: MarketValueRepository) {}
 
   getPlayers(query: PlayerListQuery) {
     return this.repo.findAll(query);
@@ -35,5 +37,20 @@ export class PlayerService {
     const player = await this.repo.findById(id);
     if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
     await this.repo.delete(id);
+  }
+
+  async getMarketValueHistory(playerId: string) {
+    const player = await this.repo.findById(playerId);
+    if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
+    if (!this.mvRepo) throw new AppError(500, "MARKET_VALUE_REPO_NOT_CONFIGURED");
+    return this.mvRepo.getHistory(playerId);
+  }
+
+  async updateMarketValue(playerId: string, dto: UpdateMarketValueDto, recordedById: number) {
+    const player = await this.repo.findById(playerId);
+    if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
+    if (!this.mvRepo) throw new AppError(500, "MARKET_VALUE_REPO_NOT_CONFIGURED");
+    await this.mvRepo.updateCurrentValue(playerId, dto.value, recordedById);
+    return { playerId, currentMarketValue: dto.value };
   }
 }

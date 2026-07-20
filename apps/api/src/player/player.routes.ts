@@ -7,10 +7,12 @@ import { getPrisma } from "../lib/prisma";
 import { JerseyService } from "./jersey.service";
 import { JerseyController } from "./jersey.controller";
 import { JerseyRepository } from "./jersey.repo";
+import { MarketValueRepository } from "./market-value.repo";
 
 const router = Router();
 const repo = new PlayerRepository(getPrisma());
-const service = new PlayerService(repo);
+const mvRepo = new MarketValueRepository(getPrisma());
+const service = new PlayerService(repo, mvRepo);
 const controller = new PlayerController(service);
 const jerseyRepo = new JerseyRepository(getPrisma());
 const jerseyService = new JerseyService(jerseyRepo);
@@ -50,5 +52,11 @@ router.post("/:id/jersey-numbers/retire", auth, jerseyController.retire);
 
 // 결번 재활성화 (ADMIN only)
 router.post("/:id/jersey-numbers/reactivate", auth, jerseyController.reactivate);
+
+// 시장 가치 이력 조회 (GM, TD, ADMIN)
+router.get("/:id/market-value/history", auth, controller.getMarketValueHistory);
+
+// 시장 가치 수동 업데이트 (GM, TD, ADMIN)
+router.patch("/:id/market-value", auth, controller.updateMarketValue);
 
 export default router;

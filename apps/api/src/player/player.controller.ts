@@ -76,4 +76,26 @@ export class PlayerController {
       next(err);
     }
   };
+
+  private readonly MARKET_VALUE_ROLES = ["GM", "TD", "ADMIN"] as const;
+
+  getMarketValueHistory = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!this.MARKET_VALUE_ROLES.includes(req.user!.role as any)) throw new AppError(403, "FORBIDDEN");
+      const history = await this.service.getMarketValueHistory(String(req.params["id"]));
+      res.json(history);
+    } catch (err) { next(err); }
+  };
+
+  updateMarketValue = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!this.MARKET_VALUE_ROLES.includes(req.user!.role as any)) throw new AppError(403, "FORBIDDEN");
+      const result = await this.service.updateMarketValue(
+        String(req.params["id"]),
+        req.body,
+        req.user!.id,
+      );
+      res.json(result);
+    } catch (err) { next(err); }
+  };
 }
