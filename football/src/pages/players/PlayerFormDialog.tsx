@@ -2,21 +2,14 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { playerApi } from '@/services/player.service'
 import { api } from '@/services/api'
-import type {
-  Player,
-  PlayerDetail,
-  Position,
-  Foot,
-  PlayerLevel,
-} from '@/types/player'
+import type { Player, PlayerDetail, Position, PlayerLevel } from '@/types/player'
 import { POSITION_ABBR, POSITION_LABEL, LEVEL_LABEL } from '@/types/player'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -43,16 +36,15 @@ interface Props {
 
 const POSITIONS = Object.keys(POSITION_ABBR) as Position[]
 const LEVELS = Object.keys(LEVEL_LABEL) as PlayerLevel[]
-const FEET: Foot[] = ['LEFT', 'RIGHT']
-
-const FOOT_LABEL: Record<Foot, string> = { LEFT: '왼발', RIGHT: '오른발' }
+const FEET = ['LEFT', 'RIGHT', 'BOTH'] as const
+const FOOT_LABEL: Record<string, string> = { LEFT: '왼발', RIGHT: '오른발', BOTH: '양발' }
 
 export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props) {
   const isEdit = !!player
 
   const [name, setName] = useState('')
   const [dob, setDob] = useState('')
-  const [foot, setFoot] = useState<Foot>('RIGHT')
+  const [foot, setFoot] = useState<string>('RIGHT')
   const [height, setHeight] = useState('')
   const [weight, setWeight] = useState('')
   const [position, setPosition] = useState<Position>('STRIKER')
@@ -98,29 +90,21 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
     }
     setSaving(true)
     try {
+      const payload = {
+        playerName: name.trim(),
+        dateOfBirth: dob,
+        preferredFoot: foot as 'LEFT' | 'RIGHT',
+        height: Number(height),
+        weight: Number(weight),
+        position,
+        level,
+        nationalityId: Number(nationalityId),
+      }
       if (isEdit && player) {
-        await playerApi.update(player.id, {
-          playerName: name.trim(),
-          dateOfBirth: dob,
-          preferredFoot: foot,
-          height: Number(height),
-          weight: Number(weight),
-          position,
-          level,
-          nationalityId: Number(nationalityId),
-        })
+        await playerApi.update(player.id, payload)
         toast.success('선수 정보가 수정됐습니다.')
       } else {
-        await playerApi.create({
-          playerName: name.trim(),
-          dateOfBirth: dob,
-          preferredFoot: foot,
-          height: Number(height),
-          weight: Number(weight),
-          position,
-          level,
-          nationalityId: Number(nationalityId),
-        })
+        await playerApi.create(payload)
         toast.success('선수가 등록됐습니다.')
       }
       onSaved()
@@ -132,13 +116,13 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? '선수 정보 수정' : '선수 등록'}</DialogTitle>
-        </DialogHeader>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-[480px] flex flex-col">
+        <SheetHeader>
+          <SheetTitle>{isEdit ? '선수 정보 수정' : '선수 등록'}</SheetTitle>
+        </SheetHeader>
 
-        <div className="space-y-4 py-2">
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
           {/* 이름 */}
           <div className="space-y-1.5">
             <Label htmlFor="playerName">이름 *</Label>
@@ -165,9 +149,9 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
             {/* 주발 */}
             <div className="space-y-1.5">
               <Label>주발 *</Label>
-              <Select value={foot} onValueChange={(v) => setFoot(v as Foot)}>
+              <Select value={foot} onValueChange={setFoot}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="선택" />
                 </SelectTrigger>
                 <SelectContent>
                   {FEET.map((f) => (
@@ -214,13 +198,12 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
               <Label>포지션 *</Label>
               <Select value={position} onValueChange={(v) => setPosition(v as Position)}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="선택" />
                 </SelectTrigger>
                 <SelectContent>
                   {POSITIONS.map((p) => (
                     <SelectItem key={p} value={p}>
-                      <span className="font-mono text-xs">{POSITION_ABBR[p]}</span>
-                      <span className="ml-2">{POSITION_LABEL[p]}</span>
+                      {POSITION_ABBR[p]} · {POSITION_LABEL[p]}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -232,7 +215,7 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
               <Label>레벨 *</Label>
               <Select value={level} onValueChange={(v) => setLevel(v as PlayerLevel)}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="선택" />
                 </SelectTrigger>
                 <SelectContent>
                   {LEVELS.map((l) => (
@@ -258,8 +241,7 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
               <SelectContent>
                 {countries.map((c) => (
                   <SelectItem key={c.id} value={String(c.id)}>
-                    <span className="font-mono text-xs text-muted-foreground">{c.code}</span>
-                    <span className="ml-2">{c.name}</span>
+                    {c.code} · {c.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -267,15 +249,16 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
           </div>
         </div>
 
-        <DialogFooter>
+        {/* Footer */}
+        <div className="border-t px-5 py-4 flex justify-end gap-2 shrink-0">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             취소
           </Button>
           <Button onClick={handleSave} disabled={saving}>
             {saving ? '저장 중...' : isEdit ? '수정' : '등록'}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </SheetContent>
+    </Sheet>
   )
 }

@@ -163,6 +163,14 @@ export interface JerseyNumber {
   teamId: number
 }
 
+export interface TeamJerseyEntry {
+  id: number
+  number: number
+  status: 'AVAILABLE' | 'OCCUPIED' | 'RETIRED' | 'RESERVED'
+  teamId: number
+  player?: { id: string; playerName: string; position: string } | null
+}
+
 export interface MarketValueEntry {
   id: number
   value: number

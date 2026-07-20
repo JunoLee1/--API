@@ -7,6 +7,7 @@ import type {
   UpdatePlayerPayload,
   PlayerStatus,
   JerseyNumber,
+  TeamJerseyEntry,
   MarketValueEntry,
   MatchStat,
   TrainingResultEntry,
@@ -57,6 +58,9 @@ export const playerApi = {
 
   getJerseyNumbers: (id: string) =>
     api.get<JerseyNumber[]>(`/players/${id}/jersey-numbers`),
+
+  getTeamJerseys: (teamId: number) =>
+    api.get<TeamJerseyEntry[]>(`/players/jersey/teams/${teamId}`),
 
   assignJersey: (id: string, body: { number: number; teamId: number }) =>
     api.post<JerseyNumber>(`/players/${id}/jersey-numbers/assign`, body),
