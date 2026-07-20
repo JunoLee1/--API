@@ -6,6 +6,11 @@ import type {
   CreatePlayerPayload,
   UpdatePlayerPayload,
   PlayerStatus,
+  JerseyNumber,
+  MarketValueEntry,
+  MatchStat,
+  TrainingResultEntry,
+  RadarData,
 } from '@/types/player'
 
 function buildQuery(q: PlayerListQuery): string {
@@ -35,4 +40,33 @@ export const playerApi = {
 
   delete: (id: string) =>
     api.delete<void>(`/players/${id}`),
+
+  getMatchStats: (id: string, seasonId?: number) =>
+    api.get<MatchStat[]>(`/players/${id}/match-stats${seasonId ? `?seasonId=${seasonId}` : ''}`),
+
+  getTrainingResults: (id: string, params?: { from?: string; to?: string }) => {
+    const qs = new URLSearchParams()
+    if (params?.from) qs.set('from', params.from)
+    if (params?.to) qs.set('to', params.to)
+    const q = qs.toString()
+    return api.get<TrainingResultEntry[]>(`/players/${id}/training-results${q ? `?${q}` : ''}`)
+  },
+
+  getRadar: (id: string) =>
+    api.get<RadarData>(`/players/${id}/radar`),
+
+  getJerseyNumbers: (id: string) =>
+    api.get<JerseyNumber[]>(`/players/${id}/jersey-numbers`),
+
+  assignJersey: (id: string, body: { number: number; teamId: number }) =>
+    api.post<JerseyNumber>(`/players/${id}/jersey-numbers/assign`, body),
+
+  releaseJersey: (id: string, body: { teamId: number; number: number }) =>
+    api.post<JerseyNumber>(`/players/${id}/jersey-numbers/release`, body),
+
+  getMarketValueHistory: (id: string) =>
+    api.get<MarketValueEntry[]>(`/players/${id}/market-value/history`),
+
+  updateMarketValue: (id: string, value: number) =>
+    api.patch<{ playerId: string; currentMarketValue: number }>(`/players/${id}/market-value`, { value }),
 }
