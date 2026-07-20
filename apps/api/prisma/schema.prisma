@@ -255,6 +255,10 @@ enum NotificationType {
   CALLUP_REJECTED
   LOAN_OUT_EXPIRED
   TACTICAL_ANALYSIS_CONFIRM_REQUESTED
+  JERSEY_NUMBER_CONFLICT
+  MATCH_DAY_REMINDER
+  ATTENDANCE_UNAUTHORIZED
+  ATTENDANCE_PENALTY_PLAYER
 }
 
 enum TacticalStatus {
@@ -451,6 +455,7 @@ model User {
   trainerSignedReports     InjuryReport[]          @relation("InjuryReportTrainerSigner")
   medicalSignedReports     InjuryReport[]          @relation("InjuryReportMedicalSigner")
   assessedInjuries         InjuryAssessment[]
+  squadConfirmations       MatchSquad[]       @relation("SquadConfirmations")
   team                     Team?                   @relation(fields: [teamId], references: [id])
   createdHiringRounds      CoachHiringRound[]      @relation("HiringRoundCreatedBy")
   coachProfile             Coach?                  @relation("CoachUser")
@@ -524,6 +529,7 @@ model Player {
   currentMarketValue     Float?
   jerseyNumbers          JerseyNumber[]
   marketValueHistory     MarketValueHistory[]
+  matchSquads            MatchSquad[]
 }
 
 model Contract {
@@ -751,6 +757,7 @@ model Match {
   playerMatchStats PlayerMatchStats[]
   teamMatchStats   TeamMatchStats?
   tacticalAnalyses TacticalAnalysis[]
+  squadPlayers     MatchSquad[]
 }
 
 model PlayerMatchStats {
@@ -1424,4 +1431,21 @@ model MarketValueHistory {
   recordedBy User?  @relation(fields: [recordedById], references: [id])
 
   @@index([playerId, recordedAt])
+}
+
+model MatchSquad {
+  id            Int       @id @default(autoincrement())
+  matchId       Int
+  playerId      String
+  isConfirmed   Boolean   @default(false)
+  confirmedAt   DateTime?
+  confirmedById Int?
+  notifiedAt    DateTime?
+
+  match       Match   @relation(fields: [matchId], references: [id])
+  player      Player  @relation(fields: [playerId], references: [id])
+  confirmedBy User?   @relation("SquadConfirmations", fields: [confirmedById], references: [id])
+
+  @@unique([matchId, playerId])
+  @@index([matchId])
 }
