@@ -39,6 +39,24 @@ const LEVELS = Object.keys(LEVEL_LABEL) as PlayerLevel[]
 const FEET = ['LEFT', 'RIGHT', 'BOTH'] as const
 const FOOT_LABEL: Record<string, string> = { LEFT: '왼발', RIGHT: '오른발', BOTH: '양발' }
 
+function calcAge(dob: string): number | null {
+  if (!dob) return null
+  const today = new Date()
+  const birth = new Date(dob)
+  let age = today.getFullYear() - birth.getFullYear()
+  const m = today.getMonth() - birth.getMonth()
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--
+  return age
+}
+
+function inferLevel(dob: string): PlayerLevel | null {
+  const age = calcAge(dob)
+  if (age === null) return null
+  if (age >= 8 && age <= 18) return 'YOUTH'
+  if (age > 18) return null
+  return null
+}
+
 export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props) {
   const isEdit = !!player
 
@@ -83,9 +101,29 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
     }
   }, [open, player])
 
+  const handleDobChange = (value: string) => {
+    setDob(value)
+    const suggested = inferLevel(value)
+    if (suggested) {
+      setLevel(suggested)
+    } else if (level === 'YOUTH') {
+      const age = calcAge(value)
+      if (age !== null && age > 18) setLevel('ROOKIE')
+    }
+  }
+
   const handleSave = async () => {
     if (!name.trim() || !dob || !height || !weight || !nationalityId) {
       toast.error('필수 항목을 모두 입력해주세요.')
+      return
+    }
+    const age = calcAge(dob)
+    if (level === 'YOUTH' && (age === null || age < 8 || age > 18)) {
+      toast.error('유스 선수는 만 8세~18세이어야 합니다.')
+      return
+    }
+    if (age !== null && age >= 8 && age <= 18 && level !== 'YOUTH') {
+      toast.error('만 8~18세 선수는 레벨을 유스로 설정해야 합니다.')
       return
     }
     setSaving(true)
@@ -142,8 +180,14 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
                 id="dob"
                 type="date"
                 value={dob}
-                onChange={(e) => setDob(e.target.value)}
+                onChange={(e) => handleDobChange(e.target.value)}
               />
+              {dob && (() => {
+                const age = calcAge(dob)
+                return age !== null ? (
+                  <p className="text-xs text-muted-foreground">만 {age}세</p>
+                ) : null
+              })()}
             </div>
 
             {/* 주발 */}
@@ -220,7 +264,7 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
                 <SelectContent>
                   {LEVELS.map((l) => (
                     <SelectItem key={l} value={l}>
-                      {LEVEL_LABEL[l]}
+                      {LEVEL_LABEL[l]}{l === 'YOUTH' ? ' (만 8–18세)' : ''}
                     </SelectItem>
                   ))}
                 </SelectContent>
