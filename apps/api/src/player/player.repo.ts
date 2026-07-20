@@ -13,6 +13,9 @@ const PLAYER_SELECT = {
   level: true,
   status: true,
   externalId: true,
+  playStyle: true,
+  currentMarketValue: true,
+  teamId: true,
   nationality: { select: { id: true, name: true, code: true } },
 } as const;
 

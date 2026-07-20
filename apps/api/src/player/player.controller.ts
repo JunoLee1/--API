@@ -28,6 +28,10 @@ export class PlayerController {
   getPlayerById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const player = await this.service.getPlayerById(String(req.params["id"]));
+      if (req.user!.role === "PLAYER") {
+        const { currentMarketValue, ...safePlayer } = player as any;
+        return res.status(200).json(safePlayer);
+      }
       res.status(200).json(player);
     } catch (err) {
       next(err);
