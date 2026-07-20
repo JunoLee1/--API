@@ -79,4 +79,31 @@ export class MatchController {
       next(err);
     }
   };
+
+  getShotEvents = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.status(200).json(await this.service.getShotEvents(Number(req.params["id"])));
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  createShotEvent = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!STATS_ROLES.includes(req.user!.role as StatsRole)) throw new AppError(403, "FORBIDDEN");
+      res.status(201).json(await this.service.createShotEvent(Number(req.params["id"]), req.body));
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  deleteShotEvent = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!STATS_ROLES.includes(req.user!.role as StatsRole)) throw new AppError(403, "FORBIDDEN");
+      await this.service.deleteShotEvent(Number(req.params["id"]), Number(req.params["eventId"]));
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  };
 }

@@ -42,4 +42,9 @@ router.post("/:id/squad", auth, squadController.addPlayer);
 router.delete("/:id/squad", auth, squadController.removePlayer);
 router.post("/:id/squad/confirm", auth, squadController.confirmSquad);
 
+// 슈팅 이벤트
+router.get("/:id/shots",             auth, controller.getShotEvents);
+router.post("/:id/shots",            auth, controller.createShotEvent);
+router.delete("/:id/shots/:eventId", auth, controller.deleteShotEvent);
+
 export default router;
