@@ -53,6 +53,17 @@ export class PlayerRepository {
           orderBy: { startDate: "desc" },
           take: 1,
         },
+        transfers: {
+          select: {
+            id: true,
+            type: true,
+            date: true,
+            fee: true,
+            fromClub: true,
+            toClub: true,
+          },
+          orderBy: { date: "desc" },
+        },
       },
     });
   }

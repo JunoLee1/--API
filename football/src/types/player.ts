@@ -47,6 +47,17 @@ export interface Player {
   nationality: PlayerNationality
 }
 
+export type TransferType = 'PERMANENT' | 'LOAN_OUT' | 'LOAN_IN' | 'FREE' | 'RELEASE'
+
+export interface PlayerTransfer {
+  id: number
+  type: TransferType
+  date: string
+  fee: number | null
+  fromClub: string | null
+  toClub: string | null
+}
+
 export interface PlayerDetail extends Player {
   userId: number | null
   agentId: number | null
@@ -54,6 +65,7 @@ export interface PlayerDetail extends Player {
   playStyle: string | null
   currentMarketValue: number | null
   contracts: PlayerContract[]
+  transfers: PlayerTransfer[]
 }
 
 export interface PlayerListQuery {

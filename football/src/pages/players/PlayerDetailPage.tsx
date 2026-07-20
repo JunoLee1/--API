@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { playerApi } from '@/services/player.service'
-import type { PlayerDetail, PlayerStatus, PositionZone } from '@/types/player'
+import type { PlayerDetail, PlayerStatus, PositionZone, TransferType } from '@/types/player'
 import {
   POSITION_ABBR,
   POSITION_LABEL,
@@ -60,6 +60,14 @@ function formatSalary(salary: number): string {
   if (salary >= 100_000_000) return `${(salary / 100_000_000).toFixed(1)}억원`
   if (salary >= 10_000) return `${(salary / 10_000).toFixed(0)}만원`
   return `${salary.toLocaleString()}원`
+}
+
+const TRANSFER_TYPE_LABEL: Record<TransferType, string> = {
+  PERMANENT: '완전 이적',
+  LOAN_OUT: '임대 출신',
+  LOAN_IN: '임대 영입',
+  FREE: '자유 계약',
+  RELEASE: '방출',
 }
 
 interface StatRowProps {
@@ -277,6 +285,41 @@ export function PlayerDetailPage() {
                   )}
                 </div>
               </div>
+
+              {/* 이적 이력 */}
+              {player.transfers.length > 0 && (
+                <div className="rounded-lg border bg-card p-5">
+                  <h3 className="text-sm font-semibold text-foreground mb-1">이적 이력</h3>
+                  <Separator className="mb-1" />
+                  <div className="space-y-0">
+                    {player.transfers.map((t, i) => (
+                      <div key={t.id}>
+                        {i > 0 && <Separator />}
+                        <div className="flex items-center justify-between py-2.5 gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-xs bg-muted px-1.5 py-0.5 rounded shrink-0">
+                              {TRANSFER_TYPE_LABEL[t.type]}
+                            </span>
+                            <span className="text-sm text-muted-foreground truncate">
+                              {t.fromClub && t.toClub
+                                ? `${t.fromClub} → ${t.toClub}`
+                                : t.fromClub ?? t.toClub ?? '—'}
+                            </span>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <div className="text-sm font-medium">
+                              {t.fee != null ? formatSalary(t.fee) : '비공개'}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {formatDate(t.date)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </TabsContent>
           <TabsContent value="pdp" className="flex-1 overflow-auto mt-0">

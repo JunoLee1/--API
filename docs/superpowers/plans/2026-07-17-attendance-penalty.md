@@ -42,7 +42,7 @@
 - Modify: `apps/api/src/notification/notification.repo.ts`
 - Modify: `apps/api/src/notification/notification.service.ts`
 
-- [ ] **Step 1: notification.repo.ts — `createForHeadCoach` 추가**
+- [x] **Step 1: notification.repo.ts — `createForHeadCoach` 추가**
 
 `createForTD` 메서드 바로 뒤에 삽입:
 
@@ -61,7 +61,7 @@ createForHeadCoach(type: string, title: string, body: string, entityId?: number)
 }
 ```
 
-- [ ] **Step 2: notification.service.ts — `notifyAttendancePenalty` 추가**
+- [x] **Step 2: notification.service.ts — `notifyAttendancePenalty` 추가**
 
 `notifyCoachArchived` 메서드 바로 뒤에 삽입:
 
@@ -76,7 +76,7 @@ async notifyAttendancePenalty(playerName: string, effectiveAbsences: number) {
 }
 ```
 
-- [ ] **Step 3: tsc 체크**
+- [x] **Step 3: tsc 체크**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | grep -v "country.repo\|ErrorHandler" | head -10
@@ -84,7 +84,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | grep -v "countr
 
 Expected: 0 errors
 
-- [ ] **Step 4: commit**
+- [x] **Step 4: commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -99,7 +99,7 @@ git commit -m "feat(attendance): add createForHeadCoach and notifyAttendancePena
 **Files:**
 - Modify: `apps/api/src/training/training.repo.ts`
 
-- [ ] **Step 1: `countUnexcusedAttendance` 추가**
+- [x] **Step 1: `countUnexcusedAttendance` 추가**
 
 `updateResult` 메서드 바로 뒤에 삽입:
 
@@ -120,7 +120,7 @@ findPlayerNameById(playerId: string) {
 }
 ```
 
-- [ ] **Step 2: tsc 체크**
+- [x] **Step 2: tsc 체크**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | grep -v "country.repo\|ErrorHandler" | head -10
@@ -128,7 +128,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | grep -v "countr
 
 Expected: 0 errors
 
-- [ ] **Step 3: commit**
+- [x] **Step 3: commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -143,7 +143,7 @@ git commit -m "feat(attendance): add countUnexcusedAttendance and findPlayerName
 **Files:**
 - Modify: `apps/api/src/training/training.service.ts`
 
-- [ ] **Step 1: 파일 상단에 import 추가 + 순수 함수 export**
+- [x] **Step 1: 파일 상단에 import 추가 + 순수 함수 export**
 
 기존 import 블록 뒤에 추가:
 
@@ -163,7 +163,7 @@ export function shouldTriggerPenalty(effectiveAbsences: number): boolean {
 }
 ```
 
-- [ ] **Step 2: `upsertResult` 메서드 교체**
+- [x] **Step 2: `upsertResult` 메서드 교체**
 
 기존 `upsertResult` 전체를 아래로 교체:
 
@@ -191,7 +191,7 @@ async upsertResult(sessionId: number, dto: UpsertResultDto) {
 }
 ```
 
-- [ ] **Step 3: tsc 체크**
+- [x] **Step 3: tsc 체크**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | grep -v "country.repo\|ErrorHandler" | head -10
@@ -199,7 +199,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | grep -v "countr
 
 Expected: 0 errors
 
-- [ ] **Step 4: commit**
+- [x] **Step 4: commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -214,7 +214,7 @@ git commit -m "feat(attendance): add penalty check to upsertResult"
 **Files:**
 - Create: `apps/api/__test__/training/attendance.penalty.test.ts`
 
-- [ ] **Step 1: 테스트 파일 작성**
+- [x] **Step 1: 테스트 파일 작성**
 
 ```typescript
 import 'dotenv/config';
@@ -317,7 +317,7 @@ describe('TrainingRepository.countUnexcusedAttendance', () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행**
+- [x] **Step 2: 테스트 실행**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx jest __test__/training/attendance.penalty.test.ts --no-coverage 2>&1 | tail -20
@@ -325,7 +325,7 @@ cd /Users/juno/work/football/apps/api && npx jest __test__/training/attendance.p
 
 Expected: 10/10 PASS
 
-- [ ] **Step 3: commit**
+- [x] **Step 3: commit**
 
 ```bash
 cd /Users/juno/work/football
