@@ -57,3 +57,46 @@ describe("JerseyService - retire", () => {
       .rejects.toMatchObject({ statusCode: 409, code: "JERSEY_MUST_BE_AVAILABLE_TO_RETIRE" });
   });
 });
+
+const mockNotifRepo = {
+  createForUser: jest.fn<() => Promise<any>>().mockResolvedValue({}),
+} as any;
+
+describe("JerseyService - assignToPlayer with notification", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test("OCCUPIED 충돌 시 선수에게 알림 발송", async () => {
+    mockRepo.findByNumberAndTeam.mockResolvedValue({
+      id: 1, number: 7, status: "OCCUPIED", playerId: "existing",
+    });
+    mockRepo.findPlayerUserId = jest.fn<() => Promise<any>>().mockResolvedValue({ userId: 99 });
+
+    const serviceWithNotif = new JerseyService(mockRepo, mockNotifRepo);
+
+    await expect(serviceWithNotif.assignToPlayer(1, { number: 7, playerId: "p2" }))
+      .rejects.toMatchObject({ code: "JERSEY_NUMBER_OCCUPIED" });
+
+    // fire-and-forget — wait a tick
+    await new Promise((r) => setTimeout(r, 10));
+    expect(mockNotifRepo.createForUser).toHaveBeenCalledWith(
+      99, "JERSEY_NUMBER_CONFLICT",
+      "등번호 7번 선택 불가",
+      expect.stringContaining("이미 다른 선수"),
+    );
+  });
+
+  test("userId 없는 선수는 알림 미발송", async () => {
+    mockRepo.findByNumberAndTeam.mockResolvedValue({
+      id: 1, number: 7, status: "OCCUPIED",
+    });
+    mockRepo.findPlayerUserId = jest.fn<() => Promise<any>>().mockResolvedValue({ userId: null });
+
+    const serviceWithNotif = new JerseyService(mockRepo, mockNotifRepo);
+
+    await expect(serviceWithNotif.assignToPlayer(1, { number: 7, playerId: "p2" }))
+      .rejects.toMatchObject({ code: "JERSEY_NUMBER_OCCUPIED" });
+
+    await new Promise((r) => setTimeout(r, 10));
+    expect(mockNotifRepo.createForUser).not.toHaveBeenCalled();
+  });
+});

@@ -8,6 +8,7 @@ import { JerseyService } from "./jersey.service";
 import { JerseyController } from "./jersey.controller";
 import { JerseyRepository } from "./jersey.repo";
 import { MarketValueRepository } from "./market-value.repo";
+import { NotificationRepository } from "../notification/notification.repo";
 
 const router = Router();
 const repo = new PlayerRepository(getPrisma());
@@ -15,7 +16,8 @@ const mvRepo = new MarketValueRepository(getPrisma());
 const service = new PlayerService(repo, mvRepo);
 const controller = new PlayerController(service);
 const jerseyRepo = new JerseyRepository(getPrisma());
-const jerseyService = new JerseyService(jerseyRepo);
+const notifRepo = new NotificationRepository(getPrisma());
+const jerseyService = new JerseyService(jerseyRepo, notifRepo);
 const jerseyController = new JerseyController(jerseyService);
 
 const auth = passport.authenticate("accessToken", { session: false });

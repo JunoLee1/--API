@@ -46,4 +46,11 @@ export class JerseyRepository {
       },
     });
   }
+
+  findPlayerUserId(playerId: string) {
+    return this.prisma.player.findUnique({
+      where: { id: playerId },
+      select: { userId: true },
+    });
+  }
 }
