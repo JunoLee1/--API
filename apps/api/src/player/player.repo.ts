@@ -103,4 +103,44 @@ export class PlayerRepository {
   async delete(id: string): Promise<void> {
     await this.prisma.player.delete({ where: { id } });
   }
+
+  getMatchStats(playerId: string, seasonId?: number) {
+    return this.prisma.playerMatchStats.findMany({
+      where: {
+        playerId,
+        ...(seasonId && { match: { seasonId } }),
+      },
+      include: {
+        match: {
+          select: { id: true, date: true, homeTeamName: true, awayTeamName: true, seasonId: true },
+        },
+      },
+      orderBy: { match: { date: "desc" } },
+    });
+  }
+
+  getTrainingResults(playerId: string, from?: string, to?: string) {
+    return this.prisma.trainingResult.findMany({
+      where: {
+        playerId,
+        ...(from || to
+          ? {
+              session: {
+                date: {
+                  ...(from ? { gte: new Date(from) } : {}),
+                  ...(to ? { lte: new Date(to + "T23:59:59Z") } : {}),
+                },
+              },
+            }
+          : {}),
+      },
+      include: {
+        session: {
+          select: { id: true, date: true, sessionType: true, goal: true },
+        },
+      },
+      orderBy: { session: { date: "desc" } },
+      take: 50,
+    });
+  }
 }

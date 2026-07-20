@@ -98,4 +98,26 @@ export class PlayerController {
       res.json(result);
     } catch (err) { next(err); }
   };
+
+  getMatchStats = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const seasonId = req.query["seasonId"] ? Number(req.query["seasonId"]) : undefined;
+      const stats = await this.service.getMatchStats(String(req.params["id"]), seasonId);
+      res.json(stats);
+    } catch (err) { next(err); }
+  };
+
+  getTrainingResults = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { from, to } = req.query as Record<string, string | undefined>;
+      const results = await this.service.getTrainingResults(
+        String(req.params["id"]),
+        String(req.user!.id),
+        req.user!.role,
+        from,
+        to,
+      );
+      res.json(results);
+    } catch (err) { next(err); }
+  };
 }

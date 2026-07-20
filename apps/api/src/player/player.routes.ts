@@ -59,4 +59,10 @@ router.get("/:id/market-value/history", auth, controller.getMarketValueHistory);
 // 시장 가치 수동 업데이트 (GM, TD, ADMIN)
 router.patch("/:id/market-value", auth, controller.updateMarketValue);
 
+// 경기 스탯 조회 (?seasonId=)
+router.get("/:id/match-stats", auth, controller.getMatchStats);
+
+// 훈련 결과 조회 (?from=&to=)
+router.get("/:id/training-results", auth, controller.getTrainingResults);
+
 export default router;

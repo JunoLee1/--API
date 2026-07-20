@@ -53,4 +53,19 @@ export class PlayerService {
     await this.mvRepo.updateCurrentValue(playerId, dto.value, recordedById);
     return { playerId, currentMarketValue: dto.value };
   }
+
+  async getMatchStats(playerId: string, seasonId?: number) {
+    const player = await this.repo.findById(playerId);
+    if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
+    return this.repo.getMatchStats(playerId, seasonId);
+  }
+
+  async getTrainingResults(playerId: string, requesterId: string, requesterRole: string, from?: string, to?: string) {
+    const player = await this.repo.findById(playerId);
+    if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
+    if (requesterRole === "PLAYER" && String(player.userId) !== requesterId) {
+      throw new AppError(403, "FORBIDDEN");
+    }
+    return this.repo.getTrainingResults(playerId, from, to);
+  }
 }
