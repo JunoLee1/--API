@@ -10,7 +10,7 @@ const fwdStats = {
 
 describe("computeRadarScores - FWD", () => {
   test("공격수 6축 점수 반환 (0-100 범위)", () => {
-    const scores = computeRadarScores("striker", fwdStats as any, null);
+    const scores = computeRadarScores("STRIKER", fwdStats as any, null);
     expect(Object.keys(scores)).toHaveLength(6);
     Object.values(scores).forEach((v) => {
       expect(v).toBeGreaterThanOrEqual(0);
@@ -34,8 +34,8 @@ describe("computeTags", () => {
 });
 
 describe("POSITION_GROUP", () => {
-  test("striker → FWD", () => expect(POSITION_GROUP["striker"]).toBe("FWD"));
-  test("centralDefensiveMiddleFielder → MID", () => expect(POSITION_GROUP["centralDefensiveMiddleFielder"]).toBe("MID"));
-  test("centerBack → DEF", () => expect(POSITION_GROUP["centerBack"]).toBe("DEF"));
-  test("goalKeeper → GK", () => expect(POSITION_GROUP["goalKeeper"]).toBe("GK"));
+  test("STRIKER → FWD", () => expect(POSITION_GROUP["STRIKER"]).toBe("FWD"));
+  test("CENTRAL_DEFENSIVE_MIDFIELDER → MID", () => expect(POSITION_GROUP["CENTRAL_DEFENSIVE_MIDFIELDER"]).toBe("MID"));
+  test("CENTER_BACK → DEF", () => expect(POSITION_GROUP["CENTER_BACK"]).toBe("DEF"));
+  test("GOALKEEPER → GK", () => expect(POSITION_GROUP["GOALKEEPER"]).toBe("GK"));
 });

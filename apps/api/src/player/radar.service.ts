@@ -1,22 +1,21 @@
 export type PositionGroup = "FWD" | "MID" | "DEF" | "GK";
 
 export const POSITION_GROUP: Record<string, PositionGroup> = {
-  striker: "FWD",
-  shadowStriker: "FWD",
-  winger: "FWD",
-  centralAttackMiddleFielder: "FWD",
-  rightAttackMiddleFielder: "FWD",
-  leftAttackMiddleFielder: "FWD",
-  centralDefensiveMiddleFielder: "MID",
-  leftDefensiveMiddleFielder: "MID",
-  rightDefensiveMiddleFielder: "MID",
-  centralMiddleFielder: "MID",
-  centerBack: "DEF",
-  leftWingBack: "DEF",
-  rightWingBack: "DEF",
-  leftFullBack: "DEF",
-  rightFullBack: "DEF",
-  goalKeeper: "GK",
+  STRIKER: "FWD",
+  SHADOW_STRIKER: "FWD",
+  WINGER: "FWD",
+  CENTRAL_ATTACK_MIDFIELDER: "FWD",
+  RIGHT_ATTACK_MIDFIELDER: "FWD",
+  LEFT_ATTACK_MIDFIELDER: "FWD",
+  CENTRAL_DEFENSIVE_MIDFIELDER: "MID",
+  LEFT_DEFENSIVE_MIDFIELDER: "MID",
+  RIGHT_DEFENSIVE_MIDFIELDER: "MID",
+  CENTER_BACK: "DEF",
+  LEFT_WING_BACK: "DEF",
+  RIGHT_WING_BACK: "DEF",
+  LEFT_FULL_BACK: "DEF",
+  RIGHT_FULL_BACK: "DEF",
+  GOALKEEPER: "GK",
 };
 
 function clamp(v: number): number {
