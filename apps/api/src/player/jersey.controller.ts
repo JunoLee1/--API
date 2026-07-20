@@ -15,6 +15,15 @@ export class JerseyController {
     } catch (err) { next(err); }
   };
 
+  listByTeam = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const teamId = Number(req.params["teamId"]);
+      if (!teamId) throw new AppError(400, "TEAM_ID_REQUIRED");
+      const result = await this.service.listByTeam(teamId);
+      res.json(result);
+    } catch (err) { next(err); }
+  };
+
   assign = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!ASSIGN_ROLES.includes(req.user!.role as any)) throw new AppError(403, "FORBIDDEN");

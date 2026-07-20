@@ -40,6 +40,9 @@ router.patch("/:id/status", auth, controller.updatePlayerStatus);
 // 선수 삭제 (ADMIN)
 router.delete("/:id", auth, controller.deletePlayer);
 
+// 팀 등번호 현황 조회 (팀 관리 화면용)
+router.get("/jersey/teams/:teamId", auth, jerseyController.listByTeam);
+
 // 선수의 등번호 조회
 router.get("/:id/jersey-numbers", auth, jerseyController.listByPlayer);
 

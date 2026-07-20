@@ -46,6 +46,32 @@ async function main() {
     create: { name: "브라질", code: "BR" },
   });
 
+  // 추가 국가
+  await prisma.country.createMany({
+    data: [
+      { name: "일본",         code: "JP" },
+      { name: "중국",         code: "CN" },
+      { name: "미국",         code: "US" },
+      { name: "독일",         code: "DE" },
+      { name: "프랑스",       code: "FR" },
+      { name: "스페인",       code: "ES" },
+      { name: "이탈리아",     code: "IT" },
+      { name: "잉글랜드",     code: "GB" },
+      { name: "포르투갈",     code: "PT" },
+      { name: "네덜란드",     code: "NL" },
+      { name: "아르헨티나",   code: "AR" },
+      { name: "우루과이",     code: "UY" },
+      { name: "콜롬비아",     code: "CO" },
+      { name: "나이지리아",   code: "NG" },
+      { name: "세네갈",       code: "SN" },
+      { name: "가나",         code: "GH" },
+      { name: "코트디부아르", code: "CI" },
+      { name: "호주",         code: "AU" },
+      { name: "사우디아라비아", code: "SA" },
+    ],
+    skipDuplicates: true,
+  });
+
   // ── Users ─────────────────────────────────────────────
   const adminPhone    = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0001") });
   const coachPhone    = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0002") });
@@ -1174,6 +1200,21 @@ async function main() {
       opponentAnalysis: "인천은 빌드업 회피, 롱볼 의존. 세컨볼 경합 중요.",
       createdById: coach.id,
     },
+  });
+
+  // ── Jersey Numbers ───────────────────────────────────
+  await prisma.jerseyNumber.createMany({
+    data: [
+      { number: 9,  teamId: firstTeam.id, playerId: p1.id, status: "OCCUPIED" },
+      { number: 10, teamId: firstTeam.id, playerId: p2.id, status: "OCCUPIED" },
+      { number: 11, teamId: firstTeam.id, playerId: p3.id, status: "OCCUPIED" },
+      { number: 1,  teamId: firstTeam.id, playerId: p4.id, status: "OCCUPIED" },
+      { number: 5,  teamId: firstTeam.id, playerId: p5.id, status: "OCCUPIED" },
+      { number: 4,  teamId: firstTeam.id, playerId: p6.id, status: "OCCUPIED" },
+      { number: 3,  teamId: firstTeam.id, playerId: p7.id, status: "OCCUPIED" },
+      { number: 7,  teamId: firstTeam.id, status: "RESERVED" },
+    ],
+    skipDuplicates: true,
   });
 
   console.log("✅ Seed complete");
