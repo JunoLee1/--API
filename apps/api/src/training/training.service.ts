@@ -75,6 +75,20 @@ export class TrainingService {
     if (dto.attendance === "ABSENT_UNAUTHORIZED" || dto.attendance === "LATE_UNAUTHORIZED") {
       const { absences, lateCount } = await this.repo.countUnexcusedAttendance(dto.playerId);
       const effective = calcEffectiveAbsences(absences, lateCount);
+      const type = dto.attendance === "LATE_UNAUTHORIZED" ? "LATE" : "ABSENT";
+
+      // notify player (fire-and-forget)
+      void this.repo
+        .findPlayerUserId(dto.playerId)
+        .then(async (p) => {
+          if (!p?.userId) return;
+          await notificationService.notifyAttendanceUnauthorized(p.userId, type, new Date(), lateCount, effective);
+          if (shouldTriggerPenalty(effective)) {
+            await notificationService.notifyAttendancePenaltyPlayer(p.userId, effective);
+          }
+        })
+        .catch(console.error);
+
       if (shouldTriggerPenalty(effective)) {
         const player = await this.repo.findPlayerNameById(dto.playerId);
         if (player) {

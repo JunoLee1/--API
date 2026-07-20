@@ -198,4 +198,11 @@ export class TrainingRepository {
       data: { attendance: attendance as any },
     });
   }
+
+  findPlayerUserId(playerId: string) {
+    return this.prisma.player.findUnique({
+      where: { id: playerId },
+      select: { userId: true },
+    });
+  }
 }
