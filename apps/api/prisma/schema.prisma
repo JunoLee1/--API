@@ -530,6 +530,8 @@ model Player {
   jerseyNumbers          JerseyNumber[]
   marketValueHistory     MarketValueHistory[]
   matchSquads            MatchSquad[]
+  shotsAsShooter         ShotEvent[] @relation("ShotShooter")
+  shotsAsAssister        ShotEvent[] @relation("ShotAssister")
 }
 
 model Contract {
@@ -758,6 +760,7 @@ model Match {
   teamMatchStats   TeamMatchStats?
   tacticalAnalyses TacticalAnalysis[]
   squadPlayers     MatchSquad[]
+  shotEvents       ShotEvent[]
 }
 
 model PlayerMatchStats {
@@ -789,6 +792,28 @@ model PlayerMatchStats {
 
   match  Match  @relation(fields: [matchId], references: [id])
   player Player @relation(fields: [playerId], references: [id])
+}
+
+enum ShotResult {
+  GOAL
+  ON_TARGET
+  OFF_TARGET
+  BLOCKED
+}
+
+model ShotEvent {
+  id                       Int        @id @default(autoincrement())
+  matchId                  Int
+  shooterId                String
+  assisterId               String?
+  assisterPositionOverride String?
+  xG                       Float
+  result                   ShotResult
+  minute                   Int?
+
+  match    Match   @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  shooter  Player  @relation("ShotShooter",  fields: [shooterId],  references: [id])
+  assister Player? @relation("ShotAssister", fields: [assisterId], references: [id])
 }
 
 model TeamMatchStats {
