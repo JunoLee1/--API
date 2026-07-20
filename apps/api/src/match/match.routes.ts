@@ -3,6 +3,9 @@ import passport from "passport";
 import { MatchController } from "./match.controller";
 import { MatchService } from "./match.service";
 import { MatchRepository } from "./match.repo";
+import { MatchSquadRepository } from "./match.squad.repo";
+import { MatchSquadService } from "./match.squad.service";
+import { MatchSquadController } from "./match.squad.controller";
 import { getPrisma } from "../lib/prisma";
 
 const router = Router();
@@ -29,5 +32,14 @@ router.put("/:id/player-stats", auth, controller.upsertPlayerStats);
 
 // 팀 매치 스탯 입력/수정 (ADMIN, COACHING_STAFF)
 router.put("/:id/team-stats", auth, controller.upsertTeamStats);
+
+const squadRepo = new MatchSquadRepository(getPrisma());
+const squadService = new MatchSquadService(squadRepo);
+const squadController = new MatchSquadController(squadService);
+
+router.get("/:id/squad", auth, squadController.getSquad);
+router.post("/:id/squad", auth, squadController.addPlayer);
+router.delete("/:id/squad", auth, squadController.removePlayer);
+router.post("/:id/squad/confirm", auth, squadController.confirmSquad);
 
 export default router;
