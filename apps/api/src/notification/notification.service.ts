@@ -63,6 +63,59 @@ export class NotificationService {
     });
   }
 
+  async notifyJerseyConflict(
+    playerUserId: number,
+    number: number,
+    reason: "OCCUPIED" | "RETIRED" | "RESERVED",
+  ) {
+    const reasonText: Record<string, string> = {
+      OCCUPIED: "이미 다른 선수가 사용 중입니다",
+      RETIRED: "구단 영구결번입니다",
+      RESERVED: "계약 진행 중인 선수가 선점한 번호입니다",
+    };
+    const title = `등번호 ${number}번 선택 불가`;
+    const body = `요청하신 ${number}번은 ${reasonText[reason]}. 다른 번호를 선택해 주세요.`;
+    await this.repo.createForUser(playerUserId, "JERSEY_NUMBER_CONFLICT", title, body);
+  }
+
+  async notifyAttendanceUnauthorized(
+    playerUserId: number,
+    type: "LATE" | "ABSENT",
+    date: Date,
+    lateCount: number,
+    effectiveAbsences: number,
+  ) {
+    const typeText = type === "LATE" ? "무단 지각" : "무단 결근";
+    const dateStr = date.toLocaleDateString("ko-KR");
+    const title = `${typeText} 기록 안내`;
+    const body = `${dateStr} ${typeText}이 기록됐습니다. 현재 누적 무단 결근 환산 ${effectiveAbsences}회 (무단 지각 ${lateCount}회 포함).`;
+    await this.repo.createForUser(playerUserId, "ATTENDANCE_UNAUTHORIZED", title, body);
+  }
+
+  async notifyAttendancePenaltyPlayer(playerUserId: number, effectiveAbsences: number) {
+    const title = "출결 페널티 경고";
+    const body = `무단 결근 누적 환산 ${effectiveAbsences}회로 규정에 따른 페널티(벌금, 출전 정지 등)가 부여될 수 있습니다. 코치진에게 문의하세요.`;
+    await this.repo.createForUser(playerUserId, "ATTENDANCE_PENALTY_PLAYER", title, body);
+  }
+
+  async notifyMatchDayReminder(
+    playerUserId: number,
+    matchInfo: { date: Date; homeTeamName: string; awayTeamName: string; venue?: string | null },
+  ) {
+    const dateStr = matchInfo.date.toLocaleDateString("ko-KR", {
+      month: "long",
+      day: "numeric",
+      weekday: "short",
+    });
+    const timeStr = matchInfo.date.toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const title = "내일 경기 알림";
+    const body = `${dateStr} ${timeStr} | ${matchInfo.homeTeamName} vs ${matchInfo.awayTeamName}${matchInfo.venue ? ` @ ${matchInfo.venue}` : ""}. 경기 준비 바랍니다.`;
+    await this.repo.createForUser(playerUserId, "MATCH_DAY_REMINDER", title, body);
+  }
+
   async getPartnerAlerts() {
     const contracts = await this.repo.findExpiringContracts(30);
     return contracts.map((c) => {
