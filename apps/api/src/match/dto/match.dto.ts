@@ -61,3 +61,15 @@ export interface UpsertTeamStatsDto {
   interceptions: number;
   clearances: number;
 }
+
+export type ShotResultType = 'GOAL' | 'ON_TARGET' | 'OFF_TARGET' | 'BLOCKED';
+export const VALID_SHOT_RESULTS: ShotResultType[] = ['GOAL', 'ON_TARGET', 'OFF_TARGET', 'BLOCKED'];
+
+export interface CreateShotEventDto {
+  shooterId: string;
+  assisterId?: string;
+  assisterPositionOverride?: string;
+  xG: number;
+  result: ShotResultType;
+  minute?: number;
+}
