@@ -233,9 +233,9 @@ export class MatchRepository {
         await this.prisma.playerMatchStats.update({
           where: { id: stat.id },
           data: {
-            xG:        xgMap[playerId]       != null ? Math.round(xgMap[playerId] * 100) / 100       : null,
-            xA:        xaMap[playerId]       != null ? Math.round(xaMap[playerId] * 100) / 100       : null,
-            keyPasses: keyPassMap[playerId]  ?? null,
+            ...(xgMap[playerId]      != null ? { xG:        Math.round(xgMap[playerId] * 100) / 100 } : {}),
+            ...(xaMap[playerId]      != null ? { xA:        Math.round(xaMap[playerId] * 100) / 100 } : {}),
+            ...(keyPassMap[playerId] != null ? { keyPasses: keyPassMap[playerId] }                     : {}),
           },
         });
       }
