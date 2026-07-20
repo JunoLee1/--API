@@ -46,32 +46,6 @@ async function main() {
     create: { name: "브라질", code: "BR" },
   });
 
-  // 추가 국가
-  await prisma.country.createMany({
-    data: [
-      { name: "일본",         code: "JP" },
-      { name: "중국",         code: "CN" },
-      { name: "미국",         code: "US" },
-      { name: "독일",         code: "DE" },
-      { name: "프랑스",       code: "FR" },
-      { name: "스페인",       code: "ES" },
-      { name: "이탈리아",     code: "IT" },
-      { name: "잉글랜드",     code: "GB" },
-      { name: "포르투갈",     code: "PT" },
-      { name: "네덜란드",     code: "NL" },
-      { name: "아르헨티나",   code: "AR" },
-      { name: "우루과이",     code: "UY" },
-      { name: "콜롬비아",     code: "CO" },
-      { name: "나이지리아",   code: "NG" },
-      { name: "세네갈",       code: "SN" },
-      { name: "가나",         code: "GH" },
-      { name: "코트디부아르", code: "CI" },
-      { name: "호주",         code: "AU" },
-      { name: "사우디아라비아", code: "SA" },
-    ],
-    skipDuplicates: true,
-  });
-
   // ── Users ─────────────────────────────────────────────
   const adminPhone    = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0001") });
   const coachPhone    = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0002") });
