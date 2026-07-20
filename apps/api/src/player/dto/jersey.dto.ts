@@ -1,10 +1,12 @@
+import { JerseyNumberStatus } from "../../generated/client";
+
 export interface AssignJerseyDto {
   number: number;
   playerId?: string;
-  status?: "OCCUPIED" | "RESERVED" | "RETIRED" | "AVAILABLE";
+  status?: JerseyNumberStatus;
 }
 
 export interface UpdateJerseyStatusDto {
-  status: "AVAILABLE" | "OCCUPIED" | "RETIRED" | "RESERVED";
+  status: JerseyNumberStatus;
   playerId?: string | null;
 }

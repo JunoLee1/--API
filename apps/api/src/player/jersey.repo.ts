@@ -1,4 +1,4 @@
-import { PrismaClient } from "../generated/client";
+import { PrismaClient, JerseyNumberStatus } from "../generated/client";
 import { AssignJerseyDto, UpdateJerseyStatusDto } from "./dto/jersey.dto";
 
 export class JerseyRepository {
@@ -41,7 +41,7 @@ export class JerseyRepository {
     return this.prisma.jerseyNumber.update({
       where: { id },
       data: {
-        status: dto.status as any,
+        status: dto.status,
         ...(dto.playerId !== undefined && { playerId: dto.playerId }),
       },
     });
