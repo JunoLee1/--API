@@ -50,6 +50,33 @@ export interface TeamMatchStat {
   clearances: number
 }
 
+export type ShotResult = 'GOAL' | 'ON_TARGET' | 'OFF_TARGET' | 'BLOCKED'
+
+export const SHOT_RESULT_LABEL: Record<ShotResult, string> = {
+  GOAL:       '골',
+  ON_TARGET:  '유효슈팅',
+  OFF_TARGET: '빗나감',
+  BLOCKED:    '블록',
+}
+
+export const SHOT_RESULT_STYLE: Record<ShotResult, string> = {
+  GOAL:       'bg-emerald-100 text-emerald-800 border-emerald-200',
+  ON_TARGET:  'bg-blue-100 text-blue-800 border-blue-200',
+  OFF_TARGET: 'bg-slate-100 text-slate-600 border-slate-200',
+  BLOCKED:    'bg-orange-100 text-orange-800 border-orange-200',
+}
+
+export interface ShotEvent {
+  id:                       number
+  matchId:                  number
+  xG:                       number
+  result:                   ShotResult
+  minute:                   number | null
+  assisterPositionOverride: string | null
+  shooter:                  { id: string; playerName: string; position: string }
+  assister:                 { id: string; playerName: string; position: string } | null
+}
+
 export interface MatchDetail extends Match {
   playerMatchStats: PlayerMatchStat[]
   teamMatchStats: TeamMatchStat | null
