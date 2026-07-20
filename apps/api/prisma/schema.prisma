@@ -814,6 +814,8 @@ model ShotEvent {
   match    Match   @relation(fields: [matchId], references: [id], onDelete: Cascade)
   shooter  Player  @relation("ShotShooter",  fields: [shooterId],  references: [id])
   assister Player? @relation("ShotAssister", fields: [assisterId], references: [id])
+
+  @@index([matchId])
 }
 
 model TeamMatchStats {
