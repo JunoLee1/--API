@@ -10,8 +10,24 @@ const SUPPORTED_FORMATIONS = [
 export class MatchLineupService {
   constructor(private repo: MatchLineupRepository) {}
 
-  getLineup(matchId: number) {
-    return this.repo.findByMatch(matchId);
+  async getLineup(matchId: number) {
+    const lineup = await this.repo.findByMatch(matchId);
+    if (lineup) return lineup;
+
+    const squadMembers = await this.repo.findSquadPlayers(matchId);
+    if (squadMembers.length === 0) return null;
+
+    return {
+      matchId,
+      formation: "4-3-3" as const,
+      isConfirmed: false,
+      confirmedAt: null,
+      slots: squadMembers.map((sq, i) => ({
+        slotKey: `BENCH_${i}`,
+        isStarter: false,
+        player: sq.player,
+      })),
+    };
   }
 
   async saveLineup(matchId: number, dto: SaveLineupDto) {

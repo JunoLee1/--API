@@ -46,6 +46,13 @@ export class MatchLineupRepository {
     });
   }
 
+  findSquadPlayers(matchId: number) {
+    return this.prisma.matchSquad.findMany({
+      where: { matchId },
+      include: { player: { select: PLAYER_SELECT } },
+    });
+  }
+
   confirmLineup(matchId: number, confirmedById: number) {
     return this.prisma.matchLineup.update({
       where: { matchId },
