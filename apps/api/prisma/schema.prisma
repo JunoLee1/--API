@@ -255,6 +255,10 @@ enum NotificationType {
   CALLUP_REJECTED
   LOAN_OUT_EXPIRED
   TACTICAL_ANALYSIS_CONFIRM_REQUESTED
+  JERSEY_NUMBER_CONFLICT
+  MATCH_DAY_REMINDER
+  ATTENDANCE_UNAUTHORIZED
+  ATTENDANCE_PENALTY_PLAYER
 }
 
 enum TacticalStatus {
@@ -355,6 +359,18 @@ enum PlayerDevelopmentPlanStatus {
   REVIEWED
 }
 
+enum JerseyNumberStatus {
+  AVAILABLE
+  OCCUPIED
+  RETIRED
+  RESERVED
+}
+
+enum MarketValueSource {
+  MANUAL
+  EXTERNAL_API
+}
+
 // ─────────────────────────────────────────────
 // Models
 // ─────────────────────────────────────────────
@@ -376,6 +392,7 @@ model Team {
   coaches          Coach[]
   callupsFrom      PlayerCallup[]    @relation("CallupFromTeam")
   callupsTo        PlayerCallup[]    @relation("CallupToTeam")
+  jerseyNumbers    JerseyNumber[]
 }
 
 model Country {
@@ -438,6 +455,8 @@ model User {
   trainerSignedReports     InjuryReport[]          @relation("InjuryReportTrainerSigner")
   medicalSignedReports     InjuryReport[]          @relation("InjuryReportMedicalSigner")
   assessedInjuries         InjuryAssessment[]
+  squadConfirmations       MatchSquad[]       @relation("SquadConfirmations")
+  lineupConfirmations      MatchLineup[]      @relation("LineupConfirmations")
   team                     Team?                   @relation(fields: [teamId], references: [id])
   createdHiringRounds      CoachHiringRound[]      @relation("HiringRoundCreatedBy")
   coachProfile             Coach?                  @relation("CoachUser")
@@ -452,6 +471,7 @@ model User {
   requestedCallups         PlayerCallup[]          @relation("CallupRequestedBy")
   approvedCallups          PlayerCallup[]          @relation("CallupApprovedBy")
   loginHistory             LoginHistory[]
+  recordedMarketValues     MarketValueHistory[]
 }
 
 model Season {
@@ -505,6 +525,15 @@ model Player {
   improvementAnalyses    TacticalAnalysis[]      @relation("ImprovementPlayer")
   videoAssignments       VideoAssignment[]
   callups                PlayerCallup[]
+  playStyle              String?
+  // 최신값 캐시 — MarketValueHistory 항목 생성 시 항상 동시 업데이트할 것 (service 레이어에서 트랜잭션 보장)
+  currentMarketValue     Float?
+  jerseyNumbers          JerseyNumber[]
+  marketValueHistory     MarketValueHistory[]
+  matchSquads            MatchSquad[]
+  lineupSlots            LineupSlot[]
+  shotsAsShooter         ShotEvent[] @relation("ShotShooter")
+  shotsAsAssister        ShotEvent[] @relation("ShotAssister")
 }
 
 model Contract {
@@ -732,6 +761,9 @@ model Match {
   playerMatchStats PlayerMatchStats[]
   teamMatchStats   TeamMatchStats?
   tacticalAnalyses TacticalAnalysis[]
+  squadPlayers     MatchSquad[]
+  shotEvents       ShotEvent[]
+  matchLineup      MatchLineup?
 }
 
 model PlayerMatchStats {
@@ -748,13 +780,45 @@ model PlayerMatchStats {
   clearances        Int?
   interceptions     Int?
   saves             Int?
-  cleanSheet        Boolean?
-  minutesPlayed     Int?
-  matchId           Int
+  cleanSheet             Boolean?
+  minutesPlayed          Int?
+  aerialDuelSuccessRate  Float?
+  sprint                 Float?
+  clearCutChanceRate     Float?
+  penaltyConversionRate  Float?
+  freeKickConversionRate Float?
+  foulsCommitted         Int?
+  crossesCompleted       Int?
+  shotsAllowed           Int?
+  matchId                Int
   playerId          String
 
   match  Match  @relation(fields: [matchId], references: [id])
   player Player @relation(fields: [playerId], references: [id])
+}
+
+enum ShotResult {
+  GOAL
+  ON_TARGET
+  OFF_TARGET
+  BLOCKED
+}
+
+model ShotEvent {
+  id                       Int        @id @default(autoincrement())
+  matchId                  Int
+  shooterId                String
+  assisterId               String?
+  assisterPositionOverride String?
+  xG                       Float
+  result                   ShotResult
+  minute                   Int?
+
+  match    Match   @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  shooter  Player  @relation("ShotShooter",  fields: [shooterId],  references: [id])
+  assister Player? @relation("ShotAssister", fields: [assisterId], references: [id])
+
+  @@index([matchId])
 }
 
 model TeamMatchStats {
@@ -1369,4 +1433,79 @@ model LoginHistory {
   createdAt DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id])
+}
+
+model JerseyNumber {
+  id       Int                @id @default(autoincrement())
+  number   Int
+  status   JerseyNumberStatus @default(AVAILABLE)
+  teamId   Int
+  playerId String?
+
+  team   Team    @relation(fields: [teamId], references: [id])
+  player Player? @relation(fields: [playerId], references: [id])
+
+  @@unique([number, teamId])
+  @@index([playerId])
+}
+
+model MarketValueHistory {
+  id           Int               @id @default(autoincrement())
+  value        Float
+  source       MarketValueSource
+  recordedAt   DateTime          @default(now())
+  recordedById Int?
+  playerId     String
+
+  player     Player @relation(fields: [playerId], references: [id])
+  recordedBy User?  @relation(fields: [recordedById], references: [id])
+
+  @@index([playerId, recordedAt])
+}
+
+model MatchSquad {
+  id            Int       @id @default(autoincrement())
+  matchId       Int
+  playerId      String
+  isConfirmed   Boolean   @default(false)
+  confirmedAt   DateTime?
+  confirmedById Int?
+  notifiedAt    DateTime?
+
+  match       Match   @relation(fields: [matchId], references: [id])
+  player      Player  @relation(fields: [playerId], references: [id])
+  confirmedBy User?   @relation("SquadConfirmations", fields: [confirmedById], references: [id])
+
+  @@unique([matchId, playerId])
+  @@index([matchId])
+}
+
+model MatchLineup {
+  id            Int        @id @default(autoincrement())
+  matchId       Int        @unique
+  formation     String
+  isConfirmed   Boolean    @default(false)
+  confirmedAt   DateTime?
+  confirmedById Int?
+
+  match       Match       @relation(fields: [matchId], references: [id])
+  confirmedBy User?       @relation("LineupConfirmations", fields: [confirmedById], references: [id])
+  slots       LineupSlot[]
+
+  @@index([matchId])
+}
+
+model LineupSlot {
+  id        Int     @id @default(autoincrement())
+  lineupId  Int
+  playerId  String
+  slotKey   String
+  isStarter Boolean @default(true)
+
+  lineup  MatchLineup @relation(fields: [lineupId], references: [id], onDelete: Cascade)
+  player  Player      @relation(fields: [playerId], references: [id])
+
+  @@unique([lineupId, slotKey])
+  @@unique([lineupId, playerId])
+  @@index([lineupId])
 }

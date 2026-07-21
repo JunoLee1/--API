@@ -47,10 +47,25 @@ export interface Player {
   nationality: PlayerNationality
 }
 
+export type TransferType = 'PERMANENT' | 'LOAN_OUT' | 'LOAN_IN' | 'FREE' | 'RELEASE'
+
+export interface PlayerTransfer {
+  id: number
+  type: TransferType
+  date: string
+  fee: number | null
+  fromClub: string | null
+  toClub: string | null
+}
+
 export interface PlayerDetail extends Player {
   userId: number | null
   agentId: number | null
+  teamId: number | null
+  playStyle: string | null
+  currentMarketValue: number | null
   contracts: PlayerContract[]
+  transfers: PlayerTransfer[]
 }
 
 export interface PlayerListQuery {
@@ -151,4 +166,72 @@ export const STATUS_LABEL: Record<PlayerStatus, string> = {
   ON_LOAN: '임대 중',
   RELEASED: '방출',
   RETIRED: '은퇴',
+}
+
+export interface JerseyNumber {
+  id: number
+  number: number
+  status: 'AVAILABLE' | 'OCCUPIED' | 'RETIRED' | 'RESERVED'
+  teamId: number
+}
+
+export interface TeamJerseyEntry {
+  id: number
+  number: number
+  status: 'AVAILABLE' | 'OCCUPIED' | 'RETIRED' | 'RESERVED'
+  teamId: number
+  player?: { id: string; playerName: string; position: string } | null
+}
+
+export interface MarketValueEntry {
+  id: number
+  value: number
+  source: 'MANUAL' | 'EXTERNAL_API'
+  recordedAt: string
+}
+
+export interface MatchStat {
+  id: number
+  goals: number | null
+  assists: number | null
+  xG: number | null
+  xA: number | null
+  passAccuracy: number | null
+  tackleSuccessRate: number | null
+  clearances: number | null
+  interceptions: number | null
+  saves: number | null
+  aerialDuelSuccessRate: number | null
+  sprint: number | null
+  clearCutChanceRate: number | null
+  penaltyConversionRate: number | null
+  freeKickConversionRate: number | null
+  crossesCompleted: number | null
+  shotsAllowed: number | null
+  minutesPlayed: number | null
+  match: {
+    id: number
+    date: string
+    seasonId: number
+  }
+}
+
+export interface TrainingResultEntry {
+  id: number
+  attendance: string
+  feedback: string | null
+  performanceScore: number | null
+  session: {
+    id: number
+    date: string
+    sessionType: string
+    goal: string
+  }
+}
+
+export interface RadarData {
+  scores: Record<string, number>
+  strengths: string[]
+  weaknesses: string[]
+  message?: string
 }

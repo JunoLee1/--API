@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { playerApi } from '@/services/player.service'
-import type { PlayerDetail, PlayerStatus, PositionZone } from '@/types/player'
+import type { PlayerDetail, PlayerStatus, PositionZone, TransferType } from '@/types/player'
 import {
   POSITION_ABBR,
   POSITION_LABEL,
@@ -21,6 +21,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PlayerFormDialog } from './PlayerFormDialog'
 import { PlayerStatusDialog } from './PlayerStatusDialog'
 import { PlayerDevelopmentPlanTab } from './PlayerDevelopmentPlanTab'
+import { StatsTab } from './tabs/StatsTab'
+import { JerseyTab } from './tabs/JerseyTab'
+import { MotivationTab } from './tabs/MotivationTab'
 
 const ZONE_STYLE: Record<PositionZone, { badge: string; avatar: string }> = {
   GK: { badge: 'bg-amber-100 text-amber-800 border-amber-300', avatar: 'bg-amber-100 text-amber-800' },
@@ -59,6 +62,14 @@ function formatSalary(salary: number): string {
   return `${salary.toLocaleString()}원`
 }
 
+const TRANSFER_TYPE_LABEL: Record<TransferType, string> = {
+  PERMANENT: '완전 이적',
+  LOAN_OUT: '임대 출신',
+  LOAN_IN: '임대 영입',
+  FREE: '자유 계약',
+  RELEASE: '방출',
+}
+
 interface StatRowProps {
   label: string
   value: string | number
@@ -84,6 +95,11 @@ export function PlayerDetailPage() {
   const confirm = useConfirm()
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
   const canChangeStatus = user?.role === 'ADMIN'
+  const isOwnProfile = user?.role === 'PLAYER' && player?.userId === user?.id
+  const canSeeMarketValue = ['GM', 'TD', 'ADMIN'].includes(user?.role ?? '')
+  const canAssignJersey = ['GM', 'ADMIN', 'FRONT_OFFICE'].includes(user?.role ?? '')
+  const canRetireJersey = ['GM', 'ADMIN'].includes(user?.role ?? '')
+  const canReactivateJersey = user?.role === 'ADMIN'
 
   const handleDelete = async () => {
     if (!player) return
@@ -179,6 +195,9 @@ export function PlayerDetailPage() {
           <div className="px-6 pt-4 border-b shrink-0">
             <TabsList>
               <TabsTrigger value="info">기본 정보</TabsTrigger>
+              <TabsTrigger value="stats">스탯</TabsTrigger>
+              <TabsTrigger value="jersey">등번호</TabsTrigger>
+              {isOwnProfile && <TabsTrigger value="motivation">동기부여</TabsTrigger>}
               <TabsTrigger value="pdp">발전 계획</TabsTrigger>
             </TabsList>
           </div>
@@ -206,6 +225,13 @@ export function PlayerDetailPage() {
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground mt-0.5">{POSITION_LABEL[player.position]}</p>
+                  {player.playStyle ? (
+                    <span className="inline-flex items-center text-xs bg-violet-100 text-violet-800 px-2 py-0.5 rounded-full mt-1">
+                      {player.playStyle}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center text-xs text-muted-foreground mt-1">미분류</span>
+                  )}
                   <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
                     <span>{player.nationality.name}</span>
                     <span>·</span>
@@ -259,11 +285,63 @@ export function PlayerDetailPage() {
                   )}
                 </div>
               </div>
+
+              {/* 이적 이력 */}
+              {player.transfers.length > 0 && (
+                <div className="rounded-lg border bg-card p-5">
+                  <h3 className="text-sm font-semibold text-foreground mb-1">이적 이력</h3>
+                  <Separator className="mb-1" />
+                  <div className="space-y-0">
+                    {player.transfers.map((t, i) => (
+                      <div key={t.id}>
+                        {i > 0 && <Separator />}
+                        <div className="flex items-center justify-between py-2.5 gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-xs bg-muted px-1.5 py-0.5 rounded shrink-0">
+                              {TRANSFER_TYPE_LABEL[t.type]}
+                            </span>
+                            <span className="text-sm text-muted-foreground truncate">
+                              {t.fromClub && t.toClub
+                                ? `${t.fromClub} → ${t.toClub}`
+                                : t.fromClub ?? t.toClub ?? '—'}
+                            </span>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <div className="text-sm font-medium">
+                              {t.fee != null ? formatSalary(t.fee) : '비공개'}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {formatDate(t.date)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </TabsContent>
           <TabsContent value="pdp" className="flex-1 overflow-auto mt-0">
             <PlayerDevelopmentPlanTab playerId={player.id} />
           </TabsContent>
+          <TabsContent value="stats" className="flex-1 overflow-auto mt-0">
+            <StatsTab playerId={player.id} />
+          </TabsContent>
+          <TabsContent value="jersey" className="flex-1 overflow-auto mt-0">
+            <JerseyTab
+              playerId={player.id}
+              teamId={player.teamId ?? null}
+              canAssign={canAssignJersey}
+              canRetire={canRetireJersey}
+              canReactivate={canReactivateJersey}
+            />
+          </TabsContent>
+          {isOwnProfile && (
+            <TabsContent value="motivation" className="flex-1 overflow-auto mt-0">
+              <MotivationTab playerId={player.id} />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 

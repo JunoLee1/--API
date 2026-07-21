@@ -14,6 +14,8 @@ import { startMonthlyAttendanceCheckJob } from "./jobs/monthlyAttendanceCheck";
 import { startWorkPermitExpiryCheckJob } from "./jobs/workPermitExpiryCheck";
 import { startLoanOutExpiryJob } from "./jobs/loanOutExpiry";
 import { startContractExpiryJob } from "./jobs/contractExpiry";
+import { startMonthlyMarketValueSnapshotJob } from "./jobs/monthlyMarketValueSnapshot";
+import { startMatchDayNotificationJob } from "./jobs/matchDayNotification";
 
 const app = express();
 
@@ -45,3 +47,5 @@ startMonthlyAttendanceCheckJob();
 startWorkPermitExpiryCheckJob();
 startLoanOutExpiryJob();
 startContractExpiryJob();
+startMonthlyMarketValueSnapshotJob();
+startMatchDayNotificationJob();

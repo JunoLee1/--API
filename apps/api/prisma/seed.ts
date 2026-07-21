@@ -1176,6 +1176,21 @@ async function main() {
     },
   });
 
+  // ── Jersey Numbers ───────────────────────────────────
+  await prisma.jerseyNumber.createMany({
+    data: [
+      { number: 9,  teamId: firstTeam.id, playerId: p1.id, status: "OCCUPIED" },
+      { number: 10, teamId: firstTeam.id, playerId: p2.id, status: "OCCUPIED" },
+      { number: 11, teamId: firstTeam.id, playerId: p3.id, status: "OCCUPIED" },
+      { number: 1,  teamId: firstTeam.id, playerId: p4.id, status: "OCCUPIED" },
+      { number: 5,  teamId: firstTeam.id, playerId: p5.id, status: "OCCUPIED" },
+      { number: 4,  teamId: firstTeam.id, playerId: p6.id, status: "OCCUPIED" },
+      { number: 3,  teamId: firstTeam.id, playerId: p7.id, status: "OCCUPIED" },
+      { number: 7,  teamId: firstTeam.id, status: "RESERVED" },
+    ],
+    skipDuplicates: true,
+  });
+
   console.log("✅ Seed complete");
   console.log(`   - Countries: 2`);
   console.log(`   - Users: 14 / pw: Password1!`);

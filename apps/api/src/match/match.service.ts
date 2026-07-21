@@ -7,6 +7,8 @@ import {
   UpsertPlayerStatsDto,
   UpsertTeamStatsDto,
   VALID_COMPETITION_TYPES,
+  CreateShotEventDto,
+  VALID_SHOT_RESULTS,
 } from "./dto/match.dto";
 import { Venue } from "../generated/enums";
 
@@ -65,5 +67,26 @@ export class MatchService {
     const match = await this.repo.findById(matchId);
     if (!match) throw new AppError(404, "MATCH_NOT_FOUND");
     return this.repo.upsertTeamStats(matchId, dto);
+  }
+
+  getShotEvents(matchId: number) {
+    return this.repo.findShotEvents(matchId);
+  }
+
+  async createShotEvent(matchId: number, dto: CreateShotEventDto) {
+    const match = await this.repo.findById(matchId);
+    if (!match) throw new AppError(404, "MATCH_NOT_FOUND");
+    if (!VALID_SHOT_RESULTS.includes(dto.result)) throw new AppError(400, "INVALID_SHOT_RESULT");
+    if (typeof dto.xG !== 'number' || dto.xG < 0 || dto.xG > 1) {
+      throw new AppError(400, "INVALID_XG_VALUE");
+    }
+    const event = await this.repo.createShotEvent(matchId, dto);
+    await this.repo.recalculateXgXa(matchId);
+    return event;
+  }
+
+  async deleteShotEvent(matchId: number, eventId: number) {
+    await this.repo.deleteShotEvent(eventId);
+    await this.repo.recalculateXgXa(matchId);
   }
 }

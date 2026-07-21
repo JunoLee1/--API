@@ -1,5 +1,5 @@
 import { api } from './api'
-import type { Match, MatchDetail, CompetitionType } from '@/types/match'
+import type { Match, MatchDetail, CompetitionType, ShotEvent, ShotResult } from '@/types/match'
 
 export const matchApi = {
   list: (params?: { seasonId?: number; competitionType?: CompetitionType }) => {
@@ -73,4 +73,22 @@ export const matchApi = {
       clearances: number
     },
   ) => api.put(`/matches/${id}/team-stats`, payload),
+
+  getShots: (matchId: number) =>
+    api.get<ShotEvent[]>(`/matches/${matchId}/shots`),
+
+  createShot: (
+    matchId: number,
+    payload: {
+      shooterId: string
+      assisterId?: string
+      assisterPositionOverride?: string
+      xG: number
+      result: ShotResult
+      minute?: number
+    },
+  ) => api.post<ShotEvent>(`/matches/${matchId}/shots`, payload),
+
+  deleteShot: (matchId: number, eventId: number) =>
+    api.delete<void>(`/matches/${matchId}/shots/${eventId}`),
 }

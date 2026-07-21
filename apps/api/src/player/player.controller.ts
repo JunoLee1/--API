@@ -3,6 +3,7 @@ import { AppError } from "../lib/appError";
 import { PlayerService } from "./player.service";
 import { PlayerListQuery } from "./dto/player.dto";
 import { PlayerStatus, Position, PlayerLevel } from "../generated/enums";
+import { getPlayerRadarData } from "./radar.service";
 
 const WRITE_ROLES = ["ADMIN", "FRONT_OFFICE"] as const;
 
@@ -27,6 +28,10 @@ export class PlayerController {
   getPlayerById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const player = await this.service.getPlayerById(String(req.params["id"]));
+      if (req.user!.role === "PLAYER") {
+        const { currentMarketValue, ...safePlayer } = player as any;
+        return res.status(200).json(safePlayer);
+      }
       res.status(200).json(player);
     } catch (err) {
       next(err);
@@ -75,5 +80,60 @@ export class PlayerController {
     } catch (err) {
       next(err);
     }
+  };
+
+  private readonly MARKET_VALUE_ROLES = ["GM", "TD", "ADMIN"] as const;
+
+  getMarketValueHistory = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!this.MARKET_VALUE_ROLES.includes(req.user!.role as any)) throw new AppError(403, "FORBIDDEN");
+      const history = await this.service.getMarketValueHistory(String(req.params["id"]));
+      res.json(history);
+    } catch (err) { next(err); }
+  };
+
+  updateMarketValue = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!this.MARKET_VALUE_ROLES.includes(req.user!.role as any)) throw new AppError(403, "FORBIDDEN");
+      const result = await this.service.updateMarketValue(
+        String(req.params["id"]),
+        req.body,
+        req.user!.id,
+      );
+      res.json(result);
+    } catch (err) { next(err); }
+  };
+
+  getMatchStats = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const seasonId = req.query["seasonId"] ? Number(req.query["seasonId"]) : undefined;
+      const stats = await this.service.getMatchStats(String(req.params["id"]), seasonId);
+      res.json(stats);
+    } catch (err) { next(err); }
+  };
+
+  getTrainingResults = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { from, to } = req.query as Record<string, string | undefined>;
+      const results = await this.service.getTrainingResults(
+        String(req.params["id"]),
+        String(req.user!.id),
+        req.user!.role,
+        from,
+        to,
+      );
+      res.json(results);
+    } catch (err) { next(err); }
+  };
+
+  getRadar = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const playerId = String(req.params["id"]);
+      const player = await this.service.getPlayerById(playerId);
+      const stats = await this.service.getMatchStats(playerId);
+      const radar = await getPlayerRadarData(player.position, stats as any);
+      if (!radar) return res.json({ scores: {}, strengths: [], weaknesses: [], message: "데이터 부족" });
+      res.json(radar);
+    } catch (err) { next(err); }
   };
 }
