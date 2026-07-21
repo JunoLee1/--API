@@ -456,6 +456,7 @@ model User {
   medicalSignedReports     InjuryReport[]          @relation("InjuryReportMedicalSigner")
   assessedInjuries         InjuryAssessment[]
   squadConfirmations       MatchSquad[]       @relation("SquadConfirmations")
+  lineupConfirmations      MatchLineup[]      @relation("LineupConfirmations")
   team                     Team?                   @relation(fields: [teamId], references: [id])
   createdHiringRounds      CoachHiringRound[]      @relation("HiringRoundCreatedBy")
   coachProfile             Coach?                  @relation("CoachUser")
@@ -530,6 +531,7 @@ model Player {
   jerseyNumbers          JerseyNumber[]
   marketValueHistory     MarketValueHistory[]
   matchSquads            MatchSquad[]
+  lineupSlots            LineupSlot[]
   shotsAsShooter         ShotEvent[] @relation("ShotShooter")
   shotsAsAssister        ShotEvent[] @relation("ShotAssister")
 }
@@ -761,6 +763,7 @@ model Match {
   tacticalAnalyses TacticalAnalysis[]
   squadPlayers     MatchSquad[]
   shotEvents       ShotEvent[]
+  matchLineup      MatchLineup?
 }
 
 model PlayerMatchStats {
@@ -1475,4 +1478,34 @@ model MatchSquad {
 
   @@unique([matchId, playerId])
   @@index([matchId])
+}
+
+model MatchLineup {
+  id            Int        @id @default(autoincrement())
+  matchId       Int        @unique
+  formation     String
+  isConfirmed   Boolean    @default(false)
+  confirmedAt   DateTime?
+  confirmedById Int?
+
+  match       Match       @relation(fields: [matchId], references: [id])
+  confirmedBy User?       @relation("LineupConfirmations", fields: [confirmedById], references: [id])
+  slots       LineupSlot[]
+
+  @@index([matchId])
+}
+
+model LineupSlot {
+  id        Int     @id @default(autoincrement())
+  lineupId  Int
+  playerId  String
+  slotKey   String
+  isStarter Boolean @default(true)
+
+  lineup  MatchLineup @relation(fields: [lineupId], references: [id], onDelete: Cascade)
+  player  Player      @relation(fields: [playerId], references: [id])
+
+  @@unique([lineupId, slotKey])
+  @@unique([lineupId, playerId])
+  @@index([lineupId])
 }
