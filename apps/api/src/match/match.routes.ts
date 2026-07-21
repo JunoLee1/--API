@@ -47,4 +47,16 @@ router.get("/:id/shots",             auth, controller.getShotEvents);
 router.post("/:id/shots",            auth, controller.createShotEvent);
 router.delete("/:id/shots/:eventId", auth, controller.deleteShotEvent);
 
+import { MatchLineupRepository } from "./match.lineup.repo";
+import { MatchLineupService } from "./match.lineup.service";
+import { MatchLineupController } from "./match.lineup.controller";
+
+const lineupRepo = new MatchLineupRepository(getPrisma());
+const lineupService = new MatchLineupService(lineupRepo);
+const lineupController = new MatchLineupController(lineupService);
+
+router.get("/:id/lineup", auth, lineupController.getLineup);
+router.put("/:id/lineup", auth, lineupController.saveLineup);
+router.post("/:id/lineup/confirm", auth, lineupController.confirmLineup);
+
 export default router;
