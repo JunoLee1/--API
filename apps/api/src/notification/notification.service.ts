@@ -116,6 +116,18 @@ export class NotificationService {
     await this.repo.createForUser(playerUserId, "MATCH_DAY_REMINDER", title, body);
   }
 
+  async notifyLineupConfirmed(
+    playerUserId: number,
+    isStarter: boolean,
+    matchInfo: { homeTeamName: string; awayTeamName: string },
+    matchId: number,
+  ) {
+    const role = isStarter ? "선발" : "후보";
+    const title = "라인업 확정";
+    const body = `${matchInfo.homeTeamName} vs ${matchInfo.awayTeamName} 경기 ${role}로 확정되었습니다.`;
+    await this.repo.createForUser(playerUserId, "LINEUP_CONFIRMED", title, body, matchId);
+  }
+
   async getPartnerAlerts() {
     const contracts = await this.repo.findExpiringContracts(30);
     return contracts.map((c) => {

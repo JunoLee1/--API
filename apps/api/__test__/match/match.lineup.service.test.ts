@@ -5,6 +5,8 @@ const mockRepo = {
   findByMatch: jest.fn<() => Promise<any>>(),
   saveLineup: jest.fn<() => Promise<any>>(),
   confirmLineup: jest.fn<() => Promise<any>>(),
+  findSlotsWithUsers: jest.fn<() => Promise<any>>().mockResolvedValue([]),
+  findMatchInfo: jest.fn<() => Promise<any>>().mockResolvedValue(null),
 } as any;
 
 const service = new MatchLineupService(mockRepo);

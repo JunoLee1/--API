@@ -46,6 +46,23 @@ export class MatchLineupRepository {
     });
   }
 
+  findSlotsWithUsers(matchId: number) {
+    return this.prisma.lineupSlot.findMany({
+      where: { lineup: { matchId } },
+      select: {
+        isStarter: true,
+        player: { select: { userId: true } },
+      },
+    });
+  }
+
+  findMatchInfo(matchId: number) {
+    return this.prisma.match.findUnique({
+      where: { id: matchId },
+      select: { homeTeamName: true, awayTeamName: true },
+    });
+  }
+
   findSquadPlayers(matchId: number) {
     return this.prisma.matchSquad.findMany({
       where: { matchId },
