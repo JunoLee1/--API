@@ -1191,30 +1191,380 @@ async function main() {
     skipDuplicates: true,
   });
 
+  // ── YOUTH Teams ──────────────────────────────────────
+  const u15Team = await prisma.team.upsert({
+    where: { id: 2 },
+    update: {},
+    create: {
+      name: 'U-15',
+      type: 'YOUTH',
+      ageGroup: 'U15',
+      isActive: true,
+      trackStats: false,
+      requiresContract: false,
+    },
+  });
+
+  const u18Team = await prisma.team.upsert({
+    where: { id: 3 },
+    update: {},
+    create: {
+      name: 'U-18',
+      type: 'YOUTH',
+      ageGroup: 'U18',
+      isActive: true,
+      trackStats: false,
+      requiresContract: false,
+    },
+  });
+
+  // ── YOUTH Coaching Staff ──────────────────────────────
+  const yc1Phone = await prisma.phoneNumber.create({ data: encryptPhone("010-0001-0001") });
+  const yc2Phone = await prisma.phoneNumber.create({ data: encryptPhone("010-0001-0002") });
+
+  const youthCoach1 = await prisma.user.upsert({
+    where: { email: "youth.coach1@club.com" },
+    update: {},
+    create: {
+      email: "youth.coach1@club.com",
+      password: hashed,
+      username: "유소년감독",
+      nickname: "youthhead",
+      role: "COACHING_STAFF",
+      coachingRole: "HEAD_COACH",
+      dateOfBirth: new Date("1982-04-10"),
+      nationalityId: korea.id,
+      phoneNumberId: yc1Phone.id,
+    },
+  });
+
+  const youthCoach2 = await prisma.user.upsert({
+    where: { email: "youth.coach2@club.com" },
+    update: {},
+    create: {
+      email: "youth.coach2@club.com",
+      password: hashed,
+      username: "유소년코치",
+      nickname: "youthcoach",
+      role: "COACHING_STAFF",
+      coachingRole: "ASSISTANT_COACH",
+      dateOfBirth: new Date("1985-08-22"),
+      nationalityId: korea.id,
+      phoneNumberId: yc2Phone.id,
+    },
+  });
+
+  // ── GUARDIAN Users ────────────────────────────────────
+  const guardianPhones = await Promise.all([
+    prisma.phoneNumber.create({ data: encryptPhone("010-0002-0001") }),
+    prisma.phoneNumber.create({ data: encryptPhone("010-0002-0002") }),
+    prisma.phoneNumber.create({ data: encryptPhone("010-0002-0003") }),
+    prisma.phoneNumber.create({ data: encryptPhone("010-0002-0004") }),
+    prisma.phoneNumber.create({ data: encryptPhone("010-0002-0005") }),
+    prisma.phoneNumber.create({ data: encryptPhone("010-0002-0006") }),
+    prisma.phoneNumber.create({ data: encryptPhone("010-0002-0007") }),
+    prisma.phoneNumber.create({ data: encryptPhone("010-0002-0008") }),
+  ]);
+
+  const guardianData = [
+    { email: "guardian1@club.com", username: "김부모", nickname: "guardian1", dob: "1975-03-15" },
+    { email: "guardian2@club.com", username: "이부모", nickname: "guardian2", dob: "1977-07-20" },
+    { email: "guardian3@club.com", username: "박부모", nickname: "guardian3", dob: "1976-11-05" },
+    { email: "guardian4@club.com", username: "최부모", nickname: "guardian4", dob: "1978-02-28" },
+    { email: "guardian5@club.com", username: "정부모", nickname: "guardian5", dob: "1974-09-12" },
+    { email: "guardian6@club.com", username: "한부모", nickname: "guardian6", dob: "1979-06-03" },
+    { email: "guardian7@club.com", username: "오부모", nickname: "guardian7", dob: "1973-12-18" },
+    { email: "guardian8@club.com", username: "윤부모", nickname: "guardian8", dob: "1980-04-25" },
+  ];
+
+  const guardians = await Promise.all(
+    guardianData.map((g, i) =>
+      prisma.user.upsert({
+        where: { email: g.email },
+        update: {},
+        create: {
+          email: g.email,
+          password: hashed,
+          username: g.username,
+          nickname: g.nickname,
+          role: "GUARDIAN",
+          dateOfBirth: new Date(g.dob),
+          nationalityId: korea.id,
+          phoneNumberId: guardianPhones[i]!.id,
+        },
+      }),
+    ),
+  );
+
+  // ── YOUTH Players (U-15) ──────────────────────────────
+  const yp1 = await prisma.player.upsert({
+    where: { id: "youth-u15-001" },
+    update: {},
+    create: {
+      id: "youth-u15-001",
+      playerName: "김유스",
+      dateOfBirth: new Date("2011-03-12"),
+      preferredFoot: "RIGHT",
+      height: 165,
+      weight: 55,
+      position: "GOALKEEPER",
+      level: "YOUTH",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+      teamId: u15Team.id,
+      guardianId: guardians[0]!.id,
+    },
+  });
+
+  const yp2 = await prisma.player.upsert({
+    where: { id: "youth-u15-002" },
+    update: {},
+    create: {
+      id: "youth-u15-002",
+      playerName: "이소년",
+      dateOfBirth: new Date("2011-07-22"),
+      preferredFoot: "RIGHT",
+      height: 168,
+      weight: 57,
+      position: "CENTER_BACK",
+      level: "YOUTH",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+      teamId: u15Team.id,
+      guardianId: guardians[1]!.id,
+    },
+  });
+
+  const yp3 = await prisma.player.upsert({
+    where: { id: "youth-u15-003" },
+    update: {},
+    create: {
+      id: "youth-u15-003",
+      playerName: "박청소년",
+      dateOfBirth: new Date("2012-01-05"),
+      preferredFoot: "LEFT",
+      height: 162,
+      weight: 53,
+      position: "CENTER_BACK",
+      level: "YOUTH",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+      teamId: u15Team.id,
+      guardianId: guardians[2]!.id,
+    },
+  });
+
+  const yp4 = await prisma.player.upsert({
+    where: { id: "youth-u15-004" },
+    update: {},
+    create: {
+      id: "youth-u15-004",
+      playerName: "최미드",
+      dateOfBirth: new Date("2011-09-18"),
+      preferredFoot: "RIGHT",
+      height: 164,
+      weight: 56,
+      position: "CENTRAL_ATTACK_MIDFIELDER",
+      level: "YOUTH",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+      teamId: u15Team.id,
+      guardianId: guardians[3]!.id,
+    },
+  });
+
+  const yp5 = await prisma.player.upsert({
+    where: { id: "youth-u15-005" },
+    update: {},
+    create: {
+      id: "youth-u15-005",
+      playerName: "정공격수",
+      dateOfBirth: new Date("2012-05-30"),
+      preferredFoot: "RIGHT",
+      height: 167,
+      weight: 58,
+      position: "STRIKER",
+      level: "YOUTH",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+      teamId: u15Team.id,
+      guardianId: guardians[4]!.id,
+    },
+  });
+
+  // ── YOUTH Players (U-18) ──────────────────────────────
+  const yp6 = await prisma.player.upsert({
+    where: { id: "youth-u18-001" },
+    update: {},
+    create: {
+      id: "youth-u18-001",
+      playerName: "한골키퍼",
+      dateOfBirth: new Date("2008-04-14"),
+      preferredFoot: "RIGHT",
+      height: 182,
+      weight: 72,
+      position: "GOALKEEPER",
+      level: "YOUTH",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+      teamId: u18Team.id,
+      guardianId: guardians[5]!.id,
+    },
+  });
+
+  const yp7 = await prisma.player.upsert({
+    where: { id: "youth-u18-002" },
+    update: {},
+    create: {
+      id: "youth-u18-002",
+      playerName: "오수비수",
+      dateOfBirth: new Date("2008-11-02"),
+      preferredFoot: "RIGHT",
+      height: 178,
+      weight: 68,
+      position: "LEFT_FULL_BACK",
+      level: "YOUTH",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+      teamId: u18Team.id,
+      guardianId: guardians[6]!.id,
+    },
+  });
+
+  const yp8 = await prisma.player.upsert({
+    where: { id: "youth-u18-003" },
+    update: {},
+    create: {
+      id: "youth-u18-003",
+      playerName: "윤센터백",
+      dateOfBirth: new Date("2009-02-19"),
+      preferredFoot: "RIGHT",
+      height: 180,
+      weight: 70,
+      position: "CENTER_BACK",
+      level: "YOUTH",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+      teamId: u18Team.id,
+      guardianId: guardians[7]!.id,
+    },
+  });
+
+  const yp9 = await prisma.player.upsert({
+    where: { id: "youth-u18-004" },
+    update: {},
+    create: {
+      id: "youth-u18-004",
+      playerName: "강미드필더",
+      dateOfBirth: new Date("2008-08-07"),
+      preferredFoot: "BOTH",
+      height: 174,
+      weight: 65,
+      position: "CENTRAL_DEFENSIVE_MIDFIELDER",
+      level: "YOUTH",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+      teamId: u18Team.id,
+      guardianId: guardians[5]!.id,
+    },
+  });
+
+  const yp10 = await prisma.player.upsert({
+    where: { id: "youth-u18-005" },
+    update: {},
+    create: {
+      id: "youth-u18-005",
+      playerName: "임스트라이커",
+      dateOfBirth: new Date("2009-06-25"),
+      preferredFoot: "LEFT",
+      height: 176,
+      weight: 67,
+      position: "STRIKER",
+      level: "YOUTH",
+      status: "ACTIVE",
+      nationalityId: korea.id,
+      teamId: u18Team.id,
+      guardianId: guardians[6]!.id,
+    },
+  });
+
+  // ── YouthRegistrations ────────────────────────────────
+  const adminUser = await prisma.user.findUnique({ where: { email: "admin@club.com" }, select: { id: true } });
+
+  await prisma.youthRegistration.createMany({
+    data: [
+      {
+        playerName: yp1.playerName,
+        birthDate: yp1.dateOfBirth,
+        preferredJerseyNumber: 1,
+        teamId: u15Team.id,
+        guardianId: guardians[0]!.id,
+        status: "CONTRACTED",
+        requestedById: adminUser!.id,
+      },
+      {
+        playerName: yp2.playerName,
+        birthDate: yp2.dateOfBirth,
+        preferredJerseyNumber: 4,
+        teamId: u15Team.id,
+        guardianId: guardians[1]!.id,
+        status: "CONTRACTED",
+        requestedById: adminUser!.id,
+      },
+      {
+        playerName: yp3.playerName,
+        birthDate: yp3.dateOfBirth,
+        teamId: u15Team.id,
+        guardianId: guardians[2]!.id,
+        status: "GUARDIAN_APPROVED",
+        requestedById: adminUser!.id,
+      },
+      {
+        playerName: yp4.playerName,
+        birthDate: yp4.dateOfBirth,
+        preferredJerseyNumber: 10,
+        teamId: u15Team.id,
+        guardianId: guardians[3]!.id,
+        status: "PENDING",
+        requestedById: adminUser!.id,
+      },
+      {
+        playerName: yp6.playerName,
+        birthDate: yp6.dateOfBirth,
+        preferredJerseyNumber: 1,
+        teamId: u18Team.id,
+        guardianId: guardians[5]!.id,
+        status: "CONTRACTED",
+        requestedById: adminUser!.id,
+      },
+      {
+        playerName: yp8.playerName,
+        birthDate: yp8.dateOfBirth,
+        teamId: u18Team.id,
+        guardianId: guardians[7]!.id,
+        status: "PENDING",
+        requestedById: adminUser!.id,
+      },
+    ],
+    skipDuplicates: false,
+  });
+
   console.log("✅ Seed complete");
   console.log(`   - Countries: 2`);
-  console.log(`   - Users: 14 / pw: Password1!`);
+  console.log(`   - Users: 14 + 10 유소년 / pw: Password1!`);
   console.log(`     ADMIN       : admin@club.com`);
   console.log(`     FRONT_OFFICE: gm@club.com (GM)`);
   console.log(`     FRONT_OFFICE: td@club.com (TD)`);
   console.log(`     FRONT_OFFICE: fo@club.com (SCOUT)`);
   console.log(`     PLAYER      : player@club.com`);
   console.log(`     HEAD_COACH  : coach@club.com`);
-  console.log(`     ASSISTANT   : assistant@club.com`);
-  console.log(`     DEFENSIVE   : defensive@club.com`);
-  console.log(`     ATTACKING   : attacking@club.com`);
-  console.log(`     PHYSICAL    : physical@club.com`);
-  console.log(`     SET_PIECE   : setpiece@club.com`);
-  console.log(`     GOALKEEPER  : gk@club.com`);
-  console.log(`     MEDICAL     : medical@club.com`);
-  console.log(`     MED_DIR     : meddir@club.com`);
+  console.log(`     YOUTH COACH : youth.coach1@club.com (감독)`);
+  console.log(`     YOUTH COACH : youth.coach2@club.com (코치)`);
+  console.log(`     GUARDIAN    : guardian1~8@club.com`);
   console.log(`   - Season: ${season.name}`);
-  console.log(`   - Players: 20`);
-  console.log(`   - Contracts: 3`);
-  console.log(`   - Matches: 12 (7 완료 + 1 컵 + 4 예정)`);
-  console.log(`   - Training session: 1`);
-  console.log(`   - Injury: 1`);
-  console.log(`   - Tactical analysis: 1`);
+  console.log(`   - Players: 20 (1군) + 10 (유소년: U15×5, U18×5)`);
+  console.log(`   - Youth Teams: U-15 (id:${u15Team.id}), U-18 (id:${u18Team.id})`);
+  console.log(`   - YouthRegistrations: 6 (CONTRACTED×3, GUARDIAN_APPROVED×1, PENDING×2)`);
 }
 
 main()
