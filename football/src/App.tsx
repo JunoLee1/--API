@@ -21,6 +21,7 @@ import { CoachAvailabilityPage } from '@/pages/training/CoachAvailabilityPage'
 import { CoachDashboardPage } from '@/pages/training/CoachDashboardPage'
 import { MatchesPage } from '@/pages/matches/MatchesPage'
 import { MatchDetailPage } from '@/pages/matches/MatchDetailPage'
+import { MatchLineupPage } from '@/pages/matches/MatchLineupPage'
 import { RankingsPage } from '@/pages/matches/RankingsPage'
 import { TacticalAnalysisPage } from '@/pages/tactical/TacticalAnalysisPage'
 import { EquipmentPage } from '@/pages/equipment/EquipmentPage'
@@ -44,6 +45,7 @@ import { CoachDetailPage } from '@/pages/coaches/CoachDetailPage'
 import { MedicalExpenseFormPage } from '@/pages/medical-expense/MedicalExpenseFormPage'
 import { MedicalExpenseDetailPage } from '@/pages/medical-expense/MedicalExpenseDetailPage'
 import { SquadPlannerPage } from '@/pages/squad/SquadPlannerPage'
+import YouthRegistrationPage from '@/pages/youth/YouthRegistrationPage'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const loggedIn = localStorage.getItem('loggedIn')
@@ -71,6 +73,7 @@ function App() {
             <Route path="/contracts/:id" element={<ContractDetailPage />} />
             <Route path="/transfers" element={<TransfersPage />} />
             <Route path="/player-callups" element={<PlayerCallupPage />} />
+            <Route path="/youth-registrations" element={<YouthRegistrationPage />} />
             <Route path="/injuries" element={<InjuriesPage />} />
             <Route path="/injuries/:id" element={<InjuryDetailPage />} />
             <Route path="/injuries/stats" element={<InjuryStatsPage />} />
@@ -85,6 +88,7 @@ function App() {
             <Route path="/matches/analysis" element={<TacticalAnalysisPage />} />
             <Route path="/squad" element={<SquadPlannerPage />} />
             <Route path="/matches/rankings" element={<RankingsPage />} />
+            <Route path="/matches/:id/lineup" element={<MatchLineupPage />} />
             <Route path="/matches/:id" element={<MatchDetailPage />} />
             <Route path="/equipment" element={<EquipmentPage />} />
             <Route path="/prospects" element={<ProspectsPage />} />
