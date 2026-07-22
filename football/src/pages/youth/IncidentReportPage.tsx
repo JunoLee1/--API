@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { incidentReportApi } from '@/services/incidentReport.service'
+import { playerApi } from '@/services/player.service'
 import type { IncidentReport } from '@/types/incident-report'
 import { IncidentReportFormDialog } from './IncidentReportFormDialog'
 
@@ -12,6 +13,7 @@ const STATUS_VARIANT: Record<string, 'outline' | 'secondary' | 'default'> = {
 
 export default function IncidentReportPage() {
   const [reports, setReports] = useState<IncidentReport[]>([])
+  const [players, setPlayers] = useState<{ id: string; playerName: string; teamId: number }[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
 
@@ -21,7 +23,12 @@ export default function IncidentReportPage() {
     finally { setLoading(false) }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+    playerApi.list({ level: 'YOUTH' })
+      .then(r => setPlayers(r.data.map(p => ({ id: p.id, playerName: p.playerName, teamId: p.teamId ?? 0 }))))
+      .catch(() => {})
+  }, [])
 
   const handleSign = async (id: number, role: 'SUPERVISOR' | 'MEDICAL') => {
     await incidentReportApi.sign(id, role)
@@ -32,9 +39,6 @@ export default function IncidentReportPage() {
     await incidentReportApi.submit(id)
     load()
   }
-
-  const allPlayers = reports.map(r => ({ id: r.playerId, playerName: r.player.playerName, teamId: r.teamId }))
-  const uniquePlayers = [...new Map(allPlayers.map(p => [p.id, p])).values()]
 
   return (
     <div className="p-6 space-y-4">
@@ -84,7 +88,7 @@ export default function IncidentReportPage() {
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
         onCreated={load}
-        players={uniquePlayers}
+        players={players}
       />
     </div>
   )

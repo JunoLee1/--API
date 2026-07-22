@@ -72,13 +72,16 @@ export class IncidentReportService {
       (isMedical ? true : report.medicalSigned);
 
     if (bothSigned) {
-      await this.repo.markSigned(id);
       const now = new Date();
-      await this.repo.createExternalReports(
-        id,
-        YOUTH_EXTERNAL_TARGETS.map((t) => ({ target: t.target, dueDate: addDays(now, t.daysUntilDue) })),
-        { incidentReportId: id, playerName: report.player.playerName, description: report.description },
-      );
+      const [signed] = await Promise.all([
+        this.repo.markSigned(id),
+        this.repo.createExternalReports(
+          id,
+          YOUTH_EXTERNAL_TARGETS.map((t) => ({ target: t.target, dueDate: addDays(now, t.daysUntilDue) })),
+          { incidentReportId: id, playerName: report.player.playerName, description: report.description },
+        ),
+      ]);
+      return signed;
     }
 
     return updated;

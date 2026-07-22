@@ -41,12 +41,14 @@ export class IncidentReportController {
 
   submit = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      if (!ALLOWED_ROLES.includes(req.user!.role as any)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.submit(Number(req.params["id"])));
     } catch (e) { next(e); }
   };
 
   sign = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      if (!ALLOWED_ROLES.includes(req.user!.role as any)) throw new AppError(403, "FORBIDDEN");
       const { role } = req.body as SignIncidentReportDto;
       if (role !== "SUPERVISOR" && role !== "MEDICAL") throw new AppError(400, "INVALID_ROLE");
       res.json(await this.service.sign(Number(req.params["id"]), role));
