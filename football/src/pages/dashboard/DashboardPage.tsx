@@ -7,7 +7,7 @@ import { analysisApi, type TeamRanking } from '@/services/analysis.service'
 import { seasonApi } from '@/services/season.service'
 import type { Match } from '@/types/match'
 import { COMPETITION_LABEL } from '@/types/match'
-import type { DashboardStats, MedicalDashboardStats } from '@/types/dashboard'
+import type { DashboardStats, MedicalDashboardStats, YouthDevelopmentStats } from '@/types/dashboard'
 import { getDashboardConfig } from './dashboardConfig'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { ActionQueueCard } from '@/components/dashboard/ActionQueueCard'
@@ -15,6 +15,7 @@ import { ScheduleCard, type ScheduleItem } from '@/components/dashboard/Schedule
 import { RecentFeedCard, type FeedItem } from '@/components/dashboard/RecentFeedCard'
 import { RankingCard } from '@/components/dashboard/RankingCard'
 import { MedicalSection } from '@/components/dashboard/MedicalSection'
+import { YouthDevelopmentSection } from '@/components/dashboard/YouthDevelopmentSection'
 
 const OUR_TEAM_NAME = 'FC Seoul'
 
@@ -58,10 +59,13 @@ export function DashboardPage() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [matches, setMatches] = useState<Match[]>([])
   const [myRanking, setMyRanking] = useState<TeamRanking | null>(null)
+  const [youthDev, setYouthDev] = useState<YouthDevelopmentStats | null>(null)
   const [statsLoading, setStatsLoading] = useState(true)
   const [notiLoading, setNotiLoading] = useState(true)
   const [matchesLoading, setMatchesLoading] = useState(true)
   const [rankingLoading, setRankingLoading] = useState(true)
+
+  const showYouthDev = user?.role === 'ADMIN' || (user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'TD')
 
   useEffect(() => {
     if (!user) return
@@ -83,6 +87,9 @@ export function DashboardPage() {
       })
       .catch(() => null)
       .finally(() => setRankingLoading(false))
+    if (showYouthDev) {
+      dashboardApi.youthDevelopment().then(setYouthDev).catch(() => null)
+    }
   }, [user])
 
   if (userLoading) {
@@ -118,6 +125,11 @@ export function DashboardPage() {
           data={(stats as { medicalDashboard?: MedicalDashboardStats }).medicalDashboard!}
           role={user.coachingRole}
         />
+      )}
+
+      {/* 유소년 포지션 편중 섹션 */}
+      {config.showYouthDevelopment && youthDev && (
+        <YouthDevelopmentSection data={youthDev} />
       )}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

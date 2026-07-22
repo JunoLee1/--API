@@ -95,3 +95,27 @@ export type DashboardStats =
   | MedicalDirectorStats
   | PlayerStats
   | AgentStats
+
+export interface PlayerPdiEntry {
+  playerId: string
+  playerName: string
+  teamId: number
+  teamName: string
+  totalMinutes: number
+  slotDistribution: Record<string, number>
+  biasedSlot: string | null
+  biasedPct: number
+  isBiased: boolean
+}
+
+export interface TeamPdiSummary {
+  teamId: number
+  teamName: string
+  playerCount: number
+  biasedPlayerCount: number
+  players: PlayerPdiEntry[]
+}
+
+export interface YouthDevelopmentStats {
+  teams: TeamPdiSummary[]
+}
