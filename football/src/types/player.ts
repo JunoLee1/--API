@@ -59,11 +59,6 @@ export interface PlayerTransfer {
   toClub: string | null
 }
 
-export interface PositionDiversityEntry {
-  position: string
-  minutes: number
-  percentage: number
-}
 
 export interface PlayerDetail extends Player {
   userId: number | null

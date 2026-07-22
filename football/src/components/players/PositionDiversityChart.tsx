@@ -1,62 +1,55 @@
-import { useEffect, useState } from 'react'
-import { playerApi } from '@/services/player.service'
-import type { PositionDiversityEntry } from '@/types/player'
-import { Skeleton } from '@/components/ui/skeleton'
+import type { PositionDiversityEntry } from '@/services/playerPdi.service'
 
-const BAR_COLORS = [
-  'bg-violet-500',
-  'bg-blue-500',
-  'bg-emerald-500',
-  'bg-amber-500',
-  'bg-rose-500',
-  'bg-cyan-500',
+const COLORS = [
+  '#6366f1', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6',
+  '#06b6d4', '#f97316', '#84cc16', '#ec4899', '#14b8a6',
 ]
 
 interface Props {
-  playerId: string
+  data: PositionDiversityEntry[]
 }
 
-export function PositionDiversityChart({ playerId }: Props) {
-  const [data, setData] = useState<PositionDiversityEntry[] | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    setLoading(true)
-    playerApi
-      .getPositionDiversity(playerId)
-      .then(setData)
-      .catch(() => setData([]))
-      .finally(() => setLoading(false))
-  }, [playerId])
-
-  if (loading) return <Skeleton className="h-24 w-full" />
-
-  if (!data || data.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground text-center py-4">
-        출전 기록이 없습니다.
-      </p>
-    )
+export function PositionDiversityChart({ data }: Props) {
+  if (data.length === 0) {
+    return <p className="text-sm text-muted-foreground">출전 기록이 없습니다.</p>
   }
 
+  const cx = 80
+  const cy = 80
+  const r = 60
+  let startAngle = -Math.PI / 2
+
+  const slices = data.map((entry, i) => {
+    const angle = (entry.percentage / 100) * 2 * Math.PI
+    const endAngle = startAngle + angle
+    const x1 = cx + r * Math.cos(startAngle)
+    const y1 = cy + r * Math.sin(startAngle)
+    const x2 = cx + r * Math.cos(endAngle)
+    const y2 = cy + r * Math.sin(endAngle)
+    const largeArc = angle > Math.PI ? 1 : 0
+    const path = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`
+    const result = { path, color: COLORS[i % COLORS.length]!, entry, endAngle }
+    startAngle = endAngle
+    return result
+  })
+
   return (
-    <div className="space-y-2.5">
-      {data.map((entry, i) => (
-        <div key={entry.position} className="space-y-1">
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-mono font-semibold text-foreground">{entry.position}</span>
-            <span className="text-muted-foreground">
-              {entry.minutes}분 · {entry.percentage}%
-            </span>
+    <div className="flex items-start gap-6">
+      <svg width={160} height={160} viewBox="0 0 160 160">
+        {slices.map((s, i) => (
+          <path key={i} d={s.path} fill={s.color} stroke="white" strokeWidth={1} />
+        ))}
+      </svg>
+      <div className="space-y-1.5">
+        {slices.map((s, i) => (
+          <div key={i} className="flex items-center gap-2 text-sm">
+            <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ background: s.color }} />
+            <span className="text-muted-foreground w-24">{s.entry.position}</span>
+            <span className="font-medium">{s.entry.percentage}%</span>
+            <span className="text-muted-foreground text-xs">({s.entry.minutes}분)</span>
           </div>
-          <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-            <div
-              className={`h-full rounded-full ${BAR_COLORS[i % BAR_COLORS.length]}`}
-              style={{ width: `${entry.percentage}%` }}
-            />
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   )
 }

@@ -26,6 +26,7 @@ import { StatsTab } from './tabs/StatsTab'
 import { JerseyTab } from './tabs/JerseyTab'
 import { MotivationTab } from './tabs/MotivationTab'
 import { PositionDiversityChart } from '@/components/players/PositionDiversityChart'
+import { playerPdiApi, type PositionDiversityEntry } from '@/services/playerPdi.service'
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts'
@@ -112,6 +113,7 @@ export function PlayerDetailPage() {
   const [mvHistory, setMvHistory] = useState<MarketValueEntry[]>([])
   const [mvInput, setMvInput] = useState('')
   const [mvSaving, setMvSaving] = useState(false)
+  const [pdiData, setPdiData] = useState<PositionDiversityEntry[]>([])
 
   const confirm = useConfirm()
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
@@ -162,6 +164,11 @@ export function PlayerDetailPage() {
     if (!id || !canSeeMarketValue) return
     playerApi.getMarketValueHistory(id).then(setMvHistory).catch(() => null)
   }, [id, canSeeMarketValue])
+
+  useEffect(() => {
+    if (!player || player.team?.type !== 'YOUTH') return
+    playerPdiApi.get(player.id).then(setPdiData).catch(() => setPdiData([]))
+  }, [player])
 
   const handleMvUpdate = async () => {
     if (!id || !mvInput) return
@@ -463,7 +470,7 @@ export function PlayerDetailPage() {
               {player.team?.type === 'YOUTH' && (
                 <div className="rounded-lg border bg-card p-5">
                   <h3 className="text-sm font-semibold text-foreground mb-3">포지션 다양성 지수</h3>
-                  <PositionDiversityChart playerId={player.id} />
+                  <PositionDiversityChart data={pdiData} />
                 </div>
               )}
             </div>
