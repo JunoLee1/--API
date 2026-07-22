@@ -34,12 +34,12 @@ export class YouthRegistrationRepository {
       data: {
         playerName: data.playerName,
         birthDate: new Date(data.birthDate),
-        preferredJerseyNumber: data.preferredJerseyNumber,
+        ...(data.preferredJerseyNumber != null && { preferredJerseyNumber: data.preferredJerseyNumber }),
         teamId: data.teamId,
-        guardianId: data.guardianId,
+        ...(data.guardianId != null && { guardianId: data.guardianId }),
         requestedById: data.requestedById,
         status: "PENDING",
-      },
+      } as any,
       include: { team: { select: { id: true, name: true } } },
     });
   }

@@ -26,6 +26,7 @@ import coachAvailabilityRouter from "./coach-availability/coach-availability.rou
 import trainingLoadRouter from "./training-load/training-load.routes";
 import teamRouter from "./team/team.routes";
 import playerCallupRouter from "./player-callup/player-callup.routes";
+import youthRegistrationRouter from "./youth-registration/youth-registration.routes";
 
 const apiRouter = Router();
 
@@ -56,5 +57,6 @@ apiRouter.use("/coach-availabilities", coachAvailabilityRouter);
 apiRouter.use("/training-loads", trainingLoadRouter);
 apiRouter.use("/teams", teamRouter);
 apiRouter.use("/player-callups", playerCallupRouter);
+apiRouter.use("/youth-registrations", youthRegistrationRouter);
 
 export default apiRouter;
