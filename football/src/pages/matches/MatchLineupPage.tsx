@@ -18,6 +18,7 @@ import { POSITION_ABBR } from '@/types/player'
 import type { Player } from '@/types/player'
 import { playerApi } from '@/services/player.service'
 import { lineupApi } from '@/services/lineup.service'
+import { injuryApi } from '@/services/injury.service'
 import type { LineupPlayer, LineupDragPayload } from '@/types/lineup'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 
@@ -119,6 +120,7 @@ export function MatchLineupPage() {
   const matchId = Number(id)
 
   const [allPlayers, setAllPlayers] = useState<Player[]>([])
+  const [injuredPlayerIds, setInjuredPlayerIds] = useState<Set<string>>(new Set())
   const [formation, setFormation] = useState<SupportedFormation>('4-3-3')
   const [slots, setSlots] = useState<SlotMap>({})
   const [bench, setBench] = useState<LineupPlayer[]>([])
@@ -141,9 +143,11 @@ export function MatchLineupPage() {
     Promise.all([
       playerApi.list({ status: 'ACTIVE' }),
       lineupApi.get(matchId),
+      injuryApi.active().catch(() => [] as { playerId: string }[]),
     ])
-      .then(([players, lineup]) => {
+      .then(([players, lineup, injuries]) => {
         setAllPlayers(players)
+        setInjuredPlayerIds(new Set(injuries.map((inj) => inj.playerId)))
         if (lineup) {
           setFormation(lineup.formation)
           setIsConfirmed(lineup.isConfirmed)
@@ -344,31 +348,37 @@ export function MatchLineupPage() {
             <p className="text-[10px] text-muted-foreground mt-0.5">{pool.length}명 대기</p>
           </div>
           <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-1">
-            {pool.map((p) => (
-              <div
-                key={p.id}
-                draggable={canEdit}
-                onDragStart={(e) => {
-                  const payload: LineupDragPayload = {
-                    playerId: p.id,
-                    playerName: p.playerName,
-                    position: p.position,
-                    src: 'POOL',
-                  }
-                  e.dataTransfer.setData(DRAG_KEY, JSON.stringify(payload))
-                  e.dataTransfer.effectAllowed = 'move'
-                }}
-                className={cn(
-                  'flex items-center gap-2 rounded-lg border bg-background p-2 text-[11px]',
-                  canEdit ? 'cursor-grab active:cursor-grabbing' : 'cursor-default',
-                )}
-              >
-                <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-[9px] font-bold shrink-0">
-                  {POSITION_ABBR[p.position as keyof typeof POSITION_ABBR] ?? '?'}
+            {pool.map((p) => {
+              const isInjured = injuredPlayerIds.has(p.id)
+              return (
+                <div
+                  key={p.id}
+                  draggable={canEdit && !isInjured}
+                  onDragStart={(e) => {
+                    if (isInjured) { e.preventDefault(); return }
+                    const payload: LineupDragPayload = {
+                      playerId: p.id,
+                      playerName: p.playerName,
+                      position: p.position,
+                      src: 'POOL',
+                    }
+                    e.dataTransfer.setData(DRAG_KEY, JSON.stringify(payload))
+                    e.dataTransfer.effectAllowed = 'move'
+                  }}
+                  title={isInjured ? '부상 중 - 라인업 등록 불가' : undefined}
+                  className={cn(
+                    'flex items-center gap-2 rounded-lg border bg-background p-2 text-[11px]',
+                    isInjured ? 'opacity-50 cursor-not-allowed' : canEdit ? 'cursor-grab active:cursor-grabbing' : 'cursor-default',
+                  )}
+                >
+                  <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-[9px] font-bold shrink-0">
+                    {POSITION_ABBR[p.position as keyof typeof POSITION_ABBR] ?? '?'}
+                  </div>
+                  <span className="truncate font-medium">{p.playerName}</span>
+                  {isInjured && <span className="ml-auto text-red-500 shrink-0">🚑</span>}
                 </div>
-                <span className="truncate font-medium">{p.playerName}</span>
-              </div>
-            ))}
+              )
+            })}
             {pool.length === 0 && (
               <p className="text-[10px] text-muted-foreground text-center pt-4">모든 선수가 배치됨</p>
             )}
@@ -403,11 +413,14 @@ export function MatchLineupPage() {
                 canEdit ? 'border-muted-foreground/30' : 'border-muted/20',
               )}
             >
-              {bench.map((p, i) => (
+              {bench.map((p, i) => {
+                const isInjured = injuredPlayerIds.has(p.id)
+                return (
                 <div
                   key={p.id}
-                  draggable={canEdit}
+                  draggable={canEdit && !isInjured}
                   onDragStart={(e) => {
+                    if (isInjured) { e.preventDefault(); return }
                     const payload: LineupDragPayload = {
                       playerId: p.id,
                       playerName: p.playerName,
@@ -418,8 +431,13 @@ export function MatchLineupPage() {
                     e.dataTransfer.setData(DRAG_KEY, JSON.stringify(payload))
                     e.dataTransfer.effectAllowed = 'move'
                   }}
-                  className="flex items-center gap-1 rounded-full border bg-muted px-2 py-0.5 text-[10px] cursor-grab"
+                  title={isInjured ? '부상 중 - 라인업 등록 불가' : undefined}
+                  className={cn(
+                    'flex items-center gap-1 rounded-full border bg-muted px-2 py-0.5 text-[10px]',
+                    isInjured ? 'opacity-50 cursor-not-allowed border-red-300' : 'cursor-grab',
+                  )}
                 >
+                  {isInjured && <span className="text-red-500 text-[9px]">🚑</span>}
                   <span>{p.playerName}</span>
                   {canEdit && (
                     <button
@@ -433,7 +451,8 @@ export function MatchLineupPage() {
                     </button>
                   )}
                 </div>
-              ))}
+              )
+              })}
               {bench.length === 0 && (
                 <span className="text-[10px] text-muted-foreground self-center">
                   선수를 여기로 드래그하면 후보로 등록됩니다

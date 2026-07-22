@@ -73,12 +73,12 @@ function CreatePlanDialog({ open, onOpenChange, playerId, seasons, onSaved }: Cr
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
             <Label>시즌 *</Label>
-            <Select
-              value={seasonId}
-              onValueChange={setSeasonId}
-              items={Object.fromEntries(seasons.map(s => [String(s.id), s.name]))}
-            >
-              <SelectTrigger><SelectValue placeholder="시즌 선택" /></SelectTrigger>
+            <Select value={seasonId} onValueChange={setSeasonId}>
+              <SelectTrigger>
+                {seasonId
+                  ? <span>{seasons.find(s => String(s.id) === seasonId)?.name ?? seasonId}</span>
+                  : <span className="text-muted-foreground">시즌 선택</span>}
+              </SelectTrigger>
               <SelectContent>
                 {seasons.map(s => <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>)}
               </SelectContent>

@@ -195,7 +195,7 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
               <Label>주발 *</Label>
               <Select value={foot} onValueChange={setFoot}>
                 <SelectTrigger>
-                  <SelectValue placeholder="선택" />
+                  {foot ? <span>{FOOT_LABEL[foot]}</span> : <span className="text-muted-foreground">선택</span>}
                 </SelectTrigger>
                 <SelectContent>
                   {FEET.map((f) => (
@@ -242,7 +242,9 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
               <Label>포지션 *</Label>
               <Select value={position} onValueChange={(v) => setPosition(v as Position)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="선택" />
+                  {position
+                    ? <span>{POSITION_ABBR[position]} · {POSITION_LABEL[position]}</span>
+                    : <span className="text-muted-foreground">선택</span>}
                 </SelectTrigger>
                 <SelectContent>
                   {POSITIONS.map((p) => (
@@ -259,7 +261,9 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
               <Label>레벨 *</Label>
               <Select value={level} onValueChange={(v) => setLevel(v as PlayerLevel)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="선택" />
+                  {level
+                    ? <span>{LEVEL_LABEL[level]}{level === 'YOUTH' ? ' (만 8–18세)' : ''}</span>
+                    : <span className="text-muted-foreground">선택</span>}
                 </SelectTrigger>
                 <SelectContent>
                   {LEVELS.map((l) => (
@@ -280,7 +284,12 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
               onValueChange={(v) => setNationalityId(Number(v))}
             >
               <SelectTrigger>
-                <SelectValue placeholder="국적 선택" />
+                {nationalityId !== ''
+                  ? (() => {
+                      const c = countries.find((c) => c.id === nationalityId)
+                      return c ? <span>{c.code} · {c.name}</span> : <span className="text-muted-foreground">국적 선택</span>
+                    })()
+                  : <span className="text-muted-foreground">국적 선택</span>}
               </SelectTrigger>
               <SelectContent>
                 {countries.map((c) => (

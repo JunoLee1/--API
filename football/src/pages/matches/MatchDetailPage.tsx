@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ArrowLeft, Pencil, Trash2, Plus } from 'lucide-react'
+import { ArrowLeft, Pencil, Trash2, Plus, Users } from 'lucide-react'
 import { playerApi } from '@/services/player.service'
 import { POSITION_ABBR, POSITION_ZONE, POSITION_LABEL } from '@/types/player'
 import type { Player, Position } from '@/types/player'
@@ -601,8 +601,7 @@ function AddShotDialog({
                 <SelectContent>
                   {ALL_POSITIONS.map((pos) => (
                     <SelectItem key={pos} value={pos}>
-                      <span className="font-mono text-xs">{POSITION_ABBR[pos as Position]}</span>
-                      <span className="ml-2 text-muted-foreground">{POSITION_LABEL[pos as Position]}</span>
+                      <span><span className="font-mono text-xs">{POSITION_ABBR[pos as Position]}</span><span className="ml-2 text-muted-foreground">{POSITION_LABEL[pos as Position]}</span></span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -738,6 +737,9 @@ export function MatchDetailPage() {
         <div className="flex-1" />
         {canInputStats && (
           <>
+            <Button variant="outline" size="sm" onClick={() => navigate(`/matches/${id}/lineup`)}>
+              <Users className="h-3.5 w-3.5 mr-1.5" />라인업 관리
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setPlayerStatsOpen(true)}>
               <Pencil className="h-3.5 w-3.5 mr-1.5" />선수 기록 입력
             </Button>
