@@ -46,7 +46,7 @@
 - Modify: `apps/api/src/admin/admin.controller.ts`
 - Modify: `apps/api/src/admin/admin.routes.ts`
 
-- [ ] **Step 1: `admin.repo.ts`에 `listAuditLogs()` 추가**
+- [x] **Step 1: `admin.repo.ts`에 `listAuditLogs()` 추가**
 
 파일을 열어 클래스 마지막에 추가:
 
@@ -102,7 +102,7 @@ countAuditLogs(filters: { actorId?: number; action?: string; from?: string; to?:
 }
 ```
 
-- [ ] **Step 2: `admin.service.ts`에 `getAuditLogs()` 추가**
+- [x] **Step 2: `admin.service.ts`에 `getAuditLogs()` 추가**
 
 ```typescript
 async getAuditLogs(filters: {
@@ -121,7 +121,7 @@ async getAuditLogs(filters: {
 }
 ```
 
-- [ ] **Step 3: `admin.controller.ts`에 `listAuditLogs` 핸들러 추가**
+- [x] **Step 3: `admin.controller.ts`에 `listAuditLogs` 핸들러 추가**
 
 ```typescript
 listAuditLogs = async (req: Request, res: Response, next: NextFunction) => {
@@ -142,7 +142,7 @@ listAuditLogs = async (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 4: `admin.routes.ts`에 라우트 등록**
+- [x] **Step 4: `admin.routes.ts`에 라우트 등록**
 
 기존 `router.get("/users", ...)` 위에 추가:
 
@@ -150,7 +150,7 @@ listAuditLogs = async (req: Request, res: Response, next: NextFunction) => {
 router.get("/audit-logs", auth, controller.listAuditLogs);
 ```
 
-- [ ] **Step 5: 동작 확인**
+- [x] **Step 5: 동작 확인**
 
 ```bash
 cd apps/api && npx ts-node -e "
@@ -161,7 +161,7 @@ console.log('컴파일 확인');
 
 Expected: 타입 오류 없음
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/admin/
@@ -176,7 +176,7 @@ git commit -m "feat(admin): add GET /admin/audit-logs endpoint with pagination"
 - Create: `football/src/types/auditLog.ts`
 - Modify: `football/src/services/admin.service.ts`
 
-- [ ] **Step 1: `football/src/types/auditLog.ts` 생성**
+- [x] **Step 1: `football/src/types/auditLog.ts` 생성**
 
 ```typescript
 export interface AuditLogActor {
@@ -210,7 +210,7 @@ export interface AuditLogFilters {
 }
 ```
 
-- [ ] **Step 2: `football/src/services/admin.service.ts` 확인 및 `auditLogApi` 추가**
+- [x] **Step 2: `football/src/services/admin.service.ts` 확인 및 `auditLogApi` 추가**
 
 파일이 없으면 생성, 있으면 추가:
 
@@ -232,7 +232,7 @@ export const auditLogApi = {
 }
 ```
 
-- [ ] **Step 3: TypeScript 확인**
+- [x] **Step 3: TypeScript 확인**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | head -20
@@ -240,7 +240,7 @@ cd football && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 오류 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/types/auditLog.ts football/src/services/admin.service.ts
@@ -256,7 +256,7 @@ git commit -m "feat(admin): add AuditLog types and API service"
 - Modify: `football/src/App.tsx`
 - Modify: `football/src/layouts/AppShell.tsx`
 
-- [ ] **Step 1: `AuditLogPage.tsx` 생성**
+- [x] **Step 1: `AuditLogPage.tsx` 생성**
 
 ```typescript
 import { useState, useEffect, useCallback } from 'react'
@@ -415,7 +415,7 @@ export function AuditLogPage() {
 }
 ```
 
-- [ ] **Step 2: `App.tsx`에 라우트 추가**
+- [x] **Step 2: `App.tsx`에 라우트 추가**
 
 기존 admin 라우트 근처에 추가:
 
@@ -425,7 +425,7 @@ import { AuditLogPage } from '@/pages/admin/AuditLogPage'
 <Route path="/admin/audit-logs" element={<AuditLogPage />} />
 ```
 
-- [ ] **Step 3: `AppShell.tsx`에 사이드바 링크 추가**
+- [x] **Step 3: `AppShell.tsx`에 사이드바 링크 추가**
 
 관리자 섹션에 추가 (기존 Users 링크 아래):
 
@@ -435,7 +435,7 @@ import { AuditLogPage } from '@/pages/admin/AuditLogPage'
 
 `ClipboardList`는 lucide-react에서 import.
 
-- [ ] **Step 4: TypeScript 확인**
+- [x] **Step 4: TypeScript 확인**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | head -20
@@ -443,7 +443,7 @@ cd football && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 오류 없음
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/pages/admin/AuditLogPage.tsx football/src/App.tsx football/src/layouts/AppShell.tsx
@@ -462,7 +462,7 @@ git commit -m "feat(admin): add AuditLog page with date/action filter and pagina
 - Modify: `football/src/types/contract.ts`
 - Modify: `football/src/services/contract.service.ts`
 
-- [ ] **Step 1: `football/src/types/contract.ts`에 타입 추가**
+- [x] **Step 1: `football/src/types/contract.ts`에 타입 추가**
 
 파일 하단에 추가:
 
@@ -510,7 +510,7 @@ export interface CreateBonusDto {
 }
 ```
 
-- [ ] **Step 2: `football/src/services/contract.service.ts`에 API 추가**
+- [x] **Step 2: `football/src/services/contract.service.ts`에 API 추가**
 
 ```typescript
 addBuyout: (contractId: number, amount: number) =>
@@ -528,13 +528,13 @@ import 추가:
 import type { ..., CreateExtensionDto, CreateBonusDto } from '@/types/contract'
 ```
 
-- [ ] **Step 3: TypeScript 확인**
+- [x] **Step 3: TypeScript 확인**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | head -20
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/types/contract.ts football/src/services/contract.service.ts
@@ -550,7 +550,7 @@ git commit -m "feat(contract): extend types and service for buyout/extension/bon
 - Modify: `football/src/pages/contracts/ContractsPage.tsx`
 - Modify: `football/src/App.tsx`
 
-- [ ] **Step 1: `ContractDetailPage.tsx` 생성**
+- [x] **Step 1: `ContractDetailPage.tsx` 생성**
 
 ```typescript
 import { useState, useEffect } from 'react'
@@ -956,7 +956,7 @@ export function ContractDetailPage() {
 }
 ```
 
-- [ ] **Step 2: `ContractsPage.tsx`에 행 클릭 → navigate 추가**
+- [x] **Step 2: `ContractsPage.tsx`에 행 클릭 → navigate 추가**
 
 `useNavigate` hook 추가 및 `TableRow`에 onClick 추가:
 
@@ -975,7 +975,7 @@ const navigate = useNavigate()
 >
 ```
 
-- [ ] **Step 3: `App.tsx`에 라우트 추가**
+- [x] **Step 3: `App.tsx`에 라우트 추가**
 
 ```typescript
 import { ContractDetailPage } from '@/pages/contracts/ContractDetailPage'
@@ -985,7 +985,7 @@ import { ContractDetailPage } from '@/pages/contracts/ContractDetailPage'
 
 기존 `/contracts` 라우트 바로 아래에 배치.
 
-- [ ] **Step 4: TypeScript 확인**
+- [x] **Step 4: TypeScript 확인**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | head -20
@@ -993,7 +993,7 @@ cd football && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 오류 없음
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/pages/contracts/ContractDetailPage.tsx \

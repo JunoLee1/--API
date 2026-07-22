@@ -74,7 +74,7 @@ CANDIDATE → SHORTLISTED → APPROVAL_PENDING → CONTRACTED → RETIRED
 - Modify: `apps/api/src/notification/notification.repo.ts`
 - Modify: `apps/api/src/notification/notification.service.ts`
 
-- [ ] **Step 1: notification.repo.ts에 `createForTD` 추가**
+- [x] **Step 1: notification.repo.ts에 `createForTD` 추가**
 
 `createForAdmin` 바로 뒤에 삽입:
 
@@ -93,7 +93,7 @@ createForTD(type: string, title: string, body: string, entityId?: number) {
 }
 ```
 
-- [ ] **Step 2: notification.service.ts에 coach 알림 4개 추가**
+- [x] **Step 2: notification.service.ts에 coach 알림 4개 추가**
 
 `notifyProspectSigned` 메서드 뒤에 추가:
 
@@ -126,7 +126,7 @@ async notifyCoachArchived(coachName: string, coachId: number, roundCreatorId: nu
 }
 ```
 
-- [ ] **Step 3: tsc 체크**
+- [x] **Step 3: tsc 체크**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -20
@@ -134,7 +134,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 0 errors
 
-- [ ] **Step 4: commit**
+- [x] **Step 4: commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -149,7 +149,7 @@ git commit -m "feat(coach): add coach domain notification methods"
 **Files:**
 - Create: `apps/api/src/coach/dto/coach.dto.ts`
 
-- [ ] **Step 1: DTO 파일 작성**
+- [x] **Step 1: DTO 파일 작성**
 
 ```typescript
 import {
@@ -260,7 +260,7 @@ export interface UpdateTutorAssignmentDto {
 }
 ```
 
-- [ ] **Step 2: commit**
+- [x] **Step 2: commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -275,7 +275,7 @@ git commit -m "feat(coach): add coach BE DTOs"
 **Files:**
 - Create: `apps/api/src/coach/coach.repo.ts`
 
-- [ ] **Step 1: repo 작성 (상태머신 포함)**
+- [x] **Step 1: repo 작성 (상태머신 포함)**
 
 ```typescript
 import { PrismaClient } from "../generated/client";
@@ -529,7 +529,7 @@ export class CoachRepository {
 }
 ```
 
-- [ ] **Step 2: tsc 체크**
+- [x] **Step 2: tsc 체크**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -20
@@ -537,7 +537,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 0 errors
 
-- [ ] **Step 3: commit**
+- [x] **Step 3: commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -552,7 +552,7 @@ git commit -m "feat(coach): add CoachRepository with state machine + eval upsert
 **Files:**
 - Create: `apps/api/src/coach/coach.service.ts`
 
-- [ ] **Step 1: service 작성**
+- [x] **Step 1: service 작성**
 
 ```typescript
 import { CoachRepository } from "./coach.repo";
@@ -673,7 +673,7 @@ export class CoachService {
 }
 ```
 
-- [ ] **Step 2: tsc 체크**
+- [x] **Step 2: tsc 체크**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -20
@@ -681,7 +681,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 0 errors
 
-- [ ] **Step 3: commit**
+- [x] **Step 3: commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -698,7 +698,7 @@ git commit -m "feat(coach): add CoachService with notification triggers"
 - Create: `apps/api/src/coach/coach.routes.ts`
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: controller 작성**
+- [x] **Step 1: controller 작성**
 
 ```typescript
 import { Request, Response, NextFunction } from "express";
@@ -831,7 +831,7 @@ export class CoachController {
 }
 ```
 
-- [ ] **Step 2: routes 작성**
+- [x] **Step 2: routes 작성**
 
 ```typescript
 import { Router } from "express";
@@ -871,7 +871,7 @@ router.patch("/:id/tutors/:tutorId", auth, controller.updateTutor);
 export default router;
 ```
 
-- [ ] **Step 3: apiRouter.ts에 마운트**
+- [x] **Step 3: apiRouter.ts에 마운트**
 
 `apps/api/src/apiRouter.ts`에서 `import medicalExpenseRouter` 줄 아래에 추가:
 
@@ -885,7 +885,7 @@ import coachRouter from "./coach/coach.routes";
 apiRouter.use("/coaches", coachRouter);
 ```
 
-- [ ] **Step 4: tsc 체크**
+- [x] **Step 4: tsc 체크**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -20
@@ -893,7 +893,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 0 errors
 
-- [ ] **Step 5: commit**
+- [x] **Step 5: commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -908,7 +908,7 @@ git commit -m "feat(coach): add coach controller, routes, and apiRouter registra
 **Files:**
 - Create: `apps/api/__test__/coach/coach.hiring.test.ts`
 
-- [ ] **Step 1: 테스트 파일 작성**
+- [x] **Step 1: 테스트 파일 작성**
 
 ```typescript
 import 'dotenv/config';
@@ -1045,7 +1045,7 @@ describe('CoachTutorAssignment', () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인 (파일만 작성, 아직 API 서버 불필요 - 직접 DB 테스트)**
+- [x] **Step 2: 실패 확인 (파일만 작성, 아직 API 서버 불필요 - 직접 DB 테스트)**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx jest __test__/coach/coach.hiring.test.ts --no-coverage 2>&1 | tail -20
@@ -1053,7 +1053,7 @@ cd /Users/juno/work/football/apps/api && npx jest __test__/coach/coach.hiring.te
 
 Expected: PASS (DB 통합 테스트, schema 검증)
 
-- [ ] **Step 3: commit**
+- [x] **Step 3: commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -1069,7 +1069,7 @@ git commit -m "test(coach): add coach hiring integration tests"
 - Create: `football/src/types/coach.ts`
 - Create: `football/src/services/coach.service.ts`
 
-- [ ] **Step 1: types/coach.ts 작성**
+- [x] **Step 1: types/coach.ts 작성**
 
 ```typescript
 export type CoachingRole =
@@ -1252,7 +1252,7 @@ export const TIER1_ROLES: CoachingRole[] = [
 ]
 ```
 
-- [ ] **Step 2: services/coach.service.ts 작성**
+- [x] **Step 2: services/coach.service.ts 작성**
 
 ```typescript
 import { api } from './api'
@@ -1296,7 +1296,7 @@ export const coachApi = {
 }
 ```
 
-- [ ] **Step 3: tsc 체크**
+- [x] **Step 3: tsc 체크**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -20
@@ -1304,7 +1304,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 0 errors
 
-- [ ] **Step 4: commit**
+- [x] **Step 4: commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -1319,7 +1319,7 @@ git commit -m "feat(coach): add FE types and coach API service"
 **Files:**
 - Create: `football/src/pages/coaches/HiringRoundsPage.tsx`
 
-- [ ] **Step 1: HiringRoundsPage 작성**
+- [x] **Step 1: HiringRoundsPage 작성**
 
 ```typescript
 import { useEffect, useState } from 'react'
@@ -1562,7 +1562,7 @@ export function HiringRoundsPage() {
 }
 ```
 
-- [ ] **Step 2: tsc 체크**
+- [x] **Step 2: tsc 체크**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -20
@@ -1570,7 +1570,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 0 errors
 
-- [ ] **Step 3: commit**
+- [x] **Step 3: commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -1585,7 +1585,7 @@ git commit -m "feat(coach): add HiringRoundsPage"
 **Files:**
 - Create: `football/src/pages/coaches/CoachListPage.tsx`
 
-- [ ] **Step 1: CoachListPage 작성**
+- [x] **Step 1: CoachListPage 작성**
 
 ```typescript
 import { useEffect, useState } from 'react'
@@ -1898,7 +1898,7 @@ export function CoachListPage() {
 }
 ```
 
-- [ ] **Step 2: tsc 체크**
+- [x] **Step 2: tsc 체크**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -20
@@ -1906,7 +1906,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 0 errors
 
-- [ ] **Step 3: commit**
+- [x] **Step 3: commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -1921,7 +1921,7 @@ git commit -m "feat(coach): add CoachListPage with status transitions"
 **Files:**
 - Create: `football/src/pages/coaches/CoachDetailPage.tsx`
 
-- [ ] **Step 1: CoachDetailPage 작성**
+- [x] **Step 1: CoachDetailPage 작성**
 
 ```typescript
 import { useEffect, useState } from 'react'
@@ -2423,7 +2423,7 @@ export function CoachDetailPage() {
 }
 ```
 
-- [ ] **Step 2: tsc 체크**
+- [x] **Step 2: tsc 체크**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -20
@@ -2431,7 +2431,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 0 errors
 
-- [ ] **Step 3: commit**
+- [x] **Step 3: commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -2447,7 +2447,7 @@ git commit -m "feat(coach): add CoachDetailPage with evaluation and tutor sectio
 - Modify: `football/src/App.tsx`
 - Modify: `football/src/layouts/AppShell.tsx`
 
-- [ ] **Step 1: App.tsx — import 3개 추가**
+- [x] **Step 1: App.tsx — import 3개 추가**
 
 기존 `import { MedicalExpensesPage }` 줄 아래에 삽입:
 
@@ -2457,7 +2457,7 @@ import { CoachListPage } from '@/pages/coaches/CoachListPage'
 import { CoachDetailPage } from '@/pages/coaches/CoachDetailPage'
 ```
 
-- [ ] **Step 2: App.tsx — Route 3개 추가**
+- [x] **Step 2: App.tsx — Route 3개 추가**
 
 `<Route path="/admin/users" element={<UsersPage />} />` 줄 바로 위에 삽입:
 
@@ -2467,7 +2467,7 @@ import { CoachDetailPage } from '@/pages/coaches/CoachDetailPage'
 <Route path="/coaches/:id" element={<CoachDetailPage />} />
 ```
 
-- [ ] **Step 3: AppShell.tsx — Briefcase import 추가**
+- [x] **Step 3: AppShell.tsx — Briefcase import 추가**
 
 기존 lucide-react import 목록에 `Briefcase` 추가:
 
@@ -2481,7 +2481,7 @@ import {
 } from 'lucide-react'
 ```
 
-- [ ] **Step 4: AppShell.tsx — NAV_ITEMS에 항목 추가**
+- [x] **Step 4: AppShell.tsx — NAV_ITEMS에 항목 추가**
 
 `// 계약·영입` 섹션의 마지막 항목(`/transfers`) 뒤에 삽입:
 
@@ -2496,7 +2496,7 @@ import {
 },
 ```
 
-- [ ] **Step 5: tsc 체크**
+- [x] **Step 5: tsc 체크**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -20
@@ -2504,7 +2504,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 0 errors
 
-- [ ] **Step 6: commit**
+- [x] **Step 6: commit**
 
 ```bash
 cd /Users/juno/work/football

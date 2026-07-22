@@ -44,7 +44,7 @@
 **Files:**
 - Modify: `apps/api/src/training/training.repo.ts`
 
-- [ ] **Step 1: `findResults` 메서드 추가**
+- [x] **Step 1: `findResults` 메서드 추가**
 
 `training.repo.ts`의 클래스 마지막에 추가:
 
@@ -88,7 +88,7 @@ findResults(filters: {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/training/training.repo.ts
@@ -104,7 +104,7 @@ git commit -m "feat(training): add findResults repo method with date/type/player
 - Modify: `apps/api/src/training/training.controller.ts`
 - Modify: `apps/api/src/training/training.routes.ts`
 
-- [ ] **Step 1: service에 `getResults` 추가**
+- [x] **Step 1: service에 `getResults` 추가**
 
 `training.service.ts` 클래스 마지막에:
 
@@ -114,7 +114,7 @@ getResults(filters: { from?: string; to?: string; sessionType?: string; playerId
 }
 ```
 
-- [ ] **Step 2: controller에 `getResults` 핸들러 추가**
+- [x] **Step 2: controller에 `getResults` 핸들러 추가**
 
 `training.controller.ts` 클래스 마지막에:
 
@@ -132,7 +132,7 @@ getResults = async (req: Request, res: Response) => {
 
 > `next`가 없다면 컨트롤러 시그니처를 `(req, res, next)` 로 수정하거나 기존 패턴에 맞게 try/catch 처리한다.
 
-- [ ] **Step 3: route 등록**
+- [x] **Step 3: route 등록**
 
 `training.routes.ts`에서 `router.get("/", ...)` 위에 추가:
 
@@ -140,7 +140,7 @@ getResults = async (req: Request, res: Response) => {
 router.get("/results", auth, controller.getResults);
 ```
 
-- [ ] **Step 4: 수동 검증**
+- [x] **Step 4: 수동 검증**
 
 ```bash
 curl -s "http://localhost:3000/training/results?from=2026-07-01&to=2026-07-31" \
@@ -149,7 +149,7 @@ curl -s "http://localhost:3000/training/results?from=2026-07-01&to=2026-07-31" \
 
 응답에 `session.date`, `session.sessionType`, `player.name`, `attendance`, `performanceScore` 포함 확인.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/training/training.service.ts \
@@ -166,7 +166,7 @@ git commit -m "feat(training): GET /training/results with date/sessionType/playe
 - Modify: `football/src/types/training.ts`
 - Modify: `football/src/services/training.service.ts`
 
-- [ ] **Step 1: `TrainingResultRow` 타입 추가**
+- [x] **Step 1: `TrainingResultRow` 타입 추가**
 
 `football/src/types/training.ts` 하단에:
 
@@ -199,7 +199,7 @@ export interface TrainingResultFilters {
 }
 ```
 
-- [ ] **Step 2: `trainingApi.getResults` 추가**
+- [x] **Step 2: `trainingApi.getResults` 추가**
 
 `football/src/services/training.service.ts`에서 `trainingApi` 객체에:
 
@@ -214,7 +214,7 @@ getResults: (filters: TrainingResultFilters) => {
 },
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/types/training.ts football/src/services/training.service.ts
@@ -228,13 +228,13 @@ git commit -m "feat(training): add TrainingResultRow type and getResults API cal
 **Files:**
 - Create: `football/src/pages/training/TrainingResultsPage.tsx`
 
-- [ ] **Step 1: papaparse 설치 확인**
+- [x] **Step 1: papaparse 설치 확인**
 
 ```bash
 cd football && grep '"papaparse"' package.json || npm install papaparse @types/papaparse
 ```
 
-- [ ] **Step 2: 페이지 작성**
+- [x] **Step 2: 페이지 작성**
 
 `football/src/pages/training/TrainingResultsPage.tsx`:
 
@@ -387,7 +387,7 @@ export function TrainingResultsPage() {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/pages/training/TrainingResultsPage.tsx
@@ -401,7 +401,7 @@ git commit -m "feat(training): add TrainingResultsPage with date filter and CSV 
 **Files:**
 - Modify: `football/src/App.tsx`
 
-- [ ] **Step 1: import 추가**
+- [x] **Step 1: import 추가**
 
 `App.tsx` 상단 import 블록에:
 
@@ -409,7 +409,7 @@ git commit -m "feat(training): add TrainingResultsPage with date filter and CSV 
 import { TrainingResultsPage } from '@/pages/training/TrainingResultsPage'
 ```
 
-- [ ] **Step 2: 라우트 추가**
+- [x] **Step 2: 라우트 추가**
 
 `/training` 라우트 아래에 (`/training/:id` **위에**):
 
@@ -417,11 +417,11 @@ import { TrainingResultsPage } from '@/pages/training/TrainingResultsPage'
 <Route path="/training/results" element={<TrainingResultsPage />} />
 ```
 
-- [ ] **Step 3: 사이드바 링크 확인**
+- [x] **Step 3: 사이드바 링크 확인**
 
 사이드바/네비에 훈련 메뉴가 있다면 "훈련 결과" 링크(`/training/results`)를 추가한다. 사이드바 파일은 `football/src/layouts/AppShell.tsx` 또는 `Sidebar.tsx`를 찾아 기존 `/training` 링크 아래에 동일 패턴으로 삽입.
 
-- [ ] **Step 4: 수동 검증**
+- [x] **Step 4: 수동 검증**
 
 ```
 브라우저 → /training/results
@@ -430,7 +430,7 @@ import { TrainingResultsPage } from '@/pages/training/TrainingResultsPage'
 3. CSV 내보내기 → 파일 다운로드, Excel에서 UTF-8 BOM 정상 표시 확인
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/App.tsx
@@ -446,7 +446,7 @@ git commit -m "feat(training): register /training/results route"
 **Files:**
 - Modify: `prisma/schema.prisma`
 
-- [ ] **Step 1: enum 수정**
+- [x] **Step 1: enum 수정**
 
 `prisma/schema.prisma`의 `enum ReportType`:
 
@@ -459,7 +459,7 @@ enum ReportType {
 }
 ```
 
-- [ ] **Step 2: 마이그레이션**
+- [x] **Step 2: 마이그레이션**
 
 ```bash
 cd apps/api
@@ -469,7 +469,7 @@ npx prisma generate
 
 Expected: `Migration 20260718..._add_training_report_type applied`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add prisma/schema.prisma apps/api/prisma/migrations/
@@ -484,7 +484,7 @@ git commit -m "feat(report): add TRAINING to ReportType enum"
 - Modify: `apps/api/src/report/report.controller.ts`
 - Modify: `apps/api/src/report/report.service.ts`
 
-- [ ] **Step 1: controller에 `isHeadCoach` 헬퍼 추가**
+- [x] **Step 1: controller에 `isHeadCoach` 헬퍼 추가**
 
 `report.controller.ts` 상단 `isGM` 함수 아래에:
 
@@ -494,7 +494,7 @@ function isHeadCoach(req: Request): boolean {
 }
 ```
 
-- [ ] **Step 2: `approve` 핸들러 권한 분기 수정**
+- [x] **Step 2: `approve` 핸들러 권한 분기 수정**
 
 기존:
 ```typescript
@@ -512,7 +512,7 @@ if (!canApprove) throw new AppError(403, 'FORBIDDEN')
 
 > 컨트롤러가 service.approve를 호출하기 전에 report를 조회하지 않는다면, service.approve 내부에서 type을 확인하고 `AppError(403)` 을 던지도록 service 레이어에서 처리한다.
 
-- [ ] **Step 3: `reject` 핸들러도 동일하게 분기**
+- [x] **Step 3: `reject` 핸들러도 동일하게 분기**
 
 ```typescript
 const canReject =
@@ -520,7 +520,7 @@ const canReject =
 if (!canReject) throw new AppError(403, 'FORBIDDEN')
 ```
 
-- [ ] **Step 4: `list` — HEAD_COACH에게 TRAINING 보고서 노출**
+- [x] **Step 4: `list` — HEAD_COACH에게 TRAINING 보고서 노출**
 
 `report.repo.ts`의 `findAll`:
 
@@ -551,7 +551,7 @@ list(userId: number, isGM: boolean, isHeadCoach: boolean) {
 res.json(await this.service.list(req.user!.id, isGM(req), isHeadCoach(req)))
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/report/report.controller.ts \
@@ -567,13 +567,13 @@ git commit -m "feat(report): HEAD_COACH can approve/view TRAINING reports"
 **Files:**
 - Modify: `football/src/types/report.ts`
 
-- [ ] **Step 1: 타입 확장**
+- [x] **Step 1: 타입 확장**
 
 ```typescript
 export type ReportType = 'FINANCIAL' | 'PERFORMANCE' | 'MEDICAL' | 'TRAINING'
 ```
 
-- [ ] **Step 2: 레이블 추가**
+- [x] **Step 2: 레이블 추가**
 
 ```typescript
 export const REPORT_TYPE_LABEL: Record<ReportType, string> = {
@@ -584,7 +584,7 @@ export const REPORT_TYPE_LABEL: Record<ReportType, string> = {
 }
 ```
 
-- [ ] **Step 3: 스타일 추가**
+- [x] **Step 3: 스타일 추가**
 
 ```typescript
 export const REPORT_TYPE_STYLE: Record<ReportType, string> = {
@@ -595,7 +595,7 @@ export const REPORT_TYPE_STYLE: Record<ReportType, string> = {
 }
 ```
 
-- [ ] **Step 4: 타입 에러 확인**
+- [x] **Step 4: 타입 에러 확인**
 
 ```bash
 cd football && npx tsc --noEmit
@@ -603,7 +603,7 @@ cd football && npx tsc --noEmit
 
 Expected: 0 errors.
 
-- [ ] **Step 5: 수동 검증**
+- [x] **Step 5: 수동 검증**
 
 ```
 브라우저 → /reports/new
@@ -612,7 +612,7 @@ Expected: 0 errors.
 3. GM 계정으로 훈련 보고서 승인 시도 → 403 확인
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add football/src/types/report.ts

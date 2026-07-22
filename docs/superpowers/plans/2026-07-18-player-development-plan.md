@@ -41,7 +41,7 @@
 **Files:**
 - Modify: `apps/api/src/notification/notification.repo.ts`
 
-- [ ] **Step 1: createForUser 메서드 추가**
+- [x] **Step 1: createForUser 메서드 추가**
 
 파일을 열고 기존 `createForHeadCoach` 메서드 뒤에 추가:
 
@@ -53,7 +53,7 @@ createForUser(userId: number, type: string, title: string, body: string, entityI
 }
 ```
 
-- [ ] **Step 2: TypeScript 빌드 확인**
+- [x] **Step 2: TypeScript 빌드 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit
@@ -61,7 +61,7 @@ cd apps/api && npx tsc --noEmit
 
 Expected: 에러 없음
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add apps/api/src/notification/notification.repo.ts
@@ -76,7 +76,7 @@ git commit -m "feat(notification): add createForUser single-target method"
 - Create: `apps/api/src/development-plan/dto/development-plan.dto.ts`
 - Create: `apps/api/src/development-plan/development-plan.repo.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 `apps/api/__test__/development-plan/development-plan.service.test.ts` 생성:
 
@@ -145,7 +145,7 @@ describe('DevelopmentPlanRepository', () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 → 실패 확인**
+- [x] **Step 2: 테스트 실행 → 실패 확인**
 
 ```bash
 cd apps/api && npx jest __test__/development-plan/development-plan.service.test.ts --no-coverage 2>&1 | tail -5
@@ -153,7 +153,7 @@ cd apps/api && npx jest __test__/development-plan/development-plan.service.test.
 
 Expected: `Cannot find module '../../src/development-plan/development-plan.repo'`
 
-- [ ] **Step 3: DTO 파일 생성**
+- [x] **Step 3: DTO 파일 생성**
 
 `apps/api/src/development-plan/dto/development-plan.dto.ts`:
 
@@ -176,7 +176,7 @@ export interface PlanListQuery {
 }
 ```
 
-- [ ] **Step 4: Repo 파일 생성**
+- [x] **Step 4: Repo 파일 생성**
 
 `apps/api/src/development-plan/development-plan.repo.ts`:
 
@@ -266,7 +266,7 @@ export class DevelopmentPlanRepository {
 }
 ```
 
-- [ ] **Step 5: 테스트 실행 → 통과 확인**
+- [x] **Step 5: 테스트 실행 → 통과 확인**
 
 ```bash
 cd apps/api && npx jest __test__/development-plan/development-plan.service.test.ts --no-coverage 2>&1 | tail -5
@@ -274,7 +274,7 @@ cd apps/api && npx jest __test__/development-plan/development-plan.service.test.
 
 Expected: `Tests: 3 passed`
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add apps/api/src/development-plan/dto/development-plan.dto.ts \
@@ -293,7 +293,7 @@ git commit -m "feat(development-plan): add repo and DTO with DB integration test
 - Create: `apps/api/src/development-plan/development-plan.routes.ts`
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: Service 작성**
+- [x] **Step 1: Service 작성**
 
 `apps/api/src/development-plan/development-plan.service.ts`:
 
@@ -375,7 +375,7 @@ export class DevelopmentPlanService {
 }
 ```
 
-- [ ] **Step 2: Controller 작성**
+- [x] **Step 2: Controller 작성**
 
 `apps/api/src/development-plan/development-plan.controller.ts`:
 
@@ -450,7 +450,7 @@ export class DevelopmentPlanController {
 }
 ```
 
-- [ ] **Step 3: Routes 작성**
+- [x] **Step 3: Routes 작성**
 
 `apps/api/src/development-plan/development-plan.routes.ts`:
 
@@ -482,7 +482,7 @@ router.patch("/:id/review", auth, controller.review);
 export default router;
 ```
 
-- [ ] **Step 4: apiRouter.ts에 등록**
+- [x] **Step 4: apiRouter.ts에 등록**
 
 `apps/api/src/apiRouter.ts`를 열고 기존 라우터 등록 패턴에 맞게 추가:
 
@@ -494,7 +494,7 @@ import developmentPlanRouter from "./development-plan/development-plan.routes";
 router.use("/development-plans", developmentPlanRouter);
 ```
 
-- [ ] **Step 5: TypeScript 빌드 확인**
+- [x] **Step 5: TypeScript 빌드 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | head -20
@@ -502,7 +502,7 @@ cd apps/api && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 에러 없음
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add apps/api/src/development-plan/ apps/api/src/apiRouter.ts
@@ -517,7 +517,7 @@ git commit -m "feat(development-plan): add service, controller, routes — DRAFT
 - Create: `football/src/types/development-plan.ts`
 - Create: `football/src/services/development-plan.service.ts`
 
-- [ ] **Step 1: 타입 파일 작성**
+- [x] **Step 1: 타입 파일 작성**
 
 `football/src/types/development-plan.ts`:
 
@@ -565,7 +565,7 @@ export interface UpdatePlanPayload {
 }
 ```
 
-- [ ] **Step 2: 서비스 파일 작성**
+- [x] **Step 2: 서비스 파일 작성**
 
 `football/src/services/development-plan.service.ts`:
 
@@ -598,7 +598,7 @@ export const developmentPlanApi = {
 }
 ```
 
-- [ ] **Step 3: TypeScript 빌드 확인**
+- [x] **Step 3: TypeScript 빌드 확인**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | head -10
@@ -606,7 +606,7 @@ cd football && npx tsc --noEmit 2>&1 | head -10
 
 Expected: 에러 없음
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add football/src/types/development-plan.ts football/src/services/development-plan.service.ts
@@ -621,7 +621,7 @@ git commit -m "feat(development-plan): add FE types and API service"
 - Create: `football/src/pages/players/PlayerDevelopmentPlanTab.tsx`
 - Modify: `football/src/pages/players/PlayerDetailPage.tsx`
 
-- [ ] **Step 1: Tab 컴포넌트 작성**
+- [x] **Step 1: Tab 컴포넌트 작성**
 
 `football/src/pages/players/PlayerDevelopmentPlanTab.tsx`:
 
@@ -823,7 +823,7 @@ export function PlayerDevelopmentPlanTab({ playerId }: Props) {
 }
 ```
 
-- [ ] **Step 2: PlayerDetailPage에 탭 추가**
+- [x] **Step 2: PlayerDetailPage에 탭 추가**
 
 `football/src/pages/players/PlayerDetailPage.tsx`를 열어 현재 구조를 확인한 뒤, 파일 최하단에 탭 컴포넌트를 통합한다.
 
@@ -849,7 +849,7 @@ import { PlayerDevelopmentPlanTab } from './PlayerDevelopmentPlanTab'
 // </Tabs>
 ```
 
-- [ ] **Step 3: TypeScript 빌드 확인**
+- [x] **Step 3: TypeScript 빌드 확인**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | head -10
@@ -857,7 +857,7 @@ cd football && npx tsc --noEmit 2>&1 | head -10
 
 Expected: 에러 없음
 
-- [ ] **Step 4: 수동 동작 확인**
+- [x] **Step 4: 수동 동작 확인**
 
 1. dev 서버 실행 (`npm run dev`)
 2. COACHING_STAFF로 로그인
@@ -866,7 +866,7 @@ Expected: 에러 없음
 5. 카드 표시 확인, "활성화" 버튼 클릭 → status ACTIVE 변경 확인
 6. HEAD_COACH 로그인 → "검토 완료" 버튼 클릭 → REVIEWED 확인
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add football/src/pages/players/PlayerDevelopmentPlanTab.tsx \

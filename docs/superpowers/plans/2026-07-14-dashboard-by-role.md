@@ -41,7 +41,7 @@
 **Files:**
 - Create: `apps/api/src/dashboard/dashboard.repo.ts`
 
-- [ ] **Step 1: 파일 생성**
+- [x] **Step 1: 파일 생성**
 
 ```typescript
 // apps/api/src/dashboard/dashboard.repo.ts
@@ -334,7 +334,7 @@ export class DashboardRepository {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/dashboard/dashboard.repo.ts
@@ -349,7 +349,7 @@ git commit -m "feat(dashboard): add DashboardRepository with per-role Prisma que
 - Create: `apps/api/src/dashboard/dashboard.service.ts`
 - Create: `apps/api/__test__/dashboard/dashboard.service.test.ts`
 
-- [ ] **Step 1: 실패하는 테스트 작성**
+- [x] **Step 1: 실패하는 테스트 작성**
 
 ```typescript
 // apps/api/__test__/dashboard/dashboard.service.test.ts
@@ -431,14 +431,14 @@ describe("DashboardService.getStats", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 — 실패 확인**
+- [x] **Step 2: 테스트 실행 — 실패 확인**
 
 ```bash
 cd apps/api && npx jest __test__/dashboard/dashboard.service.test.ts --no-coverage
 ```
 Expected: FAIL (DashboardService not found)
 
-- [ ] **Step 3: DashboardService 구현**
+- [x] **Step 3: DashboardService 구현**
 
 ```typescript
 // apps/api/src/dashboard/dashboard.service.ts
@@ -516,14 +516,14 @@ export class DashboardService {
 }
 ```
 
-- [ ] **Step 4: 테스트 재실행 — 통과 확인**
+- [x] **Step 4: 테스트 재실행 — 통과 확인**
 
 ```bash
 cd apps/api && npx jest __test__/dashboard/dashboard.service.test.ts --no-coverage
 ```
 Expected: PASS (8 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/dashboard/dashboard.service.ts apps/api/__test__/dashboard/dashboard.service.test.ts
@@ -539,7 +539,7 @@ git commit -m "feat(dashboard): add DashboardService with role-based dispatch + 
 - Create: `apps/api/src/dashboard/dashboard.routes.ts`
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: Controller 작성**
+- [x] **Step 1: Controller 작성**
 
 ```typescript
 // apps/api/src/dashboard/dashboard.controller.ts
@@ -559,7 +559,7 @@ export class DashboardController {
 }
 ```
 
-- [ ] **Step 2: Routes 작성**
+- [x] **Step 2: Routes 작성**
 
 ```typescript
 // apps/api/src/dashboard/dashboard.routes.ts
@@ -582,7 +582,7 @@ router.get("/stats", auth, controller.getStats);
 export default router;
 ```
 
-- [ ] **Step 3: apiRouter에 등록**
+- [x] **Step 3: apiRouter에 등록**
 
 `apps/api/src/apiRouter.ts` 파일을 열어 아래 두 줄을 추가:
 
@@ -594,7 +594,7 @@ import dashboardRouter from "./dashboard/dashboard.routes";
 apiRouter.use("/dashboard", dashboardRouter);
 ```
 
-- [ ] **Step 4: 서버 실행 후 동작 확인**
+- [x] **Step 4: 서버 실행 후 동작 확인**
 
 ```bash
 cd apps/api && npx ts-node src/server.ts &
@@ -604,7 +604,7 @@ curl -s http://localhost:3000/api/dashboard/stats \
 ```
 Expected: 역할에 맞는 stats JSON 반환
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/dashboard/
@@ -620,7 +620,7 @@ git commit -m "feat(dashboard): register dashboard router — GET /api/dashboard
 - Create: `football/src/types/dashboard.ts`
 - Create: `football/src/services/dashboard.service.ts`
 
-- [ ] **Step 1: 타입 정의**
+- [x] **Step 1: 타입 정의**
 
 ```typescript
 // football/src/types/dashboard.ts
@@ -711,7 +711,7 @@ export type DashboardStats =
   | AgentStats
 ```
 
-- [ ] **Step 2: API 서비스 작성**
+- [x] **Step 2: API 서비스 작성**
 
 ```typescript
 // football/src/services/dashboard.service.ts
@@ -723,7 +723,7 @@ export const dashboardApi = {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/types/dashboard.ts football/src/services/dashboard.service.ts
@@ -740,7 +740,7 @@ git commit -m "feat(dashboard): add DashboardStats types + API client"
 - Create: `football/src/components/dashboard/RecentFeedCard.tsx`
 - Create: `football/src/components/dashboard/ScheduleCard.tsx`
 
-- [ ] **Step 1: StatCard (숫자 카드)**
+- [x] **Step 1: StatCard (숫자 카드)**
 
 ```tsx
 // football/src/components/dashboard/StatCard.tsx
@@ -770,7 +770,7 @@ export function StatCard({ label, value, unit, highlight }: Props) {
 }
 ```
 
-- [ ] **Step 2: ActionQueueCard (액션 요청)**
+- [x] **Step 2: ActionQueueCard (액션 요청)**
 
 ```tsx
 // football/src/components/dashboard/ActionQueueCard.tsx
@@ -847,7 +847,7 @@ export function ActionQueueCard({ notifications, loading }: Props) {
 }
 ```
 
-- [ ] **Step 3: RecentFeedCard (최근 활동)**
+- [x] **Step 3: RecentFeedCard (최근 활동)**
 
 ```tsx
 // football/src/components/dashboard/RecentFeedCard.tsx
@@ -905,7 +905,7 @@ export function RecentFeedCard({ title, items, loading }: Props) {
 }
 ```
 
-- [ ] **Step 4: ScheduleCard (일정)**
+- [x] **Step 4: ScheduleCard (일정)**
 
 ```tsx
 // football/src/components/dashboard/ScheduleCard.tsx
@@ -956,7 +956,7 @@ export function ScheduleCard({ items, loading }: Props) {
 }
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/components/dashboard/
@@ -971,7 +971,7 @@ git commit -m "feat(dashboard): add StatCard, ActionQueueCard, RecentFeedCard, S
 - Create: `football/src/pages/dashboard/dashboardConfig.ts`
 - Modify: `football/src/pages/dashboard/DashboardPage.tsx`
 
-- [ ] **Step 1: dashboardConfig 작성**
+- [x] **Step 1: dashboardConfig 작성**
 
 ```typescript
 // football/src/pages/dashboard/dashboardConfig.ts
@@ -1158,7 +1158,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
 }
 ```
 
-- [ ] **Step 2: DashboardPage 구현**
+- [x] **Step 2: DashboardPage 구현**
 
 ```tsx
 // football/src/pages/dashboard/DashboardPage.tsx
@@ -1244,14 +1244,14 @@ export function DashboardPage() {
 
 > **Note:** `RecentFeedCard`와 `ScheduleCard`의 `items`는 현재 빈 배열로 시작합니다. 이 데이터는 각 도메인 API(`/matches`, `/training` 등)에서 추가로 fetch해야 하며, 추후 개선 태스크로 분리됩니다. 현재 구현은 위젯 레이아웃과 stats + 액션 요청 동작 확인에 집중합니다.
 
-- [ ] **Step 3: TypeScript 컴파일 확인**
+- [x] **Step 3: TypeScript 컴파일 확인**
 
 ```bash
 cd football && npx tsc --noEmit
 ```
 Expected: 에러 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/pages/dashboard/

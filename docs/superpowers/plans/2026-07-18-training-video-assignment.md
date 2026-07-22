@@ -38,7 +38,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: schema.prisma에 모델 추가**
+- [x] **Step 1: schema.prisma에 모델 추가**
 
 `NotificationType` enum 끝 (`TRAINING_SESSION_PENDING` 다음)에 추가:
 ```prisma
@@ -90,7 +90,7 @@ model VideoAssignment {
   videoAssignments VideoAssignment[]
 ```
 
-- [ ] **Step 2: DB 반영**
+- [x] **Step 2: DB 반영**
 
 ```bash
 cd apps/api && npx prisma db push
@@ -98,13 +98,13 @@ cd apps/api && npx prisma db push
 
 Expected: "Your database is now in sync with your Prisma schema."
 
-- [ ] **Step 3: Prisma 클라이언트 재생성**
+- [x] **Step 3: Prisma 클라이언트 재생성**
 
 ```bash
 cd apps/api && npx prisma generate
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma
@@ -120,7 +120,7 @@ git commit -m "feat(schema): add TrainingVideo and VideoAssignment models"
 - Create: `apps/api/src/video/video.repo.ts`
 - Create: `apps/api/__test__/video/video.service.test.ts` (통합 테스트 - repo 직접 테스트)
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 ```typescript
 // apps/api/__test__/video/video.service.test.ts
@@ -196,7 +196,7 @@ describe('VideoRepository', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 ```bash
 cd apps/api && npx jest __test__/video/video.service.test.ts --no-coverage 2>&1 | tail -10
@@ -204,7 +204,7 @@ cd apps/api && npx jest __test__/video/video.service.test.ts --no-coverage 2>&1 
 
 Expected: FAIL — "Cannot find module '../../src/video/video.repo'"
 
-- [ ] **Step 3: DTO 작성**
+- [x] **Step 3: DTO 작성**
 
 ```typescript
 // apps/api/src/video/dto/video.dto.ts
@@ -231,7 +231,7 @@ export interface VideoListQuery {
 }
 ```
 
-- [ ] **Step 4: Repository 작성**
+- [x] **Step 4: Repository 작성**
 
 ```typescript
 // apps/api/src/video/video.repo.ts
@@ -332,7 +332,7 @@ export class VideoRepository {
 }
 ```
 
-- [ ] **Step 5: Run test**
+- [x] **Step 5: Run test**
 
 ```bash
 cd apps/api && npx jest __test__/video/video.service.test.ts --no-coverage 2>&1 | tail -10
@@ -340,7 +340,7 @@ cd apps/api && npx jest __test__/video/video.service.test.ts --no-coverage 2>&1 
 
 Expected: PASS — 4 passing
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/video/dto/video.dto.ts apps/api/src/video/video.repo.ts apps/api/__test__/video/video.service.test.ts
@@ -357,7 +357,7 @@ git commit -m "feat(video): add VideoRepository with CRUD and assignment methods
 - Create: `apps/api/src/video/video.routes.ts`
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: Service 작성**
+- [x] **Step 1: Service 작성**
 
 ```typescript
 // apps/api/src/video/video.service.ts
@@ -419,7 +419,7 @@ export class VideoService {
 }
 ```
 
-- [ ] **Step 2: Controller 작성**
+- [x] **Step 2: Controller 작성**
 
 ```typescript
 // apps/api/src/video/video.controller.ts
@@ -500,7 +500,7 @@ export class VideoController {
 }
 ```
 
-- [ ] **Step 3: Routes 작성**
+- [x] **Step 3: Routes 작성**
 
 ```typescript
 // apps/api/src/video/video.routes.ts
@@ -531,7 +531,7 @@ router.patch("/:id/assignments/:playerId/progress", auth, controller.updateProgr
 export default router;
 ```
 
-- [ ] **Step 4: apiRouter.ts에 등록**
+- [x] **Step 4: apiRouter.ts에 등록**
 
 `apps/api/src/apiRouter.ts`에 import 추가:
 ```typescript
@@ -543,7 +543,7 @@ import videoRouter from "./video/video.routes";
 apiRouter.use("/videos", videoRouter);
 ```
 
-- [ ] **Step 5: TypeScript 빌드 확인**
+- [x] **Step 5: TypeScript 빌드 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | head -20
@@ -551,7 +551,7 @@ cd apps/api && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 오류 없음 (또는 기존 오류만)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/video/ apps/api/src/apiRouter.ts
@@ -566,7 +566,7 @@ git commit -m "feat(video): add video service, controller, and routes"
 - Create: `apps/api/src/jobs/videoAssignmentOverdue.ts`
 - Modify: `apps/api/src/server.ts`
 
-- [ ] **Step 1: Cron job 작성**
+- [x] **Step 1: Cron job 작성**
 
 ```typescript
 // apps/api/src/jobs/videoAssignmentOverdue.ts
@@ -600,7 +600,7 @@ export function startVideoAssignmentOverdueJob() {
 }
 ```
 
-- [ ] **Step 2: server.ts에 cron 시작 추가**
+- [x] **Step 2: server.ts에 cron 시작 추가**
 
 `apps/api/src/server.ts`에서 기존 cron import 라인들 아래에 추가:
 ```typescript
@@ -612,13 +612,13 @@ import { startVideoAssignmentOverdueJob } from "./jobs/videoAssignmentOverdue";
 startVideoAssignmentOverdueJob();
 ```
 
-- [ ] **Step 3: TypeScript 확인**
+- [x] **Step 3: TypeScript 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | head -10
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/src/jobs/videoAssignmentOverdue.ts apps/api/src/server.ts
@@ -633,7 +633,7 @@ git commit -m "feat(video): add cron job for overdue video assignment notificati
 - Create: `football/src/types/video.ts`
 - Create: `football/src/services/video.service.ts`
 
-- [ ] **Step 1: 타입 정의**
+- [x] **Step 1: 타입 정의**
 
 ```typescript
 // football/src/types/video.ts
@@ -685,7 +685,7 @@ export interface CreateAssignmentPayload {
 }
 ```
 
-- [ ] **Step 2: API 서비스 작성**
+- [x] **Step 2: API 서비스 작성**
 
 ```typescript
 // football/src/services/video.service.ts
@@ -725,13 +725,13 @@ export const videoApi = {
 }
 ```
 
-- [ ] **Step 3: TypeScript 확인**
+- [x] **Step 3: TypeScript 확인**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | head -10
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/types/video.ts football/src/services/video.service.ts
@@ -747,7 +747,7 @@ git commit -m "feat(video): add FE types and API service"
 - Modify: `football/src/App.tsx`
 - Modify: `football/src/layouts/AppShell.tsx`
 
-- [ ] **Step 1: 페이지 컴포넌트 작성**
+- [x] **Step 1: 페이지 컴포넌트 작성**
 
 ```typescript
 // football/src/pages/training/TrainingVideoPage.tsx
@@ -1009,7 +1009,7 @@ export function TrainingVideoPage() {
 }
 ```
 
-- [ ] **Step 2: App.tsx에 라우트 추가**
+- [x] **Step 2: App.tsx에 라우트 추가**
 
 기존 `TrainingResultsPage` import 아래에:
 ```typescript
@@ -1021,7 +1021,7 @@ import { TrainingVideoPage } from '@/pages/training/TrainingVideoPage'
 <Route path="/training/videos" element={<TrainingVideoPage />} />
 ```
 
-- [ ] **Step 3: AppShell.tsx 사이드바에 링크 추가**
+- [x] **Step 3: AppShell.tsx 사이드바에 링크 추가**
 
 기존 훈련 섹션 (훈련 결과 링크 아래)에 추가. AppShell.tsx에서 `BarChart2`를 import하고 있는 라인 근처에서 `Video` 아이콘 추가:
 ```typescript
@@ -1033,7 +1033,7 @@ import { ..., Video } from 'lucide-react'
 { to: '/training/videos', label: '훈련 영상', icon: Video },
 ```
 
-- [ ] **Step 4: TypeScript 확인**
+- [x] **Step 4: TypeScript 확인**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | head -10
@@ -1041,7 +1041,7 @@ cd football && npx tsc --noEmit 2>&1 | head -10
 
 Expected: 오류 없음
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/pages/training/TrainingVideoPage.tsx football/src/App.tsx football/src/layouts/AppShell.tsx

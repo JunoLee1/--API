@@ -24,7 +24,7 @@
 **Files:**
 - Modify: `football/src/pages/matches/MatchDetailPage.tsx:161-177`
 
-- [ ] **Step 1: 기존 `bg-card` 헤더 블록을 그라디언트 헤더로 교체**
+- [x] **Step 1: 기존 `bg-card` 헤더 블록을 그라디언트 헤더로 교체**
 
 ```tsx
 {/* 스코어 헤더 */}
@@ -64,11 +64,11 @@
 </div>
 ```
 
-- [ ] **Step 2: `Separator` import 제거 (라인 10에서)**
+- [x] **Step 2: `Separator` import 제거 (라인 10에서)**
 
 `Separator` import 라인 삭제.
 
-- [ ] **Step 3: 브라우저에서 스코어 헤더 확인**
+- [x] **Step 3: 브라우저에서 스코어 헤더 확인**
 
 npm dev 서버가 이미 실행 중이면 브라우저에서 경기 상세 페이지 열고 헤더 렌더링 확인.
 
@@ -79,11 +79,11 @@ npm dev 서버가 이미 실행 중이면 브라우저에서 경기 상세 페�
 **Files:**
 - Modify: `football/src/pages/matches/MatchDetailPage.tsx` — `StatCard` 제거, `TeamStatsBar` 추가, 팀통계 섹션 교체
 
-- [ ] **Step 1: `StatCardProps`·`StatCard` 삭제 (라인 36-54)**
+- [x] **Step 1: `StatCardProps`·`StatCard` 삭제 (라인 36-54)**
 
 두 인터페이스+함수 블록 전부 제거.
 
-- [ ] **Step 2: `TeamStatsBar` 컴포넌트 추가 (StatCard 자리에)**
+- [x] **Step 2: `TeamStatsBar` 컴포넌트 추가 (StatCard 자리에)**
 
 ```tsx
 interface StatRowProps {
@@ -120,7 +120,7 @@ function StatRow({ label, homeVal, awayVal, homeMax, fmt, homeColor = '#2563eb',
 }
 ```
 
-- [ ] **Step 3: 팀 통계 섹션 블록 교체 (라인 180-209)**
+- [x] **Step 3: 팀 통계 섹션 블록 교체 (라인 180-209)**
 
 ```tsx
 {ts && (
@@ -169,7 +169,7 @@ function StatRow({ label, homeVal, awayVal, homeMax, fmt, homeColor = '#2563eb',
 **Files:**
 - Modify: `football/src/pages/matches/MatchDetailPage.tsx` — 기존 6열 보조 통계 그리드를 3칩 그리드로 교체
 
-- [ ] **Step 1: 팀 통계 섹션 바로 아래에 3-칩 그리드 추가**
+- [x] **Step 1: 팀 통계 섹션 바로 아래에 3-칩 그리드 추가**
 
 ```tsx
 {ts && (
@@ -197,7 +197,7 @@ function StatRow({ label, homeVal, awayVal, homeMax, fmt, homeColor = '#2563eb',
 **Files:**
 - Modify: `football/src/pages/matches/MatchDetailPage.tsx:211-271`
 
-- [ ] **Step 1: 선수 테이블 헤더·데이터 스타일 교체**
+- [x] **Step 1: 선수 테이블 헤더·데이터 스타일 교체**
 
 ```tsx
 {match.playerMatchStats.length > 0 && (
@@ -258,7 +258,7 @@ function StatRow({ label, homeVal, awayVal, homeMax, fmt, homeColor = '#2563eb',
 **Files:**
 - Verify: `football/src/pages/matches/MatchDetailPage.tsx`
 
-- [ ] **Step 1: TS 타입 체크**
+- [x] **Step 1: TS 타입 체크**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -30
@@ -266,7 +266,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -30
 
 Expected: 에러 없음 (혹은 기존 무관한 에러만)
 
-- [ ] **Step 2: 커밋**
+- [x] **Step 2: 커밋**
 
 ```bash
 git add football/src/pages/matches/MatchDetailPage.tsx
