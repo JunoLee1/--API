@@ -17,6 +17,14 @@ enum Role {
   COACHING_STAFF
   PLAYER
   AGENT
+  GUARDIAN
+}
+
+enum YouthRegistrationStatus {
+  PENDING
+  GUARDIAN_APPROVED
+  CONTRACTED
+  REJECTED
 }
 
 enum CoachingRole {
@@ -259,6 +267,10 @@ enum NotificationType {
   MATCH_DAY_REMINDER
   ATTENDANCE_UNAUTHORIZED
   ATTENDANCE_PENALTY_PLAYER
+  YOUTH_REGISTRATION_STATUS_CHANGED
+  YOUTH_WEEKLY_SCHEDULE
+  YOUTH_SESSION_CHANGED
+  INCIDENT_REPORT_SUBMITTED
 }
 
 enum TacticalStatus {
@@ -390,9 +402,10 @@ model Team {
   trainingSessions TrainingSession[]
   matches          Match[]
   coaches          Coach[]
-  callupsFrom      PlayerCallup[]    @relation("CallupFromTeam")
-  callupsTo        PlayerCallup[]    @relation("CallupToTeam")
-  jerseyNumbers    JerseyNumber[]
+  callupsFrom        PlayerCallup[]    @relation("CallupFromTeam")
+  callupsTo          PlayerCallup[]    @relation("CallupToTeam")
+  jerseyNumbers      JerseyNumber[]
+  youthRegistrations YouthRegistration[]
 }
 
 model Country {
@@ -472,6 +485,9 @@ model User {
   approvedCallups          PlayerCallup[]          @relation("CallupApprovedBy")
   loginHistory             LoginHistory[]
   recordedMarketValues     MarketValueHistory[]
+  guardianPlayers          Player[]                @relation("GuardianPlayers")
+  guardianRegistrations    YouthRegistration[]     @relation("GuardianRegistrations")
+  youthRegistrations       YouthRegistration[]     @relation("YouthRegistrationRequester")
 }
 
 model Season {
@@ -501,6 +517,7 @@ model Player {
   nationalityId    Int
   userId           Int?             @unique
   agentId          Int?
+  guardianId       Int?
   workPermitStatus WorkPermitStatus @default(NOT_REQUIRED)
   workPermitExpiry DateTime?
   teamId           Int?
@@ -508,6 +525,7 @@ model Player {
   nationality            Country                 @relation(fields: [nationalityId], references: [id])
   user                   User?                   @relation(fields: [userId], references: [id])
   agent                  User?                   @relation("AgentPlayers", fields: [agentId], references: [id])
+  guardian               User?                   @relation("GuardianPlayers", fields: [guardianId], references: [id])
   team                   Team?                   @relation(fields: [teamId], references: [id])
   contracts              Contract[]
   transfers              Transfer[]
@@ -1400,6 +1418,24 @@ enum PlayerCallupStatus {
   APPROVED
   REJECTED
   COMPLETED
+}
+
+model YouthRegistration {
+  id                    Int                     @id @default(autoincrement())
+  playerName            String
+  birthDate             DateTime
+  preferredJerseyNumber Int?
+  teamId                Int
+  guardianId            Int?
+  status                YouthRegistrationStatus @default(PENDING)
+  requestedById         Int
+  rejectionReason       String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+
+  team        Team  @relation(fields: [teamId], references: [id])
+  guardian    User? @relation("GuardianRegistrations", fields: [guardianId], references: [id])
+  requestedBy User  @relation("YouthRegistrationRequester", fields: [requestedById], references: [id])
 }
 
 model PlayerCallup {
