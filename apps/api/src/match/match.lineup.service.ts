@@ -16,8 +16,13 @@ export class MatchLineupService {
   constructor(private repo: MatchLineupRepository) {}
 
   async getLineup(matchId: number) {
-    const lineup = await this.repo.findByMatch(matchId);
-    if (lineup) return lineup;
+    const [lineup, matchInfo] = await Promise.all([
+      this.repo.findByMatch(matchId),
+      this.repo.findMatchInfo(matchId),
+    ]);
+    const teamType = matchInfo?.team?.type ?? null;
+
+    if (lineup) return { ...lineup, teamType };
 
     const squadMembers = await this.repo.findSquadPlayers(matchId);
     if (squadMembers.length === 0) return null;
@@ -27,6 +32,7 @@ export class MatchLineupService {
       formation: "4-3-3" as const,
       isConfirmed: false,
       confirmedAt: null,
+      teamType,
       slots: squadMembers.map((sq, i) => ({
         slotKey: `BENCH_${i}`,
         isStarter: false,
