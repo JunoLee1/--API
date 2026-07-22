@@ -14,4 +14,14 @@ const auth = passport.authenticate("accessToken", { session: false });
 
 router.get("/stats", auth, controller.getStats);
 
+router.get("/youth-development", auth, async (req, res, next) => {
+  try {
+    const user = req.user as any;
+    if (user.role !== "ADMIN" && !(user.role === "FRONT_OFFICE" && user.frontOfficeRole === "TD")) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    res.json(await service.getYouthDevelopmentStats());
+  } catch (e) { next(e); }
+});
+
 export default router;
