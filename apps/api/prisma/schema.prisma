@@ -27,6 +27,17 @@ enum YouthRegistrationStatus {
   REJECTED
 }
 
+enum IncidentReportStatus {
+  DRAFT
+  SUBMITTED
+  SIGNED
+}
+
+enum IncidentType {
+  MATCH
+  TRAINING
+}
+
 enum CoachingRole {
   HEAD_COACH
   ASSISTANT_COACH
@@ -406,6 +417,7 @@ model Team {
   callupsTo          PlayerCallup[]    @relation("CallupToTeam")
   jerseyNumbers      JerseyNumber[]
   youthRegistrations YouthRegistration[]
+  incidentReports    IncidentReport[]
 }
 
 model Country {
@@ -488,6 +500,7 @@ model User {
   guardianPlayers          Player[]                @relation("GuardianPlayers")
   guardianRegistrations    YouthRegistration[]     @relation("GuardianRegistrations")
   youthRegistrations       YouthRegistration[]     @relation("YouthRegistrationRequester")
+  reportedIncidents        IncidentReport[]        @relation("IncidentReporter")
 }
 
 model Season {
@@ -552,6 +565,7 @@ model Player {
   lineupSlots            LineupSlot[]
   shotsAsShooter         ShotEvent[] @relation("ShotShooter")
   shotsAsAssister        ShotEvent[] @relation("ShotAssister")
+  incidentReports        IncidentReport[]
 }
 
 model Contract {
@@ -705,6 +719,7 @@ model Injury {
   injuryReport    InjuryReport?
   assessment      InjuryAssessment?
   externalReports ExternalReport[]
+  incidentReports IncidentReport[]
 }
 
 model InjuryAssessment {
@@ -745,20 +760,23 @@ enum ExternalReportStatus {
 }
 
 model ExternalReport {
-  id            Int                  @id @default(autoincrement())
-  injuryId      Int
-  target        ExternalReportTarget
-  status        ExternalReportStatus @default(PENDING_SUBMISSION)
-  reportData    Json
-  dueDate       DateTime?
-  submittedAt   DateTime?
-  submittedNote String?
-  createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @updatedAt
+  id               Int                  @id @default(autoincrement())
+  injuryId         Int?
+  incidentReportId Int?
+  target           ExternalReportTarget
+  status           ExternalReportStatus @default(PENDING_SUBMISSION)
+  reportData       Json
+  dueDate          DateTime?
+  submittedAt      DateTime?
+  submittedNote    String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
 
-  injury Injury @relation(fields: [injuryId], references: [id], onDelete: Cascade)
+  injury         Injury?         @relation(fields: [injuryId], references: [id], onDelete: Cascade)
+  incidentReport IncidentReport? @relation(fields: [incidentReportId], references: [id], onDelete: Cascade)
 
   @@unique([injuryId, target])
+  @@unique([incidentReportId, target])
 }
 
 model Match {
@@ -782,6 +800,7 @@ model Match {
   squadPlayers     MatchSquad[]
   shotEvents       ShotEvent[]
   matchLineup      MatchLineup?
+  incidentReports  IncidentReport[]
 }
 
 model PlayerMatchStats {
@@ -876,10 +895,11 @@ model TrainingSession {
   team          Team?                 @relation(fields: [teamId], references: [id])
   createdBy     User                  @relation("TrainingSessionCreatedBy", fields: [createdById], references: [id])
   approvedBy    User?                 @relation("TrainingSessionApprovedBy", fields: [approvedById], references: [id])
-  contents      TrainingContent[]
-  participants  TrainingParticipant[]
-  results       TrainingResult[]
-  trainingLoads TrainingLoad[]
+  contents        TrainingContent[]
+  participants    TrainingParticipant[]
+  results         TrainingResult[]
+  trainingLoads   TrainingLoad[]
+  incidentReports IncidentReport[]
 }
 
 model TrainingContent {
@@ -1436,6 +1456,31 @@ model YouthRegistration {
   team        Team  @relation(fields: [teamId], references: [id])
   guardian    User? @relation("GuardianRegistrations", fields: [guardianId], references: [id])
   requestedBy User  @relation("YouthRegistrationRequester", fields: [requestedById], references: [id])
+}
+
+model IncidentReport {
+  id               Int                  @id @default(autoincrement())
+  playerId         String
+  teamId           Int
+  type             IncidentType
+  matchId          Int?
+  sessionId        Int?
+  description      String               @db.Text
+  reportedById     Int
+  supervisorSigned Boolean              @default(false)
+  medicalSigned    Boolean              @default(false)
+  injuryId         Int?
+  status           IncidentReportStatus @default(DRAFT)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  player          Player           @relation(fields: [playerId], references: [id])
+  team            Team             @relation(fields: [teamId], references: [id])
+  match           Match?           @relation(fields: [matchId], references: [id])
+  session         TrainingSession? @relation(fields: [sessionId], references: [id])
+  reportedBy      User             @relation("IncidentReporter", fields: [reportedById], references: [id])
+  injury          Injury?          @relation(fields: [injuryId], references: [id])
+  externalReports ExternalReport[]
 }
 
 model PlayerCallup {
