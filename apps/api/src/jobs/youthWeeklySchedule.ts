@@ -12,7 +12,7 @@ export async function collectWeeklyScheduleByGuardian(
 
   const sessions = await prisma.trainingSession.findMany({
     where: { date: { gte: weekStart, lt: weekEnd }, team: { type: "YOUTH" } },
-    select: { id: true, date: true, sessionType: true, team: { select: { id: true, name: true } } },
+    select: { id: true, date: true, sessionType: true, teamId: true, team: { select: { id: true, name: true } } },
   });
 
   const matches = await prisma.match.findMany({
@@ -21,8 +21,8 @@ export async function collectWeeklyScheduleByGuardian(
   });
 
   const youthTeamIds = [...new Set([
-    ...sessions.map(s => s.team.id),
-    ...matches.map(m => m.team!.id),
+    ...sessions.map(s => s.team?.id ?? s.teamId).filter((id): id is number => id != null),
+    ...matches.map(m => m.team?.id).filter((id): id is number => id != null),
   ])];
 
   if (youthTeamIds.length === 0) return [];
@@ -38,7 +38,7 @@ export async function collectWeeklyScheduleByGuardian(
     if (!player.guardianId) continue;
     if (!guardianMap.has(player.guardianId)) {
       guardianMap.set(player.guardianId, {
-        sessions: sessions.filter(s => s.team.id === player.teamId),
+        sessions: sessions.filter(s => (s.team?.id ?? s.teamId) === player.teamId),
         matches: matches.filter(m => m.team?.id === player.teamId),
       });
     }
