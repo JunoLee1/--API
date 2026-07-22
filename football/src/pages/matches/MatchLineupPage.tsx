@@ -30,11 +30,13 @@ function PitchSlot({
   player,
   onDrop,
   onRemove,
+  showMismatch,
 }: {
   slotDef: { key: string; position: string; top: number; left: number }
   player: LineupPlayer | null
   onDrop: (slotKey: string, payload: LineupDragPayload) => void
   onRemove: (slotKey: string) => void
+  showMismatch: boolean
 }) {
   const style: React.CSSProperties = {
     position: 'absolute',
@@ -56,6 +58,7 @@ function PitchSlot({
   }
 
   if (player) {
+    const isMismatch = showMismatch && player.position !== slotDef.position
     return (
       <div
         style={style}
@@ -74,9 +77,14 @@ function PitchSlot({
         onDragOver={handleDragOver}
         onDrop={handleDrop}
         onDoubleClick={() => onRemove(slotDef.key)}
-        title="더블클릭으로 해제"
-        className="flex flex-col items-center gap-0.5 cursor-grab active:cursor-grabbing z-10"
+        title={isMismatch ? `포지션 불일치: 선수 ${player.position} / 슬롯 ${slotDef.position}` : '더블클릭으로 해제'}
+        className="relative flex flex-col items-center gap-0.5 cursor-grab active:cursor-grabbing z-10"
       >
+        {isMismatch && (
+          <div className="absolute -top-1 -right-1 bg-yellow-400 text-yellow-900 rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-bold z-20">
+            ⚠
+          </div>
+        )}
         <div className="bg-green-800/90 border-2 border-green-400 rounded-full px-2 py-1 text-white text-[10px] font-bold whitespace-nowrap shadow-lg">
           {POSITION_ABBR[player.position as keyof typeof POSITION_ABBR] ?? player.position}
         </div>
@@ -115,10 +123,13 @@ export function MatchLineupPage() {
   const [slots, setSlots] = useState<SlotMap>({})
   const [bench, setBench] = useState<LineupPlayer[]>([])
   const [isConfirmed, setIsConfirmed] = useState(false)
+  const [teamType, setTeamType] = useState<'FIRST_TEAM' | 'YOUTH' | null>(null)
   const [loading, setLoading] = useState(true)
   const [dirty, setDirty] = useState(false)
   const [saving, setSaving] = useState(false)
   const [confirming, setConfirming] = useState(false)
+
+  const showMismatch = teamType === 'FIRST_TEAM'
 
   const canEdit =
     user?.role === 'ADMIN' ||
@@ -136,6 +147,7 @@ export function MatchLineupPage() {
         if (lineup) {
           setFormation(lineup.formation)
           setIsConfirmed(lineup.isConfirmed)
+          setTeamType(lineup.teamType ?? null)
           const slotMap: SlotMap = {}
           const benchList: LineupPlayer[] = []
           for (const s of lineup.slots) {
@@ -368,6 +380,7 @@ export function MatchLineupPage() {
                   player={slots[slotDef.key] ?? null}
                   onDrop={canEdit ? handleSlotDrop : () => {}}
                   onRemove={canEdit ? handleSlotRemove : () => {}}
+                  showMismatch={showMismatch}
                 />
               ))}
             </FootballPitch>
