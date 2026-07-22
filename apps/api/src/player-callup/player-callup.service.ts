@@ -31,7 +31,7 @@ export class PlayerCallupService {
       )
       .catch(console.error);
 
-    const guardianId = (callup.player as any).guardianId;
+    const guardianId = callup.player.guardianId;
     if (guardianId) {
       void this.notifRepo
         .createForGuardian(

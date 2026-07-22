@@ -885,6 +885,7 @@ model TrainingSession {
   goal         String
   sessionType  SessionType
   isApproved   Boolean     @default(false)
+  cancelledAt  DateTime?
   createdAt    DateTime    @default(now())
   seasonId     Int
   createdById  Int

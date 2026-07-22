@@ -224,7 +224,7 @@ export class TrainingRepository {
   cancelSession(id: number) {
     return this.prisma.trainingSession.update({
       where: { id },
-      data: { isCancelled: true } as any,
+      data: { cancelledAt: new Date() },
     });
   }
 
