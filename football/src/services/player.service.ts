@@ -12,6 +12,7 @@ import type {
   MatchStat,
   TrainingResultEntry,
   RadarData,
+  PositionDiversityEntry,
 } from '@/types/player'
 
 function buildQuery(q: PlayerListQuery): string {
@@ -55,6 +56,9 @@ export const playerApi = {
 
   getRadar: (id: string) =>
     api.get<RadarData>(`/players/${id}/radar`),
+
+  getPositionDiversity: (id: string) =>
+    api.get<PositionDiversityEntry[]>(`/players/${id}/position-diversity`),
 
   getJerseyNumbers: (id: string) =>
     api.get<JerseyNumber[]>(`/players/${id}/jersey-numbers`),

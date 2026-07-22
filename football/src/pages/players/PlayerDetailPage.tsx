@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { playerApi } from '@/services/player.service'
-import type { PlayerDetail, PlayerStatus, PositionZone, TransferType } from '@/types/player'
+import type { PlayerDetail, PlayerStatus, PositionZone, TransferType, MarketValueEntry } from '@/types/player'
 import {
   POSITION_ABBR,
   POSITION_LABEL,
@@ -12,10 +12,11 @@ import {
 } from '@/types/player'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { ArrowLeft, Pencil, ShieldAlert, Trash2 } from 'lucide-react'
+import { ArrowLeft, Pencil, ShieldAlert, Trash2, TrendingUp } from 'lucide-react'
 import { useConfirm } from '@/lib/confirm-dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PlayerFormDialog } from './PlayerFormDialog'
@@ -24,6 +25,10 @@ import { PlayerDevelopmentPlanTab } from './PlayerDevelopmentPlanTab'
 import { StatsTab } from './tabs/StatsTab'
 import { JerseyTab } from './tabs/JerseyTab'
 import { MotivationTab } from './tabs/MotivationTab'
+import { PositionDiversityChart } from '@/components/players/PositionDiversityChart'
+import {
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+} from 'recharts'
 
 const ZONE_STYLE: Record<PositionZone, { badge: string; avatar: string }> = {
   GK: { badge: 'bg-amber-100 text-amber-800 border-amber-300', avatar: 'bg-amber-100 text-amber-800' },
@@ -62,6 +67,18 @@ function formatSalary(salary: number): string {
   return `${salary.toLocaleString()}원`
 }
 
+function fmtMv(v: number): string {
+  if (v >= 100_000_000) return `${(v / 100_000_000).toFixed(1)}억`
+  if (v >= 10_000) return `${(v / 10_000).toFixed(0)}만`
+  return String(v)
+}
+
+function fmtMvTick(v: number): string {
+  if (v >= 100_000_000) return `${(v / 100_000_000).toFixed(0)}억`
+  if (v >= 10_000) return `${(v / 10_000).toFixed(0)}만`
+  return String(v)
+}
+
 const TRANSFER_TYPE_LABEL: Record<TransferType, string> = {
   PERMANENT: '완전 이적',
   LOAN_OUT: '임대 출신',
@@ -92,13 +109,22 @@ export function PlayerDetailPage() {
   const [editOpen, setEditOpen] = useState(false)
   const [statusOpen, setStatusOpen] = useState(false)
 
+  const [mvHistory, setMvHistory] = useState<MarketValueEntry[]>([])
+  const [mvInput, setMvInput] = useState('')
+  const [mvSaving, setMvSaving] = useState(false)
+
   const confirm = useConfirm()
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
   const canChangeStatus = user?.role === 'ADMIN'
   const isOwnProfile = user?.role === 'PLAYER' && player?.userId === user?.id
-  const canSeeMarketValue = ['GM', 'TD', 'ADMIN'].includes(user?.role ?? '')
-  const canAssignJersey = ['GM', 'ADMIN', 'FRONT_OFFICE'].includes(user?.role ?? '')
-  const canRetireJersey = ['GM', 'ADMIN'].includes(user?.role ?? '')
+  const canSeeMarketValue =
+    user?.role === 'ADMIN' ||
+    (user?.role === 'FRONT_OFFICE' && (user.frontOfficeRole === 'GM' || user.frontOfficeRole === 'TD'))
+  const canUpdateMarketValue = canSeeMarketValue
+  const canAssignJersey = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
+  const canRetireJersey =
+    user?.role === 'ADMIN' ||
+    (user?.role === 'FRONT_OFFICE' && (user.frontOfficeRole === 'GM' || user.frontOfficeRole === 'TD'))
   const canReactivateJersey = user?.role === 'ADMIN'
 
   const handleDelete = async () => {
@@ -131,6 +157,29 @@ export function PlayerDetailPage() {
   useEffect(() => {
     fetchPlayer()
   }, [id])
+
+  useEffect(() => {
+    if (!id || !canSeeMarketValue) return
+    playerApi.getMarketValueHistory(id).then(setMvHistory).catch(() => null)
+  }, [id, canSeeMarketValue])
+
+  const handleMvUpdate = async () => {
+    if (!id || !mvInput) return
+    const val = Number(mvInput.replace(/[^0-9]/g, ''))
+    if (!val || val <= 0) { toast.error('올바른 금액을 입력해주세요.'); return }
+    setMvSaving(true)
+    try {
+      await playerApi.updateMarketValue(id, val)
+      toast.success('시장가치가 업데이트됐습니다.')
+      setMvInput('')
+      fetchPlayer()
+      playerApi.getMarketValueHistory(id).then(setMvHistory).catch(() => null)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '업데이트에 실패했습니다.')
+    } finally {
+      setMvSaving(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -262,6 +311,19 @@ export function PlayerDetailPage() {
                       <StatRow label="외부 ID" value={player.externalId} />
                     </>
                   )}
+                  {canSeeMarketValue && (
+                    <>
+                      <Separator />
+                      <StatRow
+                        label="시장가치"
+                        value={
+                          player.currentMarketValue != null
+                            ? formatSalary(player.currentMarketValue)
+                            : '—'
+                        }
+                      />
+                    </>
+                  )}
                 </div>
 
                 {/* 최근 계약 */}
@@ -318,6 +380,90 @@ export function PlayerDetailPage() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* 시장가치 추이 */}
+              {canSeeMarketValue && (
+                <div className="rounded-lg border bg-card p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                      <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+                      시장가치 추이
+                    </h3>
+                    {canUpdateMarketValue && (
+                      <div className="flex items-center gap-1.5">
+                        <Input
+                          type="number"
+                          placeholder="금액 (원)"
+                          value={mvInput}
+                          onChange={(e) => setMvInput(e.target.value)}
+                          className="h-7 w-32 text-xs"
+                          onKeyDown={(e) => { if (e.key === 'Enter') void handleMvUpdate() }}
+                        />
+                        <Button
+                          size="sm"
+                          className="h-7 text-xs px-2"
+                          disabled={mvSaving || !mvInput}
+                          onClick={() => void handleMvUpdate()}
+                        >
+                          {mvSaving ? '저장 중' : '업데이트'}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  {mvHistory.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-6">
+                      시장가치 이력이 없습니다.
+                    </p>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={180}>
+                      <AreaChart
+                        data={[...mvHistory].reverse().map((e) => ({
+                          date: new Date(e.recordedAt).toLocaleDateString('ko-KR', { year: '2-digit', month: 'short' }),
+                          value: e.value,
+                          label: fmtMv(e.value),
+                        }))}
+                        margin={{ top: 8, right: 12, bottom: 0, left: 8 }}
+                      >
+                        <defs>
+                          <linearGradient id="mvGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#2563eb" stopOpacity={0.18} />
+                            <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
+                        <YAxis
+                          tickFormatter={fmtMvTick}
+                          tick={{ fontSize: 10, fill: '#94a3b8' }}
+                          tickLine={false}
+                          axisLine={false}
+                          width={40}
+                        />
+                        <Tooltip
+                          formatter={(v: number) => [fmtMv(v), '시장가치']}
+                          contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="value"
+                          stroke="#2563eb"
+                          strokeWidth={2}
+                          fill="url(#mvGrad)"
+                          dot={{ r: 3, fill: '#2563eb', strokeWidth: 0 }}
+                          activeDot={{ r: 5 }}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
+              )}
+              {/* 포지션 다양성 지수 (유스 전용) */}
+              {player.team?.type === 'YOUTH' && (
+                <div className="rounded-lg border bg-card p-5">
+                  <h3 className="text-sm font-semibold text-foreground mb-3">포지션 다양성 지수</h3>
+                  <PositionDiversityChart playerId={player.id} />
                 </div>
               )}
             </div>

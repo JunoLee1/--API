@@ -68,4 +68,18 @@ export class PlayerService {
     }
     return this.repo.getTrainingResults(playerId, from, to);
   }
+
+  async getPositionDiversity(playerId: string) {
+    const player = await this.repo.findById(playerId);
+    if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
+    if ((player as any).team?.type !== "YOUTH") return [];
+    const rows = await this.repo.getPositionDiversity(playerId);
+    const totalMinutes = rows.reduce((sum, r) => sum + r.totalMinutes, 0);
+    if (totalMinutes === 0) return [];
+    return rows.map((r) => ({
+      position: r.position,
+      minutes: r.totalMinutes,
+      percentage: Math.round((r.totalMinutes / totalMinutes) * 100),
+    }));
+  }
 }

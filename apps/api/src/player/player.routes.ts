@@ -73,4 +73,7 @@ router.get("/:id/training-results", auth, controller.getTrainingResults);
 // 레이더 차트 데이터 + 강점/약점 태그
 router.get("/:id/radar", auth, controller.getRadar);
 
+// 포지션 다양성 지수 (유스 선수 전용)
+router.get("/:id/position-diversity", auth, controller.getPositionDiversity);
+
 export default router;

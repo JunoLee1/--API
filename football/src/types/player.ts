@@ -44,6 +44,7 @@ export interface Player {
   level: PlayerLevel
   status: PlayerStatus
   externalId: string | null
+  currentMarketValue: number | null
   nationality: PlayerNationality
 }
 
@@ -58,12 +59,18 @@ export interface PlayerTransfer {
   toClub: string | null
 }
 
+export interface PositionDiversityEntry {
+  position: string
+  minutes: number
+  percentage: number
+}
+
 export interface PlayerDetail extends Player {
   userId: number | null
   agentId: number | null
   teamId: number | null
   playStyle: string | null
-  currentMarketValue: number | null
+  team: { id: number; type: 'FIRST_TEAM' | 'YOUTH' } | null
   contracts: PlayerContract[]
   transfers: PlayerTransfer[]
 }
