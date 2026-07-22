@@ -74,6 +74,16 @@ export class MatchLineupRepository {
     });
   }
 
+  findActiveInjuredPlayerIds(playerIds: string[]) {
+    return this.prisma.injury.findMany({
+      where: {
+        playerId: { in: playerIds },
+        status: { not: "RETURNED" },
+      },
+      select: { playerId: true },
+    });
+  }
+
   confirmLineup(matchId: number, confirmedById: number) {
     return this.prisma.matchLineup.update({
       where: { matchId },

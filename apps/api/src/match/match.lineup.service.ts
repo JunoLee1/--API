@@ -53,6 +53,10 @@ export class MatchLineupService {
     if (new Set(slotKeys).size !== slotKeys.length) {
       throw new AppError(409, "DUPLICATE_SLOT");
     }
+    const injured = await this.repo.findActiveInjuredPlayerIds(playerIds);
+    if (injured.length > 0) {
+      throw new AppError(409, "INJURED_PLAYER_IN_LINEUP");
+    }
     return this.repo.saveLineup(matchId, dto);
   }
 

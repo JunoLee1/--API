@@ -5,6 +5,7 @@ import { ConfirmProvider } from '@/lib/confirm-dialog'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { PlayersPage } from '@/pages/players/PlayersPage'
+import { YouthPlayersPage } from '@/pages/players/YouthPlayersPage'
 import { PlayerDetailPage } from '@/pages/players/PlayerDetailPage'
 import { ContractsPage } from '@/pages/contracts/ContractsPage'
 import { InjuriesPage } from '@/pages/injuries/InjuriesPage'
@@ -69,6 +70,7 @@ function App() {
           >
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/players" element={<PlayersPage />} />
+            <Route path="/youth-players" element={<YouthPlayersPage />} />
             <Route path="/players/:id" element={<PlayerDetailPage />} />
             <Route path="/contracts" element={<ContractsPage />} />
             <Route path="/contracts/:id" element={<ContractDetailPage />} />

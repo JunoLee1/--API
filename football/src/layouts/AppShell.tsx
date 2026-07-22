@@ -40,6 +40,7 @@ import {
   Users2,
   CalendarDays,
   History,
+  GraduationCap,
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -83,6 +84,14 @@ const NAV_ITEMS: NavItem[] = [
     to: '/players',
     label: '선수 목록',
     icon: Users,
+    section: '선수 관리',
+    end: true,
+    roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
+  },
+  {
+    to: '/youth-players',
+    label: '유소년 선수',
+    icon: GraduationCap,
     section: '선수 관리',
     end: true,
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],

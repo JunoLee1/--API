@@ -2,19 +2,11 @@ import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { playerApi } from '@/services/player.service'
-import type {
-  Player,
-  PlayerStatus,
-  PlayerLevel,
-  Position,
-  PositionZone,
-  PlayerListQuery,
-} from '@/types/player'
+import type { Player, PlayerStatus, Position, PositionZone } from '@/types/player'
 import {
   POSITION_ABBR,
   POSITION_LABEL,
   POSITION_ZONE,
-  LEVEL_LABEL,
   STATUS_LABEL,
 } from '@/types/player'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
@@ -27,7 +19,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select'
 import {
   Table,
@@ -63,7 +54,7 @@ function calcAge(dateOfBirth: string): number {
   return age
 }
 
-export function PlayersPage() {
+export function YouthPlayersPage() {
   const navigate = useNavigate()
   const { user } = useCurrentUser()
   const [players, setPlayers] = useState<Player[]>([])
@@ -71,33 +62,28 @@ export function PlayersPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<PlayerStatus | 'ALL'>('ALL')
   const [positionFilter, setPositionFilter] = useState<Position | 'ALL'>('ALL')
-  const [levelFilter, setLevelFilter] = useState<PlayerLevel | 'ALL'>('ALL')
   const [createOpen, setCreateOpen] = useState(false)
   const [page, setPage] = useState(1)
   const PAGE_SIZE = 10
 
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
-  const canSeeMarketValue =
-    user?.role === 'ADMIN' ||
-    (user?.role === 'FRONT_OFFICE' && (user.frontOfficeRole === 'GM' || user.frontOfficeRole === 'TD'))
 
   const fetchPlayers = () => {
     setLoading(true)
-    const query: PlayerListQuery = {}
+    const query: { level: 'YOUTH'; status?: PlayerStatus; position?: Position } = { level: 'YOUTH' }
     if (statusFilter !== 'ALL') query.status = statusFilter
     if (positionFilter !== 'ALL') query.position = positionFilter
-    if (levelFilter !== 'ALL') query.level = levelFilter
     playerApi
       .list(query)
       .then(setPlayers)
-      .catch(() => toast.error('선수 목록을 불러오지 못했습니다.'))
+      .catch(() => toast.error('유소년 선수 목록을 불러오지 못했습니다.'))
       .finally(() => setLoading(false))
   }
 
   useEffect(() => {
     fetchPlayers()
     setPage(1)
-  }, [statusFilter, positionFilter, levelFilter])
+  }, [statusFilter, positionFilter])
 
   useEffect(() => {
     setPage(1)
@@ -122,10 +108,9 @@ export function PlayersPage() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* 헤더 */}
       <div className="border-b px-6 py-4 flex items-center justify-between gap-4 shrink-0">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">선수 목록</h1>
+          <h1 className="text-lg font-semibold tracking-tight">유소년 선수 목록</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             전체 {players.length}명{activeCount < players.length && ` · 활성 ${activeCount}명`}
           </p>
@@ -138,7 +123,6 @@ export function PlayersPage() {
         )}
       </div>
 
-      {/* 필터 바 */}
       <div className="border-b px-6 py-3 flex flex-wrap items-center gap-3 shrink-0 bg-muted/30">
         <div className="relative flex-1 min-w-48 max-w-64">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -191,29 +175,9 @@ export function PlayersPage() {
               ))}
             </SelectContent>
           </Select>
-
-          <Select
-            value={levelFilter}
-            onValueChange={(v) => setLevelFilter(v as PlayerLevel | 'ALL')}
-          >
-            <SelectTrigger className="h-8 text-sm w-28 bg-background">
-              <span>{levelFilter === 'ALL' ? '전체 레벨' : LEVEL_LABEL[levelFilter]}</span>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">전체 레벨</SelectItem>
-              {(Object.keys(LEVEL_LABEL) as PlayerLevel[])
-                .filter((l) => l !== 'YOUTH')
-                .map((l) => (
-                  <SelectItem key={l} value={l}>
-                    {LEVEL_LABEL[l]}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
         </div>
       </div>
 
-      {/* 테이블 */}
       <div className="flex-1 overflow-auto min-h-0">
         {loading ? (
           <div className="p-6 space-y-3">
@@ -224,7 +188,7 @@ export function PlayersPage() {
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
             <p className="text-sm">
-              {search ? `"${search}"에 해당하는 선수가 없습니다.` : '등록된 선수가 없습니다.'}
+              {search ? `"${search}"에 해당하는 선수가 없습니다.` : '등록된 유소년 선수가 없습니다.'}
             </p>
           </div>
         ) : (
@@ -234,12 +198,10 @@ export function PlayersPage() {
                 <TableHead className="w-10" />
                 <TableHead>이름</TableHead>
                 <TableHead className="w-24">포지션</TableHead>
-                <TableHead className="w-24">레벨</TableHead>
                 <TableHead className="w-24">국적</TableHead>
                 <TableHead className="w-16 text-center">나이</TableHead>
                 <TableHead className="w-20 text-center">신장</TableHead>
                 <TableHead className="w-24">상태</TableHead>
-                {canSeeMarketValue && <TableHead className="w-28 text-right">시장가치</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -267,11 +229,6 @@ export function PlayersPage() {
                       </span>
                     </TableCell>
                     <TableCell className="py-2">
-                      <span className="text-sm text-muted-foreground">
-                        {LEVEL_LABEL[player.level]}
-                      </span>
-                    </TableCell>
-                    <TableCell className="py-2">
                       <span className="text-sm">{player.nationality.name}</span>
                     </TableCell>
                     <TableCell className="py-2 text-center tabular-nums text-sm">
@@ -287,15 +244,6 @@ export function PlayersPage() {
                         {STATUS_LABEL[player.status]}
                       </span>
                     </TableCell>
-                    {canSeeMarketValue && (
-                      <TableCell className="py-2 text-right tabular-nums text-sm">
-                        {player.currentMarketValue != null
-                          ? player.currentMarketValue >= 100_000_000
-                            ? `${(player.currentMarketValue / 100_000_000).toFixed(1)}억`
-                            : `${(player.currentMarketValue / 10_000).toFixed(0)}만`
-                          : <span className="text-muted-foreground">—</span>}
-                      </TableCell>
-                    )}
                   </TableRow>
                 )
               })}
@@ -304,7 +252,6 @@ export function PlayersPage() {
         )}
       </div>
 
-      {/* 페이지네이션 */}
       {!loading && filtered.length > PAGE_SIZE && (
         <div className="border-t px-6 py-3 flex items-center justify-between shrink-0">
           <span className="text-xs text-muted-foreground">

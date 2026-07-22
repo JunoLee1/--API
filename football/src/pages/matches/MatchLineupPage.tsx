@@ -259,8 +259,13 @@ export function MatchLineupPage() {
       setIsConfirmed(result?.isConfirmed ?? false)
       setDirty(false)
       toast.success('라인업이 저장되었습니다.')
-    } catch {
-      toast.error('저장에 실패했습니다.')
+    } catch (err: unknown) {
+      const code = (err as { response?: { data?: { code?: string } } })?.response?.data?.code
+      if (code === 'INJURED_PLAYER_IN_LINEUP') {
+        toast.error('부상 중인 선수가 포함되어 있습니다. 라인업에서 제외해 주세요.')
+      } else {
+        toast.error('저장에 실패했습니다.')
+      }
     } finally {
       setSaving(false)
     }
