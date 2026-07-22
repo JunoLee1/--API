@@ -44,6 +44,8 @@ ADMIN이 생성·관리하는 클럽 내 팀 단위. 팀 구성은 구단마다 
 
 **정렬도 모니터링 대시보드:** 팀별 TrainingSession SessionType 비율을 1군 기준과 비교하여 정렬도 점수(%)를 자동 계산. 열람 권한: 1군 HEAD_COACH, GM, TD, ADMIN.
 
+**유소년 육성 현황 섹션 (기존 TD 대시보드 내 추가):** `Team.type=YOUTH` 팀의 포지션 다양성 지표를 연령대(`Team.ageGroup`)별로 집계. 표시 항목: 팀별 평균 PDI, 단일 포지션 비율 ≥ 80% 선수 목록(편중 경고). 데이터 소스: `LineupSlot` + `PlayerMatchStats.minutesPlayed` 온디맨드 집계. 열람 권한: TD, ADMIN 전용.
+
 ---
 
 ## 역할 (Role)
@@ -89,6 +91,13 @@ Recall 승인 권한: GM 전용.
 선수 에이전트. 담당 선수(복수 가능)의 계약·부상·훈련 출석·경기 스탯 조회 가능.
 선수 한 명에 에이전트 한 명 (`Player.agentId → User`). 에이전트 한 명이 복수 선수 담당 가능.
 성과 보너스 달성 시 담당 계약 FRONT_OFFICE 직원과 함께 알림 수신.
+
+### GUARDIAN
+유소년 선수의 법적 보호자(학부모). `Player.guardianId → User(GUARDIAN)`로 연결.
+- 초대 기반 가입 (ADMIN이 입단 신청 처리 중 초대 발송)
+- 담당 선수(1명)의 훈련 일정·경기 일정·사고 보고서 수신 전용
+- 입단 동의 승인 권한: 본인 자녀 입단 신청(YouthRegistration)에 한함
+- 연봉·계약·타 선수 데이터 열람 불가
 
 ---
 
@@ -248,6 +257,15 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 - `position`: 아래 Position 참조
 - `preferredFoot`: left / right / both
 - `nationality`: 국적
+- `playStyle: PlayStyleEnum?` — HEAD_COACH 수동 설정. 알고리즘이 `PlayerMatchStats` 집계로 초기값 제안 후 HEAD_COACH가 확정·수정. 통계 데이터 부족 시(신인 등) null 허용. **고정 Prisma enum** — 변경 시 마이그레이션 필요하나 레이더 차트 비교 일관성을 위해 채택. 초기 enum 값 목록은 구현 시 확정.
+
+**시장 가치 (MarketValue):**
+- `Player.currentMarketValue: Float?` — 현재 시장 가치. 현재는 TD/SCOUT 수동 입력, 향후 외부 API(어댑터 패턴)로 교체 예정.
+- `MarketValueHistory` 별도 엔티티 — 시점별 가치 이력. 감가 상각 추이 조회에 사용.
+  - 필드: `playerId → Player`, `value: Float`, `recordedAt: DateTime`, `recordedById → User`, `source: MANUAL | EXTERNAL_API`
+  - **스냅샷 트리거:** ① 수동 업데이트 시 즉시 생성 + ② 월 1회 cron 정기 스냅샷 (`source: EXTERNAL_API`로 전환 후에도 동일 패턴 유지)
+- **열람 권한:** GM, TD, ADMIN 전용 (이적료와 동일 기준). PLAYER 본인 포함 그 외 역할 비공개.
+- **쓰기 권한:** TD, SCOUT (수동 입력 단계 기준).
 
 **생성 권한:** ADMIN, FRONT_OFFICE
 
@@ -286,6 +304,8 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 
 **메타데이터:** date, opponent, venue(`HOME | AWAY | NEUTRAL`), homeScore, awayScore, competitionType, seasonId, externalId
 
+> **타입 수정 필요:** `Player_match_stats.xG`, `Player_match_stats.xA`가 스키마에 `Int?`로 선언되어 있으나 Expected Goals는 소수값이므로 `Float?`로 마이그레이션 필요.
+
 **competitionType enum:** `LEAGUE | DOMESTIC_CUP | CONTINENTAL | PLAYOFF | FRIENDLY`
 
 **인제스트 흐름:**
@@ -298,11 +318,78 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 ### PlayerMatchStats (경기 선수 스탯)
 경기별 선수 수치 데이터 (골·어시스트·패스 정확도·태클 성공률 등). 내부 평가·코멘트는 포함하지 않는다. 선수 본인·AGENT 포함 전 역할 열람 가능 (본인 또는 담당 선수 범위 내).
 
+**Position Diversity Index (유소년 전용):** `LineupSlot.slotKey` → Position 매핑 + `PlayerMatchStats.minutesPlayed`를 온디맨드 집계하여 포지션별 출전 시간 비율을 반환. 별도 테이블 없음. 훈련 포지션 추적은 미지원(TrainingParticipant에 positionAssigned 없음). `GET /players/:id/position-diversity` 엔드포인트로 제공. `Team.type !== 'YOUTH'`인 선수는 빈 응답.
+
+> **타입 수정 필요:** `xG`, `xA` → `Float?` 마이그레이션 필요 (현재 `Int?`로 잘못 선언).
+> **필드 추가 필요:** `aerial_duel_success_rate: Float?` (수비수 레이더 차트 공중볼 축).
+
+**레이더 차트 축 정의 (포지션 그룹별, 각 6축):**
+
+| 그룹 | 축 | 스키마 필드 |
+|------|----|------------|
+| **공격수** (striker·shadow_striker·winger·*AM) | 득점력 | `xG`, `goals` |
+| | 찬스 메이킹 | `xA`, `assist` |
+| | 드리블/활동량 | `sprint` |
+| | 슈팅 정확도 | `clear_cut_chance_rate` |
+| | 패스 | `passing_accuracy` |
+| | 세트피스 | `penalty_conversion_rate`, `free_kick_conversion_rate` |
+| **미드필더** (CDM·CM·CAM) | 패스 | `passing_accuracy` |
+| | 기회창출 | `xA`, `assist` |
+| | 수비 기여 | `tackle_success_rate`, `interception` |
+| | 활동량 | `sprint` |
+| | 득점 관여 | `xG`, `goals` |
+| | 세트피스 | `free_kick_conversion_rate` |
+| **수비수** (CB·WB·FB) | 태클 | `tackle_success_rate` |
+| | 인터셉트 | `interception` |
+| | 클리어런스 | `clearance` |
+| | 공중볼 | `aerial_duel_success_rate` *(신규 필드)* |
+| | 빌드업 패스 | `passing_accuracy` |
+| | 활동량 | `sprint` |
+| **골키퍼** | 세이브율 | `shots_on_target - shot_allowed` 역산 |
+| | 빌드업 패스 | `passing_accuracy` |
+| | 크로스 처리 | `crosses_completed` |
+| | 슈팅 방어 | `shot_blocked` |
+| | 실점 방어 | `shot_allowed` |
+| | 킥 배급 | `free_kick_conversion_rate` |
+
+**강점/약점 태그 판정 알고리즘:**
+- **강점** = 해당 축 점수 ≥ 70 **AND** 팀 내 동일 포지션 그룹 상위 25%
+- **약점** = 해당 축 점수 ≤ 40 **OR** 팀 내 동일 포지션 그룹 하위 25%
+- **표본 부족 (동일 포지션 그룹 3명 미만):** 상대 비교 비활성화, 절대 임계값만 적용, 태그 미표시 처리 가능.
+
 **competitionType 결정:**
 - 자동 인제스트: 외부 API 대회 정보 → 내부 enum 매핑 테이블로 변환
 - 수동 입력: FRONT_OFFICE / COACHING_STAFF가 직접 선택
 
 **수동 입력:** FRONT_OFFICE 또는 COACHING_STAFF가 `PlayerMatchStats` 직접 입력 가능. API 장애·미커버 대회 대응.
+
+### MatchLineup / LineupSlot (경기 라인업)
+
+COACHING_STAFF 또는 HEAD_COACH가 경기별 포메이션·선발·후보 라인업을 드래그앤드롭으로 구성하고, HEAD_COACH가 최종 확정하는 기능. `MatchSquad`(참여 명단)와 별도로 관리되는 전용 테이블.
+
+**MatchLineup 필드:** `matchId`(@unique), `formation`, `isConfirmed`, `confirmedAt`, `confirmedById`
+
+**LineupSlot 필드:** `lineupId`, `playerId`, `slotKey`, `isStarter`
+- `slotKey`: FORMATION_LAYOUTS 포지션 키 (예: "GK", "CB1", "LW")
+- 후보(`isStarter=false`)는 `"BENCH_0"`, `"BENCH_1"` 등
+
+**접근 권한:**
+
+| 역할 | 조회 | 편집·저장 | 확정 |
+|------|------|-----------|------|
+| PLAYER / FRONT_OFFICE | ✅ | ❌ | ❌ |
+| COACHING_STAFF | ✅ | ✅ | ❌ |
+| HEAD_COACH / ADMIN | ✅ | ✅ | ✅ |
+
+**저장 방식:** `PUT /matches/:id/lineup` — 트랜잭션으로 기존 슬롯 전체 삭제 후 재생성(replace). `isConfirmed`는 저장으로 초기화되지 않음.
+
+**미등록 경기 대응:** `MatchLineup`이 없고 `MatchSquad`가 있는 경기 → GET 시 스쿼드 선수를 후보 슬롯으로 채운 초안 반환(미저장 상태). 저장 시 비로소 `MatchLineup` 생성.
+
+**확정 시 알림:** HEAD_COACH 확정 후 라인업 내 각 선수(`userId` 보유)에게 선발/후보 구분하여 `LINEUP_CONFIRMED` 알림 발송.
+
+**포지션 Mismatch 경고 (FIRST_TEAM 전용):** FE에서 `slotDef.position !== player.position`일 때 슬롯에 ⚠ 배지 표시. 저장은 차단하지 않는다(비차단 경고). `Team.type === 'YOUTH'`이면 배지를 렌더링하지 않는다. BE는 포지션 유효성을 검증하지 않는다.
+
+**선수 앱 노출:** `isConfirmed=true`인 경우에만 노출.
 
 ---
 
@@ -319,6 +406,40 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 | 수비수 | center_back, left_wing_back, left_full_back, right_wing_back, right_full_back |
 
 포지션 그룹은 성과 보너스 트리거 조건을 매핑하는 단위로 사용된다.
+
+---
+
+## 등번호 (JerseyNumber)
+
+팀별로 독립 관리되는 등번호 단위. 선수와 독립적으로 존재하며, 은퇴 번호(`Retired`) 및 영입 후보 예약(`Reserved`) 개념을 지원하기 위해 별도 엔티티로 분리한다.
+
+**필드:**
+- `number: Int` — 등번호
+- `teamId → Team` — 팀별 독립 관리 (1군 7번 ≠ 유소년 7번)
+- `status: AVAILABLE | OCCUPIED | RETIRED | RESERVED` — 아래 상태 설명 참조
+- `playerId? → Player` — OCCUPIED 시 연결
+- `prospectId? → Prospect` — RESERVED 시 영입 후보 연결 (nullable)
+
+**유니크 제약:** `@@unique([number, teamId])`
+
+**상태 의미:**
+- `AVAILABLE`: 사용 가능
+- `OCCUPIED`: 현재 선수가 착용 중
+- `RETIRED`: 영구 결번 (선수 없음)
+- `RESERVED`: 특정 영입 후보를 위해 예약됨
+
+**쓰기 권한:**
+- `RETIRED` 설정: GM 전용
+- `RESERVED` 설정 (영입 후보 예약): GM 전용
+- `OCCUPIED` 전환 (선수 배정): GM + ADMIN (충돌 워크플로우 참조)
+- `AVAILABLE` 복원: GM + ADMIN
+
+**충돌 워크플로우:**
+- `OCCUPIED` 번호 배정 시도: 시스템 차단. 기존 선수 번호 해제(→ AVAILABLE) 후 재배정 2단계 강제.
+- `RESERVED` 번호 배정 시도: 예약 해제 또는 동일 GM이 직접 배정하는 경우만 허용.
+- `RETIRED` 번호 재활성화: **ADMIN 전용 override**. GM 포함 그 외 역할 불가.
+
+**알림:** 충돌 시도 시 요청자에게 인앱 알림 발송.
 
 ---
 
@@ -477,6 +598,24 @@ HEAD_COACH 요청 → GM 최종 승인 → LOAN_OUT 종료 처리 → Player.sta
 
 임대 클럽 통보는 FRONT_OFFICE가 시스템 외부에서 처리한다. 이 ERP의 범위 밖이다.
 
+### 유소년 입단 신청 (YouthRegistration)
+
+유소년 선수가 팀에 합류하기 위한 승인 워크플로우. 학부모 동의가 확보되기 전까지 `Player` 레코드를 생성하지 않는다.
+
+**상태머신:**
+```
+PENDING → GUARDIAN_APPROVED → CONTRACTED
+        ↘ REJECTED
+```
+
+**필드:** `playerName`, `birthDate`, `preferredJerseyNumber`, `teamId → Team(YOUTH)`, `guardianId → User(GUARDIAN)`(승인 후 연결), `status`, `requestedById → User(ADMIN)`, `createdAt`, `updatedAt`
+
+**흐름:** ADMIN 입단 신청 생성 + GUARDIAN 초대 발송 → GUARDIAN 앱 내 동의 승인(GUARDIAN_APPROVED) → ADMIN 계약 체결 처리(CONTRACTED) → `Player` 레코드 + `Player.guardianId` 동시 생성. 거절 시 REJECTED.
+
+**선호 등번호:** `YouthRegistration.preferredJerseyNumber`에 보관. CONTRACTED 전환 시 해당 팀의 JerseyNumber 가용 여부 확인 후 배정(불가 시 ADMIN 알림).
+
+---
+
 ### 유소년 콜업 (PlayerCallup)
 
 유소년 선수를 1군으로 임시 합류시키는 워크플로우. `teamId` 직접 변경이 아닌 승인 흐름을 거친다.
@@ -492,6 +631,25 @@ REQUESTED → APPROVED → ACTIVE (teamId 업데이트)
 **흐름:** HEAD_COACH 요청 → GM 승인 → `Player.teamId` 자동 업데이트 + `AuditLog` 기록. 거절 시 `reason` 필수.
 
 **완료(COMPLETED):** `endDate` 도래 시 HEAD_COACH 또는 GM이 수동으로 COMPLETED 처리. `Player.teamId` 원복은 수동. 자동 복귀 없음.
+
+---
+
+## 사고 보고서 (IncidentReport)
+
+유소년 전용. 훈련·경기 중 사고 발생 시 코치가 작성하고 학부모(GUARDIAN)에게 자동 알림을 발송하는 워크플로우. 의료 상태 추적(Injury)과 분리된 현장 기록 엔티티.
+
+**상태머신:**
+```
+DRAFT → SUBMITTED → SIGNED
+```
+
+**필드:** `playerId → Player`, `teamId → Team(YOUTH)`, `type: MATCH | TRAINING`, `matchId? → Match`, `sessionId? → TrainingSession`, `description`(육하원칙), `reportedById → User(COACHING_STAFF)`, `supervisorSigned: boolean`, `medicalSigned: boolean`, `injuryId? → Injury`(후속 부상 연결 시), `status`
+
+**흐름:**
+- DRAFT → SUBMITTED: 코치 제출 시 GUARDIAN에게 인앱 알림 자동 발송
+- SUBMITTED → SIGNED: 감독·의무팀 양측 서명 완료 시 → 공기관 외부 보고서 생성 트리거
+
+**Injury 연결:** 경미한 사고는 `injuryId` 없이 독립 존재 가능. 의무팀이 진찰 후 `Injury` 생성 시 `incidentReportId`로 역참조.
 
 ---
 
@@ -517,6 +675,8 @@ REQUESTED → APPROVED → ACTIVE (teamId 업데이트)
 
 `복귀 가능` 전환 시 COACHING_STAFF 전원에 자동 알림.
 
+**ExternalReport 연결:** `ExternalReport.injuryId`는 optional로 전환. `ExternalReport.incidentReportId? → IncidentReport` 추가. `injuryId`와 `incidentReportId` 중 하나는 반드시 존재해야 한다(DB CHECK 제약 또는 서비스 레이어 보장). 기존 성인 Injury 흐름은 변경 없음.
+
 ---
 
 ## 훈련 (Training)
@@ -538,6 +698,14 @@ REQUESTED → APPROVED → ACTIVE (teamId 업데이트)
 **알림:** 할당 시 해당 선수에게 알림 발송. `dueDate` 초과 시 담당 코치에게 알림.
 
 **체화도 연결:** `progressRate` 100% 달성 후 해당 선수의 다음 `TrainingResult.performanceScore`가 코치 판단의 참고 지표로 활용된다. 자동 반영은 없음 — 코치가 직접 평가.
+
+**Player Motivation Design (PLAYER 본인 전용 뷰):**
+세 가지 레이어를 함께 표시한다.
+- **(A) 훈련-경기 상관관계:** 최근 `TrainingResult.performanceScore` 추세와 경기 스탯 추세를 같은 차트에 겹쳐 표시. 훈련 노력이 경기 성과로 이어지는 것을 시각화.
+- **(B) 훈련 성실도 요약:** 출석률·`VideoAssignment` 완료율 숫자 카드. "이번 달 훈련 참여율 92%" 형태.
+- **(C) 시즌 평균 대비 현재 폼:** 최근 N경기 축별 평균 vs 해당 시즌 전체 평균. 레이더 차트 오버레이 또는 별도 폼 카드로 "시즌 평균 대비 ±%" 표시.
+
+타 역할(코치·FRONT_OFFICE 등)의 선수 상세 페이지에서는 노출하지 않는다.
 
 ### TrainingSession (훈련 세션)
 
@@ -567,6 +735,20 @@ REQUESTED → APPROVED → ACTIVE (teamId 업데이트)
 - `scoredById → User`: 평가자 기록. 감사 및 평가자별 추적 목적.
 
 **PLAYER 열람:** 본인 출석·점수·피드백 조회 가능. 타 선수 정보 비공개.
+
+**선수 상세 페이지 — PLAYER 본인 뷰 공개 범위:**
+
+| 컴포넌트 | PLAYER 본인 공개 여부 |
+|----------|----------------------|
+| 레이더 차트 (강점/약점 태그) | ✅ |
+| `playStyle` 라벨 | ✅ (동기 부여 목적) |
+| `Contract.salary` (본인 계약) | ✅ |
+| `TrainingResult` (출석·점수·피드백) | ✅ |
+| `PlayerDevelopmentPlan` | ✅ (ACTIVE 이후) |
+| `TacticalAnalysis` | ✅ (CONFIRMED만) |
+| `Transfer.fee` 이적료 | ❌ |
+| `MarketValue` / `MarketValueHistory` | ❌ |
+| 타 선수 데이터 일체 | ❌ |
 
 ### 훈련 도메인 (SessionType)
 
@@ -655,7 +837,7 @@ REQUESTED → APPROVED → ACTIVE (teamId 업데이트)
 
 **승인 흐름:** 담당 코치 DRAFT 작성 → HEAD_COACH 검토 후 CONFIRMED. CONFIRMED된 분석만 선수에게 공개.
 
-**경기 라인업:** PRE_MATCH 분석 안에 포함. HEAD_COACH가 CONFIRMED 처리 시 라인업 확정.
+**경기 라인업:** 별도 `MatchLineup` 테이블로 관리 (→ MatchLineup / LineupSlot 섹션 참조). 전술 분석의 `lineup` JSON 필드는 전술 메모 용도로 유지.
 
 **PLAYER 열람:** 본인이 출전한 경기의 PRE_MATCH + POST_MATCH 분석 모두 조회 가능 (opponentAnalysis 포함). CONFIRMED 상태에서만 노출된다. 라인업 공개 타이밍은 HEAD_COACH가 CONFIRMED 처리 시점으로 직접 통제한다.
 
@@ -775,6 +957,13 @@ REJECTED 상태에서 원 신청자가 재상신 가능. 재상신 시 `rejectio
 | 의료비 최종 승인 | 신청자 본인 | ADMIN이 최종 승인 시 |
 | 훈련 부하 초과 | PHYSICAL_COACH, HEAD_COACH | 선수 주간 누적 load ≥ 임계값 시 |
 | PDP 활성화 | 해당 선수 본인 | PDP status → ACTIVE 전환 시 |
+| 라인업 확정 | 라인업 내 선수 전원 (userId 보유자) | HEAD_COACH가 라인업 확정 시 |
+| 경기 D-1 알림 | GUARDIAN (자녀 소속 팀 경기) | 경기 전날 cron (`MATCH_DAY_REMINDER` 수신자 확장) |
+| 주간 훈련·경기 일정 | GUARDIAN (자녀 소속 팀) | 매주 월요일 아침 cron (`YOUTH_WEEKLY_SCHEDULE`) |
+| 훈련 세션 변경·취소 | GUARDIAN (자녀 소속 팀) | TrainingSession 시간 변경 또는 취소 처리 시 (`YOUTH_SESSION_CHANGED`) |
+| 사고 보고서 제출 | GUARDIAN (해당 자녀) | IncidentReport → SUBMITTED 전환 시 (`INCIDENT_REPORT_SUBMITTED`) |
+| 입단 신청 상태 변경 | GUARDIAN (해당 신청 건) | YouthRegistration 상태 전환 시 (`YOUTH_REGISTRATION_STATUS_CHANGED`) |
+| 1군 콜업 요청 | GUARDIAN (해당 자녀) | PlayerCallup REQUESTED 시 (`CALLUP_REQUESTED` 수신자 확장) |
 
 **저장 방식:** 수신자별 Notification 레코드 DB 저장. 읽음/안읽음 상태 추적. `/notifications` 목록 페이지 제공.
 
@@ -805,4 +994,5 @@ MEDICAL_EXPENSE_REJECTED
 MEDICAL_EXPENSE_APPROVED
 TRAINING_LOAD_ALERT
 PLAYER_DEVELOPMENT_PLAN_ACTIVATED
+LINEUP_CONFIRMED
 ```
