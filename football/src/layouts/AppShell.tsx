@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { SafeguardButton } from '@/components/layout/SafeguardButton'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { useLiteMode } from '@/hooks/useLiteMode'
 import { useConfirm } from '@/lib/confirm-dialog'
 import { useApiPending } from '@/lib/useApiPending'
 import { authApi } from '@/services/auth.service'
@@ -65,6 +66,7 @@ interface NavItem {
   coachingRoles?: CoachingRole[]
   frontOfficeRoles?: FrontOfficeRole[]
   description?: string
+  liteBlocked?: boolean
 }
 
 
@@ -267,6 +269,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: FileText,
     section: '유소년',
     roles: ['ADMIN', 'FRONT_OFFICE'],
+    liteBlocked: true,
   },
 
   // 관리
@@ -339,6 +342,7 @@ const NAV_ITEMS: NavItem[] = [
 
 export function AppShell() {
   const { user, loading } = useCurrentUser()
+  const isLite = useLiteMode()
   const navigate = useNavigate()
   const location = useLocation()
   const confirm = useConfirm()
@@ -404,6 +408,7 @@ export function AppShell() {
   }
 
   const visibleNavItems = NAV_ITEMS.filter((item) => {
+    if (item.liteBlocked && isLite) return false
     if (!item.roles) return true
     if (!user) return false
     if (!item.roles.includes(user.role)) return false
