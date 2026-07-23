@@ -12,6 +12,9 @@ const DUE_DAYS: Record<ExternalReportTarget, number> = {
   INSURANCE: 5,
   LEAGUE: 7,
   FEDERATION: 7,
+  POLICE: 1,
+  CHILD_PROTECTION_AGENCY: 1,
+  FOOTBALL_ASSOCIATION: 3,
 };
 
 export class InjuryService {
