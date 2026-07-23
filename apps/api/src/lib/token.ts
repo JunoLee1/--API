@@ -7,6 +7,7 @@ interface TokenPayload {
   role: Role;
   coachingRole?: CoachingRole | null;
   frontOfficeRole?: FrontOfficeRole | null;
+  teamId?: number | null;
 }
 
 export function generateTokens(payload: TokenPayload) {

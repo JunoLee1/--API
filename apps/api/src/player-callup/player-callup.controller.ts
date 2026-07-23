@@ -60,11 +60,10 @@ export class PlayerCallupController {
 
   confirmYouth = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = req.user!;
+      const { role, coachingRole, teamId } = req.user!;
       if (role !== "COACHING_STAFF" || coachingRole !== "HEAD_COACH") {
         throw new AppError(403, "FORBIDDEN");
       }
-      const teamId = (req.user! as any).teamId as number | undefined;
       res.json(await this.service.confirmYouth(Number(req.params["id"]), teamId ?? null));
     } catch (err) { next(err); }
   };
