@@ -6,6 +6,7 @@ export interface Team {
   type: TeamType
   ageGroup: string | null
   isActive: boolean
+  isLite: boolean
   trackStats: boolean
   requiresContract: boolean
 }
