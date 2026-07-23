@@ -22,11 +22,22 @@ export class PlayerCallupService {
 
   async create(dto: CreateCallupDto, requestedById: number) {
     const callup = await this.repo.create({ ...dto, requestedById });
+
     void this.notifRepo
-      .createForGM(
+      .createForYouthHeadCoach(
+        callup.fromTeam.id,
         "CALLUP_REQUESTED",
-        "유소년 콜업 요청",
-        `${callup.player.playerName} 선수의 1군 콜업 요청이 등록됐습니다.`,
+        "유소년 콜업 서류 요청",
+        `${callup.player.playerName} 선수의 1군 콜업 서류 확인이 필요합니다.`,
+        callup.id,
+      )
+      .catch(console.error);
+
+    void this.notifRepo
+      .createForMedicalStaff(
+        "CALLUP_REQUESTED",
+        "유소년 콜업 서류 요청",
+        `${callup.player.playerName} 선수의 1군 콜업 의무 서류 확인이 필요합니다.`,
         callup.id,
       )
       .catch(console.error);
@@ -50,14 +61,15 @@ export class PlayerCallupService {
   async approve(id: number, approvedById: number) {
     const callup = await this.repo.findById(id);
     if (!callup) throw new AppError(404, "CALLUP_NOT_FOUND");
-    if (callup.status !== "REQUESTED") throw new AppError(409, "INVALID_STATUS");
+    if (callup.status !== "DOCS_SUBMITTED") throw new AppError(409, "INVALID_STATUS");
 
     const updated = await this.repo.approve(id, approvedById);
     await this.repo.updatePlayerTeam(callup.player.id, callup.toTeam.id);
     await writeAuditLog({ actorId: approvedById, action: "CALLUP_APPROVED", targetId: id });
 
     void this.notifRepo
-      .createForHeadCoach(
+      .createForUser(
+        callup.requestedBy.id,
         "CALLUP_APPROVED",
         "콜업 승인",
         `${callup.player.playerName} 선수의 1군 콜업이 승인됐습니다.`,
@@ -71,20 +83,56 @@ export class PlayerCallupService {
   async reject(id: number, approvedById: number, dto: RejectCallupDto) {
     const callup = await this.repo.findById(id);
     if (!callup) throw new AppError(404, "CALLUP_NOT_FOUND");
-    if (callup.status !== "REQUESTED") throw new AppError(409, "INVALID_STATUS");
+    if (callup.status !== "DOCS_SUBMITTED") throw new AppError(409, "INVALID_STATUS");
     if (!dto.reason?.trim()) throw new AppError(400, "REASON_REQUIRED");
 
     const updated = await this.repo.reject(id, approvedById, dto.reason);
     await writeAuditLog({ actorId: approvedById, action: "CALLUP_REJECTED", targetId: id });
 
     void this.notifRepo
-      .createForHeadCoach(
+      .createForUser(
+        callup.requestedBy.id,
         "CALLUP_REJECTED",
         "콜업 거절",
         `${callup.player.playerName} 선수의 1군 콜업이 거절됐습니다. 사유: ${dto.reason}`,
         id,
       )
       .catch(console.error);
+
+    return updated;
+  }
+
+  async confirmYouth(id: number, actorId: number, actorTeamId: number | null) {
+    const callup = await this.repo.findById(id);
+    if (!callup) throw new AppError(404, "CALLUP_NOT_FOUND");
+    if (callup.status !== "REQUESTED") throw new AppError(409, "INVALID_STATUS");
+    if (actorTeamId !== callup.fromTeam.id) throw new AppError(403, "FORBIDDEN");
+
+    const updated = await this.repo.confirmYouth(id);
+
+    if (updated.medicalConfirmed) {
+      const submitted = await this.repo.submitDocs(id);
+      void this.notifRepo.createForGM("CALLUP_DOCS_READY", "콜업 서류 완료", `${callup.player.playerName} 선수 콜업 서류가 완료됐습니다. 최종 승인을 진행해주세요.`, id).catch(console.error);
+      void this.notifRepo.createForTD("CALLUP_DOCS_READY", "콜업 서류 완료", `${callup.player.playerName} 선수 콜업 서류가 완료됐습니다.`, id).catch(console.error);
+      return submitted;
+    }
+
+    return updated;
+  }
+
+  async confirmMedical(id: number, actorId: number) {
+    const callup = await this.repo.findById(id);
+    if (!callup) throw new AppError(404, "CALLUP_NOT_FOUND");
+    if (callup.status !== "REQUESTED") throw new AppError(409, "INVALID_STATUS");
+
+    const updated = await this.repo.confirmMedical(id);
+
+    if (updated.youthCoachConfirmed) {
+      const submitted = await this.repo.submitDocs(id);
+      void this.notifRepo.createForGM("CALLUP_DOCS_READY", "콜업 서류 완료", `${callup.player.playerName} 선수 콜업 서류가 완료됐습니다. 최종 승인을 진행해주세요.`, id).catch(console.error);
+      void this.notifRepo.createForTD("CALLUP_DOCS_READY", "콜업 서류 완료", `${callup.player.playerName} 선수 콜업 서류가 완료됐습니다.`, id).catch(console.error);
+      return submitted;
+    }
 
     return updated;
   }
