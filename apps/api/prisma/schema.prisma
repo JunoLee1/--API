@@ -282,6 +282,22 @@ enum NotificationType {
   YOUTH_WEEKLY_SCHEDULE
   YOUTH_SESSION_CHANGED
   INCIDENT_REPORT_SUBMITTED
+  GROWTH_REPORT_PUBLISHED
+  SAFEGUARD_EMERGENCY
+  FEE_INVOICE_ISSUED
+  FEE_REMINDER
+  FEE_OVERDUE_WARNING
+  FEE_ACCOUNT_LOCKED
+}
+
+enum BadgeType {
+  PASSION_KING
+  SPACE_WIZARD
+  BEST_PASSER
+  TEAM_PLAYER
+  MOST_IMPROVED
+  DEFENSIVE_WALL
+  GOAL_MACHINE
 }
 
 enum TacticalStatus {
@@ -501,6 +517,8 @@ model User {
   guardianRegistrations    YouthRegistration[]     @relation("GuardianRegistrations")
   youthRegistrations       YouthRegistration[]     @relation("YouthRegistrationRequester")
   reportedIncidents        IncidentReport[]        @relation("IncidentReporter")
+  coachEvaluations         GrowthEvaluation[]      @relation("CoachEvaluations")
+  awardedBadges            PlayerBadge[]           @relation("CoachBadges")
 }
 
 model Season {
@@ -566,6 +584,8 @@ model Player {
   shotsAsShooter         ShotEvent[] @relation("ShotShooter")
   shotsAsAssister        ShotEvent[] @relation("ShotAssister")
   incidentReports        IncidentReport[]
+  growthEvaluations      GrowthEvaluation[]
+  badges                 PlayerBadge[]
 }
 
 model Contract {
@@ -901,6 +921,7 @@ model TrainingSession {
   results         TrainingResult[]
   trainingLoads   TrainingLoad[]
   incidentReports IncidentReport[]
+  playerBadges    PlayerBadge[]
 }
 
 model TrainingContent {
@@ -1482,6 +1503,45 @@ model IncidentReport {
   reportedBy      User             @relation("IncidentReporter", fields: [reportedById], references: [id])
   injury          Injury?          @relation(fields: [injuryId], references: [id])
   externalReports ExternalReport[]
+}
+
+model GrowthEvaluation {
+  id                  Int       @id @default(autoincrement())
+  playerId            String
+  coachId             Int
+  year                Int
+  month               Int
+  isPublished         Boolean   @default(false)
+  publishedAt         DateTime?
+  attitudeScore       Int
+  attitudeComment     String    @db.Text
+  fundamentalsScore   Int
+  fundamentalsComment String    @db.Text
+  spatialScore        Int
+  spatialComment      String    @db.Text
+  physicalScore       Int
+  physicalComment     String    @db.Text
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id])
+  coach  User   @relation("CoachEvaluations", fields: [coachId], references: [id])
+
+  @@unique([playerId, year, month])
+}
+
+model PlayerBadge {
+  id        Int       @id @default(autoincrement())
+  playerId  String
+  coachId   Int
+  sessionId Int?
+  badgeType BadgeType
+  awardedAt DateTime  @default(now())
+  note      String?
+
+  player  Player           @relation(fields: [playerId], references: [id])
+  coach   User             @relation("CoachBadges", fields: [coachId], references: [id])
+  session TrainingSession? @relation(fields: [sessionId], references: [id])
 }
 
 model PlayerCallup {
