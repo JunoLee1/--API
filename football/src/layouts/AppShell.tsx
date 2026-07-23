@@ -321,6 +321,13 @@ const NAV_ITEMS: NavItem[] = [
     section: '관리',
     roles: ['ADMIN'],
   },
+  {
+    to: '/safeguard-reports',
+    label: '보호 신고 현황',
+    icon: Shield,
+    section: '관리',
+    roles: ['ADMIN'],
+  },
 ]
 
 export function AppShell() {
