@@ -29,6 +29,7 @@ import playerCallupRouter from "./player-callup/player-callup.routes";
 import youthRegistrationRouter from "./youth-registration/youth-registration.routes";
 import incidentReportRouter from "./incident-report/incident-report.routes";
 import growthReportRouter from "./growth-report/growth-report.routes";
+import safeguardRouter from "./safeguard/safeguard.routes";
 
 const apiRouter = Router();
 
@@ -62,5 +63,6 @@ apiRouter.use("/player-callups", playerCallupRouter);
 apiRouter.use("/youth-registrations", youthRegistrationRouter);
 apiRouter.use("/incident-reports", incidentReportRouter);
 apiRouter.use("/growth-reports", growthReportRouter);
+apiRouter.use("/safeguard-reports", safeguardRouter);
 
 export default apiRouter;

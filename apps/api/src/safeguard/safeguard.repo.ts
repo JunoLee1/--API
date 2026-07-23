@@ -8,9 +8,9 @@ export class SafeguardRepository {
     return this.prisma.safeguardReport.create({
       data: {
         description: dto.description,
-        contactInfo: dto.contactInfo,
-        accusedUserId: dto.accusedUserId,
         status: 'RECEIVED',
+        ...(dto.contactInfo !== undefined && { contactInfo: dto.contactInfo }),
+        ...(dto.accusedUserId !== undefined && { accusedUserId: dto.accusedUserId }),
       },
     })
   }
@@ -32,7 +32,10 @@ export class SafeguardRepository {
   updateStatus(id: number, dto: UpdateSafeguardStatusDto) {
     return this.prisma.safeguardReport.update({
       where: { id },
-      data: { status: dto.status, resolvedNote: dto.resolvedNote },
+      data: {
+        status: dto.status,
+        ...(dto.resolvedNote !== undefined && { resolvedNote: dto.resolvedNote }),
+      },
     })
   }
 
