@@ -21,6 +21,7 @@ import { lineupApi } from '@/services/lineup.service'
 import { injuryApi } from '@/services/injury.service'
 import type { LineupPlayer, LineupDragPayload } from '@/types/lineup'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { useLiteMode } from '@/hooks/useLiteMode'
 
 const DRAG_KEY = 'text/lineup-player'
 
@@ -117,6 +118,7 @@ export function MatchLineupPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user } = useCurrentUser()
+  const isLite = useLiteMode()
   const matchId = Number(id)
 
   const [allPlayers, setAllPlayers] = useState<Player[]>([])
@@ -321,13 +323,18 @@ export function MatchLineupPage() {
             ))}
           </SelectContent>
         </Select>
+        {isLite && (
+          <div className="rounded-md border border-yellow-200 bg-yellow-50 px-3 py-1.5 text-xs text-yellow-800">
+            Lite Mode — 드래그앤드롭 비활성
+          </div>
+        )}
         {canEdit && (
-          <Button size="sm" variant="outline" disabled={!dirty || saving} onClick={handleSave}>
+          <Button size="sm" variant="outline" disabled={!dirty || saving || isLite} onClick={handleSave}>
             {saving ? '저장 중...' : '저장'}
           </Button>
         )}
         {canConfirm && !isConfirmed && (
-          <Button size="sm" disabled={dirty || confirming} onClick={handleConfirm}>
+          <Button size="sm" disabled={dirty || confirming || isLite} onClick={handleConfirm}>
             <Check className="h-3.5 w-3.5 mr-1.5" />
             {confirming ? '확정 중...' : '라인업 확정'}
           </Button>

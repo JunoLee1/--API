@@ -28,6 +28,7 @@ import { MotivationTab } from './tabs/MotivationTab'
 import { GrowthReportTab } from './tabs/GrowthReportTab'
 import { PositionDiversityChart } from '@/components/players/PositionDiversityChart'
 import { playerPdiApi, type PositionDiversityEntry } from '@/services/playerPdi.service'
+import { LiteModeGate } from '@/components/ui/LiteModeGate'
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts'
@@ -474,10 +475,12 @@ export function PlayerDetailPage() {
               )}
               {/* 포지션 다양성 지수 (유스 전용) */}
               {player.team?.type === 'YOUTH' && (
-                <div className="rounded-lg border bg-card p-5">
-                  <h3 className="text-sm font-semibold text-foreground mb-3">포지션 다양성 지수</h3>
-                  <PositionDiversityChart data={pdiData} />
-                </div>
+                <LiteModeGate blocked>
+                  <div className="rounded-lg border bg-card p-5">
+                    <h3 className="text-sm font-semibold text-foreground mb-3">포지션 다양성 지수</h3>
+                    <PositionDiversityChart data={pdiData} />
+                  </div>
+                </LiteModeGate>
               )}
             </div>
           </TabsContent>
