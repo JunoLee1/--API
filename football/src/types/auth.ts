@@ -1,4 +1,4 @@
-export type Role = 'ADMIN' | 'FRONT_OFFICE' | 'COACHING_STAFF' | 'PLAYER' | 'AGENT'
+export type Role = 'ADMIN' | 'FRONT_OFFICE' | 'COACHING_STAFF' | 'PLAYER' | 'AGENT' | 'GUARDIAN'
 
 export type CoachingRole =
   | 'HEAD_COACH'
@@ -25,6 +25,7 @@ export const ROLE_LABEL: Record<Role, string> = {
   COACHING_STAFF: '코칭스태프',
   PLAYER: '선수',
   AGENT: '에이전트',
+  GUARDIAN: '학부모',
 }
 
 export const COACHING_ROLE_LABEL: Record<CoachingRole, string> = {

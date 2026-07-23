@@ -59,7 +59,7 @@ interface NavItem {
   label: string
   icon: LucideIcon
   end?: boolean
-  section?: '선수 관리' | '계약·영입' | '부상·의료' | '훈련' | '경기·분석' | '관리'
+  section?: '선수 관리' | '계약·영입' | '부상·의료' | '훈련' | '경기·분석' | '유소년' | '관리'
   roles?: Role[]
   coachingRoles?: CoachingRole[]
   frontOfficeRoles?: FrontOfficeRole[]
@@ -73,6 +73,7 @@ const SECTION_ORDER: Array<NavItem['section'] & string> = [
   '부상·의료',
   '훈련',
   '경기·분석',
+  '유소년',
   '관리',
 ]
 
@@ -235,6 +236,22 @@ const NAV_ITEMS: NavItem[] = [
     icon: LayoutGrid,
     section: '경기·분석',
     roles: ['ADMIN', 'COACHING_STAFF'],
+  },
+
+  // 유소년
+  {
+    to: '/youth-registrations',
+    label: '입단 신청',
+    icon: ClipboardList,
+    section: '유소년',
+    roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF', 'GUARDIAN'],
+  },
+  {
+    to: '/incident-reports',
+    label: '사고 보고서',
+    icon: FileText,
+    section: '유소년',
+    roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
   },
 
   // 관리
