@@ -21,6 +21,7 @@ export interface DashboardConfig {
   recentFeedTitle?: string
   showMedicalSection: boolean
   showYouthDevelopment: boolean
+  showAcademyFinance: boolean
 }
 
 export function getDashboardConfig(user: UserDto): DashboardConfig {
@@ -39,6 +40,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
       showRanking: false,
       showMedicalSection: false,
       showYouthDevelopment: true,
+        showAcademyFinance: false,
     }
   }
 
@@ -56,6 +58,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         showRanking: false,
         showMedicalSection: false,
         showYouthDevelopment: false,
+        showAcademyFinance: true,
       }
     }
     if (frontOfficeRole === 'TD') {
@@ -71,6 +74,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         showRanking: false,
         showMedicalSection: false,
         showYouthDevelopment: true,
+        showAcademyFinance: false,
       }
     }
     if (frontOfficeRole === 'CONTRACT_MANAGER') {
@@ -85,6 +89,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         showRanking: false,
         showMedicalSection: false,
         showYouthDevelopment: false,
+        showAcademyFinance: false,
       }
     }
     if (frontOfficeRole === 'SCOUT') {
@@ -99,6 +104,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         showRanking: false,
         showMedicalSection: false,
         showYouthDevelopment: false,
+        showAcademyFinance: false,
       }
     }
     if (frontOfficeRole === 'EQUIPMENT_MANAGER') {
@@ -113,6 +119,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         showRanking: false,
         showMedicalSection: false,
         showYouthDevelopment: false,
+        showAcademyFinance: false,
       }
     }
     if (frontOfficeRole === 'TACTICAL_ANALYST') {
@@ -127,6 +134,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         showRanking: false,
         showMedicalSection: false,
         showYouthDevelopment: false,
+        showAcademyFinance: false,
       }
     }
   }
@@ -145,6 +153,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         recentFeedTitle: '최근 경기 결과',
         showMedicalSection: true,
         showYouthDevelopment: false,
+        showAcademyFinance: false,
       }
     }
     if (coachingRole === 'ASSISTANT_COACH') {
@@ -160,6 +169,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         recentFeedTitle: '최근 경기 결과',
         showMedicalSection: false,
         showYouthDevelopment: false,
+        showAcademyFinance: false,
       }
     }
     if (coachingRole === 'MEDICAL_DIRECTOR') {
@@ -175,6 +185,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         showRanking: false,
         showMedicalSection: true,
         showYouthDevelopment: false,
+        showAcademyFinance: false,
       }
     }
     if (coachingRole === 'MEDICAL') {
@@ -189,6 +200,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         showRanking: false,
         showMedicalSection: true,
         showYouthDevelopment: false,
+        showAcademyFinance: false,
       }
     }
     // DEFENSIVE/ATTACKING/SET_PIECE/GOALKEEPER/PHYSICAL
@@ -203,6 +215,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
       showRanking: false,
       showMedicalSection: false,
       showYouthDevelopment: false,
+        showAcademyFinance: false,
     }
   }
 
@@ -218,6 +231,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
       showRanking: false,
       showMedicalSection: false,
       showYouthDevelopment: false,
+        showAcademyFinance: false,
     }
   }
 
@@ -234,5 +248,6 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
     showRanking: false,
     showMedicalSection: false,
     showYouthDevelopment: false,
+        showAcademyFinance: false,
   }
 }
