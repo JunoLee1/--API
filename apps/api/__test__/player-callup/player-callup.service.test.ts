@@ -56,16 +56,34 @@ describe('PlayerCallupRepository', () => {
       startDate: '2026-08-01',
     });
     expect(r.status).toBe('REQUESTED');
+    expect(r.youthCoachConfirmed).toBe(false);
+    expect(r.medicalConfirmed).toBe(false);
     callupId = r.id;
   });
 
-  it('목록 조회', async () => {
-    const list = await repo().findAll({ status: 'REQUESTED' });
-    expect(list.some((c) => c.id === callupId)).toBe(true);
+  it('유소년감독 확인', async () => {
+    const r = await repo().confirmYouth(callupId);
+    expect(r.youthCoachConfirmed).toBe(true);
+    expect(r.status).toBe('REQUESTED'); // medicalConfirmed 아직 false
   });
 
-  it('승인 처리', async () => {
+  it('의무팀 확인', async () => {
+    const r = await repo().confirmMedical(callupId);
+    expect(r.medicalConfirmed).toBe(true);
+  });
+
+  it('submitDocs → DOCS_SUBMITTED 전환', async () => {
+    const r = await repo().submitDocs(callupId);
+    expect(r.status).toBe('DOCS_SUBMITTED');
+  });
+
+  it('승인 처리 (DOCS_SUBMITTED → APPROVED)', async () => {
     const r = await repo().approve(callupId, gmUserId);
     expect(r.status).toBe('APPROVED');
+  });
+
+  it('목록 조회', async () => {
+    const list = await repo().findAll({ status: 'APPROVED' });
+    expect(list.some((c) => c.id === callupId)).toBe(true);
   });
 });
