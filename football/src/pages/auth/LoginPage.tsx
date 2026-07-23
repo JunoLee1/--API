@@ -30,6 +30,15 @@ const DEV_ACCOUNTS: { group: string; accounts: { label: string; email: string }[
       { label: '메디컬팀장', email: 'meddir@club.com' },
     ],
   },
+  {
+    group: '유소년',
+    accounts: [
+      { label: '유소년감독', email: 'youth.coach1@club.com' },
+      { label: '유소년코치', email: 'youth.coach2@club.com' },
+      { label: '학부모 (김)', email: 'guardian1@club.com' },
+      { label: '학부모 (이)', email: 'guardian2@club.com' },
+    ],
+  },
 ]
 
 const DEV_PASSWORD = 'Password1!'
