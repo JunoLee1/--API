@@ -46,7 +46,7 @@ export class AcademyFeeService {
       const days = daysSince(fee.dueDate);
       if (days >= 30) {
         await this.repo.updateStatus(fee.id, "LOCKED");
-        if (fee.player.status !== "SUSPENDED") await this.repo.lockPlayer(fee.playerId);
+        if ((fee.player.status as string) !== "SUSPENDED") await this.repo.lockPlayer(fee.playerId);
         void this.notifRepo.createForGuardian(
           fee.guardianId, "FEE_ACCOUNT_LOCKED",
           "아카데미 회비 미납 — 훈련/경기 참가 정지",
