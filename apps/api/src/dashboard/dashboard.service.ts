@@ -15,6 +15,10 @@ export class DashboardService {
     return this.repo.getYouthDevelopmentStats();
   }
 
+  getAcademyFinanceStats(year: number, month: number) {
+    return this.repo.getAcademyFinanceStats(year, month);
+  }
+
   getStats(user: UserCtx) {
     switch (user.role) {
       case "ADMIN":

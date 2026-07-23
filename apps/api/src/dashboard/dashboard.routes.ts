@@ -24,4 +24,17 @@ router.get("/youth-development", auth, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+router.get("/academy-finance", auth, async (req, res, next) => {
+  try {
+    const user = req.user as any;
+    if (user.role !== "ADMIN" && user.role !== "FRONT_OFFICE") {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    const now = new Date();
+    const year = Number(req.query.year ?? now.getFullYear());
+    const month = Number(req.query.month ?? now.getMonth() + 1);
+    res.json(await service.getAcademyFinanceStats(year, month));
+  } catch (e) { next(e); }
+});
+
 export default router;

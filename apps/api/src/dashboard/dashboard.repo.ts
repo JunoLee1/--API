@@ -431,4 +431,26 @@ export class DashboardRepository {
       injuriesByPosition,
     };
   }
+
+  async getAcademyFinanceStats(year: number, month: number) {
+    const rows = await this.prisma.academyFee.groupBy({
+      by: ["status"],
+      where: { year, month },
+      _count: { id: true },
+      _sum: { amount: true },
+    });
+    const total = rows.reduce((s, r) => s + (r._count.id ?? 0), 0);
+    const paid = rows.find(r => r.status === "PAID")?._count.id ?? 0;
+    const overdue = rows
+      .filter(r => ["OVERDUE", "LOCKED"].includes(r.status as string))
+      .reduce((s, r) => s + (r._count.id ?? 0), 0);
+    const locked = rows.find(r => r.status === "LOCKED")?._count.id ?? 0;
+    const totalRevenue = rows.find(r => r.status === "PAID")?._sum.amount ?? 0;
+    return {
+      monthlyCollectionRate: total > 0 ? Math.round((paid / total) * 100) : 0,
+      totalRevenue,
+      overdueCount: overdue,
+      lockedPlayerCount: locked,
+    };
+  }
 }
