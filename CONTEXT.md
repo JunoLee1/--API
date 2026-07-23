@@ -305,8 +305,6 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 
 **메타데이터:** date, opponent, venue(`HOME | AWAY | NEUTRAL`), homeScore, awayScore, competitionType, seasonId, externalId
 
-> **타입 수정 필요:** `Player_match_stats.xG`, `Player_match_stats.xA`가 스키마에 `Int?`로 선언되어 있으나 Expected Goals는 소수값이므로 `Float?`로 마이그레이션 필요.
-
 **competitionType enum:** `LEAGUE | DOMESTIC_CUP | CONTINENTAL | PLAYOFF | FRIENDLY`
 
 **인제스트 흐름:**
@@ -320,9 +318,6 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 경기별 선수 수치 데이터 (골·어시스트·패스 정확도·태클 성공률 등). 내부 평가·코멘트는 포함하지 않는다. 선수 본인·AGENT 포함 전 역할 열람 가능 (본인 또는 담당 선수 범위 내).
 
 **Position Diversity Index (유소년 전용):** `LineupSlot.slotKey` → Position 매핑 + `PlayerMatchStats.minutesPlayed`를 온디맨드 집계하여 포지션별 출전 시간 비율을 반환. 별도 테이블 없음. 훈련 포지션 추적은 미지원(TrainingParticipant에 positionAssigned 없음). `GET /players/:id/position-diversity` 엔드포인트로 제공. `Team.type !== 'YOUTH'`인 선수는 빈 응답.
-
-> **타입 수정 필요:** `xG`, `xA` → `Float?` 마이그레이션 필요 (현재 `Int?`로 잘못 선언).
-> **필드 추가 필요:** `aerial_duel_success_rate: Float?` (수비수 레이더 차트 공중볼 축).
 
 **레이더 차트 축 정의 (포지션 그룹별, 각 6축):**
 
@@ -343,7 +338,7 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 | **수비수** (CB·WB·FB) | 태클 | `tackle_success_rate` |
 | | 인터셉트 | `interception` |
 | | 클리어런스 | `clearance` |
-| | 공중볼 | `aerial_duel_success_rate` *(신규 필드)* |
+| | 공중볼 | `aerial_duel_success_rate` |
 | | 빌드업 패스 | `passing_accuracy` |
 | | 활동량 | `sprint` |
 | **골키퍼** | 세이브율 | `shots_on_target - shot_allowed` 역산 |
