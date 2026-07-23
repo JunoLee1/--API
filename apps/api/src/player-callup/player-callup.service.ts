@@ -21,6 +21,9 @@ export class PlayerCallupService {
   }
 
   async create(dto: CreateCallupDto, requestedById: number) {
+    const existing = await this.repo.findActiveByPlayerId(dto.playerId);
+    if (existing) throw new AppError(409, "CALLUP_ALREADY_ACTIVE");
+
     const callup = await this.repo.create({ ...dto, requestedById });
 
     void this.notifRepo

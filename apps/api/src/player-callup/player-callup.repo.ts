@@ -33,6 +33,13 @@ export class PlayerCallupRepository {
     return this.prisma.playerCallup.findUnique({ where: { id }, select: SELECT });
   }
 
+  findActiveByPlayerId(playerId: string) {
+    return this.prisma.playerCallup.findFirst({
+      where: { playerId, status: { in: ["REQUESTED", "DOCS_SUBMITTED", "APPROVED"] } },
+      select: { id: true },
+    });
+  }
+
   create(dto: CreateCallupDto & { requestedById: number }) {
     return this.prisma.playerCallup.create({
       data: {
