@@ -57,4 +57,25 @@ export class PlayerCallupController {
       res.json(await this.service.complete(Number(req.params["id"]), req.user!.id));
     } catch (err) { next(err); }
   };
+
+  confirmYouth = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, coachingRole } = req.user!;
+      if (role !== "COACHING_STAFF" || coachingRole !== "HEAD_COACH") {
+        throw new AppError(403, "FORBIDDEN");
+      }
+      const teamId = (req.user! as any).teamId as number | undefined;
+      res.json(await this.service.confirmYouth(Number(req.params["id"]), teamId ?? null));
+    } catch (err) { next(err); }
+  };
+
+  confirmMedical = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, coachingRole } = req.user!;
+      if (role !== "COACHING_STAFF" || coachingRole !== "MEDICAL") {
+        throw new AppError(403, "FORBIDDEN");
+      }
+      res.json(await this.service.confirmMedical(Number(req.params["id"])));
+    } catch (err) { next(err); }
+  };
 }

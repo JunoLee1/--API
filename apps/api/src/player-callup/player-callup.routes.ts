@@ -21,5 +21,7 @@ router.post("/", auth, controller.create);
 router.patch("/:id/approve", auth, controller.approve);
 router.patch("/:id/reject", auth, controller.reject);
 router.patch("/:id/complete", auth, controller.complete);
+router.patch("/:id/confirm-youth", auth, controller.confirmYouth);
+router.patch("/:id/confirm-medical", auth, controller.confirmMedical);
 
 export default router;
