@@ -102,7 +102,7 @@ export class PlayerCallupService {
     return updated;
   }
 
-  async confirmYouth(id: number, actorId: number, actorTeamId: number | null) {
+  async confirmYouth(id: number, actorTeamId: number | null) {
     const callup = await this.repo.findById(id);
     if (!callup) throw new AppError(404, "CALLUP_NOT_FOUND");
     if (callup.status !== "REQUESTED") throw new AppError(409, "INVALID_STATUS");
@@ -120,7 +120,7 @@ export class PlayerCallupService {
     return updated;
   }
 
-  async confirmMedical(id: number, actorId: number) {
+  async confirmMedical(id: number) {
     const callup = await this.repo.findById(id);
     if (!callup) throw new AppError(404, "CALLUP_NOT_FOUND");
     if (callup.status !== "REQUESTED") throw new AppError(409, "INVALID_STATUS");
