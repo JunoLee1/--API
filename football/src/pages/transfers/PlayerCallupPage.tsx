@@ -24,6 +24,7 @@ import { Plus } from 'lucide-react'
 const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: 'ALL', label: '전체' },
   { value: 'REQUESTED', label: '요청' },
+  { value: 'DOCS_SUBMITTED', label: '서류제출' },
   { value: 'APPROVED', label: '승인' },
   { value: 'REJECTED', label: '거절' },
   { value: 'COMPLETED', label: '완료' },
@@ -144,6 +145,7 @@ export function PlayerCallupPage() {
 
   const isHeadCoach = user?.coachingRole === 'HEAD_COACH'
   const isGM = user?.frontOfficeRole === 'GM'
+  const isMedical = user?.coachingRole === 'MEDICAL'
 
   const fetchCallups = () => {
     setLoading(true)
@@ -189,7 +191,27 @@ export function PlayerCallupPage() {
     }
   }
 
-  const showActions = isGM || isHeadCoach
+  const handleConfirmYouth = async (id: number) => {
+    try {
+      await callupApi.confirmYouth(id)
+      toast.success('유소년 서류 확인 완료.')
+      fetchCallups()
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : '실패했습니다.')
+    }
+  }
+
+  const handleConfirmMedical = async (id: number) => {
+    try {
+      await callupApi.confirmMedical(id)
+      toast.success('의무 서류 확인 완료.')
+      fetchCallups()
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : '실패했습니다.')
+    }
+  }
+
+  const showActions = isGM || isHeadCoach || isMedical
 
   return (
     <div className="flex flex-col h-full">
@@ -235,7 +257,8 @@ export function PlayerCallupPage() {
                 <TableHead>출신팀 → 합류팀</TableHead>
                 <TableHead className="w-28">기간</TableHead>
                 <TableHead className="w-20 text-center">상태</TableHead>
-                {showActions && <TableHead className="w-40" />}
+                <TableHead className="w-32 text-center">서류확인</TableHead>
+                {showActions && <TableHead className="w-44" />}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -254,9 +277,31 @@ export function PlayerCallupPage() {
                       {CALLUP_STATUS_LABEL[c.status as PlayerCallupStatus]}
                     </span>
                   </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex flex-col gap-0.5 items-center text-xs">
+                      <span className={c.youthCoachConfirmed ? 'text-green-600' : 'text-muted-foreground'}>
+                        유소년 {c.youthCoachConfirmed ? '✓' : '대기'}
+                      </span>
+                      <span className={c.medicalConfirmed ? 'text-green-600' : 'text-muted-foreground'}>
+                        의무 {c.medicalConfirmed ? '✓' : '대기'}
+                      </span>
+                    </div>
+                  </TableCell>
                   {showActions && (
                     <TableCell className="flex gap-1.5">
-                      {isGM && c.status === 'REQUESTED' && (
+                      {isHeadCoach && c.status === 'REQUESTED' && !c.youthCoachConfirmed && (
+                        <Button size="sm" variant="outline" className="h-7 text-xs"
+                          onClick={() => handleConfirmYouth(c.id)}>
+                          유소년 확인
+                        </Button>
+                      )}
+                      {isMedical && c.status === 'REQUESTED' && !c.medicalConfirmed && (
+                        <Button size="sm" variant="outline" className="h-7 text-xs"
+                          onClick={() => handleConfirmMedical(c.id)}>
+                          의무 확인
+                        </Button>
+                      )}
+                      {isGM && c.status === 'DOCS_SUBMITTED' && (
                         <>
                           <Button size="sm" variant="outline" className="h-7 text-xs"
                             onClick={() => handleApprove(c.id)}>
