@@ -261,6 +261,13 @@ const NAV_ITEMS: NavItem[] = [
     section: '유소년',
     roles: ['ADMIN', 'COACHING_STAFF', 'GUARDIAN'],
   },
+  {
+    to: '/academy-fees',
+    label: '회비 관리',
+    icon: FileText,
+    section: '유소년',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+  },
 
   // 관리
   {

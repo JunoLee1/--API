@@ -49,6 +49,7 @@ import { MedicalExpenseDetailPage } from '@/pages/medical-expense/MedicalExpense
 import { SquadPlannerPage } from '@/pages/squad/SquadPlannerPage'
 import YouthRegistrationPage from '@/pages/youth/YouthRegistrationPage'
 import IncidentReportPage from '@/pages/youth/IncidentReportPage'
+import AcademyFeePage from '@/pages/youth/AcademyFeePage'
 
 function GrowthReportRedirect() {
   const { playerId } = useParams<{ playerId: string }>()
@@ -84,6 +85,7 @@ function App() {
             <Route path="/player-callups" element={<PlayerCallupPage />} />
             <Route path="/youth-registrations" element={<YouthRegistrationPage />} />
             <Route path="/incident-reports" element={<IncidentReportPage />} />
+            <Route path="/academy-fees" element={<AcademyFeePage />} />
             <Route path="/growth-reports/:playerId" element={<GrowthReportRedirect />} />
             <Route path="/injuries" element={<InjuriesPage />} />
             <Route path="/injuries/:id" element={<InjuryDetailPage />} />
