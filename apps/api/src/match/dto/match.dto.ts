@@ -51,6 +51,7 @@ export interface UpsertPlayerStatsDto {
   foulsCommitted?: number;
   crossesCompleted?: number;
   shotsAllowed?: number;
+  shotBlocked?: number;
 }
 
 export interface UpsertTeamStatsDto {

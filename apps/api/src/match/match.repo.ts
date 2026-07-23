@@ -80,6 +80,7 @@ export class MatchRepository {
             foulsCommitted: true,
             crossesCompleted: true,
             shotsAllowed: true,
+            shotBlocked: true,
             player: { select: { playerName: true, position: true } },
           },
         },
@@ -152,6 +153,7 @@ export class MatchRepository {
         foulsCommitted: n(dto.foulsCommitted),
         crossesCompleted: n(dto.crossesCompleted),
         shotsAllowed: n(dto.shotsAllowed),
+        shotBlocked: n(dto.shotBlocked),
       },
     });
   }
@@ -182,6 +184,7 @@ export class MatchRepository {
         foulsCommitted: n(dto.foulsCommitted),
         crossesCompleted: n(dto.crossesCompleted),
         shotsAllowed: n(dto.shotsAllowed),
+        shotBlocked: n(dto.shotBlocked),
       },
     });
   }
