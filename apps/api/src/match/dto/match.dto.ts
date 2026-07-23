@@ -43,6 +43,14 @@ export interface UpsertPlayerStatsDto {
   saves?: number;
   cleanSheet?: boolean;
   minutesPlayed?: number;
+  aerialDuelSuccessRate?: number;
+  sprint?: number;
+  clearCutChanceRate?: number;
+  penaltyConversionRate?: number;
+  freeKickConversionRate?: number;
+  foulsCommitted?: number;
+  crossesCompleted?: number;
+  shotsAllowed?: number;
 }
 
 export interface UpsertTeamStatsDto {
