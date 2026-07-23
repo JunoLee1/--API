@@ -141,7 +141,9 @@ export class PlayerCallupService {
     const callup = await this.repo.findById(id);
     if (!callup) throw new AppError(404, "CALLUP_NOT_FOUND");
     if (callup.status !== "APPROVED") throw new AppError(409, "INVALID_STATUS");
+    const completed = await this.repo.complete(id);
+    await this.repo.updatePlayerTeam(callup.player.id, callup.fromTeam.id);
     await writeAuditLog({ actorId, action: "CALLUP_COMPLETED", targetId: id });
-    return this.repo.complete(id);
+    return completed;
   }
 }

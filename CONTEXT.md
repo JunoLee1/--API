@@ -16,7 +16,7 @@ ADMIN이 생성·관리하는 클럽 내 팀 단위. 팀 구성은 구단마다 
 
 **필드:** `name`(팀명), `type`(FIRST_TEAM \| YOUTH), `ageGroup`(U18·U15 등, nullable), `isActive`
 
-**Player ↔ Team:** 단일 소속. `Player.teamId → Team`. 유소년 콜업은 `PlayerCallup` 워크플로우(HEAD_COACH 요청 → GM 승인)를 거쳐 `teamId`를 업데이트하며, 변경 이력은 `AuditLog`로 추적한다.
+**Player ↔ Team:** 단일 소속. `Player.teamId → Team`. 유소년 콜업은 `PlayerCallup` 워크플로우(HEAD_COACH 요청 → 유소년감독·의무팀 서류 확인 → GM 승인)를 거쳐 `teamId`를 업데이트하며, 변경 이력은 `AuditLog`로 추적한다.
 
 **COACHING_STAFF ↔ Team:** 단일 소속. `User.teamId → Team`. Player와 동일 원칙.
 
@@ -205,6 +205,7 @@ HEAD_COACH와 동일한 시스템 권한을 상시 보유한다. "부재 시 대
 
 ### MEDICAL (의료진)
 담당 영역: 부상(Injury) 기록 작성·상태 변경 전담. 부상 예방 훈련은 PHYSICAL_COACH 소관이며 MEDICAL 소관이 아니다.
+클럽 공용 조직 — `teamId` 없음. 1군·유소년 구분 없이 클럽 전체 선수를 담당한다.
 
 **협진 병원:** 외부 병원 의료진은 시스템 계정을 갖지 않는다. 클럽 MEDICAL이 협진 결과를 대신 입력한다.
 
@@ -622,15 +623,24 @@ PENDING → GUARDIAN_APPROVED → CONTRACTED
 
 **상태머신:**
 ```
-REQUESTED → APPROVED → ACTIVE (teamId 업데이트)
+REQUESTED → DOCS_SUBMITTED → APPROVED → COMPLETED
            ↘ REJECTED
 ```
 
-**필드:** `playerId → Player`, `fromTeamId → Team`(출신 유소년 팀), `toTeamId → Team`(1군), `requestedById → User`(HEAD_COACH), `approvedById → User`(GM), `reason`(콜업 사유), `status`(REQUESTED \| APPROVED \| REJECTED \| COMPLETED), `startDate`, `endDate`(nullable — 미지정 시 영구 이적으로 간주)
+- `REQUESTED`: HEAD_COACH 요청 직후. 유소년감독·의무팀 서류 확인 대기 중.
+- `DOCS_SUBMITTED`: `youthCoachConfirmed`와 `medicalConfirmed` 양쪽 모두 `true`가 되는 순간 서비스 레이어가 자동 전환. GM 최종 승인 대기 중.
+- `APPROVED`: GM 승인. 이 시점에 `Player.teamId` → `toTeamId`로 즉시 업데이트 + `AuditLog` 기록.
+- `COMPLETED`: 콜업 기간 종료. HEAD_COACH 또는 GM이 수동 처리. `Player.teamId` → `fromTeamId`로 자동 원복 + `AuditLog` 기록.
+- `REJECTED`: `DOCS_SUBMITTED` 상태에서 GM이 거절. 거절 사유(`reason`) 필수.
 
-**흐름:** HEAD_COACH 요청 → GM 승인 → `Player.teamId` 자동 업데이트 + `AuditLog` 기록. 거절 시 `reason` 필수.
+**필드:** `playerId → Player`, `fromTeamId → Team`(출신 유소년 팀), `toTeamId → Team`(1군), `requestedById → User`(HEAD_COACH), `approvedById → User`(GM), `reason`(콜업 사유 또는 거절 사유), `status`(REQUESTED \| DOCS_SUBMITTED \| APPROVED \| REJECTED \| COMPLETED), `youthCoachConfirmed: Boolean`(유소년팀 HEAD_COACH 서류 확인 여부), `medicalConfirmed: Boolean`(의무팀 서류 확인 여부), `startDate`, `endDate`(nullable — 임시 합류 종료 예정일. null이면 종료 시점 미확정. 영구 이적은 Transfer 도메인에서 처리하며 콜업은 항상 임시 성격)
 
-**완료(COMPLETED):** `endDate` 도래 시 HEAD_COACH 또는 GM이 수동으로 COMPLETED 처리. `Player.teamId` 원복은 수동. 자동 복귀 없음.
+**흐름:**
+1. HEAD_COACH 콜업 요청 → 유소년팀 HEAD_COACH·MEDICAL 스태프·GUARDIAN에게 알림
+2. 유소년팀 HEAD_COACH가 `PATCH /:id/confirm-youth` 호출 → `youthCoachConfirmed = true`
+3. MEDICAL 스태프가 `PATCH /:id/confirm-medical` 호출 → `medicalConfirmed = true`
+4. 2·3 순서 무관. 양쪽 모두 완료되는 시점에 서비스 레이어가 `DOCS_SUBMITTED`로 자동 전환 + GM·TD 알림
+5. GM이 `PATCH /:id/approve` → `APPROVED` + `Player.teamId` 업데이트, 또는 `PATCH /:id/reject` → `REJECTED`
 
 ---
 
@@ -963,7 +973,10 @@ REJECTED 상태에서 원 신청자가 재상신 가능. 재상신 시 `rejectio
 | 훈련 세션 변경·취소 | GUARDIAN (자녀 소속 팀) | TrainingSession 시간 변경 또는 취소 처리 시 (`YOUTH_SESSION_CHANGED`) |
 | 사고 보고서 제출 | GUARDIAN (해당 자녀) | IncidentReport → SUBMITTED 전환 시 (`INCIDENT_REPORT_SUBMITTED`) |
 | 입단 신청 상태 변경 | GUARDIAN (해당 신청 건) | YouthRegistration 상태 전환 시 (`YOUTH_REGISTRATION_STATUS_CHANGED`) |
-| 1군 콜업 요청 | GUARDIAN (해당 자녀) | PlayerCallup REQUESTED 시 (`CALLUP_REQUESTED` 수신자 확장) |
+| 1군 콜업 요청 | 유소년팀 HEAD_COACH, MEDICAL 스태프, GUARDIAN (해당 자녀) | PlayerCallup REQUESTED 시 (`CALLUP_REQUESTED`) |
+| 콜업 서류 완료 | GM, TD | `youthCoachConfirmed` + `medicalConfirmed` 양쪽 완료 시 (`CALLUP_DOCS_READY`) |
+| 콜업 승인 | 요청자(HEAD_COACH) | GM이 승인 처리 시 (`CALLUP_APPROVED`) |
+| 콜업 거절 | 요청자(HEAD_COACH) | GM이 거절 처리 시 (`CALLUP_REJECTED`) |
 
 **저장 방식:** 수신자별 Notification 레코드 DB 저장. 읽음/안읽음 상태 추적. `/notifications` 목록 페이지 제공.
 
@@ -995,4 +1008,8 @@ MEDICAL_EXPENSE_APPROVED
 TRAINING_LOAD_ALERT
 PLAYER_DEVELOPMENT_PLAN_ACTIVATED
 LINEUP_CONFIRMED
+CALLUP_REQUESTED
+CALLUP_DOCS_READY
+CALLUP_APPROVED
+CALLUP_REJECTED
 ```
