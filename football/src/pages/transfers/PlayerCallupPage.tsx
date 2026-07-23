@@ -289,7 +289,7 @@ export function PlayerCallupPage() {
                   </TableCell>
                   {showActions && (
                     <TableCell className="flex gap-1.5">
-                      {isHeadCoach && c.status === 'REQUESTED' && !c.youthCoachConfirmed && (
+                      {isHeadCoach && c.status === 'REQUESTED' && !c.youthCoachConfirmed && user?.teamId === c.fromTeam.id && (
                         <Button size="sm" variant="outline" className="h-7 text-xs"
                           onClick={() => handleConfirmYouth(c.id)}>
                           유소년 확인
