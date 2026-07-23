@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { SafeguardButton } from '@/components/layout/SafeguardButton'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useConfirm } from '@/lib/confirm-dialog'
@@ -632,6 +633,7 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
+      <SafeguardButton />
     </div>
   )
 }
