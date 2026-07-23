@@ -59,7 +59,11 @@ export class MatchLineupRepository {
   findMatchInfo(matchId: number) {
     return this.prisma.match.findUnique({
       where: { id: matchId },
-      select: { homeTeamName: true, awayTeamName: true },
+      select: {
+        homeTeamName: true,
+        awayTeamName: true,
+        team: { select: { id: true, type: true } },
+      },
     });
   }
 
@@ -67,6 +71,16 @@ export class MatchLineupRepository {
     return this.prisma.matchSquad.findMany({
       where: { matchId },
       include: { player: { select: PLAYER_SELECT } },
+    });
+  }
+
+  findActiveInjuredPlayerIds(playerIds: string[]) {
+    return this.prisma.injury.findMany({
+      where: {
+        playerId: { in: playerIds },
+        status: { not: "RETURNED" },
+      },
+      select: { playerId: true },
     });
   }
 

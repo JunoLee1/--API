@@ -29,7 +29,7 @@
 - Modify: `apps/api/prisma/schema.prisma`
 - Create: `apps/api/prisma/migrations/20260715000002_add_medical_report_type/migration.sql`
 
-- [ ] **Step 1: schema.prisma의 ReportType enum에 MEDICAL 추가**
+- [x] **Step 1: schema.prisma의 ReportType enum에 MEDICAL 추가**
 
 `apps/api/prisma/schema.prisma` 에서 아래 블록을 찾아:
 
@@ -50,7 +50,7 @@ enum ReportType {
 }
 ```
 
-- [ ] **Step 2: 마이그레이션 디렉토리 생성 및 SQL 작성**
+- [x] **Step 2: 마이그레이션 디렉토리 생성 및 SQL 작성**
 
 ```bash
 mkdir -p apps/api/prisma/migrations/20260715000002_add_medical_report_type
@@ -63,7 +63,7 @@ mkdir -p apps/api/prisma/migrations/20260715000002_add_medical_report_type
 ALTER TYPE "ReportType" ADD VALUE 'MEDICAL';
 ```
 
-- [ ] **Step 3: 마이그레이션 적용 및 Prisma client 재생성**
+- [x] **Step 3: 마이그레이션 적용 및 Prisma client 재생성**
 
 ```bash
 cd apps/api
@@ -74,7 +74,7 @@ npx prisma generate
 
 Expected: `✔ Generated Prisma Client` 메시지.
 
-- [ ] **Step 4: BE 타입 확인**
+- [x] **Step 4: BE 타입 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | grep "report"
@@ -82,7 +82,7 @@ cd apps/api && npx tsc --noEmit 2>&1 | grep "report"
 
 Expected: 출력 없음 (report 관련 에러 없음).
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add apps/api/prisma/schema.prisma \
@@ -97,7 +97,7 @@ git commit -m "feat: add MEDICAL to ReportType enum"
 **Files:**
 - Modify: `football/src/types/report.ts`
 
-- [ ] **Step 1: ReportType에 'MEDICAL' 추가**
+- [x] **Step 1: ReportType에 'MEDICAL' 추가**
 
 `football/src/types/report.ts` 에서:
 
@@ -111,7 +111,7 @@ export type ReportType = 'FINANCIAL' | 'PERFORMANCE'
 export type ReportType = 'FINANCIAL' | 'PERFORMANCE' | 'MEDICAL'
 ```
 
-- [ ] **Step 2: REPORT_TYPE_LABEL에 MEDICAL 추가**
+- [x] **Step 2: REPORT_TYPE_LABEL에 MEDICAL 추가**
 
 ```typescript
 export const REPORT_TYPE_LABEL: Record<ReportType, string> = {
@@ -121,7 +121,7 @@ export const REPORT_TYPE_LABEL: Record<ReportType, string> = {
 }
 ```
 
-- [ ] **Step 3: REPORT_TYPE_STYLE에 MEDICAL 추가**
+- [x] **Step 3: REPORT_TYPE_STYLE에 MEDICAL 추가**
 
 ```typescript
 export const REPORT_TYPE_STYLE: Record<ReportType, string> = {
@@ -131,7 +131,7 @@ export const REPORT_TYPE_STYLE: Record<ReportType, string> = {
 }
 ```
 
-- [ ] **Step 4: FE 타입 확인**
+- [x] **Step 4: FE 타입 확인**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | grep "report"
@@ -139,7 +139,7 @@ cd football && npx tsc --noEmit 2>&1 | grep "report"
 
 Expected: 출력 없음.
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add football/src/types/report.ts
@@ -153,7 +153,7 @@ git commit -m "feat: add MEDICAL ReportType label and style"
 **Files:**
 - Modify: `football/src/pages/reports/ReportFormPage.tsx`
 
-- [ ] **Step 1: TYPES 배열에 'MEDICAL' 추가**
+- [x] **Step 1: TYPES 배열에 'MEDICAL' 추가**
 
 `football/src/pages/reports/ReportFormPage.tsx` 에서:
 
@@ -167,7 +167,7 @@ const TYPES: ReportType[] = ['FINANCIAL', 'PERFORMANCE']
 const TYPES: ReportType[] = ['FINANCIAL', 'PERFORMANCE', 'MEDICAL']
 ```
 
-- [ ] **Step 2: FE 타입 확인**
+- [x] **Step 2: FE 타입 확인**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | head -5
@@ -175,7 +175,7 @@ cd football && npx tsc --noEmit 2>&1 | head -5
 
 Expected: 출력 없음.
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add football/src/pages/reports/ReportFormPage.tsx
@@ -206,7 +206,7 @@ git commit -m "feat: expose MEDICAL type in report form"
 ...
 ```
 
-- [ ] **Step 1: import 정리 — 의료비 관련 제거, report 관련 추가**
+- [x] **Step 1: import 정리 — 의료비 관련 제거, report 관련 추가**
 
 `football/src/pages/injuries/InjuryStatsPage.tsx` 상단 import를 다음으로 교체:
 
@@ -227,7 +227,7 @@ import { toast } from 'sonner'
 import { Plus, ClipboardList } from 'lucide-react'
 ```
 
-- [ ] **Step 2: 컴포넌트 상태 및 로직 교체**
+- [x] **Step 2: 컴포넌트 상태 및 로직 교체**
 
 `InjuryStatsPage` 컴포넌트 안의 상태 선언 및 핸들러를 다음으로 교체:
 
@@ -334,7 +334,7 @@ import { Plus, ClipboardList } from 'lucide-react'
   }
 ```
 
-- [ ] **Step 3: 헤더 버튼 레이블 교체**
+- [x] **Step 3: 헤더 버튼 레이블 교체**
 
 기존:
 ```tsx
@@ -354,7 +354,7 @@ import { Plus, ClipboardList } from 'lucide-react'
         )}
 ```
 
-- [ ] **Step 4: Sheet 내용 교체**
+- [x] **Step 4: Sheet 내용 교체**
 
 기존 Sheet 전체 (`<Sheet open={sheetOpen} ...>...</Sheet>`)를 다음으로 교체:
 
@@ -408,7 +408,7 @@ import { Plus, ClipboardList } from 'lucide-react'
       </Sheet>
 ```
 
-- [ ] **Step 5: FE 타입 확인**
+- [x] **Step 5: FE 타입 확인**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | head -10
@@ -416,7 +416,7 @@ cd football && npx tsc --noEmit 2>&1 | head -10
 
 Expected: 출력 없음.
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add football/src/pages/injuries/InjuryStatsPage.tsx

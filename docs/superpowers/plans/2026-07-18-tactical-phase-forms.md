@@ -34,7 +34,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: TacticalAnalysis 모델에 PRE/POST 전용 필드 추가**
+- [x] **Step 1: TacticalAnalysis 모델에 PRE/POST 전용 필드 추가**
 
 `apps/api/prisma/schema.prisma`의 `TacticalAnalysis` 모델에서 `media TacticalMedia[]` 줄 **바로 앞**에 추가:
 
@@ -60,7 +60,7 @@
   improvementPlayer   Player?          @relation("ImprovementPlayer", fields: [improvementPlayerId], references: [id])
 ```
 
-- [ ] **Step 2: Player 모델에 back-relations 추가**
+- [x] **Step 2: Player 모델에 back-relations 추가**
 
 `Player` 모델의 relation 목록 마지막(기존 `developmentPlans PlayerDevelopmentPlan[]` 아래)에 추가:
 
@@ -69,7 +69,7 @@
   improvementAnalyses TacticalAnalysis[] @relation("ImprovementPlayer")
 ```
 
-- [ ] **Step 3: Prisma format 확인**
+- [x] **Step 3: Prisma format 확인**
 
 ```bash
 cd apps/api && npx prisma format
@@ -77,7 +77,7 @@ cd apps/api && npx prisma format
 
 Expected: 에러 없이 포맷 완료
 
-- [ ] **Step 4: Migration 생성**
+- [x] **Step 4: Migration 생성**
 
 ```bash
 cd apps/api
@@ -90,7 +90,7 @@ npx prisma migrate diff \
 
 Expected: migration.sql 내용에 `ALTER TABLE "TacticalAnalysis" ADD COLUMN "opponentFormation"` 등 포함 확인
 
-- [ ] **Step 5: DB 적용 + 이력 등록**
+- [x] **Step 5: DB 적용 + 이력 등록**
 
 ```bash
 cd apps/api
@@ -101,7 +101,7 @@ npx prisma generate
 
 Expected: 각각 에러 없이 완료, `✔ Generated Prisma Client` 출력
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/20260718_tactical_phase_fields/
@@ -119,7 +119,7 @@ git commit -m "feat(schema): add PRE/POST match tactical analysis phase fields"
 - Modify: `apps/api/src/tactical/tactical.controller.ts`
 - Modify: `apps/api/src/tactical/tactical.routes.ts`
 
-- [ ] **Step 1: tactical.dto.ts — CreateAnalysisDto 확장 + UpdateAnalysisDto 신규**
+- [x] **Step 1: tactical.dto.ts — CreateAnalysisDto 확장 + UpdateAnalysisDto 신규**
 
 `apps/api/src/tactical/dto/tactical.dto.ts` 전체 교체:
 
@@ -172,7 +172,7 @@ export interface AddMediaDto {
 }
 ```
 
-- [ ] **Step 2: tactical.repo.ts — create() 신규 필드 포함, update() 추가, findAll() select 확장**
+- [x] **Step 2: tactical.repo.ts — create() 신규 필드 포함, update() 추가, findAll() select 확장**
 
 `apps/api/src/tactical/tactical.repo.ts` 전체 교체:
 
@@ -318,7 +318,7 @@ export class TacticalRepository {
 }
 ```
 
-- [ ] **Step 3: tactical.service.ts — updateAnalysis() 추가**
+- [x] **Step 3: tactical.service.ts — updateAnalysis() 추가**
 
 `updateAnalysis` 메서드를 `confirmAnalysis` 앞에 추가:
 
@@ -339,7 +339,7 @@ import { CreateAnalysisDto, UpdateAnalysisDto, AddLineupDto, AddMediaDto } from 
 import { getPrisma } from "../lib/prisma";
 ```
 
-- [ ] **Step 4: tactical.controller.ts — update 핸들러 추가**
+- [x] **Step 4: tactical.controller.ts — update 핸들러 추가**
 
 `confirm` 핸들러 바로 앞에 추가:
 
@@ -359,7 +359,7 @@ update = async (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 5: tactical.routes.ts — PATCH /:id 추가**
+- [x] **Step 5: tactical.routes.ts — PATCH /:id 추가**
 
 기존 `router.patch("/:id/confirm", ...)` 바로 위에 추가:
 
@@ -368,7 +368,7 @@ update = async (req: Request, res: Response, next: NextFunction) => {
 router.patch("/:id", auth, controller.update);
 ```
 
-- [ ] **Step 6: TypeScript 컴파일 확인**
+- [x] **Step 6: TypeScript 컴파일 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | grep -E "tactical|error TS"
@@ -376,7 +376,7 @@ cd apps/api && npx tsc --noEmit 2>&1 | grep -E "tactical|error TS"
 
 Expected: 출력 없음 (에러 없음)
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add apps/api/src/tactical/
@@ -390,7 +390,7 @@ git commit -m "feat(tactical): add update endpoint with PRE/POST phase-specific 
 **Files:**
 - Modify: `apps/api/__test__/tactical/tactical.controller.test.ts`
 
-- [ ] **Step 1: mockService에 updateAnalysis + list 메서드 추가 및 update 테스트 작성**
+- [x] **Step 1: mockService에 updateAnalysis + list 메서드 추가 및 update 테스트 작성**
 
 기존 파일의 `mockService` 객체에 `updateAnalysis` 추가 후 describe 블록 추가:
 
@@ -444,7 +444,7 @@ describe("TacticalController - update", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행**
+- [x] **Step 2: 테스트 실행**
 
 ```bash
 cd apps/api && npx jest __test__/tactical/tactical.controller.test.ts --verbose
@@ -452,7 +452,7 @@ cd apps/api && npx jest __test__/tactical/tactical.controller.test.ts --verbose
 
 Expected: 전체 테스트 PASS (기존 + 신규 3개)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/__test__/tactical/tactical.controller.test.ts
@@ -467,7 +467,7 @@ git commit -m "test(tactical): add update endpoint unit tests"
 - Modify: `football/src/types/tactical.ts`
 - Modify: `football/src/services/tactical.service.ts`
 
-- [ ] **Step 1: types/tactical.ts — TacticalAnalysis 확장 + UpdateTacticalDto**
+- [x] **Step 1: types/tactical.ts — TacticalAnalysis 확장 + UpdateTacticalDto**
 
 `football/src/types/tactical.ts` 전체 교체:
 
@@ -589,7 +589,7 @@ export const MEDIA_TYPE_LABEL: Record<TacticalMediaType, string> = {
 }
 ```
 
-- [ ] **Step 2: services/tactical.service.ts — update() 추가**
+- [x] **Step 2: services/tactical.service.ts — update() 추가**
 
 `football/src/services/tactical.service.ts` 전체 교체:
 
@@ -631,7 +631,7 @@ export const tacticalApi = {
 }
 ```
 
-- [ ] **Step 3: TypeScript 컴파일 확인**
+- [x] **Step 3: TypeScript 컴파일 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep "error TS"
@@ -639,7 +639,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep "error TS"
 
 Expected: 출력 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/types/tactical.ts football/src/services/tactical.service.ts
@@ -653,7 +653,7 @@ git commit -m "feat(tactical): add UpdateTacticalDto, phase-specific fields to t
 **Files:**
 - Modify: `football/src/pages/tactical/TacticalAnalysisPage.tsx`
 
-- [ ] **Step 1: TacticalAnalysisPage.tsx 전체 교체**
+- [x] **Step 1: TacticalAnalysisPage.tsx 전체 교체**
 
 아래 코드로 전체 교체:
 
@@ -1306,7 +1306,7 @@ export function TacticalAnalysisPage() {
 }
 ```
 
-- [ ] **Step 2: TypeScript 컴파일 확인**
+- [x] **Step 2: TypeScript 컴파일 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep "tactical\|error TS"
@@ -1314,7 +1314,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep "tactical\
 
 Expected: 출력 없음
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/pages/tactical/TacticalAnalysisPage.tsx

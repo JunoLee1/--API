@@ -290,7 +290,12 @@ export function TrainingPage() {
     }
   }
 
-  const sessionDates = new Set(sessions.map(s => s.date.slice(0, 10)))
+  const sessionsByDate = sessions.reduce<Map<string, SessionType[]>>((acc, s) => {
+    const d = s.date.slice(0, 10)
+    if (!acc.has(d)) acc.set(d, [])
+    acc.get(d)!.push(s.sessionType)
+    return acc
+  }, new Map())
 
   const filteredSessions = selectedDate
     ? sessions.filter(s => s.date.slice(0, 10) === selectedDate)
@@ -364,7 +369,7 @@ export function TrainingPage() {
           {calCells.map((day, i) => {
             if (!day) return <span key={`e-${i}`} />
             const dateStr = toCalDateStr(day)
-            const hasSession = sessionDates.has(dateStr)
+            const daySessions = sessionsByDate.get(dateStr) ?? []
             const isSelected = selectedDate === dateStr
             const isToday = todayStr === dateStr
             return (
@@ -383,12 +388,25 @@ export function TrainingPage() {
                 )}>
                   {day}
                 </span>
-                <span className={cn(
-                  'h-1 w-1 rounded-full',
-                  hasSession
-                    ? isSelected ? 'bg-primary-foreground' : 'bg-primary'
-                    : 'invisible',
-                )} />
+                <div className="flex flex-col items-center gap-0.5 w-full px-0.5">
+                  {daySessions.slice(0, 2).map((type, idx) => (
+                    <span
+                      key={idx}
+                      className={cn(
+                        'w-full text-center rounded px-0.5 leading-tight',
+                        'text-[8px] font-medium border truncate',
+                        isSelected
+                          ? 'bg-primary/20 text-primary-foreground border-primary/30'
+                          : SESSION_TYPE_STYLE[type],
+                      )}
+                    >
+                      {SESSION_TYPE_LABEL[type]}
+                    </span>
+                  ))}
+                  {daySessions.length > 2 && (
+                    <span className="text-[8px] text-muted-foreground">+{daySessions.length - 2}</span>
+                  )}
+                </div>
               </button>
             )
           })}

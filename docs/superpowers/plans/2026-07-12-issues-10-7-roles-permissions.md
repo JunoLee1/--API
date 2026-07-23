@@ -54,7 +54,7 @@
 **Files:**
 - Modify: `src/training/training.controller.ts:37-41`
 
-- [ ] **Step 1: approveSession 가드 수정**
+- [x] **Step 1: approveSession 가드 수정**
 
 현재 코드:
 ```ts
@@ -73,7 +73,7 @@ approveSession = async (req: Request, res: Response, next: NextFunction) => {
     if (!canApprove) throw new AppError(403, "FORBIDDEN");
 ```
 
-- [ ] **Step 2: 테스트 추가** — `__test__/training/training.controller.test.ts` 파일 끝에 describe 블록 추가:
+- [x] **Step 2: 테스트 추가** — `__test__/training/training.controller.test.ts` 파일 끝에 describe 블록 추가:
 
 ```ts
 describe("TrainingController - approveSession", () => {
@@ -119,7 +119,7 @@ describe("TrainingController - approveSession", () => {
 });
 ```
 
-- [ ] **Step 3: 테스트 실행**
+- [x] **Step 3: 테스트 실행**
 
 ```bash
 cd apps/api && npx jest __test__/training/training.controller.test.ts --no-coverage
@@ -127,7 +127,7 @@ cd apps/api && npx jest __test__/training/training.controller.test.ts --no-cover
 
 Expected: 모든 테스트 PASS
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/src/training/training.controller.ts apps/api/__test__/training/training.controller.test.ts
@@ -144,7 +144,7 @@ git commit -m "feat(training): allow HEAD_COACH to approve sessions (#10)"
 - Modify: `src/tactical/tactical.controller.ts`
 - Modify: `src/tactical/tactical.routes.ts`
 
-- [ ] **Step 1: tactical.repo.ts — confirm 메서드 추가**
+- [x] **Step 1: tactical.repo.ts — confirm 메서드 추가**
 
 파일 맨 끝 `addMedia` 다음에 추가:
 
@@ -158,7 +158,7 @@ confirm(id: number) {
 }
 ```
 
-- [ ] **Step 2: tactical.service.ts — confirmAnalysis 추가**
+- [x] **Step 2: tactical.service.ts — confirmAnalysis 추가**
 
 `addMedia` 메서드 다음에 추가:
 
@@ -171,7 +171,7 @@ async confirmAnalysis(id: number) {
 }
 ```
 
-- [ ] **Step 3: tactical.controller.ts — create 가드 + confirm 액션**
+- [x] **Step 3: tactical.controller.ts — create 가드 + confirm 액션**
 
 `create` 메서드 전체 교체:
 
@@ -203,7 +203,7 @@ confirm = async (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 4: tactical.routes.ts — confirm 라우트 추가**
+- [x] **Step 4: tactical.routes.ts — confirm 라우트 추가**
 
 마지막 라우트 다음에 추가:
 
@@ -212,7 +212,7 @@ confirm = async (req: Request, res: Response, next: NextFunction) => {
 router.patch("/:id/confirm", auth, controller.confirm);
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/tactical/
@@ -226,7 +226,7 @@ git commit -m "feat(tactical): allow TACTICAL_ANALYST to create DRAFT, HEAD_COAC
 **Files:**
 - Create: `__test__/tactical/tactical.controller.test.ts`
 
-- [ ] **Step 1: 테스트 파일 작성**
+- [x] **Step 1: 테스트 파일 작성**
 
 ```ts
 import { describe, test, jest, expect, beforeEach } from "@jest/globals";
@@ -368,7 +368,7 @@ describe("TacticalController - confirm", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행**
+- [x] **Step 2: 테스트 실행**
 
 ```bash
 cd apps/api && npx jest __test__/tactical/tactical.controller.test.ts --no-coverage
@@ -376,7 +376,7 @@ cd apps/api && npx jest __test__/tactical/tactical.controller.test.ts --no-cover
 
 Expected: 모든 테스트 PASS
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/__test__/tactical/
@@ -393,7 +393,7 @@ git commit -m "test(tactical): TACTICAL_ANALYST create + HEAD_COACH confirm cove
 - Modify: `src/injury/injury.controller.ts`
 - Modify: `src/injury/injury.routes.ts`
 
-- [ ] **Step 1: injury.repo.ts — getStats 추가**
+- [x] **Step 1: injury.repo.ts — getStats 추가**
 
 `updateStatus` 메서드 다음에 추가:
 
@@ -429,7 +429,7 @@ async getStats() {
 }
 ```
 
-- [ ] **Step 2: injury.service.ts — getStats 추가**
+- [x] **Step 2: injury.service.ts — getStats 추가**
 
 `updateStatus` 다음에:
 
@@ -439,7 +439,7 @@ getStats() {
 }
 ```
 
-- [ ] **Step 3: injury.controller.ts — getStats 핸들러 추가**
+- [x] **Step 3: injury.controller.ts — getStats 핸들러 추가**
 
 `InjuryController` 클래스 안 `create` 앞에 추가:
 
@@ -455,7 +455,7 @@ getStats = async (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 4: injury.routes.ts — GET /stats 라우트 추가**
+- [x] **Step 4: injury.routes.ts — GET /stats 라우트 추가**
 
 `router.get("/player/:playerId", ...)` 앞에 추가 (`:id` 보다 먼저 매칭되도록):
 
@@ -463,7 +463,7 @@ getStats = async (req: Request, res: Response, next: NextFunction) => {
 router.get("/stats", auth, controller.getStats);
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/injury/
@@ -477,7 +477,7 @@ git commit -m "feat(injury): add GET /stats for MEDICAL_DIRECTOR (#7)"
 **Files:**
 - Create: `__test__/injury/injury.controller.test.ts`
 
-- [ ] **Step 1: 테스트 파일 작성**
+- [x] **Step 1: 테스트 파일 작성**
 
 ```ts
 import { describe, test, jest, expect, beforeEach } from "@jest/globals";
@@ -574,7 +574,7 @@ describe("InjuryController - getByPlayer (TACTICAL_ANALYST 읽기 접근)", () =
 });
 ```
 
-- [ ] **Step 2: 테스트 실행**
+- [x] **Step 2: 테스트 실행**
 
 ```bash
 cd apps/api && npx jest __test__/injury/injury.controller.test.ts --no-coverage
@@ -582,7 +582,7 @@ cd apps/api && npx jest __test__/injury/injury.controller.test.ts --no-coverage
 
 Expected: 모든 테스트 PASS
 
-- [ ] **Step 3: 전체 테스트 실행**
+- [x] **Step 3: 전체 테스트 실행**
 
 ```bash
 cd apps/api && npx jest --no-coverage
@@ -590,7 +590,7 @@ cd apps/api && npx jest --no-coverage
 
 Expected: 전체 PASS (기존 테스트 회귀 없음)
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/__test__/injury/

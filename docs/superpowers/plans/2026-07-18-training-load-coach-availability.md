@@ -50,7 +50,7 @@
 **Files:**
 - Modify: `apps/api/src/notification/notification.repo.ts`
 
-- [ ] **Step 1: 메서드 추가**
+- [x] **Step 1: 메서드 추가**
 
 `createForCoachingStaff` 메서드 바로 아래에 추가:
 
@@ -69,7 +69,7 @@ createForPhysicalCoach(type: string, title: string, body: string, entityId?: num
 }
 ```
 
-- [ ] **Step 2: 커밋**
+- [x] **Step 2: 커밋**
 
 ```bash
 git add apps/api/src/notification/notification.repo.ts
@@ -84,7 +84,7 @@ git commit -m "feat(notification): add createForPhysicalCoach method"
 - Create: `apps/api/src/coach-availability/dto/coach-availability.dto.ts`
 - Create: `apps/api/src/coach-availability/coach-availability.repo.ts`
 
-- [ ] **Step 1: DTO 작성**
+- [x] **Step 1: DTO 작성**
 
 ```typescript
 // apps/api/src/coach-availability/dto/coach-availability.dto.ts
@@ -102,7 +102,7 @@ export interface CoachAvailabilityQuery {
 }
 ```
 
-- [ ] **Step 2: Repo 작성**
+- [x] **Step 2: Repo 작성**
 
 ```typescript
 // apps/api/src/coach-availability/coach-availability.repo.ts
@@ -170,7 +170,7 @@ export class CoachAvailabilityRepository {
 }
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add apps/api/src/coach-availability/
@@ -187,7 +187,7 @@ git commit -m "feat(coach-availability): add DTO and repository"
 - Create: `apps/api/src/coach-availability/coach-availability.routes.ts`
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: Service 작성**
+- [x] **Step 1: Service 작성**
 
 ```typescript
 // apps/api/src/coach-availability/coach-availability.service.ts
@@ -224,7 +224,7 @@ export class CoachAvailabilityService {
 }
 ```
 
-- [ ] **Step 2: Controller 작성**
+- [x] **Step 2: Controller 작성**
 
 ```typescript
 // apps/api/src/coach-availability/coach-availability.controller.ts
@@ -278,7 +278,7 @@ export class CoachAvailabilityController {
 }
 ```
 
-- [ ] **Step 3: Routes 작성**
+- [x] **Step 3: Routes 작성**
 
 ```typescript
 // apps/api/src/coach-availability/coach-availability.routes.ts
@@ -303,7 +303,7 @@ router.delete("/:id", auth, controller.delete);
 export default router;
 ```
 
-- [ ] **Step 4: apiRouter.ts에 등록**
+- [x] **Step 4: apiRouter.ts에 등록**
 
 `apps/api/src/apiRouter.ts`를 열어 다른 라우터 import 패턴 그대로 추가:
 
@@ -313,7 +313,7 @@ import coachAvailabilityRouter from "./coach-availability/coach-availability.rou
 router.use("/coach-availabilities", coachAvailabilityRouter);
 ```
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add apps/api/src/coach-availability/ apps/api/src/apiRouter.ts
@@ -328,7 +328,7 @@ git commit -m "feat(coach-availability): add service, controller, and routes"
 - Create: `apps/api/__test__/training-load/training-load.test.ts`
 - Create: `apps/api/src/training-load/training-load.service.ts` (순수 함수만 먼저)
 
-- [ ] **Step 1: 순수 함수 먼저 작성 (service에 export)**
+- [x] **Step 1: 순수 함수 먼저 작성 (service에 export)**
 
 ```typescript
 // apps/api/src/training-load/training-load.service.ts (일부 — 순수 함수)
@@ -339,7 +339,7 @@ export function isWeeklyOverload(weeklyTotal: number): boolean {
 }
 ```
 
-- [ ] **Step 2: 단위 테스트 작성**
+- [x] **Step 2: 단위 테스트 작성**
 
 ```typescript
 // apps/api/__test__/training-load/training-load.test.ts
@@ -361,7 +361,7 @@ describe("isWeeklyOverload", () => {
 });
 ```
 
-- [ ] **Step 3: 테스트 실행 (실패 확인)**
+- [x] **Step 3: 테스트 실행 (실패 확인)**
 
 ```bash
 cd /Users/juno/work/football
@@ -370,7 +370,7 @@ npx jest --testPathPattern="training-load" --no-coverage 2>&1 | tail -20
 
 Expected: FAIL (함수 미구현)
 
-- [ ] **Step 4: 구현 후 테스트 통과 확인**
+- [x] **Step 4: 구현 후 테스트 통과 확인**
 
 `isWeeklyOverload` 구현 후:
 
@@ -380,7 +380,7 @@ npx jest --testPathPattern="training-load" --no-coverage 2>&1 | tail -10
 
 Expected: PASS
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add apps/api/__test__/training-load/ apps/api/src/training-load/training-load.service.ts
@@ -396,7 +396,7 @@ git commit -m "test(training-load): add weekly overload pure function tests"
 - Create: `apps/api/src/training-load/training-load.repo.ts`
 - Modify: `apps/api/src/training-load/training-load.service.ts`
 
-- [ ] **Step 1: DTO 작성**
+- [x] **Step 1: DTO 작성**
 
 ```typescript
 // apps/api/src/training-load/dto/training-load.dto.ts
@@ -418,7 +418,7 @@ export interface WeeklySummaryQuery {
 }
 ```
 
-- [ ] **Step 2: Repo 작성**
+- [x] **Step 2: Repo 작성**
 
 ```typescript
 // apps/api/src/training-load/training-load.repo.ts
@@ -482,7 +482,7 @@ export class TrainingLoadRepository {
 }
 ```
 
-- [ ] **Step 3: Service 전체 완성**
+- [x] **Step 3: Service 전체 완성**
 
 ```typescript
 // apps/api/src/training-load/training-load.service.ts
@@ -574,7 +574,7 @@ export class TrainingLoadService {
 }
 ```
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add apps/api/src/training-load/
@@ -590,7 +590,7 @@ git commit -m "feat(training-load): add DTO, repo, and service with weekly overl
 - Create: `apps/api/src/training-load/training-load.routes.ts`
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: Controller 작성**
+- [x] **Step 1: Controller 작성**
 
 ```typescript
 // apps/api/src/training-load/training-load.controller.ts
@@ -635,7 +635,7 @@ export class TrainingLoadController {
 }
 ```
 
-- [ ] **Step 2: Routes 작성**
+- [x] **Step 2: Routes 작성**
 
 ```typescript
 // apps/api/src/training-load/training-load.routes.ts
@@ -661,7 +661,7 @@ router.post("/", auth, controller.upsert);
 export default router;
 ```
 
-- [ ] **Step 3: apiRouter.ts에 등록**
+- [x] **Step 3: apiRouter.ts에 등록**
 
 ```typescript
 import trainingLoadRouter from "./training-load/training-load.routes";
@@ -669,7 +669,7 @@ import trainingLoadRouter from "./training-load/training-load.routes";
 router.use("/training-loads", trainingLoadRouter);
 ```
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add apps/api/src/training-load/ apps/api/src/apiRouter.ts
@@ -686,7 +686,7 @@ git commit -m "feat(training-load): add controller and routes"
 - Create: `football/src/services/coach-availability.service.ts`
 - Create: `football/src/services/training-load.service.ts`
 
-- [ ] **Step 1: 타입 작성**
+- [x] **Step 1: 타입 작성**
 
 ```typescript
 // football/src/types/coach-availability.ts
@@ -736,7 +736,7 @@ export interface UpsertTrainingLoadPayload {
 }
 ```
 
-- [ ] **Step 2: FE 서비스 작성**
+- [x] **Step 2: FE 서비스 작성**
 
 ```typescript
 // football/src/services/coach-availability.service.ts
@@ -778,7 +778,7 @@ export const trainingLoadApi = {
 }
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add football/src/types/coach-availability.ts football/src/types/training-load.ts football/src/services/coach-availability.service.ts football/src/services/training-load.service.ts
@@ -794,7 +794,7 @@ git commit -m "feat(training-load): add FE types and API services"
 - Modify: `football/src/App.tsx`
 - Modify: `football/src/layouts/AppShell.tsx`
 
-- [ ] **Step 1: 페이지 작성**
+- [x] **Step 1: 페이지 작성**
 
 ```tsx
 // football/src/pages/training/CoachAvailabilityPage.tsx
@@ -975,7 +975,7 @@ export function CoachAvailabilityPage() {
 }
 ```
 
-- [ ] **Step 2: App.tsx에 라우트 추가**
+- [x] **Step 2: App.tsx에 라우트 추가**
 
 ```tsx
 // football/src/App.tsx에 추가
@@ -986,7 +986,7 @@ import { CoachAvailabilityPage } from '@/pages/training/CoachAvailabilityPage'
 
 라우트는 `/training/results` 앞에 등록 (파라미터 충돌 방지).
 
-- [ ] **Step 3: AppShell.tsx 사이드바 추가**
+- [x] **Step 3: AppShell.tsx 사이드바 추가**
 
 훈련 섹션에 "코치 가용성" 링크 추가 (CalendarX2 아이콘 사용):
 
@@ -996,7 +996,7 @@ import { CalendarX2 } from 'lucide-react'
 { to: '/training/coach-availability', label: '코치 가용성', icon: CalendarX2 }
 ```
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add football/src/pages/training/CoachAvailabilityPage.tsx football/src/App.tsx football/src/layouts/AppShell.tsx
@@ -1010,7 +1010,7 @@ git commit -m "feat(coach-availability): add FE page, route, and sidebar link"
 **Files:**
 - Modify: `football/src/pages/training/TrainingDetailPage.tsx`
 
-- [ ] **Step 1: 기존 페이지 끝 부분에 섹션 추가**
+- [x] **Step 1: 기존 페이지 끝 부분에 섹션 추가**
 
 TrainingDetailPage.tsx의 참가자 목록 아래에 TrainingLoad 입력 섹션을 추가한다.
 
@@ -1112,7 +1112,7 @@ JSX에서 참가자 섹션 아래에 추가:
 )}
 ```
 
-- [ ] **Step 2: 커밋**
+- [x] **Step 2: 커밋**
 
 ```bash
 git add football/src/pages/training/TrainingDetailPage.tsx
@@ -1123,8 +1123,8 @@ git commit -m "feat(training-load): add TrainingLoad section to TrainingDetailPa
 
 ## 최종 확인
 
-- [ ] `npx tsc --noEmit` (FE 타입 오류 없음)
-- [ ] `GET /coach-availabilities` 응답 확인
-- [ ] `POST /training-loads` — PLAYER rpe 입력, PHYSICAL_COACH load 입력 각각 확인
-- [ ] `GET /training-loads/weekly-summary` 확인
-- [ ] TrainingDetailPage 부하 섹션 렌더링 확인
+- [x] `npx tsc --noEmit` (FE 타입 오류 없음)
+- [x] `GET /coach-availabilities` 응답 확인
+- [x] `POST /training-loads` — PLAYER rpe 입력, PHYSICAL_COACH load 입력 각각 확인
+- [x] `GET /training-loads/weekly-summary` 확인
+- [x] TrainingDetailPage 부하 섹션 렌더링 확인

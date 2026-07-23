@@ -16,8 +16,13 @@ export class MatchLineupService {
   constructor(private repo: MatchLineupRepository) {}
 
   async getLineup(matchId: number) {
-    const lineup = await this.repo.findByMatch(matchId);
-    if (lineup) return lineup;
+    const [lineup, matchInfo] = await Promise.all([
+      this.repo.findByMatch(matchId),
+      this.repo.findMatchInfo(matchId),
+    ]);
+    const teamType = matchInfo?.team?.type ?? null;
+
+    if (lineup) return { ...lineup, teamType };
 
     const squadMembers = await this.repo.findSquadPlayers(matchId);
     if (squadMembers.length === 0) return null;
@@ -27,6 +32,7 @@ export class MatchLineupService {
       formation: "4-3-3" as const,
       isConfirmed: false,
       confirmedAt: null,
+      teamType,
       slots: squadMembers.map((sq, i) => ({
         slotKey: `BENCH_${i}`,
         isStarter: false,
@@ -46,6 +52,10 @@ export class MatchLineupService {
     const slotKeys = dto.slots.map((s) => s.slotKey);
     if (new Set(slotKeys).size !== slotKeys.length) {
       throw new AppError(409, "DUPLICATE_SLOT");
+    }
+    const injured = await this.repo.findActiveInjuredPlayerIds(playerIds);
+    if (injured.length > 0) {
+      throw new AppError(409, "INJURED_PLAYER_IN_LINEUP");
     }
     return this.repo.saveLineup(matchId, dto);
   }

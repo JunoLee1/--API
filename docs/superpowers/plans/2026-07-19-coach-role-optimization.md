@@ -29,7 +29,7 @@
 **Files:**
 - Create: `football/src/lib/coachPositionMap.ts`
 
-- [ ] **Step 1: 파일 생성**
+- [x] **Step 1: 파일 생성**
 
 ```ts
 // football/src/lib/coachPositionMap.ts
@@ -63,7 +63,7 @@ export function getCoachPositions(coachingRole: CoachingRole | null | undefined)
 
 > **주의:** Position 값은 모두 대문자(`'CENTER_BACK'` 등). `football/src/types/player.ts`의 `Position` 타입과 동일해야 한다.
 
-- [ ] **Step 2: TypeScript 컴파일 확인**
+- [x] **Step 2: TypeScript 컴파일 확인**
 
 ```bash
 cd football && npx tsc --noEmit
@@ -71,7 +71,7 @@ cd football && npx tsc --noEmit
 
 에러 없이 통과해야 함.
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add football/src/lib/coachPositionMap.ts
@@ -85,7 +85,7 @@ git commit -m "feat(training): add COACH_POSITION_MAP for position-based filteri
 **Files:**
 - Modify: `football/src/pages/training/TrainingDetailPage.tsx`
 
-- [ ] **Step 1: import 추가**
+- [x] **Step 1: import 추가**
 
 파일 상단 import 블록에 추가:
 
@@ -95,7 +95,7 @@ import type { Position } from '@/types/player'
 import { Switch } from '@/components/ui/switch'
 ```
 
-- [ ] **Step 2: showAll 상태 + isOwnerPos 헬퍼 추가**
+- [x] **Step 2: showAll 상태 + isOwnerPos 헬퍼 추가**
 
 `useCurrentUser()` 호출 바로 아래에 추가:
 
@@ -118,7 +118,7 @@ const isOwnerPos = (pos: string): boolean => {
 }
 ```
 
-- [ ] **Step 3: 출석·평가 섹션 헤더에 "전체 보기" 토글 추가**
+- [x] **Step 3: 출석·평가 섹션 헤더에 "전체 보기" 토글 추가**
 
 기존 코드:
 ```tsx
@@ -148,7 +148,7 @@ const isOwnerPos = (pos: string): boolean => {
 </div>
 ```
 
-- [ ] **Step 4: TableRow에 포지션 기반 스타일 적용**
+- [x] **Step 4: TableRow에 포지션 기반 스타일 적용**
 
 기존:
 ```tsx
@@ -176,7 +176,7 @@ const isOwnerPos = (pos: string): boolean => {
     >
 ```
 
-- [ ] **Step 5: 비소유 행의 입력 필드를 읽기 전용으로 처리**
+- [x] **Step 5: 비소유 행의 입력 필드를 읽기 전용으로 처리**
 
 `canScore && input ? (...)` 패턴을 가진 3개 필드(출석 Select, 점수 Input, 피드백 Input) 모두:
 
@@ -219,7 +219,7 @@ const isOwnerPos = (pos: string): boolean => {
 </TableCell>
 ```
 
-- [ ] **Step 6: 개발 서버 실행 후 수동 확인**
+- [x] **Step 6: 개발 서버 실행 후 수동 확인**
 
 ```bash
 cd football && npm run dev
@@ -231,7 +231,7 @@ cd football && npm run dev
 - HEAD_COACH 로그인 → 토글 없음, 전체 정상 표시
 - 페이지 새로고침 → localStorage에서 토글 상태 복원
 
-- [ ] **Step 7: 커밋**
+- [x] **Step 7: 커밋**
 
 ```bash
 git add football/src/pages/training/TrainingDetailPage.tsx
@@ -245,7 +245,7 @@ git commit -m "feat(training): position-based participant filter for coaching ro
 **Files:**
 - Create: `football/src/components/ui/mini-calendar.tsx`
 
-- [ ] **Step 1: 파일 생성**
+- [x] **Step 1: 파일 생성**
 
 ```tsx
 // football/src/components/ui/mini-calendar.tsx
@@ -342,7 +342,7 @@ export function MiniCalendar({ sessionDates, selectedDate, onSelect }: MiniCalen
 }
 ```
 
-- [ ] **Step 2: TypeScript 컴파일 확인**
+- [x] **Step 2: TypeScript 컴파일 확인**
 
 ```bash
 cd football && npx tsc --noEmit
@@ -350,7 +350,7 @@ cd football && npx tsc --noEmit
 
 에러 없이 통과해야 함.
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add football/src/components/ui/mini-calendar.tsx
@@ -364,7 +364,7 @@ git commit -m "feat(ui): add MiniCalendar component with session dot indicators"
 **Files:**
 - Modify: `football/src/pages/training/TrainingPage.tsx`
 
-- [ ] **Step 1: MiniCalendar import 추가**
+- [x] **Step 1: MiniCalendar import 추가**
 
 파일 상단 import 블록에 추가:
 
@@ -372,7 +372,7 @@ git commit -m "feat(ui): add MiniCalendar component with session dot indicators"
 import { MiniCalendar } from '@/components/ui/mini-calendar'
 ```
 
-- [ ] **Step 2: selectedDate 상태 추가**
+- [x] **Step 2: selectedDate 상태 추가**
 
 `TrainingPage` 컴포넌트 내 기존 `useState` 선언들 바로 아래에 추가:
 
@@ -380,7 +380,7 @@ import { MiniCalendar } from '@/components/ui/mini-calendar'
 const [selectedDate, setSelectedDate] = useState<string | null>(null)
 ```
 
-- [ ] **Step 3: 날짜 필터 파생 값 추가**
+- [x] **Step 3: 날짜 필터 파생 값 추가**
 
 `totalPages` 선언 바로 위에 추가:
 
@@ -397,7 +397,7 @@ const paged = filteredSessions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
 > `totalPages`와 `paged` 선언이 기존에 있다면 제거하고 위 코드로 교체.
 
-- [ ] **Step 4: 본문 레이아웃을 2컬럼으로 변경**
+- [x] **Step 4: 본문 레이아웃을 2컬럼으로 변경**
 
 기존:
 ```tsx
@@ -483,7 +483,7 @@ const paged = filteredSessions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 </div>
 ```
 
-- [ ] **Step 5: Pagination의 `totalItems`를 `filteredSessions.length`로 수정**
+- [x] **Step 5: Pagination의 `totalItems`를 `filteredSessions.length`로 수정**
 
 기존:
 ```tsx
@@ -503,7 +503,7 @@ const paged = filteredSessions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   ...
 ```
 
-- [ ] **Step 6: 개발 서버에서 수동 확인**
+- [x] **Step 6: 개발 서버에서 수동 확인**
 
 ```bash
 cd football && npm run dev
@@ -515,7 +515,7 @@ cd football && npm run dev
 - 날짜 클릭 → 해당 날짜 세션만 필터링, 이전/다음 달 이동 가능
 - 선택된 날짜 재클릭 또는 "초기화" → 전체 목록 복귀
 
-- [ ] **Step 7: 커밋**
+- [x] **Step 7: 커밋**
 
 ```bash
 git add football/src/pages/training/TrainingPage.tsx
@@ -529,7 +529,7 @@ git commit -m "feat(training): add mini calendar sidebar with date filter (#36)"
 **Files:**
 - Create: `football/src/pages/training/CoachDashboardPage.tsx`
 
-- [ ] **Step 1: 파일 생성**
+- [x] **Step 1: 파일 생성**
 
 ```tsx
 // football/src/pages/training/CoachDashboardPage.tsx
@@ -927,7 +927,7 @@ export function CoachDashboardPage() {
 }
 ```
 
-- [ ] **Step 2: TypeScript 컴파일 확인**
+- [x] **Step 2: TypeScript 컴파일 확인**
 
 ```bash
 cd football && npx tsc --noEmit
@@ -935,7 +935,7 @@ cd football && npx tsc --noEmit
 
 에러 없이 통과해야 함.
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add football/src/pages/training/CoachDashboardPage.tsx
@@ -950,7 +950,7 @@ git commit -m "feat(training): add CoachDashboardPage with charts and report cop
 - Modify: `football/src/App.tsx`
 - Modify: `football/src/layouts/AppShell.tsx`
 
-- [ ] **Step 1: App.tsx에 import 추가**
+- [x] **Step 1: App.tsx에 import 추가**
 
 기존 훈련 import 블록 바로 아래에 추가:
 
@@ -958,7 +958,7 @@ git commit -m "feat(training): add CoachDashboardPage with charts and report cop
 import { CoachDashboardPage } from '@/pages/training/CoachDashboardPage'
 ```
 
-- [ ] **Step 2: App.tsx에 라우트 추가**
+- [x] **Step 2: App.tsx에 라우트 추가**
 
 기존 `/training/coach-availability` 라우트 바로 아래에 추가:
 
@@ -968,7 +968,7 @@ import { CoachDashboardPage } from '@/pages/training/CoachDashboardPage'
 
 > **주의:** `/training/:id` 라우트보다 **위**에 있어야 한다. 현재 `/training/coach-availability` 아래, `/training/:id` 위인 순서를 유지한다.
 
-- [ ] **Step 3: AppShell.tsx에 내비게이션 항목 추가**
+- [x] **Step 3: AppShell.tsx에 내비게이션 항목 추가**
 
 기존 `coach-availability` 항목 바로 아래에 추가:
 
@@ -984,7 +984,7 @@ import { CoachDashboardPage } from '@/pages/training/CoachDashboardPage'
 
 > `BarChart2`는 AppShell.tsx 상단에서 이미 import 중. `roles: ['COACHING_STAFF']`로 설정하면 COACHING_STAFF 역할만 메뉴에 표시됨.
 
-- [ ] **Step 4: TypeScript 컴파일 확인**
+- [x] **Step 4: TypeScript 컴파일 확인**
 
 ```bash
 cd football && npx tsc --noEmit
@@ -992,7 +992,7 @@ cd football && npx tsc --noEmit
 
 에러 없이 통과해야 함.
 
-- [ ] **Step 5: 개발 서버에서 수동 확인**
+- [x] **Step 5: 개발 서버에서 수동 확인**
 
 ```bash
 cd football && npm run dev
@@ -1008,7 +1008,7 @@ cd football && npm run dev
 - DEFENSIVE_COACH로 로그인 → "내 담당만" 기본 선택, 수비 포지션 차트만 표시
 - ADMIN으로 로그인 → 훈련 섹션에 "코치 대시보드" 메뉴 없음
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add football/src/App.tsx football/src/layouts/AppShell.tsx

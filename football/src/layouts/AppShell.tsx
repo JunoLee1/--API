@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from 'react'
+import { SafeguardButton } from '@/components/layout/SafeguardButton'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { useLiteMode } from '@/hooks/useLiteMode'
 import { useConfirm } from '@/lib/confirm-dialog'
 import { useApiPending } from '@/lib/useApiPending'
 import { authApi } from '@/services/auth.service'
@@ -40,6 +42,7 @@ import {
   Users2,
   CalendarDays,
   History,
+  GraduationCap,
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -58,11 +61,12 @@ interface NavItem {
   label: string
   icon: LucideIcon
   end?: boolean
-  section?: '선수 관리' | '계약·영입' | '부상·의료' | '훈련' | '경기·분석' | '관리'
+  section?: '선수 관리' | '계약·영입' | '부상·의료' | '훈련' | '경기·분석' | '유소년' | '관리'
   roles?: Role[]
   coachingRoles?: CoachingRole[]
   frontOfficeRoles?: FrontOfficeRole[]
   description?: string
+  liteBlocked?: boolean
 }
 
 
@@ -72,6 +76,7 @@ const SECTION_ORDER: Array<NavItem['section'] & string> = [
   '부상·의료',
   '훈련',
   '경기·분석',
+  '유소년',
   '관리',
 ]
 
@@ -83,6 +88,14 @@ const NAV_ITEMS: NavItem[] = [
     to: '/players',
     label: '선수 목록',
     icon: Users,
+    section: '선수 관리',
+    end: true,
+    roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
+  },
+  {
+    to: '/youth-players',
+    label: '유소년 선수',
+    icon: GraduationCap,
     section: '선수 관리',
     end: true,
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
@@ -228,6 +241,37 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'COACHING_STAFF'],
   },
 
+  // 유소년
+  {
+    to: '/youth-registrations',
+    label: '입단 신청',
+    icon: ClipboardList,
+    section: '유소년',
+    roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF', 'GUARDIAN'],
+  },
+  {
+    to: '/incident-reports',
+    label: '사고 보고서',
+    icon: FileText,
+    section: '유소년',
+    roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
+  },
+  {
+    to: '/youth-players',
+    label: '성장 보고서',
+    icon: TrendingUp,
+    section: '유소년',
+    roles: ['ADMIN', 'COACHING_STAFF', 'GUARDIAN'],
+  },
+  {
+    to: '/academy-fees',
+    label: '회비 관리',
+    icon: FileText,
+    section: '유소년',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    liteBlocked: true,
+  },
+
   // 관리
   {
     to: '/reports',
@@ -287,10 +331,25 @@ const NAV_ITEMS: NavItem[] = [
     section: '관리',
     roles: ['ADMIN'],
   },
+  {
+    to: '/safeguard-reports',
+    label: '보호 신고 현황',
+    icon: Shield,
+    section: '관리',
+    roles: ['ADMIN'],
+  },
+  {
+    to: '/admin/team-settings',
+    label: '구단 설정',
+    icon: Settings,
+    section: '관리',
+    roles: ['ADMIN'],
+  },
 ]
 
 export function AppShell() {
   const { user, loading } = useCurrentUser()
+  const isLite = useLiteMode()
   const navigate = useNavigate()
   const location = useLocation()
   const confirm = useConfirm()
@@ -356,6 +415,7 @@ export function AppShell() {
   }
 
   const visibleNavItems = NAV_ITEMS.filter((item) => {
+    if (item.liteBlocked && isLite) return false
     if (!item.roles) return true
     if (!user) return false
     if (!item.roles.includes(user.role)) return false
@@ -599,6 +659,7 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
+      <SafeguardButton />
     </div>
   )
 }

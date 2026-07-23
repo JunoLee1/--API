@@ -17,6 +17,25 @@ enum Role {
   COACHING_STAFF
   PLAYER
   AGENT
+  GUARDIAN
+}
+
+enum YouthRegistrationStatus {
+  PENDING
+  GUARDIAN_APPROVED
+  CONTRACTED
+  REJECTED
+}
+
+enum IncidentReportStatus {
+  DRAFT
+  SUBMITTED
+  SIGNED
+}
+
+enum IncidentType {
+  MATCH
+  TRAINING
 }
 
 enum CoachingRole {
@@ -259,6 +278,26 @@ enum NotificationType {
   MATCH_DAY_REMINDER
   ATTENDANCE_UNAUTHORIZED
   ATTENDANCE_PENALTY_PLAYER
+  YOUTH_REGISTRATION_STATUS_CHANGED
+  YOUTH_WEEKLY_SCHEDULE
+  YOUTH_SESSION_CHANGED
+  INCIDENT_REPORT_SUBMITTED
+  GROWTH_REPORT_PUBLISHED
+  SAFEGUARD_EMERGENCY
+  FEE_INVOICE_ISSUED
+  FEE_REMINDER
+  FEE_OVERDUE_WARNING
+  FEE_ACCOUNT_LOCKED
+}
+
+enum BadgeType {
+  PASSION_KING
+  SPACE_WIZARD
+  BEST_PASSER
+  TEAM_PLAYER
+  MOST_IMPROVED
+  DEFENSIVE_WALL
+  GOAL_MACHINE
 }
 
 enum TacticalStatus {
@@ -381,6 +420,7 @@ model Team {
   type             TeamType
   ageGroup         String?
   isActive         Boolean  @default(true)
+  isLite           Boolean  @default(false)
   trackStats       Boolean  @default(true)
   requiresContract Boolean  @default(true)
   createdAt        DateTime @default(now())
@@ -390,9 +430,11 @@ model Team {
   trainingSessions TrainingSession[]
   matches          Match[]
   coaches          Coach[]
-  callupsFrom      PlayerCallup[]    @relation("CallupFromTeam")
-  callupsTo        PlayerCallup[]    @relation("CallupToTeam")
-  jerseyNumbers    JerseyNumber[]
+  callupsFrom        PlayerCallup[]    @relation("CallupFromTeam")
+  callupsTo          PlayerCallup[]    @relation("CallupToTeam")
+  jerseyNumbers      JerseyNumber[]
+  youthRegistrations YouthRegistration[]
+  incidentReports    IncidentReport[]
 }
 
 model Country {
@@ -472,6 +514,15 @@ model User {
   approvedCallups          PlayerCallup[]          @relation("CallupApprovedBy")
   loginHistory             LoginHistory[]
   recordedMarketValues     MarketValueHistory[]
+  guardianPlayers          Player[]                @relation("GuardianPlayers")
+  guardianRegistrations    YouthRegistration[]     @relation("GuardianRegistrations")
+  youthRegistrations       YouthRegistration[]     @relation("YouthRegistrationRequester")
+  reportedIncidents        IncidentReport[]        @relation("IncidentReporter")
+  coachEvaluations         GrowthEvaluation[]      @relation("CoachEvaluations")
+  awardedBadges            PlayerBadge[]           @relation("CoachBadges")
+  isSuspended              Boolean                 @default(false)
+  safeguardReportsAccused  SafeguardReport[]       @relation("SafeguardAccused")
+  guardianFees             AcademyFee[]            @relation("GuardianFees")
 }
 
 model Season {
@@ -501,6 +552,7 @@ model Player {
   nationalityId    Int
   userId           Int?             @unique
   agentId          Int?
+  guardianId       Int?
   workPermitStatus WorkPermitStatus @default(NOT_REQUIRED)
   workPermitExpiry DateTime?
   teamId           Int?
@@ -508,6 +560,7 @@ model Player {
   nationality            Country                 @relation(fields: [nationalityId], references: [id])
   user                   User?                   @relation(fields: [userId], references: [id])
   agent                  User?                   @relation("AgentPlayers", fields: [agentId], references: [id])
+  guardian               User?                   @relation("GuardianPlayers", fields: [guardianId], references: [id])
   team                   Team?                   @relation(fields: [teamId], references: [id])
   contracts              Contract[]
   transfers              Transfer[]
@@ -534,6 +587,10 @@ model Player {
   lineupSlots            LineupSlot[]
   shotsAsShooter         ShotEvent[] @relation("ShotShooter")
   shotsAsAssister        ShotEvent[] @relation("ShotAssister")
+  incidentReports        IncidentReport[]
+  growthEvaluations      GrowthEvaluation[]
+  badges                 PlayerBadge[]
+  academyFees            AcademyFee[]
 }
 
 model Contract {
@@ -687,6 +744,7 @@ model Injury {
   injuryReport    InjuryReport?
   assessment      InjuryAssessment?
   externalReports ExternalReport[]
+  incidentReports IncidentReport[]
 }
 
 model InjuryAssessment {
@@ -717,6 +775,15 @@ enum ExternalReportTarget {
   LEAGUE
   FEDERATION
   INSURANCE
+  POLICE
+  CHILD_PROTECTION_AGENCY
+  FOOTBALL_ASSOCIATION
+}
+
+enum SafeguardReportStatus {
+  RECEIVED
+  UNDER_REVIEW
+  RESOLVED
 }
 
 enum ExternalReportStatus {
@@ -727,20 +794,24 @@ enum ExternalReportStatus {
 }
 
 model ExternalReport {
-  id            Int                  @id @default(autoincrement())
-  injuryId      Int
-  target        ExternalReportTarget
-  status        ExternalReportStatus @default(PENDING_SUBMISSION)
-  reportData    Json
-  dueDate       DateTime?
-  submittedAt   DateTime?
-  submittedNote String?
-  createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @updatedAt
+  id                 Int                  @id @default(autoincrement())
+  injuryId           Int?
+  incidentReportId   Int?
+  safeguardReportId  Int?
+  target             ExternalReportTarget
+  status             ExternalReportStatus @default(PENDING_SUBMISSION)
+  reportData         Json
+  dueDate            DateTime?
+  submittedAt        DateTime?
+  submittedNote      String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
 
-  injury Injury @relation(fields: [injuryId], references: [id], onDelete: Cascade)
+  injury         Injury?         @relation(fields: [injuryId], references: [id], onDelete: Cascade)
+  incidentReport IncidentReport? @relation(fields: [incidentReportId], references: [id], onDelete: Cascade)
 
   @@unique([injuryId, target])
+  @@unique([incidentReportId, target])
 }
 
 model Match {
@@ -764,6 +835,7 @@ model Match {
   squadPlayers     MatchSquad[]
   shotEvents       ShotEvent[]
   matchLineup      MatchLineup?
+  incidentReports  IncidentReport[]
 }
 
 model PlayerMatchStats {
@@ -848,6 +920,7 @@ model TrainingSession {
   goal         String
   sessionType  SessionType
   isApproved   Boolean     @default(false)
+  cancelledAt  DateTime?
   createdAt    DateTime    @default(now())
   seasonId     Int
   createdById  Int
@@ -858,10 +931,12 @@ model TrainingSession {
   team          Team?                 @relation(fields: [teamId], references: [id])
   createdBy     User                  @relation("TrainingSessionCreatedBy", fields: [createdById], references: [id])
   approvedBy    User?                 @relation("TrainingSessionApprovedBy", fields: [approvedById], references: [id])
-  contents      TrainingContent[]
-  participants  TrainingParticipant[]
-  results       TrainingResult[]
-  trainingLoads TrainingLoad[]
+  contents        TrainingContent[]
+  participants    TrainingParticipant[]
+  results         TrainingResult[]
+  trainingLoads   TrainingLoad[]
+  incidentReports IncidentReport[]
+  playerBadges    PlayerBadge[]
 }
 
 model TrainingContent {
@@ -1402,6 +1477,101 @@ enum PlayerCallupStatus {
   COMPLETED
 }
 
+model YouthRegistration {
+  id                    Int                     @id @default(autoincrement())
+  playerName            String
+  birthDate             DateTime
+  preferredJerseyNumber Int?
+  teamId                Int
+  guardianId            Int?
+  status                YouthRegistrationStatus @default(PENDING)
+  requestedById         Int
+  rejectionReason       String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+
+  team        Team  @relation(fields: [teamId], references: [id])
+  guardian    User? @relation("GuardianRegistrations", fields: [guardianId], references: [id])
+  requestedBy User  @relation("YouthRegistrationRequester", fields: [requestedById], references: [id])
+}
+
+model IncidentReport {
+  id               Int                  @id @default(autoincrement())
+  playerId         String
+  teamId           Int
+  type             IncidentType
+  matchId          Int?
+  sessionId        Int?
+  description      String               @db.Text
+  reportedById     Int
+  supervisorSigned Boolean              @default(false)
+  medicalSigned    Boolean              @default(false)
+  injuryId         Int?
+  status           IncidentReportStatus @default(DRAFT)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  player          Player           @relation(fields: [playerId], references: [id])
+  team            Team             @relation(fields: [teamId], references: [id])
+  match           Match?           @relation(fields: [matchId], references: [id])
+  session         TrainingSession? @relation(fields: [sessionId], references: [id])
+  reportedBy      User             @relation("IncidentReporter", fields: [reportedById], references: [id])
+  injury          Injury?          @relation(fields: [injuryId], references: [id])
+  externalReports ExternalReport[]
+}
+
+model SafeguardReport {
+  id            Int                   @id @default(autoincrement())
+  description   String                @db.Text
+  contactInfo   String?
+  accusedUserId Int?
+  status        SafeguardReportStatus @default(RECEIVED)
+  resolvedNote  String?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  accusedUser User? @relation("SafeguardAccused", fields: [accusedUserId], references: [id])
+}
+
+model GrowthEvaluation {
+  id                  Int       @id @default(autoincrement())
+  playerId            String
+  coachId             Int
+  year                Int
+  month               Int
+  isPublished         Boolean   @default(false)
+  publishedAt         DateTime?
+  attitudeScore       Int
+  attitudeComment     String    @db.Text
+  fundamentalsScore   Int
+  fundamentalsComment String    @db.Text
+  spatialScore        Int
+  spatialComment      String    @db.Text
+  physicalScore       Int
+  physicalComment     String    @db.Text
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id])
+  coach  User   @relation("CoachEvaluations", fields: [coachId], references: [id])
+
+  @@unique([playerId, year, month])
+}
+
+model PlayerBadge {
+  id        Int       @id @default(autoincrement())
+  playerId  String
+  coachId   Int
+  sessionId Int?
+  badgeType BadgeType
+  awardedAt DateTime  @default(now())
+  note      String?
+
+  player  Player           @relation(fields: [playerId], references: [id])
+  coach   User             @relation("CoachBadges", fields: [coachId], references: [id])
+  session TrainingSession? @relation(fields: [sessionId], references: [id])
+}
+
 model PlayerCallup {
   id            Int                @id @default(autoincrement())
   playerId      String
@@ -1508,4 +1678,33 @@ model LineupSlot {
   @@unique([lineupId, slotKey])
   @@unique([lineupId, playerId])
   @@index([lineupId])
+}
+
+enum FeeStatus {
+  PENDING
+  SUBMITTED
+  PAID
+  OVERDUE
+  LOCKED
+}
+
+model AcademyFee {
+  id                  Int        @id @default(autoincrement())
+  playerId            String
+  guardianId          Int
+  amount              Int
+  dueDate             DateTime
+  status              FeeStatus  @default(PENDING)
+  paidAt              DateTime?
+  paymentProofUrl     String?
+  paymentSubmittedAt  DateTime?
+  year                Int
+  month               Int
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  player   Player @relation(fields: [playerId], references: [id])
+  guardian User   @relation("GuardianFees", fields: [guardianId], references: [id])
+
+  @@unique([playerId, year, month])
 }

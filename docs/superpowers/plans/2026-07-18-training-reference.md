@@ -36,7 +36,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: 스키마에 TrainingReference 모델 추가**
+- [x] **Step 1: 스키마에 TrainingReference 모델 추가**
 
 `apps/api/prisma/schema.prisma` 파일에서 `PlayerDevelopmentPlan` 모델 바로 뒤에 추가:
 
@@ -65,7 +65,7 @@ enum ReferenceSource {
   trainingReferences TrainingReference[]
 ```
 
-- [ ] **Step 2: DB에 반영**
+- [x] **Step 2: DB에 반영**
 
 ```bash
 cd apps/api
@@ -75,7 +75,7 @@ npx prisma generate
 
 Expected: `Your database is now in sync with your Prisma schema.`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma
@@ -89,7 +89,7 @@ git commit -m "feat(schema): add TrainingReference model with tags and Reference
 **Files:**
 - Create: `apps/api/src/training-reference/dto/training-reference.dto.ts`
 
-- [ ] **Step 1: DTO 파일 작성**
+- [x] **Step 1: DTO 파일 작성**
 
 ```typescript
 // apps/api/src/training-reference/dto/training-reference.dto.ts
@@ -109,7 +109,7 @@ export interface ListTrainingReferencesQuery {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/training-reference/
@@ -123,7 +123,7 @@ git commit -m "feat(training-reference): add DTO types"
 **Files:**
 - Create: `apps/api/src/training-reference/training-reference.repo.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 `apps/api/__test__/training-reference/training-reference.controller.test.ts` 파일에서 repo 직접 테스트보다 controller mock 테스트를 먼저 작성하므로, 이 단계에서는 repo 파일만 생성:
 
@@ -218,7 +218,7 @@ export class TrainingReferenceRepository {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/training-reference/training-reference.repo.ts
@@ -232,7 +232,7 @@ git commit -m "feat(training-reference): add repository with list/create/delete/
 **Files:**
 - Create: `apps/api/src/training-reference/training-reference.service.ts`
 
-- [ ] **Step 1: Service 작성**
+- [x] **Step 1: Service 작성**
 
 ```typescript
 // apps/api/src/training-reference/training-reference.service.ts
@@ -265,7 +265,7 @@ export class TrainingReferenceService {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/training-reference/training-reference.service.ts
@@ -280,7 +280,7 @@ git commit -m "feat(training-reference): add service with delete ownership check
 - Create: `apps/api/src/training-reference/training-reference.controller.ts`
 - Create: `apps/api/__test__/training-reference/training-reference.controller.test.ts`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 ```typescript
 // apps/api/__test__/training-reference/training-reference.controller.test.ts
@@ -354,7 +354,7 @@ describe("TrainingReferenceController - create", () => {
 });
 ```
 
-- [ ] **Step 2: Run test — expect FAIL**
+- [x] **Step 2: Run test — expect FAIL**
 
 ```bash
 cd apps/api
@@ -363,7 +363,7 @@ npx jest __test__/training-reference/training-reference.controller.test.ts --no-
 
 Expected: `Cannot find module '../../src/training-reference/training-reference.controller'`
 
-- [ ] **Step 3: Write controller**
+- [x] **Step 3: Write controller**
 
 ```typescript
 // apps/api/src/training-reference/training-reference.controller.ts
@@ -427,7 +427,7 @@ export class TrainingReferenceController {
 }
 ```
 
-- [ ] **Step 4: Run test — expect PASS**
+- [x] **Step 4: Run test — expect PASS**
 
 ```bash
 cd apps/api
@@ -436,7 +436,7 @@ npx jest __test__/training-reference/training-reference.controller.test.ts --no-
 
 Expected: `Tests: 4 passed, 4 total`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/training-reference/training-reference.controller.ts apps/api/__test__/training-reference/
@@ -451,7 +451,7 @@ git commit -m "feat(training-reference): add controller with role guards and tes
 - Create: `apps/api/src/training-reference/training-reference.routes.ts`
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: Routes 파일 작성**
+- [x] **Step 1: Routes 파일 작성**
 
 ```typescript
 // apps/api/src/training-reference/training-reference.routes.ts
@@ -477,7 +477,7 @@ router.delete("/:id", auth, controller.delete);
 export default router;
 ```
 
-- [ ] **Step 2: apiRouter.ts에 등록**
+- [x] **Step 2: apiRouter.ts에 등록**
 
 `apps/api/src/apiRouter.ts` 파일에서:
 
@@ -491,7 +491,7 @@ import trainingReferenceRouter from "./training-reference/training-reference.rou
 apiRouter.use("/training-references", trainingReferenceRouter);
 ```
 
-- [ ] **Step 3: 서버 기동 확인**
+- [x] **Step 3: 서버 기동 확인**
 
 ```bash
 cd apps/api && npx ts-node src/server.ts &
@@ -502,7 +502,7 @@ kill %1
 
 Expected: JSON 응답 (빈 배열 또는 401 — 인증 없이 접근 시 정상)
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/src/training-reference/training-reference.routes.ts apps/api/src/apiRouter.ts
@@ -517,7 +517,7 @@ git commit -m "feat(training-reference): register routes at /training-references
 - Create: `football/src/types/training-reference.ts`
 - Create: `football/src/services/training-reference.service.ts`
 
-- [ ] **Step 1: 타입 정의**
+- [x] **Step 1: 타입 정의**
 
 ```typescript
 // football/src/types/training-reference.ts
@@ -552,7 +552,7 @@ export const REFERENCE_SOURCE_LABEL: Record<ReferenceSource, string> = {
 }
 ```
 
-- [ ] **Step 2: API 서비스 작성**
+- [x] **Step 2: API 서비스 작성**
 
 ```typescript
 // football/src/services/training-reference.service.ts
@@ -586,7 +586,7 @@ export const trainingReferenceApi = {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/types/training-reference.ts football/src/services/training-reference.service.ts
@@ -602,7 +602,7 @@ git commit -m "feat(training-reference): add FE types and API service"
 
 TrainingDetailPage에 레퍼런스 섹션을 추가한다. 페이지 구조를 먼저 파악하고 적합한 위치에 삽입한다.
 
-- [ ] **Step 1: TrainingDetailPage 상단 import 추가**
+- [x] **Step 1: TrainingDetailPage 상단 import 추가**
 
 기존 import 목록 끝에 추가:
 ```typescript
@@ -612,7 +612,7 @@ import { REFERENCE_SOURCE_LABEL } from '@/types/training-reference'
 import { ExternalLink, Trash2, Plus } from 'lucide-react'
 ```
 
-- [ ] **Step 2: 레퍼런스 상태 추가**
+- [x] **Step 2: 레퍼런스 상태 추가**
 
 컴포넌트 내 `useState` 목록에 추가:
 ```typescript
@@ -625,7 +625,7 @@ const [newRefTags, setNewRefTags] = useState('')
 const [addingRef, setAddingRef] = useState(false)
 ```
 
-- [ ] **Step 3: 레퍼런스 데이터 로드 — useEffect에 추가**
+- [x] **Step 3: 레퍼런스 데이터 로드 — useEffect에 추가**
 
 세션 조회 useEffect 내부에서 함께 로드:
 ```typescript
@@ -637,7 +637,7 @@ const fetchRefs = () => {
 }
 ```
 
-- [ ] **Step 4: 레퍼런스 섹션 JSX 추가**
+- [x] **Step 4: 레퍼런스 섹션 JSX 추가**
 
 페이지 하단 (참가자 섹션 아래)에 추가:
 
@@ -745,7 +745,7 @@ const fetchRefs = () => {
 const canAddRef = user?.role === 'ADMIN' || user?.role === 'COACHING_STAFF'
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/pages/training/TrainingDetailPage.tsx
@@ -756,13 +756,13 @@ git commit -m "feat(training-reference): add reference section to TrainingDetail
 
 ## 검증 체크리스트
 
-- [ ] `GET /training-references?sessionType=PHYSICAL` — 목록 반환
-- [ ] `GET /training-references?tag=압박` — 태그 필터 동작
-- [ ] `POST /training-references` (COACHING_STAFF 토큰) — 201 생성
-- [ ] `POST /training-references` (FRONT_OFFICE 토큰) — 403
-- [ ] `DELETE /training-references/:id` (본인 토큰) — 204
-- [ ] `DELETE /training-references/:id` (타인 토큰) — 403
-- [ ] `GET /training-references/recommendations?sessionType=PHYSICAL` — 상위 5개 세션
-- [ ] FE: TrainingDetailPage에 레퍼런스 섹션 렌더링
-- [ ] FE: 등록 후 목록 갱신
-- [ ] FE: 삭제 후 목록 갱신
+- [x] `GET /training-references?sessionType=PHYSICAL` — 목록 반환
+- [x] `GET /training-references?tag=압박` — 태그 필터 동작
+- [x] `POST /training-references` (COACHING_STAFF 토큰) — 201 생성
+- [x] `POST /training-references` (FRONT_OFFICE 토큰) — 403
+- [x] `DELETE /training-references/:id` (본인 토큰) — 204
+- [x] `DELETE /training-references/:id` (타인 토큰) — 403
+- [x] `GET /training-references/recommendations?sessionType=PHYSICAL` — 상위 5개 세션
+- [x] FE: TrainingDetailPage에 레퍼런스 섹션 렌더링
+- [x] FE: 등록 후 목록 갱신
+- [x] FE: 삭제 후 목록 갱신

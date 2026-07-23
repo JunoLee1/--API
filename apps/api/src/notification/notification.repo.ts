@@ -130,6 +130,12 @@ export class NotificationRepository {
     });
   }
 
+  createForGuardian(guardianUserId: number, type: string, title: string, body: string, entityId?: number) {
+    return this.prisma.notification.create({
+      data: { userId: guardianUserId, type, title, body, ...(entityId && { entityId }) } as any,
+    });
+  }
+
   findExpiringContracts(withinDays: number) {
     const now = new Date();
     const threshold = new Date(now);

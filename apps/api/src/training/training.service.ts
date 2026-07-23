@@ -100,6 +100,48 @@ export class TrainingService {
     return result;
   }
 
+  async updateSession(id: number, data: { date?: string; goal?: string }, _updatedById: number) {
+    const session = await this.repo.findByIdWithTeam(id);
+    if (!session) throw new AppError(404, "SESSION_NOT_FOUND");
+    const updated = await this.repo.updateSession(id, data);
+    if (session.team?.type === "YOUTH" && this.notifRepo) {
+      const guardianIds = await this.repo.findGuardiansByTeam(session.teamId!);
+      for (const guardianId of guardianIds) {
+        void this.notifRepo
+          .createForGuardian(
+            guardianId,
+            "YOUTH_SESSION_CHANGED",
+            `${session.team.name} 훈련 일정 변경`,
+            `훈련 일정이 변경됐습니다. 앱에서 확인해주세요.`,
+            session.id,
+          )
+          .catch(console.error);
+      }
+    }
+    return updated;
+  }
+
+  async cancelSession(id: number) {
+    const session = await this.repo.findByIdWithTeam(id);
+    if (!session) throw new AppError(404, "SESSION_NOT_FOUND");
+    const result = await this.repo.cancelSession(id);
+    if (session.team?.type === "YOUTH" && this.notifRepo) {
+      const guardianIds = await this.repo.findGuardiansByTeam(session.teamId!);
+      for (const guardianId of guardianIds) {
+        void this.notifRepo
+          .createForGuardian(
+            guardianId,
+            "YOUTH_SESSION_CHANGED",
+            `${session.team.name} 훈련 취소`,
+            `훈련이 취소됐습니다.`,
+            session.id,
+          )
+          .catch(console.error);
+      }
+    }
+    return result;
+  }
+
   getResults(filters: { from?: string; to?: string; sessionType?: string; playerId?: string }) {
     return this.repo.findResults(filters)
   }

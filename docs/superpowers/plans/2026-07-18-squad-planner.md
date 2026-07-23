@@ -44,7 +44,7 @@
 - Modify: `apps/api/src/injury/injury.routes.ts`
 - Modify: `apps/api/__test__/injury/injury.controller.test.ts`
 
-- [ ] **Step 1: injury.repo.ts에 `findActive()` 추가**
+- [x] **Step 1: injury.repo.ts에 `findActive()` 추가**
 
 `confirm` 메서드 위 (또는 `getStats` 뒤)에 추가:
 
@@ -57,7 +57,7 @@ findActive() {
 }
 ```
 
-- [ ] **Step 2: injury.service.ts에 `getActive()` 추가**
+- [x] **Step 2: injury.service.ts에 `getActive()` 추가**
 
 `getStats()` 메서드 바로 아래에 추가:
 
@@ -67,7 +67,7 @@ getActive() {
 }
 ```
 
-- [ ] **Step 3: injury.controller.ts에 `getActive` 핸들러 추가**
+- [x] **Step 3: injury.controller.ts에 `getActive` 핸들러 추가**
 
 `getStats` 핸들러 바로 아래에 추가:
 
@@ -79,7 +79,7 @@ getActive = async (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 4: injury.routes.ts에 라우트 추가**
+- [x] **Step 4: injury.routes.ts에 라우트 추가**
 
 `router.get("/stats", ...)` 바로 아래, `router.get("/:id", ...)` 보다 **앞에** 추가:
 
@@ -88,7 +88,7 @@ getActive = async (req: Request, res: Response, next: NextFunction) => {
 router.get("/active", auth, controller.getActive);
 ```
 
-- [ ] **Step 5: 테스트 작성**
+- [x] **Step 5: 테스트 작성**
 
 `apps/api/__test__/injury/injury.controller.test.ts`의 `mockService` 객체에 `getActive` 추가 후 describe 블록 추가:
 
@@ -124,7 +124,7 @@ describe("InjuryController - getActive", () => {
 });
 ```
 
-- [ ] **Step 6: 테스트 실행**
+- [x] **Step 6: 테스트 실행**
 
 ```bash
 cd apps/api && npx jest __test__/injury/injury.controller.test.ts --verbose
@@ -132,7 +132,7 @@ cd apps/api && npx jest __test__/injury/injury.controller.test.ts --verbose
 
 Expected: 전체 PASS
 
-- [ ] **Step 7: TypeScript 컴파일 확인**
+- [x] **Step 7: TypeScript 컴파일 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | grep "injury.*error\|error TS" | grep -v country
@@ -140,7 +140,7 @@ cd apps/api && npx tsc --noEmit 2>&1 | grep "injury.*error\|error TS" | grep -v 
 
 Expected: 출력 없음
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add apps/api/src/injury/ apps/api/__test__/injury/injury.controller.test.ts
@@ -156,7 +156,7 @@ git commit -m "feat(injury): add GET /injuries/active endpoint for squad planner
 - Create: `football/src/components/squad/adjacent-positions.ts`
 - Create: `football/src/components/squad/squad-utils.ts`
 
-- [ ] **Step 1: `formation-layouts.ts` 생성**
+- [x] **Step 1: `formation-layouts.ts` 생성**
 
 ```typescript
 import type { Position } from '@/types/player'
@@ -288,7 +288,7 @@ export const FORMATION_LAYOUTS: Record<SupportedFormation, SlotDef[]> = {
 }
 ```
 
-- [ ] **Step 2: `adjacent-positions.ts` 생성**
+- [x] **Step 2: `adjacent-positions.ts` 생성**
 
 ```typescript
 import type { Position } from '@/types/player'
@@ -311,7 +311,7 @@ export const ADJACENT_POSITIONS: Partial<Record<Position, Position[]>> = {
 }
 ```
 
-- [ ] **Step 3: `squad-utils.ts` 생성**
+- [x] **Step 3: `squad-utils.ts` 생성**
 
 ```typescript
 import type { Player, PlayerLevel, Position } from '@/types/player'
@@ -357,7 +357,7 @@ export function buildInitialPlacement(
 }
 ```
 
-- [ ] **Step 4: TypeScript 컴파일 확인**
+- [x] **Step 4: TypeScript 컴파일 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep "squad\|error TS"
@@ -365,7 +365,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep "squad\|er
 
 Expected: 출력 없음
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/components/squad/formation-layouts.ts \
@@ -382,7 +382,7 @@ git commit -m "feat(squad): add formation layouts, adjacent positions, and slot 
 - Create: `football/src/components/squad/FootballPitch.tsx`
 - Create: `football/src/components/squad/FormationSlot.tsx`
 
-- [ ] **Step 1: `FootballPitch.tsx` 생성**
+- [x] **Step 1: `FootballPitch.tsx` 생성**
 
 ```tsx
 import type { ReactNode } from 'react'
@@ -473,7 +473,7 @@ export function FootballPitch({ viewMode, children }: FootballPitchProps) {
 }
 ```
 
-- [ ] **Step 2: `FormationSlot.tsx` 생성**
+- [x] **Step 2: `FormationSlot.tsx` 생성**
 
 ```tsx
 import { useNavigate } from 'react-router-dom'
@@ -589,7 +589,7 @@ export function FormationSlot({
 }
 ```
 
-- [ ] **Step 3: TypeScript 컴파일 확인**
+- [x] **Step 3: TypeScript 컴파일 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep "squad\|error TS"
@@ -597,7 +597,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep "squad\|er
 
 Expected: 출력 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/components/squad/FootballPitch.tsx \
@@ -612,7 +612,7 @@ git commit -m "feat(squad): add FootballPitch and FormationSlot components"
 **Files:**
 - Create: `football/src/components/squad/PlayerBench.tsx`
 
-- [ ] **Step 1: `PlayerBench.tsx` 생성**
+- [x] **Step 1: `PlayerBench.tsx` 생성**
 
 ```tsx
 import type { Player } from '@/types/player'
@@ -738,7 +738,7 @@ export function PlayerBench({
 }
 ```
 
-- [ ] **Step 2: TypeScript 컴파일 확인**
+- [x] **Step 2: TypeScript 컴파일 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep "squad\|error TS"
@@ -746,7 +746,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep "squad\|er
 
 Expected: 출력 없음
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/components/squad/PlayerBench.tsx
@@ -760,7 +760,7 @@ git commit -m "feat(squad): add PlayerBench component"
 **Files:**
 - Create: `football/src/pages/squad/SquadPlannerPage.tsx`
 
-- [ ] **Step 1: `SquadPlannerPage.tsx` 생성**
+- [x] **Step 1: `SquadPlannerPage.tsx` 생성**
 
 ```tsx
 import { useEffect, useMemo, useState } from 'react'
@@ -987,7 +987,7 @@ export function SquadPlannerPage() {
 }
 ```
 
-- [ ] **Step 2: TypeScript 컴파일 확인**
+- [x] **Step 2: TypeScript 컴파일 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep "squad\|error TS"
@@ -995,7 +995,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep "squad\|er
 
 Expected: 출력 없음
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/pages/squad/SquadPlannerPage.tsx
@@ -1012,7 +1012,7 @@ git commit -m "feat(squad): add SquadPlannerPage with formation + grid view"
 - Modify: `football/src/layouts/AppShell.tsx`
 - Modify: `football/src/pages/prospects/ProspectsPage.tsx`
 
-- [ ] **Step 1: injury.service.ts에 `active()` 추가**
+- [x] **Step 1: injury.service.ts에 `active()` 추가**
 
 기존 `injuryApi` 객체에 `active` 메서드 추가:
 
@@ -1023,7 +1023,7 @@ active: () =>
 
 `InjuryStatus`는 이미 import되어 있음. 없으면 import 라인에 추가.
 
-- [ ] **Step 2: App.tsx에 `/squad` 라우트 추가**
+- [x] **Step 2: App.tsx에 `/squad` 라우트 추가**
 
 import 추가:
 
@@ -1037,7 +1037,7 @@ import { SquadPlannerPage } from '@/pages/squad/SquadPlannerPage'
 <Route path="/squad" element={<SquadPlannerPage />} />
 ```
 
-- [ ] **Step 3: AppShell.tsx 사이드바 메뉴 추가**
+- [x] **Step 3: AppShell.tsx 사이드바 메뉴 추가**
 
 `lucide-react` import에 `LayoutGrid` 추가:
 
@@ -1060,7 +1060,7 @@ import {
 },
 ```
 
-- [ ] **Step 4: ProspectsPage.tsx — `useSearchParams` 연동**
+- [x] **Step 4: ProspectsPage.tsx — `useSearchParams` 연동**
 
 `react-router-dom` import에 `useSearchParams` 추가:
 
@@ -1081,7 +1081,7 @@ const [position, setPosition] = useState<Position | ''>(
 )
 ```
 
-- [ ] **Step 5: TypeScript 전체 컴파일 확인**
+- [x] **Step 5: TypeScript 전체 컴파일 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep "error TS"
@@ -1089,7 +1089,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep "error TS"
 
 Expected: 출력 없음
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add football/src/services/injury.service.ts \

@@ -39,7 +39,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: schema.prisma에 BodyPart enum 추가, Injury.bodyPart 타입 변경**
+- [x] **Step 1: schema.prisma에 BodyPart enum 추가, Injury.bodyPart 타입 변경**
 
 `schema.prisma`의 기존 `enum InjuryCause` 바로 위에 추가:
 ```prisma
@@ -122,7 +122,7 @@ model ExternalReport {
   externalReports ExternalReport[]
 ```
 
-- [ ] **Step 2: 마이그레이션 생성**
+- [x] **Step 2: 마이그레이션 생성**
 
 ```bash
 cd apps/api
@@ -136,7 +136,7 @@ npx prisma migrate dev --name body_part_assessment_external_report
 CREATE TYPE "BodyPart" AS ENUM ('HEAD_FACE', 'NECK_SHOULDER', 'TORSO_BACK', ...);
 ```
 
-- [ ] **Step 3: Prisma 클라이언트 재생성**
+- [x] **Step 3: Prisma 클라이언트 재생성**
 
 ```bash
 npx prisma generate
@@ -144,7 +144,7 @@ npx prisma generate
 
 `src/generated/enums.ts`에 `BodyPart`, `ExternalReportTarget`, `ExternalReportStatus` enum이 추가됐는지 확인.
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/
@@ -159,7 +159,7 @@ git commit -m "feat(injury): add BodyPart enum, InjuryAssessment, ExternalReport
 - Create: `apps/api/src/injury/injury.score.ts`
 - Create: `apps/api/__test__/injury/injury.score.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 `apps/api/__test__/injury/injury.score.test.ts`:
 ```typescript
@@ -228,7 +228,7 @@ describe("calculateTotalScore", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 ```bash
 cd apps/api
@@ -237,7 +237,7 @@ npx jest --testPathPattern="injury.score" --no-coverage
 
 Expected: FAIL "Cannot find module '../../src/injury/injury.score'"
 
-- [ ] **Step 3: 계산 함수 구현**
+- [x] **Step 3: 계산 함수 구현**
 
 `apps/api/src/injury/injury.score.ts`:
 ```typescript
@@ -302,7 +302,7 @@ export function calculateTotalScore(input: AssessmentInput): ScoreResult {
 export const SCORE_THRESHOLD = 80;
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 ```bash
 npx jest --testPathPattern="injury.score" --no-coverage
@@ -310,7 +310,7 @@ npx jest --testPathPattern="injury.score" --no-coverage
 
 Expected: 8/8 PASS
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add apps/api/src/injury/injury.score.ts apps/api/__test__/injury/injury.score.test.ts
@@ -326,7 +326,7 @@ git commit -m "feat(injury): add weight-based score calculation functions (TDD)"
 - Modify: `apps/api/src/injury/injury.repo.ts`
 - Modify: `apps/api/src/injury/injury.service.ts`
 
-- [ ] **Step 1: DTO 추가**
+- [x] **Step 1: DTO 추가**
 
 `apps/api/src/injury/dto/injury.dto.ts` 하단에 추가:
 ```typescript
@@ -368,7 +368,7 @@ export interface CreateInjuryDto {
 import { InjuryCause, InjuryStatus, HospitalType, RehabStage, RiskLevel, SecurityLevel, BodyPart } from "../../generated/enums";
 ```
 
-- [ ] **Step 2: Repo에 assessment + externalReport 메서드 추가**
+- [x] **Step 2: Repo에 assessment + externalReport 메서드 추가**
 
 `apps/api/src/injury/injury.repo.ts`에 아래 메서드 추가 (`InjuryRepository` 클래스 내):
 
@@ -411,7 +411,7 @@ async getExternalReports(injuryId: number) {
 import { InjuryCause, InjuryStatus, ExternalReportTarget } from "../generated/enums";
 ```
 
-- [ ] **Step 3: Service에 processAssessment 추가**
+- [x] **Step 3: Service에 processAssessment 추가**
 
 `apps/api/src/injury/injury.service.ts` 상단 import에 추가:
 ```typescript
@@ -461,7 +461,7 @@ async getExternalReports(injuryId: number) {
 
 `injury.service.ts` 상단 import에 `UpsertAssessmentDto` 추가.
 
-- [ ] **Step 4: getById가 player.level을 포함하는지 확인**
+- [x] **Step 4: getById가 player.level을 포함하는지 확인**
 
 `injury.repo.ts`의 `getById` 메서드에서 `player` include가 있는지 확인:
 ```typescript
@@ -480,7 +480,7 @@ async getById(id: number) {
 
 `player: true`가 없으면 `include` 블록에 추가.
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add apps/api/src/injury/
@@ -496,7 +496,7 @@ git commit -m "feat(injury): add assessment + external report repo/service metho
 - Modify: `apps/api/src/injury/injury.controller.ts`
 - Modify: `apps/api/src/injury/injury.routes.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 `apps/api/__test__/injury/injury.assessment.test.ts`:
 ```typescript
@@ -585,7 +585,7 @@ describe("InjuryController - getExternalReports", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 ```bash
 cd apps/api
@@ -594,7 +594,7 @@ npx jest --testPathPattern="injury.assessment" --no-coverage
 
 Expected: FAIL "controller.getAssessment is not a function"
 
-- [ ] **Step 3: 컨트롤러에 메서드 추가**
+- [x] **Step 3: 컨트롤러에 메서드 추가**
 
 `apps/api/src/injury/injury.controller.ts`에 추가:
 ```typescript
@@ -624,7 +624,7 @@ getExternalReports = async (req: Request, res: Response, next: NextFunction) => 
 };
 ```
 
-- [ ] **Step 4: 라우트 등록**
+- [x] **Step 4: 라우트 등록**
 
 `apps/api/src/injury/injury.routes.ts`에서 기존 라우트 블록 뒤에 추가 (권한 미들웨어는 기존 패턴 따름):
 ```typescript
@@ -636,7 +636,7 @@ router.put("/:id/assessment", requireAuth, controller.processAssessment);
 router.get("/:id/external-reports", requireAuth, controller.getExternalReports);
 ```
 
-- [ ] **Step 5: 테스트 통과 확인**
+- [x] **Step 5: 테스트 통과 확인**
 
 ```bash
 npx jest --testPathPattern="injury.(score|assessment)" --no-coverage
@@ -644,7 +644,7 @@ npx jest --testPathPattern="injury.(score|assessment)" --no-coverage
 
 Expected: 11/11 PASS
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add apps/api/src/injury/ apps/api/__test__/injury/
@@ -661,7 +661,7 @@ git commit -m "feat(injury): add assessment + external report controller/routes 
 - Modify: `football/src/pages/injuries/InjuriesPage.tsx`
 - Modify: `football/src/pages/injuries/InjuryStatsPage.tsx`
 
-- [ ] **Step 1: types/injury.ts에 새 타입 추가**
+- [x] **Step 1: types/injury.ts에 새 타입 추가**
 
 `football/src/types/injury.ts`에 추가:
 ```typescript
@@ -749,7 +749,7 @@ export interface ExternalReport {
 
 기존 `Injury` 인터페이스의 `bodyPart: string` → `bodyPart: BodyPart`로 변경.
 
-- [ ] **Step 2: injury.service.ts에 API 메서드 추가**
+- [x] **Step 2: injury.service.ts에 API 메서드 추가**
 
 `football/src/services/injury.service.ts`에 추가:
 ```typescript
@@ -774,7 +774,7 @@ async getExternalReports(injuryId: number): Promise<ExternalReport[]> {
 },
 ```
 
-- [ ] **Step 3: InjuriesPage — bodyPart 드롭다운으로 교체**
+- [x] **Step 3: InjuriesPage — bodyPart 드롭다운으로 교체**
 
 `football/src/pages/injuries/InjuriesPage.tsx` 상단 import에 추가:
 ```typescript
@@ -812,7 +812,7 @@ import { BODY_PART_LABEL } from '@/types/injury'
 </TableCell>
 ```
 
-- [ ] **Step 4: InjuryStatsPage — byBodyPart 한글 라벨**
+- [x] **Step 4: InjuryStatsPage — byBodyPart 한글 라벨**
 
 `football/src/pages/injuries/InjuryStatsPage.tsx` import에 추가:
 ```typescript
@@ -840,7 +840,7 @@ bodyPartEntries.forEach(([part, count]) =>
 )
 ```
 
-- [ ] **Step 5: 타입 체크**
+- [x] **Step 5: 타입 체크**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | grep error | head -20
@@ -848,7 +848,7 @@ cd football && npx tsc --noEmit 2>&1 | grep error | head -20
 
 Expected: 오류 없음
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add football/src/types/injury.ts football/src/services/injury.service.ts \
@@ -864,7 +864,7 @@ git commit -m "feat(injury): add FE types, bodyPart dropdown, Korean labels"
 **Files:**
 - Create: `football/src/components/injury/AssessmentForm.tsx`
 
-- [ ] **Step 1: 컴포넌트 작성**
+- [x] **Step 1: 컴포넌트 작성**
 
 `football/src/components/injury/AssessmentForm.tsx`:
 ```tsx
@@ -993,7 +993,7 @@ export function AssessmentForm({ injuryId, initial, onSaved }: Props) {
 }
 ```
 
-- [ ] **Step 2: 타입 체크**
+- [x] **Step 2: 타입 체크**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | grep "AssessmentForm\|error" | head -10
@@ -1001,7 +1001,7 @@ cd football && npx tsc --noEmit 2>&1 | grep "AssessmentForm\|error" | head -10
 
 Expected: 오류 없음
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add football/src/components/injury/AssessmentForm.tsx
@@ -1015,7 +1015,7 @@ git commit -m "feat(injury): add AssessmentForm component with real-time score p
 **Files:**
 - Modify: `football/src/pages/injuries/InjuryDetailPage.tsx`
 
-- [ ] **Step 1: 타임라인 + 평가 + 외부 보고서 import 추가**
+- [x] **Step 1: 타임라인 + 평가 + 외부 보고서 import 추가**
 
 `InjuryDetailPage.tsx` 상단 import 수정:
 ```typescript
@@ -1034,7 +1034,7 @@ import {
 import { AssessmentForm } from '@/components/injury/AssessmentForm'
 ```
 
-- [ ] **Step 2: 상태 + 로딩 추가**
+- [x] **Step 2: 상태 + 로딩 추가**
 
 `InjuryDetailPage` 컴포넌트 내 기존 state 아래에 추가:
 ```typescript
@@ -1058,7 +1058,7 @@ Promise.all([
   })
 ```
 
-- [ ] **Step 3: 상태 타임라인 컴포넌트 추가 (파일 내 로컬)**
+- [x] **Step 3: 상태 타임라인 컴포넌트 추가 (파일 내 로컬)**
 
 `InjuryDetailPage.tsx`의 `InjuryDetailPage` 함수 바로 위에 추가:
 ```tsx
@@ -1098,7 +1098,7 @@ function StatusTimeline({ current }: { current: InjuryDetail['status'] }) {
 }
 ```
 
-- [ ] **Step 4: 렌더링에 세 섹션 추가**
+- [x] **Step 4: 렌더링에 세 섹션 추가**
 
 `InjuryDetailPage`의 기존 `return` 블록에서, InjuryReport 폼 섹션 아래에 추가:
 
@@ -1151,7 +1151,7 @@ function StatusTimeline({ current }: { current: InjuryDetail['status'] }) {
 )}
 ```
 
-- [ ] **Step 5: 타입 체크**
+- [x] **Step 5: 타입 체크**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | grep error | head -20
@@ -1159,7 +1159,7 @@ cd football && npx tsc --noEmit 2>&1 | grep error | head -20
 
 Expected: 오류 없음
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add football/src/pages/injuries/InjuryDetailPage.tsx
@@ -1173,7 +1173,7 @@ git commit -m "feat(injury): add status timeline, assessment form, external repo
 **Files:**
 - Modify: `football/src/pages/injuries/InjuryDetailPage.tsx`
 
-- [ ] **Step 1: 복귀 체크리스트 로컬 컴포넌트 추가**
+- [x] **Step 1: 복귀 체크리스트 로컬 컴포넌트 추가**
 
 `InjuryDetailPage.tsx`의 `StatusTimeline` 함수 바로 아래에 추가:
 ```tsx
@@ -1207,7 +1207,7 @@ function ReturnChecklist({ assessment }: { assessment: InjuryAssessment }) {
 }
 ```
 
-- [ ] **Step 2: 외부 의무보고서 섹션 바로 아래에 체크리스트 섹션 추가**
+- [x] **Step 2: 외부 의무보고서 섹션 바로 아래에 체크리스트 섹션 추가**
 
 ```tsx
 {/* 복귀 체크리스트 */}
@@ -1219,7 +1219,7 @@ function ReturnChecklist({ assessment }: { assessment: InjuryAssessment }) {
 )}
 ```
 
-- [ ] **Step 3: 타입 체크 + 전체 테스트**
+- [x] **Step 3: 타입 체크 + 전체 테스트**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | grep error | head -10
@@ -1228,7 +1228,7 @@ cd ../apps/api && npx jest --testPathPattern="injury" --no-coverage
 
 Expected: FE 오류 없음, BE 부상 관련 테스트 전부 PASS
 
-- [ ] **Step 4: 최종 커밋**
+- [x] **Step 4: 최종 커밋**
 
 ```bash
 cd /Users/juno/work/football

@@ -44,4 +44,8 @@ export class TeamRepository {
   update(id: number, dto: UpdateTeamDto) {
     return this.prisma.team.update({ where: { id }, data: dto });
   }
+
+  updateLiteFlag(teamId: number, isLite: boolean) {
+    return this.prisma.team.update({ where: { id: teamId }, data: { isLite } });
+  }
 }

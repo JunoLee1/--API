@@ -47,7 +47,7 @@
 - Modify: `apps/api/prisma/schema.prisma`
 - Create: `apps/api/prisma/migrations/20260714000002_add_report/migration.sql`
 
-- [ ] **Step 1: schema.prisma에 Report 모델 + enum 추가**
+- [x] **Step 1: schema.prisma에 Report 모델 + enum 추가**
 
 `apps/api/prisma/schema.prisma` 맨 끝(AuditLog 모델 아래)에 추가:
 
@@ -93,7 +93,7 @@ model Report {
   auditLogs        AuditLog[]
 ```
 
-- [ ] **Step 2: 마이그레이션 파일 생성**
+- [x] **Step 2: 마이그레이션 파일 생성**
 
 `apps/api/prisma/migrations/20260714000002_add_report/migration.sql` 생성:
 
@@ -119,7 +119,7 @@ CREATE TABLE "Report" (
 );
 ```
 
-- [ ] **Step 3: 마이그레이션 적용**
+- [x] **Step 3: 마이그레이션 적용**
 
 ```bash
 cd apps/api
@@ -130,7 +130,7 @@ npx prisma generate
 
 성공 시 `✔ Generated Prisma Client` 출력.
 
-- [ ] **Step 4: multer 설치**
+- [x] **Step 4: multer 설치**
 
 ```bash
 cd apps/api
@@ -138,13 +138,13 @@ npm install multer
 npm install -D @types/multer
 ```
 
-- [ ] **Step 5: uploads 디렉토리 생성**
+- [x] **Step 5: uploads 디렉토리 생성**
 
 ```bash
 mkdir -p apps/api/uploads/reports
 ```
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/20260714000002_add_report/
@@ -158,7 +158,7 @@ git commit -m "feat: add Report schema and migration"
 **Files:**
 - Modify: `apps/api/src/notification/notification.repo.ts`
 
-- [ ] **Step 1: createForGM 메서드 추가**
+- [x] **Step 1: createForGM 메서드 추가**
 
 `findExpiringContracts` 메서드 바로 위에 삽입:
 
@@ -177,7 +177,7 @@ createForGM(type: string, title: string, body: string) {
 }
 ```
 
-- [ ] **Step 2: 커밋**
+- [x] **Step 2: 커밋**
 
 ```bash
 git add apps/api/src/notification/notification.repo.ts
@@ -194,7 +194,7 @@ git commit -m "feat: add createForGM notification method"
 - Create: `apps/api/src/report/report.controller.ts`
 - Create: `apps/api/src/report/report.routes.ts`
 
-- [ ] **Step 1: report.repo.ts 생성**
+- [x] **Step 1: report.repo.ts 생성**
 
 ```typescript
 import { PrismaClient, ReportType, ReportStatus } from "../generated/client";
@@ -253,7 +253,7 @@ export class ReportRepository {
 }
 ```
 
-- [ ] **Step 2: report.service.ts 생성**
+- [x] **Step 2: report.service.ts 생성**
 
 ```typescript
 import { AppError } from "../lib/appError";
@@ -328,7 +328,7 @@ export class ReportService {
 }
 ```
 
-- [ ] **Step 3: report.controller.ts 생성**
+- [x] **Step 3: report.controller.ts 생성**
 
 ```typescript
 import { Request, Response, NextFunction } from "express";
@@ -394,7 +394,7 @@ export class ReportController {
 }
 ```
 
-- [ ] **Step 4: report.routes.ts 생성**
+- [x] **Step 4: report.routes.ts 생성**
 
 ```typescript
 import { Router, Request, Response, NextFunction } from "express";
@@ -444,7 +444,7 @@ router.post("/:id/reject", auth, requireGM, controller.reject);
 export default router;
 ```
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add apps/api/src/report/
@@ -459,7 +459,7 @@ git commit -m "feat: add report module (repo, service, controller, routes)"
 - Modify: `apps/api/src/apiRouter.ts`
 - Modify: `apps/api/src/server.ts`
 
-- [ ] **Step 1: apiRouter.ts에 reportRouter 추가**
+- [x] **Step 1: apiRouter.ts에 reportRouter 추가**
 
 `import notificationRouter` 아래에 추가:
 ```typescript
@@ -471,7 +471,7 @@ import reportRouter from "./report/report.routes";
 apiRouter.use("/reports", reportRouter);
 ```
 
-- [ ] **Step 2: server.ts에 static 파일 서빙 추가**
+- [x] **Step 2: server.ts에 static 파일 서빙 추가**
 
 `app.use("/api", apiRouter);` 위에 추가:
 ```typescript
@@ -482,7 +482,7 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 (파일 상단 imports에 `import path from "path";` 추가)
 
-- [ ] **Step 3: 서버 재시작 후 확인**
+- [x] **Step 3: 서버 재시작 후 확인**
 
 ```bash
 cd apps/api && npm run dev
@@ -491,7 +491,7 @@ curl -s http://localhost:3001/api/reports -H "Cookie: <valid-cookie>" | head -20
 # 401 or [] 응답이면 정상 등록
 ```
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add apps/api/src/apiRouter.ts apps/api/src/server.ts
@@ -506,7 +506,7 @@ git commit -m "feat: register report router and static file serving"
 - Create: `football/src/types/report.ts`
 - Create: `football/src/services/report.service.ts`
 
-- [ ] **Step 1: types/report.ts 생성**
+- [x] **Step 1: types/report.ts 생성**
 
 ```typescript
 export type ReportType = 'FINANCIAL' | 'PERFORMANCE'
@@ -551,7 +551,7 @@ export const REPORT_STATUS_STYLE: Record<ReportStatus, string> = {
 }
 ```
 
-- [ ] **Step 2: services/report.service.ts 생성**
+- [x] **Step 2: services/report.service.ts 생성**
 
 `api.ts`는 `Content-Type: application/json`을 고정 사용하므로 파일 업로드는 별도 fetch로 처리한다.
 
@@ -586,7 +586,7 @@ export const reportApi = {
 }
 ```
 
-- [ ] **Step 3: 타입 체크**
+- [x] **Step 3: 타입 체크**
 
 ```bash
 cd football && npx tsc --noEmit
@@ -594,7 +594,7 @@ cd football && npx tsc --noEmit
 
 에러 없어야 함.
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add football/src/types/report.ts football/src/services/report.service.ts
@@ -608,7 +608,7 @@ git commit -m "feat: add report types and API service"
 **Files:**
 - Create: `football/src/hooks/useReportNotification.ts`
 
-- [ ] **Step 1: useReportNotification.ts 생성**
+- [x] **Step 1: useReportNotification.ts 생성**
 
 ```typescript
 import { useEffect } from 'react'
@@ -637,7 +637,7 @@ export function useReportNotification(onNew: () => void, isGM: boolean) {
 }
 ```
 
-- [ ] **Step 2: AppShell.tsx에 hook 연결**
+- [x] **Step 2: AppShell.tsx에 hook 연결**
 
 `AppShell.tsx`에서:
 
@@ -652,7 +652,7 @@ const isGM = user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'GM'
 useReportNotification(refreshUnread, isGM)
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add football/src/hooks/useReportNotification.ts football/src/layouts/AppShell.tsx
@@ -666,7 +666,7 @@ git commit -m "feat: add report submission WebSocket notification hook"
 **Files:**
 - Create: `football/src/pages/reports/ReportsPage.tsx`
 
-- [ ] **Step 1: ReportsPage.tsx 생성**
+- [x] **Step 1: ReportsPage.tsx 생성**
 
 ```typescript
 import { useEffect, useState } from 'react'
@@ -790,13 +790,13 @@ export function ReportsPage() {
 }
 ```
 
-- [ ] **Step 2: 타입 체크**
+- [x] **Step 2: 타입 체크**
 
 ```bash
 cd football && npx tsc --noEmit
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add football/src/pages/reports/ReportsPage.tsx
@@ -810,7 +810,7 @@ git commit -m "feat: add ReportsPage with tabs and list"
 **Files:**
 - Create: `football/src/pages/reports/ReportFormPage.tsx`
 
-- [ ] **Step 1: ReportFormPage.tsx 생성**
+- [x] **Step 1: ReportFormPage.tsx 생성**
 
 ```typescript
 import { useEffect, useRef, useState } from 'react'
@@ -988,13 +988,13 @@ export function ReportFormPage() {
 }
 ```
 
-- [ ] **Step 2: 타입 체크**
+- [x] **Step 2: 타입 체크**
 
 ```bash
 cd football && npx tsc --noEmit
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add football/src/pages/reports/ReportFormPage.tsx
@@ -1008,7 +1008,7 @@ git commit -m "feat: add ReportFormPage (create/edit with file upload)"
 **Files:**
 - Create: `football/src/pages/reports/ReportDetailPage.tsx`
 
-- [ ] **Step 1: ReportDetailPage.tsx 생성**
+- [x] **Step 1: ReportDetailPage.tsx 생성**
 
 ```typescript
 import { useEffect, useState } from 'react'
@@ -1217,13 +1217,13 @@ export function ReportDetailPage() {
 }
 ```
 
-- [ ] **Step 2: 타입 체크**
+- [x] **Step 2: 타입 체크**
 
 ```bash
 cd football && npx tsc --noEmit
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add football/src/pages/reports/ReportDetailPage.tsx
@@ -1238,7 +1238,7 @@ git commit -m "feat: add ReportDetailPage with approve/reject actions"
 - Modify: `football/src/App.tsx`
 - Modify: `football/src/layouts/AppShell.tsx`
 
-- [ ] **Step 1: App.tsx에 라우트 추가**
+- [x] **Step 1: App.tsx에 라우트 추가**
 
 기존 import 블록에 추가:
 ```typescript
@@ -1255,7 +1255,7 @@ import { ReportDetailPage } from '@/pages/reports/ReportDetailPage'
 <Route path="/reports/:id" element={<ReportDetailPage />} />
 ```
 
-- [ ] **Step 2: AppShell.tsx NAV_ITEMS에 보고서 추가**
+- [x] **Step 2: AppShell.tsx NAV_ITEMS에 보고서 추가**
 
 `관리` 섹션의 마지막 항목(`/admin/users`) 바로 앞에 추가:
 
@@ -1273,13 +1273,13 @@ import { ReportDetailPage } from '@/pages/reports/ReportDetailPage'
 
 `FileText`는 이미 import됨.
 
-- [ ] **Step 3: 타입 체크 + 빌드 확인**
+- [x] **Step 3: 타입 체크 + 빌드 확인**
 
 ```bash
 cd football && npx tsc --noEmit
 ```
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add football/src/App.tsx football/src/layouts/AppShell.tsx

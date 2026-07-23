@@ -35,7 +35,7 @@
 - Modify: `apps/api/prisma/schema.prisma`
 - Create: `apps/api/prisma/migrations/<timestamp>_external_report_submission_fields/migration.sql`
 
-- [ ] **Step 1: schema.prisma 수정**
+- [x] **Step 1: schema.prisma 수정**
 
 `ExternalReport` 모델의 `dueDate` 아래에 두 필드를 추가한다.
 
@@ -58,7 +58,7 @@ model ExternalReport {
 }
 ```
 
-- [ ] **Step 2: 마이그레이션 파일 생성 (shadow DB 우회)**
+- [x] **Step 2: 마이그레이션 파일 생성 (shadow DB 우회)**
 
 ```bash
 cd apps/api
@@ -74,20 +74,20 @@ ALTER TABLE "ExternalReport" ADD COLUMN "submittedAt" TIMESTAMP(3);
 ALTER TABLE "ExternalReport" ADD COLUMN "submittedNote" TEXT;
 ```
 
-- [ ] **Step 3: 마이그레이션 수동 적용**
+- [x] **Step 3: 마이그레이션 수동 적용**
 
 ```bash
 psql $DATABASE_URL -f prisma/migrations/<timestamp>_external_report_submission_fields/migration.sql
 npx prisma migrate resolve --applied <timestamp>_external_report_submission_fields
 ```
 
-- [ ] **Step 4: Prisma 클라이언트 재생성**
+- [x] **Step 4: Prisma 클라이언트 재생성**
 
 ```bash
 npx prisma generate
 ```
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/
@@ -104,7 +104,7 @@ git commit -m "feat(injury): add submittedAt, submittedNote to ExternalReport sc
 - Modify: `apps/api/src/injury/injury.routes.ts`
 - Test: `apps/api/__test__/injury/injury.assessment.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 `apps/api/__test__/injury/injury.assessment.test.ts` 파일 하단에 추가한다.
 기존 파일은 controller 유닛 테스트(mock service)이므로 같은 패턴을 따른다:
@@ -120,7 +120,7 @@ describe("InjuryController - updateExternalReportStatus (미구현 상태에서 
 })
 ```
 
-- [ ] **Step 2: 테스트 실행 — FAIL 확인**
+- [x] **Step 2: 테스트 실행 — FAIL 확인**
 
 ```bash
 npx jest __test__/injury/injury.assessment.test.ts --no-coverage
@@ -128,7 +128,7 @@ npx jest __test__/injury/injury.assessment.test.ts --no-coverage
 
 Expected: FAIL (dueDate가 null)
 
-- [ ] **Step 3: `injury.repo.ts` — createExternalReports 시그니처 변경**
+- [x] **Step 3: `injury.repo.ts` — createExternalReports 시그니처 변경**
 
 `createExternalReports` 메서드를 아래로 교체한다:
 
@@ -145,7 +145,7 @@ async createExternalReports(
 }
 ```
 
-- [ ] **Step 4: `injury.service.ts` — DUE_DAYS 상수 + notifRepo 주입 + processAssessment 수정**
+- [x] **Step 4: `injury.service.ts` — DUE_DAYS 상수 + notifRepo 주입 + processAssessment 수정**
 
 파일 상단 import에 `NotificationRepository`와 `ExternalReportStatus`를 추가한다:
 
@@ -204,7 +204,7 @@ try {
 }
 ```
 
-- [ ] **Step 5: `injury.routes.ts` — notifRepo 와이어링**
+- [x] **Step 5: `injury.routes.ts` — notifRepo 와이어링**
 
 ```typescript
 import { Router } from "express";
@@ -245,7 +245,7 @@ router.patch("/:id/external-reports/:reportId/status", auth, controller.updateEx
 export default router;
 ```
 
-- [ ] **Step 6: 테스트 실행 — PASS 확인**
+- [x] **Step 6: 테스트 실행 — PASS 확인**
 
 ```bash
 npx jest __test__/injury/injury.assessment.test.ts --no-coverage
@@ -253,7 +253,7 @@ npx jest __test__/injury/injury.assessment.test.ts --no-coverage
 
 Expected: PASS (dueDate가 올바르게 설정됨)
 
-- [ ] **Step 7: 커밋**
+- [x] **Step 7: 커밋**
 
 ```bash
 git add apps/api/src/injury/ apps/api/__test__/injury/injury.assessment.test.ts
@@ -270,7 +270,7 @@ git commit -m "feat(injury): auto-calculate dueDate on ExternalReport creation, 
 - Modify: `apps/api/src/injury/injury.controller.ts`
 - Test: `apps/api/__test__/injury/injury.assessment.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 `apps/api/__test__/injury/injury.assessment.test.ts`의 기존 `mockService` 객체에 `updateExternalReportStatus`를 추가하고, 새 describe 블록을 파일 하단에 추가한다.
 
@@ -329,7 +329,7 @@ describe("InjuryController - updateExternalReportStatus", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 — FAIL 확인**
+- [x] **Step 2: 테스트 실행 — FAIL 확인**
 
 ```bash
 npx jest __test__/injury/injury.assessment.test.ts --no-coverage
@@ -337,7 +337,7 @@ npx jest __test__/injury/injury.assessment.test.ts --no-coverage
 
 Expected: FAIL (route not found)
 
-- [ ] **Step 3: `injury.repo.ts` — findExternalReportById, updateExternalReportStatus 추가**
+- [x] **Step 3: `injury.repo.ts` — findExternalReportById, updateExternalReportStatus 추가**
 
 `getExternalReports` 아래에 두 메서드를 추가한다:
 
@@ -377,7 +377,7 @@ import에 `ExternalReportStatus` 추가:
 import { ExternalReportTarget, ExternalReportStatus } from "../generated/enums";
 ```
 
-- [ ] **Step 4: `injury.service.ts` — updateExternalReportStatus 추가**
+- [x] **Step 4: `injury.service.ts` — updateExternalReportStatus 추가**
 
 `getExternalReports` 아래에 추가:
 
@@ -393,7 +393,7 @@ async updateExternalReportStatus(
 }
 ```
 
-- [ ] **Step 5: `injury.controller.ts` — updateExternalReportStatus 추가**
+- [x] **Step 5: `injury.controller.ts` — updateExternalReportStatus 추가**
 
 `getExternalReports` 아래에 추가:
 
@@ -412,7 +412,7 @@ updateExternalReportStatus = async (req: Request, res: Response, next: NextFunct
 };
 ```
 
-- [ ] **Step 6: 테스트 실행 — PASS 확인**
+- [x] **Step 6: 테스트 실행 — PASS 확인**
 
 ```bash
 npx jest __test__/injury/injury.assessment.test.ts --no-coverage
@@ -420,7 +420,7 @@ npx jest __test__/injury/injury.assessment.test.ts --no-coverage
 
 Expected: PASS (전체 injury 테스트 통과)
 
-- [ ] **Step 7: 커밋**
+- [x] **Step 7: 커밋**
 
 ```bash
 git add apps/api/src/injury/ apps/api/__test__/injury/injury.assessment.test.ts
@@ -435,7 +435,7 @@ git commit -m "feat(injury): add PATCH external-report status endpoint with MEDI
 - Create: `apps/api/src/jobs/externalReportReminder.ts`
 - Modify: `apps/api/src/server.ts`
 
-- [ ] **Step 1: node-cron 설치**
+- [x] **Step 1: node-cron 설치**
 
 ```bash
 cd apps/api
@@ -443,7 +443,7 @@ npm install node-cron
 npm install -D @types/node-cron
 ```
 
-- [ ] **Step 2: cron job 파일 생성**
+- [x] **Step 2: cron job 파일 생성**
 
 `apps/api/src/jobs/externalReportReminder.ts`를 생성한다:
 
@@ -502,7 +502,7 @@ export function startExternalReportReminderJob() {
 }
 ```
 
-- [ ] **Step 3: `server.ts`에 cron 등록**
+- [x] **Step 3: `server.ts`에 cron 등록**
 
 `server.ts` 상단에 import 추가:
 
@@ -517,7 +517,7 @@ httpServer.listen(PORT, () => console.log(`API server running on port ${PORT}`))
 startExternalReportReminderJob();
 ```
 
-- [ ] **Step 4: 빌드 확인**
+- [x] **Step 4: 빌드 확인**
 
 ```bash
 npx tsc --noEmit
@@ -525,7 +525,7 @@ npx tsc --noEmit
 
 Expected: 에러 없음
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add apps/api/src/jobs/ apps/api/src/server.ts apps/api/package.json apps/api/package-lock.json
@@ -541,7 +541,7 @@ git commit -m "feat(injury): add node-cron job for external report due-soon and 
 - Modify: `football/src/services/injury.service.ts`
 - Modify: `football/src/pages/injuries/InjuryDetailPage.tsx`
 
-- [ ] **Step 1: `types/injury.ts` — ExternalReport 인터페이스 업데이트**
+- [x] **Step 1: `types/injury.ts` — ExternalReport 인터페이스 업데이트**
 
 `ExternalReport` 인터페이스를 아래로 교체한다:
 
@@ -559,7 +559,7 @@ export interface ExternalReport {
 }
 ```
 
-- [ ] **Step 2: `services/injury.service.ts` — updateExternalReportStatus 추가**
+- [x] **Step 2: `services/injury.service.ts` — updateExternalReportStatus 추가**
 
 `getExternalReports` 아래에 추가:
 
@@ -582,7 +582,7 @@ import에 `ExternalReportStatus` 타입이 포함되어 있는지 확인한다. 
 import type { ..., ExternalReportStatus } from '@/types/injury'
 ```
 
-- [ ] **Step 3: `InjuryDetailPage.tsx` — 외부 보고서 섹션에 상태 변경 UI 추가**
+- [x] **Step 3: `InjuryDetailPage.tsx` — 외부 보고서 섹션에 상태 변경 UI 추가**
 
 파일 상단에서 기존 import를 확인하고, `useState`가 import되어 있는지 확인한다 (이미 있음).
 
@@ -706,7 +706,7 @@ function ExternalReportRow({
 }
 ```
 
-- [ ] **Step 4: TypeScript 빌드 확인**
+- [x] **Step 4: TypeScript 빌드 확인**
 
 ```bash
 cd football && npx tsc --noEmit
@@ -714,7 +714,7 @@ cd football && npx tsc --noEmit
 
 Expected: 에러 없음
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add football/src/types/injury.ts football/src/services/injury.service.ts football/src/pages/injuries/InjuryDetailPage.tsx
@@ -725,8 +725,8 @@ git commit -m "feat(injury): add external report status update UI with inline ed
 
 ## 완료 기준
 
-- [ ] `npx jest --testPathPattern="injury" --no-coverage` — 전체 PASS
-- [ ] MEDICAL 사용자가 InjuryDetailPage에서 보고서 상태를 SUBMITTED로 변경하면 `submittedAt`이 기록되고 메모가 저장됨
-- [ ] 80점 이상 평가 저장 시 ExternalReport의 `dueDate`가 대상 기관별로 자동 계산됨
-- [ ] MEDICAL_DIRECTOR 계정에 생성 즉시 알림이 도착함
-- [ ] cron이 자정에 실행되어 마감 2일 전 + 초과 보고서에 대한 알림을 발송함
+- [x] `npx jest --testPathPattern="injury" --no-coverage` — 전체 PASS
+- [x] MEDICAL 사용자가 InjuryDetailPage에서 보고서 상태를 SUBMITTED로 변경하면 `submittedAt`이 기록되고 메모가 저장됨
+- [x] 80점 이상 평가 저장 시 ExternalReport의 `dueDate`가 대상 기관별로 자동 계산됨
+- [x] MEDICAL_DIRECTOR 계정에 생성 즉시 알림이 도착함
+- [x] cron이 자정에 실행되어 마감 2일 전 + 초과 보고서에 대한 알림을 발송함

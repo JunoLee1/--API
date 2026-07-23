@@ -41,7 +41,7 @@
 - Create: `apps/api/src/team/team.routes.ts`
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: team.repo.ts 작성**
+- [x] **Step 1: team.repo.ts 작성**
 
 ```typescript
 // apps/api/src/team/team.repo.ts
@@ -94,7 +94,7 @@ export class TeamRepository {
 }
 ```
 
-- [ ] **Step 2: team.service.ts 작성**
+- [x] **Step 2: team.service.ts 작성**
 
 ```typescript
 // apps/api/src/team/team.service.ts
@@ -130,7 +130,7 @@ export class TeamService {
 }
 ```
 
-- [ ] **Step 3: team.controller.ts 작성**
+- [x] **Step 3: team.controller.ts 작성**
 
 ```typescript
 // apps/api/src/team/team.controller.ts
@@ -176,7 +176,7 @@ export class TeamController {
 }
 ```
 
-- [ ] **Step 4: team.routes.ts 작성**
+- [x] **Step 4: team.routes.ts 작성**
 
 ```typescript
 // apps/api/src/team/team.routes.ts
@@ -202,7 +202,7 @@ router.patch("/:id/deactivate", auth, controller.deactivate);
 export default router;
 ```
 
-- [ ] **Step 5: apiRouter.ts에 /teams 등록**
+- [x] **Step 5: apiRouter.ts에 /teams 등록**
 
 `apps/api/src/apiRouter.ts` 상단 imports에 추가:
 ```typescript
@@ -214,7 +214,7 @@ import teamRouter from "./team/team.routes";
 apiRouter.use("/teams", teamRouter);
 ```
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add apps/api/src/team/ apps/api/src/apiRouter.ts
@@ -231,7 +231,7 @@ git commit -m "feat(team): add Team CRUD BE API"
 - Modify: `football/src/services/season.service.ts`
 - Modify: `football/src/types/season.ts`
 
-- [ ] **Step 1: types/season.ts 확장**
+- [x] **Step 1: types/season.ts 확장**
 
 현재 파일 내용을 다음으로 교체:
 ```typescript
@@ -259,7 +259,7 @@ export const SEASON_STATUS_STYLE: Record<SeasonStatus, string> = {
 }
 ```
 
-- [ ] **Step 2: services/season.service.ts 확장**
+- [x] **Step 2: services/season.service.ts 확장**
 
 현재 파일 내용을 다음으로 교체:
 ```typescript
@@ -284,7 +284,7 @@ export const seasonApi = {
 }
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add football/src/services/season.service.ts football/src/types/season.ts
@@ -301,7 +301,7 @@ git commit -m "feat(season): extend season service with create/activate/close"
 - Create: `football/src/types/team.ts`
 - Create: `football/src/services/team.service.ts`
 
-- [ ] **Step 1: types/team.ts 작성**
+- [x] **Step 1: types/team.ts 작성**
 
 ```typescript
 // football/src/types/team.ts
@@ -323,7 +323,7 @@ export const TEAM_TYPE_LABEL: Record<TeamType, string> = {
 }
 ```
 
-- [ ] **Step 2: services/team.service.ts 작성**
+- [x] **Step 2: services/team.service.ts 작성**
 
 ```typescript
 // football/src/services/team.service.ts
@@ -347,7 +347,7 @@ export const teamApi = {
 }
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add football/src/types/team.ts football/src/services/team.service.ts
@@ -363,7 +363,7 @@ git commit -m "feat(team): add Team FE types and API service"
 **Files:**
 - Create: `football/src/pages/admin/SeasonsPage.tsx`
 
-- [ ] **Step 1: SeasonsPage.tsx 작성**
+- [x] **Step 1: SeasonsPage.tsx 작성**
 
 ```tsx
 // football/src/pages/admin/SeasonsPage.tsx
@@ -561,7 +561,7 @@ export function SeasonsPage() {
 }
 ```
 
-- [ ] **Step 2: 커밋**
+- [x] **Step 2: 커밋**
 
 ```bash
 git add football/src/pages/admin/SeasonsPage.tsx
@@ -577,7 +577,7 @@ git commit -m "feat(season): add SeasonsPage with create/activate/close"
 **Files:**
 - Create: `football/src/pages/admin/TeamsPage.tsx`
 
-- [ ] **Step 1: TeamsPage.tsx 작성**
+- [x] **Step 1: TeamsPage.tsx 작성**
 
 ```tsx
 // football/src/pages/admin/TeamsPage.tsx
@@ -800,7 +800,7 @@ export function TeamsPage() {
 }
 ```
 
-- [ ] **Step 2: 커밋**
+- [x] **Step 2: 커밋**
 
 ```bash
 git add football/src/pages/admin/TeamsPage.tsx
@@ -817,7 +817,7 @@ git commit -m "feat(team): add TeamsPage with create/edit/deactivate"
 - Modify: `football/src/App.tsx`
 - Modify: `football/src/layouts/AppShell.tsx`
 
-- [ ] **Step 1: App.tsx에 라우트 추가**
+- [x] **Step 1: App.tsx에 라우트 추가**
 
 `football/src/App.tsx`에서 `UsersPage` import 근처에 추가:
 ```typescript
@@ -831,7 +831,7 @@ import { SeasonsPage } from '@/pages/admin/SeasonsPage'
 <Route path="/admin/seasons" element={<SeasonsPage />} />
 ```
 
-- [ ] **Step 2: AppShell.tsx에 사이드바 링크 추가**
+- [x] **Step 2: AppShell.tsx에 사이드바 링크 추가**
 
 `football/src/layouts/AppShell.tsx` — `Users` 아이콘 import 있는 줄 근처에서 `CalendarDays` 아이콘 추가:
 이미 있다면 그대로, 없으면 import에 추가: `CalendarDays, Users2`
@@ -854,7 +854,7 @@ import { SeasonsPage } from '@/pages/admin/SeasonsPage'
 },
 ```
 
-- [ ] **Step 3: 타입스크립트 체크**
+- [x] **Step 3: 타입스크립트 체크**
 
 ```bash
 cd football && npx tsc --noEmit
@@ -862,7 +862,7 @@ cd football && npx tsc --noEmit
 
 Expected: 오류 없음
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add football/src/App.tsx football/src/layouts/AppShell.tsx

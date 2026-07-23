@@ -205,4 +205,35 @@ export class TrainingRepository {
       select: { userId: true },
     });
   }
+
+  findByIdWithTeam(id: number) {
+    return this.prisma.trainingSession.findUnique({
+      where: { id },
+      select: { id: true, teamId: true, date: true, team: { select: { id: true, type: true, name: true } } },
+    });
+  }
+
+  updateSession(id: number, data: { date?: string; goal?: string }) {
+    return this.prisma.trainingSession.update({
+      where: { id },
+      data: { ...(data.date && { date: new Date(data.date) }), ...(data.goal && { goal: data.goal }) },
+      select: { id: true, date: true, goal: true, sessionType: true, isApproved: true },
+    });
+  }
+
+  cancelSession(id: number) {
+    return this.prisma.trainingSession.update({
+      where: { id },
+      data: { cancelledAt: new Date() },
+    });
+  }
+
+  findGuardiansByTeam(teamId: number): Promise<number[]> {
+    return this.prisma.player
+      .findMany({
+        where: { teamId, guardianId: { not: null } },
+        select: { guardianId: true },
+      })
+      .then(rows => rows.map(r => r.guardianId!));
+  }
 }

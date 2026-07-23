@@ -4,11 +4,13 @@ import { MatchSquadRepository } from "../match/match.squad.repo";
 import { NotificationService } from "../notification/notification.service";
 import { NotificationRepository } from "../notification/notification.repo";
 
+
 export function startMatchDayNotificationJob() {
   cron.schedule("0 18 * * *", async () => {
     const prisma = getPrisma();
     const squadRepo = new MatchSquadRepository(prisma);
-    const notifService = new NotificationService(new NotificationRepository(prisma));
+    const notifRepo = new NotificationRepository(prisma);
+    const notifService = new NotificationService(notifRepo);
 
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -36,6 +38,19 @@ export function startMatchDayNotificationJob() {
             venue: matchInfo.venue ?? null,
           })
           .catch(console.error);
+
+        const guardianId = entry.player.guardianId;
+        if (guardianId) {
+          const dateStr = new Date(matchInfo.date).toLocaleDateString("ko-KR");
+          void notifRepo
+            .createForGuardian(
+              guardianId,
+              "MATCH_DAY_REMINDER",
+              "내일 경기 일정",
+              `${dateStr} ${matchInfo.homeTeamName} vs ${matchInfo.awayTeamName}`,
+            )
+            .catch(console.error);
+        }
       }
       void squadRepo.markNotified(matchId).catch(console.error);
     }

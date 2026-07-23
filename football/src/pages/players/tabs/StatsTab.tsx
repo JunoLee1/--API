@@ -14,6 +14,17 @@ const ATTENDANCE_KO: Record<string, string> = {
   LATE_UNAUTHORIZED: '무단지각',
 }
 
+const SESSION_TYPE_KO: Record<string, string> = {
+  INDIVIDUAL_SKILL: '개인 기술',
+  TACTICAL_DEFENSIVE: '수비 전술',
+  TACTICAL_ATTACKING: '공격 전술',
+  TACTICAL_FULL_TEAM: '팀 전술',
+  PHYSICAL: '체력',
+  PSYCHOLOGICAL_SOCIAL: '심리/사회',
+  SET_PIECE: '세트피스',
+  GOALKEEPER: '골키퍼',
+}
+
 function fmt(v: number | null | undefined, digits = 0): string {
   if (v == null) return '-'
   return v.toFixed(digits)
@@ -97,9 +108,27 @@ export function StatsTab({ playerId }: Props) {
                     <td className="py-2 pr-3 text-muted-foreground">{formatDate(s.match.date)}</td>
                     <td className="text-right pr-3 font-medium">{fmt(s.goals)}</td>
                     <td className="text-right pr-3">{fmt(s.assists)}</td>
-                    <td className="text-right pr-3">{fmt(s.xG, 2)}</td>
-                    <td className="text-right pr-3">{fmt(s.xA, 2)}</td>
-                    <td className="text-right pr-3">{fmt(s.passAccuracy, 0)}{s.passAccuracy != null ? '%' : ''}</td>
+                    <td className="text-right pr-3">
+                      {(s.xG != null && s.xG > 0)
+                        ? s.xG.toFixed(2)
+                        : (s.goals != null && s.goals > 0)
+                          ? <span className="text-orange-500 font-bold">⚠</span>
+                          : '-'}
+                    </td>
+                    <td className="text-right pr-3">
+                      {(s.xA != null && s.xA > 0)
+                        ? s.xA.toFixed(2)
+                        : (s.assists != null && s.assists > 0)
+                          ? <span className="text-orange-500 font-bold">⚠</span>
+                          : '-'}
+                    </td>
+                    <td className="text-right pr-3">
+                      {(s.passAccuracy != null && s.passAccuracy > 0)
+                        ? `${s.passAccuracy.toFixed(0)}%`
+                        : (s.minutesPlayed != null && s.minutesPlayed > 0)
+                          ? <span className="text-orange-500 font-bold">⚠</span>
+                          : '-'}
+                    </td>
                     <td className="text-right pr-3">{fmt(s.tackleSuccessRate, 0)}{s.tackleSuccessRate != null ? '%' : ''}</td>
                     <td className="text-right">{s.minutesPlayed != null ? `${s.minutesPlayed}'` : '-'}</td>
                   </tr>
@@ -122,7 +151,7 @@ export function StatsTab({ playerId }: Props) {
             {trainingResults.map((r) => (
               <div key={r.id} className="rounded-md border px-4 py-3 flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground">{formatDate(r.session.date)} · {r.session.sessionType}</p>
+                  <p className="text-xs text-muted-foreground">{formatDate(r.session.date)} · {SESSION_TYPE_KO[r.session.sessionType] ?? r.session.sessionType}</p>
                   <p className="text-sm font-medium truncate">{r.session.goal}</p>
                   {r.feedback && <p className="text-xs text-muted-foreground mt-0.5 truncate">{r.feedback}</p>}
                 </div>

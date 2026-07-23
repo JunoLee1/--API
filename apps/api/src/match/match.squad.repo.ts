@@ -60,7 +60,7 @@ export class MatchSquadRepository {
         match: { date: { gte: start, lte: end } },
       },
       include: {
-        player: { select: { id: true, playerName: true, userId: true } },
+        player: { select: { id: true, playerName: true, userId: true, guardianId: true } },
         match: {
           select: { id: true, date: true, homeTeamName: true, awayTeamName: true, venue: true },
         },

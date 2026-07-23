@@ -35,7 +35,7 @@
 - Modify: `apps/api/prisma/schema.prisma`
 - Create: `apps/api/prisma/migrations/20260715000003_add_injury_report/migration.sql`
 
-- [ ] **Step 1: schema.prisma에 열거형 추가**
+- [x] **Step 1: schema.prisma에 열거형 추가**
 
 `Injury` 모델 정의 아래(또는 파일 끝)에 다음을 추가한다.
 
@@ -61,7 +61,7 @@ enum SecurityLevel {
 }
 ```
 
-- [ ] **Step 2: schema.prisma에 InjuryReport 모델 추가**
+- [x] **Step 2: schema.prisma에 InjuryReport 모델 추가**
 
 열거형 바로 아래에 추가한다.
 
@@ -100,7 +100,7 @@ model InjuryReport {
 }
 ```
 
-- [ ] **Step 3: Injury 모델에 역방향 관계 추가**
+- [x] **Step 3: Injury 모델에 역방향 관계 추가**
 
 `apps/api/prisma/schema.prisma`의 `model Injury { ... }` 블록 안에 다음을 추가한다.
 
@@ -108,7 +108,7 @@ model InjuryReport {
   injuryReport InjuryReport?
 ```
 
-- [ ] **Step 4: User 모델에 역방향 관계 추가**
+- [x] **Step 4: User 모델에 역방향 관계 추가**
 
 `model User { ... }` 블록 안에 다음을 추가한다.
 
@@ -120,7 +120,7 @@ model InjuryReport {
   medicalSignedReports  InjuryReport[] @relation("InjuryReportMedicalSigner")
 ```
 
-- [ ] **Step 5: 마이그레이션 SQL 파일 생성**
+- [x] **Step 5: 마이그레이션 SQL 파일 생성**
 
 `apps/api/prisma/migrations/20260715000003_add_injury_report/migration.sql` 파일을 만든다.
 
@@ -182,7 +182,7 @@ ALTER TABLE "InjuryReport" ADD CONSTRAINT "InjuryReport_trainerSignedById_fkey" 
 ALTER TABLE "InjuryReport" ADD CONSTRAINT "InjuryReport_medicalSignedById_fkey" FOREIGN KEY ("medicalSignedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 ```
 
-- [ ] **Step 6: 마이그레이션 적용**
+- [x] **Step 6: 마이그레이션 적용**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -193,7 +193,7 @@ npx prisma generate
 
 Expected: `Prisma Client generated` 출력.
 
-- [ ] **Step 7: 커밋**
+- [x] **Step 7: 커밋**
 
 ```bash
 git add apps/api/prisma/
@@ -208,7 +208,7 @@ git commit -m "feat: add InjuryReport model with RehabStage/RiskLevel/SecurityLe
 - Modify: `apps/api/src/injury/dto/injury.dto.ts`
 - Modify: `apps/api/src/injury/injury.repo.ts`
 
-- [ ] **Step 1: DTO 추가**
+- [x] **Step 1: DTO 추가**
 
 `apps/api/src/injury/dto/injury.dto.ts` 파일에 import와 인터페이스를 추가한다.
 
@@ -243,7 +243,7 @@ export interface UpsertInjuryReportDto {
 }
 ```
 
-- [ ] **Step 2: Repo에 INJURY_REPORT_SELECT 상수 + 메서드 추가**
+- [x] **Step 2: Repo에 INJURY_REPORT_SELECT 상수 + 메서드 추가**
 
 `apps/api/src/injury/injury.repo.ts` 파일에 다음을 추가한다. 기존 import에 `UpsertInjuryReportDto`를 포함시키고, 클래스 안에 두 메서드를 추가한다.
 
@@ -300,7 +300,7 @@ upsertReport(injuryId: number, dto: UpsertInjuryReportDto, userId: number) {
 }
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add apps/api/src/injury/dto/injury.dto.ts apps/api/src/injury/injury.repo.ts
@@ -316,7 +316,7 @@ git commit -m "feat: add InjuryReport DTO and repo methods (findReport, upsertRe
 - Modify: `apps/api/src/injury/injury.controller.ts`
 - Modify: `apps/api/src/injury/injury.routes.ts`
 
-- [ ] **Step 1: Service에 getReport, saveReport 추가**
+- [x] **Step 1: Service에 getReport, saveReport 추가**
 
 `apps/api/src/injury/injury.service.ts`의 기존 `getStats` 앞에 추가한다.
 
@@ -340,7 +340,7 @@ import에 `UpsertInjuryReportDto`를 추가한다.
 import { CreateInjuryDto, UpdateInjuryStatusDto, UpsertInjuryReportDto } from "./dto/injury.dto";
 ```
 
-- [ ] **Step 2: Controller에 getReport, saveReport 핸들러 추가**
+- [x] **Step 2: Controller에 getReport, saveReport 핸들러 추가**
 
 `apps/api/src/injury/injury.controller.ts`의 기존 `updateStatus` 핸들러 뒤에 추가한다.
 
@@ -362,7 +362,7 @@ saveReport = async (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 3: Routes에 엔드포인트 추가**
+- [x] **Step 3: Routes에 엔드포인트 추가**
 
 `apps/api/src/injury/injury.routes.ts`에서 `router.patch("/:id/status", ...)` 아래에 추가한다.
 
@@ -371,7 +371,7 @@ router.get("/:id/report", auth, controller.getReport);
 router.put("/:id/report", auth, controller.saveReport);
 ```
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add apps/api/src/injury/injury.service.ts apps/api/src/injury/injury.controller.ts apps/api/src/injury/injury.routes.ts
@@ -386,7 +386,7 @@ git commit -m "feat: add getReport/saveReport endpoints to injury API"
 - Modify: `football/src/types/injury.ts`
 - Modify: `football/src/services/injury.service.ts`
 
-- [ ] **Step 1: injury.ts에 InjuryReport 타입 + 레이블 추가**
+- [x] **Step 1: injury.ts에 InjuryReport 타입 + 레이블 추가**
 
 `football/src/types/injury.ts` 파일 끝에 추가한다.
 
@@ -447,7 +447,7 @@ export const SECURITY_LEVEL_LABEL: Record<SecurityLevel, string> = {
 }
 ```
 
-- [ ] **Step 2: injury.service.ts에 API 메서드 추가**
+- [x] **Step 2: injury.service.ts에 API 메서드 추가**
 
 `football/src/services/injury.service.ts`에 import에 새 타입들을 추가하고, `injuryApi` 객체에 메서드를 추가한다.
 
@@ -473,7 +473,7 @@ import type { Injury, InjuryDetail, InjuryStatus, InjuryCause, HospitalType, Inj
   }) => api.put<InjuryReport>(`/injuries/${injuryId}/report`, payload),
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add football/src/types/injury.ts football/src/services/injury.service.ts
@@ -489,7 +489,7 @@ git commit -m "feat: add InjuryReport FE types and API service methods"
 - Modify: `football/src/App.tsx`
 - Modify: `football/src/pages/injuries/InjuriesPage.tsx`
 
-- [ ] **Step 1: InjuryDetailPage.tsx 생성**
+- [x] **Step 1: InjuryDetailPage.tsx 생성**
 
 `football/src/pages/injuries/InjuryDetailPage.tsx` 파일을 생성한다.
 
@@ -797,7 +797,7 @@ export function InjuryDetailPage() {
 }
 ```
 
-- [ ] **Step 2: App.tsx에 라우트 추가**
+- [x] **Step 2: App.tsx에 라우트 추가**
 
 `football/src/App.tsx`에 import와 Route를 추가한다.
 
@@ -811,7 +811,7 @@ import { InjuryDetailPage } from '@/pages/injuries/InjuryDetailPage'
 <Route path="/injuries/:id" element={<InjuryDetailPage />} />
 ```
 
-- [ ] **Step 3: InjuriesPage 테이블 행 클릭 추가**
+- [x] **Step 3: InjuriesPage 테이블 행 클릭 추가**
 
 `football/src/pages/injuries/InjuriesPage.tsx`에서 테이블 `TableRow`에 `useNavigate`를 사용해 클릭 이벤트를 추가한다.
 
@@ -831,7 +831,7 @@ const navigate = useNavigate()
 ```
 로 변경한다. (기존에 `className`이 없으면 추가, 있으면 `cursor-pointer`를 더한다.)
 
-- [ ] **Step 4: InjuryDetailPage의 player 필드 확인**
+- [x] **Step 4: InjuryDetailPage의 player 필드 확인**
 
 현재 `injuryApi.get(id)` → `InjuryDetail`에는 `player: { playerName: string }`만 있다. `position`을 표시하려면 BE `INJURY_SELECT`와 FE 타입을 수정해야 한다.
 
@@ -848,7 +848,7 @@ export interface InjuryDetail extends Injury {
 }
 ```
 
-- [ ] **Step 5: 타입 체크**
+- [x] **Step 5: 타입 체크**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -30
@@ -856,7 +856,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -30
 
 Expected: 오류 없음.
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add football/src/pages/injuries/InjuryDetailPage.tsx football/src/App.tsx football/src/pages/injuries/InjuriesPage.tsx football/src/types/injury.ts football/src/services/injury.service.ts apps/api/src/injury/injury.repo.ts
@@ -879,7 +879,7 @@ git commit -m "feat: add InjuryDetailPage with InjuryReport form"
 - Modify: `football/src/services/injury.service.ts`
 - Modify: `football/src/pages/injuries/InjuryDetailPage.tsx`
 
-- [ ] **Step 1: InjuryReport 타입에 서명 필드 추가 (이미 Task 4에서 정의했다면 확인)**
+- [x] **Step 1: InjuryReport 타입에 서명 필드 추가 (이미 Task 4에서 정의했다면 확인)**
 
 `football/src/types/injury.ts`의 `InjuryReport` 인터페이스가 아래 필드를 포함하는지 확인한다. 없으면 추가한다.
 
@@ -895,7 +895,7 @@ git commit -m "feat: add InjuryDetailPage with InjuryReport form"
   medicalSigner: { id: number; nickname: string } | null
 ```
 
-- [ ] **Step 2: BE Repo에 signReport, unsignReport 추가**
+- [x] **Step 2: BE Repo에 signReport, unsignReport 추가**
 
 `apps/api/src/injury/injury.repo.ts`의 `INJURY_REPORT_SELECT` 상수에 서명 필드를 추가한다.
 
@@ -947,7 +947,7 @@ unsignReport(injuryId: number, role: 'COACH' | 'TRAINER' | 'MEDICAL') {
 }
 ```
 
-- [ ] **Step 3: BE Service에 signReport, unsignReport 추가**
+- [x] **Step 3: BE Service에 signReport, unsignReport 추가**
 
 `apps/api/src/injury/injury.service.ts`에 추가한다.
 
@@ -965,7 +965,7 @@ async unsignReport(injuryId: number, role: 'COACH' | 'TRAINER' | 'MEDICAL') {
 }
 ```
 
-- [ ] **Step 4: BE Controller에 signReport, unsignReport 핸들러 추가**
+- [x] **Step 4: BE Controller에 signReport, unsignReport 핸들러 추가**
 
 `apps/api/src/injury/injury.controller.ts`에 추가한다. 역할 판별 로직: HEAD_COACH → COACH, PHYSICAL_COACH → TRAINER, MEDICAL/MEDICAL_DIRECTOR → MEDICAL. 위 세 역할에 해당하지 않으면 403.
 
@@ -1001,7 +1001,7 @@ unsignReport = async (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 5: BE Routes에 서명 엔드포인트 추가**
+- [x] **Step 5: BE Routes에 서명 엔드포인트 추가**
 
 `apps/api/src/injury/injury.routes.ts`에서 `PUT /:id/report` 아래에 추가한다.
 
@@ -1010,7 +1010,7 @@ router.post("/:id/report/sign", auth, controller.signReport);
 router.delete("/:id/report/sign", auth, controller.unsignReport);
 ```
 
-- [ ] **Step 6: FE Service에 signReport, unsignReport 추가**
+- [x] **Step 6: FE Service에 signReport, unsignReport 추가**
 
 `football/src/services/injury.service.ts`의 `injuryApi` 객체에 추가한다.
 
@@ -1022,7 +1022,7 @@ router.delete("/:id/report/sign", auth, controller.unsignReport);
     api.delete<InjuryReport>(`/injuries/${injuryId}/report/sign`),
 ```
 
-- [ ] **Step 7: FE InjuryDetailPage에 서명 UI 섹션 추가**
+- [x] **Step 7: FE InjuryDetailPage에 서명 UI 섹션 추가**
 
 `football/src/pages/injuries/InjuryDetailPage.tsx`에서 `의료 보고서` 섹션 아래에 `복귀 계획 조율` 섹션을 추가한다.
 
@@ -1122,7 +1122,7 @@ const handleToggleSign = async () => {
 )}
 ```
 
-- [ ] **Step 8: 타입 체크**
+- [x] **Step 8: 타입 체크**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -30
@@ -1130,7 +1130,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -30
 
 Expected: 오류 없음.
 
-- [ ] **Step 9: 커밋**
+- [x] **Step 9: 커밋**
 
 ```bash
 git add apps/api/src/injury/ football/src/types/injury.ts football/src/services/injury.service.ts football/src/pages/injuries/InjuryDetailPage.tsx

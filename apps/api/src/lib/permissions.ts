@@ -14,6 +14,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   COACHING_STAFF: [Permission.VIEW_TEAM_RANKING],
   PLAYER: [Permission.VIEW_TEAM_RANKING],
   AGENT: [],
+  GUARDIAN: [],
 }
 
 export function hasPermission(role: Role, permission: Permission): boolean {

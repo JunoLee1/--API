@@ -30,6 +30,20 @@ export class PlayerCallupService {
         callup.id,
       )
       .catch(console.error);
+
+    const guardianId = callup.player.guardianId;
+    if (guardianId) {
+      void this.notifRepo
+        .createForGuardian(
+          guardianId,
+          "CALLUP_REQUESTED",
+          "1군 콜업 요청",
+          `${callup.player.playerName} 선수에게 1군 콜업 요청이 들어왔습니다.`,
+          callup.id,
+        )
+        .catch(console.error);
+    }
+
     return callup;
   }
 

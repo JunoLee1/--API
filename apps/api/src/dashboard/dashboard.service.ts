@@ -11,6 +11,14 @@ type UserCtx = {
 export class DashboardService {
   constructor(private repo: DashboardRepository) {}
 
+  getYouthDevelopmentStats() {
+    return this.repo.getYouthDevelopmentStats();
+  }
+
+  getAcademyFinanceStats(year: number, month: number) {
+    return this.repo.getAcademyFinanceStats(year, month);
+  }
+
   getStats(user: UserCtx) {
     switch (user.role) {
       case "ADMIN":

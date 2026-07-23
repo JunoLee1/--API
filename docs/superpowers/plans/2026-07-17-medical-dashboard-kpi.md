@@ -29,7 +29,7 @@
 **Files:**
 - Modify: `apps/api/__test__/dashboard/dashboard.service.test.ts`
 
-- [ ] **Step 1: mockRepo에 `getMedicalDashboardStats` 추가 및 3개 테스트 수정**
+- [x] **Step 1: mockRepo에 `getMedicalDashboardStats` 추가 및 3개 테스트 수정**
 
 아래 코드로 테스트 파일 전체를 교체한다. 변경 핵심:
   - `mockRepo`에 `getMedicalDashboardStats: jest.fn()` 추가
@@ -180,7 +180,7 @@ describe("DashboardService.getStats", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 → FAIL 확인**
+- [x] **Step 2: 테스트 실행 → FAIL 확인**
 
 ```bash
 cd /Users/juno/work/football && npx jest __test__/dashboard/dashboard.service.test.ts --no-coverage
@@ -195,7 +195,7 @@ Expected: HEAD_COACH, MEDICAL, MEDICAL_DIRECTOR 테스트 3개 FAIL (getMedicalD
 **Files:**
 - Modify: `apps/api/src/dashboard/dashboard.repo.ts`
 
-- [ ] **Step 1: repo.ts에 날짜 헬퍼 + 메서드 추가**
+- [x] **Step 1: repo.ts에 날짜 헬퍼 + 메서드 추가**
 
 파일 상단 헬퍼 블록 끝부분(현재 `START_OF_MONTH` 함수 바로 뒤)에 아래를 추가한다:
 
@@ -308,7 +308,7 @@ async getMedicalDashboardStats() {
 **Files:**
 - Modify: `apps/api/src/dashboard/dashboard.service.ts`
 
-- [ ] **Step 1: `getCoachingStats` 메서드 업데이트**
+- [x] **Step 1: `getCoachingStats` 메서드 업데이트**
 
 `getCoachingStats` 메서드 전체를 아래 코드로 교체한다 (HEAD_COACH/ASSISTANT_COACH 분리, 3개 역할에 Promise.all 병합):
 
@@ -349,7 +349,7 @@ private async getCoachingStats(user: UserCtx) {
 
 주의: `getStats` 메서드의 `case "COACHING_STAFF":` 분기에서 `getCoachingStats(user)`를 `await`로 호출하고 있는지 확인한다. 현재 코드는 `return this.getCoachingStats(user)` — Promise를 그대로 반환하므로 변경 불필요.
 
-- [ ] **Step 2: 테스트 실행 → PASS 확인**
+- [x] **Step 2: 테스트 실행 → PASS 확인**
 
 ```bash
 cd /Users/juno/work/football && npx jest __test__/dashboard/dashboard.service.test.ts --no-coverage
@@ -357,7 +357,7 @@ cd /Users/juno/work/football && npx jest __test__/dashboard/dashboard.service.te
 
 Expected: 전체 17개 테스트 PASS
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 cd /Users/juno/work/football && git add apps/api/__test__/dashboard/dashboard.service.test.ts apps/api/src/dashboard/dashboard.repo.ts apps/api/src/dashboard/dashboard.service.ts && git commit -m "feat(dashboard): add getMedicalDashboardStats and merge into medical roles"
@@ -370,7 +370,7 @@ cd /Users/juno/work/football && git add apps/api/__test__/dashboard/dashboard.se
 **Files:**
 - Modify: `football/src/types/dashboard.ts`
 
-- [ ] **Step 1: `MedicalDashboardStats` 인터페이스 추가 및 3개 타입 확장**
+- [x] **Step 1: `MedicalDashboardStats` 인터페이스 추가 및 3개 타입 확장**
 
 파일 전체를 아래 코드로 교체한다:
 
@@ -481,7 +481,7 @@ export type DashboardStats =
 **Files:**
 - Modify: `football/src/pages/dashboard/dashboardConfig.ts`
 
-- [ ] **Step 1: `DashboardConfig` 인터페이스에 `showMedicalSection` 추가**
+- [x] **Step 1: `DashboardConfig` 인터페이스에 `showMedicalSection` 추가**
 
 ```typescript
 // 기존 DashboardConfig 인터페이스 교체
@@ -494,7 +494,7 @@ export interface DashboardConfig {
 }
 ```
 
-- [ ] **Step 2: `getDashboardConfig` 내 모든 return 객체에 `showMedicalSection` 추가**
+- [x] **Step 2: `getDashboardConfig` 내 모든 return 객체에 `showMedicalSection` 추가**
 
 MEDICAL_DIRECTOR 분기 (`coachingRole === 'MEDICAL_DIRECTOR'`) 반환값:
 ```typescript
@@ -558,7 +558,7 @@ if (coachingRole === 'ASSISTANT_COACH') {
 
 나머지 모든 `return` 객체에 `showMedicalSection: false` 추가 (ADMIN, GM, TD, CONTRACT_MANAGER, SCOUT, EQUIPMENT_MANAGER, TACTICAL_ANALYST, PHYSICAL, specialist, PLAYER, AGENT).
 
-- [ ] **Step 3: TypeScript 빌드 확인**
+- [x] **Step 3: TypeScript 빌드 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -30
@@ -573,7 +573,7 @@ Expected: 에러 없음 (또는 `showMedicalSection` 관련 에러만 → Task 4
 **Files:**
 - Create: `football/src/components/dashboard/MedicalSection.tsx`
 
-- [ ] **Step 1: 컴포넌트 파일 생성**
+- [x] **Step 1: 컴포넌트 파일 생성**
 
 ```typescript
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -704,7 +704,7 @@ export function MedicalSection({ data, role }: Props) {
 **Files:**
 - Modify: `football/src/pages/dashboard/DashboardPage.tsx`
 
-- [ ] **Step 1: import 추가 및 조건부 렌더링 추가**
+- [x] **Step 1: import 추가 및 조건부 렌더링 추가**
 
 파일 상단 import 블록에 추가:
 ```typescript
@@ -773,7 +773,7 @@ return (
 )
 ```
 
-- [ ] **Step 2: TypeScript 최종 확인**
+- [x] **Step 2: TypeScript 최종 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -30
@@ -781,7 +781,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -30
 
 Expected: 에러 없음
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 cd /Users/juno/work/football && git add football/src/types/dashboard.ts football/src/pages/dashboard/dashboardConfig.ts football/src/components/dashboard/MedicalSection.tsx football/src/pages/dashboard/DashboardPage.tsx && git commit -m "feat(dashboard): add MedicalSection KPI for MEDICAL, MEDICAL_DIRECTOR, HEAD_COACH"

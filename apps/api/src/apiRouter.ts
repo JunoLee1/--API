@@ -26,6 +26,11 @@ import coachAvailabilityRouter from "./coach-availability/coach-availability.rou
 import trainingLoadRouter from "./training-load/training-load.routes";
 import teamRouter from "./team/team.routes";
 import playerCallupRouter from "./player-callup/player-callup.routes";
+import youthRegistrationRouter from "./youth-registration/youth-registration.routes";
+import incidentReportRouter from "./incident-report/incident-report.routes";
+import growthReportRouter from "./growth-report/growth-report.routes";
+import safeguardRouter from "./safeguard/safeguard.routes";
+import academyFeeRouter from "./academy-fee/academy-fee.routes";
 
 const apiRouter = Router();
 
@@ -56,5 +61,10 @@ apiRouter.use("/coach-availabilities", coachAvailabilityRouter);
 apiRouter.use("/training-loads", trainingLoadRouter);
 apiRouter.use("/teams", teamRouter);
 apiRouter.use("/player-callups", playerCallupRouter);
+apiRouter.use("/youth-registrations", youthRegistrationRouter);
+apiRouter.use("/incident-reports", incidentReportRouter);
+apiRouter.use("/growth-reports", growthReportRouter);
+apiRouter.use("/safeguard-reports", safeguardRouter);
+apiRouter.use("/academy-fees", academyFeeRouter);
 
 export default apiRouter;

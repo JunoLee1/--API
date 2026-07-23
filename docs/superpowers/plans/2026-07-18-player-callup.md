@@ -38,7 +38,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: `PlayerCallupStatus` enum + `PlayerCallup` 모델 + NotificationType 3개 추가**
+- [x] **Step 1: `PlayerCallupStatus` enum + `PlayerCallup` 모델 + NotificationType 3개 추가**
 
 `schema.prisma`에서 `NotificationType` enum 마지막 값(`TRAINING_SESSION_PENDING`) 다음에 추가:
 
@@ -97,7 +97,7 @@ model PlayerCallup {
   callups PlayerCallup[]
 ```
 
-- [ ] **Step 2: DB 반영**
+- [x] **Step 2: DB 반영**
 
 ```bash
 cd apps/api && npx prisma db push && npx prisma generate
@@ -105,7 +105,7 @@ cd apps/api && npx prisma db push && npx prisma generate
 
 Expected: `Your database is now in sync with your Prisma schema.`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma
@@ -120,7 +120,7 @@ git commit -m "feat(schema): add PlayerCallup model and CALLUP notification type
 - Create: `apps/api/src/player-callup/dto/player-callup.dto.ts`
 - Create: `apps/api/src/player-callup/player-callup.repo.ts`
 
-- [ ] **Step 1: 테스트 작성**
+- [x] **Step 1: 테스트 작성**
 
 `apps/api/__test__/player-callup/player-callup.service.test.ts` 생성:
 
@@ -206,7 +206,7 @@ describe('PlayerCallupRepository', () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 (실패 확인)**
+- [x] **Step 2: 테스트 실행 (실패 확인)**
 
 ```bash
 cd apps/api && npx jest __test__/player-callup/player-callup.service.test.ts --no-coverage 2>&1 | tail -5
@@ -214,7 +214,7 @@ cd apps/api && npx jest __test__/player-callup/player-callup.service.test.ts --n
 
 Expected: FAIL — `PlayerCallupRepository is not a constructor`
 
-- [ ] **Step 3: DTO 생성**
+- [x] **Step 3: DTO 생성**
 
 `apps/api/src/player-callup/dto/player-callup.dto.ts`:
 
@@ -237,7 +237,7 @@ export interface CallupListQuery {
 }
 ```
 
-- [ ] **Step 4: Repository 생성**
+- [x] **Step 4: Repository 생성**
 
 `apps/api/src/player-callup/player-callup.repo.ts`:
 
@@ -322,7 +322,7 @@ export class PlayerCallupRepository {
 }
 ```
 
-- [ ] **Step 5: 테스트 실행 (통과 확인)**
+- [x] **Step 5: 테스트 실행 (통과 확인)**
 
 ```bash
 cd apps/api && npx jest __test__/player-callup/player-callup.service.test.ts --no-coverage 2>&1 | tail -5
@@ -330,7 +330,7 @@ cd apps/api && npx jest __test__/player-callup/player-callup.service.test.ts --n
 
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/player-callup/dto/player-callup.dto.ts \
@@ -349,7 +349,7 @@ git commit -m "feat(player-callup): add repository and DTO with integration test
 - Create: `apps/api/src/player-callup/player-callup.routes.ts`
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: Service 생성**
+- [x] **Step 1: Service 생성**
 
 `apps/api/src/player-callup/player-callup.service.ts`:
 
@@ -441,7 +441,7 @@ export class PlayerCallupService {
 }
 ```
 
-- [ ] **Step 2: Controller 생성**
+- [x] **Step 2: Controller 생성**
 
 `apps/api/src/player-callup/player-callup.controller.ts`:
 
@@ -507,7 +507,7 @@ export class PlayerCallupController {
 }
 ```
 
-- [ ] **Step 3: Routes 생성**
+- [x] **Step 3: Routes 생성**
 
 `apps/api/src/player-callup/player-callup.routes.ts`:
 
@@ -539,7 +539,7 @@ router.patch("/:id/complete", auth, controller.complete);
 export default router;
 ```
 
-- [ ] **Step 4: apiRouter.ts에 등록**
+- [x] **Step 4: apiRouter.ts에 등록**
 
 `apps/api/src/apiRouter.ts` 상단 import 추가:
 
@@ -553,7 +553,7 @@ import playerCallupRouter from "./player-callup/player-callup.routes";
 apiRouter.use("/player-callups", playerCallupRouter);
 ```
 
-- [ ] **Step 5: TypeScript 빌드 확인**
+- [x] **Step 5: TypeScript 빌드 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | head -20
@@ -561,7 +561,7 @@ cd apps/api && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 오류 없음
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/player-callup/ apps/api/src/apiRouter.ts
@@ -579,7 +579,7 @@ git commit -m "feat(player-callup): add service, controller, and routes"
 - Modify: `football/src/App.tsx`
 - Modify: `football/src/layouts/AppShell.tsx`
 
-- [ ] **Step 1: 타입 생성**
+- [x] **Step 1: 타입 생성**
 
 `football/src/types/player-callup.ts`:
 
@@ -624,7 +624,7 @@ export interface CreateCallupDto {
 }
 ```
 
-- [ ] **Step 2: 서비스 생성**
+- [x] **Step 2: 서비스 생성**
 
 `football/src/services/player-callup.service.ts`:
 
@@ -653,7 +653,7 @@ export const callupApi = {
 }
 ```
 
-- [ ] **Step 3: 페이지 생성**
+- [x] **Step 3: 페이지 생성**
 
 `football/src/pages/transfers/PlayerCallupPage.tsx`:
 
@@ -969,7 +969,7 @@ export function PlayerCallupPage() {
 }
 ```
 
-- [ ] **Step 4: App.tsx 라우트 추가**
+- [x] **Step 4: App.tsx 라우트 추가**
 
 `football/src/App.tsx`에 import 추가:
 ```typescript
@@ -981,7 +981,7 @@ import { PlayerCallupPage } from '@/pages/transfers/PlayerCallupPage'
 <Route path="/player-callups" element={<PlayerCallupPage />} />
 ```
 
-- [ ] **Step 5: AppShell.tsx 사이드바 링크 추가**
+- [x] **Step 5: AppShell.tsx 사이드바 링크 추가**
 
 `football/src/layouts/AppShell.tsx`에서 이적 현황 항목 아래에 추가:
 ```typescript
@@ -997,7 +997,7 @@ import { PlayerCallupPage } from '@/pages/transfers/PlayerCallupPage'
 
 `lucide-react`에서 `ArrowUpCircle` import 추가 확인.
 
-- [ ] **Step 6: TypeScript 빌드 확인**
+- [x] **Step 6: TypeScript 빌드 확인**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | head -20
@@ -1005,7 +1005,7 @@ cd football && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 오류 없음
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add football/src/types/player-callup.ts \

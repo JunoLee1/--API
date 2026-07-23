@@ -40,7 +40,7 @@
 - Create: `apps/api/prisma/migrations/20260714000003_add_medical_expense/migration.sql`
 - Modify: `apps/api/src/notification/notification.repo.ts`
 
-- [ ] **Step 1: schema.prisma에 enum 3개 + MedicalExpense 모델 + User 관계 추가**
+- [x] **Step 1: schema.prisma에 enum 3개 + MedicalExpense 모델 + User 관계 추가**
 
 `apps/api/prisma/schema.prisma` 맨 끝(Report 모델 아래)에 추가:
 
@@ -108,7 +108,7 @@ model MedicalExpense {
   medicalExpenses MedicalExpense[]
 ```
 
-- [ ] **Step 2: 마이그레이션 디렉토리 생성 및 SQL 작성**
+- [x] **Step 2: 마이그레이션 디렉토리 생성 및 SQL 작성**
 
 ```bash
 mkdir -p apps/api/prisma/migrations/20260714000003_add_medical_expense
@@ -164,7 +164,7 @@ ALTER TABLE "MedicalExpense" ADD CONSTRAINT "MedicalExpense_leaderReviewerId_fke
 ALTER TABLE "MedicalExpense" ADD CONSTRAINT "MedicalExpense_adminReviewerId_fkey" FOREIGN KEY ("adminReviewerId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 ```
 
-- [ ] **Step 3: 마이그레이션 적용 및 Prisma client 재생성**
+- [x] **Step 3: 마이그레이션 적용 및 Prisma client 재생성**
 
 ```bash
 cd apps/api
@@ -175,7 +175,7 @@ npx prisma generate
 
 Expected: `✔ Generated Prisma Client` 메시지.
 
-- [ ] **Step 4: notification.repo.ts에 createForMedicalDirector + createForAdmin 추가**
+- [x] **Step 4: notification.repo.ts에 createForMedicalDirector + createForAdmin 추가**
 
 `apps/api/src/notification/notification.repo.ts`의 `createForGM` 메서드 아래에 추가:
 
@@ -207,7 +207,7 @@ Expected: `✔ Generated Prisma Client` 메시지.
   }
 ```
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add apps/api/prisma/schema.prisma \
@@ -223,7 +223,7 @@ git commit -m "feat: add MedicalExpense schema, migration, notification helpers"
 **Files:**
 - Create: `apps/api/src/medical-expense/medical-expense.repo.ts`
 
-- [ ] **Step 1: repo 파일 생성**
+- [x] **Step 1: repo 파일 생성**
 
 `apps/api/src/medical-expense/medical-expense.repo.ts`:
 
@@ -338,7 +338,7 @@ export class MedicalExpenseRepository {
 }
 ```
 
-- [ ] **Step 2: 커밋**
+- [x] **Step 2: 커밋**
 
 ```bash
 git add apps/api/src/medical-expense/medical-expense.repo.ts
@@ -355,7 +355,7 @@ git commit -m "feat: add MedicalExpenseRepository"
 - Create: `apps/api/src/medical-expense/medical-expense.routes.ts`
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: medical-expense.service.ts 작성**
+- [x] **Step 1: medical-expense.service.ts 작성**
 
 `apps/api/src/medical-expense/medical-expense.service.ts`:
 
@@ -510,7 +510,7 @@ export class MedicalExpenseService {
 }
 ```
 
-- [ ] **Step 2: medical-expense.controller.ts 작성**
+- [x] **Step 2: medical-expense.controller.ts 작성**
 
 `apps/api/src/medical-expense/medical-expense.controller.ts`:
 
@@ -644,7 +644,7 @@ export class MedicalExpenseController {
 }
 ```
 
-- [ ] **Step 3: medical-expense.routes.ts 작성**
+- [x] **Step 3: medical-expense.routes.ts 작성**
 
 `apps/api/src/medical-expense/medical-expense.routes.ts`:
 
@@ -695,7 +695,7 @@ router.post("/:id/reject", auth, controller.reject);
 export default router;
 ```
 
-- [ ] **Step 4: apiRouter.ts에 등록**
+- [x] **Step 4: apiRouter.ts에 등록**
 
 `apps/api/src/apiRouter.ts`에서 기존 import 블록 맨 아래에 추가:
 
@@ -709,7 +709,7 @@ import medicalExpenseRouter from "./medical-expense/medical-expense.routes";
 apiRouter.use("/medical-expenses", medicalExpenseRouter);
 ```
 
-- [ ] **Step 5: 빌드 확인**
+- [x] **Step 5: 빌드 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit
@@ -717,7 +717,7 @@ cd apps/api && npx tsc --noEmit
 
 Expected: 오류 없음.
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add apps/api/src/medical-expense/ apps/api/src/apiRouter.ts
@@ -732,7 +732,7 @@ git commit -m "feat: add MedicalExpense BE service, controller, routes"
 - Create: `football/src/types/medical-expense.ts`
 - Create: `football/src/services/medical-expense.service.ts`
 
-- [ ] **Step 1: types/medical-expense.ts 작성**
+- [x] **Step 1: types/medical-expense.ts 작성**
 
 `football/src/types/medical-expense.ts`:
 
@@ -831,7 +831,7 @@ export const EXPENSE_STATUS_STYLE: Record<MedicalExpenseStatus, string> = {
 }
 ```
 
-- [ ] **Step 2: services/medical-expense.service.ts 작성**
+- [x] **Step 2: services/medical-expense.service.ts 작성**
 
 `football/src/services/medical-expense.service.ts`:
 
@@ -884,7 +884,7 @@ export const medicalExpenseApi = {
 }
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add football/src/types/medical-expense.ts football/src/services/medical-expense.service.ts
@@ -898,7 +898,7 @@ git commit -m "feat: add MedicalExpense FE types and service"
 **Files:**
 - Create: `football/src/pages/medical-expense/MedicalExpensesPage.tsx`
 
-- [ ] **Step 1: MedicalExpensesPage.tsx 작성**
+- [x] **Step 1: MedicalExpensesPage.tsx 작성**
 
 `football/src/pages/medical-expense/MedicalExpensesPage.tsx`:
 
@@ -1021,7 +1021,7 @@ export function MedicalExpensesPage() {
 }
 ```
 
-- [ ] **Step 2: 커밋**
+- [x] **Step 2: 커밋**
 
 ```bash
 git add football/src/pages/medical-expense/MedicalExpensesPage.tsx
@@ -1035,7 +1035,7 @@ git commit -m "feat: add MedicalExpensesPage"
 **Files:**
 - Create: `football/src/pages/medical-expense/MedicalExpenseFormPage.tsx`
 
-- [ ] **Step 1: MedicalExpenseFormPage.tsx 작성**
+- [x] **Step 1: MedicalExpenseFormPage.tsx 작성**
 
 `football/src/pages/medical-expense/MedicalExpenseFormPage.tsx`:
 
@@ -1209,7 +1209,7 @@ export function MedicalExpenseFormPage() {
 }
 ```
 
-- [ ] **Step 2: 커밋**
+- [x] **Step 2: 커밋**
 
 ```bash
 git add football/src/pages/medical-expense/MedicalExpenseFormPage.tsx
@@ -1223,7 +1223,7 @@ git commit -m "feat: add MedicalExpenseFormPage"
 **Files:**
 - Create: `football/src/pages/medical-expense/MedicalExpenseDetailPage.tsx`
 
-- [ ] **Step 1: MedicalExpenseDetailPage.tsx 작성**
+- [x] **Step 1: MedicalExpenseDetailPage.tsx 작성**
 
 `football/src/pages/medical-expense/MedicalExpenseDetailPage.tsx`:
 
@@ -1508,7 +1508,7 @@ export function MedicalExpenseDetailPage() {
 }
 ```
 
-- [ ] **Step 2: 커밋**
+- [x] **Step 2: 커밋**
 
 ```bash
 git add football/src/pages/medical-expense/MedicalExpenseDetailPage.tsx
@@ -1525,7 +1525,7 @@ git commit -m "feat: add MedicalExpenseDetailPage"
 
 **참고:** Task 9에서 InjuryStatsPage에 Sheet 통합 추가 (명세서 §315: "통계 데이터를 백그라운드에 띄워둔 채로 초안을 보며 수정")
 
-- [ ] **Step 1: AppShell.tsx에 nav 항목 추가**
+- [x] **Step 1: AppShell.tsx에 nav 항목 추가**
 
 `football/src/layouts/AppShell.tsx`의 부상·의료 섹션 끝(부상 통계 항목 아래)에 추가:
 
@@ -1546,7 +1546,7 @@ git commit -m "feat: add MedicalExpenseDetailPage"
 import { ..., Receipt } from 'lucide-react'
 ```
 
-- [ ] **Step 2: App.tsx에 라우트 3개 추가**
+- [x] **Step 2: App.tsx에 라우트 3개 추가**
 
 `football/src/App.tsx` import 블록에 추가:
 
@@ -1565,7 +1565,7 @@ Route 블록(기존 `/reports` 라우트 아래)에 추가:
 <Route path="/medical-expenses/:id" element={<MedicalExpenseDetailPage />} />
 ```
 
-- [ ] **Step 3: TS 타입 확인**
+- [x] **Step 3: TS 타입 확인**
 
 ```bash
 cd football && npx tsc --noEmit
@@ -1573,7 +1573,7 @@ cd football && npx tsc --noEmit
 
 Expected: 오류 없음.
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add football/src/layouts/AppShell.tsx football/src/App.tsx
@@ -1589,7 +1589,7 @@ git commit -m "feat: add medical-expense nav and routes"
 **Files:**
 - Modify: `football/src/pages/injuries/InjuryStatsPage.tsx`
 
-- [ ] **Step 1: InjuryStatsPage에 Sheet 기반 의료비 등록 폼 추가**
+- [x] **Step 1: InjuryStatsPage에 Sheet 기반 의료비 등록 폼 추가**
 
 `football/src/pages/injuries/InjuryStatsPage.tsx`를 다음과 같이 수정:
 
@@ -1741,7 +1741,7 @@ import { Plus } from 'lucide-react'
   )
 ```
 
-- [ ] **Step 2: TS 타입 확인**
+- [x] **Step 2: TS 타입 확인**
 
 ```bash
 cd football && npx tsc --noEmit
@@ -1749,7 +1749,7 @@ cd football && npx tsc --noEmit
 
 Expected: 오류 없음.
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add football/src/pages/injuries/InjuryStatsPage.tsx

@@ -56,7 +56,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: 스키마에 새 enum/모델 추가, 기존 Hospital 제거**
+- [x] **Step 1: 스키마에 새 enum/모델 추가, 기존 Hospital 제거**
 
 ```prisma
 // schema.prisma에 추가할 enum/모델:
@@ -128,7 +128,7 @@ model EquipmentLoan {
 }
 ```
 
-- [ ] **Step 2: Injury 모델 수정 (hospitalId → partnerId)**
+- [x] **Step 2: Injury 모델 수정 (hospitalId → partnerId)**
 
 `apps/api/prisma/schema.prisma`의 Injury 모델에서:
 ```prisma
@@ -141,7 +141,7 @@ model EquipmentLoan {
   partner      Partner? @relation(fields: [partnerId], references: [id])
 ```
 
-- [ ] **Step 3: EquipmentItem 모델에 partnerId 추가**
+- [x] **Step 3: EquipmentItem 모델에 partnerId 추가**
 
 ```prisma
 model EquipmentItem {
@@ -152,7 +152,7 @@ model EquipmentItem {
 }
 ```
 
-- [ ] **Step 4: EquipmentUnit 모델에 loans 역관계 추가**
+- [x] **Step 4: EquipmentUnit 모델에 loans 역관계 추가**
 
 ```prisma
 model EquipmentUnit {
@@ -161,7 +161,7 @@ model EquipmentUnit {
 }
 ```
 
-- [ ] **Step 5: User 모델에 EquipmentLoan 역관계 추가**
+- [x] **Step 5: User 모델에 EquipmentLoan 역관계 추가**
 
 ```prisma
 model User {
@@ -171,25 +171,25 @@ model User {
 }
 ```
 
-- [ ] **Step 6: Hospital 모델 완전 삭제**
+- [x] **Step 6: Hospital 모델 완전 삭제**
 
 schema.prisma에서 `model Hospital { ... }` 블록 전체 삭제.
 
-- [ ] **Step 7: db push 실행**
+- [x] **Step 7: db push 실행**
 
 ```bash
 cd apps/api && npx prisma db push
 ```
 Expected: `Your database is now in sync with your Prisma schema.`
 
-- [ ] **Step 8: Prisma client 재생성 확인**
+- [x] **Step 8: Prisma client 재생성 확인**
 
 ```bash
 ls apps/api/src/generated/enums.ts | xargs grep "PartnerType\|EquipmentLoanStatus"
 ```
 Expected: 두 enum이 출력됨.
 
-- [ ] **Step 9: 커밋**
+- [x] **Step 9: 커밋**
 
 ```bash
 git add apps/api/prisma/schema.prisma
@@ -209,7 +209,7 @@ git commit -m "feat(schema): add Partner, PartnerContract, EquipmentLoan models;
 - Create: `apps/api/__test__/partner/partner.service.test.ts`
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: DTO 작성**
+- [x] **Step 1: DTO 작성**
 
 `apps/api/src/partner/dto/partner.dto.ts`:
 ```typescript
@@ -249,7 +249,7 @@ export interface UpdatePartnerContractDto {
 }
 ```
 
-- [ ] **Step 2: Repo 작성**
+- [x] **Step 2: Repo 작성**
 
 `apps/api/src/partner/partner.repo.ts`:
 ```typescript
@@ -357,7 +357,7 @@ export class PartnerRepository {
 }
 ```
 
-- [ ] **Step 3: Service 작성**
+- [x] **Step 3: Service 작성**
 
 `apps/api/src/partner/partner.service.ts`:
 ```typescript
@@ -404,7 +404,7 @@ export class PartnerService {
 }
 ```
 
-- [ ] **Step 4: 서비스 테스트 작성**
+- [x] **Step 4: 서비스 테스트 작성**
 
 `apps/api/__test__/partner/partner.service.test.ts`:
 ```typescript
@@ -457,14 +457,14 @@ describe("PartnerService - createContract", () => {
 });
 ```
 
-- [ ] **Step 5: 테스트 실행 (실패 확인)**
+- [x] **Step 5: 테스트 실행 (실패 확인)**
 
 ```bash
 cd apps/api && npx jest __test__/partner/partner.service.test.ts --no-coverage
 ```
 Expected: FAIL (PartnerService not found)
 
-- [ ] **Step 6: Controller 작성**
+- [x] **Step 6: Controller 작성**
 
 `apps/api/src/partner/partner.controller.ts`:
 ```typescript
@@ -533,7 +533,7 @@ export class PartnerController {
 }
 ```
 
-- [ ] **Step 7: Routes 작성**
+- [x] **Step 7: Routes 작성**
 
 `apps/api/src/partner/partner.routes.ts`:
 ```typescript
@@ -561,7 +561,7 @@ router.patch("/:id/contracts/:contractId", auth, controller.updateContract);
 export default router;
 ```
 
-- [ ] **Step 8: apiRouter에 등록, /hospitals 제거**
+- [x] **Step 8: apiRouter에 등록, /hospitals 제거**
 
 `apps/api/src/apiRouter.ts`:
 ```typescript
@@ -574,21 +574,21 @@ import partnerRouter from "./partner/partner.routes";
 apiRouter.use("/partners", partnerRouter);
 ```
 
-- [ ] **Step 9: 테스트 통과 확인**
+- [x] **Step 9: 테스트 통과 확인**
 
 ```bash
 cd apps/api && npx jest __test__/partner/partner.service.test.ts --no-coverage
 ```
 Expected: PASS (4 tests)
 
-- [ ] **Step 10: TS 체크**
+- [x] **Step 10: TS 체크**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | grep -v "country.repo\|ErrorHandler"
 ```
 Expected: 출력 없음 (오류 없음)
 
-- [ ] **Step 11: 커밋**
+- [x] **Step 11: 커밋**
 
 ```bash
 git add apps/api/src/partner/ apps/api/__test__/partner/ apps/api/src/apiRouter.ts
@@ -603,7 +603,7 @@ git commit -m "feat(partner): unified Partner + PartnerContract CRUD API (replac
 - Modify: `apps/api/src/injury/dto/injury.dto.ts`
 - Modify: `apps/api/src/injury/injury.repo.ts`
 
-- [ ] **Step 1: DTO 수정**
+- [x] **Step 1: DTO 수정**
 
 `apps/api/src/injury/dto/injury.dto.ts`에서:
 ```typescript
@@ -618,7 +618,7 @@ git commit -m "feat(partner): unified Partner + PartnerContract CRUD API (replac
   customHospitalName?: string;
 ```
 
-- [ ] **Step 2: Repo INJURY_SELECT 수정**
+- [x] **Step 2: Repo INJURY_SELECT 수정**
 
 `apps/api/src/injury/injury.repo.ts`의 `INJURY_SELECT`에서:
 ```typescript
@@ -635,7 +635,7 @@ git commit -m "feat(partner): unified Partner + PartnerContract CRUD API (replac
   partner: { select: { id: true, name: true } },
 ```
 
-- [ ] **Step 3: Repo create() 수정**
+- [x] **Step 3: Repo create() 수정**
 
 `apps/api/src/injury/injury.repo.ts`의 `create()` 메서드에서:
 ```typescript
@@ -648,20 +648,20 @@ git commit -m "feat(partner): unified Partner + PartnerContract CRUD API (replac
   partnerId: dto.partnerId ?? null,
 ```
 
-- [ ] **Step 4: TS 체크**
+- [x] **Step 4: TS 체크**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | grep -v "country.repo\|ErrorHandler"
 ```
 Expected: 출력 없음
 
-- [ ] **Step 5: hospital/ 디렉토리 삭제**
+- [x] **Step 5: hospital/ 디렉토리 삭제**
 
 ```bash
 rm -rf apps/api/src/hospital/
 ```
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add apps/api/src/injury/ && git rm -r apps/api/src/hospital/
@@ -676,7 +676,7 @@ git commit -m "refactor(injury): migrate hospitalId → partnerId; remove Hospit
 - Modify: `apps/api/src/notification/notification.repo.ts`
 - Modify: `apps/api/src/notification/notification.service.ts`
 
-- [ ] **Step 1: notification.repo.ts의 findExpiringContracts 교체**
+- [x] **Step 1: notification.repo.ts의 findExpiringContracts 교체**
 
 `apps/api/src/notification/notification.repo.ts`에서 기존 `findExpiringContracts` 메서드를:
 ```typescript
@@ -695,7 +695,7 @@ git commit -m "refactor(injury): migrate hospitalId → partnerId; remove Hospit
   }
 ```
 
-- [ ] **Step 2: notification.service.ts의 getPartnerAlerts 교체**
+- [x] **Step 2: notification.service.ts의 getPartnerAlerts 교체**
 
 `apps/api/src/notification/notification.service.ts`의 `getPartnerAlerts()`:
 ```typescript
@@ -720,7 +720,7 @@ git commit -m "refactor(injury): migrate hospitalId → partnerId; remove Hospit
   }
 ```
 
-- [ ] **Step 3: TS 체크 + 커밋**
+- [x] **Step 3: TS 체크 + 커밋**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | grep -v "country.repo\|ErrorHandler"
@@ -740,7 +740,7 @@ git commit -m "refactor(notification): partner alerts use PartnerContract instea
 - Modify: `apps/api/src/equipment/equipment.routes.ts`
 - Create: `apps/api/__test__/equipment/equipment.loan.service.test.ts`
 
-- [ ] **Step 1: DTO 추가**
+- [x] **Step 1: DTO 추가**
 
 `apps/api/src/equipment/dto/equipment.dto.ts` 끝에 추가:
 ```typescript
@@ -757,7 +757,7 @@ export interface UpdateEquipmentLoanStatusDto {
 }
 ```
 
-- [ ] **Step 2: Repo에 Loan 메서드 추가**
+- [x] **Step 2: Repo에 Loan 메서드 추가**
 
 `apps/api/src/equipment/equipment.repo.ts`에 추가:
 ```typescript
@@ -819,7 +819,7 @@ const LOAN_SELECT = {
   findEquipmentManagers() { /* 이미 존재 */ }
 ```
 
-- [ ] **Step 3: 서비스 테스트 작성**
+- [x] **Step 3: 서비스 테스트 작성**
 
 `apps/api/__test__/equipment/equipment.loan.service.test.ts`:
 ```typescript
@@ -878,14 +878,14 @@ describe("EquipmentService - approveLoan / rejectLoan", () => {
 });
 ```
 
-- [ ] **Step 4: 테스트 실행 (실패 확인)**
+- [x] **Step 4: 테스트 실행 (실패 확인)**
 
 ```bash
 cd apps/api && npx jest __test__/equipment/equipment.loan.service.test.ts --no-coverage
 ```
 Expected: FAIL
 
-- [ ] **Step 5: Service에 Loan 메서드 추가**
+- [x] **Step 5: Service에 Loan 메서드 추가**
 
 `apps/api/src/equipment/equipment.service.ts`에 추가:
 ```typescript
@@ -960,14 +960,14 @@ Expected: FAIL
   }
 ```
 
-- [ ] **Step 6: 테스트 통과 확인**
+- [x] **Step 6: 테스트 통과 확인**
 
 ```bash
 cd apps/api && npx jest __test__/equipment/equipment.loan.service.test.ts --no-coverage
 ```
 Expected: PASS
 
-- [ ] **Step 7: Controller에 Loan 핸들러 추가**
+- [x] **Step 7: Controller에 Loan 핸들러 추가**
 
 `apps/api/src/equipment/equipment.controller.ts`에 추가:
 ```typescript
@@ -1025,7 +1025,7 @@ Expected: PASS
   };
 ```
 
-- [ ] **Step 8: Routes에 Loan 경로 추가**
+- [x] **Step 8: Routes에 Loan 경로 추가**
 
 `apps/api/src/equipment/equipment.routes.ts`의 기존 라우트 위에 추가:
 ```typescript
@@ -1039,7 +1039,7 @@ router.post("/loans/:loanId/issue", auth, controller.issueLoan);
 router.post("/loans/:loanId/return", auth, controller.returnLoan);
 ```
 
-- [ ] **Step 9: TS 체크 + 커밋**
+- [x] **Step 9: TS 체크 + 커밋**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | grep -v "country.repo\|ErrorHandler"
@@ -1059,7 +1059,7 @@ git commit -m "feat(equipment): EquipmentLoan CRUD API with REQUESTED→APPROVED
 - Modify: `football/src/types/equipment.ts`
 - Modify: `football/src/services/equipment.service.ts`
 
-- [ ] **Step 1: partner.ts 타입 작성**
+- [x] **Step 1: partner.ts 타입 작성**
 
 `football/src/types/partner.ts`:
 ```typescript
@@ -1125,7 +1125,7 @@ export const CONTRACT_STATUS_STYLE: Record<PartnerContractStatus, string> = {
 }
 ```
 
-- [ ] **Step 2: partner.service.ts 작성**
+- [x] **Step 2: partner.service.ts 작성**
 
 `football/src/services/partner.service.ts`:
 ```typescript
@@ -1152,13 +1152,13 @@ export const partnerApi = {
 }
 ```
 
-- [ ] **Step 3: hospital.ts, hospital.service.ts 삭제**
+- [x] **Step 3: hospital.ts, hospital.service.ts 삭제**
 
 ```bash
 rm football/src/types/hospital.ts football/src/services/hospital.service.ts
 ```
 
-- [ ] **Step 4: equipment.ts에 EquipmentLoan 타입 추가**
+- [x] **Step 4: equipment.ts에 EquipmentLoan 타입 추가**
 
 `football/src/types/equipment.ts`에 추가:
 ```typescript
@@ -1204,7 +1204,7 @@ export interface EquipmentItem {
 }
 ```
 
-- [ ] **Step 5: equipment.service.ts에 loanApi 추가**
+- [x] **Step 5: equipment.service.ts에 loanApi 추가**
 
 `football/src/services/equipment.service.ts`에 추가:
 ```typescript
@@ -1233,7 +1233,7 @@ export const loanApi = {
 }
 ```
 
-- [ ] **Step 6: InjuriesPage의 hospital 참조 수정**
+- [x] **Step 6: InjuriesPage의 hospital 참조 수정**
 
 `football/src/pages/injuries/InjuriesPage.tsx`에서:
 ```typescript
@@ -1250,14 +1250,14 @@ import type { Partner } from '@/types/partner'
 // hospital.partnerId
 ```
 
-- [ ] **Step 7: TS 체크**
+- [x] **Step 7: TS 체크**
 
 ```bash
 cd football && npx tsc --noEmit
 ```
 Expected: 출력 없음
 
-- [ ] **Step 8: 커밋**
+- [x] **Step 8: 커밋**
 
 ```bash
 git add football/src/types/ football/src/services/ football/src/pages/injuries/
@@ -1274,7 +1274,7 @@ git commit -m "feat(frontend): Partner/Loan types and services; migrate Injuries
 - Modify: `football/src/layouts/AppShell.tsx`
 - Modify: `football/src/App.tsx`
 
-- [ ] **Step 1: PartnersPage 작성**
+- [x] **Step 1: PartnersPage 작성**
 
 `football/src/pages/admin/PartnersPage.tsx`:
 ```typescript
@@ -1586,7 +1586,7 @@ export function PartnersPage() {
 }
 ```
 
-- [ ] **Step 2: AppShell에 /admin/partners 네비 항목 추가**
+- [x] **Step 2: AppShell에 /admin/partners 네비 항목 추가**
 
 `football/src/layouts/AppShell.tsx`의 NAV_ITEMS 배열에서 `/admin/users` 항목 바로 앞에 추가:
 ```typescript
@@ -1602,7 +1602,7 @@ export function PartnersPage() {
 
 `Building2`를 lucide-react import에 추가.
 
-- [ ] **Step 3: App.tsx에 라우트 추가**
+- [x] **Step 3: App.tsx에 라우트 추가**
 
 `football/src/App.tsx`에서:
 ```typescript
@@ -1611,7 +1611,7 @@ import { PartnersPage } from '@/pages/admin/PartnersPage'
 <Route path="/admin/partners" element={<PartnersPage />} />
 ```
 
-- [ ] **Step 4: TS 체크 + 커밋**
+- [x] **Step 4: TS 체크 + 커밋**
 
 ```bash
 cd football && npx tsc --noEmit
@@ -1626,7 +1626,7 @@ git commit -m "feat(frontend): PartnersPage with HOSPITAL/MANUFACTURER tabs and 
 **Files:**
 - Modify: `football/src/pages/equipment/EquipmentPage.tsx`
 
-- [ ] **Step 1: 대여 탭 추가**
+- [x] **Step 1: 대여 탭 추가**
 
 `football/src/pages/equipment/EquipmentPage.tsx` 상단 imports에 추가:
 ```typescript
@@ -1637,7 +1637,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 ```
 
-- [ ] **Step 2: LoanRequestDialog 컴포넌트 추가**
+- [x] **Step 2: LoanRequestDialog 컴포넌트 추가**
 
 EquipmentPage.tsx 내 컴포넌트 영역에 추가:
 ```typescript
@@ -1693,7 +1693,7 @@ function LoanRequestDialog({ open, onOpenChange, onSaved }: {
 }
 ```
 
-- [ ] **Step 3: LoansTab 컴포넌트 추가**
+- [x] **Step 3: LoansTab 컴포넌트 추가**
 
 ```typescript
 function LoansTab({ isKitManager }: { isKitManager: boolean }) {
@@ -1786,7 +1786,7 @@ function LoansTab({ isKitManager }: { isKitManager: boolean }) {
 }
 ```
 
-- [ ] **Step 4: EquipmentPage 메인에 Tabs 추가**
+- [x] **Step 4: EquipmentPage 메인에 Tabs 추가**
 
 기존 EquipmentPage의 최상위 return에서 장비 목록 전체를 `<TabsContent value="items">`로 감싸고, 대여 탭을 추가:
 
@@ -1819,7 +1819,7 @@ return (
 )
 ```
 
-- [ ] **Step 5: TS 체크 + 커밋**
+- [x] **Step 5: TS 체크 + 커밋**
 
 ```bash
 cd football && npx tsc --noEmit

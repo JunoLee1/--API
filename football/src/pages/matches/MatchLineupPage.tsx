@@ -18,8 +18,10 @@ import { POSITION_ABBR } from '@/types/player'
 import type { Player } from '@/types/player'
 import { playerApi } from '@/services/player.service'
 import { lineupApi } from '@/services/lineup.service'
+import { injuryApi } from '@/services/injury.service'
 import type { LineupPlayer, LineupDragPayload } from '@/types/lineup'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { useLiteMode } from '@/hooks/useLiteMode'
 
 const DRAG_KEY = 'text/lineup-player'
 
@@ -30,11 +32,13 @@ function PitchSlot({
   player,
   onDrop,
   onRemove,
+  showMismatch,
 }: {
   slotDef: { key: string; position: string; top: number; left: number }
   player: LineupPlayer | null
   onDrop: (slotKey: string, payload: LineupDragPayload) => void
   onRemove: (slotKey: string) => void
+  showMismatch: boolean
 }) {
   const style: React.CSSProperties = {
     position: 'absolute',
@@ -56,6 +60,7 @@ function PitchSlot({
   }
 
   if (player) {
+    const isMismatch = showMismatch && player.position !== slotDef.position
     return (
       <div
         style={style}
@@ -74,9 +79,14 @@ function PitchSlot({
         onDragOver={handleDragOver}
         onDrop={handleDrop}
         onDoubleClick={() => onRemove(slotDef.key)}
-        title="더블클릭으로 해제"
-        className="flex flex-col items-center gap-0.5 cursor-grab active:cursor-grabbing z-10"
+        title={isMismatch ? `포지션 불일치: 선수 ${player.position} / 슬롯 ${slotDef.position}` : '더블클릭으로 해제'}
+        className="relative flex flex-col items-center gap-0.5 cursor-grab active:cursor-grabbing z-10"
       >
+        {isMismatch && (
+          <div className="absolute -top-1 -right-1 bg-yellow-400 text-yellow-900 rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-bold z-20">
+            ⚠
+          </div>
+        )}
         <div className="bg-green-800/90 border-2 border-green-400 rounded-full px-2 py-1 text-white text-[10px] font-bold whitespace-nowrap shadow-lg">
           {POSITION_ABBR[player.position as keyof typeof POSITION_ABBR] ?? player.position}
         </div>
@@ -108,17 +118,22 @@ export function MatchLineupPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user } = useCurrentUser()
+  const isLite = useLiteMode()
   const matchId = Number(id)
 
   const [allPlayers, setAllPlayers] = useState<Player[]>([])
+  const [injuredPlayerIds, setInjuredPlayerIds] = useState<Set<string>>(new Set())
   const [formation, setFormation] = useState<SupportedFormation>('4-3-3')
   const [slots, setSlots] = useState<SlotMap>({})
   const [bench, setBench] = useState<LineupPlayer[]>([])
   const [isConfirmed, setIsConfirmed] = useState(false)
+  const [teamType, setTeamType] = useState<'FIRST_TEAM' | 'YOUTH' | null>(null)
   const [loading, setLoading] = useState(true)
   const [dirty, setDirty] = useState(false)
   const [saving, setSaving] = useState(false)
   const [confirming, setConfirming] = useState(false)
+
+  const showMismatch = teamType === 'FIRST_TEAM'
 
   const canEdit =
     user?.role === 'ADMIN' ||
@@ -130,12 +145,15 @@ export function MatchLineupPage() {
     Promise.all([
       playerApi.list({ status: 'ACTIVE' }),
       lineupApi.get(matchId),
+      injuryApi.active().catch(() => [] as { playerId: string }[]),
     ])
-      .then(([players, lineup]) => {
+      .then(([players, lineup, injuries]) => {
         setAllPlayers(players)
+        setInjuredPlayerIds(new Set(injuries.map((inj) => inj.playerId)))
         if (lineup) {
           setFormation(lineup.formation)
           setIsConfirmed(lineup.isConfirmed)
+          setTeamType(lineup.teamType ?? null)
           const slotMap: SlotMap = {}
           const benchList: LineupPlayer[] = []
           for (const s of lineup.slots) {
@@ -247,8 +265,13 @@ export function MatchLineupPage() {
       setIsConfirmed(result?.isConfirmed ?? false)
       setDirty(false)
       toast.success('라인업이 저장되었습니다.')
-    } catch {
-      toast.error('저장에 실패했습니다.')
+    } catch (err: unknown) {
+      const code = (err as { response?: { data?: { code?: string } } })?.response?.data?.code
+      if (code === 'INJURED_PLAYER_IN_LINEUP') {
+        toast.error('부상 중인 선수가 포함되어 있습니다. 라인업에서 제외해 주세요.')
+      } else {
+        toast.error('저장에 실패했습니다.')
+      }
     } finally {
       setSaving(false)
     }
@@ -300,13 +323,18 @@ export function MatchLineupPage() {
             ))}
           </SelectContent>
         </Select>
+        {isLite && (
+          <div className="rounded-md border border-yellow-200 bg-yellow-50 px-3 py-1.5 text-xs text-yellow-800">
+            Lite Mode — 드래그앤드롭 비활성
+          </div>
+        )}
         {canEdit && (
-          <Button size="sm" variant="outline" disabled={!dirty || saving} onClick={handleSave}>
+          <Button size="sm" variant="outline" disabled={!dirty || saving || isLite} onClick={handleSave}>
             {saving ? '저장 중...' : '저장'}
           </Button>
         )}
         {canConfirm && !isConfirmed && (
-          <Button size="sm" disabled={dirty || confirming} onClick={handleConfirm}>
+          <Button size="sm" disabled={dirty || confirming || isLite} onClick={handleConfirm}>
             <Check className="h-3.5 w-3.5 mr-1.5" />
             {confirming ? '확정 중...' : '라인업 확정'}
           </Button>
@@ -327,31 +355,37 @@ export function MatchLineupPage() {
             <p className="text-[10px] text-muted-foreground mt-0.5">{pool.length}명 대기</p>
           </div>
           <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-1">
-            {pool.map((p) => (
-              <div
-                key={p.id}
-                draggable={canEdit}
-                onDragStart={(e) => {
-                  const payload: LineupDragPayload = {
-                    playerId: p.id,
-                    playerName: p.playerName,
-                    position: p.position,
-                    src: 'POOL',
-                  }
-                  e.dataTransfer.setData(DRAG_KEY, JSON.stringify(payload))
-                  e.dataTransfer.effectAllowed = 'move'
-                }}
-                className={cn(
-                  'flex items-center gap-2 rounded-lg border bg-background p-2 text-[11px]',
-                  canEdit ? 'cursor-grab active:cursor-grabbing' : 'cursor-default',
-                )}
-              >
-                <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-[9px] font-bold shrink-0">
-                  {POSITION_ABBR[p.position as keyof typeof POSITION_ABBR] ?? '?'}
+            {pool.map((p) => {
+              const isInjured = injuredPlayerIds.has(p.id)
+              return (
+                <div
+                  key={p.id}
+                  draggable={canEdit && !isInjured}
+                  onDragStart={(e) => {
+                    if (isInjured) { e.preventDefault(); return }
+                    const payload: LineupDragPayload = {
+                      playerId: p.id,
+                      playerName: p.playerName,
+                      position: p.position,
+                      src: 'POOL',
+                    }
+                    e.dataTransfer.setData(DRAG_KEY, JSON.stringify(payload))
+                    e.dataTransfer.effectAllowed = 'move'
+                  }}
+                  title={isInjured ? '부상 중 - 라인업 등록 불가' : undefined}
+                  className={cn(
+                    'flex items-center gap-2 rounded-lg border bg-background p-2 text-[11px]',
+                    isInjured ? 'opacity-50 cursor-not-allowed' : canEdit ? 'cursor-grab active:cursor-grabbing' : 'cursor-default',
+                  )}
+                >
+                  <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-[9px] font-bold shrink-0">
+                    {POSITION_ABBR[p.position as keyof typeof POSITION_ABBR] ?? '?'}
+                  </div>
+                  <span className="truncate font-medium">{p.playerName}</span>
+                  {isInjured && <span className="ml-auto text-red-500 shrink-0">🚑</span>}
                 </div>
-                <span className="truncate font-medium">{p.playerName}</span>
-              </div>
-            ))}
+              )
+            })}
             {pool.length === 0 && (
               <p className="text-[10px] text-muted-foreground text-center pt-4">모든 선수가 배치됨</p>
             )}
@@ -368,6 +402,7 @@ export function MatchLineupPage() {
                   player={slots[slotDef.key] ?? null}
                   onDrop={canEdit ? handleSlotDrop : () => {}}
                   onRemove={canEdit ? handleSlotRemove : () => {}}
+                  showMismatch={showMismatch}
                 />
               ))}
             </FootballPitch>
@@ -385,11 +420,14 @@ export function MatchLineupPage() {
                 canEdit ? 'border-muted-foreground/30' : 'border-muted/20',
               )}
             >
-              {bench.map((p, i) => (
+              {bench.map((p, i) => {
+                const isInjured = injuredPlayerIds.has(p.id)
+                return (
                 <div
                   key={p.id}
-                  draggable={canEdit}
+                  draggable={canEdit && !isInjured}
                   onDragStart={(e) => {
+                    if (isInjured) { e.preventDefault(); return }
                     const payload: LineupDragPayload = {
                       playerId: p.id,
                       playerName: p.playerName,
@@ -400,8 +438,13 @@ export function MatchLineupPage() {
                     e.dataTransfer.setData(DRAG_KEY, JSON.stringify(payload))
                     e.dataTransfer.effectAllowed = 'move'
                   }}
-                  className="flex items-center gap-1 rounded-full border bg-muted px-2 py-0.5 text-[10px] cursor-grab"
+                  title={isInjured ? '부상 중 - 라인업 등록 불가' : undefined}
+                  className={cn(
+                    'flex items-center gap-1 rounded-full border bg-muted px-2 py-0.5 text-[10px]',
+                    isInjured ? 'opacity-50 cursor-not-allowed border-red-300' : 'cursor-grab',
+                  )}
                 >
+                  {isInjured && <span className="text-red-500 text-[9px]">🚑</span>}
                   <span>{p.playerName}</span>
                   {canEdit && (
                     <button
@@ -415,7 +458,8 @@ export function MatchLineupPage() {
                     </button>
                   )}
                 </div>
-              ))}
+              )
+              })}
               {bench.length === 0 && (
                 <span className="text-[10px] text-muted-foreground self-center">
                   선수를 여기로 드래그하면 후보로 등록됩니다

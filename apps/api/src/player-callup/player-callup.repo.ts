@@ -8,7 +8,7 @@ const SELECT = {
   startDate: true,
   endDate: true,
   createdAt: true,
-  player: { select: { id: true, playerName: true, position: true } },
+  player: { select: { id: true, playerName: true, position: true, guardianId: true } },
   fromTeam: { select: { id: true, name: true } },
   toTeam: { select: { id: true, name: true } },
   requestedBy: { select: { id: true, nickname: true } },

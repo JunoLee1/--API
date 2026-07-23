@@ -1,0 +1,30 @@
+export type IncidentReportStatus = 'DRAFT' | 'SUBMITTED' | 'SIGNED'
+export type IncidentType = 'MATCH' | 'TRAINING'
+
+export interface IncidentReport {
+  id: number
+  playerId: string
+  player: { id: string; playerName: string; guardianId: number | null }
+  teamId: number
+  team: { id: number; name: string }
+  type: IncidentType
+  matchId: number | null
+  sessionId: number | null
+  description: string
+  reportedById: number
+  reportedBy: { id: number; username: string }
+  supervisorSigned: boolean
+  medicalSigned: boolean
+  injuryId: number | null
+  status: IncidentReportStatus
+  createdAt: string
+}
+
+export interface CreateIncidentReportPayload {
+  playerId: string
+  teamId: number
+  type: IncidentType
+  matchId?: number
+  sessionId?: number
+  description: string
+}

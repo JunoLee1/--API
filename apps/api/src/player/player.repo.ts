@@ -42,6 +42,7 @@ export class PlayerRepository {
         ...PLAYER_SELECT,
         userId: true,
         agentId: true,
+        team: { select: { id: true, type: true } },
         contracts: {
           select: {
             id: true,
@@ -156,5 +157,23 @@ export class PlayerRepository {
       orderBy: { session: { date: "desc" } },
       take: 50,
     });
+  }
+
+  async getPositionDiversity(playerId: string): Promise<{ position: string; totalMinutes: number }[]> {
+    const rows = await this.prisma.$queryRaw<{ position: string; total_minutes: bigint }[]>`
+      SELECT
+        ls."slotKey" AS position,
+        COALESCE(SUM(pms."minutesPlayed"), 0) AS total_minutes
+      FROM "LineupSlot" ls
+      INNER JOIN "MatchLineup" ml ON ml.id = ls."lineupId"
+      LEFT JOIN "PlayerMatchStats" pms
+        ON pms."matchId" = ml."matchId" AND pms."playerId" = ls."playerId"
+      WHERE ls."playerId" = ${playerId}
+        AND ls."isStarter" = true
+      GROUP BY ls."slotKey"
+      HAVING COALESCE(SUM(pms."minutesPlayed"), 0) > 0
+      ORDER BY total_minutes DESC
+    `;
+    return rows.map((r) => ({ position: r.position, totalMinutes: Number(r.total_minutes) }));
   }
 }

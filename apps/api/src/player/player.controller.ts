@@ -126,6 +126,13 @@ export class PlayerController {
     } catch (err) { next(err); }
   };
 
+  getPositionDiversity = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await this.service.getPositionDiversity(String(req.params["id"]));
+      res.json(data);
+    } catch (err) { next(err); }
+  };
+
   getRadar = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const playerId = String(req.params["id"]);

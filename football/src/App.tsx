@@ -1,10 +1,11 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { Toaster } from '@/components/ui/sonner'
 import { AppShell } from '@/layouts/AppShell'
 import { ConfirmProvider } from '@/lib/confirm-dialog'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { PlayersPage } from '@/pages/players/PlayersPage'
+import { YouthPlayersPage } from '@/pages/players/YouthPlayersPage'
 import { PlayerDetailPage } from '@/pages/players/PlayerDetailPage'
 import { ContractsPage } from '@/pages/contracts/ContractsPage'
 import { InjuriesPage } from '@/pages/injuries/InjuriesPage'
@@ -21,6 +22,7 @@ import { CoachAvailabilityPage } from '@/pages/training/CoachAvailabilityPage'
 import { CoachDashboardPage } from '@/pages/training/CoachDashboardPage'
 import { MatchesPage } from '@/pages/matches/MatchesPage'
 import { MatchDetailPage } from '@/pages/matches/MatchDetailPage'
+import { MatchLineupPage } from '@/pages/matches/MatchLineupPage'
 import { RankingsPage } from '@/pages/matches/RankingsPage'
 import { TacticalAnalysisPage } from '@/pages/tactical/TacticalAnalysisPage'
 import { EquipmentPage } from '@/pages/equipment/EquipmentPage'
@@ -33,6 +35,8 @@ import { TeamsPage } from '@/pages/admin/TeamsPage'
 import { SeasonsPage } from '@/pages/admin/SeasonsPage'
 import { AuditLogPage } from '@/pages/admin/AuditLogPage'
 import { LoginHistoryPage } from '@/pages/admin/LoginHistoryPage'
+import SafeguardReportPage from '@/pages/admin/SafeguardReportPage'
+import TeamSettingsPage from '@/pages/admin/TeamSettingsPage'
 import { ContractDetailPage } from '@/pages/contracts/ContractDetailPage'
 import { ReportsPage } from '@/pages/reports/ReportsPage'
 import { ReportFormPage } from '@/pages/reports/ReportFormPage'
@@ -44,6 +48,14 @@ import { CoachDetailPage } from '@/pages/coaches/CoachDetailPage'
 import { MedicalExpenseFormPage } from '@/pages/medical-expense/MedicalExpenseFormPage'
 import { MedicalExpenseDetailPage } from '@/pages/medical-expense/MedicalExpenseDetailPage'
 import { SquadPlannerPage } from '@/pages/squad/SquadPlannerPage'
+import YouthRegistrationPage from '@/pages/youth/YouthRegistrationPage'
+import IncidentReportPage from '@/pages/youth/IncidentReportPage'
+import AcademyFeePage from '@/pages/youth/AcademyFeePage'
+
+function GrowthReportRedirect() {
+  const { playerId } = useParams<{ playerId: string }>()
+  return <Navigate to={`/players/${playerId}`} replace />
+}
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const loggedIn = localStorage.getItem('loggedIn')
@@ -66,11 +78,16 @@ function App() {
           >
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/players" element={<PlayersPage />} />
+            <Route path="/youth-players" element={<YouthPlayersPage />} />
             <Route path="/players/:id" element={<PlayerDetailPage />} />
             <Route path="/contracts" element={<ContractsPage />} />
             <Route path="/contracts/:id" element={<ContractDetailPage />} />
             <Route path="/transfers" element={<TransfersPage />} />
             <Route path="/player-callups" element={<PlayerCallupPage />} />
+            <Route path="/youth-registrations" element={<YouthRegistrationPage />} />
+            <Route path="/incident-reports" element={<IncidentReportPage />} />
+            <Route path="/academy-fees" element={<AcademyFeePage />} />
+            <Route path="/growth-reports/:playerId" element={<GrowthReportRedirect />} />
             <Route path="/injuries" element={<InjuriesPage />} />
             <Route path="/injuries/:id" element={<InjuryDetailPage />} />
             <Route path="/injuries/stats" element={<InjuryStatsPage />} />
@@ -85,6 +102,7 @@ function App() {
             <Route path="/matches/analysis" element={<TacticalAnalysisPage />} />
             <Route path="/squad" element={<SquadPlannerPage />} />
             <Route path="/matches/rankings" element={<RankingsPage />} />
+            <Route path="/matches/:id/lineup" element={<MatchLineupPage />} />
             <Route path="/matches/:id" element={<MatchDetailPage />} />
             <Route path="/equipment" element={<EquipmentPage />} />
             <Route path="/prospects" element={<ProspectsPage />} />
@@ -106,6 +124,8 @@ function App() {
             <Route path="/admin/seasons" element={<SeasonsPage />} />
             <Route path="/admin/audit-logs" element={<AuditLogPage />} />
             <Route path="/admin/login-history" element={<LoginHistoryPage />} />
+            <Route path="/safeguard-reports" element={<SafeguardReportPage />} />
+            <Route path="/admin/team-settings" element={<TeamSettingsPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/login" replace />} />

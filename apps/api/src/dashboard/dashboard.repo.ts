@@ -267,6 +267,89 @@ export class DashboardRepository {
     return { managedPlayerCount, injuredManagedPlayerCount, expiringManagedContractCount };
   }
 
+  async getYouthDevelopmentStats() {
+    const rows = await this.prisma.$queryRaw<
+      Array<{
+        playerId: string;
+        playerName: string;
+        teamId: number;
+        teamName: string;
+        slotKey: string;
+        totalMinutes: number;
+      }>
+    >`
+      SELECT
+        p.id                      AS "playerId",
+        p."playerName"            AS "playerName",
+        t.id                      AS "teamId",
+        t.name                    AS "teamName",
+        ls."slotKey"              AS "slotKey",
+        COALESCE(SUM(pms."minutesPlayed"), 0)::int AS "totalMinutes"
+      FROM "Player" p
+      JOIN "Team" t ON t.id = p."teamId"
+      JOIN "MatchLineup" ml ON ml."matchId" IN (
+        SELECT id FROM "Match" WHERE "teamId" = t.id
+      )
+      JOIN "LineupSlot" ls ON ls."lineupId" = ml.id AND ls."playerId" = p.id
+      LEFT JOIN "PlayerMatchStats" pms ON pms."matchId" = ml."matchId" AND pms."playerId" = p.id
+      WHERE t.type = 'YOUTH'
+        AND pms."minutesPlayed" IS NOT NULL
+        AND pms."minutesPlayed" > 0
+      GROUP BY p.id, p."playerName", t.id, t.name, ls."slotKey"
+      ORDER BY t.id, p.id
+    `;
+
+    const byPlayer = new Map<
+      string,
+      { playerId: string; playerName: string; teamId: number; teamName: string; slots: Map<string, number>; totalMinutes: number }
+    >();
+
+    for (const row of rows) {
+      if (!byPlayer.has(row.playerId)) {
+        byPlayer.set(row.playerId, {
+          playerId: row.playerId, playerName: row.playerName,
+          teamId: row.teamId, teamName: row.teamName,
+          slots: new Map(), totalMinutes: 0,
+        });
+      }
+      const entry = byPlayer.get(row.playerId)!;
+      entry.slots.set(row.slotKey, row.totalMinutes);
+      entry.totalMinutes += row.totalMinutes;
+    }
+
+    const players = Array.from(byPlayer.values()).map((entry) => {
+      const slotDistribution: Record<string, number> = {};
+      let maxPct = 0;
+      let biasedSlot: string | null = null;
+      for (const [slot, minutes] of entry.slots.entries()) {
+        const pct = entry.totalMinutes > 0 ? minutes / entry.totalMinutes : 0;
+        slotDistribution[slot] = Math.round(pct * 100);
+        if (pct > maxPct) { maxPct = pct; biasedSlot = slot; }
+      }
+      return {
+        playerId: entry.playerId, playerName: entry.playerName,
+        teamId: entry.teamId, teamName: entry.teamName,
+        totalMinutes: entry.totalMinutes, slotDistribution,
+        biasedSlot, biasedPct: Math.round(maxPct * 100), isBiased: maxPct >= 0.8,
+      };
+    });
+
+    const byTeam = new Map<number, { teamId: number; teamName: string; players: typeof players }>();
+    for (const p of players) {
+      if (!byTeam.has(p.teamId)) byTeam.set(p.teamId, { teamId: p.teamId, teamName: p.teamName, players: [] });
+      byTeam.get(p.teamId)!.players.push(p);
+    }
+
+    return {
+      teams: Array.from(byTeam.values()).map((t) => ({
+        teamId: t.teamId, teamName: t.teamName,
+        playerCount: t.players.length,
+        biasedPlayerCount: t.players.filter((p) => p.isBiased).length,
+        players: t.players,
+      })),
+    };
+  }
+
   async getMedicalDashboardStats() {
     const now = NOW();
     const in7Days = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
@@ -346,6 +429,28 @@ export class DashboardRepository {
       pendingApprovalCount,
       avgRecoveryDays: avgRecoveryRaw[0]?.avg_days ?? null,
       injuriesByPosition,
+    };
+  }
+
+  async getAcademyFinanceStats(year: number, month: number) {
+    const rows = await this.prisma.academyFee.groupBy({
+      by: ["status"],
+      where: { year, month },
+      _count: { id: true },
+      _sum: { amount: true },
+    });
+    const total = rows.reduce((s, r) => s + (r._count.id ?? 0), 0);
+    const paid = rows.find(r => r.status === "PAID")?._count.id ?? 0;
+    const overdue = rows
+      .filter(r => ["OVERDUE", "LOCKED"].includes(r.status as string))
+      .reduce((s, r) => s + (r._count.id ?? 0), 0);
+    const locked = rows.find(r => r.status === "LOCKED")?._count.id ?? 0;
+    const totalRevenue = rows.find(r => r.status === "PAID")?._sum.amount ?? 0;
+    return {
+      monthlyCollectionRate: total > 0 ? Math.round((paid / total) * 100) : 0,
+      totalRevenue,
+      overdueCount: overdue,
+      lockedPlayerCount: locked,
     };
   }
 }

@@ -37,7 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Plus, Search, SlidersHorizontal } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Search, SlidersHorizontal } from 'lucide-react'
 import { PlayerFormDialog } from './PlayerFormDialog'
 
 const ZONE_STYLE: Record<PositionZone, string> = {
@@ -73,8 +73,13 @@ export function PlayersPage() {
   const [positionFilter, setPositionFilter] = useState<Position | 'ALL'>('ALL')
   const [levelFilter, setLevelFilter] = useState<PlayerLevel | 'ALL'>('ALL')
   const [createOpen, setCreateOpen] = useState(false)
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 10
 
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
+  const canSeeMarketValue =
+    user?.role === 'ADMIN' ||
+    (user?.role === 'FRONT_OFFICE' && (user.frontOfficeRole === 'GM' || user.frontOfficeRole === 'TD'))
 
   const fetchPlayers = () => {
     setLoading(true)
@@ -91,7 +96,12 @@ export function PlayersPage() {
 
   useEffect(() => {
     fetchPlayers()
+    setPage(1)
   }, [statusFilter, positionFilter, levelFilter])
+
+  useEffect(() => {
+    setPage(1)
+  }, [search])
 
   const filtered = useMemo(() => {
     if (!search.trim()) return players
@@ -103,6 +113,10 @@ export function PlayersPage() {
         p.nationality.code.toLowerCase().includes(q),
     )
   }, [players, search])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages)
+  const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
   const activeCount = players.filter((p) => p.status === 'ACTIVE').length
 
@@ -144,7 +158,7 @@ export function PlayersPage() {
             onValueChange={(v) => setStatusFilter(v as PlayerStatus | 'ALL')}
           >
             <SelectTrigger className="h-8 text-sm w-28 bg-background">
-              <SelectValue placeholder="상태" />
+              <span>{statusFilter === 'ALL' ? '전체 상태' : STATUS_LABEL[statusFilter]}</span>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">전체 상태</SelectItem>
@@ -161,7 +175,11 @@ export function PlayersPage() {
             onValueChange={(v) => setPositionFilter(v as Position | 'ALL')}
           >
             <SelectTrigger className="h-8 text-sm w-36 bg-background">
-              <SelectValue placeholder="포지션" />
+              <span>
+                {positionFilter === 'ALL'
+                  ? '전체 포지션'
+                  : `${POSITION_ABBR[positionFilter]} ${POSITION_LABEL[positionFilter]}`}
+              </span>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">전체 포지션</SelectItem>
@@ -179,22 +197,24 @@ export function PlayersPage() {
             onValueChange={(v) => setLevelFilter(v as PlayerLevel | 'ALL')}
           >
             <SelectTrigger className="h-8 text-sm w-28 bg-background">
-              <SelectValue placeholder="레벨" />
+              <span>{levelFilter === 'ALL' ? '전체 레벨' : LEVEL_LABEL[levelFilter]}</span>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">전체 레벨</SelectItem>
-              {(Object.keys(LEVEL_LABEL) as PlayerLevel[]).map((l) => (
-                <SelectItem key={l} value={l}>
-                  {LEVEL_LABEL[l]}
-                </SelectItem>
-              ))}
+              {(Object.keys(LEVEL_LABEL) as PlayerLevel[])
+                .filter((l) => l !== 'YOUTH')
+                .map((l) => (
+                  <SelectItem key={l} value={l}>
+                    {LEVEL_LABEL[l]}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
       </div>
 
       {/* 테이블 */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto min-h-0">
         {loading ? (
           <div className="p-6 space-y-3">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -219,10 +239,11 @@ export function PlayersPage() {
                 <TableHead className="w-16 text-center">나이</TableHead>
                 <TableHead className="w-20 text-center">신장</TableHead>
                 <TableHead className="w-24">상태</TableHead>
+                {canSeeMarketValue && <TableHead className="w-28 text-right">시장가치</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((player) => {
+              {paginated.map((player) => {
                 const zone = POSITION_ZONE[player.position]
                 return (
                   <TableRow
@@ -266,6 +287,15 @@ export function PlayersPage() {
                         {STATUS_LABEL[player.status]}
                       </span>
                     </TableCell>
+                    {canSeeMarketValue && (
+                      <TableCell className="py-2 text-right tabular-nums text-sm">
+                        {player.currentMarketValue != null
+                          ? player.currentMarketValue >= 100_000_000
+                            ? `${(player.currentMarketValue / 100_000_000).toFixed(1)}억`
+                            : `${(player.currentMarketValue / 10_000).toFixed(0)}만`
+                          : <span className="text-muted-foreground">—</span>}
+                      </TableCell>
+                    )}
                   </TableRow>
                 )
               })}
@@ -273,6 +303,36 @@ export function PlayersPage() {
           </Table>
         )}
       </div>
+
+      {/* 페이지네이션 */}
+      {!loading && filtered.length > PAGE_SIZE && (
+        <div className="border-t px-6 py-3 flex items-center justify-between shrink-0">
+          <span className="text-xs text-muted-foreground">
+            {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} / {filtered.length}명
+          </span>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              disabled={safePage <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-xs tabular-nums px-1">{safePage} / {totalPages}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              disabled={safePage >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {canWrite && (
         <PlayerFormDialog

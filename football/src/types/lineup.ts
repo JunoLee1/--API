@@ -17,6 +17,7 @@ export interface MatchLineup {
   formation: SupportedFormation
   isConfirmed: boolean
   confirmedAt: string | null
+  teamType: 'FIRST_TEAM' | 'YOUTH' | null
   slots: LineupSlotData[]
 }
 

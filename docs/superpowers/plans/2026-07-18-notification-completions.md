@@ -34,7 +34,7 @@ football/src/pages/transfers/TransfersPage.tsx       ← LOAN_IN export 버튼 �
 - Create: `apps/api/__test__/training/monthly.attendance.test.ts`
 - Create: (함수는 Task 2에서 `monthlyAttendanceCheck.ts`에 정의)
 
-- [ ] **Step 1: 순수 함수 테스트 작성**
+- [x] **Step 1: 순수 함수 테스트 작성**
 
 ```typescript
 // apps/api/__test__/training/monthly.attendance.test.ts
@@ -56,7 +56,7 @@ describe('calcMonthlyAttendanceRate', () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 ```bash
 cd apps/api && npx jest monthly.attendance --no-coverage 2>&1 | tail -5
@@ -70,7 +70,7 @@ Expected: `Cannot find module '../../src/jobs/monthlyAttendanceCheck'`
 **Files:**
 - Create: `apps/api/src/jobs/monthlyAttendanceCheck.ts`
 
-- [ ] **Step 1: 파일 작성**
+- [x] **Step 1: 파일 작성**
 
 ```typescript
 // apps/api/src/jobs/monthlyAttendanceCheck.ts
@@ -151,14 +151,14 @@ export function startMonthlyAttendanceCheckJob() {
 }
 ```
 
-- [ ] **Step 2: 테스트 통과 확인**
+- [x] **Step 2: 테스트 통과 확인**
 
 ```bash
 cd apps/api && npx jest monthly.attendance --no-coverage 2>&1 | tail -5
 ```
 Expected: `Tests: 3 passed`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/jobs/monthlyAttendanceCheck.ts apps/api/__test__/training/monthly.attendance.test.ts
@@ -174,7 +174,7 @@ git commit -m "feat(attendance): add monthly 80% attendance rate check cron job"
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: NotificationType enum에 추가**
+- [x] **Step 1: NotificationType enum에 추가**
 
 `schema.prisma`에서 `enum NotificationType {` 블록을 찾아 마지막 항목 다음에 추가:
 
@@ -184,14 +184,14 @@ git commit -m "feat(attendance): add monthly 80% attendance rate check cron job"
 }
 ```
 
-- [ ] **Step 2: DB push + 클라이언트 재생성**
+- [x] **Step 2: DB push + 클라이언트 재생성**
 
 ```bash
 cd apps/api && npx prisma db push && npx prisma generate
 ```
 Expected: `Your database is now in sync with your Prisma schema.`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma
@@ -205,7 +205,7 @@ git commit -m "feat(schema): add WORK_PERMIT_EXPIRY_SOON NotificationType"
 **Files:**
 - Create: `apps/api/src/jobs/workPermitExpiryCheck.ts`
 
-- [ ] **Step 1: 파일 작성**
+- [x] **Step 1: 파일 작성**
 
 ```typescript
 // apps/api/src/jobs/workPermitExpiryCheck.ts
@@ -251,7 +251,7 @@ export function startWorkPermitExpiryCheckJob() {
 
 > `createForStaff`는 ADMIN + FRONT_OFFICE 전원에게 발송하는 메서드. `NotificationRepository`에 이미 존재.
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/jobs/workPermitExpiryCheck.ts
@@ -265,7 +265,7 @@ git commit -m "feat(player): add work permit expiry cron alert (30-day warning)"
 **Files:**
 - Modify: `apps/api/src/server.ts`
 
-- [ ] **Step 1: import 추가 및 등록**
+- [x] **Step 1: import 추가 및 등록**
 
 `server.ts` 상단에:
 
@@ -283,14 +283,14 @@ startMonthlyAttendanceCheckJob();
 startWorkPermitExpiryCheckJob();
 ```
 
-- [ ] **Step 2: 빌드 확인**
+- [x] **Step 2: 빌드 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | head -10
 ```
 Expected: no output (no errors)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/server.ts
@@ -306,7 +306,7 @@ git commit -m "feat(jobs): register monthly attendance and work permit expiry cr
 **Files:**
 - Modify: `apps/api/src/transfer/transfer.repo.ts`
 
-- [ ] **Step 1: exportLoanInData 추가**
+- [x] **Step 1: exportLoanInData 추가**
 
 `transfer.repo.ts`의 기존 메서드들 다음에 추가:
 
@@ -377,7 +377,7 @@ git commit -m "feat(jobs): register monthly attendance and work permit expiry cr
   }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/transfer/transfer.repo.ts
@@ -393,7 +393,7 @@ git commit -m "feat(transfer): add exportLoanInData repo method"
 - Modify: `apps/api/src/transfer/transfer.controller.ts`
 - Modify: `apps/api/src/transfer/transfer.routes.ts`
 
-- [ ] **Step 1: service에 메서드 추가**
+- [x] **Step 1: service에 메서드 추가**
 
 `transfer.service.ts`의 마지막 메서드 다음:
 
@@ -405,7 +405,7 @@ git commit -m "feat(transfer): add exportLoanInData repo method"
   }
 ```
 
-- [ ] **Step 2: controller에 핸들러 추가**
+- [x] **Step 2: controller에 핸들러 추가**
 
 `transfer.controller.ts`의 마지막 핸들러 다음:
 
@@ -421,7 +421,7 @@ git commit -m "feat(transfer): add exportLoanInData repo method"
   };
 ```
 
-- [ ] **Step 3: route 추가**
+- [x] **Step 3: route 추가**
 
 `transfer.routes.ts`에서 기존 라우트 다음 (exports 이전):
 
@@ -430,14 +430,14 @@ git commit -m "feat(transfer): add exportLoanInData repo method"
 router.get("/:id/export", auth, controller.exportLoanIn);
 ```
 
-- [ ] **Step 4: 빌드 확인**
+- [x] **Step 4: 빌드 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | head -10
 ```
 Expected: no output
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/transfer/transfer.service.ts apps/api/src/transfer/transfer.controller.ts apps/api/src/transfer/transfer.routes.ts
@@ -452,7 +452,7 @@ git commit -m "feat(transfer): add GET /:id/export endpoint for LOAN_IN player d
 - Modify: `football/src/pages/transfers/TransfersPage.tsx`
 - Modify: `football/src/services/transfer.service.ts` (또는 생성)
 
-- [ ] **Step 1: transfer API 서비스에 export 메서드 추가**
+- [x] **Step 1: transfer API 서비스에 export 메서드 추가**
 
 `football/src/services/transfer.service.ts` 파일을 확인하고 `exportLoanIn` 메서드를 추가:
 
@@ -462,7 +462,7 @@ exportLoanIn: (id: number) => api.get<unknown>(`/transfers/${id}/export`),
 
 없으면 파일 먼저 읽은 후 추가한다.
 
-- [ ] **Step 2: TransfersPage에서 LOAN_IN export 버튼 추가**
+- [x] **Step 2: TransfersPage에서 LOAN_IN export 버튼 추가**
 
 `TransfersPage.tsx`에서 transfer 목록을 렌더링하는 테이블 행에 LOAN_IN 타입일 때 export 버튼을 추가한다.
 
@@ -503,14 +503,14 @@ const handleExport = async (id: number, playerName: string) => {
 
 > `canExport`: `user?.role === 'ADMIN' || ['GM','TD'].includes(user?.frontOfficeRole ?? '')`
 
-- [ ] **Step 3: FE 빌드 확인**
+- [x] **Step 3: FE 빌드 확인**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | head -10
 ```
 Expected: no output
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/pages/transfers/TransfersPage.tsx football/src/services/transfer.service.ts
@@ -521,7 +521,7 @@ git commit -m "feat(transfer): add LOAN_IN data export button for GM/TD/ADMIN"
 
 ## 최종 확인
 
-- [ ] `npx jest monthly.attendance --no-coverage` — 3 passed
-- [ ] `cd apps/api && npx tsc --noEmit` — no errors
-- [ ] `cd football && npx tsc --noEmit` — no errors
-- [ ] LOAN_IN 이적 상세에서 "데이터 내보내기" 버튼 클릭 → JSON 다운로드 확인
+- [x] `npx jest monthly.attendance --no-coverage` — 3 passed
+- [x] `cd apps/api && npx tsc --noEmit` — no errors
+- [x] `cd football && npx tsc --noEmit` — no errors
+- [x] LOAN_IN 이적 상세에서 "데이터 내보내기" 버튼 클릭 → JSON 다운로드 확인

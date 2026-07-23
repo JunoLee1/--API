@@ -37,4 +37,12 @@ export class TeamController {
       res.json(await this.service.deactivate(Number(req.params["id"])));
     } catch (err) { next(err); }
   };
+
+  setLiteMode = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user as any;
+      const result = await this.service.setLiteMode(Number(req.params["id"]), req.body.isLite, user.role);
+      res.json(result);
+    } catch (err) { next(err); }
+  };
 }
