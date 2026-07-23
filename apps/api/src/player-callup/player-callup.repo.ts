@@ -8,6 +8,8 @@ const SELECT = {
   startDate: true,
   endDate: true,
   createdAt: true,
+  youthCoachConfirmed: true,
+  medicalConfirmed: true,
   player: { select: { id: true, playerName: true, position: true, guardianId: true } },
   fromTeam: { select: { id: true, name: true } },
   toTeam: { select: { id: true, name: true } },
@@ -66,6 +68,30 @@ export class PlayerCallupRepository {
     return this.prisma.playerCallup.update({
       where: { id },
       data: { status: "COMPLETED" },
+      select: SELECT,
+    });
+  }
+
+  confirmYouth(id: number) {
+    return this.prisma.playerCallup.update({
+      where: { id },
+      data: { youthCoachConfirmed: true },
+      select: SELECT,
+    });
+  }
+
+  confirmMedical(id: number) {
+    return this.prisma.playerCallup.update({
+      where: { id },
+      data: { medicalConfirmed: true },
+      select: SELECT,
+    });
+  }
+
+  submitDocs(id: number) {
+    return this.prisma.playerCallup.update({
+      where: { id },
+      data: { status: "DOCS_SUBMITTED" },
       select: SELECT,
     });
   }
