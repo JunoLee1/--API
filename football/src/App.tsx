@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { Toaster } from '@/components/ui/sonner'
 import { AppShell } from '@/layouts/AppShell'
 import { ConfirmProvider } from '@/lib/confirm-dialog'
@@ -49,6 +49,11 @@ import { SquadPlannerPage } from '@/pages/squad/SquadPlannerPage'
 import YouthRegistrationPage from '@/pages/youth/YouthRegistrationPage'
 import IncidentReportPage from '@/pages/youth/IncidentReportPage'
 
+function GrowthReportRedirect() {
+  const { playerId } = useParams<{ playerId: string }>()
+  return <Navigate to={`/players/${playerId}`} replace />
+}
+
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const loggedIn = localStorage.getItem('loggedIn')
   return loggedIn ? <>{children}</> : <Navigate to="/login" replace />
@@ -78,6 +83,7 @@ function App() {
             <Route path="/player-callups" element={<PlayerCallupPage />} />
             <Route path="/youth-registrations" element={<YouthRegistrationPage />} />
             <Route path="/incident-reports" element={<IncidentReportPage />} />
+            <Route path="/growth-reports/:playerId" element={<GrowthReportRedirect />} />
             <Route path="/injuries" element={<InjuriesPage />} />
             <Route path="/injuries/:id" element={<InjuryDetailPage />} />
             <Route path="/injuries/stats" element={<InjuryStatsPage />} />

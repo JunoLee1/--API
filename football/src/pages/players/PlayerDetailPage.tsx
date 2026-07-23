@@ -25,6 +25,7 @@ import { PlayerDevelopmentPlanTab } from './PlayerDevelopmentPlanTab'
 import { StatsTab } from './tabs/StatsTab'
 import { JerseyTab } from './tabs/JerseyTab'
 import { MotivationTab } from './tabs/MotivationTab'
+import { GrowthReportTab } from './tabs/GrowthReportTab'
 import { PositionDiversityChart } from '@/components/players/PositionDiversityChart'
 import { playerPdiApi, type PositionDiversityEntry } from '@/services/playerPdi.service'
 import {
@@ -123,6 +124,10 @@ export function PlayerDetailPage() {
     user?.role === 'ADMIN' ||
     (user?.role === 'FRONT_OFFICE' && (user.frontOfficeRole === 'GM' || user.frontOfficeRole === 'TD'))
   const canUpdateMarketValue = canSeeMarketValue
+  const isYouthPlayer = player?.team?.type === 'YOUTH'
+  const canCoachGrowth =
+    user?.role === 'ADMIN' ||
+    user?.role === 'COACHING_STAFF'
   const canAssignJersey = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
   const canRetireJersey =
     user?.role === 'ADMIN' ||
@@ -255,6 +260,7 @@ export function PlayerDetailPage() {
               <TabsTrigger value="jersey">등번호</TabsTrigger>
               {isOwnProfile && <TabsTrigger value="motivation">동기부여</TabsTrigger>}
               <TabsTrigger value="pdp">발전 계획</TabsTrigger>
+              {isYouthPlayer && <TabsTrigger value="growth">성장 보고서</TabsTrigger>}
             </TabsList>
           </div>
           <TabsContent value="info" className="flex-1 overflow-auto p-6 mt-0">
@@ -493,6 +499,11 @@ export function PlayerDetailPage() {
           {isOwnProfile && (
             <TabsContent value="motivation" className="flex-1 overflow-auto mt-0">
               <MotivationTab playerId={player.id} />
+            </TabsContent>
+          )}
+          {isYouthPlayer && (
+            <TabsContent value="growth" className="flex-1 overflow-auto mt-0">
+              <GrowthReportTab playerId={player.id} canCoach={canCoachGrowth} />
             </TabsContent>
           )}
         </Tabs>

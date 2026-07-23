@@ -253,6 +253,13 @@ const NAV_ITEMS: NavItem[] = [
     section: '유소년',
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
   },
+  {
+    to: '/youth-players',
+    label: '성장 보고서',
+    icon: TrendingUp,
+    section: '유소년',
+    roles: ['ADMIN', 'COACHING_STAFF', 'GUARDIAN'],
+  },
 
   // 관리
   {
