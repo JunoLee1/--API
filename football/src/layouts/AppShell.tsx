@@ -338,6 +338,13 @@ const NAV_ITEMS: NavItem[] = [
     section: '관리',
     roles: ['ADMIN'],
   },
+  {
+    to: '/admin/team-settings',
+    label: '구단 설정',
+    icon: Settings,
+    section: '관리',
+    roles: ['ADMIN'],
+  },
 ]
 
 export function AppShell() {
