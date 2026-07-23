@@ -70,6 +70,7 @@ describe('PlayerCallupRepository', () => {
   it('의무팀 확인', async () => {
     const r = await repo().confirmMedical(callupId);
     expect(r.medicalConfirmed).toBe(true);
+    expect(r.status).toBe('REQUESTED'); // youthCoachConfirmed 기반 자동 전환 없음 (Service 레이어 책임)
   });
 
   it('submitDocs → DOCS_SUBMITTED 전환', async () => {
