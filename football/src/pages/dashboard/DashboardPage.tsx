@@ -7,15 +7,16 @@ import { analysisApi, type TeamRanking } from '@/services/analysis.service'
 import { seasonApi } from '@/services/season.service'
 import type { Match } from '@/types/match'
 import { COMPETITION_LABEL } from '@/types/match'
-import type { DashboardStats, MedicalDashboardStats, YouthDevelopmentStats } from '@/types/dashboard'
+import type { DashboardStats, YouthDevelopmentStats } from '@/types/dashboard'
+import type { AcademyFinanceStats } from '@/types/academy-fee'
 import { getDashboardConfig } from './dashboardConfig'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { ActionQueueCard } from '@/components/dashboard/ActionQueueCard'
 import { ScheduleCard, type ScheduleItem } from '@/components/dashboard/ScheduleCard'
 import { RecentFeedCard, type FeedItem } from '@/components/dashboard/RecentFeedCard'
 import { RankingCard } from '@/components/dashboard/RankingCard'
-import { MedicalSection } from '@/components/dashboard/MedicalSection'
 import { YouthDevelopmentSection } from '@/components/dashboard/YouthDevelopmentSection'
+import { AcademyFinanceSection } from '@/components/dashboard/AcademyFinanceSection'
 
 const OUR_TEAM_NAME = 'FC Seoul'
 
@@ -60,6 +61,7 @@ export function DashboardPage() {
   const [matches, setMatches] = useState<Match[]>([])
   const [myRanking, setMyRanking] = useState<TeamRanking | null>(null)
   const [youthDev, setYouthDev] = useState<YouthDevelopmentStats | null>(null)
+  const [academyFinance, setAcademyFinance] = useState<AcademyFinanceStats | null>(null)
   const [statsLoading, setStatsLoading] = useState(true)
   const [notiLoading, setNotiLoading] = useState(true)
   const [matchesLoading, setMatchesLoading] = useState(true)
@@ -90,6 +92,10 @@ export function DashboardPage() {
     if (showYouthDev) {
       dashboardApi.youthDevelopment().then(setYouthDev).catch(() => null)
     }
+    const config = getDashboardConfig(user)
+    if (config.showAcademyFinance) {
+      dashboardApi.academyFinance().then(setAcademyFinance).catch(() => null)
+    }
   }, [user])
 
   if (userLoading) {
@@ -119,17 +125,14 @@ export function DashboardPage() {
         ))}
       </div>
 
-      {/* 의료 KPI 섹션 */}
-      {config.showMedicalSection && stats && (stats as { medicalDashboard?: MedicalDashboardStats }).medicalDashboard && (
-        <MedicalSection
-          data={(stats as { medicalDashboard?: MedicalDashboardStats }).medicalDashboard!}
-          role={user.coachingRole}
-        />
-      )}
-
       {/* 유소년 포지션 편중 섹션 */}
       {config.showYouthDevelopment && youthDev && (
         <YouthDevelopmentSection data={youthDev} />
+      )}
+
+      {/* 아카데미 회비 KPI 섹션 */}
+      {config.showAcademyFinance && academyFinance && (
+        <AcademyFinanceSection data={academyFinance} />
       )}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
