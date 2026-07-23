@@ -2,7 +2,7 @@ import type { PrismaClient } from "../generated/client";
 import type { CreateGrowthEvaluationDto, AwardBadgeDto } from "./dto/growth-report.dto";
 
 const EVAL_INCLUDE = {
-  player: { select: { id: true, playerName: true } },
+  player: { select: { id: true, playerName: true, guardianId: true } },
   coach: { select: { id: true, username: true, nickname: true } },
 } as const;
 
