@@ -521,6 +521,7 @@ model User {
   awardedBadges            PlayerBadge[]           @relation("CoachBadges")
   isSuspended              Boolean                 @default(false)
   safeguardReportsAccused  SafeguardReport[]       @relation("SafeguardAccused")
+  guardianFees             AcademyFee[]            @relation("GuardianFees")
 }
 
 model Season {
@@ -588,6 +589,7 @@ model Player {
   incidentReports        IncidentReport[]
   growthEvaluations      GrowthEvaluation[]
   badges                 PlayerBadge[]
+  academyFees            AcademyFee[]
 }
 
 model Contract {
@@ -1675,4 +1677,33 @@ model LineupSlot {
   @@unique([lineupId, slotKey])
   @@unique([lineupId, playerId])
   @@index([lineupId])
+}
+
+enum FeeStatus {
+  PENDING
+  SUBMITTED
+  PAID
+  OVERDUE
+  LOCKED
+}
+
+model AcademyFee {
+  id                  Int        @id @default(autoincrement())
+  playerId            String
+  guardianId          Int
+  amount              Int
+  dueDate             DateTime
+  status              FeeStatus  @default(PENDING)
+  paidAt              DateTime?
+  paymentProofUrl     String?
+  paymentSubmittedAt  DateTime?
+  year                Int
+  month               Int
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  player   Player @relation(fields: [playerId], references: [id])
+  guardian User   @relation("GuardianFees", fields: [guardianId], references: [id])
+
+  @@unique([playerId, year, month])
 }
