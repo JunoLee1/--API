@@ -272,6 +272,7 @@ enum NotificationType {
   CALLUP_REQUESTED
   CALLUP_APPROVED
   CALLUP_REJECTED
+  CALLUP_DOCS_READY
   LOAN_OUT_EXPIRED
   TACTICAL_ANALYSIS_CONFIRM_REQUESTED
   JERSEY_NUMBER_CONFLICT
@@ -1472,6 +1473,7 @@ enum ReferenceSource {
 
 enum PlayerCallupStatus {
   REQUESTED
+  DOCS_SUBMITTED
   APPROVED
   REJECTED
   COMPLETED
@@ -1581,6 +1583,8 @@ model PlayerCallup {
   approvedById  Int?
   reason        String
   status        PlayerCallupStatus @default(REQUESTED)
+  youthCoachConfirmed Boolean            @default(false)
+  medicalConfirmed    Boolean            @default(false)
   startDate     DateTime
   endDate       DateTime?
   createdAt     DateTime           @default(now())
