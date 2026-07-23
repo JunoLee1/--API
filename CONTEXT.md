@@ -631,9 +631,9 @@ REQUESTED → DOCS_SUBMITTED → APPROVED → COMPLETED
 - `DOCS_SUBMITTED`: `youthCoachConfirmed`와 `medicalConfirmed` 양쪽 모두 `true`가 되는 순간 서비스 레이어가 자동 전환. GM 최종 승인 대기 중.
 - `APPROVED`: GM 승인. 이 시점에 `Player.teamId` → `toTeamId`로 즉시 업데이트 + `AuditLog` 기록.
 - `COMPLETED`: 콜업 기간 종료. HEAD_COACH 또는 GM이 수동 처리. `Player.teamId` → `fromTeamId`로 자동 원복 + `AuditLog` 기록.
-- `REJECTED`: `DOCS_SUBMITTED` 상태에서 GM이 거절. 거절 사유(`reason`) 필수.
+- `REJECTED`: `DOCS_SUBMITTED` 상태에서 GM이 거절. 거절 사유(`reason`) 필수. 종결 상태이며 이후 동일 선수에 대한 재신청 허용.
 
-**필드:** `playerId → Player`, `fromTeamId → Team`(출신 유소년 팀), `toTeamId → Team`(1군), `requestedById → User`(HEAD_COACH), `approvedById → User`(GM), `reason`(콜업 사유 또는 거절 사유), `status`(REQUESTED \| DOCS_SUBMITTED \| APPROVED \| REJECTED \| COMPLETED), `youthCoachConfirmed: Boolean`(유소년팀 HEAD_COACH 서류 확인 여부), `medicalConfirmed: Boolean`(의무팀 서류 확인 여부), `startDate`, `endDate`(nullable — 임시 합류 종료 예정일. null이면 종료 시점 미확정. 영구 이적은 Transfer 도메인에서 처리하며 콜업은 항상 임시 성격)
+**필드:** `playerId → Player`, `fromTeamId → Team`(출신 유소년 팀), `toTeamId → Team`(1군), `requestedById → User`(HEAD_COACH), `approvedById → User`(GM), `reason`(콜업 사유), `rejectionReason`(거절 사유, nullable), `status`(REQUESTED \| DOCS_SUBMITTED \| APPROVED \| REJECTED \| COMPLETED), `youthCoachConfirmed: Boolean`(유소년팀 HEAD_COACH 서류 확인 여부), `medicalConfirmed: Boolean`(의무팀 서류 확인 여부), `startDate`, `endDate`(nullable — 임시 합류 종료 예정일. null이면 종료 시점 미확정. 영구 이적은 Transfer 도메인에서 처리하며 콜업은 항상 임시 성격)
 
 **흐름:**
 1. HEAD_COACH 콜업 요청 → 유소년팀 HEAD_COACH·MEDICAL 스태프·GUARDIAN에게 알림

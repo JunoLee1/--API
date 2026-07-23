@@ -20,6 +20,7 @@ export interface PlayerCallup {
   id: number
   status: PlayerCallupStatus
   reason: string
+  rejectionReason: string | null
   startDate: string
   endDate: string | null
   createdAt: string

@@ -1581,8 +1581,9 @@ model PlayerCallup {
   toTeamId      Int
   requestedById Int
   approvedById  Int?
-  reason        String
-  status        PlayerCallupStatus @default(REQUESTED)
+  reason          String
+  rejectionReason String?
+  status          PlayerCallupStatus @default(REQUESTED)
   youthCoachConfirmed Boolean            @default(false)
   medicalConfirmed    Boolean            @default(false)
   startDate     DateTime

@@ -5,6 +5,7 @@ const SELECT = {
   id: true,
   status: true,
   reason: true,
+  rejectionReason: true,
   startDate: true,
   endDate: true,
   createdAt: true,
@@ -63,10 +64,10 @@ export class PlayerCallupRepository {
     });
   }
 
-  reject(id: number, approvedById: number, reason: string) {
+  reject(id: number, approvedById: number, rejectionReason: string) {
     return this.prisma.playerCallup.update({
       where: { id },
-      data: { status: "REJECTED", approvedById, reason },
+      data: { status: "REJECTED", approvedById, rejectionReason },
       select: SELECT,
     });
   }

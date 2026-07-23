@@ -102,6 +102,7 @@ export class PlayerCallupService {
       )
       .catch(console.error);
 
+
     return updated;
   }
 
