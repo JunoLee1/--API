@@ -24,8 +24,10 @@ export class SafeguardService {
             this.notifRepo.createForUser(
               r.id,
               'SAFEGUARD_EMERGENCY',
-              '[긴급] 유소년 보호 위반 신고 접수',
-              '유소년 학대 의심 신고가 접수됐습니다. 즉시 확인이 필요합니다.',
+              () => ({
+                title: '[긴급] 유소년 보호 위반 신고 접수',
+                body: '유소년 학대 의심 신고가 접수됐습니다. 즉시 확인이 필요합니다.',
+              }),
               report.id,
             ),
           ),

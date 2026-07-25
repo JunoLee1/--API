@@ -64,8 +64,10 @@ export class MedicalExpenseService {
 
     await this.notifRepo.createForMedicalDirector(
       "MEDICAL_EXPENSE_SUBMITTED",
-      "의료비 결재 요청",
-      "의료비 지출 건이 1차 결재를 기다리고 있습니다.",
+      () => ({
+        title: "의료비 결재 요청",
+        body: "의료비 지출 건이 1차 결재를 기다리고 있습니다.",
+      }),
       id,
     );
 
@@ -83,8 +85,10 @@ export class MedicalExpenseService {
 
     await this.notifRepo.createForAdmin(
       "MEDICAL_EXPENSE_LEADER_APPROVED",
-      "의료비 최종 결재 요청",
-      "1차 승인된 의료비 지출 건이 최종 결재를 기다리고 있습니다.",
+      () => ({
+        title: "의료비 최종 결재 요청",
+        body: "1차 승인된 의료비 지출 건이 최종 결재를 기다리고 있습니다.",
+      }),
       id,
     );
 

@@ -70,7 +70,7 @@ export function startYouthWeeklyScheduleJob() {
       if (!body) continue;
 
       void notifRepo
-        .createForGuardian(group.guardianId, "YOUTH_WEEKLY_SCHEDULE", "이번 주 일정 안내", `이번 주 예정된 일정: ${body}`)
+        .createForGuardian(group.guardianId, "YOUTH_WEEKLY_SCHEDULE", () => ({ title: "이번 주 일정 안내", body: `이번 주 예정된 일정: ${body}` }))
         .catch(console.error);
     }
   });

@@ -152,6 +152,7 @@ export class TrainingRepository {
     to?: string
     sessionType?: string
     playerId?: string
+    nullOnly?: boolean
   }) {
     const where: Record<string, unknown> = {}
 
@@ -173,6 +174,10 @@ export class TrainingRepository {
 
     if (filters.playerId) {
       where.playerId = filters.playerId
+    }
+
+    if (filters.nullOnly) {
+      where.attendance = null
     }
 
     return this.prisma.trainingResult.findMany({

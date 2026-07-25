@@ -47,8 +47,10 @@ export class IncidentReportService {
         .createForGuardian(
           report.player.guardianId,
           "INCIDENT_REPORT_SUBMITTED",
-          "사고 보고서 접수",
-          `${report.player.playerName} 선수의 사고 보고서가 접수됐습니다.`,
+          () => ({
+            title: "사고 보고서 접수",
+            body: `${report.player.playerName} 선수의 사고 보고서가 접수됐습니다.`,
+          }),
           id,
         )
         .catch(console.error);

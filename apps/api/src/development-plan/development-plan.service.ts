@@ -47,8 +47,10 @@ export class DevelopmentPlanService {
         .createForUser(
           playerData.userId,
           "PLAYER_DEVELOPMENT_PLAN_ACTIVATED",
-          "발전 계획이 등록됐습니다",
-          "코치가 이번 시즌 발전 계획을 작성하고 활성화했습니다.",
+          () => ({
+            title: "발전 계획이 등록됐습니다",
+            body: "코치가 이번 시즌 발전 계획을 작성하고 활성화했습니다.",
+          }),
           id,
         )
         .catch(console.error);

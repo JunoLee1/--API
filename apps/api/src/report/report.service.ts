@@ -52,8 +52,10 @@ export class ReportService {
 
     await this.notifRepo.createForGM(
       "REPORT_SUBMITTED",
-      "새 보고서가 제출됐습니다",
-      `"${report.title}" 보고서가 결재 대기 중입니다.`,
+      () => ({
+        title: "새 보고서가 제출됐습니다",
+        body: `"${report.title}" 보고서가 결재 대기 중입니다.`,
+      }),
       id,
     );
 
@@ -96,8 +98,10 @@ export class ReportService {
       .createForUser(
         report.authorId,
         "REPORT_REJECTED",
-        "보고서가 반려됐습니다",
-        `"${report.title}" 보고서가 반려됐습니다. 사유: ${reason.trim()}`,
+        () => ({
+          title: "보고서가 반려됐습니다",
+          body: `"${report.title}" 보고서가 반려됐습니다. 사유: ${reason.trim()}`,
+        }),
         id,
       )
       .catch(console.error);

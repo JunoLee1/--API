@@ -46,8 +46,10 @@ export function startMatchDayNotificationJob() {
             .createForGuardian(
               guardianId,
               "MATCH_DAY_REMINDER",
-              "내일 경기 일정",
-              `${dateStr} ${matchInfo.homeTeamName} vs ${matchInfo.awayTeamName}`,
+              () => ({
+                title: "내일 경기 일정",
+                body: `${dateStr} ${matchInfo.homeTeamName} vs ${matchInfo.awayTeamName}`,
+              }),
             )
             .catch(console.error);
         }

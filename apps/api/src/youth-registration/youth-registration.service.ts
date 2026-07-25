@@ -52,7 +52,7 @@ export class YouthRegistrationService {
 
     if (reg.guardianId) {
       void this.notifRepo
-        .createForGuardian(reg.guardianId, "YOUTH_REGISTRATION_STATUS_CHANGED", "입단 신청 반려", `${reg.playerName} 선수의 입단 신청이 반려됐습니다.`, id)
+        .createForGuardian(reg.guardianId, "YOUTH_REGISTRATION_STATUS_CHANGED", () => ({ title: "입단 신청 반려", body: `${reg.playerName} 선수의 입단 신청이 반려됐습니다.` }), id)
         .catch(console.error);
     }
     return updated;
@@ -67,7 +67,7 @@ export class YouthRegistrationService {
 
     if (reg.guardianId) {
       void this.notifRepo
-        .createForGuardian(reg.guardianId, "YOUTH_REGISTRATION_STATUS_CHANGED", "입단 완료", `${reg.playerName} 선수가 정식 입단했습니다.`, id)
+        .createForGuardian(reg.guardianId, "YOUTH_REGISTRATION_STATUS_CHANGED", () => ({ title: "입단 완료", body: `${reg.playerName} 선수가 정식 입단했습니다.` }), id)
         .catch(console.error);
     }
 

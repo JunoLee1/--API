@@ -44,7 +44,10 @@ type StatRow = {
   crossesCompleted?: number | null;
   saves?: number | null;
   shotsAllowed?: number | null;
+  ballRecoveries?: number | null;
+  turnovers?: number | null;
 };
+
 
 export function computeRadarScores(
   position: string,
@@ -52,6 +55,8 @@ export function computeRadarScores(
   teamAvg: StatRow | null,
 ): Record<string, number> {
   const group = POSITION_GROUP[position] ?? "MID";
+  const passing = clamp(scale(avg.passAccuracy, 100) - clamp(scale(avg.turnovers, 6) * 35));
+  const stability = clamp(scale(avg.ballRecoveries, 10) * 100 * 0.4 + clamp(100 - scale(avg.turnovers, 6) * 100) * 0.6);
 
   switch (group) {
     case "FWD":
@@ -60,7 +65,8 @@ export function computeRadarScores(
         creation: clamp(scale(avg.xA, 1.0) * 0.5 + scale(avg.assists, 8) * 0.5),
         speed: scale(avg.sprint, 36),
         chance: scale(avg.clearCutChanceRate, 1.0),
-        passing: scale(avg.passAccuracy, 100),
+        passing,
+        안정성: stability,
         setpiece: clamp(
           scale(avg.penaltyConversionRate, 1.0) * 0.5 +
           scale(avg.freeKickConversionRate, 1.0) * 0.5,
@@ -68,7 +74,7 @@ export function computeRadarScores(
       };
     case "MID":
       return {
-        passing: scale(avg.passAccuracy, 100),
+        passing,
         creation: clamp(scale(avg.xA, 1.0) * 0.5 + scale(avg.assists, 8) * 0.5),
         defending: clamp(
           scale(avg.tackleSuccessRate, 100) * 0.5 +
@@ -76,6 +82,7 @@ export function computeRadarScores(
         ),
         speed: scale(avg.sprint, 36),
         shooting: clamp(scale(avg.xG, 1.5) * 0.5 + scale(avg.goals, 10) * 0.5),
+        안정성: stability,
         setpiece: scale(avg.freeKickConversionRate, 1.0),
       };
     case "DEF":
@@ -84,7 +91,8 @@ export function computeRadarScores(
         interception: scale(avg.interceptions, 5),
         clearing: scale(avg.clearances, 8),
         aerial: scale(avg.aerialDuelSuccessRate, 1.0),
-        passing: scale(avg.passAccuracy, 100),
+        passing,
+        안정성: stability,
         speed: scale(avg.sprint, 36),
       };
     case "GK": {
@@ -94,7 +102,8 @@ export function computeRadarScores(
           : 0;
       return {
         saving: saveRate,
-        passing: scale(avg.passAccuracy, 100),
+        passing,
+        안정성: stability,
         distribution: scale(avg.crossesCompleted, 5),
         shotStopping: scale(avg.saves, 8),
         goalsConceded: avg.shotsAllowed != null ? clamp(100 - avg.shotsAllowed * 10) : 0,
@@ -136,6 +145,7 @@ export async function getPlayerRadarData(
     "passAccuracy", "penaltyConversionRate", "freeKickConversionRate",
     "tackleSuccessRate", "interceptions", "clearances",
     "aerialDuelSuccessRate", "crossesCompleted", "saves", "shotsAllowed",
+    "ballRecoveries", "turnovers",
   ];
 
   for (const key of keys) {

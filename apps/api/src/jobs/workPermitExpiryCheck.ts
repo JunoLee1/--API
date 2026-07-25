@@ -27,8 +27,10 @@ export function startWorkPermitExpiryCheckJob() {
       void notifRepo
         .createForStaff(
           "WORK_PERMIT_EXPIRY_SOON",
-          "노동허가 만료 임박",
-          `${player.playerName} 선수의 노동허가가 ${daysLeft}일 후(${expiry.toLocaleDateString("ko-KR")}) 만료됩니다.`,
+          () => ({
+            title: "노동허가 만료 임박",
+            body: `${player.playerName} 선수의 노동허가가 ${daysLeft}일 후(${expiry.toLocaleDateString("ko-KR")}) 만료됩니다.`,
+          }),
           undefined,
         )
         .catch(console.error);

@@ -30,8 +30,10 @@ export function startLoanOutExpiryJob() {
       void notifRepo
         .createForStaff(
           "LOAN_OUT_EXPIRED",
-          "임대 만료",
-          `${transfer.player.playerName} 선수의 임대 기간이 만료되어 복귀 처리됐습니다.`,
+          () => ({
+            title: "임대 만료",
+            body: `${transfer.player.playerName} 선수의 임대 기간이 만료되어 복귀 처리됐습니다.`,
+          }),
           transfer.id,
         )
         .catch(console.error);
