@@ -103,7 +103,6 @@ export function JerseyTab({ playerId, teamId, canAssign, canRetire, canReactivat
 
       {/* 배정된 등번호 */}
       <div>
-        <h3 className="text-sm font-semibold mb-3">배정된 등번호</h3>
         {jerseys.length === 0 ? (
           <p className="text-sm text-muted-foreground">배정된 등번호가 없습니다.</p>
         ) : (
