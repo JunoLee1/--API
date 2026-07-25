@@ -341,7 +341,7 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 | | 공중볼 | `aerial_duel_success_rate` |
 | | 빌드업 패스 | `passing_accuracy` |
 | | 활동량 | `sprint` |
-| **골키퍼** | 세이브율 | `shots_on_target - shot_allowed` 역산 |
+| **골키퍼** | 세이브율 | `saves / (saves + shotsAllowed)` 역산 |
 | | 빌드업 패스 | `passing_accuracy` |
 | | 크로스 처리 | `crosses_completed` |
 | | 슈팅 방어 | `shot_blocked` |
