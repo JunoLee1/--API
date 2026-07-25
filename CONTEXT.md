@@ -357,7 +357,7 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 - 자동 인제스트: 외부 API 대회 정보 → 내부 enum 매핑 테이블로 변환
 - 수동 입력: FRONT_OFFICE / COACHING_STAFF가 직접 선택
 
-**수동 입력:** FRONT_OFFICE 또는 COACHING_STAFF가 `PlayerMatchStats` 직접 입력 가능. API 장애·미커버 대회 대응.
+**수동 입력:** FRONT_OFFICE 또는 COACHING_STAFF가 `PlayerMatchStats` 직접 입력 가능. API 장애·미커버 대회 대응. `xG`·`xA`는 예외 — `ShotEvent` 기반 자동 집계(`recalculateXgXa`)가 단일 출처이며 수동 입력 경로 없음.
 
 ### MatchLineup / LineupSlot (경기 라인업)
 
