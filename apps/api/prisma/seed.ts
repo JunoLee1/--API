@@ -749,7 +749,8 @@ async function main() {
       goals: 1,
       assists: 2,
       keyPasses: 4,
-      passAccuracy: 88.5,
+      passesAttempted: 72,
+      passesCompleted: 64,
       minutesPlayed: 90,
     },
   });
