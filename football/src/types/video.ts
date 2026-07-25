@@ -8,6 +8,7 @@ export interface TrainingVideo {
   sessionType: SessionType | null
   uploadedById: number
   createdAt: string
+  aiSummary?: string | null
   uploader: { id: number; nickname: string }
   _count?: { assignments: number }
 }
