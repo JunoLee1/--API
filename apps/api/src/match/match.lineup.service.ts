@@ -22,23 +22,8 @@ export class MatchLineupService {
     ]);
     const teamType = matchInfo?.team?.type ?? null;
 
-    if (lineup) return { ...lineup, teamType };
-
-    const squadMembers = await this.repo.findSquadPlayers(matchId);
-    if (squadMembers.length === 0) return null;
-
-    return {
-      matchId,
-      formation: "4-3-3" as const,
-      isConfirmed: false,
-      confirmedAt: null,
-      teamType,
-      slots: squadMembers.map((sq, i) => ({
-        slotKey: `BENCH_${i}`,
-        isStarter: false,
-        player: sq.player,
-      })),
-    };
+    if (!lineup) return null;
+    return { ...lineup, teamType };
   }
 
   async saveLineup(matchId: number, dto: SaveLineupDto) {

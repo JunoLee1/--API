@@ -51,6 +51,7 @@ export const trainingApi = {
     if (filters.to) params.set('to', filters.to)
     if (filters.sessionType) params.set('sessionType', filters.sessionType)
     if (filters.playerId) params.set('playerId', filters.playerId)
+    if (filters.nullOnly) params.set('nullOnly', 'true')
     return api.get<TrainingResultRow[]>(`/training/results?${params.toString()}`)
   },
 

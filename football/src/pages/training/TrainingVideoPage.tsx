@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import { toast } from 'sonner'
 import { videoApi } from '@/services/video.service'
 import type { TrainingVideo, CreateVideoPayload } from '@/types/video'
@@ -20,7 +20,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { Pagination } from '@/components/ui/pagination'
-import { Plus, ExternalLink, Trash2 } from 'lucide-react'
+import { Plus, ExternalLink, Trash2, Sparkles, RefreshCw } from 'lucide-react'
 
 const PAGE_SIZE = 10
 
@@ -119,6 +119,7 @@ export function TrainingVideoPage() {
   const canWrite = user?.role === 'ADMIN' || user?.role === 'COACHING_STAFF'
   const canDelete = (uploadedById: number) =>
     user?.role === 'ADMIN' || user?.id === uploadedById
+  const [generatingSummaryId, setGeneratingSummaryId] = useState<number | null>(null)
 
   const fetchVideos = () => {
     setLoading(true)
@@ -129,6 +130,19 @@ export function TrainingVideoPage() {
   }
 
   useEffect(() => { fetchVideos() }, [])
+
+  const handleGenerateSummary = async (id: number) => {
+    setGeneratingSummaryId(id)
+    try {
+      const result = await videoApi.generateAiSummary(id)
+      setVideos(prev => prev.map(v => v.id === id ? { ...v, aiSummary: result.aiSummary } : v))
+      toast.success('AI 요약이 생성됐습니다.')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'AI 요약 생성에 실패했습니다.')
+    } finally {
+      setGeneratingSummaryId(null)
+    }
+  }
 
   const handleDelete = async (id: number) => {
     try {
@@ -193,45 +207,70 @@ export function TrainingVideoPage() {
             </TableHeader>
             <TableBody>
               {paged.map(v => (
-                <TableRow key={v.id}>
-                  <TableCell className="font-medium">
-                    <a href={v.url} target="_blank" rel="noopener noreferrer"
-                       className="flex items-center gap-1 hover:underline">
-                      {v.title}
-                      <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                    </a>
-                  </TableCell>
-                  <TableCell>
-                    {v.sessionType ? (
-                      <span className="text-xs border rounded px-1.5 py-0.5">
-                        {SESSION_TYPE_LABEL[v.sessionType]}
-                      </span>
-                    ) : '—'}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {v.tags.map(t => (
-                        <Badge key={t} variant="outline" className="text-xs">{t}</Badge>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center tabular-nums">
-                    {v._count?.assignments ?? 0}
-                  </TableCell>
-                  <TableCell className="tabular-nums">{formatDate(v.createdAt)}</TableCell>
-                  <TableCell>
-                    {canDelete(v.uploadedById) && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                        onClick={() => handleDelete(v.id)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
+                <Fragment key={v.id}>
+                  <TableRow>
+                    <TableCell className="font-medium">
+                      <a href={v.url} target="_blank" rel="noopener noreferrer"
+                         className="flex items-center gap-1 hover:underline">
+                        {v.title}
+                        <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                      </a>
+                    </TableCell>
+                    <TableCell>
+                      {v.sessionType ? (
+                        <span className="text-xs border rounded px-1.5 py-0.5">
+                          {SESSION_TYPE_LABEL[v.sessionType]}
+                        </span>
+                      ) : '—'}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {v.tags.map(t => (
+                          <Badge key={t} variant="outline" className="text-xs">{t}</Badge>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center tabular-nums">
+                      {v._count?.assignments ?? 0}
+                    </TableCell>
+                    <TableCell className="tabular-nums">{formatDate(v.createdAt)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-0.5">
+                        {canWrite && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-muted-foreground hover:text-primary"
+                            onClick={() => handleGenerateSummary(v.id)}
+                            disabled={generatingSummaryId === v.id}
+                            title={v.aiSummary ? 'AI 요약 재생성' : 'AI 요약 생성'}
+                          >
+                            {generatingSummaryId === v.id
+                              ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                              : <Sparkles className="h-3.5 w-3.5" />}
+                          </Button>
+                        )}
+                        {canDelete(v.uploadedById) && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            onClick={() => handleDelete(v.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                  {v.aiSummary && (
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell colSpan={6} className="py-1 pt-0 pb-2">
+                        <p className="text-xs text-muted-foreground italic pl-1">{v.aiSummary}</p>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </Fragment>
               ))}
             </TableBody>
           </Table>

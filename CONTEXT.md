@@ -16,7 +16,7 @@ ADMIN이 생성·관리하는 클럽 내 팀 단위. 팀 구성은 구단마다 
 
 **필드:** `name`(팀명), `type`(FIRST_TEAM \| YOUTH), `ageGroup`(U18·U15 등, nullable), `isActive`
 
-**Player ↔ Team:** 단일 소속. `Player.teamId → Team`. 유소년 콜업은 `PlayerCallup` 워크플로우(HEAD_COACH 요청 → GM 승인)를 거쳐 `teamId`를 업데이트하며, 변경 이력은 `AuditLog`로 추적한다.
+**Player ↔ Team:** 단일 소속. `Player.teamId → Team`. 유소년 콜업은 `PlayerCallup` 워크플로우(HEAD_COACH 요청 → 유소년감독·의무팀 서류 확인 → GM 승인)를 거쳐 `teamId`를 업데이트하며, 변경 이력은 `AuditLog`로 추적한다.
 
 **COACHING_STAFF ↔ Team:** 단일 소속. `User.teamId → Team`. Player와 동일 원칙.
 
@@ -205,6 +205,7 @@ HEAD_COACH와 동일한 시스템 권한을 상시 보유한다. "부재 시 대
 
 ### MEDICAL (의료진)
 담당 영역: 부상(Injury) 기록 작성·상태 변경 전담. 부상 예방 훈련은 PHYSICAL_COACH 소관이며 MEDICAL 소관이 아니다.
+클럽 공용 조직 — `teamId` 없음. 1군·유소년 구분 없이 클럽 전체 선수를 담당한다.
 
 **협진 병원:** 외부 병원 의료진은 시스템 계정을 갖지 않는다. 클럽 MEDICAL이 협진 결과를 대신 입력한다.
 
@@ -304,8 +305,6 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 
 **메타데이터:** date, opponent, venue(`HOME | AWAY | NEUTRAL`), homeScore, awayScore, competitionType, seasonId, externalId
 
-> **타입 수정 필요:** `Player_match_stats.xG`, `Player_match_stats.xA`가 스키마에 `Int?`로 선언되어 있으나 Expected Goals는 소수값이므로 `Float?`로 마이그레이션 필요.
-
 **competitionType enum:** `LEAGUE | DOMESTIC_CUP | CONTINENTAL | PLAYOFF | FRIENDLY`
 
 **인제스트 흐름:**
@@ -316,12 +315,9 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 **externalId 매핑 실패 시:** 해당 선수 스탯 스킵 + FRONT_OFFICE에 미매핑 선수 목록 알림. `Player.externalId` 연결 후 재처리 가능.
 
 ### PlayerMatchStats (경기 선수 스탯)
-경기별 선수 수치 데이터 (골·어시스트·패스 정확도·태클 성공률 등). 내부 평가·코멘트는 포함하지 않는다. 선수 본인·AGENT 포함 전 역할 열람 가능 (본인 또는 담당 선수 범위 내).
+경기별 선수 수치 데이터 (골·어시스트·패스 시도/성공 수·태클 성공률 등). 내부 평가·코멘트는 포함하지 않는다. 선수 본인·AGENT 포함 전 역할 열람 가능 (본인 또는 담당 선수 범위 내).
 
 **Position Diversity Index (유소년 전용):** `LineupSlot.slotKey` → Position 매핑 + `PlayerMatchStats.minutesPlayed`를 온디맨드 집계하여 포지션별 출전 시간 비율을 반환. 별도 테이블 없음. 훈련 포지션 추적은 미지원(TrainingParticipant에 positionAssigned 없음). `GET /players/:id/position-diversity` 엔드포인트로 제공. `Team.type !== 'YOUTH'`인 선수는 빈 응답.
-
-> **타입 수정 필요:** `xG`, `xA` → `Float?` 마이그레이션 필요 (현재 `Int?`로 잘못 선언).
-> **필드 추가 필요:** `aerial_duel_success_rate: Float?` (수비수 레이더 차트 공중볼 축).
 
 **레이더 차트 축 정의 (포지션 그룹별, 각 6축):**
 
@@ -331,9 +327,9 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 | | 찬스 메이킹 | `xA`, `assist` |
 | | 드리블/활동량 | `sprint` |
 | | 슈팅 정확도 | `clear_cut_chance_rate` |
-| | 패스 | `passing_accuracy` |
+| | 패스 | `passesCompleted / passesAttempted` 역산 |
 | | 세트피스 | `penalty_conversion_rate`, `free_kick_conversion_rate` |
-| **미드필더** (CDM·CM·CAM) | 패스 | `passing_accuracy` |
+| **미드필더** (CDM·CM·CAM) | 패스 | `passesCompleted / passesAttempted` 역산 |
 | | 기회창출 | `xA`, `assist` |
 | | 수비 기여 | `tackle_success_rate`, `interception` |
 | | 활동량 | `sprint` |
@@ -342,11 +338,11 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 | **수비수** (CB·WB·FB) | 태클 | `tackle_success_rate` |
 | | 인터셉트 | `interception` |
 | | 클리어런스 | `clearance` |
-| | 공중볼 | `aerial_duel_success_rate` *(신규 필드)* |
-| | 빌드업 패스 | `passing_accuracy` |
+| | 공중볼 | `aerial_duel_success_rate` |
+| | 빌드업 패스 | `passesCompleted / passesAttempted` 역산 |
 | | 활동량 | `sprint` |
-| **골키퍼** | 세이브율 | `shots_on_target - shot_allowed` 역산 |
-| | 빌드업 패스 | `passing_accuracy` |
+| **골키퍼** | 세이브율 | `saves / (saves + shotsAllowed)` 역산 |
+| | 빌드업 패스 | `passesCompleted / passesAttempted` 역산 |
 | | 크로스 처리 | `crosses_completed` |
 | | 슈팅 방어 | `shot_blocked` |
 | | 실점 방어 | `shot_allowed` |
@@ -361,7 +357,10 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 - 자동 인제스트: 외부 API 대회 정보 → 내부 enum 매핑 테이블로 변환
 - 수동 입력: FRONT_OFFICE / COACHING_STAFF가 직접 선택
 
-**수동 입력:** FRONT_OFFICE 또는 COACHING_STAFF가 `PlayerMatchStats` 직접 입력 가능. API 장애·미커버 대회 대응.
+**수동 입력:** FRONT_OFFICE 또는 COACHING_STAFF가 `PlayerMatchStats` 직접 입력 가능. API 장애·미커버 대회 대응. 아래 필드는 수동 입력 경로 없이 자동 집계된다:
+- `xG`·`xA`·`keyPasses`: `ShotEvent` 기반 `recalculateXgXa` 단일 출처
+- `TeamMatchStats.shots`·`passes`·`passAccuracy`·`fouls`·`tackles`·`interceptions`·`clearances`·`shotsOnTarget`·`xG`: `PlayerMatchStats` 집계(`recalculateTeamStats`)로 자동 계산. 팀 스탯 입력 폼에는 점유율·경고·퇴장·코너킥·오프사이드만 수동 입력.
+- `TeamMatchStats.passAccuracy`: `passesCompleted / passesAttempted × 100`. `PlayerMatchStats`에는 원시 카운트(`passesAttempted Int`, `passesCompleted Int`)만 저장되며, 성공률은 항상 역산.
 
 ### MatchLineup / LineupSlot (경기 라인업)
 
@@ -622,15 +621,24 @@ PENDING → GUARDIAN_APPROVED → CONTRACTED
 
 **상태머신:**
 ```
-REQUESTED → APPROVED → ACTIVE (teamId 업데이트)
+REQUESTED → DOCS_SUBMITTED → APPROVED → COMPLETED
            ↘ REJECTED
 ```
 
-**필드:** `playerId → Player`, `fromTeamId → Team`(출신 유소년 팀), `toTeamId → Team`(1군), `requestedById → User`(HEAD_COACH), `approvedById → User`(GM), `reason`(콜업 사유), `status`(REQUESTED \| APPROVED \| REJECTED \| COMPLETED), `startDate`, `endDate`(nullable — 미지정 시 영구 이적으로 간주)
+- `REQUESTED`: HEAD_COACH 요청 직후. 유소년감독·의무팀 서류 확인 대기 중.
+- `DOCS_SUBMITTED`: `youthCoachConfirmed`와 `medicalConfirmed` 양쪽 모두 `true`가 되는 순간 서비스 레이어가 자동 전환. GM 최종 승인 대기 중.
+- `APPROVED`: GM 승인. 이 시점에 `Player.teamId` → `toTeamId`로 즉시 업데이트 + `AuditLog` 기록.
+- `COMPLETED`: 콜업 기간 종료. HEAD_COACH 또는 GM이 수동 처리. `Player.teamId` → `fromTeamId`로 자동 원복 + `AuditLog` 기록.
+- `REJECTED`: `DOCS_SUBMITTED` 상태에서 GM이 거절. 거절 사유(`reason`) 필수. 종결 상태이며 이후 동일 선수에 대한 재신청 허용.
 
-**흐름:** HEAD_COACH 요청 → GM 승인 → `Player.teamId` 자동 업데이트 + `AuditLog` 기록. 거절 시 `reason` 필수.
+**필드:** `playerId → Player`, `fromTeamId → Team`(출신 유소년 팀), `toTeamId → Team`(1군), `requestedById → User`(HEAD_COACH), `approvedById → User`(GM), `reason`(콜업 사유), `rejectionReason`(거절 사유, nullable), `status`(REQUESTED \| DOCS_SUBMITTED \| APPROVED \| REJECTED \| COMPLETED), `youthCoachConfirmed: Boolean`(유소년팀 HEAD_COACH 서류 확인 여부), `medicalConfirmed: Boolean`(의무팀 서류 확인 여부), `startDate`, `endDate`(nullable — 임시 합류 종료 예정일. null이면 종료 시점 미확정. 영구 이적은 Transfer 도메인에서 처리하며 콜업은 항상 임시 성격)
 
-**완료(COMPLETED):** `endDate` 도래 시 HEAD_COACH 또는 GM이 수동으로 COMPLETED 처리. `Player.teamId` 원복은 수동. 자동 복귀 없음.
+**흐름:**
+1. HEAD_COACH 콜업 요청 → 유소년팀 HEAD_COACH·MEDICAL 스태프·GUARDIAN에게 알림
+2. 유소년팀 HEAD_COACH가 `PATCH /:id/confirm-youth` 호출 → `youthCoachConfirmed = true`
+3. MEDICAL 스태프가 `PATCH /:id/confirm-medical` 호출 → `medicalConfirmed = true`
+4. 2·3 순서 무관. 양쪽 모두 완료되는 시점에 서비스 레이어가 `DOCS_SUBMITTED`로 자동 전환 + GM·TD 알림
+5. GM이 `PATCH /:id/approve` → `APPROVED` + `Player.teamId` 업데이트, 또는 `PATCH /:id/reject` → `REJECTED`
 
 ---
 
@@ -963,7 +971,10 @@ REJECTED 상태에서 원 신청자가 재상신 가능. 재상신 시 `rejectio
 | 훈련 세션 변경·취소 | GUARDIAN (자녀 소속 팀) | TrainingSession 시간 변경 또는 취소 처리 시 (`YOUTH_SESSION_CHANGED`) |
 | 사고 보고서 제출 | GUARDIAN (해당 자녀) | IncidentReport → SUBMITTED 전환 시 (`INCIDENT_REPORT_SUBMITTED`) |
 | 입단 신청 상태 변경 | GUARDIAN (해당 신청 건) | YouthRegistration 상태 전환 시 (`YOUTH_REGISTRATION_STATUS_CHANGED`) |
-| 1군 콜업 요청 | GUARDIAN (해당 자녀) | PlayerCallup REQUESTED 시 (`CALLUP_REQUESTED` 수신자 확장) |
+| 1군 콜업 요청 | 유소년팀 HEAD_COACH, MEDICAL 스태프, GUARDIAN (해당 자녀) | PlayerCallup REQUESTED 시 (`CALLUP_REQUESTED`) |
+| 콜업 서류 완료 | GM, TD | `youthCoachConfirmed` + `medicalConfirmed` 양쪽 완료 시 (`CALLUP_DOCS_READY`) |
+| 콜업 승인 | 요청자(HEAD_COACH) | GM이 승인 처리 시 (`CALLUP_APPROVED`) |
+| 콜업 거절 | 요청자(HEAD_COACH) | GM이 거절 처리 시 (`CALLUP_REJECTED`) |
 
 **저장 방식:** 수신자별 Notification 레코드 DB 저장. 읽음/안읽음 상태 추적. `/notifications` 목록 페이지 제공.
 
@@ -995,4 +1006,8 @@ MEDICAL_EXPENSE_APPROVED
 TRAINING_LOAD_ALERT
 PLAYER_DEVELOPMENT_PLAN_ACTIVATED
 LINEUP_CONFIRMED
+CALLUP_REQUESTED
+CALLUP_DOCS_READY
+CALLUP_APPROVED
+CALLUP_REJECTED
 ```

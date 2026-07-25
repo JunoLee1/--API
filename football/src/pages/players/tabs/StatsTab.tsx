@@ -123,11 +123,9 @@ export function StatsTab({ playerId }: Props) {
                           : '-'}
                     </td>
                     <td className="text-right pr-3">
-                      {(s.passAccuracy != null && s.passAccuracy > 0)
-                        ? `${s.passAccuracy.toFixed(0)}%`
-                        : (s.minutesPlayed != null && s.minutesPlayed > 0)
-                          ? <span className="text-orange-500 font-bold">⚠</span>
-                          : '-'}
+                      {(s.passesAttempted != null && s.passesAttempted > 0)
+                        ? `${Math.round((s.passesCompleted ?? 0) / s.passesAttempted * 100)}%`
+                        : '-'}
                     </td>
                     <td className="text-right pr-3">{fmt(s.tackleSuccessRate, 0)}{s.tackleSuccessRate != null ? '%' : ''}</td>
                     <td className="text-right">{s.minutesPlayed != null ? `${s.minutesPlayed}'` : '-'}</td>

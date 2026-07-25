@@ -74,6 +74,7 @@ export interface PlayerListQuery {
   status?: PlayerStatus
   position?: Position
   level?: PlayerLevel
+  excludeYouth?: boolean
 }
 
 export interface CreatePlayerPayload {
@@ -196,14 +197,28 @@ export interface MatchStat {
   id: number
   goals: number | null
   assists: number | null
+  shots: number | null
+  keyPasses: number | null
   xG: number | null
   xA: number | null
-  passAccuracy: number | null
+  passesAttempted: number | null
+  passesCompleted: number | null
+  tackles: number | null
+  tacklesAttempted: number | null
   tackleSuccessRate: number | null
   clearances: number | null
   interceptions: number | null
   saves: number | null
+  cleanSheet: boolean | null
   aerialDuelSuccessRate: number | null
+  groundDuels: number | null
+  groundDuelsAttempted: number | null
+  groundDuelSuccessRate: number | null
+  aerialDuels: number | null
+  aerialDuelsAttempted: number | null
+  ballRecoveries: number | null
+  turnovers: number | null
+  distanceCovered: number | null
   sprint: number | null
   clearCutChanceRate: number | null
   penaltyConversionRate: number | null

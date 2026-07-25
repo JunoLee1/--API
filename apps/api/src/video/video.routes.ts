@@ -19,6 +19,7 @@ router.get("/my-assignments", auth, controller.getMyAssignments);
 router.get("/:id", auth, controller.getVideoById);
 router.post("/", auth, controller.createVideo);
 router.delete("/:id", auth, controller.deleteVideo);
+router.post("/:id/ai-summary", auth, controller.generateAiSummary);
 router.post("/:id/assignments", auth, controller.createAssignment);
 router.patch("/:id/assignments/:playerId/progress", auth, controller.updateProgress);
 

@@ -5,9 +5,12 @@ const SELECT = {
   id: true,
   status: true,
   reason: true,
+  rejectionReason: true,
   startDate: true,
   endDate: true,
   createdAt: true,
+  youthCoachConfirmed: true,
+  medicalConfirmed: true,
   player: { select: { id: true, playerName: true, position: true, guardianId: true } },
   fromTeam: { select: { id: true, name: true } },
   toTeam: { select: { id: true, name: true } },
@@ -29,6 +32,13 @@ export class PlayerCallupRepository {
 
   findById(id: number) {
     return this.prisma.playerCallup.findUnique({ where: { id }, select: SELECT });
+  }
+
+  findActiveByPlayerId(playerId: string) {
+    return this.prisma.playerCallup.findFirst({
+      where: { playerId, status: { in: ["REQUESTED", "DOCS_SUBMITTED", "APPROVED"] } },
+      select: { id: true },
+    });
   }
 
   create(dto: CreateCallupDto & { requestedById: number }) {
@@ -54,10 +64,10 @@ export class PlayerCallupRepository {
     });
   }
 
-  reject(id: number, approvedById: number, reason: string) {
+  reject(id: number, approvedById: number, rejectionReason: string) {
     return this.prisma.playerCallup.update({
       where: { id },
-      data: { status: "REJECTED", approvedById, reason },
+      data: { status: "REJECTED", approvedById, rejectionReason },
       select: SELECT,
     });
   }
@@ -66,6 +76,30 @@ export class PlayerCallupRepository {
     return this.prisma.playerCallup.update({
       where: { id },
       data: { status: "COMPLETED" },
+      select: SELECT,
+    });
+  }
+
+  confirmYouth(id: number) {
+    return this.prisma.playerCallup.update({
+      where: { id },
+      data: { youthCoachConfirmed: true },
+      select: SELECT,
+    });
+  }
+
+  confirmMedical(id: number) {
+    return this.prisma.playerCallup.update({
+      where: { id },
+      data: { medicalConfirmed: true },
+      select: SELECT,
+    });
+  }
+
+  submitDocs(id: number) {
+    return this.prisma.playerCallup.update({
+      where: { id },
+      data: { status: "DOCS_SUBMITTED" },
       select: SELECT,
     });
   }

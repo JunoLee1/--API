@@ -19,4 +19,10 @@ export const callupApi = {
 
   complete: (id: number) =>
     api.patch<PlayerCallup>(`/player-callups/${id}/complete`, {}),
+
+  confirmYouth: (id: number) =>
+    api.patch<PlayerCallup>(`/player-callups/${id}/confirm-youth`, {}),
+
+  confirmMedical: (id: number) =>
+    api.patch<PlayerCallup>(`/player-callups/${id}/confirm-medical`, {}),
 }

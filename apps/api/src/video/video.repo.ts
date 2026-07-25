@@ -92,4 +92,12 @@ export class VideoRepository {
   deleteVideo(id: number) {
     return this.prisma.trainingVideo.delete({ where: { id } });
   }
+
+  updateAiSummary(id: number, aiSummary: string) {
+    return this.prisma.trainingVideo.update({
+      where: { id },
+      data: { aiSummary },
+      select: { id: true, aiSummary: true },
+    });
+  }
 }

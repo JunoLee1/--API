@@ -31,4 +31,7 @@ export const videoApi = {
 
   updateProgress: (videoId: number, playerId: string, progressRate: number) =>
     api.patch<VideoAssignment>(`/videos/${videoId}/assignments/${playerId}/progress`, { progressRate }),
+
+  generateAiSummary: (id: number) =>
+    api.post<{ id: number; aiSummary: string }>(`/videos/${id}/ai-summary`),
 }

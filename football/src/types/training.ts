@@ -116,4 +116,5 @@ export interface TrainingResultFilters {
   to?: string
   sessionType?: SessionType | ''
   playerId?: string
+  nullOnly?: boolean
 }

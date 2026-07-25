@@ -272,6 +272,7 @@ enum NotificationType {
   CALLUP_REQUESTED
   CALLUP_APPROVED
   CALLUP_REJECTED
+  CALLUP_DOCS_READY
   LOAN_OUT_EXPIRED
   TACTICAL_ANALYSIS_CONFIRM_REQUESTED
   JERSEY_NUMBER_CONFLICT
@@ -523,6 +524,8 @@ model User {
   isSuspended              Boolean                 @default(false)
   safeguardReportsAccused  SafeguardReport[]       @relation("SafeguardAccused")
   guardianFees             AcademyFee[]            @relation("GuardianFees")
+  givenEvaluations         CoachingStaffEvaluation[] @relation("EvaluationGiver")
+  receivedEvaluations      CoachingStaffEvaluation[] @relation("EvaluationReceiver")
 }
 
 model Season {
@@ -591,6 +594,7 @@ model Player {
   growthEvaluations      GrowthEvaluation[]
   badges                 PlayerBadge[]
   academyFees            AcademyFee[]
+  secondaryPositions     PlayerSecondaryPosition[]
 }
 
 model Contract {
@@ -826,6 +830,8 @@ model Match {
   externalId      String?         @unique
   seasonId        Int
   teamId          Int?
+  statSheetRaw       Json?
+  statSheetImagePath String?
 
   season           Season             @relation(fields: [seasonId], references: [id])
   team             Team?              @relation(fields: [teamId], references: [id])
@@ -845,16 +851,26 @@ model PlayerMatchStats {
   xG                Float?
   xA                Float?
   shots             Int?
-  passAccuracy      Float?
   keyPasses         Int?
   tackles           Int?
+  tacklesAttempted  Int?
   tackleSuccessRate Float?
   clearances        Int?
   interceptions     Int?
   saves             Int?
   cleanSheet             Boolean?
   minutesPlayed          Int?
+  passesAttempted        Int?
+  passesCompleted        Int?
+  aerialDuels            Int?
+  aerialDuelsAttempted   Int?
   aerialDuelSuccessRate  Float?
+  groundDuels            Int?
+  groundDuelsAttempted   Int?
+  groundDuelSuccessRate  Float?
+  ballRecoveries         Int?
+  turnovers              Int?
+  distanceCovered        Float?
   sprint                 Float?
   clearCutChanceRate     Float?
   penaltyConversionRate  Float?
@@ -862,11 +878,14 @@ model PlayerMatchStats {
   foulsCommitted         Int?
   crossesCompleted       Int?
   shotsAllowed           Int?
+  shotBlocked            Int?
   matchId                Int
   playerId          String
 
   match  Match  @relation(fields: [matchId], references: [id])
   player Player @relation(fields: [playerId], references: [id])
+
+  @@unique([matchId, playerId])
 }
 
 enum ShotResult {
@@ -1360,6 +1379,30 @@ model CoachTier2Evaluation {
   coach Coach @relation(fields: [coachId], references: [id])
 }
 
+model PlayerSecondaryPosition {
+  id            Int      @id @default(autoincrement())
+  playerId      String
+  position      Position
+  fitnessTarget Float
+  createdAt     DateTime @default(now())
+
+  player Player @relation(fields: [playerId], references: [id])
+
+  @@unique([playerId, position])
+}
+
+model CoachingStaffEvaluation {
+  id          Int      @id @default(autoincrement())
+  staffUserId Int
+  evaluatorId Int
+  score       Int
+  comment     String?
+  evaluatedAt DateTime @default(now())
+
+  staffUser User @relation("EvaluationReceiver", fields: [staffUserId], references: [id])
+  evaluator User @relation("EvaluationGiver", fields: [evaluatorId], references: [id])
+}
+
 model CoachTutorAssignment {
   id                         Int                  @id @default(autoincrement())
   coachId                    Int
@@ -1430,6 +1473,7 @@ model TrainingVideo {
   sessionType  SessionType?
   uploadedById Int
   createdAt    DateTime     @default(now())
+  aiSummary    String?
 
   uploader    User              @relation("VideoUploader", fields: [uploadedById], references: [id])
   assignments VideoAssignment[]
@@ -1472,6 +1516,7 @@ enum ReferenceSource {
 
 enum PlayerCallupStatus {
   REQUESTED
+  DOCS_SUBMITTED
   APPROVED
   REJECTED
   COMPLETED
@@ -1579,8 +1624,11 @@ model PlayerCallup {
   toTeamId      Int
   requestedById Int
   approvedById  Int?
-  reason        String
-  status        PlayerCallupStatus @default(REQUESTED)
+  reason          String
+  rejectionReason String?
+  status          PlayerCallupStatus @default(REQUESTED)
+  youthCoachConfirmed Boolean            @default(false)
+  medicalConfirmed    Boolean            @default(false)
   startDate     DateTime
   endDate       DateTime?
   createdAt     DateTime           @default(now())

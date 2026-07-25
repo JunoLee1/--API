@@ -20,15 +20,27 @@ export interface PlayerMatchStat {
   xG: number | null
   xA: number | null
   shots: number | null
-  passAccuracy: number | null
+  passesAttempted: number | null
+  passesCompleted: number | null
   keyPasses: number | null
   tackles: number | null
+  tacklesAttempted: number | null
   tackleSuccessRate: number | null
   clearances: number | null
   interceptions: number | null
   saves: number | null
   cleanSheet: boolean | null
   minutesPlayed: number | null
+  aerialDuels: number | null
+  aerialDuelsAttempted: number | null
+  aerialDuelSuccessRate: number | null
+  groundDuels: number | null
+  groundDuelsAttempted: number | null
+  groundDuelSuccessRate: number | null
+  ballRecoveries: number | null
+  turnovers: number | null
+  distanceCovered: number | null
+  sprint: number | null
   player: { playerName: string; position: string }
 }
 
@@ -66,6 +78,29 @@ export const SHOT_RESULT_STYLE: Record<ShotResult, string> = {
   BLOCKED:    'bg-orange-100 text-orange-800 border-orange-200',
 }
 
+export interface StatSheetTeamStat {
+  home: number | null
+  away: number | null
+}
+
+export interface StatSheetScorer {
+  name: string
+  team: 'home' | 'away'
+  minute: number | null
+}
+
+export interface StatSheetData {
+  possession: StatSheetTeamStat
+  shots: StatSheetTeamStat
+  shotsOnTarget: StatSheetTeamStat
+  goals: StatSheetTeamStat
+  corners: StatSheetTeamStat
+  fouls: StatSheetTeamStat
+  yellowCards: StatSheetTeamStat
+  redCards: StatSheetTeamStat
+  scorers: StatSheetScorer[]
+}
+
 export interface ShotEvent {
   id:                       number
   matchId:                  number
@@ -78,8 +113,11 @@ export interface ShotEvent {
 }
 
 export interface MatchDetail extends Match {
+  hasSquad: boolean
   playerMatchStats: PlayerMatchStat[]
   teamMatchStats: TeamMatchStat | null
+  statSheetRaw: StatSheetData | null
+  statSheetImagePath: string | null
 }
 
 export const COMPETITION_LABEL: Record<CompetitionType, string> = {

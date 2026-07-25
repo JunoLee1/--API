@@ -99,11 +99,10 @@ export function JerseyTab({ playerId, teamId, canAssign, canRetire, canReactivat
   teamJerseys.forEach((j) => teamMap.set(j.number, j))
 
   return (
-    <div className="p-6 space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-2xl">
 
       {/* 배정된 등번호 */}
       <div>
-        <h3 className="text-sm font-semibold mb-3">배정된 등번호</h3>
         {jerseys.length === 0 ? (
           <p className="text-sm text-muted-foreground">배정된 등번호가 없습니다.</p>
         ) : (

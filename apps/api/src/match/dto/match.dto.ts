@@ -34,32 +34,39 @@ export interface UpsertPlayerStatsDto {
   xG?: number;
   xA?: number;
   shots?: number;
-  passAccuracy?: number;
+  passesAttempted?: number;
+  passesCompleted?: number;
   keyPasses?: number;
   tackles?: number;
-  tackleSuccessRate?: number;
+  tacklesAttempted?: number;
   clearances?: number;
   interceptions?: number;
   saves?: number;
   cleanSheet?: boolean;
   minutesPlayed?: number;
+  aerialDuels?: number;
+  aerialDuelsAttempted?: number;
+  groundDuels?: number;
+  groundDuelsAttempted?: number;
+  ballRecoveries?: number;
+  turnovers?: number;
+  sprint?: number;
+  clearCutChanceRate?: number;
+  penaltyConversionRate?: number;
+  freeKickConversionRate?: number;
+  foulsCommitted?: number;
+  crossesCompleted?: number;
+  shotsAllowed?: number;
+  shotBlocked?: number;
+  distanceCovered?: number;
 }
 
 export interface UpsertTeamStatsDto {
   possession: number;
-  shots: number;
-  shotsOnTarget: number;
-  passes: number;
-  passAccuracy: number;
-  fouls: number;
   yellowCards: number;
   redCards: number;
-  xG: number;
   corners: number;
   offsides: number;
-  tackles: number;
-  interceptions: number;
-  clearances: number;
 }
 
 export type ShotResultType = 'GOAL' | 'ON_TARGET' | 'OFF_TARGET' | 'BLOCKED';

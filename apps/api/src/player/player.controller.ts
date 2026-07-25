@@ -4,11 +4,13 @@ import { PlayerService } from "./player.service";
 import { PlayerListQuery } from "./dto/player.dto";
 import { PlayerStatus, Position, PlayerLevel } from "../generated/enums";
 import { getPlayerRadarData } from "./radar.service";
+import { SecondaryPositionRepository } from "./secondary-position.repo";
 
 const WRITE_ROLES = ["ADMIN", "FRONT_OFFICE"] as const;
+const SECONDARY_POS_WRITE_ROLES = ["ADMIN", "COACHING_STAFF"] as const;
 
 export class PlayerController {
-  constructor(private service: PlayerService) {}
+  constructor(private service: PlayerService, private spRepo?: SecondaryPositionRepository) {}
 
   getPlayers = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -18,6 +20,7 @@ export class PlayerController {
       if (q["position"]) query.position = q["position"] as Position;
       if (q["level"]) query.level = q["level"] as PlayerLevel;
       if (q["nationalityId"]) query.nationalityId = Number(q["nationalityId"]);
+      if (q["excludeYouth"] === "true") query.excludeYouth = true;
       const players = await this.service.getPlayers(query);
       res.status(200).json(players);
     } catch (err) {
@@ -141,6 +144,32 @@ export class PlayerController {
       const radar = await getPlayerRadarData(player.position, stats as any);
       if (!radar) return res.json({ scores: {}, strengths: [], weaknesses: [], message: "데이터 부족" });
       res.json(radar);
+    } catch (err) { next(err); }
+  };
+
+  listSecondaryPositions = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const rows = await this.spRepo!.list(String(req.params["playerId"]));
+      res.json(rows);
+    } catch (err) { next(err); }
+  };
+
+  upsertSecondaryPosition = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!SECONDARY_POS_WRITE_ROLES.includes(req.user!.role as any))
+        throw new AppError(403, "FORBIDDEN");
+      const { position, fitnessTarget } = req.body as { position: Position; fitnessTarget: number };
+      const row = await this.spRepo!.upsert(String(req.params["playerId"]), position, fitnessTarget);
+      res.json(row);
+    } catch (err) { next(err); }
+  };
+
+  deleteSecondaryPosition = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!SECONDARY_POS_WRITE_ROLES.includes(req.user!.role as any))
+        throw new AppError(403, "FORBIDDEN");
+      await this.spRepo!.delete(String(req.params["playerId"]), String(req.params["position"]) as Position);
+      res.status(204).send();
     } catch (err) { next(err); }
   };
 }

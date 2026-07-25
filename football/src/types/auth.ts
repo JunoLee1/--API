@@ -57,6 +57,7 @@ export interface UserDto {
   role: Role
   coachingRole: CoachingRole | null
   frontOfficeRole: FrontOfficeRole | null
+  teamId: number | null
   isOutOfOffice: boolean
 }
 

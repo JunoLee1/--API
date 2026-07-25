@@ -98,6 +98,32 @@ export class NotificationRepository {
     });
   }
 
+  createForYouthHeadCoach(fromTeamId: number, type: string, title: string, body: string, entityId?: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const coaches = await tx.user.findMany({
+        where: { role: "COACHING_STAFF", coachingRole: "HEAD_COACH", teamId: fromTeamId },
+        select: { id: true },
+      });
+      if (coaches.length === 0) return;
+      await tx.notification.createMany({
+        data: coaches.map((u) => ({ userId: u.id, type, title, body, entityId })) as any,
+      });
+    });
+  }
+
+  createForMedicalStaff(type: string, title: string, body: string, entityId?: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const medics = await tx.user.findMany({
+        where: { role: "COACHING_STAFF", coachingRole: "MEDICAL" },
+        select: { id: true },
+      });
+      if (medics.length === 0) return;
+      await tx.notification.createMany({
+        data: medics.map((u) => ({ userId: u.id, type, title, body, entityId })) as any,
+      });
+    });
+  }
+
   createForCoachingStaff(type: string, title: string, body: string, entityId?: number) {
     return this.prisma.$transaction(async (tx) => {
       const coaches = await tx.user.findMany({

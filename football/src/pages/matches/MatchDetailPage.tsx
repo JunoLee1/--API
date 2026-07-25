@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { matchApi } from '@/services/match.service'
-import type { MatchDetail, ShotEvent, ShotResult } from '@/types/match'
+import type { MatchDetail, ShotEvent, ShotResult, StatSheetData } from '@/types/match'
 import { COMPETITION_LABEL, SHOT_RESULT_LABEL, SHOT_RESULT_STYLE } from '@/types/match'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ArrowLeft, Pencil, Trash2, Plus, Users } from 'lucide-react'
+import { ArrowLeft, Pencil, Trash2, Plus, Users, ScanLine } from 'lucide-react'
 import { playerApi } from '@/services/player.service'
 import { POSITION_ABBR, POSITION_ZONE, POSITION_LABEL } from '@/types/player'
 import type { Player, Position } from '@/types/player'
@@ -28,35 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import {
-  Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer,
-} from 'recharts'
-
 type PlayerStat = MatchDetail['playerMatchStats'][number]
-
-function buildRadarData(s: PlayerStat) {
-  return [
-    { axis: '득점',  value: Math.min((s.goals   ?? 0) / 3  * 100, 100) },
-    { axis: '도움',  value: Math.min((s.assists  ?? 0) / 3  * 100, 100) },
-    { axis: 'xG',   value: Math.min((s.xG       ?? 0) / 3  * 100, 100) },
-    { axis: '슈팅',  value: Math.min((s.shots    ?? 0) / 8  * 100, 100) },
-    { axis: '패스%', value: s.passAccuracy ?? 0 },
-    { axis: '키패스', value: Math.min((s.keyPasses ?? 0) / 8 * 100, 100) },
-  ]
-}
-
-function PlayerRadar({ s }: { s: PlayerStat }) {
-  const data = buildRadarData(s)
-  return (
-    <ResponsiveContainer width="100%" height={180}>
-      <RadarChart data={data} margin={{ top: 10, right: 24, bottom: 10, left: 24 }}>
-        <PolarGrid stroke="#e2e8f0" />
-        <PolarAngleAxis dataKey="axis" tick={{ fontSize: 10, fill: '#64748b' }} />
-        <Radar dataKey="value" stroke="#2563eb" fill="#2563eb" fillOpacity={0.2} dot={{ r: 2, fill: '#2563eb' }} />
-      </RadarChart>
-    </ResponsiveContainer>
-  )
-}
 
 const ZONE_STYLE: Record<string, string> = {
   GK: 'bg-amber-100 text-amber-800 border-amber-200',
@@ -104,55 +76,28 @@ function StatRow({ label, homeVal, awayVal, homeMax, fmt, homeColor = '#2563eb',
 
 type TeamStatsForm = {
   possession: string
-  shots: string
-  shotsOnTarget: string
-  passes: string
-  passAccuracy: string
-  fouls: string
   yellowCards: string
   redCards: string
-  xG: string
   corners: string
   offsides: string
-  tackles: string
-  interceptions: string
-  clearances: string
 }
 
-const TEAM_STATS_FIELDS: { key: keyof TeamStatsForm; label: string; float?: boolean }[] = [
+const TEAM_STATS_FIELDS: { key: keyof TeamStatsForm; label: string }[] = [
   { key: 'possession', label: '점유율 (%)' },
-  { key: 'shots', label: '슈팅' },
-  { key: 'shotsOnTarget', label: '유효 슈팅' },
-  { key: 'xG', label: 'xG', float: true },
-  { key: 'passes', label: '패스' },
-  { key: 'passAccuracy', label: '패스 성공률 (%)', float: true },
-  { key: 'corners', label: '코너킥' },
-  { key: 'fouls', label: '파울' },
   { key: 'yellowCards', label: '경고' },
   { key: 'redCards', label: '퇴장' },
+  { key: 'corners', label: '코너킥' },
   { key: 'offsides', label: '오프사이드' },
-  { key: 'tackles', label: '태클' },
-  { key: 'interceptions', label: '인터셉트' },
-  { key: 'clearances', label: '클리어링' },
 ]
 
 function makeEmptyForm(ts?: MatchDetail['teamMatchStats']): TeamStatsForm {
-  if (!ts) return { possession: '', shots: '', shotsOnTarget: '', passes: '', passAccuracy: '', fouls: '', yellowCards: '', redCards: '', xG: '', corners: '', offsides: '', tackles: '', interceptions: '', clearances: '' }
+  if (!ts) return { possession: '', yellowCards: '', redCards: '', corners: '', offsides: '' }
   return {
     possession: String(ts.possession),
-    shots: String(ts.shots),
-    shotsOnTarget: String(ts.shotsOnTarget),
-    passes: String(ts.passes),
-    passAccuracy: String(ts.passAccuracy),
-    fouls: String(ts.fouls),
     yellowCards: String(ts.yellowCards),
     redCards: String(ts.redCards),
-    xG: String(ts.xG),
     corners: String(ts.corners),
     offsides: String(ts.offsides),
-    tackles: String(ts.tackles),
-    interceptions: String(ts.interceptions),
-    clearances: String(ts.clearances),
   }
 }
 
@@ -179,19 +124,10 @@ function TeamStatsDialog({ open, onOpenChange, match, onSaved }: TeamStatsDialog
     try {
       await matchApi.upsertTeamStats(match.id, {
         possession: Number(form.possession),
-        shots: Number(form.shots),
-        shotsOnTarget: Number(form.shotsOnTarget),
-        passes: Number(form.passes),
-        passAccuracy: Number(form.passAccuracy),
-        fouls: Number(form.fouls),
         yellowCards: Number(form.yellowCards),
         redCards: Number(form.redCards),
-        xG: Number(form.xG),
         corners: Number(form.corners),
         offsides: Number(form.offsides),
-        tackles: Number(form.tackles),
-        interceptions: Number(form.interceptions),
-        clearances: Number(form.clearances),
       })
       toast.success('팀 통계가 저장됐습니다.')
       onSaved()
@@ -239,13 +175,23 @@ type PlayerStatsForm = {
   xG: string
   xA: string
   shots: string
-  passAccuracy: string
+  passesAttempted: string
+  passesCompleted: string
   keyPasses: string
   tackles: string
+  tacklesAttempted: string
   interceptions: string
   clearances: string
   saves: string
   cleanSheet: boolean
+  ballRecoveries: string
+  turnovers: string
+  groundDuels: string
+  groundDuelsAttempted: string
+  aerialDuels: string
+  aerialDuelsAttempted: string
+  distanceCovered: string
+  sprint: string
 }
 
 const PLAYER_STAT_FIELDS: { key: keyof Omit<PlayerStatsForm, 'playerId' | 'cleanSheet'>; label: string; float?: boolean }[] = [
@@ -255,18 +201,29 @@ const PLAYER_STAT_FIELDS: { key: keyof Omit<PlayerStatsForm, 'playerId' | 'clean
   { key: 'xG', label: 'xG', float: true },
   { key: 'xA', label: 'xA', float: true },
   { key: 'shots', label: '슈팅' },
-  { key: 'passAccuracy', label: '패스 성공률(%)', float: true },
+  { key: 'passesAttempted', label: '패스 시도' },
+  { key: 'passesCompleted', label: '패스 성공' },
   { key: 'keyPasses', label: '키패스' },
-  { key: 'tackles', label: '태클' },
+  { key: 'tackles', label: '태클 성공' },
+  { key: 'tacklesAttempted', label: '태클 시도' },
   { key: 'interceptions', label: '인터셉트' },
   { key: 'clearances', label: '클리어링' },
   { key: 'saves', label: '선방' },
+  { key: 'ballRecoveries', label: '볼 회수' },
+  { key: 'turnovers', label: '턴오버' },
+  { key: 'groundDuels', label: '지상 경합 성공' },
+  { key: 'groundDuelsAttempted', label: '지상 경합 시도' },
+  { key: 'aerialDuels', label: '공중 경합 성공' },
+  { key: 'aerialDuelsAttempted', label: '공중 경합 시도' },
+  { key: 'distanceCovered', label: '뛴 거리(km)', float: true },
+  { key: 'sprint', label: '스프린트(회)', float: true },
 ]
 
 const EMPTY_PLAYER_FORM: PlayerStatsForm = {
   playerId: '', minutesPlayed: '', goals: '', assists: '', xG: '', xA: '',
-  shots: '', passAccuracy: '', keyPasses: '', tackles: '', interceptions: '',
-  clearances: '', saves: '', cleanSheet: false,
+  shots: '', passesAttempted: '', passesCompleted: '', keyPasses: '',
+  tackles: '', tacklesAttempted: '', interceptions: '', clearances: '', saves: '', cleanSheet: false,
+  ballRecoveries: '', turnovers: '', groundDuels: '', groundDuelsAttempted: '', aerialDuels: '', aerialDuelsAttempted: '', distanceCovered: '', sprint: '',
 }
 
 interface PlayerStatsDialogProps {
@@ -301,13 +258,23 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
         xG: (existing.xG != null && existing.xG > 0) ? String(existing.xG) : '',
         xA: (existing.xA != null && existing.xA > 0) ? String(existing.xA) : '',
         shots: existing.shots != null ? String(existing.shots) : '',
-        passAccuracy: (existing.passAccuracy != null && existing.passAccuracy > 0) ? String(existing.passAccuracy) : '',
+        passesAttempted: existing.passesAttempted != null ? String(existing.passesAttempted) : '',
+        passesCompleted: existing.passesCompleted != null ? String(existing.passesCompleted) : '',
         keyPasses: existing.keyPasses != null ? String(existing.keyPasses) : '',
         tackles: existing.tackles != null ? String(existing.tackles) : '',
+        tacklesAttempted: existing.tacklesAttempted != null ? String(existing.tacklesAttempted) : '',
         interceptions: existing.interceptions != null ? String(existing.interceptions) : '',
         clearances: existing.clearances != null ? String(existing.clearances) : '',
         saves: existing.saves != null ? String(existing.saves) : '',
         cleanSheet: existing.cleanSheet ?? false,
+        ballRecoveries: existing.ballRecoveries != null ? String(existing.ballRecoveries) : '',
+        turnovers: existing.turnovers != null ? String(existing.turnovers) : '',
+        groundDuels: existing.groundDuels != null ? String(existing.groundDuels) : '',
+        groundDuelsAttempted: existing.groundDuelsAttempted != null ? String(existing.groundDuelsAttempted) : '',
+        aerialDuels: existing.aerialDuels != null ? String(existing.aerialDuels) : '',
+        aerialDuelsAttempted: existing.aerialDuelsAttempted != null ? String(existing.aerialDuelsAttempted) : '',
+        distanceCovered: existing.distanceCovered != null ? String(existing.distanceCovered) : '',
+        sprint: existing.sprint != null ? String(existing.sprint) : '',
       })
     } else {
       setForm({ ...EMPTY_PLAYER_FORM, playerId })
@@ -321,31 +288,31 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
   const num = (v: string) => v !== '' ? Number(v) : undefined
   const numPos = (v: string) => { const n = Number(v); return v !== '' && n > 0 ? n : undefined }
 
-  const [warnShown, setWarnShown] = useState(false)
-
   const assistsVal  = Number(form.assists)      || 0
   const goalsVal    = Number(form.goals)        || 0
-  const minutesVal  = Number(form.minutesPlayed) || 0
+  const keyPassVal  = Number(form.keyPasses)    || 0
 
-  const fieldWarn = (key: string): boolean => {
-    if (key === 'xA'          && assistsVal > 0 && !form.xA)          return true
-    if (key === 'xG'          && goalsVal   > 0 && !form.xG)          return true
-    if (key === 'passAccuracy' && minutesVal > 0 && !form.passAccuracy) return true
+  const fieldError = (key: string): boolean => {
+    if (key === 'xA' && assistsVal > 0 && !form.xA) return true
+    if (key === 'xG' && goalsVal   > 0 && !form.xG) return true
+    if (key === 'passesAttempted' && keyPassVal > 0 && !form.passesAttempted) return true
     return false
   }
 
   const handleSave = async () => {
     if (!form.playerId) { toast.error('선수를 선택해주세요.'); return }
-    const missing: string[] = []
-    if (assistsVal > 0 && !form.xA)          missing.push('xA')
-    if (goalsVal   > 0 && !form.xG)          missing.push('xG')
-    if (minutesVal > 0 && !form.passAccuracy) missing.push('패스 성공률')
-    if (missing.length > 0 && !warnShown) {
-      toast.warning(`${missing.join(', ')} 값이 비어 있습니다. 그대로 저장하려면 한 번 더 누르세요.`)
-      setWarnShown(true)
+    if (goalsVal > 0 && !form.xG) {
+      toast.error('득점이 있으면 xG를 입력해야 합니다.')
       return
     }
-    setWarnShown(false)
+    if (assistsVal > 0 && !form.xA) {
+      toast.error('도움이 있으면 xA를 입력해야 합니다.')
+      return
+    }
+    if (keyPassVal > 0 && !form.passesAttempted) {
+      toast.error('키패스가 있으면 패스 시도 횟수를 입력해야 합니다.')
+      return
+    }
     setSaving(true)
     try {
       await matchApi.upsertPlayerStats(match.id, {
@@ -356,13 +323,23 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
         xG: numPos(form.xG),
         xA: numPos(form.xA),
         shots: num(form.shots),
-        passAccuracy: numPos(form.passAccuracy),
+        passesAttempted: num(form.passesAttempted),
+        passesCompleted: num(form.passesCompleted),
         keyPasses: num(form.keyPasses),
         tackles: num(form.tackles),
+        tacklesAttempted: num(form.tacklesAttempted),
         interceptions: num(form.interceptions),
         clearances: num(form.clearances),
         saves: num(form.saves),
         cleanSheet: form.cleanSheet || undefined,
+        ballRecoveries: num(form.ballRecoveries),
+        turnovers: num(form.turnovers),
+        groundDuels: num(form.groundDuels),
+        groundDuelsAttempted: num(form.groundDuelsAttempted),
+        aerialDuels: num(form.aerialDuels),
+        aerialDuelsAttempted: num(form.aerialDuelsAttempted),
+        distanceCovered: numPos(form.distanceCovered),
+        sprint: numPos(form.sprint),
       })
       toast.success('선수 기록이 저장됐습니다.')
       onSaved()
@@ -393,20 +370,20 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
             {PLAYER_STAT_FIELDS.map(({ key, label, float: isFloat }) => {
-              const warn = fieldWarn(key)
+              const err = fieldError(key)
               return (
                 <div key={key} className="space-y-1">
-                  <Label className={cn('text-xs', warn && 'text-orange-600')}>
-                    {label}{warn ? ' ⚠' : ''}
+                  <Label className={cn('text-xs', err && 'text-red-600')}>
+                    {label}{err ? ' *필수' : ''}
                   </Label>
                   <Input
                     type="number"
                     min={0}
                     step={isFloat ? '0.01' : '1'}
                     value={form[key]}
-                    onChange={(e) => { setWarnShown(false); setField(key)(e) }}
+                    onChange={(e) => setField(key)(e)}
                     placeholder="—"
-                    className={cn('h-8 text-sm', warn && 'border-orange-400 focus-visible:ring-orange-400')}
+                    className={cn('h-8 text-sm', err && 'border-red-400 focus-visible:ring-red-400')}
                   />
                 </div>
               )
@@ -653,6 +630,46 @@ function AddShotDialog({
   )
 }
 
+function StatSheetDisplay({ sheet, homeTeam, awayTeam }: { sheet: StatSheetData; homeTeam: string; awayTeam: string }) {
+  const rows: { label: string; key: keyof Omit<StatSheetData, 'scorers'> }[] = [
+    { label: '점유율 (%)', key: 'possession' },
+    { label: '슈팅', key: 'shots' },
+    { label: '유효 슈팅', key: 'shotsOnTarget' },
+    { label: '득점', key: 'goals' },
+    { label: '코너킥', key: 'corners' },
+    { label: '파울', key: 'fouls' },
+    { label: '경고', key: 'yellowCards' },
+    { label: '퇴장', key: 'redCards' },
+  ]
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-3 text-[10px] font-semibold text-slate-500 border-b pb-1">
+        <div>{homeTeam}</div><div className="text-center">항목</div><div className="text-right">{awayTeam}</div>
+      </div>
+      {rows.map(({ label, key }) => (
+        <div key={key} className="grid grid-cols-3 text-xs">
+          <div className="font-semibold tabular-nums">{sheet[key]?.home ?? '—'}</div>
+          <div className="text-center text-muted-foreground">{label}</div>
+          <div className="text-right font-semibold tabular-nums">{sheet[key]?.away ?? '—'}</div>
+        </div>
+      ))}
+      {sheet.scorers.length > 0 && (
+        <div className="border-t pt-2 space-y-1">
+          <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">득점자</div>
+          {sheet.scorers.map((s, i) => (
+            <div key={i} className="text-xs flex gap-2">
+              <span className={s.team === 'home' ? 'text-blue-600 font-medium' : 'text-slate-500 font-medium'}>
+                {s.team === 'home' ? homeTeam : awayTeam}
+              </span>
+              <span>{s.name}{s.minute != null ? ` (${s.minute}')` : ''}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function MatchDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -666,9 +683,12 @@ export function MatchDetailPage() {
   const [shotEvents, setShotEvents] = useState<ShotEvent[]>([])
   const [shotOpen, setShotOpen] = useState(false)
   const [deletingShot, setDeletingShot] = useState<number | null>(null)
+  const [statUploading, setStatUploading] = useState(false)
+  const statFileRef = useRef<HTMLInputElement>(null)
 
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
   const canInputStats = canWrite || user?.role === 'COACHING_STAFF'
+  const canUploadOcr = user?.role === 'ADMIN' || user?.role === 'COACHING_STAFF'
 
   const fetchMatch = () => {
     if (!id) return
@@ -696,6 +716,21 @@ export function MatchDetailPage() {
       toast.error('삭제에 실패했습니다.')
     } finally {
       setDeletingShot(null)
+    }
+  }
+
+  const handleStatSheetUpload = async (file: File) => {
+    if (!id) return
+    setStatUploading(true)
+    try {
+      const result = await matchApi.uploadStatSheet(Number(id), file)
+      setMatch(prev => prev ? { ...prev, statSheetRaw: result.statSheetRaw, statSheetImagePath: result.statSheetImagePath } : prev)
+      toast.success('스탯 시트 분석 완료')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : '스탯 추출에 실패했습니다.')
+    } finally {
+      setStatUploading(false)
+      if (statFileRef.current) statFileRef.current.value = ''
     }
   }
 
@@ -749,7 +784,13 @@ export function MatchDetailPage() {
           </>
         )}
         {canWrite && (
-          <Button variant="outline" size="sm" onClick={() => setScoreOpen(true)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setScoreOpen(true)}
+            disabled={!match.hasSquad}
+            title={!match.hasSquad ? '스쿼드를 먼저 등록해야 스코어를 입력할 수 있습니다.' : undefined}
+          >
             <Pencil className="h-3.5 w-3.5 mr-1.5" />스코어 입력
           </Button>
         )}
@@ -829,6 +870,7 @@ export function MatchDetailPage() {
                 awayVal={null}
                 homeMax={100}
                 fmt={(v) => `${v}%`}
+                sub={ts.passes > 0 ? `${Math.round(ts.passes * ts.passAccuracy / 100)}/${ts.passes}` : undefined}
               />
               {/* xG: 홈 단일값, 초록 바 */}
               <StatRow
@@ -959,22 +1001,33 @@ export function MatchDetailPage() {
                             </td>
                           </tr>
                           {expanded && (
-                            <tr key={`${s.id}-radar`}>
+                            <tr key={`${s.id}-detail`}>
                               <td colSpan={5} className="pb-2 pt-1">
-                                <div className="rounded-lg bg-slate-50 border border-slate-100 px-2 py-1">
-                                  <PlayerRadar s={s} />
-                                  <div className="grid grid-cols-3 gap-1 mt-1 px-2 pb-2">
-                                    {[
-                                      { label: '슈팅', value: s.shots },
-                                      { label: '키패스', value: s.keyPasses },
-                                      { label: '패스%', value: s.passAccuracy != null ? `${s.passAccuracy}%` : null },
-                                      { label: '태클', value: s.tackles },
+                                <div className="rounded-lg bg-slate-50 border border-slate-100 p-3">
+                                  <div className="grid grid-cols-4 gap-x-2 gap-y-3">
+                                    {([
+                                      { label: '슈팅',    value: s.shots },
+                                      { label: 'xG',      value: (s.xG != null && s.xG > 0) ? s.xG.toFixed(2) : null },
+                                      { label: 'xA',      value: (s.xA != null && s.xA > 0) ? s.xA.toFixed(2) : null },
+                                      { label: '키패스',  value: s.keyPasses },
+                                      { label: '패스 시도', value: s.passesAttempted },
+                                      { label: '패스 성공', value: s.passesCompleted },
+                                      { label: '패스%',   value: (s.passesAttempted != null && s.passesAttempted > 0) ? `${Math.round((s.passesCompleted ?? 0) / s.passesAttempted * 100)}%` : null },
+                                      { label: '태클',    value: s.tackles },
+                                      { label: '태클%',   value: s.tackleSuccessRate != null ? `${s.tackleSuccessRate}%` : null },
                                       { label: '인터셉트', value: s.interceptions },
-                                      { label: '출전(분)', value: s.minutesPlayed != null ? `${s.minutesPlayed}'` : null },
-                                    ].map(({ label, value }) => (
+                                      { label: '클리어링', value: s.clearances },
+                                      { label: '볼 회수', value: s.ballRecoveries },
+                                      { label: '턴오버', value: s.turnovers },
+                                      { label: '지상 경합%', value: s.groundDuelSuccessRate != null ? `${s.groundDuelSuccessRate}%` : null },
+                                      { label: '공중 경합%', value: s.aerialDuelSuccessRate != null ? `${s.aerialDuelSuccessRate}%` : null },
+                                      { label: '선방',    value: s.saves },
+                                      { label: '클린시트', value: s.cleanSheet != null ? (s.cleanSheet ? '✓' : '✗') : null },
+                                      { label: '활동량',  value: (s.distanceCovered != null || s.sprint != null) ? `${s.distanceCovered != null ? s.distanceCovered.toFixed(1) + 'km' : '—'} / ${s.sprint != null ? Math.round(s.sprint) + '회' : '—'}` : null },
+                                    ] as { label: string; value: string | number | null }[]).map(({ label, value }) => (
                                       <div key={label} className="text-center">
-                                        <div className="text-[11px] font-semibold text-slate-700 tabular-nums">{value ?? '—'}</div>
-                                        <div className="text-[9px] text-slate-400">{label}</div>
+                                        <div className="text-[12px] font-semibold text-slate-700 tabular-nums">{value ?? '—'}</div>
+                                        <div className="text-[9px] text-slate-400 mt-0.5">{label}</div>
                                       </div>
                                     ))}
                                   </div>
@@ -988,6 +1041,32 @@ export function MatchDetailPage() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {/* 스탯 시트 OCR */}
+          {(canInputStats || canWrite) && (
+            <div className="rounded-xl border bg-white p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">스탯 시트 (OCR)</div>
+                {canUploadOcr && (
+                  <div className="flex items-center gap-2">
+                    {statUploading && <span className="text-xs text-muted-foreground">분석 중...</span>}
+                    <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5"
+                      onClick={() => statFileRef.current?.click()} disabled={statUploading}>
+                      <ScanLine className="h-3.5 w-3.5" />
+                      {match.statSheetRaw ? '다시 스캔' : '스캔 업로드'}
+                    </Button>
+                    <input ref={statFileRef} type="file" accept="image/jpeg,image/png" className="hidden"
+                      onChange={e => { const file = e.target.files?.[0]; if (file) handleStatSheetUpload(file) }} />
+                  </div>
+                )}
+              </div>
+              {match.statSheetRaw ? (
+                <StatSheetDisplay sheet={match.statSheetRaw} homeTeam={match.homeTeamName} awayTeam={match.awayTeamName} />
+              ) : (
+                <p className="text-xs text-muted-foreground text-center py-4">경기 기록지 이미지를 업로드하면 AI가 스탯을 자동 추출합니다.</p>
+              )}
             </div>
           )}
 

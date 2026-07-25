@@ -83,7 +83,7 @@ export function PlayersPage() {
 
   const fetchPlayers = () => {
     setLoading(true)
-    const query: PlayerListQuery = {}
+    const query: PlayerListQuery = { excludeYouth: true }
     if (statusFilter !== 'ALL') query.status = statusFilter
     if (positionFilter !== 'ALL') query.position = positionFilter
     if (levelFilter !== 'ALL') query.level = levelFilter
