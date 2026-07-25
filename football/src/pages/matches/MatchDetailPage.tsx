@@ -688,6 +688,7 @@ export function MatchDetailPage() {
 
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
   const canInputStats = canWrite || user?.role === 'COACHING_STAFF'
+  const canUploadOcr = user?.role === 'ADMIN' || user?.role === 'COACHING_STAFF'
 
   const fetchMatch = () => {
     if (!id) return
@@ -1048,7 +1049,7 @@ export function MatchDetailPage() {
             <div className="rounded-xl border bg-white p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">스탯 시트 (OCR)</div>
-                {canInputStats && (
+                {canUploadOcr && (
                   <div className="flex items-center gap-2">
                     {statUploading && <span className="text-xs text-muted-foreground">분석 중...</span>}
                     <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5"
