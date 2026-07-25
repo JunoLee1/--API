@@ -255,17 +255,14 @@ export class MatchRepository {
 
     const playerIds = new Set([...Object.keys(xgMap), ...Object.keys(xaMap), ...Object.keys(keyPassMap)]);
     for (const playerId of playerIds) {
-      const stat = await this.prisma.playerMatchStats.findFirst({ where: { matchId, playerId } });
-      if (stat) {
-        await this.prisma.playerMatchStats.update({
-          where: { id: stat.id },
-          data: {
-            ...(xgMap[playerId]      != null ? { xG:        Math.round(xgMap[playerId] * 100) / 100 } : {}),
-            ...(xaMap[playerId]      != null ? { xA:        Math.round(xaMap[playerId] * 100) / 100 } : {}),
-            ...(keyPassMap[playerId] != null ? { keyPasses: keyPassMap[playerId] }                     : {}),
-          },
-        });
-      }
+      const xG        = xgMap[playerId]      != null ? Math.round(xgMap[playerId] * 100) / 100 : undefined;
+      const xA        = xaMap[playerId]      != null ? Math.round(xaMap[playerId] * 100) / 100 : undefined;
+      const keyPasses = keyPassMap[playerId] != null ? keyPassMap[playerId]                      : undefined;
+      await this.prisma.playerMatchStats.upsert({
+        where: { matchId_playerId: { matchId, playerId } },
+        create: { matchId, playerId, ...(xG != null && { xG }), ...(xA != null && { xA }), ...(keyPasses != null && { keyPasses }) },
+        update: {                    ...(xG != null && { xG }), ...(xA != null && { xA }), ...(keyPasses != null && { keyPasses }) },
+      });
     }
   }
 }
