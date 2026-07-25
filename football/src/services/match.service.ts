@@ -43,7 +43,8 @@ export const matchApi = {
       xG?: number
       xA?: number
       shots?: number
-      passAccuracy?: number
+      passesAttempted?: number
+      passesCompleted?: number
       keyPasses?: number
       tackles?: number
       interceptions?: number
@@ -58,19 +59,10 @@ export const matchApi = {
     id: number,
     payload: {
       possession: number
-      shots: number
-      shotsOnTarget: number
-      passes: number
-      passAccuracy: number
-      fouls: number
       yellowCards: number
       redCards: number
-      xG: number
       corners: number
       offsides: number
-      tackles: number
-      interceptions: number
-      clearances: number
     },
   ) => api.put(`/matches/${id}/team-stats`, payload),
 

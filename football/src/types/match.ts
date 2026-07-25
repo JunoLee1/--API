@@ -20,7 +20,8 @@ export interface PlayerMatchStat {
   xG: number | null
   xA: number | null
   shots: number | null
-  passAccuracy: number | null
+  passesAttempted: number | null
+  passesCompleted: number | null
   keyPasses: number | null
   tackles: number | null
   tackleSuccessRate: number | null

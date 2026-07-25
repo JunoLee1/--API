@@ -198,7 +198,8 @@ export interface MatchStat {
   assists: number | null
   xG: number | null
   xA: number | null
-  passAccuracy: number | null
+  passesAttempted: number | null
+  passesCompleted: number | null
   tackleSuccessRate: number | null
   clearances: number | null
   interceptions: number | null

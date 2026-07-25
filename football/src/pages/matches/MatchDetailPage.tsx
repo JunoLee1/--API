@@ -40,7 +40,7 @@ function buildRadarData(s: PlayerStat) {
     { axis: '도움',  value: Math.min((s.assists  ?? 0) / 3  * 100, 100) },
     { axis: 'xG',   value: Math.min((s.xG       ?? 0) / 3  * 100, 100) },
     { axis: '슈팅',  value: Math.min((s.shots    ?? 0) / 8  * 100, 100) },
-    { axis: '패스%', value: s.passAccuracy ?? 0 },
+    { axis: '패스%', value: (s.passesAttempted != null && s.passesAttempted > 0) ? Math.round((s.passesCompleted ?? 0) / s.passesAttempted * 100) : 0 },
     { axis: '키패스', value: Math.min((s.keyPasses ?? 0) / 8 * 100, 100) },
   ]
 }
@@ -104,55 +104,28 @@ function StatRow({ label, homeVal, awayVal, homeMax, fmt, homeColor = '#2563eb',
 
 type TeamStatsForm = {
   possession: string
-  shots: string
-  shotsOnTarget: string
-  passes: string
-  passAccuracy: string
-  fouls: string
   yellowCards: string
   redCards: string
-  xG: string
   corners: string
   offsides: string
-  tackles: string
-  interceptions: string
-  clearances: string
 }
 
-const TEAM_STATS_FIELDS: { key: keyof TeamStatsForm; label: string; float?: boolean }[] = [
+const TEAM_STATS_FIELDS: { key: keyof TeamStatsForm; label: string }[] = [
   { key: 'possession', label: '점유율 (%)' },
-  { key: 'shots', label: '슈팅' },
-  { key: 'shotsOnTarget', label: '유효 슈팅' },
-  { key: 'xG', label: 'xG', float: true },
-  { key: 'passes', label: '패스' },
-  { key: 'passAccuracy', label: '패스 성공률 (%)', float: true },
-  { key: 'corners', label: '코너킥' },
-  { key: 'fouls', label: '파울' },
   { key: 'yellowCards', label: '경고' },
   { key: 'redCards', label: '퇴장' },
+  { key: 'corners', label: '코너킥' },
   { key: 'offsides', label: '오프사이드' },
-  { key: 'tackles', label: '태클' },
-  { key: 'interceptions', label: '인터셉트' },
-  { key: 'clearances', label: '클리어링' },
 ]
 
 function makeEmptyForm(ts?: MatchDetail['teamMatchStats']): TeamStatsForm {
-  if (!ts) return { possession: '', shots: '', shotsOnTarget: '', passes: '', passAccuracy: '', fouls: '', yellowCards: '', redCards: '', xG: '', corners: '', offsides: '', tackles: '', interceptions: '', clearances: '' }
+  if (!ts) return { possession: '', yellowCards: '', redCards: '', corners: '', offsides: '' }
   return {
     possession: String(ts.possession),
-    shots: String(ts.shots),
-    shotsOnTarget: String(ts.shotsOnTarget),
-    passes: String(ts.passes),
-    passAccuracy: String(ts.passAccuracy),
-    fouls: String(ts.fouls),
     yellowCards: String(ts.yellowCards),
     redCards: String(ts.redCards),
-    xG: String(ts.xG),
     corners: String(ts.corners),
     offsides: String(ts.offsides),
-    tackles: String(ts.tackles),
-    interceptions: String(ts.interceptions),
-    clearances: String(ts.clearances),
   }
 }
 
@@ -179,19 +152,10 @@ function TeamStatsDialog({ open, onOpenChange, match, onSaved }: TeamStatsDialog
     try {
       await matchApi.upsertTeamStats(match.id, {
         possession: Number(form.possession),
-        shots: Number(form.shots),
-        shotsOnTarget: Number(form.shotsOnTarget),
-        passes: Number(form.passes),
-        passAccuracy: Number(form.passAccuracy),
-        fouls: Number(form.fouls),
         yellowCards: Number(form.yellowCards),
         redCards: Number(form.redCards),
-        xG: Number(form.xG),
         corners: Number(form.corners),
         offsides: Number(form.offsides),
-        tackles: Number(form.tackles),
-        interceptions: Number(form.interceptions),
-        clearances: Number(form.clearances),
       })
       toast.success('팀 통계가 저장됐습니다.')
       onSaved()
@@ -239,7 +203,8 @@ type PlayerStatsForm = {
   xG: string
   xA: string
   shots: string
-  passAccuracy: string
+  passesAttempted: string
+  passesCompleted: string
   keyPasses: string
   tackles: string
   interceptions: string
@@ -255,7 +220,8 @@ const PLAYER_STAT_FIELDS: { key: keyof Omit<PlayerStatsForm, 'playerId' | 'clean
   { key: 'xG', label: 'xG', float: true },
   { key: 'xA', label: 'xA', float: true },
   { key: 'shots', label: '슈팅' },
-  { key: 'passAccuracy', label: '패스 성공률(%)', float: true },
+  { key: 'passesAttempted', label: '패스 시도' },
+  { key: 'passesCompleted', label: '패스 성공' },
   { key: 'keyPasses', label: '키패스' },
   { key: 'tackles', label: '태클' },
   { key: 'interceptions', label: '인터셉트' },
@@ -265,7 +231,7 @@ const PLAYER_STAT_FIELDS: { key: keyof Omit<PlayerStatsForm, 'playerId' | 'clean
 
 const EMPTY_PLAYER_FORM: PlayerStatsForm = {
   playerId: '', minutesPlayed: '', goals: '', assists: '', xG: '', xA: '',
-  shots: '', passAccuracy: '', keyPasses: '', tackles: '', interceptions: '',
+  shots: '', passesAttempted: '', passesCompleted: '', keyPasses: '', tackles: '', interceptions: '',
   clearances: '', saves: '', cleanSheet: false,
 }
 
@@ -301,7 +267,8 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
         xG: (existing.xG != null && existing.xG > 0) ? String(existing.xG) : '',
         xA: (existing.xA != null && existing.xA > 0) ? String(existing.xA) : '',
         shots: existing.shots != null ? String(existing.shots) : '',
-        passAccuracy: (existing.passAccuracy != null && existing.passAccuracy > 0) ? String(existing.passAccuracy) : '',
+        passesAttempted: existing.passesAttempted != null ? String(existing.passesAttempted) : '',
+        passesCompleted: existing.passesCompleted != null ? String(existing.passesCompleted) : '',
         keyPasses: existing.keyPasses != null ? String(existing.keyPasses) : '',
         tackles: existing.tackles != null ? String(existing.tackles) : '',
         interceptions: existing.interceptions != null ? String(existing.interceptions) : '',
@@ -328,18 +295,16 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
   const minutesVal  = Number(form.minutesPlayed) || 0
 
   const fieldWarn = (key: string): boolean => {
-    if (key === 'xA'          && assistsVal > 0 && !form.xA)          return true
-    if (key === 'xG'          && goalsVal   > 0 && !form.xG)          return true
-    if (key === 'passAccuracy' && minutesVal > 0 && !form.passAccuracy) return true
+    if (key === 'xA' && assistsVal > 0 && !form.xA) return true
+    if (key === 'xG' && goalsVal   > 0 && !form.xG) return true
     return false
   }
 
   const handleSave = async () => {
     if (!form.playerId) { toast.error('선수를 선택해주세요.'); return }
     const missing: string[] = []
-    if (assistsVal > 0 && !form.xA)          missing.push('xA')
-    if (goalsVal   > 0 && !form.xG)          missing.push('xG')
-    if (minutesVal > 0 && !form.passAccuracy) missing.push('패스 성공률')
+    if (assistsVal > 0 && !form.xA) missing.push('xA')
+    if (goalsVal   > 0 && !form.xG) missing.push('xG')
     if (missing.length > 0 && !warnShown) {
       toast.warning(`${missing.join(', ')} 값이 비어 있습니다. 그대로 저장하려면 한 번 더 누르세요.`)
       setWarnShown(true)
@@ -356,7 +321,8 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
         xG: numPos(form.xG),
         xA: numPos(form.xA),
         shots: num(form.shots),
-        passAccuracy: numPos(form.passAccuracy),
+        passesAttempted: num(form.passesAttempted),
+        passesCompleted: num(form.passesCompleted),
         keyPasses: num(form.keyPasses),
         tackles: num(form.tackles),
         interceptions: num(form.interceptions),
@@ -967,7 +933,7 @@ export function MatchDetailPage() {
                                     {[
                                       { label: '슈팅', value: s.shots },
                                       { label: '키패스', value: s.keyPasses },
-                                      { label: '패스%', value: s.passAccuracy != null ? `${s.passAccuracy}%` : null },
+                                      { label: '패스%', value: (s.passesAttempted != null && s.passesAttempted > 0) ? `${Math.round((s.passesCompleted ?? 0) / s.passesAttempted * 100)}%` : null },
                                       { label: '태클', value: s.tackles },
                                       { label: '인터셉트', value: s.interceptions },
                                       { label: '출전(분)', value: s.minutesPlayed != null ? `${s.minutesPlayed}'` : null },
