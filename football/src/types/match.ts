@@ -65,10 +65,10 @@ export interface TeamMatchStat {
 export type ShotResult = 'GOAL' | 'ON_TARGET' | 'OFF_TARGET' | 'BLOCKED'
 
 export const SHOT_RESULT_LABEL: Record<ShotResult, string> = {
-  GOAL:       '골',
-  ON_TARGET:  '유효슈팅',
-  OFF_TARGET: '빗나감',
-  BLOCKED:    '블록',
+  GOAL:       'Goal',
+  ON_TARGET:  'On Target',
+  OFF_TARGET: 'Off Target',
+  BLOCKED:    'Blocked',
 }
 
 export const SHOT_RESULT_STYLE: Record<ShotResult, string> = {
@@ -121,11 +121,11 @@ export interface MatchDetail extends Match {
 }
 
 export const COMPETITION_LABEL: Record<CompetitionType, string> = {
-  LEAGUE: '리그',
-  DOMESTIC_CUP: 'FA컵',
+  LEAGUE: 'League',
+  DOMESTIC_CUP: 'FA Cup',
   CONTINENTAL: 'ACL',
-  PLAYOFF: '플레이오프',
-  FRIENDLY: '친선',
+  PLAYOFF: 'Playoff',
+  FRIENDLY: 'Friendly',
 }
 
 export const COMPETITION_STYLE: Record<CompetitionType, string> = {

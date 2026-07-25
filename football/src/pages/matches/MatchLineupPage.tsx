@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -81,7 +82,7 @@ function PitchSlot({
         onDragOver={handleDragOver}
         onDrop={handleDrop}
         onDoubleClick={() => onRemove(slotDef.key)}
-        title={isMismatch ? `포지션 불일치: 선수 ${player.position} / 슬롯 ${slotDef.position}` : '더블클릭으로 해제'}
+        title={isMismatch ? `Position mismatch: player ${player.position} / slot ${slotDef.position}` : 'Double-click to remove'}
         className="relative flex flex-col items-center gap-0.5 cursor-grab active:cursor-grabbing z-10"
       >
         {isMismatch && (
@@ -117,6 +118,7 @@ function PitchSlot({
 }
 
 export function MatchLineupPage() {
+  const { t } = useTranslation('match')
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user } = useCurrentUser()
@@ -195,7 +197,7 @@ export function MatchLineupPage() {
           setDirty(true)
         }
       })
-      .catch(() => toast.error('데이터를 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('lineupPage.loadFailed')))
       .finally(() => setLoading(false))
   }, [matchId])
 
@@ -292,13 +294,13 @@ export function MatchLineupPage() {
       const result = await lineupApi.save(matchId, { formation, slots: slotPayloads })
       setIsConfirmed(result?.isConfirmed ?? false)
       setDirty(false)
-      toast.success('라인업이 저장되었습니다.')
+      toast.success(t('lineupPage.savedSuccess'))
     } catch (err: unknown) {
       const code = (err as { response?: { data?: { code?: string } } })?.response?.data?.code
       if (code === 'INJURED_PLAYER_IN_LINEUP') {
-        toast.error('부상 중인 선수가 포함되어 있습니다. 라인업에서 제외해 주세요.')
+        toast.error(t('lineupPage.injuredInLineup'))
       } else {
-        toast.error('저장에 실패했습니다.')
+        toast.error(t('lineupPage.saveFailed'))
       }
     } finally {
       setSaving(false)
@@ -310,9 +312,9 @@ export function MatchLineupPage() {
     try {
       await lineupApi.confirm(matchId)
       setIsConfirmed(true)
-      toast.success('라인업이 확정되었습니다.')
+      toast.success(t('lineupPage.confirmSuccess'))
     } catch {
-      toast.error('확정에 실패했습니다.')
+      toast.error(t('lineupPage.confirmFailed'))
     } finally {
       setConfirming(false)
     }
@@ -335,7 +337,7 @@ export function MatchLineupPage() {
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/matches/${id}`)}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <span className="text-sm font-semibold">라인업 관리</span>
+        <span className="text-sm font-semibold">{t('lineupPage.title')}</span>
         <div className="flex-1" />
         <Select
           value={formation}
@@ -353,23 +355,23 @@ export function MatchLineupPage() {
         </Select>
         {isLite && (
           <div className="rounded-md border border-yellow-200 bg-yellow-50 px-3 py-1.5 text-xs text-yellow-800">
-            Lite Mode — 드래그앤드롭 비활성
+            {t('lineupPage.liteMode')}
           </div>
         )}
         {canEdit && (
           <Button size="sm" variant="outline" disabled={!dirty || saving || isLite} onClick={handleSave}>
-            {saving ? '저장 중...' : '저장'}
+            {saving ? t('lineupPage.saving') : t('lineupPage.save')}
           </Button>
         )}
         {canConfirm && !isConfirmed && (
           <Button size="sm" disabled={dirty || confirming || isLite} onClick={handleConfirm}>
             <Check className="h-3.5 w-3.5 mr-1.5" />
-            {confirming ? '확정 중...' : '라인업 확정'}
+            {confirming ? t('lineupPage.confirming') : t('lineupPage.confirm')}
           </Button>
         )}
         {isConfirmed && (
           <span className="text-xs text-green-600 font-semibold flex items-center gap-1">
-            <Check className="h-3.5 w-3.5" />확정됨
+            <Check className="h-3.5 w-3.5" />{t('lineupPage.confirmed')}
           </span>
         )}
       </div>
@@ -378,9 +380,9 @@ export function MatchLineupPage() {
         <div className="w-48 shrink-0 border-r flex flex-col overflow-hidden">
           <div className="px-3 pt-3 pb-1">
             <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-              선수 풀
+              {t('lineupPage.playerPool')}
             </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">{pool.length}명 대기</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{t('lineupPage.waiting', { count: pool.length })}</p>
           </div>
           <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-1">
             {pool.map((p) => {
@@ -400,7 +402,7 @@ export function MatchLineupPage() {
                     e.dataTransfer.setData(DRAG_KEY, JSON.stringify(payload))
                     e.dataTransfer.effectAllowed = 'move'
                   }}
-                  title={isInjured ? '부상 중 - 라인업 등록 불가' : undefined}
+                  title={isInjured ? t('lineupPage.injuredNoAdd') : undefined}
                   className={cn(
                     'flex items-center gap-2 rounded-lg border bg-background p-2 text-[11px]',
                     isInjured ? 'opacity-50 cursor-not-allowed' : canEdit ? 'cursor-grab active:cursor-grabbing' : 'cursor-default',
@@ -415,7 +417,7 @@ export function MatchLineupPage() {
               )
             })}
             {pool.length === 0 && (
-              <p className="text-[10px] text-muted-foreground text-center pt-4">모든 선수가 배치됨</p>
+              <p className="text-[10px] text-muted-foreground text-center pt-4">{t('lineupPage.allPlaced')}</p>
             )}
           </div>
         </div>
@@ -438,7 +440,7 @@ export function MatchLineupPage() {
 
           <div className="rounded-xl border p-3">
             <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-              후보 벤치 <span className="font-normal">({bench.length}/7)</span>
+              {t('lineupPage.bench')} <span className="font-normal">({bench.length}/7)</span>
             </p>
             <div
               onDragOver={(e) => e.preventDefault()}
@@ -466,7 +468,7 @@ export function MatchLineupPage() {
                     e.dataTransfer.setData(DRAG_KEY, JSON.stringify(payload))
                     e.dataTransfer.effectAllowed = 'move'
                   }}
-                  title={isInjured ? '부상 중 - 라인업 등록 불가' : undefined}
+                  title={isInjured ? t('lineupPage.injuredNoAdd') : undefined}
                   className={cn(
                     'flex items-center gap-1 rounded-full border bg-muted px-2 py-0.5 text-[10px]',
                     isInjured ? 'opacity-50 cursor-not-allowed border-red-300' : 'cursor-grab',
@@ -490,16 +492,16 @@ export function MatchLineupPage() {
               })}
               {bench.length === 0 && (
                 <span className="text-[10px] text-muted-foreground self-center">
-                  선수를 여기로 드래그하면 후보로 등록됩니다
+                  {t('lineupPage.dropToBench')}
                 </span>
               )}
             </div>
           </div>
 
           <div className="text-[10px] text-muted-foreground flex items-center gap-2">
-            <span>선발 {starterCount}/11</span>
-            {dirty && <span className="text-amber-600">· 저장되지 않은 변경사항</span>}
-            {isConfirmed && !dirty && <span className="text-green-600">· 확정됨</span>}
+            <span>{t('lineupPage.starters', { count: starterCount })}</span>
+            {dirty && <span className="text-amber-600">· {t('lineupPage.unsaved')}</span>}
+            {isConfirmed && !dirty && <span className="text-green-600">· {t('lineupPage.confirmed')}</span>}
           </div>
         </div>
       </div>

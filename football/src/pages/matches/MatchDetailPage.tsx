@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { matchApi } from '@/services/match.service'
 import type { MatchDetail, ShotEvent, ShotResult, StatSheetData } from '@/types/match'
-import { COMPETITION_LABEL, SHOT_RESULT_LABEL, SHOT_RESULT_STYLE } from '@/types/match'
+import { SHOT_RESULT_STYLE } from '@/types/match'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -83,11 +84,11 @@ type TeamStatsForm = {
 }
 
 const TEAM_STATS_FIELDS: { key: keyof TeamStatsForm; label: string }[] = [
-  { key: 'possession', label: '점유율 (%)' },
-  { key: 'yellowCards', label: '경고' },
-  { key: 'redCards', label: '퇴장' },
-  { key: 'corners', label: '코너킥' },
-  { key: 'offsides', label: '오프사이드' },
+  { key: 'possession', label: 'teamStats.possession' },
+  { key: 'yellowCards', label: 'field.yellowCards' },
+  { key: 'redCards', label: 'field.redCards' },
+  { key: 'corners', label: 'field.corners' },
+  { key: 'offsides', label: 'teamStats.offsides' },
 ]
 
 function makeEmptyForm(ts?: MatchDetail['teamMatchStats']): TeamStatsForm {
@@ -109,6 +110,7 @@ interface TeamStatsDialogProps {
 }
 
 function TeamStatsDialog({ open, onOpenChange, match, onSaved }: TeamStatsDialogProps) {
+  const { t } = useTranslation('match')
   const [form, setForm] = useState<TeamStatsForm>(() => makeEmptyForm(match.teamMatchStats ?? undefined))
   const [saving, setSaving] = useState(false)
 
@@ -129,10 +131,10 @@ function TeamStatsDialog({ open, onOpenChange, match, onSaved }: TeamStatsDialog
         corners: Number(form.corners),
         offsides: Number(form.offsides),
       })
-      toast.success('팀 통계가 저장됐습니다.')
+      toast.success(t('teamStats.savedSuccess'))
       onSaved()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('scoreDialog.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -141,11 +143,11 @@ function TeamStatsDialog({ open, onOpenChange, match, onSaved }: TeamStatsDialog
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>팀 통계 입력 ({match.homeTeamName})</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t('teamStats.dialogTitle', { team: match.homeTeamName })}</DialogTitle></DialogHeader>
         <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 py-1 max-h-[60vh] overflow-y-auto pr-1">
           {TEAM_STATS_FIELDS.map(({ key, label, float: isFloat }) => (
             <div key={key} className="space-y-1">
-              <Label className="text-xs">{label}</Label>
+              <Label className="text-xs">{t(label)}</Label>
               <Input
                 type="number"
                 min={0}
@@ -159,8 +161,8 @@ function TeamStatsDialog({ open, onOpenChange, match, onSaved }: TeamStatsDialog
           ))}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? '저장 중...' : '저장'}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t('common:action.cancel')}</Button>
+          <Button onClick={handleSave} disabled={saving}>{saving ? t('common:action.loading') : t('common:action.save')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -195,28 +197,28 @@ type PlayerStatsForm = {
 }
 
 const PLAYER_STAT_FIELDS: { key: keyof Omit<PlayerStatsForm, 'playerId' | 'cleanSheet'>; label: string; float?: boolean }[] = [
-  { key: 'minutesPlayed', label: '출전(분)' },
-  { key: 'goals', label: '득점' },
-  { key: 'assists', label: '도움' },
+  { key: 'minutesPlayed', label: 'playerStats.fields.minutesPlayed' },
+  { key: 'goals', label: 'playerStats.fields.goals' },
+  { key: 'assists', label: 'playerStats.fields.assists' },
   { key: 'xG', label: 'xG', float: true },
   { key: 'xA', label: 'xA', float: true },
-  { key: 'shots', label: '슈팅' },
-  { key: 'passesAttempted', label: '패스 시도' },
-  { key: 'passesCompleted', label: '패스 성공' },
-  { key: 'keyPasses', label: '키패스' },
-  { key: 'tackles', label: '태클 성공' },
-  { key: 'tacklesAttempted', label: '태클 시도' },
-  { key: 'interceptions', label: '인터셉트' },
-  { key: 'clearances', label: '클리어링' },
-  { key: 'saves', label: '선방' },
-  { key: 'ballRecoveries', label: '볼 회수' },
-  { key: 'turnovers', label: '턴오버' },
-  { key: 'groundDuels', label: '지상 경합 성공' },
-  { key: 'groundDuelsAttempted', label: '지상 경합 시도' },
-  { key: 'aerialDuels', label: '공중 경합 성공' },
-  { key: 'aerialDuelsAttempted', label: '공중 경합 시도' },
-  { key: 'distanceCovered', label: '뛴 거리(km)', float: true },
-  { key: 'sprint', label: '스프린트(회)', float: true },
+  { key: 'shots', label: 'playerStats.fields.shots' },
+  { key: 'passesAttempted', label: 'playerStats.fields.passesAttempted' },
+  { key: 'passesCompleted', label: 'playerStats.fields.passesCompleted' },
+  { key: 'keyPasses', label: 'playerStats.fields.keyPasses' },
+  { key: 'tackles', label: 'playerStats.fields.tackles' },
+  { key: 'tacklesAttempted', label: 'playerStats.fields.tacklesAttempted' },
+  { key: 'interceptions', label: 'playerStats.fields.interceptions' },
+  { key: 'clearances', label: 'playerStats.fields.clearances' },
+  { key: 'saves', label: 'playerStats.fields.saves' },
+  { key: 'ballRecoveries', label: 'playerStats.fields.ballRecoveries' },
+  { key: 'turnovers', label: 'playerStats.fields.turnovers' },
+  { key: 'groundDuels', label: 'playerStats.fields.groundDuels' },
+  { key: 'groundDuelsAttempted', label: 'playerStats.fields.groundDuelsAttempted' },
+  { key: 'aerialDuels', label: 'playerStats.fields.aerialDuels' },
+  { key: 'aerialDuelsAttempted', label: 'playerStats.fields.aerialDuelsAttempted' },
+  { key: 'distanceCovered', label: 'playerStats.fields.distanceCovered', float: true },
+  { key: 'sprint', label: 'playerStats.fields.sprint', float: true },
 ]
 
 const EMPTY_PLAYER_FORM: PlayerStatsForm = {
@@ -234,6 +236,7 @@ interface PlayerStatsDialogProps {
 }
 
 function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDialogProps) {
+  const { t } = useTranslation('match')
   const [players, setPlayers] = useState<Player[]>([])
   const [form, setForm] = useState<PlayerStatsForm>(EMPTY_PLAYER_FORM)
   const [saving, setSaving] = useState(false)
@@ -300,17 +303,17 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
   }
 
   const handleSave = async () => {
-    if (!form.playerId) { toast.error('선수를 선택해주세요.'); return }
+    if (!form.playerId) { toast.error(t('playerStats.selectRequired')); return }
     if (goalsVal > 0 && !form.xG) {
-      toast.error('득점이 있으면 xG를 입력해야 합니다.')
+      toast.error(t('playerStats.xgRequired'))
       return
     }
     if (assistsVal > 0 && !form.xA) {
-      toast.error('도움이 있으면 xA를 입력해야 합니다.')
+      toast.error(t('playerStats.xaRequired'))
       return
     }
     if (keyPassVal > 0 && !form.passesAttempted) {
-      toast.error('키패스가 있으면 패스 시도 횟수를 입력해야 합니다.')
+      toast.error(t('playerStats.keyPassRequired'))
       return
     }
     setSaving(true)
@@ -341,10 +344,10 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
         distanceCovered: numPos(form.distanceCovered),
         sprint: numPos(form.sprint),
       })
-      toast.success('선수 기록이 저장됐습니다.')
+      toast.success(t('playerStats.savedSuccess'))
       onSaved()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('scoreDialog.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -353,13 +356,13 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>선수 기록 입력</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t('playerStats.dialogTitle')}</DialogTitle></DialogHeader>
         <div className="space-y-3 py-1 max-h-[65vh] overflow-y-auto pr-1">
           <div className="space-y-1">
-            <Label className="text-xs">선수</Label>
+            <Label className="text-xs">{t('playerStats.playerLabel')}</Label>
             <Select value={form.playerId} onValueChange={handlePlayerChange}>
               <SelectTrigger className="h-8 text-sm">
-                <SelectValue placeholder="선수 선택..." />
+                <SelectValue placeholder={t('playerStats.selectPlayer')} />
               </SelectTrigger>
               <SelectContent>
                 {players.map((p) => (
@@ -374,7 +377,7 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
               return (
                 <div key={key} className="space-y-1">
                   <Label className={cn('text-xs', err && 'text-red-600')}>
-                    {label}{err ? ' *필수' : ''}
+                    {label.startsWith('playerStats.') ? t(label) : label}{err ? ` ${t('playerStats.required')}` : ''}
                   </Label>
                   <Input
                     type="number"
@@ -397,12 +400,12 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
               onChange={(e) => setForm((prev) => ({ ...prev, cleanSheet: e.target.checked }))}
               className="rounded border-border"
             />
-            <Label htmlFor="cleanSheet" className="text-xs cursor-pointer">클린시트</Label>
+            <Label htmlFor="cleanSheet" className="text-xs cursor-pointer">{t('playerStats.cleanSheet')}</Label>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? '저장 중...' : '저장'}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t('common:action.cancel')}</Button>
+          <Button onClick={handleSave} disabled={saving}>{saving ? t('common:action.loading') : t('common:action.save')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -417,6 +420,7 @@ interface ScoreDialogProps {
 }
 
 function ScoreDialog({ open, onOpenChange, match, onSaved }: ScoreDialogProps) {
+  const { t } = useTranslation('match')
   const [homeScore, setHomeScore] = useState(String(match.homeScore ?? ''))
   const [awayScore, setAwayScore] = useState(String(match.awayScore ?? ''))
   const [saving, setSaving] = useState(false)
@@ -428,10 +432,10 @@ function ScoreDialog({ open, onOpenChange, match, onSaved }: ScoreDialogProps) {
         homeScore: homeScore !== '' ? Number(homeScore) : undefined,
         awayScore: awayScore !== '' ? Number(awayScore) : undefined,
       })
-      toast.success('스코어가 입력됐습니다.')
+      toast.success(t('scoreDialog.savedSuccess'))
       onSaved()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('scoreDialog.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -440,7 +444,7 @@ function ScoreDialog({ open, onOpenChange, match, onSaved }: ScoreDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xs">
-        <DialogHeader><DialogTitle>스코어 입력</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t('scoreDialog.title')}</DialogTitle></DialogHeader>
         <div className="grid grid-cols-2 gap-4 py-2">
           <div className="space-y-1.5">
             <Label>{match.homeTeamName}</Label>
@@ -452,8 +456,8 @@ function ScoreDialog({ open, onOpenChange, match, onSaved }: ScoreDialogProps) {
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? '저장 중...' : '저장'}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t('common:action.cancel')}</Button>
+          <Button onClick={handleSave} disabled={saving}>{saving ? t('common:action.loading') : t('common:action.save')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -481,6 +485,7 @@ function AddShotDialog({
   players: { id: string; playerName: string; position: string }[]
   onSaved: () => void
 }) {
+  const { t } = useTranslation('match')
   const [shooterId, setShooterId] = useState('')
   const [assisterId, setAssisterId] = useState('')
   const [assisterPositionOverride, setAssisterPositionOverride] = useState('')
@@ -497,9 +502,9 @@ function AddShotDialog({
   }
 
   const handleSave = async () => {
-    if (!shooterId) { toast.error('슈터를 선택하세요.'); return }
+    if (!shooterId) { toast.error(t('shotEvent.shooterRequired')); return }
     const xgVal = parseFloat(xG)
-    if (isNaN(xgVal) || xgVal < 0 || xgVal > 1) { toast.error('xG는 0~1 사이 숫자를 입력하세요.'); return }
+    if (isNaN(xgVal) || xgVal < 0 || xgVal > 1) { toast.error(t('shotEvent.xgRange')); return }
     setSaving(true)
     try {
       await matchApi.createShot(matchId, {
@@ -513,12 +518,12 @@ function AddShotDialog({
         result,
         minute: minute ? Number(minute) : undefined,
       })
-      toast.success('슈팅 이벤트가 저장되었습니다.')
+      toast.success(t('shotEvent.savedSuccess'))
       reset()
       onOpenChange(false)
       onSaved()
     } catch {
-      toast.error('저장에 실패했습니다.')
+      toast.error(t('shotEvent.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -528,16 +533,16 @@ function AddShotDialog({
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v) }}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle className="text-base">슈팅 이벤트 추가</DialogTitle>
+          <DialogTitle className="text-base">{t('shotEvent.dialogTitle')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
           <div className="space-y-1">
-            <Label className="text-xs">슈터 *</Label>
+            <Label className="text-xs">{t('shotEvent.shooter')} *</Label>
             <Select value={shooterId} onValueChange={setShooterId}>
               <SelectTrigger className="h-8 text-sm">
                 {shooterId
                   ? <span>{players.find(p => p.id === shooterId)?.playerName ?? shooterId}</span>
-                  : <span className="text-muted-foreground">선수 선택</span>}
+                  : <span className="text-muted-foreground">{t('shotEvent.selectPlayer')}</span>}
               </SelectTrigger>
               <SelectContent>
                 {players.map((p) => (
@@ -547,15 +552,15 @@ function AddShotDialog({
             </Select>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">어시스터</Label>
+            <Label className="text-xs">{t('shotEvent.assister')}</Label>
             <Select value={assisterId} onValueChange={(v) => { setAssisterId(v); setAssisterPositionOverride('') }}>
               <SelectTrigger className="h-8 text-sm">
                 {assisterId
                   ? <span>{players.find(p => p.id === assisterId)?.playerName ?? assisterId}</span>
-                  : <span className="text-muted-foreground">없음</span>}
+                  : <span className="text-muted-foreground">{t('shotEvent.none')}</span>}
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">없음</SelectItem>
+                <SelectItem value="">{t('shotEvent.none')}</SelectItem>
                 {players.filter(p => p.id !== shooterId).map((p) => (
                   <SelectItem key={p.id} value={p.id}>{p.playerName}</SelectItem>
                 ))}
@@ -565,8 +570,8 @@ function AddShotDialog({
           {assisterId && (
             <div className="space-y-1">
               <Label className="text-xs">
-                어시스터 포지션 오버라이드
-                <span className="ml-1 text-muted-foreground font-normal">(기본: {POSITION_ABBR[assisterDefaultPos as Position] ?? assisterDefaultPos})</span>
+                {t('shotEvent.assisterPosOverride')}
+                <span className="ml-1 text-muted-foreground font-normal">(default: {POSITION_ABBR[assisterDefaultPos as Position] ?? assisterDefaultPos})</span>
               </Label>
               <Select
                 value={assisterPositionOverride || assisterDefaultPos}
@@ -596,7 +601,7 @@ function AddShotDialog({
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">분 (선택)</Label>
+              <Label className="text-xs">{t('shotEvent.minuteLabel')}</Label>
               <Input
                 className="h-8 text-sm"
                 placeholder="67"
@@ -606,23 +611,23 @@ function AddShotDialog({
             </div>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">결과 *</Label>
+            <Label className="text-xs">{t('shotEvent.resultLabel')} *</Label>
             <Select value={result} onValueChange={(v) => setResult(v as ShotResult)}>
               <SelectTrigger className="h-8 text-sm">
-                <span>{SHOT_RESULT_LABEL[result]}</span>
+                <span>{t(`shotResult.${result}`)}</span>
               </SelectTrigger>
               <SelectContent>
                 {SHOT_RESULTS.map((r) => (
-                  <SelectItem key={r} value={r}>{SHOT_RESULT_LABEL[r]}</SelectItem>
+                  <SelectItem key={r} value={r}>{t(`shotResult.${r}`)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>취소</Button>
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>{t('common:action.cancel')}</Button>
           <Button size="sm" disabled={saving} onClick={handleSave}>
-            {saving ? '저장 중...' : '저장'}
+            {saving ? t('common:action.loading') : t('common:action.save')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -631,20 +636,21 @@ function AddShotDialog({
 }
 
 function StatSheetDisplay({ sheet, homeTeam, awayTeam }: { sheet: StatSheetData; homeTeam: string; awayTeam: string }) {
+  const { t } = useTranslation('match')
   const rows: { label: string; key: keyof Omit<StatSheetData, 'scorers'> }[] = [
-    { label: '점유율 (%)', key: 'possession' },
-    { label: '슈팅', key: 'shots' },
-    { label: '유효 슈팅', key: 'shotsOnTarget' },
-    { label: '득점', key: 'goals' },
-    { label: '코너킥', key: 'corners' },
-    { label: '파울', key: 'fouls' },
-    { label: '경고', key: 'yellowCards' },
-    { label: '퇴장', key: 'redCards' },
+    { label: t('teamStats.possession'), key: 'possession' },
+    { label: t('field.shots'), key: 'shots' },
+    { label: t('field.shotsOnTarget'), key: 'shotsOnTarget' },
+    { label: t('field.goals'), key: 'goals' },
+    { label: t('field.corners'), key: 'corners' },
+    { label: t('field.fouls'), key: 'fouls' },
+    { label: t('field.yellowCards'), key: 'yellowCards' },
+    { label: t('field.redCards'), key: 'redCards' },
   ]
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-3 text-[10px] font-semibold text-slate-500 border-b pb-1">
-        <div>{homeTeam}</div><div className="text-center">항목</div><div className="text-right">{awayTeam}</div>
+        <div>{homeTeam}</div><div className="text-center">{t('detailSection.item')}</div><div className="text-right">{awayTeam}</div>
       </div>
       {rows.map(({ label, key }) => (
         <div key={key} className="grid grid-cols-3 text-xs">
@@ -655,7 +661,7 @@ function StatSheetDisplay({ sheet, homeTeam, awayTeam }: { sheet: StatSheetData;
       ))}
       {sheet.scorers.length > 0 && (
         <div className="border-t pt-2 space-y-1">
-          <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">득점자</div>
+          <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{t('detailSection.scorers')}</div>
           {sheet.scorers.map((s, i) => (
             <div key={i} className="text-xs flex gap-2">
               <span className={s.team === 'home' ? 'text-blue-600 font-medium' : 'text-slate-500 font-medium'}>
@@ -671,6 +677,7 @@ function StatSheetDisplay({ sheet, homeTeam, awayTeam }: { sheet: StatSheetData;
 }
 
 export function MatchDetailPage() {
+  const { t } = useTranslation('match')
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user } = useCurrentUser()
@@ -694,7 +701,7 @@ export function MatchDetailPage() {
     if (!id) return
     matchApi.get(Number(id))
       .then(setMatch)
-      .catch(() => toast.error('경기 정보를 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('detail.loadFailed')))
       .finally(() => setLoading(false))
   }
 
@@ -711,9 +718,9 @@ export function MatchDetailPage() {
       await matchApi.deleteShot(Number(id), eventId)
       fetchShots()
       fetchMatch()
-      toast.success('슈팅 이벤트가 삭제되었습니다.')
+      toast.success(t('detail.shotDeleteSuccess'))
     } catch {
-      toast.error('삭제에 실패했습니다.')
+      toast.error(t('detail.shotDeleteFailed'))
     } finally {
       setDeletingShot(null)
     }
@@ -725,9 +732,9 @@ export function MatchDetailPage() {
     try {
       const result = await matchApi.uploadStatSheet(Number(id), file)
       setMatch(prev => prev ? { ...prev, statSheetRaw: result.statSheetRaw, statSheetImagePath: result.statSheetImagePath } : prev)
-      toast.success('스탯 시트 분석 완료')
+      toast.success(t('statSheetOcr.success'))
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '스탯 추출에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('statSheetOcr.failed'))
     } finally {
       setStatUploading(false)
       if (statFileRef.current) statFileRef.current.value = ''
@@ -746,8 +753,8 @@ export function MatchDetailPage() {
 
   if (!match) return (
     <div className="flex flex-col items-center justify-center h-64 gap-3 text-muted-foreground">
-      <p className="text-sm">경기를 찾을 수 없습니다.</p>
-      <Button variant="ghost" size="sm" onClick={() => navigate('/matches')}>목록으로</Button>
+      <p className="text-sm">{t('detail.notFound')}</p>
+      <Button variant="ghost" size="sm" onClick={() => navigate('/matches')}>{t('detail.toList')}</Button>
     </div>
   )
 
@@ -759,9 +766,11 @@ export function MatchDetailPage() {
   const oppScore = ourIsHome ? match.awayScore : match.homeScore
   const hasScore = ourScore != null && oppScore != null
   const resultLabel = hasScore
-    ? ourScore! > oppScore! ? '승' : ourScore! === oppScore! ? '무' : '패'
+    ? ourScore! > oppScore! ? t('outcome.win') : ourScore! === oppScore! ? t('outcome.draw') : t('outcome.loss')
     : null
-  const resultClass = resultLabel === '승' ? 'text-green-400' : resultLabel === '무' ? 'text-slate-300' : 'text-red-400'
+  const winLabel = t('outcome.win')
+  const drawLabel = t('outcome.draw')
+  const resultClass = resultLabel === winLabel ? 'text-green-400' : resultLabel === drawLabel ? 'text-slate-300' : 'text-red-400'
 
   return (
     <div className="flex flex-col h-full">
@@ -773,13 +782,13 @@ export function MatchDetailPage() {
         {canInputStats && (
           <>
             <Button variant="outline" size="sm" onClick={() => navigate(`/matches/${id}/lineup`)}>
-              <Users className="h-3.5 w-3.5 mr-1.5" />라인업 관리
+              <Users className="h-3.5 w-3.5 mr-1.5" />{t('detail.manageLineup')}
             </Button>
             <Button variant="outline" size="sm" onClick={() => setPlayerStatsOpen(true)}>
-              <Pencil className="h-3.5 w-3.5 mr-1.5" />선수 기록 입력
+              <Pencil className="h-3.5 w-3.5 mr-1.5" />{t('detail.manageStat')}
             </Button>
             <Button variant="outline" size="sm" onClick={() => setTeamStatsOpen(true)}>
-              <Pencil className="h-3.5 w-3.5 mr-1.5" />팀 통계 입력
+              <Pencil className="h-3.5 w-3.5 mr-1.5" />{t('detail.manageTeamStat')}
             </Button>
           </>
         )}
@@ -789,9 +798,9 @@ export function MatchDetailPage() {
             size="sm"
             onClick={() => setScoreOpen(true)}
             disabled={!match.hasSquad}
-            title={!match.hasSquad ? '스쿼드를 먼저 등록해야 스코어를 입력할 수 있습니다.' : undefined}
+            title={!match.hasSquad ? t('scoreDialog.squadRequired') : undefined}
           >
-            <Pencil className="h-3.5 w-3.5 mr-1.5" />스코어 입력
+            <Pencil className="h-3.5 w-3.5 mr-1.5" />{t('detail.manageScore')}
           </Button>
         )}
       </div>
@@ -806,14 +815,14 @@ export function MatchDetailPage() {
           >
             <div className="flex items-center justify-center gap-2 mb-4">
               <span className="bg-white/15 text-blue-200 rounded px-2 py-0.5 text-[10px]">
-                {COMPETITION_LABEL[match.competitionType]}
+                {t(`competitionType.${match.competitionType}`)}
               </span>
               <span className="text-blue-300 text-[10px]">{formatDate(match.date)}</span>
             </div>
             <div className="flex items-center justify-between px-2">
               <div className="flex-1 text-right">
                 <div className="text-base font-bold">{match.homeTeamName}</div>
-                <div className="text-[10px] text-blue-200 mt-0.5">홈</div>
+                <div className="text-[10px] text-blue-200 mt-0.5">{t('detailSection.home')}</div>
               </div>
               <div className="mx-5 text-center bg-white/10 rounded-xl px-5 py-2.5">
                 <div className="text-[30px] font-extrabold tabular-nums leading-none tracking-wide">
@@ -827,7 +836,7 @@ export function MatchDetailPage() {
               </div>
               <div className="flex-1 text-left">
                 <div className="text-base font-bold">{match.awayTeamName}</div>
-                <div className="text-[10px] text-blue-200 mt-0.5">원정</div>
+                <div className="text-[10px] text-blue-200 mt-0.5">{t('detailSection.away')}</div>
               </div>
             </div>
             {/* 득점자 */}
@@ -847,32 +856,28 @@ export function MatchDetailPage() {
           {/* 팀 통계 비교 바 */}
           {ts && (
             <div className="rounded-xl border bg-white p-4">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 text-center mb-3">팀 통계</div>
-              {/* 점유율: 합=100이므로 유일한 진짜 비교 바 */}
+              <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 text-center mb-3">{t('detailSection.teamStats')}</div>
               <StatRow
-                label="점유율"
+                label={t('teamStatsBar.possession')}
                 homeVal={ts.possession}
                 awayVal={100 - ts.possession}
                 fmt={(v) => `${v}%`}
               />
-              {/* 슈팅: 홈 단일값 */}
               <StatRow
-                label="슈팅"
+                label={t('teamStatsBar.shots')}
                 homeVal={ts.shots}
                 awayVal={null}
                 homeMax={ts.shots}
-                sub={`유효 ${ts.shotsOnTarget}회`}
+                sub={t('teamStatsBar.shotsOnTargetSub', { count: ts.shotsOnTarget })}
               />
-              {/* 패스 성공률: 홈 단일값 */}
               <StatRow
-                label="패스 성공률"
+                label={t('teamStatsBar.passRate')}
                 homeVal={ts.passAccuracy}
                 awayVal={null}
                 homeMax={100}
                 fmt={(v) => `${v}%`}
                 sub={ts.passes > 0 ? `${Math.round(ts.passes * ts.passAccuracy / 100)}/${ts.passes}` : undefined}
               />
-              {/* xG: 홈 단일값, 초록 바 */}
               <StatRow
                 label="xG"
                 homeVal={ts.xG}
@@ -888,9 +893,9 @@ export function MatchDetailPage() {
           {ts && (
             <div className="grid grid-cols-3 gap-2">
               {([
-                { label: '코너킥', value: ts.corners, accent: false },
-                { label: '경고', value: ts.yellowCards, accent: true },
-                { label: '파울', value: ts.fouls, accent: false },
+                { label: t('chipStats.corners'), value: ts.corners, accent: false },
+                { label: t('chipStats.yellowCards'), value: ts.yellowCards, accent: true },
+                { label: t('chipStats.fouls'), value: ts.fouls, accent: false },
               ] as const).map(({ label, value, accent }) => (
                 <div key={label} className="rounded-lg border bg-white p-3 text-center">
                   <div className={cn('text-sm font-bold tabular-nums', accent ? 'text-amber-500' : 'text-slate-900')}>
@@ -906,15 +911,15 @@ export function MatchDetailPage() {
           {(shotEvents.length > 0 || canInputStats) && (
             <div className="rounded-xl border bg-white p-4">
               <div className="flex items-center justify-between mb-3">
-                <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">슈팅 이벤트</div>
+                <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{t('shotEvent.sectionTitle')}</div>
                 {canInputStats && (
                   <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => setShotOpen(true)}>
-                    <Plus className="h-3 w-3 mr-1" />추가
+                    <Plus className="h-3 w-3 mr-1" />{t('shotEvent.add')}
                   </Button>
                 )}
               </div>
               {shotEvents.length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-2">슈팅 이벤트가 없습니다.</p>
+                <p className="text-xs text-slate-400 text-center py-2">{t('shotEvent.noEvents')}</p>
               ) : (
                 <div className="space-y-1.5">
                   {shotEvents.map((e) => (
@@ -923,7 +928,7 @@ export function MatchDetailPage() {
                         {e.minute != null ? `${e.minute}'` : '—'}
                       </span>
                       <span className={`inline-flex rounded border px-1.5 py-0.5 text-[10px] font-semibold shrink-0 ${SHOT_RESULT_STYLE[e.result]}`}>
-                        {SHOT_RESULT_LABEL[e.result]}
+                        {t(`shotResult.${e.result}`)}
                       </span>
                       <span className="font-medium text-slate-800 shrink-0">{e.shooter.playerName}</span>
                       {e.assister && (
@@ -949,16 +954,16 @@ export function MatchDetailPage() {
           {/* 선수 기록 */}
           {match.playerMatchStats.length > 0 && (
             <div className="rounded-xl border bg-white p-4">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-3">선수 기록</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-3">{t('detailSection.playerStats')}</div>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-slate-100">
-                      <th className="text-left pb-2 text-[9px] font-semibold text-slate-400 uppercase tracking-wide">선수</th>
-                      <th className="pb-2 text-[9px] font-semibold text-slate-400 uppercase tracking-wide text-center w-10">득점</th>
-                      <th className="pb-2 text-[9px] font-semibold text-slate-400 uppercase tracking-wide text-center w-10">도움</th>
+                      <th className="text-left pb-2 text-[9px] font-semibold text-slate-400 uppercase tracking-wide">{t('playerStatsTable.player')}</th>
+                      <th className="pb-2 text-[9px] font-semibold text-slate-400 uppercase tracking-wide text-center w-10">{t('playerStatsTable.goals')}</th>
+                      <th className="pb-2 text-[9px] font-semibold text-slate-400 uppercase tracking-wide text-center w-10">{t('playerStatsTable.assists')}</th>
                       <th className="pb-2 text-[9px] font-semibold text-slate-400 uppercase tracking-wide text-center w-12">xG</th>
-                      <th className="pb-2 text-[9px] font-semibold text-slate-400 uppercase tracking-wide text-center w-14">출전</th>
+                      <th className="pb-2 text-[9px] font-semibold text-slate-400 uppercase tracking-wide text-center w-14">{t('playerStatsTable.minutes')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1006,24 +1011,24 @@ export function MatchDetailPage() {
                                 <div className="rounded-lg bg-slate-50 border border-slate-100 p-3">
                                   <div className="grid grid-cols-4 gap-x-2 gap-y-3">
                                     {([
-                                      { label: '슈팅',    value: s.shots },
-                                      { label: 'xG',      value: (s.xG != null && s.xG > 0) ? s.xG.toFixed(2) : null },
-                                      { label: 'xA',      value: (s.xA != null && s.xA > 0) ? s.xA.toFixed(2) : null },
-                                      { label: '키패스',  value: s.keyPasses },
-                                      { label: '패스 시도', value: s.passesAttempted },
-                                      { label: '패스 성공', value: s.passesCompleted },
-                                      { label: '패스%',   value: (s.passesAttempted != null && s.passesAttempted > 0) ? `${Math.round((s.passesCompleted ?? 0) / s.passesAttempted * 100)}%` : null },
-                                      { label: '태클',    value: s.tackles },
-                                      { label: '태클%',   value: s.tackleSuccessRate != null ? `${s.tackleSuccessRate}%` : null },
-                                      { label: '인터셉트', value: s.interceptions },
-                                      { label: '클리어링', value: s.clearances },
-                                      { label: '볼 회수', value: s.ballRecoveries },
-                                      { label: '턴오버', value: s.turnovers },
-                                      { label: '지상 경합%', value: s.groundDuelSuccessRate != null ? `${s.groundDuelSuccessRate}%` : null },
-                                      { label: '공중 경합%', value: s.aerialDuelSuccessRate != null ? `${s.aerialDuelSuccessRate}%` : null },
-                                      { label: '선방',    value: s.saves },
-                                      { label: '클린시트', value: s.cleanSheet != null ? (s.cleanSheet ? '✓' : '✗') : null },
-                                      { label: '활동량',  value: (s.distanceCovered != null || s.sprint != null) ? `${s.distanceCovered != null ? s.distanceCovered.toFixed(1) + 'km' : '—'} / ${s.sprint != null ? Math.round(s.sprint) + '회' : '—'}` : null },
+                                      { label: t('playerStatsTable.shots'),         value: s.shots },
+                                      { label: 'xG',                                value: (s.xG != null && s.xG > 0) ? s.xG.toFixed(2) : null },
+                                      { label: 'xA',                                value: (s.xA != null && s.xA > 0) ? s.xA.toFixed(2) : null },
+                                      { label: t('playerStatsTable.keyPasses'),     value: s.keyPasses },
+                                      { label: t('playerStatsTable.passAttempted'), value: s.passesAttempted },
+                                      { label: t('playerStatsTable.passCompleted'), value: s.passesCompleted },
+                                      { label: t('playerStatsTable.passRate'),      value: (s.passesAttempted != null && s.passesAttempted > 0) ? `${Math.round((s.passesCompleted ?? 0) / s.passesAttempted * 100)}%` : null },
+                                      { label: t('playerStatsTable.tackles'),       value: s.tackles },
+                                      { label: t('playerStatsTable.tackleRate'),    value: s.tackleSuccessRate != null ? `${s.tackleSuccessRate}%` : null },
+                                      { label: t('playerStatsTable.interceptions'), value: s.interceptions },
+                                      { label: t('playerStatsTable.clearances'),    value: s.clearances },
+                                      { label: t('playerStatsTable.ballRecoveries'),value: s.ballRecoveries },
+                                      { label: t('playerStatsTable.turnovers'),     value: s.turnovers },
+                                      { label: t('playerStatsTable.groundDuelRate'),value: s.groundDuelSuccessRate != null ? `${s.groundDuelSuccessRate}%` : null },
+                                      { label: t('playerStatsTable.aerialDuelRate'),value: s.aerialDuelSuccessRate != null ? `${s.aerialDuelSuccessRate}%` : null },
+                                      { label: t('playerStatsTable.saves'),         value: s.saves },
+                                      { label: t('playerStatsTable.cleanSheet'),    value: s.cleanSheet != null ? (s.cleanSheet ? '✓' : '✗') : null },
+                                      { label: t('playerStatsTable.activity'),      value: (s.distanceCovered != null || s.sprint != null) ? `${s.distanceCovered != null ? s.distanceCovered.toFixed(1) + 'km' : '—'} / ${s.sprint != null ? Math.round(s.sprint) + '회' : '—'}` : null },
                                     ] as { label: string; value: string | number | null }[]).map(({ label, value }) => (
                                       <div key={label} className="text-center">
                                         <div className="text-[12px] font-semibold text-slate-700 tabular-nums">{value ?? '—'}</div>
@@ -1048,14 +1053,14 @@ export function MatchDetailPage() {
           {(canInputStats || canWrite) && (
             <div className="rounded-xl border bg-white p-4">
               <div className="flex items-center justify-between mb-3">
-                <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">스탯 시트 (OCR)</div>
+                <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{t('detailSection.statSheetOcr')}</div>
                 {canUploadOcr && (
                   <div className="flex items-center gap-2">
-                    {statUploading && <span className="text-xs text-muted-foreground">분석 중...</span>}
+                    {statUploading && <span className="text-xs text-muted-foreground">{t('statSheetOcr.analyzing')}</span>}
                     <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5"
                       onClick={() => statFileRef.current?.click()} disabled={statUploading}>
                       <ScanLine className="h-3.5 w-3.5" />
-                      {match.statSheetRaw ? '다시 스캔' : '스캔 업로드'}
+                      {match.statSheetRaw ? t('statSheetOcr.rescan') : t('statSheetOcr.upload')}
                     </Button>
                     <input ref={statFileRef} type="file" accept="image/jpeg,image/png" className="hidden"
                       onChange={e => { const file = e.target.files?.[0]; if (file) handleStatSheetUpload(file) }} />
@@ -1065,7 +1070,7 @@ export function MatchDetailPage() {
               {match.statSheetRaw ? (
                 <StatSheetDisplay sheet={match.statSheetRaw} homeTeam={match.homeTeamName} awayTeam={match.awayTeamName} />
               ) : (
-                <p className="text-xs text-muted-foreground text-center py-4">경기 기록지 이미지를 업로드하면 AI가 스탯을 자동 추출합니다.</p>
+                <p className="text-xs text-muted-foreground text-center py-4">{t('statSheetOcr.uploadHint')}</p>
               )}
             </div>
           )}
