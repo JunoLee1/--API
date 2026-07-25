@@ -1,0 +1,361 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Status {
+  ACTIVE
+  UNACTIVE
+}
+enum Type {
+  yellow
+  red
+}
+
+enum Role {
+  ADMIN
+  SUPER_ADVISOR
+  PLAYER
+}
+
+enum Foot {
+  left
+  right
+  both
+}
+
+enum JerseyNumberStatus {
+  AVAILABLE
+  OCCUPIED
+  RETIRED
+  RESERVED
+}
+
+enum MarketValueSource {
+  MANUAL
+  EXTERNAL_API
+}
+
+enum Position {
+  striker
+  shadow_striker
+  winger
+
+  central_attack_middle_fielder
+  right_attack_middle_fielder
+  left_attack_middle_fielder
+
+  central_defensive_middle_fielder
+  left_defensive_middle_fielder
+  right_defensive_middle_fielder
+
+  center_back
+  left_wing_back
+  left_full_back
+
+  right_wing_back
+  right_full_back
+}
+
+model Season {
+  id         Int      @id @default(autoincrement())
+  start_date DateTime
+  end_Date   DateTime
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  team_season_stats   Team_season_stats[]
+  player_season_stats Player_season_stats[]
+  season_matches      Match[]
+  team_player         Team_player[]
+}
+
+model League {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  nation_id Int
+  nation    Country @relation(fields: [nation_id], references: [id])
+  teams     Team[]
+}
+
+model Country {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+  code String @unique
+
+  users  User[]
+  player Player[]
+  league League[]
+}
+
+model PhoneNumber {
+  id        Int    @id @default(autoincrement())
+  iv        String
+  encrypted String @unique
+  users     User?
+}
+
+model User {
+  id            Int         @id @default(autoincrement())
+  date_of_birth DateTime
+  password      String
+  email         String      @unique
+  username      String
+  nickname      String      @unique
+  role          Role
+  status        Status
+  teamId        Int
+  team          Team        @relation(fields: [teamId], references: [id])
+  phoneNumberId Int         @unique
+  phoneNumber   PhoneNumber @relation(fields: [phoneNumberId], references: [id])
+  isDeleted     Boolean
+  countryId     Int
+  nationality   Country     @relation(fields: [countryId], references: [id])
+}
+
+model Team {
+  id         Int      @id @default(autoincrement())
+  teamname   String   @map("team_name")
+  founded    DateTime
+  short_name String   @unique
+
+  league_id Int
+  league    League @relation(fields: [league_id], references: [id])
+
+  homeMatches Match[] @relation("HomeTeam")
+  awayMatches Match[] @relation("AwayTeam")
+
+  team_season_stats Team_season_stats[]
+  goal              Goal[]
+
+  user             User[]
+  teamPlayers      Team_player[]
+  team_match_stats Team_match_stats[]
+  jersey_numbers   JerseyNumber[]
+}
+
+model Match {
+  id   Int      @id @default(autoincrement())
+  date DateTime
+
+  season_id Int
+  season    Season @relation(fields: [season_id], references: [id])
+
+  home_team_id Int
+  away_team_id Int
+  away_teams   Team @relation("AwayTeam", fields: [away_team_id], references: [id], map: "Match_away_team_fkey")
+  home_teams   Team @relation("HomeTeam", fields: [home_team_id], references: [id], map: "Match_home_team_fkey")
+
+  goal Goal[]
+  card Card[]
+
+  player_match_stats Player_match_stats[]
+  team_match_stats   Team_match_stats[]
+
+  @@map("match")
+}
+
+model Player {
+  id             String   @id @default(cuid())
+  player_name    String
+  position       Position
+  date_of_birth  DateTime
+  preferred_foot Foot
+  height         Int
+  weight         Int
+  // play_style: String? — 고정 PlayStyle enum으로 전환 예정. enum 값 목록 확정 후 마이그레이션.
+  play_style          String?
+  current_market_value Float?
+  nation_id      Int
+  nation         Country  @relation(fields: [nation_id], references: [id])
+
+  team_player          Team_player[]
+  player_match_stats   Player_match_stats[]
+  goals                Goal[]               @relation(name: "scorer")
+  assist               Goal[]               @relation(name: "assist")
+  player_season_stats  Player_season_stats[]
+  card                 Card[]
+  jersey_numbers       JerseyNumber[]
+  market_value_history MarketValueHistory[]
+}
+
+// 집계 테이블
+model Team_season_stats {
+  season_id Int
+  season    Season @relation(fields: [season_id], references: [id])
+
+  team_id Int
+  team    Team @relation(fields: [team_id], references: [id])
+
+  @@unique([season_id, team_id])
+}
+
+model Player_season_stats {
+  id Int @id @default(autoincrement())
+
+  avg_xG                            Float?
+  avg_xA                            Float?
+  avg_goals                         Int?
+  avg_assist                        Int?
+  avg_tackle_success_rate           Int?
+  avg_passing_accuracy              Int?
+  avg_clearance                     Int?
+  avg_sprint                        Int?
+  avg_clear_cut_chance_rate         Int?
+  avg_aerial_duel_success_rate      Float?
+  games_played                      Int?
+  goals_per_game                    Int?
+  avg_fouls_commited                Int?
+  avg_shot_allowed                  Int?
+  avg_shot_blocked                  Int?
+  avg_crosses_completed             Int?
+  avg_penalty_conversion_rate       Int?
+  avg_interception                  Int?
+  avg_free_kick_conversion_rate     Int?
+
+  season_id Int
+  season    Season @relation(fields: [season_id], references: [id])
+
+  player_id String
+  player    Player @relation(fields: [player_id], references: [id])
+
+  @@unique([season_id, player_id])
+}
+
+model Player_match_stats {
+  id                           Int    @id @default(autoincrement())
+  xG                           Float?
+  xA                           Float?
+  goals                        Int?
+  assist                       Int?
+  tackle_success_rate          Int?
+  passing_accuracy             Int?
+  clearance                    Int?
+  sprint                       Int?
+  clear_cut_chance_rate        Int?
+  aerial_duel_success_rate     Float?
+  fouls_commited               Int?
+  shot_allowed                 Int?
+  shot_blocked                 Int?
+  crosses_completed            Int?
+  penalty_conversion_rate      Int?
+  interception                 Int?
+  free_kick_conversion_rate    Int?
+
+  match_id Int
+  match    Match @relation(fields: [match_id], references: [id])
+
+  player_id String
+  player    Player @relation(fields: [player_id], references: [id])
+}
+
+model Team_match_stats {
+  id               Int @id @default(autoincrement())
+  possesion        Int
+  shots            Int
+  shots_on_target  Int
+  shots_off_target Int
+  key_passes       Int
+  passes           Int
+  pass_accuracy    Int
+  fouls            Int
+  yellow_cards     Int
+  red_cards        Int
+  xG               Float
+  corners          Int
+  offsides         Int
+  tackles          Int
+  interceptions    Int
+  clearances       Int
+  blocked_shots    Int
+
+  team_id Int
+  team    Team @relation(fields: [team_id], references: [id])
+
+  match_id Int
+  match    Match @relation(fields: [match_id], references: [id])
+
+  @@unique([team_id, match_id])
+}
+
+model Goal {
+  id       Int   @id @default(autoincrement())
+  match_id Int
+  match    Match @relation(fields: [match_id], references: [id])
+
+  scorer_id String
+  scorer    Player @relation(fields: [scorer_id], references: [id], name: "scorer")
+
+  assist_id String
+  assist    Player @relation(fields: [assist_id], references: [id], name: "assist")
+
+  team_id Int
+  team    Team @relation(fields: [team_id], references: [id])
+}
+
+model Card {
+  id      Int  @id @default(autoincrement())
+  type    Type
+  minutes Int
+
+  match_id Int
+  match    Match @relation(fields: [match_id], references: [id])
+
+  player_id String
+  player    Player @relation(fields: [player_id], references: [id])
+}
+
+model JerseyNumber {
+  id        Int                @id @default(autoincrement())
+  number    Int
+  status    JerseyNumberStatus @default(AVAILABLE)
+
+  team_id   Int
+  team      Team               @relation(fields: [team_id], references: [id])
+
+  player_id String?
+  player    Player?            @relation(fields: [player_id], references: [id])
+
+  // prospect_id 추가 예정 — Prospect 모델 구현 후 연결
+
+  @@unique([number, team_id])
+}
+
+model MarketValueHistory {
+  id            Int               @id @default(autoincrement())
+  value         Float
+  source        MarketValueSource
+  recorded_at   DateTime          @default(now())
+
+  recorded_by_id Int?
+  // recorded_by User? @relation(fields: [recorded_by_id], references: [id])
+  // User 모델이 Int PK를 사용하므로 연결 가능 — User relation 추가 시 주석 해제
+
+  player_id     String
+  player        Player            @relation(fields: [player_id], references: [id])
+}
+
+// connect
+
+model Team_player {
+  season_id Int
+  season    Season @relation(fields: [season_id], references: [id])
+
+  team_id Int
+  team    Team @relation(fields: [team_id], references: [id])
+
+  player_id String
+  player    Player @relation(fields: [player_id], references: [id])
+
+  @@id([team_id, player_id, season_id])
+}

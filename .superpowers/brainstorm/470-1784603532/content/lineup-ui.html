@@ -1,0 +1,144 @@
+<h2>라인업 관리 페이지 — UI 레이아웃</h2>
+<p class="subtitle">/matches/:id/lineup · MatchLineupPage.tsx</p>
+
+<div class="mockup" style="max-width:900px;margin:0 auto">
+  <div class="mockup-header">라인업 관리 — vs 수원 삼성 (2026-07-26)</div>
+  <div class="mockup-body" style="padding:0">
+
+    <!-- Top bar -->
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #e2e8f0;background:#f8fafc">
+      <div style="border:1px solid #e2e8f0;border-radius:4px;padding:4px 8px;font-size:11px;background:white;cursor:pointer">← 경기 상세</div>
+      <div style="flex:1"></div>
+      <div style="font-size:10px;color:#64748b">포메이션</div>
+      <div style="border:1px solid #e2e8f0;border-radius:4px;padding:4px 12px;font-size:11px;background:white;font-weight:600">4-3-3 ▾</div>
+      <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:4px;padding:4px 12px;font-size:11px;color:#64748b">저장</div>
+      <div style="background:#1e40af;color:white;border-radius:4px;padding:4px 12px;font-size:11px;font-weight:600">✓ 라인업 확정</div>
+    </div>
+
+    <!-- Main content -->
+    <div style="display:flex;gap:0;min-height:480px">
+
+      <!-- Left: Player pool -->
+      <div style="width:200px;border-right:1px solid #e2e8f0;padding:10px;overflow-y:auto;background:#fafafa;flex-shrink:0">
+        <div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">선수 풀</div>
+        <div style="font-size:9px;color:#94a3b8;margin-bottom:8px">배치되지 않은 선수</div>
+
+        <!-- Player cards -->
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="background:white;border:1px solid #e2e8f0;border-radius:6px;padding:6px 8px;cursor:grab;display:flex;align-items:center;gap:6px;font-size:10px">
+            <div style="width:28px;height:28px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#1e40af;flex-shrink:0">GK</div>
+            <div><div style="font-weight:600">이선우</div><div style="font-size:9px;color:#94a3b8">GOALKEEPER</div></div>
+            <div style="margin-left:auto;font-size:9px;color:#94a3b8">⣿</div>
+          </div>
+          <div style="background:white;border:1px solid #e2e8f0;border-radius:6px;padding:6px 8px;cursor:grab;display:flex;align-items:center;gap:6px;font-size:10px">
+            <div style="width:28px;height:28px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#15803d;flex-shrink:0">CB</div>
+            <div><div style="font-weight:600">박지훈</div><div style="font-size:9px;color:#94a3b8">CENTER_BACK</div></div>
+            <div style="margin-left:auto;font-size:9px;color:#94a3b8">⣿</div>
+          </div>
+          <div style="background:white;border:1px solid #e2e8f0;border-radius:6px;padding:6px 8px;cursor:grab;display:flex;align-items:center;gap:6px;font-size:10px">
+            <div style="width:28px;height:28px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#15803d;flex-shrink:0">CB</div>
+            <div><div style="font-weight:600">최현우</div><div style="font-size:9px;color:#94a3b8">CENTER_BACK</div></div>
+            <div style="margin-left:auto;font-size:9px;color:#94a3b8">⣿</div>
+          </div>
+          <div style="background:white;border:1px solid #e2e8f0;border-radius:6px;padding:6px 8px;cursor:grab;display:flex;align-items:center;gap:6px;font-size:10px">
+            <div style="width:28px;height:28px;border-radius:50%;background:#fef9c3;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#a16207;flex-shrink:0">CM</div>
+            <div><div style="font-weight:600">이준혁</div><div style="font-size:9px;color:#94a3b8">CENTRAL_DEF_MID</div></div>
+            <div style="margin-left:auto;font-size:9px;color:#94a3b8">⣿</div>
+          </div>
+          <!-- Injured player -->
+          <div style="background:#fff;border:1px solid #fecaca;border-radius:6px;padding:6px 8px;display:flex;align-items:center;gap:6px;font-size:10px;opacity:0.5">
+            <div style="width:28px;height:28px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#dc2626;flex-shrink:0">ST</div>
+            <div><div style="font-weight:600;color:#dc2626">오세진 🤕</div><div style="font-size:9px;color:#fca5a5">부상 중</div></div>
+          </div>
+          <div style="background:white;border:1px solid #e2e8f0;border-radius:6px;padding:6px 8px;cursor:grab;display:flex;align-items:center;gap:6px;font-size:10px">
+            <div style="width:28px;height:28px;border-radius:50%;background:#f3e8ff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#7c3aed;flex-shrink:0">ST</div>
+            <div><div style="font-weight:600">이서준</div><div style="font-size:9px;color:#94a3b8">STRIKER</div></div>
+            <div style="margin-left:auto;font-size:9px;color:#94a3b8">⣿</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Pitch + bench -->
+      <div style="flex:1;display:flex;flex-direction:column;padding:10px;gap:10px">
+
+        <!-- Pitch (4-3-3) -->
+        <div style="background:#166534;border-radius:10px;padding:12px;position:relative;flex:1;min-height:300px">
+          <!-- Field lines -->
+          <div style="position:absolute;top:50%;left:10%;right:10%;height:1px;background:rgba(255,255,255,0.15)"></div>
+          <div style="position:absolute;top:15%;left:30%;right:30%;height:1px;background:rgba(255,255,255,0.15)"></div>
+          <div style="position:absolute;bottom:15%;left:30%;right:30%;height:1px;background:rgba(255,255,255,0.15)"></div>
+          <div style="position:absolute;top:10%;bottom:10%;left:50%;width:1px;background:rgba(255,255,255,0.1);transform:translateX(-50%)"></div>
+
+          <!-- FWD row: LW ST RW -->
+          <div style="display:flex;justify-content:space-around;margin-bottom:24px;padding:0 10px">
+            <div style="background:rgba(255,255,255,0.15);border:2px dashed rgba(255,255,255,0.3);border-radius:50%;width:52px;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:9px;color:rgba(255,255,255,0.6)">
+              <span style="font-size:8px;font-weight:700">LW</span><span>비어있음</span>
+            </div>
+            <!-- ST filled -->
+            <div style="background:rgba(255,255,255,0.25);border:2px solid rgba(255,255,255,0.7);border-radius:50%;width:52px;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;color:white">
+              <span style="font-size:8px;font-weight:700">ST</span><span style="font-size:8px;font-weight:600">이서준</span>
+            </div>
+            <div style="background:rgba(255,255,255,0.15);border:2px dashed rgba(255,255,255,0.3);border-radius:50%;width:52px;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:9px;color:rgba(255,255,255,0.6)">
+              <span style="font-size:8px;font-weight:700">RW</span><span>비어있음</span>
+            </div>
+          </div>
+
+          <!-- MID row: LCM CM RCM -->
+          <div style="display:flex;justify-content:space-around;margin-bottom:24px;padding:0 16px">
+            <div style="background:rgba(255,255,255,0.25);border:2px solid rgba(255,255,255,0.7);border-radius:50%;width:52px;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;color:white">
+              <span style="font-size:8px;font-weight:700">LCM</span><span style="font-size:8px">이준혁</span>
+            </div>
+            <div style="background:rgba(255,255,255,0.15);border:2px dashed rgba(255,255,255,0.3);border-radius:50%;width:52px;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:9px;color:rgba(255,255,255,0.6)">
+              <span style="font-size:8px;font-weight:700">CM</span><span>비어있음</span>
+            </div>
+            <div style="background:rgba(255,255,255,0.15);border:2px dashed rgba(255,255,255,0.3);border-radius:50%;width:52px;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:9px;color:rgba(255,255,255,0.6)">
+              <span style="font-size:8px;font-weight:700">RCM</span><span>비어있음</span>
+            </div>
+          </div>
+
+          <!-- DEF row: LB CB1 CB2 RB -->
+          <div style="display:flex;justify-content:space-around;margin-bottom:20px">
+            <div style="background:rgba(255,255,255,0.15);border:2px dashed rgba(255,255,255,0.3);border-radius:50%;width:52px;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:9px;color:rgba(255,255,255,0.6)">
+              <span style="font-size:8px;font-weight:700">LB</span><span>비어있음</span>
+            </div>
+            <div style="background:rgba(255,255,255,0.25);border:2px solid rgba(255,255,255,0.7);border-radius:50%;width:52px;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;color:white">
+              <span style="font-size:8px;font-weight:700">CB1</span><span style="font-size:8px">박지훈</span>
+            </div>
+            <div style="background:rgba(255,255,255,0.25);border:2px solid rgba(255,255,255,0.7);border-radius:50%;width:52px;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;color:white">
+              <span style="font-size:8px;font-weight:700">CB2</span><span style="font-size:8px">최현우</span>
+            </div>
+            <div style="background:rgba(255,255,255,0.15);border:2px dashed rgba(255,255,255,0.3);border-radius:50%;width:52px;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:9px;color:rgba(255,255,255,0.6)">
+              <span style="font-size:8px;font-weight:700">RB</span><span>비어있음</span>
+            </div>
+          </div>
+
+          <!-- GK row -->
+          <div style="display:flex;justify-content:center">
+            <div style="background:rgba(255,215,0,0.2);border:2px solid rgba(255,215,0,0.7);border-radius:50%;width:52px;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;color:#fde68a">
+              <span style="font-size:8px;font-weight:700">GK</span><span style="font-size:8px">이선우</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bench -->
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px">
+          <div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">
+            후보 벤치 <span style="color:#94a3b8;font-weight:400">(0/7)</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;min-height:40px;border:2px dashed #e2e8f0;border-radius:6px;padding:6px;align-items:center">
+            <span style="font-size:10px;color:#cbd5e1">선수를 여기로 드래그하면 후보로 등록됩니다</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status bar -->
+    <div style="border-top:1px solid #e2e8f0;padding:8px 14px;background:#f8fafc;display:flex;align-items:center;gap:8px">
+      <div style="width:8px;height:8px;border-radius:50%;background:#f59e0b"></div>
+      <span style="font-size:10px;color:#92400e">선발 3/11 배치됨 · 저장되지 않은 변경사항 있음</span>
+      <div style="flex:1"></div>
+      <span style="font-size:10px;color:#64748b">라인업 확정: HEAD_COACH 전용</span>
+    </div>
+
+  </div>
+</div>

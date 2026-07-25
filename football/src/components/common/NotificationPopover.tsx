@@ -4,6 +4,7 @@ import { Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { notificationApi, type NotificationItem } from '@/services/notification.service'
+import { useTranslation } from 'react-i18next'
 
 const NOTIFICATION_ROUTES: Record<string, string> = {
   CONTRACT_EXPIRY: '/contracts',
@@ -39,6 +40,7 @@ function formatDate(iso: string): string {
 }
 
 export function NotificationPopover({ unreadCount, onUnreadCountChange, iconSize = 'sm' }: Props) {
+  const { t } = useTranslation('common')
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [items, setItems] = useState<NotificationItem[]>([])
@@ -103,14 +105,14 @@ export function NotificationPopover({ unreadCount, onUnreadCountChange, iconSize
 
       <PopoverContent className="w-80 p-0" align="end" sideOffset={8}>
         <div className="px-4 py-3 border-b">
-          <p className="text-sm font-semibold">알림</p>
+          <p className="text-sm font-semibold">{t('notification.title')}</p>
         </div>
 
         {loading ? (
-          <div className="px-4 py-6 text-center text-sm text-muted-foreground">불러오는 중...</div>
+          <div className="px-4 py-6 text-center text-sm text-muted-foreground">{t('notification.loading')}</div>
         ) : items.length === 0 ? (
           <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-            새 알림이 없습니다
+            {t('notification.empty')}
           </div>
         ) : (
           <ul className="max-h-80 overflow-y-auto divide-y">
@@ -156,7 +158,7 @@ export function NotificationPopover({ unreadCount, onUnreadCountChange, iconSize
             onClick={() => setOpen(false)}
             className="block text-xs text-muted-foreground text-center py-2 hover:text-foreground transition-colors"
           >
-            전체 목록 보기 →
+            {t('notification.viewAll')}
           </Link>
         </div>
       </PopoverContent>

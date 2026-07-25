@@ -66,7 +66,7 @@ export function computeRadarScores(
         speed: scale(avg.sprint, 36),
         chance: scale(avg.clearCutChanceRate, 1.0),
         passing,
-        안정성: stability,
+        stability,
         setpiece: clamp(
           scale(avg.penaltyConversionRate, 1.0) * 0.5 +
           scale(avg.freeKickConversionRate, 1.0) * 0.5,
@@ -82,7 +82,7 @@ export function computeRadarScores(
         ),
         speed: scale(avg.sprint, 36),
         shooting: clamp(scale(avg.xG, 1.5) * 0.5 + scale(avg.goals, 10) * 0.5),
-        안정성: stability,
+        stability,
         setpiece: scale(avg.freeKickConversionRate, 1.0),
       };
     case "DEF":
@@ -92,7 +92,7 @@ export function computeRadarScores(
         clearing: scale(avg.clearances, 8),
         aerial: scale(avg.aerialDuelSuccessRate, 1.0),
         passing,
-        안정성: stability,
+        stability,
         speed: scale(avg.sprint, 36),
       };
     case "GK": {
@@ -103,7 +103,7 @@ export function computeRadarScores(
       return {
         saving: saveRate,
         passing,
-        안정성: stability,
+        stability,
         distribution: scale(avg.crossesCompleted, 5),
         shotStopping: scale(avg.saves, 8),
         goalsConceded: avg.shotsAllowed != null ? clamp(100 - avg.shotsAllowed * 10) : 0,

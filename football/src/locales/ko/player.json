@@ -52,12 +52,21 @@
     "equipment": "용품"
   },
   "radar": {
-    "goals": "득점",
-    "assists": "도움",
-    "xG": "xG",
-    "shots": "슈팅",
-    "passAccuracy": "패스%",
-    "keyPasses": "키패스",
+    "shooting": "슈팅",
+    "creation": "창출",
+    "speed": "스피드",
+    "chance": "결정적 기회",
+    "passing": "패싱",
+    "setpiece": "세트피스",
+    "defending": "수비",
+    "tackling": "태클",
+    "interception": "인터셉트",
+    "clearing": "클리어링",
+    "aerial": "공중 경합",
+    "saving": "세이브",
+    "distribution": "배급",
+    "shotStopping": "선방",
+    "goalsConceded": "실점 억제",
     "stability": "안정성"
   }
 }

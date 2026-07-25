@@ -1,0 +1,296 @@
+<h2>의료 대시보드 — 레이아웃 방향</h2>
+<p class="subtitle">두 방향 중 하나를 선택해주세요</p>
+
+<style>
+  .dash-mock {
+    background: #f8f9fa;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 20px;
+    font-family: -apple-system, sans-serif;
+  }
+  .dash-header {
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .stat-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .stat-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  .stat-label {
+    font-size: 10px;
+    color: #94a3b8;
+    margin-bottom: 4px;
+  }
+  .stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1;
+  }
+  .stat-unit {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 400;
+    margin-left: 2px;
+  }
+  .stat-card.danger .stat-value { color: #dc2626; }
+  .stat-card.warn .stat-value { color: #d97706; }
+  .stat-card.safe .stat-value { color: #16a34a; }
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .card-grid-3 {
+    grid-template-columns: 2fr 1fr;
+  }
+  .chart-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  .chart-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+  }
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 5px;
+  }
+  .bar-label {
+    font-size: 10px;
+    color: #64748b;
+    width: 32px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .bar-track {
+    flex: 1;
+    height: 8px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: #3b82f6;
+  }
+  .bar-count {
+    font-size: 10px;
+    color: #374151;
+    font-weight: 600;
+    width: 14px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .section-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+  .badge-medical { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+  .badge-general { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+  .dash-section { margin-bottom: 14px; }
+  .existing-note {
+    font-size: 10px;
+    color: #94a3b8;
+    font-style: italic;
+    margin-top: 4px;
+  }
+  .new-tag {
+    display: inline-block;
+    font-size: 8px;
+    font-weight: 700;
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+    border-radius: 3px;
+    padding: 1px 4px;
+    margin-left: 4px;
+    vertical-align: middle;
+    letter-spacing: 0.03em;
+  }
+</style>
+
+<div class="cards">
+
+  <!-- Option A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>A — 기존 대시보드 확장</h3>
+      <p>/dashboard 페이지에 의료 섹션 추가<br>역할별로 분리 렌더링</p>
+    </div>
+    <div class="card-image" style="padding: 12px; background: #fafafa;">
+      <div class="dash-mock">
+        <div class="dash-header">대시보드 — 의료팀 뷰</div>
+
+        <!-- 기존 카드 -->
+        <div class="dash-section">
+          <div class="section-badge badge-general">기존</div>
+          <div class="stat-grid stat-grid-3">
+            <div class="stat-card danger">
+              <div class="stat-label">내 활성 케이스</div>
+              <div class="stat-value">7<span class="stat-unit">건</span></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">이번 달 복귀 전환</div>
+              <div class="stat-value">2<span class="stat-unit">건</span></div>
+            </div>
+            <div class="stat-card danger">
+              <div class="stat-label">전체 부상 선수</div>
+              <div class="stat-value">11<span class="stat-unit">명</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 신규 의료 KPI -->
+        <div class="dash-section">
+          <div class="section-badge badge-medical">의료 현황 <span class="new-tag">NEW</span></div>
+          <div class="stat-grid">
+            <div class="stat-card danger">
+              <div class="stat-label">현재 부상자</div>
+              <div class="stat-value">11<span class="stat-unit">명</span></div>
+            </div>
+            <div class="stat-card warn">
+              <div class="stat-label">금주 신규 부상</div>
+              <div class="stat-value">3<span class="stat-unit">건</span></div>
+            </div>
+            <div class="stat-card safe">
+              <div class="stat-label">7일 내 복귀 예정</div>
+              <div class="stat-value">2<span class="stat-unit">명</span></div>
+            </div>
+            <div class="stat-card warn">
+              <div class="stat-label">재부상 위험군</div>
+              <div class="stat-value">4<span class="stat-unit">명</span></div>
+            </div>
+          </div>
+          <div class="stat-grid">
+            <div class="stat-card warn">
+              <div class="stat-label">서류 미비 건수</div>
+              <div class="stat-value">5<span class="stat-unit">건</span></div>
+            </div>
+            <div class="stat-card warn">
+              <div class="stat-label">승인 대기</div>
+              <div class="stat-value">8<span class="stat-unit">건</span></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">평균 복귀 소요일</div>
+              <div class="stat-value">24<span class="stat-unit">일</span></div>
+            </div>
+            <div class="stat-card" style="background: #fafafa; border-style: dashed;"></div>
+          </div>
+        </div>
+
+        <!-- 포지션별 차트 -->
+        <div class="chart-card">
+          <div class="chart-title">포지션별 부상 추이 <span class="new-tag">NEW</span></div>
+          <div class="bar-row"><span class="bar-label">DF</span><div class="bar-track"><div class="bar-fill" style="width:80%"></div></div><span class="bar-count">8</span></div>
+          <div class="bar-row"><span class="bar-label">MF</span><div class="bar-track"><div class="bar-fill" style="width:50%"></div></div><span class="bar-count">5</span></div>
+          <div class="bar-row"><span class="bar-label">FW</span><div class="bar-track"><div class="bar-fill" style="width:30%"></div></div><span class="bar-count">3</span></div>
+          <div class="bar-row"><span class="bar-label">GK</span><div class="bar-track"><div class="bar-fill" style="width:10%"></div></div><span class="bar-count">1</span></div>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top: 10px;">
+        <div class="pros"><h4>장점</h4><ul><li>별도 페이지 없음</li><li>진입 즉시 확인</li></ul></div>
+        <div class="cons"><h4>단점</h4><ul><li>기존 카드와 중복 수치</li><li>페이지가 길어짐</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>B — 별도 의료 대시보드 페이지</h3>
+      <p>/injuries/dashboard 신규 페이지<br>사이드바 메뉴 추가</p>
+    </div>
+    <div class="card-image" style="padding: 12px; background: #fafafa;">
+      <div class="dash-mock">
+        <div class="dash-header">의료 대시보드 — 전용 페이지</div>
+
+        <!-- 핵심 KPI 4개 -->
+        <div class="stat-grid" style="margin-bottom: 10px;">
+          <div class="stat-card danger">
+            <div class="stat-label">현재 부상자</div>
+            <div class="stat-value">11<span class="stat-unit">명</span></div>
+          </div>
+          <div class="stat-card warn">
+            <div class="stat-label">금주 신규 부상</div>
+            <div class="stat-value">3<span class="stat-unit">건</span></div>
+          </div>
+          <div class="stat-card safe">
+            <div class="stat-label">7일 내 복귀 예정</div>
+            <div class="stat-value">2<span class="stat-unit">명</span></div>
+          </div>
+          <div class="stat-card warn">
+            <div class="stat-label">재부상 위험군</div>
+            <div class="stat-value">4<span class="stat-unit">명</span></div>
+          </div>
+        </div>
+
+        <!-- 행정 KPI + 포지션 차트 -->
+        <div class="card-grid card-grid-3" style="margin-bottom: 0;">
+          <div class="chart-card">
+            <div class="chart-title">포지션별 부상 추이</div>
+            <div class="bar-row"><span class="bar-label">DF</span><div class="bar-track"><div class="bar-fill" style="width:80%"></div></div><span class="bar-count">8</span></div>
+            <div class="bar-row"><span class="bar-label">MF</span><div class="bar-track"><div class="bar-fill" style="width:50%"></div></div><span class="bar-count">5</span></div>
+            <div class="bar-row"><span class="bar-label">FW</span><div class="bar-track"><div class="bar-fill" style="width:30%"></div></div><span class="bar-count">3</span></div>
+            <div class="bar-row"><span class="bar-label">GK</span><div class="bar-track"><div class="bar-fill" style="width:10%"></div></div><span class="bar-count">1</span></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div class="stat-card warn">
+              <div class="stat-label">서류 미비</div>
+              <div class="stat-value">5<span class="stat-unit">건</span></div>
+            </div>
+            <div class="stat-card warn">
+              <div class="stat-label">승인 대기</div>
+              <div class="stat-value">8<span class="stat-unit">건</span></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">평균 복귀 소요일</div>
+              <div class="stat-value">24<span class="stat-unit">일</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top: 10px;">
+        <div class="pros"><h4>장점</h4><ul><li>공간 여유 있음</li><li>집중된 정보 구조</li><li>확장 여지 큼</li></ul></div>
+        <div class="cons"><h4>단점</h4><ul><li>사이드바 항목 추가</li><li>별도 탐색 필요</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top: 16px; text-align: center;">추천: <strong>B (별도 페이지)</strong> — 8개 KPI + 차트가 한 화면에 정돈되고, 이후 확장도 쉬움</p>

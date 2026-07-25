@@ -1,0 +1,5 @@
+{"type":"server-started","port":60842,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:60842","screen_dir":"/Users/juno/work/football/.superpowers/brainstorm/470-1784603532/content","state_dir":"/Users/juno/work/football/.superpowers/brainstorm/470-1784603532/state"}
+{"type":"screen-added","file":"/Users/juno/work/football/.superpowers/brainstorm/470-1784603532/content/lineup-layout.html"}
+{"type":"screen-added","file":"/Users/juno/work/football/.superpowers/brainstorm/470-1784603532/content/waiting-1.html"}
+{"type":"screen-added","file":"/Users/juno/work/football/.superpowers/brainstorm/470-1784603532/content/lineup-ui.html"}
+{"type":"server-stopped","reason":"idle timeout"}

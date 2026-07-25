@@ -89,25 +89,38 @@ export function StatsTab({ playerId }: Props) {
           <p className="text-sm text-muted-foreground">등록된 경기 기록이 없습니다.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-xs border-collapse">
+            <table className="text-xs border-collapse whitespace-nowrap">
               <thead>
                 <tr className="text-muted-foreground border-b">
-                  <th className="text-left py-2 pr-3">날짜</th>
+                  <th className="text-left py-2 pr-4 sticky left-0 bg-background">날짜</th>
+                  <th className="text-right pr-3">출전</th>
                   <th className="text-right pr-3">골</th>
                   <th className="text-right pr-3">도움</th>
+                  <th className="text-right pr-3">슈팅</th>
                   <th className="text-right pr-3">xG</th>
                   <th className="text-right pr-3">xA</th>
+                  <th className="text-right pr-3">키패스</th>
                   <th className="text-right pr-3">패스%</th>
+                  <th className="text-right pr-3">태클</th>
                   <th className="text-right pr-3">태클%</th>
-                  <th className="text-right">출전</th>
+                  <th className="text-right pr-3">인터셉트</th>
+                  <th className="text-right pr-3">클리어링</th>
+                  <th className="text-right pr-3">볼회수</th>
+                  <th className="text-right pr-3">턴오버</th>
+                  <th className="text-right pr-3">지상%</th>
+                  <th className="text-right pr-3">공중%</th>
+                  <th className="text-right pr-3">선방</th>
+                  <th className="text-right">활동량</th>
                 </tr>
               </thead>
               <tbody>
                 {matchStats.map((s) => (
                   <tr key={s.id} className="border-b last:border-0 hover:bg-muted/30">
-                    <td className="py-2 pr-3 text-muted-foreground">{formatDate(s.match.date)}</td>
+                    <td className="py-2 pr-4 text-muted-foreground sticky left-0 bg-background">{formatDate(s.match.date)}</td>
+                    <td className="text-right pr-3">{s.minutesPlayed != null ? `${s.minutesPlayed}'` : '-'}</td>
                     <td className="text-right pr-3 font-medium">{fmt(s.goals)}</td>
                     <td className="text-right pr-3">{fmt(s.assists)}</td>
+                    <td className="text-right pr-3">{fmt(s.shots)}</td>
                     <td className="text-right pr-3">
                       {(s.xG != null && s.xG > 0)
                         ? s.xG.toFixed(2)
@@ -122,13 +135,29 @@ export function StatsTab({ playerId }: Props) {
                           ? <span className="text-orange-500 font-bold">⚠</span>
                           : '-'}
                     </td>
+                    <td className="text-right pr-3">{fmt(s.keyPasses)}</td>
                     <td className="text-right pr-3">
                       {(s.passesAttempted != null && s.passesAttempted > 0)
                         ? `${Math.round((s.passesCompleted ?? 0) / s.passesAttempted * 100)}%`
                         : '-'}
                     </td>
-                    <td className="text-right pr-3">{fmt(s.tackleSuccessRate, 0)}{s.tackleSuccessRate != null ? '%' : ''}</td>
-                    <td className="text-right">{s.minutesPlayed != null ? `${s.minutesPlayed}'` : '-'}</td>
+                    <td className="text-right pr-3">{fmt(s.tackles)}</td>
+                    <td className="text-right pr-3">{s.tackleSuccessRate != null ? `${s.tackleSuccessRate}%` : '-'}</td>
+                    <td className="text-right pr-3">{fmt(s.interceptions)}</td>
+                    <td className="text-right pr-3">{fmt(s.clearances)}</td>
+                    <td className="text-right pr-3">{fmt(s.ballRecoveries)}</td>
+                    <td className="text-right pr-3">{fmt(s.turnovers)}</td>
+                    <td className="text-right pr-3">{s.groundDuelSuccessRate != null ? `${s.groundDuelSuccessRate}%` : '-'}</td>
+                    <td className="text-right pr-3">{s.aerialDuelSuccessRate != null ? `${s.aerialDuelSuccessRate}%` : '-'}</td>
+                    <td className="text-right pr-3">{fmt(s.saves)}</td>
+                    <td className="text-right">
+                      {(s.distanceCovered != null || s.sprint != null)
+                        ? <span className="text-[10px] leading-tight">
+                            {s.distanceCovered != null ? `${s.distanceCovered.toFixed(1)}km` : '—'}<br />
+                            {s.sprint != null ? `${Math.round(s.sprint)}회` : '—'}
+                          </span>
+                        : '-'}
+                    </td>
                   </tr>
                 ))}
               </tbody>

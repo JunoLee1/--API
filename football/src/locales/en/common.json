@@ -73,5 +73,11 @@
   "language": {
     "ko": "한국어",
     "en": "English"
+  },
+  "notification": {
+    "title": "Notifications",
+    "loading": "Loading...",
+    "empty": "No new notifications",
+    "viewAll": "View all →"
   }
 }

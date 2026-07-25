@@ -52,12 +52,21 @@
     "equipment": "Equipment"
   },
   "radar": {
-    "goals": "Goals",
-    "assists": "Assists",
-    "xG": "xG",
-    "shots": "Shots",
-    "passAccuracy": "Pass%",
-    "keyPasses": "Key Passes",
+    "shooting": "Shooting",
+    "creation": "Creation",
+    "speed": "Speed",
+    "chance": "Chance Conv.",
+    "passing": "Passing",
+    "setpiece": "Set Piece",
+    "defending": "Defending",
+    "tackling": "Tackling",
+    "interception": "Interception",
+    "clearing": "Clearing",
+    "aerial": "Aerial",
+    "saving": "Saving",
+    "distribution": "Distribution",
+    "shotStopping": "Shot Stopping",
+    "goalsConceded": "Goals Conceded",
     "stability": "Stability"
   }
 }

@@ -73,5 +73,11 @@
   "language": {
     "ko": "한국어",
     "en": "English"
+  },
+  "notification": {
+    "title": "알림",
+    "loading": "불러오는 중...",
+    "empty": "새 알림이 없습니다",
+    "viewAll": "전체 목록 보기 →"
   }
 }

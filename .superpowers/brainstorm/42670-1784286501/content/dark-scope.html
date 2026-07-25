@@ -1,0 +1,122 @@
+<h2>다크 스타일 범위</h2>
+<p class="subtitle">스코어 헤더만 다크로 할지, 페이지 전체를 다크로 할지</p>
+
+<div class="split">
+
+  <!-- Option A1: Header only dark -->
+  <div class="mockup" data-choice="a1" onclick="toggleSelect(this)" style="cursor:pointer;">
+    <div class="mockup-header">A-1 · 헤더만 다크</div>
+    <div class="mockup-body" style="background:#f8fafc;padding:0;font-family:sans-serif;font-size:11px;">
+      <!-- Dark header -->
+      <div style="background:#0f172a;padding:20px;text-align:center;">
+        <div style="color:#94a3b8;font-size:9px;margin-bottom:6px;">K리그1 · 2026.04.05</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:20px;">
+          <div style="color:#f1f5f9;font-weight:700;">FC Seoul</div>
+          <div style="color:#f8fafc;font-size:26px;font-weight:800;">3 : 1</div>
+          <div style="color:#f1f5f9;font-weight:700;">Busan IPark</div>
+        </div>
+        <div style="margin-top:6px;">
+          <span style="background:#22c55e22;color:#4ade80;border:1px solid #166534;border-radius:4px;padding:1px 8px;font-size:9px;">승</span>
+        </div>
+      </div>
+      <!-- Light content below -->
+      <div style="padding:12px;">
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin-bottom:8px;">
+          <div style="color:#64748b;font-size:9px;margin-bottom:8px;font-weight:600;">팀 통계</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+            <span style="color:#0f172a;font-size:10px;font-weight:600;width:22px;text-align:right;">62%</span>
+            <div style="flex:1;height:4px;background:#e2e8f0;border-radius:9px;overflow:hidden;">
+              <div style="width:62%;height:100%;background:#3b82f6;border-radius:9px;"></div>
+            </div>
+            <span style="color:#94a3b8;font-size:10px;width:22px;">38%</span>
+            <span style="color:#94a3b8;font-size:9px;width:36px;">점유율</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+            <span style="color:#0f172a;font-size:10px;font-weight:600;width:22px;text-align:right;">14</span>
+            <div style="flex:1;height:4px;background:#e2e8f0;border-radius:9px;overflow:hidden;">
+              <div style="width:70%;height:100%;background:#3b82f6;border-radius:9px;"></div>
+            </div>
+            <span style="color:#94a3b8;font-size:10px;width:22px;">6</span>
+            <span style="color:#94a3b8;font-size:9px;width:36px;">슈팅</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="color:#0f172a;font-size:10px;font-weight:600;width:22px;text-align:right;">2.1</span>
+            <div style="flex:1;height:4px;background:#e2e8f0;border-radius:9px;overflow:hidden;">
+              <div style="width:72%;height:100%;background:#10b981;border-radius:9px;"></div>
+            </div>
+            <span style="color:#94a3b8;font-size:10px;width:22px;">0.8</span>
+            <span style="color:#94a3b8;font-size:9px;width:36px;">xG</span>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px;">
+          <div style="color:#64748b;font-size:9px;margin-bottom:6px;font-weight:600;">선수 기록</div>
+          <div style="display:flex;justify-content:space-between;color:#0f172a;font-size:10px;padding:3px 0;border-bottom:1px solid #f1f5f9;">
+            <span>김민준</span><span>⚽ 2 &nbsp; 🅰️ 1</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;color:#64748b;font-size:10px;padding:3px 0;">
+            <span>이상훈</span><span>⚽ 1 &nbsp; 🅰️ 2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option A2: Full page dark -->
+  <div class="mockup" data-choice="a2" onclick="toggleSelect(this)" style="cursor:pointer;">
+    <div class="mockup-header">A-2 · 전체 다크</div>
+    <div class="mockup-body" style="background:#0f172a;padding:0;font-family:sans-serif;font-size:11px;">
+      <!-- Dark header -->
+      <div style="background:#1e293b;border-bottom:1px solid #334155;padding:20px;text-align:center;">
+        <div style="color:#64748b;font-size:9px;margin-bottom:6px;">K리그1 · 2026.04.05</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:20px;">
+          <div style="color:#f1f5f9;font-weight:700;">FC Seoul</div>
+          <div style="color:#f8fafc;font-size:26px;font-weight:800;">3 : 1</div>
+          <div style="color:#f1f5f9;font-weight:700;">Busan IPark</div>
+        </div>
+        <div style="margin-top:6px;">
+          <span style="background:#22c55e22;color:#4ade80;border:1px solid #166534;border-radius:4px;padding:1px 8px;font-size:9px;">승</span>
+        </div>
+      </div>
+      <!-- Dark content -->
+      <div style="padding:12px;">
+        <div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:12px;margin-bottom:8px;">
+          <div style="color:#475569;font-size:9px;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">팀 통계</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+            <span style="color:#f1f5f9;font-size:10px;font-weight:600;width:22px;text-align:right;">62%</span>
+            <div style="flex:1;height:4px;background:#334155;border-radius:9px;overflow:hidden;">
+              <div style="width:62%;height:100%;background:#3b82f6;border-radius:9px;"></div>
+            </div>
+            <span style="color:#64748b;font-size:10px;width:22px;">38%</span>
+            <span style="color:#475569;font-size:9px;width:36px;">점유율</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+            <span style="color:#f1f5f9;font-size:10px;font-weight:600;width:22px;text-align:right;">14</span>
+            <div style="flex:1;height:4px;background:#334155;border-radius:9px;overflow:hidden;">
+              <div style="width:70%;height:100%;background:#3b82f6;border-radius:9px;"></div>
+            </div>
+            <span style="color:#64748b;font-size:10px;width:22px;">6</span>
+            <span style="color:#475569;font-size:9px;width:36px;">슈팅</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="color:#f1f5f9;font-size:10px;font-weight:600;width:22px;text-align:right;">2.1</span>
+            <div style="flex:1;height:4px;background:#334155;border-radius:9px;overflow:hidden;">
+              <div style="width:72%;height:100%;background:#10b981;border-radius:9px;"></div>
+            </div>
+            <span style="color:#64748b;font-size:10px;width:22px;">0.8</span>
+            <span style="color:#475569;font-size:9px;width:36px;">xG</span>
+          </div>
+        </div>
+        <div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:12px;">
+          <div style="color:#475569;font-size:9px;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">선수 기록</div>
+          <div style="display:flex;justify-content:space-between;color:#e2e8f0;font-size:10px;padding:3px 0;border-bottom:1px solid #334155;">
+            <span>김민준</span><span>⚽ 2 &nbsp; 🅰️ 1</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;color:#64748b;font-size:10px;padding:3px 0;">
+            <span>이상훈</span><span>⚽ 1 &nbsp; 🅰️ 2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

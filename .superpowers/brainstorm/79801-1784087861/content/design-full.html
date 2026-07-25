@@ -1,0 +1,319 @@
+<h2>의료 대시보드 설계 확정안</h2>
+<p class="subtitle">기존 /dashboard 하단에 의료 섹션 추가 — MEDICAL · MEDICAL_DIRECTOR · HEAD_COACH 역할에만 표시</p>
+
+<style>
+  .dash-mock {
+    background: #f8f9fa;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 20px;
+    font-family: -apple-system, sans-serif;
+  }
+  .dash-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 2px;
+  }
+  .dash-sub {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 16px;
+  }
+  .section-header {
+    font-size: 11px;
+    font-weight: 700;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .section-header::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e2e8f0;
+  }
+  .stat-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .stat-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+  .stat-label {
+    font-size: 10px;
+    color: #94a3b8;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .stat-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1;
+  }
+  .stat-unit {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 400;
+    margin-left: 2px;
+  }
+  .stat-card.red { border-left: 3px solid #dc2626; }
+  .stat-card.red .stat-value { color: #dc2626; }
+  .stat-card.amber { border-left: 3px solid #d97706; }
+  .stat-card.amber .stat-value { color: #d97706; }
+  .stat-card.green { border-left: 3px solid #16a34a; }
+  .stat-card.green .stat-value { color: #16a34a; }
+  .stat-card.blue { border-left: 3px solid #2563eb; }
+  .stat-card.blue .stat-value { color: #2563eb; }
+
+  .bottom-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .chart-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 14px;
+  }
+  .chart-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 10px;
+  }
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .bar-label {
+    font-size: 10px;
+    color: #64748b;
+    width: 28px;
+    text-align: right;
+    flex-shrink: 0;
+    font-weight: 500;
+  }
+  .bar-track {
+    flex: 1;
+    height: 9px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .bar-fill { height: 100%; border-radius: 4px; background: #3b82f6; }
+  .bar-fill.df { background: #ef4444; }
+  .bar-fill.mf { background: #3b82f6; }
+  .bar-fill.fw { background: #f59e0b; }
+  .bar-fill.gk { background: #8b5cf6; }
+  .bar-count {
+    font-size: 10px;
+    color: #374151;
+    font-weight: 700;
+    width: 14px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .admin-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .existing-section {
+    opacity: 0.5;
+  }
+  .divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 14px 0;
+    position: relative;
+  }
+  .divider-label {
+    position: absolute;
+    top: -9px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #f8f9fa;
+    padding: 0 8px;
+    font-size: 9px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+  }
+
+  .spec-table {
+    width: 100%;
+    font-size: 11px;
+    border-collapse: collapse;
+    margin-top: 12px;
+  }
+  .spec-table th {
+    text-align: left;
+    padding: 6px 8px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-weight: 600;
+    border: 1px solid #e2e8f0;
+  }
+  .spec-table td {
+    padding: 6px 8px;
+    border: 1px solid #e2e8f0;
+    color: #374151;
+    vertical-align: top;
+  }
+  .spec-table tr:nth-child(even) td { background: #f8fafc; }
+  code {
+    font-family: monospace;
+    font-size: 10px;
+    background: #f1f5f9;
+    padding: 1px 4px;
+    border-radius: 3px;
+    color: #0f172a;
+  }
+</style>
+
+<div class="mockup">
+  <div class="mockup-header">Dashboard — MEDICAL_DIRECTOR 뷰 미리보기</div>
+  <div class="mockup-body">
+    <div class="dash-mock">
+      <div class="dash-title">대시보드</div>
+      <div class="dash-sub">김의무님, 안녕하세요</div>
+
+      <!-- 기존 카드 (흐리게) -->
+      <div class="existing-section">
+        <div class="section-header">기존 KPI</div>
+        <div class="stat-grid-4" style="grid-template-columns: repeat(3, 1fr);">
+          <div class="stat-card"><div class="stat-label">내 담당 부상 케이스</div><div class="stat-value">7<span class="stat-unit">건</span></div></div>
+          <div class="stat-card"><div class="stat-label">이번 달 복귀 전환</div><div class="stat-value">2<span class="stat-unit">건</span></div></div>
+          <div class="stat-card"><div class="stat-label">전체 부상 선수</div><div class="stat-value">11<span class="stat-unit">명</span></div></div>
+        </div>
+      </div>
+
+      <div class="divider"><span class="divider-label">의료 현황</span></div>
+
+      <!-- 신규: 부상 현황 4개 -->
+      <div class="section-header">부상 현황</div>
+      <div class="stat-grid-4">
+        <div class="stat-card red">
+          <div class="stat-label">현재 부상자</div>
+          <div class="stat-value">11<span class="stat-unit">명</span></div>
+        </div>
+        <div class="stat-card amber">
+          <div class="stat-label">금주 신규 부상</div>
+          <div class="stat-value">3<span class="stat-unit">건</span></div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">7일 내 복귀 예정</div>
+          <div class="stat-value">2<span class="stat-unit">명</span></div>
+        </div>
+        <div class="stat-card amber">
+          <div class="stat-label">재부상 위험군</div>
+          <div class="stat-value">4<span class="stat-unit">명</span></div>
+        </div>
+      </div>
+
+      <!-- 신규: 행정 현황 3개 -->
+      <div class="section-header" style="margin-top:4px;">행정 현황</div>
+      <div class="stat-grid-4">
+        <div class="stat-card amber">
+          <div class="stat-label">서류 미비</div>
+          <div class="stat-value">5<span class="stat-unit">건</span></div>
+        </div>
+        <div class="stat-card amber">
+          <div class="stat-label">승인 대기</div>
+          <div class="stat-value">8<span class="stat-unit">건</span></div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">평균 복귀 소요일</div>
+          <div class="stat-value">24<span class="stat-unit">일</span></div>
+        </div>
+        <div class="stat-card" style="background: transparent; border: 1px dashed #e2e8f0;"></div>
+      </div>
+
+      <!-- 차트 -->
+      <div class="bottom-row">
+        <div class="chart-card">
+          <div class="chart-title">포지션별 부상 추이 (전체 이력)</div>
+          <div class="bar-row"><span class="bar-label">DF</span><div class="bar-track"><div class="bar-fill df" style="width:80%"></div></div><span class="bar-count">8</span></div>
+          <div class="bar-row"><span class="bar-label">MF</span><div class="bar-track"><div class="bar-fill mf" style="width:50%"></div></div><span class="bar-count">5</span></div>
+          <div class="bar-row"><span class="bar-label">FW</span><div class="bar-track"><div class="bar-fill fw" style="width:30%"></div></div><span class="bar-count">3</span></div>
+          <div class="bar-row"><span class="bar-label">GK</span><div class="bar-track"><div class="bar-fill gk" style="width:10%"></div></div><span class="bar-count">1</span></div>
+        </div>
+        <div class="admin-col">
+          <div class="chart-card" style="padding:10px 14px;">
+            <div class="chart-title" style="margin-bottom:4px; font-size:10px;">액션 큐</div>
+            <div style="font-size:10px; color:#64748b;">알림 · 승인 대기</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:20px;">
+  <h3>KPI 정의 요약</h3>
+  <table class="spec-table">
+    <tr>
+      <th>항목</th>
+      <th>정의</th>
+      <th>표시 역할</th>
+    </tr>
+    <tr>
+      <td>현재 부상자</td>
+      <td>status NOT IN (RETURNED) 인 부상 건의 고유 선수 수</td>
+      <td>MEDICAL · MEDICAL_DIRECTOR · HEAD_COACH</td>
+    </tr>
+    <tr>
+      <td>금주 신규 부상</td>
+      <td>이번 주 월요일 00:00 이후 occurredAt 인 부상 건수</td>
+      <td>MEDICAL · MEDICAL_DIRECTOR · HEAD_COACH</td>
+    </tr>
+    <tr>
+      <td>7일 내 복귀 예정</td>
+      <td>expectedReturnDate ≤ 오늘+7일, status NOT RETURNED</td>
+      <td>MEDICAL · MEDICAL_DIRECTOR · HEAD_COACH</td>
+    </tr>
+    <tr>
+      <td>재부상 위험군</td>
+      <td>부상 기록 2건 이상인 고유 선수 수 (전체 이력)</td>
+      <td>MEDICAL · MEDICAL_DIRECTOR</td>
+    </tr>
+    <tr>
+      <td>서류 미비</td>
+      <td>fileUrl IS NULL OR status = DRAFT 인 의료비 청구 건수</td>
+      <td>MEDICAL · MEDICAL_DIRECTOR</td>
+    </tr>
+    <tr>
+      <td>승인 대기</td>
+      <td>status IN (SUBMITTED, LEADER_APPROVED) 인 의료비 청구 건수</td>
+      <td>MEDICAL_DIRECTOR · ADMIN</td>
+    </tr>
+    <tr>
+      <td>평균 복귀 소요일</td>
+      <td>RETURNED 된 부상들의 avg(updatedAt - occurredAt) — 일 단위</td>
+      <td>MEDICAL · MEDICAL_DIRECTOR</td>
+    </tr>
+    <tr>
+      <td>포지션별 부상 추이</td>
+      <td>전체 부상 이력을 선수 포지션 그룹별로 집계 (가로 바 차트)</td>
+      <td>MEDICAL · MEDICAL_DIRECTOR · HEAD_COACH</td>
+    </tr>
+  </table>
+</div>
+
+<p class="subtitle" style="margin-top:16px; text-align:center;">이 설계가 맞나요? 확인 후 spec 저장 → 구현 플랜으로 넘어갑니다.</p>

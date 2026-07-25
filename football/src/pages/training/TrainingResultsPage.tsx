@@ -16,7 +16,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
-import { Download } from 'lucide-react'
+import { Download, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import Papa from 'papaparse'
 import { Pagination } from '@/components/ui/pagination'
@@ -38,7 +38,7 @@ function formatDate(d: string) {
 export function TrainingResultsPage() {
   const { user } = useCurrentUser()
   const isAdmin = user?.role === 'ADMIN'
-  const [filters, setFilters] = useState<TrainingResultFilters>({ from: '', to: '', sessionType: '' })
+  const [filters, setFilters] = useState<TrainingResultFilters>({ from: '', to: '', sessionType: '', nullOnly: false })
   const [rows, setRows] = useState<TrainingResultRow[]>([])
   const [loading, setLoading] = useState(false)
   const [page, setPage] = useState(1)
@@ -64,18 +64,18 @@ export function TrainingResultsPage() {
     }
   }
 
-  const fetchData = async () => {
+  const fetchData = async (overrides?: Partial<TrainingResultFilters>) => {
     setLoading(true)
     setPage(1)
     try {
-      const data = await trainingApi.getResults(filters)
+      const data = await trainingApi.getResults({ ...filters, ...overrides })
       setRows(data)
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => { fetchData() }, [])
+  useEffect(() => { fetchData() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const exportCsv = () => {
     const data = rows.map(r => ({
@@ -152,6 +152,21 @@ export function TrainingResultsPage() {
         <Button size="sm" onClick={fetchData} disabled={loading} className="h-8">
           {loading ? '조회 중...' : '조회'}
         </Button>
+        {isAdmin && (
+          <Button
+            size="sm"
+            variant={filters.nullOnly ? 'default' : 'outline'}
+            className="h-8 gap-1.5"
+            onClick={() => {
+              const next = !filters.nullOnly
+              setFilters(f => ({ ...f, nullOnly: next }))
+              void fetchData({ nullOnly: next })
+            }}
+          >
+            <AlertCircle className="w-3.5 h-3.5" />
+            출석 누락만
+          </Button>
+        )}
       </div>
 
       <div className="flex-1 overflow-auto min-h-0">

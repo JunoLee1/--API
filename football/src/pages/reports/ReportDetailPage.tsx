@@ -74,6 +74,8 @@ export function ReportDetailPage() {
   const [acting, setActing] = useState(false)
 
   const isGM = user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'GM'
+  const isHeadCoach = user?.role === 'COACHING_STAFF' && user?.coachingRole === 'HEAD_COACH'
+  const canApprove = (isGM || (isHeadCoach && report?.type === 'TRAINING')) && report?.status === 'SUBMITTED'
   const isAuthor = report?.authorId === user?.id
 
   useEffect(() => {
@@ -152,7 +154,7 @@ export function ReportDetailPage() {
           {isAuthor && report.status === 'DRAFT' && (
             <Button size="sm" onClick={handleSubmit} disabled={acting}>제출</Button>
           )}
-          {isGM && report.status === 'SUBMITTED' && (
+          {canApprove && (
             <>
               <Button size="sm" variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={() => setRejectOpen(true)} disabled={acting}>
                 <X className="h-3.5 w-3.5 mr-1" />반려

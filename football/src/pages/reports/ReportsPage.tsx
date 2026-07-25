@@ -35,6 +35,7 @@ export function ReportsPage() {
   const [loading, setLoading] = useState(true)
 
   const isGM = user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'GM'
+  const isHeadCoach = user?.role === 'COACHING_STAFF' && user?.coachingRole === 'HEAD_COACH'
   const canCreate = user?.role && AUTHOR_ROLES.includes(user.role)
 
   const fetchReports = useCallback(() => {
@@ -54,7 +55,11 @@ export function ReportsPage() {
         <div>
           <h1 className="text-lg font-semibold tracking-tight">보고서 결재</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {isGM ? 'GM 결재 대기 보고서 포함 전체 목록' : '내가 작성한 보고서 목록'}
+            {isGM
+              ? 'GM 결재 대기 보고서 포함 전체 목록'
+              : isHeadCoach
+              ? '훈련 보고서 결재 대기 포함 목록'
+              : '내가 작성한 보고서 목록'}
           </p>
         </div>
         {canCreate && (

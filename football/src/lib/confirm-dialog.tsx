@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { useTranslation } from 'react-i18next'
 
 interface ConfirmOptions {
   title: string
@@ -22,6 +23,7 @@ type ConfirmFn = (options: ConfirmOptions) => Promise<boolean>
 const ConfirmContext = createContext<ConfirmFn | null>(null)
 
 export function ConfirmProvider({ children }: { children: ReactNode }) {
+  const { t } = useTranslation('common')
   const [options, setOptions] = useState<ConfirmOptions | null>(null)
   const [resolver, setResolver] = useState<{ fn: (v: boolean) => void } | null>(null)
 
@@ -56,7 +58,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
           </DialogHeader>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => close(false)}>
-              {options?.cancelText ?? '취소'}
+              {options?.cancelText ?? t('action.cancel')}
             </Button>
             <Button
               type="button"
@@ -64,7 +66,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
               onClick={() => close(true)}
               autoFocus
             >
-              {options?.confirmText ?? '확인'}
+              {options?.confirmText ?? t('action.confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

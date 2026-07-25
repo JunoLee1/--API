@@ -19,6 +19,8 @@ import type { Player } from '@/types/player'
 import { playerApi } from '@/services/player.service'
 import { lineupApi } from '@/services/lineup.service'
 import { injuryApi } from '@/services/injury.service'
+import { matchApi } from '@/services/match.service'
+import { buildInitialPlacement } from '@/components/squad/squad-utils'
 import type { LineupPlayer, LineupDragPayload } from '@/types/lineup'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useLiteMode } from '@/hooks/useLiteMode'
@@ -146,8 +148,9 @@ export function MatchLineupPage() {
       playerApi.list({ status: 'ACTIVE' }),
       lineupApi.get(matchId),
       injuryApi.active().catch(() => [] as { playerId: string }[]),
+      matchApi.getSquad(matchId).catch(() => [] as { playerId: string; player: { id: string; playerName: string; position: string } }[]),
     ])
-      .then(([players, lineup, injuries]) => {
+      .then(([players, lineup, injuries, squad]) => {
         setAllPlayers(players)
         setInjuredPlayerIds(new Set(injuries.map((inj) => inj.playerId)))
         if (lineup) {
@@ -165,6 +168,31 @@ export function MatchLineupPage() {
           }
           setSlots(slotMap)
           setBench(benchList)
+        } else if (squad.length > 0) {
+          // 저장된 라인업 없음 + 스쿼드 있음 → 포지션 기반 자동 배치
+          const squadIds = new Set(squad.map((s) => s.playerId))
+          const squadPlayers = players.filter((p) => squadIds.has(p.id))
+          const defaultFormation: SupportedFormation = '4-3-3'
+          const pitchSlotDefs = FORMATION_LAYOUTS[defaultFormation]
+          const placement = buildInitialPlacement(pitchSlotDefs, squadPlayers)
+          const slotMap: SlotMap = {}
+          const placedIds = new Set<string>()
+          for (const [slotKey, playerId] of Object.entries(placement)) {
+            if (playerId) {
+              const player = squadPlayers.find((p) => p.id === playerId)
+              if (player) {
+                slotMap[slotKey] = { id: player.id, playerName: player.playerName, position: player.position }
+                placedIds.add(playerId)
+              }
+            }
+          }
+          const benchList: LineupPlayer[] = squadPlayers
+            .filter((p) => !placedIds.has(p.id))
+            .map((p) => ({ id: p.id, playerName: p.playerName, position: p.position }))
+          setFormation(defaultFormation)
+          setSlots(slotMap)
+          setBench(benchList)
+          setDirty(true)
         }
       })
       .catch(() => toast.error('데이터를 불러오지 못했습니다.'))
