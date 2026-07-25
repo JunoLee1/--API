@@ -1044,20 +1044,22 @@ export function MatchDetailPage() {
           )}
 
           {/* 스탯 시트 OCR */}
-          {canInputStats && (
+          {(canInputStats || canWrite) && (
             <div className="rounded-xl border bg-white p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">스탯 시트 (OCR)</div>
-                <div className="flex items-center gap-2">
-                  {statUploading && <span className="text-xs text-muted-foreground">분석 중...</span>}
-                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5"
-                    onClick={() => statFileRef.current?.click()} disabled={statUploading}>
-                    <ScanLine className="h-3.5 w-3.5" />
-                    {match.statSheetRaw ? '다시 스캔' : '스캔 업로드'}
-                  </Button>
-                  <input ref={statFileRef} type="file" accept="image/jpeg,image/png" className="hidden"
-                    onChange={e => { const file = e.target.files?.[0]; if (file) handleStatSheetUpload(file) }} />
-                </div>
+                {canInputStats && (
+                  <div className="flex items-center gap-2">
+                    {statUploading && <span className="text-xs text-muted-foreground">분석 중...</span>}
+                    <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5"
+                      onClick={() => statFileRef.current?.click()} disabled={statUploading}>
+                      <ScanLine className="h-3.5 w-3.5" />
+                      {match.statSheetRaw ? '다시 스캔' : '스캔 업로드'}
+                    </Button>
+                    <input ref={statFileRef} type="file" accept="image/jpeg,image/png" className="hidden"
+                      onChange={e => { const file = e.target.files?.[0]; if (file) handleStatSheetUpload(file) }} />
+                  </div>
+                )}
               </div>
               {match.statSheetRaw ? (
                 <StatSheetDisplay sheet={match.statSheetRaw} homeTeam={match.homeTeamName} awayTeam={match.awayTeamName} />
