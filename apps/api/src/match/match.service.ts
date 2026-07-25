@@ -57,10 +57,11 @@ export class MatchService {
     if (!match) throw new AppError(404, "MATCH_NOT_FOUND");
 
     const existing = await this.repo.findPlayerStats(matchId, dto.playerId);
-    if (existing) {
-      return this.repo.updatePlayerStats(existing.id, dto);
-    }
-    return this.repo.createPlayerStats(matchId, dto);
+    const result = existing
+      ? await this.repo.updatePlayerStats(existing.id, dto)
+      : await this.repo.createPlayerStats(matchId, dto);
+    await this.repo.recalculateTeamStats(matchId);
+    return result;
   }
 
   async upsertTeamStats(matchId: number, dto: UpsertTeamStatsDto) {
@@ -82,11 +83,13 @@ export class MatchService {
     }
     const event = await this.repo.createShotEvent(matchId, dto);
     await this.repo.recalculateXgXa(matchId);
+    await this.repo.recalculateTeamStats(matchId);
     return event;
   }
 
   async deleteShotEvent(matchId: number, eventId: number) {
     await this.repo.deleteShotEvent(eventId);
     await this.repo.recalculateXgXa(matchId);
+    await this.repo.recalculateTeamStats(matchId);
   }
 }

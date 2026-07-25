@@ -846,7 +846,6 @@ model PlayerMatchStats {
   xG                Float?
   xA                Float?
   shots             Int?
-  passAccuracy      Float?
   keyPasses         Int?
   tackles           Int?
   tackleSuccessRate Float?
@@ -855,6 +854,8 @@ model PlayerMatchStats {
   saves             Int?
   cleanSheet             Boolean?
   minutesPlayed          Int?
+  passesAttempted        Int?
+  passesCompleted        Int?
   aerialDuelSuccessRate  Float?
   sprint                 Float?
   clearCutChanceRate     Float?

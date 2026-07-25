@@ -32,7 +32,8 @@ export interface UpsertPlayerStatsDto {
   goals?: number;
   assists?: number;
   shots?: number;
-  passAccuracy?: number;
+  passesAttempted?: number;
+  passesCompleted?: number;
   keyPasses?: number;
   tackles?: number;
   tackleSuccessRate?: number;
@@ -54,19 +55,10 @@ export interface UpsertPlayerStatsDto {
 
 export interface UpsertTeamStatsDto {
   possession: number;
-  shots: number;
-  shotsOnTarget: number;
-  passes: number;
-  passAccuracy: number;
-  fouls: number;
   yellowCards: number;
   redCards: number;
-  xG: number;
   corners: number;
   offsides: number;
-  tackles: number;
-  interceptions: number;
-  clearances: number;
 }
 
 export type ShotResultType = 'GOAL' | 'ON_TARGET' | 'OFF_TARGET' | 'BLOCKED';

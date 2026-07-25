@@ -63,7 +63,8 @@ export class MatchRepository {
             xG: true,
             xA: true,
             shots: true,
-            passAccuracy: true,
+            passesAttempted: true,
+            passesCompleted: true,
             keyPasses: true,
             tackles: true,
             tackleSuccessRate: true,
@@ -134,7 +135,8 @@ export class MatchRepository {
         goals: n(dto.goals),
         assists: n(dto.assists),
         shots: n(dto.shots),
-        passAccuracy: n(dto.passAccuracy),
+        passesAttempted: n(dto.passesAttempted),
+        passesCompleted: n(dto.passesCompleted),
         keyPasses: n(dto.keyPasses),
         tackles: n(dto.tackles),
         tackleSuccessRate: n(dto.tackleSuccessRate),
@@ -163,7 +165,8 @@ export class MatchRepository {
         goals: n(dto.goals),
         assists: n(dto.assists),
         shots: n(dto.shots),
-        passAccuracy: n(dto.passAccuracy),
+        passesAttempted: n(dto.passesAttempted),
+        passesCompleted: n(dto.passesCompleted),
         keyPasses: n(dto.keyPasses),
         tackles: n(dto.tackles),
         tackleSuccessRate: n(dto.tackleSuccessRate),
@@ -188,8 +191,67 @@ export class MatchRepository {
   upsertTeamStats(matchId: number, dto: UpsertTeamStatsDto) {
     return this.prisma.teamMatchStats.upsert({
       where: { matchId },
-      create: { matchId, ...dto },
-      update: { ...dto },
+      create: {
+        matchId,
+        possession: dto.possession,
+        yellowCards: dto.yellowCards,
+        redCards: dto.redCards,
+        corners: dto.corners,
+        offsides: dto.offsides,
+        shots: 0,
+        shotsOnTarget: 0,
+        passes: 0,
+        passAccuracy: 0,
+        fouls: 0,
+        xG: 0,
+        tackles: 0,
+        interceptions: 0,
+        clearances: 0,
+      },
+      update: {
+        possession: dto.possession,
+        yellowCards: dto.yellowCards,
+        redCards: dto.redCards,
+        corners: dto.corners,
+        offsides: dto.offsides,
+      },
+    });
+  }
+
+  async recalculateTeamStats(matchId: number): Promise<void> {
+    const stats = await this.prisma.playerMatchStats.findMany({
+      where: { matchId },
+      select: {
+        shots: true,
+        passesAttempted: true,
+        passesCompleted: true,
+        foulsCommitted: true,
+        tackles: true,
+        interceptions: true,
+        clearances: true,
+        shotsAllowed: true,
+      },
+    });
+
+    const shots        = stats.reduce((s, r) => s + (r.shots        ?? 0), 0);
+    const attempted    = stats.reduce((s, r) => s + (r.passesAttempted ?? 0), 0);
+    const completed    = stats.reduce((s, r) => s + (r.passesCompleted ?? 0), 0);
+    const fouls        = stats.reduce((s, r) => s + (r.foulsCommitted  ?? 0), 0);
+    const tackles      = stats.reduce((s, r) => s + (r.tackles         ?? 0), 0);
+    const interceptions = stats.reduce((s, r) => s + (r.interceptions  ?? 0), 0);
+    const clearances   = stats.reduce((s, r) => s + (r.clearances      ?? 0), 0);
+
+    const shotEvents = await this.prisma.shotEvent.findMany({
+      where: { matchId },
+      select: { xG: true, result: true },
+    });
+    const shotsOnTarget = shotEvents.filter(e => e.result === 'GOAL' || e.result === 'ON_TARGET').length;
+    const xG = Math.round(shotEvents.reduce((s, e) => s + e.xG, 0) * 100) / 100;
+    const passAccuracy = attempted > 0 ? Math.round((completed / attempted) * 1000) / 10 : 0;
+
+    await this.prisma.teamMatchStats.updateMany({
+      where: { matchId },
+      data: { shots, shotsOnTarget, passes: attempted, passAccuracy, fouls, xG, tackles, interceptions, clearances },
     });
   }
 
