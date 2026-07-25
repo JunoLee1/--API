@@ -45,6 +45,7 @@ import { MedicalExpensesPage } from '@/pages/medical-expense/MedicalExpensesPage
 import { HiringRoundsPage } from '@/pages/coaches/HiringRoundsPage'
 import { CoachListPage } from '@/pages/coaches/CoachListPage'
 import { CoachDetailPage } from '@/pages/coaches/CoachDetailPage'
+import { StaffManagementPage } from '@/pages/coaching-staff/StaffManagementPage'
 import { MedicalExpenseFormPage } from '@/pages/medical-expense/MedicalExpenseFormPage'
 import { MedicalExpenseDetailPage } from '@/pages/medical-expense/MedicalExpenseDetailPage'
 import { SquadPlannerPage } from '@/pages/squad/SquadPlannerPage'
@@ -119,6 +120,7 @@ function App() {
             <Route path="/coaches/rounds" element={<HiringRoundsPage />} />
             <Route path="/coaches" element={<CoachListPage />} />
             <Route path="/coaches/:id" element={<CoachDetailPage />} />
+            <Route path="/coaching-staff/management" element={<StaffManagementPage />} />
             <Route path="/admin/users" element={<UsersPage />} />
             <Route path="/admin/teams" element={<TeamsPage />} />
             <Route path="/admin/seasons" element={<SeasonsPage />} />

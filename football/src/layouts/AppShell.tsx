@@ -61,7 +61,7 @@ interface NavItem {
   label: string
   icon: LucideIcon
   end?: boolean
-  section?: '선수 관리' | '계약·영입' | '부상·의료' | '훈련' | '경기·분석' | '유소년' | '관리'
+  section?: '선수 관리' | '계약·영입' | '부상·의료' | '훈련' | '경기·분석' | '유소년' | '코칭스태프' | '관리'
   roles?: Role[]
   coachingRoles?: CoachingRole[]
   frontOfficeRoles?: FrontOfficeRole[]
@@ -77,6 +77,7 @@ const SECTION_ORDER: Array<NavItem['section'] & string> = [
   '훈련',
   '경기·분석',
   '유소년',
+  '코칭스태프',
   '관리',
 ]
 
@@ -270,6 +271,16 @@ const NAV_ITEMS: NavItem[] = [
     section: '유소년',
     roles: ['ADMIN', 'FRONT_OFFICE'],
     liteBlocked: true,
+  },
+
+  // 코칭스태프
+  {
+    to: '/coaching-staff/management',
+    label: '스태프 관리',
+    icon: Users2,
+    section: '코칭스태프',
+    roles: ['ADMIN', 'COACHING_STAFF'],
+    coachingRoles: ['HEAD_COACH'],
   },
 
   // 관리
