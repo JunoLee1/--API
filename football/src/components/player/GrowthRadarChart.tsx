@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 interface RadarAxis {
   label: string
   value: number
@@ -12,12 +14,6 @@ interface GrowthRadarChartProps {
 }
 
 const MAX = 10
-const AXES: { key: keyof Omit<GrowthRadarChartProps, 'size'>; label: string }[] = [
-  { key: 'attitudeScore', label: '태도' },
-  { key: 'fundamentalsScore', label: '기본기' },
-  { key: 'spatialScore', label: '공간인식' },
-  { key: 'physicalScore', label: '체력' },
-]
 
 function polarToCartesian(cx: number, cy: number, r: number, angleRad: number) {
   return {
@@ -33,16 +29,17 @@ export function GrowthRadarChart({
   physicalScore,
   size = 220,
 }: GrowthRadarChartProps) {
+  const { t } = useTranslation('player')
   const cx = size / 2
   const cy = size / 2
   const radius = size * 0.35
-  const n = AXES.length
   const values: RadarAxis[] = [
-    { label: '태도', value: attitudeScore },
-    { label: '기본기', value: fundamentalsScore },
-    { label: '공간인식', value: spatialScore },
-    { label: '체력', value: physicalScore },
+    { label: t('growthRadar.attitude'), value: attitudeScore },
+    { label: t('growthRadar.fundamentals'), value: fundamentalsScore },
+    { label: t('growthRadar.spatial'), value: spatialScore },
+    { label: t('growthRadar.physical'), value: physicalScore },
   ]
+  const n = values.length
 
   const angleOffset = -Math.PI / 2
 

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { authApi } from '@/services/auth.service'
 import { Button } from '@/components/ui/button'
@@ -44,6 +45,7 @@ const DEV_ACCOUNTS: { group: string; accounts: { label: string; email: string }[
 const DEV_PASSWORD = 'Password1!'
 
 export function LoginPage() {
+  const { t } = useTranslation('common')
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -57,7 +59,7 @@ export function LoginPage() {
       await authApi.login(e, p)
       navigate('/dashboard', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : '로그인에 실패했습니다.')
+      setError(err instanceof Error ? err.message : t('loginPage.loginFailed'))
     } finally {
       setLoading(false)
     }
@@ -73,23 +75,23 @@ export function LoginPage() {
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold tracking-tight">Football ERP</h1>
-          <p className="text-sm text-muted-foreground mt-1">계속하려면 로그인하세요</p>
+          <p className="text-sm text-muted-foreground mt-1">{t('loginPage.subtitle')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">이메일</Label>
+            <Label htmlFor="email">{t('loginPage.emailLabel')}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="example@club.com"
+              placeholder={t('loginPage.emailPlaceholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">비밀번호</Label>
+            <Label htmlFor="password">{t('loginPage.passwordLabel')}</Label>
             <Input
               id="password"
               type="password"
@@ -100,12 +102,12 @@ export function LoginPage() {
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? '로그인 중...' : '로그인'}
+            {loading ? t('loginPage.loggingIn') : t('loginPage.loginButton')}
           </Button>
         </form>
 
         <div className="space-y-3">
-          <p className="text-xs text-center text-muted-foreground">빠른 로그인 (개발용)</p>
+          <p className="text-xs text-center text-muted-foreground">{t('loginPage.quickLogin')}</p>
           {DEV_ACCOUNTS.map(({ group, accounts }) => (
             <div key={group} className="space-y-1.5">
               <p className="text-[10px] text-muted-foreground/60 font-medium uppercase tracking-wide">{group}</p>

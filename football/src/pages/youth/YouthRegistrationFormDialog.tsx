@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function YouthRegistrationFormDialog({ open, onClose, onCreated, teams }: Props) {
+  const { t } = useTranslation('youth')
   const [form, setForm] = useState<CreateYouthRegistrationPayload>({
     playerName: '',
     birthDate: '',
@@ -31,7 +33,7 @@ export function YouthRegistrationFormDialog({ open, onClose, onCreated, teams }:
       onCreated()
       onClose()
     } catch (e: any) {
-      setError(e?.message ?? '오류가 발생했습니다.')
+      setError(e?.message ?? t('registrationDialog.error'))
     } finally {
       setLoading(false)
     }
@@ -41,15 +43,15 @@ export function YouthRegistrationFormDialog({ open, onClose, onCreated, teams }:
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>유소년 입단 신청</DialogTitle>
+          <DialogTitle>{t('registrationDialog.title')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label>선수 이름</Label>
+            <Label>{t('registrationDialog.playerNameLabel')}</Label>
             <Input value={form.playerName} onChange={e => setForm(f => ({ ...f, playerName: e.target.value }))} />
           </div>
           <div>
-            <Label>생년월일</Label>
+            <Label>{t('registrationDialog.birthDateLabel')}</Label>
             <Input
               type="date"
               value={form.birthDate ? form.birthDate.split('T')[0] : ''}
@@ -58,22 +60,22 @@ export function YouthRegistrationFormDialog({ open, onClose, onCreated, teams }:
           </div>
           {teams.length > 0 && (
             <div>
-              <Label>소속 팀</Label>
+              <Label>{t('registrationDialog.teamLabel')}</Label>
               <select
                 className="w-full border rounded px-3 py-2 text-sm"
                 value={form.teamId}
                 onChange={e => setForm(f => ({ ...f, teamId: Number(e.target.value) }))}
               >
-                {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                {teams.map(tm => <option key={tm.id} value={tm.id}>{tm.name}</option>)}
               </select>
             </div>
           )}
           <div>
-            <Label>학부모 이메일</Label>
+            <Label>{t('registrationDialog.guardianEmailLabel')}</Label>
             <Input type="email" value={form.guardianEmail} onChange={e => setForm(f => ({ ...f, guardianEmail: e.target.value }))} />
           </div>
           <div>
-            <Label>선호 등번호 (선택)</Label>
+            <Label>{t('registrationDialog.jerseyLabel')}</Label>
             <Input
               type="number"
               min={1}
@@ -84,8 +86,8 @@ export function YouthRegistrationFormDialog({ open, onClose, onCreated, teams }:
           </div>
           {error && <p className="text-sm text-red-500">{error}</p>}
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={onClose}>취소</Button>
-            <Button onClick={handleSubmit} disabled={loading}>{loading ? '처리 중...' : '신청 등록'}</Button>
+            <Button variant="outline" onClick={onClose}>{t('registrationDialog.cancel')}</Button>
+            <Button onClick={handleSubmit} disabled={loading}>{loading ? t('registrationDialog.submitting') : t('registrationDialog.submit')}</Button>
           </div>
         </div>
       </DialogContent>

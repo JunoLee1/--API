@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { growthReportApi } from '@/services/growthReport.service'
 import type { GrowthEvaluation, PlayerBadge } from '@/types/growth-report'
-import { BADGE_LABEL } from '@/types/growth-report'
 import { GrowthRadarChart } from '@/components/player/GrowthRadarChart'
 import { GrowthEvaluationFormDialog } from '../GrowthEvaluationFormDialog'
 import { BadgeAwardDialog } from '../BadgeAwardDialog'
@@ -15,11 +15,8 @@ interface Props {
   canCoach: boolean
 }
 
-function formatPeriod(year: number, month: number) {
-  return `${year}년 ${month}월`
-}
-
 export function GrowthReportTab({ playerId, canCoach }: Props) {
+  const { t } = useTranslation('player')
   const [evaluations, setEvaluations] = useState<GrowthEvaluation[]>([])
   const [badges, setBadges] = useState<PlayerBadge[]>([])
   const [loading, setLoading] = useState(true)
@@ -38,7 +35,7 @@ export function GrowthReportTab({ playerId, canCoach }: Props) {
         setBadges(bgs)
         if (evs.length > 0 && !selected) setSelected(evs[0]!)
       })
-      .catch(() => toast.error('데이터를 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('growthReport.loadFailed')))
       .finally(() => setLoading(false))
   }
 
@@ -49,10 +46,10 @@ export function GrowthReportTab({ playerId, canCoach }: Props) {
   const handlePublish = async (id: number) => {
     try {
       await growthReportApi.publishEvaluation(id)
-      toast.success('보고서가 발행됐습니다.')
+      toast.success(t('growthReport.publishSaved'))
       fetchAll()
     } catch {
-      toast.error('발행에 실패했습니다.')
+      toast.error(t('growthReport.publishFailed'))
     }
   }
 
@@ -65,33 +62,40 @@ export function GrowthReportTab({ playerId, canCoach }: Props) {
     )
   }
 
+  const evalFields = selected ? [
+    { label: t('growthReport.attitude'), score: selected.attitudeScore, comment: selected.attitudeComment },
+    { label: t('growthReport.fundamentals'), score: selected.fundamentalsScore, comment: selected.fundamentalsComment },
+    { label: t('growthReport.spatial'), score: selected.spatialScore, comment: selected.spatialComment },
+    { label: t('growthReport.physical'), score: selected.physicalScore, comment: selected.physicalComment },
+  ] : []
+
   return (
     <div className="p-6 space-y-6 max-w-3xl mx-auto">
-      {/* 헤더 */}
+      {/* header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-semibold">성장 보고서</h3>
+        <h3 className="text-base font-semibold">{t('growthReport.title')}</h3>
         {canCoach && (
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={() => setBadgeOpen(true)}>
               <Award className="h-3.5 w-3.5 mr-1.5" />
-              배지 수여
+              {t('growthReport.awardBadge')}
             </Button>
             <Button size="sm" onClick={() => setFormOpen(true)}>
               <Plus className="h-3.5 w-3.5 mr-1.5" />
-              평가 작성
+              {t('growthReport.writeEval')}
             </Button>
           </div>
         )}
       </div>
 
-      {/* 평가 목록 + 레이더 */}
+      {/* evaluation list + radar */}
       {evaluations.length === 0 ? (
         <div className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-          아직 작성된 성장 평가가 없습니다.
+          {t('growthReport.empty')}
         </div>
       ) : (
         <div className="grid md:grid-cols-[200px_1fr] gap-4">
-          {/* 좌측: 기간 목록 */}
+          {/* period list */}
           <div className="space-y-1">
             {evaluations.map((ev) => (
               <button
@@ -103,29 +107,31 @@ export function GrowthReportTab({ playerId, canCoach }: Props) {
                     : 'hover:bg-muted'
                 }`}
               >
-                <div>{formatPeriod(ev.year, ev.month)}</div>
+                <div>{t('growthReport.period', { year: ev.year, month: ev.month })}</div>
                 <div className={`text-xs mt-0.5 ${selected?.id === ev.id ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                  {ev.isPublished ? '발행됨' : '미발행'}
+                  {ev.isPublished ? t('growthReport.published') : t('growthReport.unpublished')}
                 </div>
               </button>
             ))}
           </div>
 
-          {/* 우측: 선택된 평가 상세 */}
+          {/* selected evaluation detail */}
           {selected && (
             <div className="rounded-lg border p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-semibold">{formatPeriod(selected.year, selected.month)} 성장 평가</h4>
-                  <p className="text-xs text-muted-foreground mt-0.5">작성: {selected.coach.nickname}</p>
+                  <h4 className="font-semibold">
+                    {t('growthReport.evalTitle', { period: t('growthReport.period', { year: selected.year, month: selected.month }) })}
+                  </h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('growthReport.writtenBy', { coach: selected.coach.nickname })}</p>
                 </div>
                 {canCoach && !selected.isPublished && (
                   <Button size="sm" variant="outline" onClick={() => void handlePublish(selected.id)}>
-                    발행
+                    {t('growthReport.publish')}
                   </Button>
                 )}
                 {selected.isPublished && (
-                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">발행됨</span>
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">{t('growthReport.publishedBadge')}</span>
                 )}
               </div>
 
@@ -139,12 +145,7 @@ export function GrowthReportTab({ playerId, canCoach }: Props) {
               </div>
 
               <div className="space-y-3">
-                {[
-                  { label: '태도', score: selected.attitudeScore, comment: selected.attitudeComment },
-                  { label: '기본기', score: selected.fundamentalsScore, comment: selected.fundamentalsComment },
-                  { label: '공간인식', score: selected.spatialScore, comment: selected.spatialComment },
-                  { label: '체력', score: selected.physicalScore, comment: selected.physicalComment },
-                ].map(({ label, score, comment }) => (
+                {evalFields.map(({ label, score, comment }) => (
                   <div key={label} className="flex gap-3">
                     <div className="flex-shrink-0 w-16 text-xs font-medium text-muted-foreground pt-0.5">{label}</div>
                     <div className="flex-1">
@@ -167,10 +168,10 @@ export function GrowthReportTab({ playerId, canCoach }: Props) {
         </div>
       )}
 
-      {/* 배지 섹션 */}
+      {/* badges section */}
       {badges.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold mb-3">수여된 배지</h4>
+          <h4 className="text-sm font-semibold mb-3">{t('growthReport.badgesTitle')}</h4>
           <div className="flex flex-wrap gap-2">
             {badges.map((b) => (
               <div
@@ -179,7 +180,7 @@ export function GrowthReportTab({ playerId, canCoach }: Props) {
                 className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-full px-3 py-1 text-xs font-medium"
               >
                 <Award className="h-3 w-3" />
-                {BADGE_LABEL[b.badgeType]}
+                {t(`badge.${b.badgeType}`)}
               </div>
             ))}
           </div>

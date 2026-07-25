@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { authApi } from '@/services/auth.service'
 import type { LoginHistoryEntry } from '@/services/auth.service'
 import {
@@ -15,6 +16,7 @@ function formatDateTime(d: string) {
 }
 
 export function LoginHistoryPage() {
+  const { t } = useTranslation('admin')
   const [history, setHistory] = useState<LoginHistoryEntry[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -28,8 +30,8 @@ export function LoginHistoryPage() {
   return (
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 shrink-0">
-        <h1 className="text-lg font-semibold tracking-tight">로그인 이력</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">최근 100건</p>
+        <h1 className="text-lg font-semibold tracking-tight">{t('loginHistoryPage.title')}</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{t('loginHistoryPage.description')}</p>
       </div>
 
       <div className="flex-1 overflow-auto">
@@ -39,18 +41,18 @@ export function LoginHistoryPage() {
           </div>
         ) : history.length === 0 ? (
           <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-            로그인 이력이 없습니다.
+            {t('loginHistoryPage.noHistory')}
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-20 text-center">결과</TableHead>
-                <TableHead>이메일</TableHead>
-                <TableHead>닉네임</TableHead>
-                <TableHead>IP</TableHead>
-                <TableHead>User-Agent</TableHead>
-                <TableHead className="w-44 text-right">시간</TableHead>
+                <TableHead className="w-20 text-center">{t('loginHistoryPage.table.result')}</TableHead>
+                <TableHead>{t('loginHistoryPage.table.email')}</TableHead>
+                <TableHead>{t('loginHistoryPage.table.nickname')}</TableHead>
+                <TableHead>{t('loginHistoryPage.table.ip')}</TableHead>
+                <TableHead>{t('loginHistoryPage.table.userAgent')}</TableHead>
+                <TableHead className="w-44 text-right">{t('loginHistoryPage.table.time')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

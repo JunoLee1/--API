@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { coachApi } from '@/services/coach.service'
 import type { Coach, CoachingRole, CoachStatus } from '@/types/coach'
 import {
-  COACHING_ROLE_LABEL, COACH_STATUS_LABEL, COACH_STATUS_STYLE,
-  SHORTLIST_SOURCE_LABEL,
+  COACH_STATUS_STYLE,
 } from '@/types/coach'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
@@ -44,6 +44,7 @@ interface CreateCoachDialogProps {
 }
 
 function CreateCoachDialog({ roundId, open, onOpenChange, onSaved }: CreateCoachDialogProps) {
+  const { t } = useTranslation('contract')
   const [name, setName] = useState('')
   const [nationality, setNationality] = useState('')
   const [coachingRole, setCoachingRole] = useState<CoachingRole | ''>('')
@@ -51,8 +52,8 @@ function CreateCoachDialog({ roundId, open, onOpenChange, onSaved }: CreateCoach
   const [saving, setSaving] = useState(false)
 
   const handleSave = async () => {
-    if (!name.trim()) { toast.error('이름을 입력해주세요.'); return }
-    if (!coachingRole) { toast.error('역할을 선택해주세요.'); return }
+    if (!name.trim()) { toast.error(t('coaches.createDialog.requiredName')); return }
+    if (!coachingRole) { toast.error(t('coaches.createDialog.requiredRole')); return }
     setSaving(true)
     try {
       await coachApi.create({
@@ -62,11 +63,11 @@ function CreateCoachDialog({ roundId, open, onOpenChange, onSaved }: CreateCoach
         ...(notes.trim() && { notes: notes.trim() }),
         ...(roundId !== undefined && { hiringRoundId: roundId }),
       })
-      toast.success('코치 후보가 등록됐습니다.')
+      toast.success(t('coaches.createDialog.saved'))
       setName(''); setNationality(''); setCoachingRole(''); setNotes('')
       onSaved()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('coaches.createDialog.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -75,37 +76,37 @@ function CreateCoachDialog({ roundId, open, onOpenChange, onSaved }: CreateCoach
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>코치 후보 등록</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t('coaches.createDialog.title')}</DialogTitle></DialogHeader>
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
-            <Label>이름 *</Label>
-            <Input placeholder="코치 이름" value={name} onChange={(e) => setName(e.target.value)} />
+            <Label>{t('coaches.createDialog.name')}</Label>
+            <Input placeholder={t('coaches.createDialog.namePlaceholder')} value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>역할 *</Label>
+            <Label>{t('coaches.createDialog.role')}</Label>
             <Select value={coachingRole} onValueChange={(v) => setCoachingRole(v as CoachingRole)}>
               <SelectTrigger>
-                <SelectValue placeholder="역할 선택">
-                  {(value: string | null) => value ? COACHING_ROLE_LABEL[value as CoachingRole] : null}
+                <SelectValue placeholder={t('coaches.createDialog.rolePlaceholder')}>
+                  {(value: string | null) => value ? t(`coaches.coachingRole.${value}`) : null}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {ALL_ROLES.map((r) => <SelectItem key={r} value={r}>{COACHING_ROLE_LABEL[r]}</SelectItem>)}
+                {ALL_ROLES.map((r) => <SelectItem key={r} value={r}>{t(`coaches.coachingRole.${r}`)}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>국적</Label>
-            <Input placeholder="예: 스페인" value={nationality} onChange={(e) => setNationality(e.target.value)} />
+            <Label>{t('coaches.createDialog.nationality')}</Label>
+            <Input placeholder={t('coaches.createDialog.nationalityPlaceholder')} value={nationality} onChange={(e) => setNationality(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>메모</Label>
+            <Label>{t('coaches.createDialog.notes')}</Label>
             <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? '저장 중...' : '등록'}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t('coaches.createDialog.cancel')}</Button>
+          <Button onClick={handleSave} disabled={saving}>{saving ? t('coaches.createDialog.saving') : t('coaches.createDialog.submit')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -113,6 +114,7 @@ function CreateCoachDialog({ roundId, open, onOpenChange, onSaved }: CreateCoach
 }
 
 export function CoachListPage() {
+  const { t } = useTranslation('contract')
   const { user } = useCurrentUser()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -137,7 +139,7 @@ export function CoachListPage() {
       ...(statusFilter !== 'ALL' && { status: statusFilter }),
     })
       .then(setCoaches)
-      .catch(() => toast.error('코치 후보 목록을 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('coaches.loadFailed')))
       .finally(() => setLoading(false))
   }
 
@@ -147,13 +149,13 @@ export function CoachListPage() {
     try {
       const shortlistSource = status === 'SHORTLISTED' ? 'MANUAL' as const : undefined
       await coachApi.updateStatus(coach.id, status, shortlistSource)
-      toast.success(`'${COACH_STATUS_LABEL[status]}'로 변경됐습니다.`)
+      toast.success(t('coaches.statusChangedTo', { status: t(`coaches.status.${status}`) }))
       void fetchCoaches()
     } catch (err: unknown) {
       const code = err instanceof Error ? err.message : ''
       const msg =
-        code === 'COACHING_ROLE_ALREADY_FILLED' ? `해당 역할(${COACHING_ROLE_LABEL[coach.coachingRole]})의 코치가 이미 재직 중입니다.` :
-        code || '변경에 실패했습니다.'
+        code === 'COACHING_ROLE_ALREADY_FILLED' ? t('coaches.roleAlreadyFilled', { role: t(`coaches.coachingRole.${coach.coachingRole}`) }) :
+        code || t('coaches.statusChangeFailed')
       toast.error(msg)
     }
   }
@@ -166,11 +168,11 @@ export function CoachListPage() {
           <div className="flex gap-1">
             <Button size="sm" variant="outline" className="h-7 text-xs"
               onClick={(e) => { e.stopPropagation(); void handleTransition(coach, 'SHORTLISTED') }}>
-              숏리스트
+              {t('coaches.actionShortlist')}
             </Button>
             <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground"
               onClick={(e) => { e.stopPropagation(); void handleTransition(coach, 'ARCHIVED') }}>
-              탈락
+              {t('coaches.actionArchive')}
             </Button>
           </div>
         ) : null
@@ -179,11 +181,11 @@ export function CoachListPage() {
           <div className="flex gap-1">
             <Button size="sm" variant="outline" className="h-7 text-xs"
               onClick={(e) => { e.stopPropagation(); void handleTransition(coach, 'APPROVAL_PENDING') }}>
-              승인 요청
+              {t('coaches.actionRequestApproval')}
             </Button>
             <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground"
               onClick={(e) => { e.stopPropagation(); void handleTransition(coach, 'ARCHIVED') }}>
-              탈락
+              {t('coaches.actionArchive')}
             </Button>
           </div>
         ) : null
@@ -193,13 +195,13 @@ export function CoachListPage() {
             {isGM && (
               <Button size="sm" className="h-7 text-xs"
                 onClick={(e) => { e.stopPropagation(); void handleTransition(coach, 'CONTRACTED') }}>
-                최종 승인
+                {t('coaches.actionFinalApprove')}
               </Button>
             )}
             {canWrite && (
               <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground"
                 onClick={(e) => { e.stopPropagation(); void handleTransition(coach, 'ARCHIVED') }}>
-                탈락
+                {t('coaches.actionArchive')}
               </Button>
             )}
           </div>
@@ -212,7 +214,7 @@ export function CoachListPage() {
   if (!canRead) {
     return (
       <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-        접근 권한이 없습니다.
+        {t('coaches.noAccess')}
       </div>
     )
   }
@@ -225,15 +227,15 @@ export function CoachListPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight">코치 후보</h1>
+            <h1 className="text-lg font-semibold tracking-tight">{t('coaches.title')}</h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              {roundId ? `라운드 #${roundId}` : '전체 후보'}
+              {roundId ? t('coaches.round', { id: roundId }) : t('coaches.allCandidates')}
             </p>
           </div>
         </div>
         {canWrite && (
           <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />후보 등록
+            <Plus className="h-4 w-4 mr-1" />{t('coaches.addBtn')}
           </Button>
         )}
       </div>
@@ -242,12 +244,12 @@ export function CoachListPage() {
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as CoachStatus | 'ALL')}>
           <SelectTrigger className="w-36 h-8 text-sm bg-background">
             <SelectValue>
-              {(value: string | null) => value === 'ALL' ? '전체' : value ? COACH_STATUS_LABEL[value as CoachStatus] : null}
+              {(value: string | null) => value === 'ALL' ? t('coaches.statusAll') : value ? t(`coaches.status.${value}`) : null}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {ALL_STATUSES.map((s) => (
-              <SelectItem key={s} value={s}>{s === 'ALL' ? '전체' : COACH_STATUS_LABEL[s]}</SelectItem>
+              <SelectItem key={s} value={s}>{s === 'ALL' ? t('coaches.statusAll') : t(`coaches.status.${s}`)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -260,18 +262,18 @@ export function CoachListPage() {
           </div>
         ) : coaches.length === 0 ? (
           <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-            등록된 코치 후보가 없습니다.
+            {t('coaches.noData')}
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead>이름</TableHead>
-                <TableHead className="w-28">역할</TableHead>
-                <TableHead className="w-20">국적</TableHead>
-                <TableHead className="w-28">상태</TableHead>
-                <TableHead className="w-32">숏리스트 경위</TableHead>
-                <TableHead className="w-28 text-muted-foreground">등록일</TableHead>
+                <TableHead>{t('coaches.col.name')}</TableHead>
+                <TableHead className="w-28">{t('coaches.col.role')}</TableHead>
+                <TableHead className="w-20">{t('coaches.col.nationality')}</TableHead>
+                <TableHead className="w-28">{t('coaches.col.status')}</TableHead>
+                <TableHead className="w-32">{t('coaches.col.shortlistSource')}</TableHead>
+                <TableHead className="w-28 text-muted-foreground">{t('coaches.col.createdAt')}</TableHead>
                 {(canWrite || isGM) && <TableHead className="w-44" />}
               </TableRow>
             </TableHeader>
@@ -283,15 +285,15 @@ export function CoachListPage() {
                   onClick={() => navigate(`/coaches/${c.id}`)}
                 >
                   <TableCell className="font-medium">{c.name}</TableCell>
-                  <TableCell className="text-sm">{COACHING_ROLE_LABEL[c.coachingRole]}</TableCell>
+                  <TableCell className="text-sm">{t(`coaches.coachingRole.${c.coachingRole}`)}</TableCell>
                   <TableCell className="text-sm">{c.nationality ?? '—'}</TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${COACH_STATUS_STYLE[c.status]}`}>
-                      {COACH_STATUS_LABEL[c.status]}
+                      {t(`coaches.status.${c.status}`)}
                     </span>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
-                    {c.shortlistSource ? SHORTLIST_SOURCE_LABEL[c.shortlistSource] : '—'}
+                    {c.shortlistSource ? t(`coaches.shortlistSource.${c.shortlistSource}`) : '—'}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground tabular-nums">
                     {formatDate(c.createdAt)}

@@ -79,5 +79,179 @@
     "loading": "불러오는 중...",
     "empty": "새 알림이 없습니다",
     "viewAll": "전체 목록 보기 →"
+  },
+  "notificationsPage": {
+    "title": "알림",
+    "unreadCount": "읽지 않은 알림 {{count}}개",
+    "allRead": "모든 알림을 읽었습니다.",
+    "markAllRead": "모두 읽음",
+    "loading": "불러오는 중...",
+    "noNotifications": "알림이 없습니다.",
+    "markReadFailed": "읽음 처리에 실패했습니다.",
+    "markAllReadSuccess": "모든 알림을 읽음 처리했습니다.",
+    "markAllReadFailed": "읽음 처리에 실패했습니다.",
+    "loadFailed": "알림을 불러오지 못했습니다.",
+    "markRead": "읽음"
+  },
+  "mePage": {
+    "title": "내 정보",
+    "description": "현재 로그인된 계정 정보입니다.",
+    "usernameLabel": "사용자명",
+    "emailLabel": "이메일",
+    "roleLabel": "역할",
+    "statusLabel": "상태",
+    "outOfOffice": "부재 중"
+  },
+  "loginPage": {
+    "subtitle": "계속하려면 로그인하세요",
+    "emailLabel": "이메일",
+    "passwordLabel": "비밀번호",
+    "emailPlaceholder": "example@club.com",
+    "loginButton": "로그인",
+    "loggingIn": "로그인 중...",
+    "loginFailed": "로그인에 실패했습니다.",
+    "quickLogin": "빠른 로그인 (개발용)",
+    "apiError": {
+      "authExpired": "인증이 만료되었습니다. 다시 로그인해주세요.",
+      "serverError": "서버 오류가 발생했습니다."
+    }
+  },
+  "liteMode": {
+    "blocked": "이 기능은 Lite Mode 구단에서 사용할 수 없습니다."
+  },
+  "dashboard": {
+    "title": "대시보드",
+    "greeting": "{{name}}님, 안녕하세요",
+    "loading": "불러오는 중...",
+    "stat": {
+      "activePlayerCount": "활성 선수",
+      "expiringContractCount": "만료 임박 계약",
+      "injuredPlayerCount": "부상 선수",
+      "lowStockEquipmentCount": "재고 부족 장비",
+      "activeTransferCount": "진행 중 이적",
+      "prospectCount": "등록된 Prospect",
+      "totalActiveContractCount": "전체 활성 계약",
+      "thisMonthProspectCount": "이번 달 신규 Prospect",
+      "totalEquipmentItemCount": "전체 장비 품목",
+      "myDraftAnalysisCount": "내 DRAFT 분석",
+      "thisMonthMatchCount": "이번 달 경기",
+      "thisMonthSessionCount": "이번 달 훈련 세션",
+      "attendanceWarningPlayerCount": "출석 경고 선수",
+      "myActiveInjuryCaseCount": "내 담당 부상 케이스",
+      "thisMonthReturnReadyCount": "이번 달 복귀 가능 전환",
+      "totalInjuredPlayerCount": "전체 부상 선수",
+      "assignedPlayerCount": "담당 선수 수",
+      "myThisMonthSessionCount": "이번 달 내 세션",
+      "thisSeasonMatchCount": "이번 시즌 출전 경기",
+      "thisMonthAttendanceRate": "이번 달 출석률",
+      "managedPlayerCount": "담당 선수",
+      "injuredManagedPlayerCount": "부상 중인 담당 선수",
+      "expiringManagedContractCount": "만료 임박 계약",
+      "unit": {
+        "person": "명",
+        "case": "건",
+        "item": "종",
+        "match": "경기",
+        "session": "회",
+        "rate": "%"
+      }
+    },
+    "recentFeed": {
+      "recentTransfers": "최근 이적 내역",
+      "recentProspects": "최근 Prospect",
+      "recentContracts": "최근 계약 현황",
+      "recentProspectList": "최근 Prospect 목록",
+      "recentAssignments": "최근 장비 지급 내역",
+      "recentMatches": "최근 경기 결과",
+      "recentInjuries": "최근 부상 업데이트",
+      "recentSessions": "최근 훈련 세션",
+      "recentPlayerMatches": "담당 선수 최근 경기"
+    },
+    "actionQueue": {
+      "title": "처리 대기 항목",
+      "loading": "불러오는 중...",
+      "empty": "처리할 항목이 없습니다",
+      "more": "+{{count}}건 더 보기",
+      "labels": {
+        "RECALL_APPROVAL_REQUESTED": "Recall 승인 대기",
+        "TRAINING_SESSION_CONFIRM_REQUESTED": "훈련 세션 확인 요청",
+        "TACTICAL_ANALYSIS_CONFIRM_REQUESTED": "전술 분석 확인 요청",
+        "INJURY_READY_TO_RETURN": "부상 복귀 가능",
+        "CONTRACT_EXPIRY": "계약 만료 임박",
+        "PERFORMANCE_BONUS_ACHIEVED": "성과 보너스 달성",
+        "EQUIPMENT_LOW_STOCK": "장비 재고 부족",
+        "TRAINING_ATTENDANCE_WARNING": "훈련 출석 경고",
+        "PLAYER_EXTERNAL_ID_UNMAPPED": "선수 외부 ID 미매핑",
+        "LOAN_OUT_EXPIRED": "임대 만료"
+      }
+    },
+    "schedule": {
+      "title": "다가오는 일정",
+      "loading": "불러오는 중...",
+      "empty": "예정된 일정이 없습니다"
+    },
+    "recentFeedCard": {
+      "loading": "불러오는 중...",
+      "empty": "최근 항목이 없습니다"
+    },
+    "ranking": {
+      "title": "리그 순위",
+      "loading": "불러오는 중...",
+      "empty": "순위 정보가 없습니다",
+      "rank": "위",
+      "points": "점",
+      "played": "경기",
+      "won": "승",
+      "drawn": "무",
+      "lost": "패",
+      "goalsFor": "득점",
+      "goalsAgainst": "실점"
+    },
+    "medical": {
+      "sectionTitle": "의료 현황",
+      "injuryStatus": "부상 현황",
+      "adminStatus": "행정 현황",
+      "positionTrend": "포지션별 부상 추이 (전체 이력)",
+      "noInjuryData": "부상 데이터가 없습니다.",
+      "kpi": {
+        "currentInjured": "현재 부상자",
+        "weekNewInjury": "금주 신규 부상",
+        "returningIn7Days": "7일 내 복귀 예정",
+        "reinjuryRisk": "재부상 위험군",
+        "incompleteDoc": "서류 미비",
+        "pendingApproval": "승인 대기",
+        "avgRecoveryDays": "평균 복귀 소요일",
+        "unit": {
+          "person": "명",
+          "case": "건",
+          "day": "일"
+        }
+      }
+    },
+    "youthDev": {
+      "title": "유소년 포지션 편중 현황",
+      "noData": "유소년 팀 경기 데이터가 없습니다.",
+      "col": {
+        "player": "선수",
+        "mainPosition": "주 포지션",
+        "bias": "편중도",
+        "totalMinutes": "총 출전"
+      },
+      "biasedOf": "{{count}}명 중",
+      "biasedCount": "{{count}}명 편중",
+      "minuteUnit": "분"
+    },
+    "academyFinance": {
+      "title": "아카데미 회비 현황",
+      "monthlyRate": "당월 수납률",
+      "totalRevenue": "총 수납액",
+      "overdueCount": "미납/연체",
+      "lockedPlayers": "참가 정지"
+    },
+    "matchResult": {
+      "WIN": "승",
+      "DRAW": "무",
+      "LOSS": "패"
+    }
   }
 }

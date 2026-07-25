@@ -90,8 +90,8 @@ export const FORMATION_OPTIONS = [
 ] as const
 
 export const PHASE_LABEL: Record<TacticalPhase, string> = {
-  PRE_MATCH: '경기 전',
-  POST_MATCH: '경기 후',
+  PRE_MATCH: 'Pre-Match',
+  POST_MATCH: 'Post-Match',
 }
 
 export const PHASE_STYLE: Record<TacticalPhase, string> = {
@@ -100,8 +100,8 @@ export const PHASE_STYLE: Record<TacticalPhase, string> = {
 }
 
 export const STATUS_LABEL: Record<TacticalStatus, string> = {
-  DRAFT: '초안',
-  CONFIRMED: '확정',
+  DRAFT: 'Draft',
+  CONFIRMED: 'Confirmed',
 }
 
 export const STATUS_STYLE: Record<TacticalStatus, string> = {
@@ -110,6 +110,6 @@ export const STATUS_STYLE: Record<TacticalStatus, string> = {
 }
 
 export const MEDIA_TYPE_LABEL: Record<TacticalMediaType, string> = {
-  image: '사진',
-  video: '영상',
+  image: 'Image',
+  video: 'Video',
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { seasonApi } from '@/services/season.service'
 import type { Season, SeasonStatus } from '@/types/season'
@@ -29,6 +30,7 @@ interface CreateSeasonDialogProps {
 }
 
 function CreateSeasonDialog({ open, onOpenChange, onSaved }: CreateSeasonDialogProps) {
+  const { t } = useTranslation('admin')
   const [name, setName] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
@@ -36,21 +38,21 @@ function CreateSeasonDialog({ open, onOpenChange, onSaved }: CreateSeasonDialogP
 
   const handleSave = async () => {
     if (!name.trim() || !startDate || !endDate) {
-      toast.error('모든 항목을 입력해주세요.')
+      toast.error(t('seasonsPage.createDialog.allRequired'))
       return
     }
     if (endDate <= startDate) {
-      toast.error('종료일은 시작일 이후여야 합니다.')
+      toast.error(t('seasonsPage.createDialog.endAfterStart'))
       return
     }
     setSaving(true)
     try {
       await seasonApi.create({ name: name.trim(), startDate, endDate })
-      toast.success('시즌이 등록됐습니다.')
+      toast.success(t('seasonsPage.createDialog.createSuccess'))
       setName(''); setStartDate(''); setEndDate('')
       onSaved()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('seasonsPage.createDialog.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -59,25 +61,25 @@ function CreateSeasonDialog({ open, onOpenChange, onSaved }: CreateSeasonDialogP
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>시즌 등록</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t('seasonsPage.createDialog.title')}</DialogTitle></DialogHeader>
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
-            <Label>시즌명 *</Label>
-            <Input placeholder="예: 2026-27 시즌" value={name} onChange={e => setName(e.target.value)} />
+            <Label>{t('seasonsPage.createDialog.nameLabel')}</Label>
+            <Input placeholder={t('seasonsPage.createDialog.namePlaceholder')} value={name} onChange={e => setName(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>시작일 *</Label>
+            <Label>{t('seasonsPage.createDialog.startDateLabel')}</Label>
             <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>종료일 *</Label>
+            <Label>{t('seasonsPage.createDialog.endDateLabel')}</Label>
             <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t('seasonsPage.createDialog.cancel')}</Button>
           <Button onClick={() => void handleSave()} disabled={saving}>
-            {saving ? '저장 중...' : '등록'}
+            {saving ? t('seasonsPage.createDialog.saving') : t('seasonsPage.createDialog.create')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -86,6 +88,7 @@ function CreateSeasonDialog({ open, onOpenChange, onSaved }: CreateSeasonDialogP
 }
 
 export function SeasonsPage() {
+  const { t } = useTranslation('admin')
   const { user } = useCurrentUser()
   const [seasons, setSeasons] = useState<Season[]>([])
   const [loading, setLoading] = useState(true)
@@ -100,7 +103,7 @@ export function SeasonsPage() {
     seasonApi
       .list()
       .then(setSeasons)
-      .catch(() => toast.error('시즌 목록을 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('seasonsPage.loadFailed')))
       .finally(() => setLoading(false))
   }
 
@@ -109,20 +112,20 @@ export function SeasonsPage() {
   const handleActivate = async (id: number) => {
     try {
       await seasonApi.activate(id)
-      toast.success('시즌이 활성화됐습니다.')
+      toast.success(t('seasonsPage.activateSuccess'))
       fetchSeasons()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '활성화에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('seasonsPage.activateFailed'))
     }
   }
 
   const handleClose = async (id: number) => {
     try {
       await seasonApi.close(id)
-      toast.success('시즌이 종료됐습니다.')
+      toast.success(t('seasonsPage.closeSuccess'))
       fetchSeasons()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '종료에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('seasonsPage.closeFailed'))
     }
   }
 
@@ -133,12 +136,12 @@ export function SeasonsPage() {
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">시즌 관리</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">전체 {seasons.length}개 시즌</p>
+          <h1 className="text-lg font-semibold tracking-tight">{t('seasonsPage.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{t('seasonsPage.description', { count: seasons.length })}</p>
         </div>
         {isAdmin && (
           <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />시즌 등록
+            <Plus className="h-4 w-4 mr-1" />{t('seasonsPage.addSeason')}
           </Button>
         )}
       </div>
@@ -146,20 +149,20 @@ export function SeasonsPage() {
       <div className="flex-1 overflow-auto">
         {loading ? (
           <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-            로딩 중...
+            {t('seasonsPage.loading')}
           </div>
         ) : seasons.length === 0 ? (
           <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-            등록된 시즌이 없습니다.
+            {t('seasonsPage.noSeasons')}
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead>시즌명</TableHead>
-                <TableHead className="w-28">시작일</TableHead>
-                <TableHead className="w-28">종료일</TableHead>
-                <TableHead className="w-24">상태</TableHead>
+                <TableHead>{t('seasonsPage.table.name')}</TableHead>
+                <TableHead className="w-28">{t('seasonsPage.table.startDate')}</TableHead>
+                <TableHead className="w-28">{t('seasonsPage.table.endDate')}</TableHead>
+                <TableHead className="w-24">{t('seasonsPage.table.status')}</TableHead>
                 {isAdmin && <TableHead className="w-32" />}
               </TableRow>
             </TableHeader>
@@ -181,7 +184,7 @@ export function SeasonsPage() {
                           size="sm" variant="outline" className="h-7 text-xs"
                           onClick={() => void handleActivate(s.id)}
                         >
-                          활성화
+                          {t('seasonsPage.activate')}
                         </Button>
                       )}
                       {s.status === 'ACTIVE' && (
@@ -189,7 +192,7 @@ export function SeasonsPage() {
                           size="sm" variant="outline" className="h-7 text-xs text-destructive"
                           onClick={() => void handleClose(s.id)}
                         >
-                          종료
+                          {t('seasonsPage.close')}
                         </Button>
                       )}
                     </TableCell>

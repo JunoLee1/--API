@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { partnerApi } from '@/services/partner.service'
 import type { Partner, PartnerType, CreatePartnerDto, CreatePartnerContractDto } from '@/types/partner'
@@ -29,6 +30,7 @@ interface CreatePartnerDialogProps {
 }
 
 function CreatePartnerDialog({ open, type, onOpenChange, onSaved }: CreatePartnerDialogProps) {
+  const { t } = useTranslation('admin')
   const [name, setName] = useState('')
   const [country, setCountry] = useState('')
   const [website, setWebsite] = useState('')
@@ -39,7 +41,7 @@ function CreatePartnerDialog({ open, type, onOpenChange, onSaved }: CreatePartne
   const reset = () => { setName(''); setCountry(''); setWebsite(''); setAddress(''); setPhone('') }
 
   const handleSave = async () => {
-    if (!name.trim()) { toast.error('이름을 입력해주세요.'); return }
+    if (!name.trim()) { toast.error(t('partnersPage.nameRequired')); return }
     setSaving(true)
     try {
       const dto: CreatePartnerDto = {
@@ -51,12 +53,12 @@ function CreatePartnerDialog({ open, type, onOpenChange, onSaved }: CreatePartne
         ...(phone && { phone }),
       }
       await partnerApi.create(dto)
-      toast.success(`${PARTNER_TYPE_LABEL[type]}이(가) 등록됐습니다.`)
+      toast.success(t('partnersPage.registerSuccess', { type: PARTNER_TYPE_LABEL[type] }))
       reset()
       onSaved()
       onOpenChange(false)
     } catch {
-      toast.error('등록에 실패했습니다.')
+      toast.error(t('partnersPage.registerFailed'))
     } finally {
       setSaving(false)
     }
@@ -66,26 +68,26 @@ function CreatePartnerDialog({ open, type, onOpenChange, onSaved }: CreatePartne
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{PARTNER_TYPE_LABEL[type]} 등록</DialogTitle>
+          <DialogTitle>{t('partnersPage.addButton', { type: PARTNER_TYPE_LABEL[type] })}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
-          <div><Label>이름 *</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
+          <div><Label>{t('partnersPage.nameLabel')}</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
           {type === 'MANUFACTURER' && (
             <>
-              <div><Label>국가</Label><Input value={country} onChange={(e) => setCountry(e.target.value)} /></div>
-              <div><Label>웹사이트</Label><Input value={website} onChange={(e) => setWebsite(e.target.value)} /></div>
+              <div><Label>{t('partnersPage.countryLabel')}</Label><Input value={country} onChange={(e) => setCountry(e.target.value)} /></div>
+              <div><Label>{t('partnersPage.websiteLabel')}</Label><Input value={website} onChange={(e) => setWebsite(e.target.value)} /></div>
             </>
           )}
           {type === 'HOSPITAL' && (
             <>
-              <div><Label>주소</Label><Input value={address} onChange={(e) => setAddress(e.target.value)} /></div>
-              <div><Label>전화번호</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
+              <div><Label>{t('partnersPage.addressLabel')}</Label><Input value={address} onChange={(e) => setAddress(e.target.value)} /></div>
+              <div><Label>{t('partnersPage.phoneLabel')}</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
             </>
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>취소</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? '저장 중…' : '저장'}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t('partnersPage.cancel')}</Button>
+          <Button onClick={handleSave} disabled={saving}>{saving ? t('partnersPage.saving') : t('partnersPage.save')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -95,6 +97,7 @@ function CreatePartnerDialog({ open, type, onOpenChange, onSaved }: CreatePartne
 function AddContractDialog({ partner, open, onOpenChange, onSaved }: {
   partner: Partner; open: boolean; onOpenChange: (v: boolean) => void; onSaved: () => void
 }) {
+  const { t } = useTranslation('admin')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [sponsorshipFee, setSponsorshipFee] = useState('')
@@ -103,7 +106,7 @@ function AddContractDialog({ partner, open, onOpenChange, onSaved }: {
   const [saving, setSaving] = useState(false)
 
   const handleSave = async () => {
-    if (!startDate || !endDate) { toast.error('계약 기간을 입력해주세요.'); return }
+    if (!startDate || !endDate) { toast.error(t('partnersPage.contractDialog.dateRequired')); return }
     setSaving(true)
     try {
       const dto: CreatePartnerContractDto = {
@@ -114,11 +117,11 @@ function AddContractDialog({ partner, open, onOpenChange, onSaved }: {
         ...(notes && { notes }),
       }
       await partnerApi.createContract(partner.id, dto)
-      toast.success('계약이 등록됐습니다.')
+      toast.success(t('partnersPage.contractDialog.saved'))
       onSaved()
       onOpenChange(false)
     } catch {
-      toast.error('계약 등록에 실패했습니다.')
+      toast.error(t('partnersPage.contractDialog.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -128,20 +131,20 @@ function AddContractDialog({ partner, open, onOpenChange, onSaved }: {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{partner.name} — 계약 추가</DialogTitle>
+          <DialogTitle>{t('partnersPage.contractDialog.title', { name: partner.name })}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            <div><Label>시작일 *</Label><Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div>
-            <div><Label>종료일 *</Label><Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} /></div>
+            <div><Label>{t('partnersPage.contractDialog.startDateLabel')}</Label><Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div>
+            <div><Label>{t('partnersPage.contractDialog.endDateLabel')}</Label><Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} /></div>
           </div>
-          <div><Label>스폰서십 금액 (원)</Label><Input type="number" value={sponsorshipFee} onChange={(e) => setSponsorshipFee(e.target.value)} /></div>
-          <div><Label>할인율 (%)</Label><Input type="number" value={discountRate} onChange={(e) => setDiscountRate(e.target.value)} /></div>
-          <div><Label>비고</Label><Input value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+          <div><Label>{t('partnersPage.contractDialog.sponsorshipLabel')}</Label><Input type="number" value={sponsorshipFee} onChange={(e) => setSponsorshipFee(e.target.value)} /></div>
+          <div><Label>{t('partnersPage.contractDialog.discountLabel')}</Label><Input type="number" value={discountRate} onChange={(e) => setDiscountRate(e.target.value)} /></div>
+          <div><Label>{t('partnersPage.contractDialog.notesLabel')}</Label><Input value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>취소</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? '저장 중…' : '저장'}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t('partnersPage.contractDialog.cancel')}</Button>
+          <Button onClick={handleSave} disabled={saving}>{saving ? t('partnersPage.contractDialog.saving') : t('partnersPage.contractDialog.save')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -151,6 +154,7 @@ function AddContractDialog({ partner, open, onOpenChange, onSaved }: {
 function PartnerRow({ partner, isAdmin, onContractAdded }: {
   partner: Partner; isAdmin: boolean; onContractAdded: () => void
 }) {
+  const { t } = useTranslation('admin')
   const [expanded, setExpanded] = useState(false)
   const [addContractOpen, setAddContractOpen] = useState(false)
 
@@ -168,7 +172,7 @@ function PartnerRow({ partner, isAdmin, onContractAdded }: {
             <Badge variant="outline" className={CONTRACT_STATUS_STYLE[latestContract.status]}>
               {CONTRACT_STATUS_LABEL[latestContract.status]}
             </Badge>
-          ) : <span className="text-muted-foreground text-xs">계약 없음</span>}
+          ) : <span className="text-muted-foreground text-xs">{t('partnersPage.noContract')}</span>}
         </TableCell>
         <TableCell className="text-right">
           {expanded ? <ChevronUp className="h-4 w-4 inline" /> : <ChevronDown className="h-4 w-4 inline" />}
@@ -178,23 +182,23 @@ function PartnerRow({ partner, isAdmin, onContractAdded }: {
         <TableRow>
           <TableCell colSpan={4} className="bg-muted/30 p-4">
             <div className="flex justify-between items-center mb-2">
-              <p className="text-sm font-semibold">계약 이력</p>
+              <p className="text-sm font-semibold">{t('partnersPage.contractHistory')}</p>
               {isAdmin && (
                 <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setAddContractOpen(true) }}>
-                  <Plus className="h-3.5 w-3.5 mr-1" />계약 추가
+                  <Plus className="h-3.5 w-3.5 mr-1" />{t('partnersPage.addContract')}
                 </Button>
               )}
             </div>
             {!partner.contracts?.length ? (
-              <p className="text-sm text-muted-foreground">등록된 계약이 없습니다.</p>
+              <p className="text-sm text-muted-foreground">{t('partnersPage.noContracts')}</p>
             ) : (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-muted-foreground">
-                    <th className="text-left pb-1">기간</th>
-                    <th className="text-left pb-1">스폰서십</th>
-                    <th className="text-left pb-1">할인율</th>
-                    <th className="text-left pb-1">상태</th>
+                    <th className="text-left pb-1">{t('partnersPage.contractPeriod')}</th>
+                    <th className="text-left pb-1">{t('partnersPage.contractSponsorship')}</th>
+                    <th className="text-left pb-1">{t('partnersPage.contractDiscount')}</th>
+                    <th className="text-left pb-1">{t('partnersPage.contractStatus')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -227,6 +231,7 @@ function PartnerRow({ partner, isAdmin, onContractAdded }: {
 }
 
 export function PartnersPage() {
+  const { t } = useTranslation('admin')
   const { user } = useCurrentUser()
   const isAdmin = user?.role === 'ADMIN'
   const [tab, setTab] = useState<PartnerType>('HOSPITAL')
@@ -236,7 +241,7 @@ export function PartnersPage() {
 
   const load = () => {
     setLoading(true)
-    partnerApi.list(tab).then(setPartners).catch(() => toast.error('목록을 불러오지 못했습니다.')).finally(() => setLoading(false))
+    partnerApi.list(tab).then(setPartners).catch(() => toast.error(t('partnersPage.loadFailed'))).finally(() => setLoading(false))
   }
 
   useEffect(() => { load() }, [tab])
@@ -245,39 +250,39 @@ export function PartnersPage() {
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">파트너 관리</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">협진병원 및 장비 제조사 계약 관리</p>
+          <h1 className="text-lg font-semibold tracking-tight">{t('partnersPage.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{t('partnersPage.description')}</p>
         </div>
         <Button size="sm" onClick={() => setCreateOpen(true)}>
           <Plus className="h-3.5 w-3.5 mr-1.5" />
-          {PARTNER_TYPE_LABEL[tab]} 추가
+          {t('partnersPage.addButton', { type: PARTNER_TYPE_LABEL[tab] })}
         </Button>
       </div>
 
       <div className="flex-1 overflow-auto p-6">
         <Tabs value={tab} onValueChange={(v) => setTab(v as PartnerType)}>
           <TabsList className="mb-4">
-            <TabsTrigger value="HOSPITAL">협진병원</TabsTrigger>
-            <TabsTrigger value="MANUFACTURER">제조사</TabsTrigger>
+            <TabsTrigger value="HOSPITAL">{t('partnersPage.hospital')}</TabsTrigger>
+            <TabsTrigger value="MANUFACTURER">{t('partnersPage.manufacturer')}</TabsTrigger>
           </TabsList>
 
-          {(['HOSPITAL', 'MANUFACTURER'] as PartnerType[]).map((t) => (
-            <TabsContent key={t} value={t}>
+          {(['HOSPITAL', 'MANUFACTURER'] as PartnerType[]).map((tp) => (
+            <TabsContent key={tp} value={tp}>
               {loading ? (
                 <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>이름</TableHead>
-                      <TableHead>{t === 'MANUFACTURER' ? '국가' : '주소'}</TableHead>
-                      <TableHead>최근 계약</TableHead>
+                      <TableHead>{t('partnersPage.colName')}</TableHead>
+                      <TableHead>{t('partnersPage.colLocation')}</TableHead>
+                      <TableHead>{t('partnersPage.colLatestContract')}</TableHead>
                       <TableHead />
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {partners.length === 0 ? (
-                      <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">등록된 {PARTNER_TYPE_LABEL[t]}이 없습니다.</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">{t('partnersPage.noPartners', { type: PARTNER_TYPE_LABEL[tp] })}</TableCell></TableRow>
                     ) : (
                       partners.map((p) => (
                         <PartnerRow key={p.id} partner={p} isAdmin={isAdmin} onContractAdded={load} />

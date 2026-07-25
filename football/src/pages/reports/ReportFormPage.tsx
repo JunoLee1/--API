@@ -1,9 +1,9 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { reportApi } from '@/services/report.service'
 import type { ReportType } from '@/types/report'
-import { REPORT_TYPE_LABEL } from '@/types/report'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,6 +20,7 @@ import { ArrowLeft, Paperclip, X } from 'lucide-react'
 const TYPES: ReportType[] = ['FINANCIAL', 'PERFORMANCE', 'MEDICAL', 'TRAINING']
 
 export function ReportFormPage() {
+  const { t } = useTranslation('report')
   const navigate = useNavigate()
   const fileRef = useRef<HTMLInputElement>(null)
   const [type, setType] = useState<ReportType>('PERFORMANCE')
@@ -29,20 +30,20 @@ export function ReportFormPage() {
   const [saving, setSaving] = useState(false)
 
   const handleSave = async (asDraft: boolean) => {
-    if (!title.trim()) { toast.error('제목을 입력해주세요.'); return }
-    if (!content.trim()) { toast.error('내용을 입력해주세요.'); return }
+    if (!title.trim()) { toast.error(t('form.titleLabel') + ' ' + '필수'); return }
+    if (!content.trim()) { toast.error(t('form.contentLabel') + ' ' + '필수'); return }
     setSaving(true)
     try {
       const report = await reportApi.create({ type, title: title.trim(), content: content.trim(), file: file ?? undefined })
       if (!asDraft) {
         await reportApi.submit(report.id)
-        toast.success('보고서가 제출됐습니다.')
+        toast.success(t('form.createSuccess'))
       } else {
-        toast.success('초안으로 저장됐습니다.')
+        toast.success(t('form.updateSuccess'))
       }
       navigate('/reports')
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('form.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -55,39 +56,39 @@ export function ReportFormPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">보고서 작성</h1>
+          <h1 className="text-lg font-semibold tracking-tight">{t('form.title')}</h1>
         </div>
       </div>
 
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-2xl space-y-5">
           <div className="space-y-1.5">
-            <Label>유형 *</Label>
+            <Label>{t('form.typeLabel')} *</Label>
             <Select value={type} onValueChange={(v) => setType(v as ReportType)}>
               <SelectTrigger className="w-48">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {TYPES.map((t) => (
-                  <SelectItem key={t} value={t}>{REPORT_TYPE_LABEL[t]}</SelectItem>
+                {TYPES.map((tp) => (
+                  <SelectItem key={tp} value={tp}>{t(`type.${tp}`)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-1.5">
-            <Label>제목 *</Label>
+            <Label>{t('form.titleLabel')} *</Label>
             <Input
-              placeholder="보고서 제목"
+              placeholder={t('form.titlePlaceholder')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label>내용 *</Label>
+            <Label>{t('form.contentLabel')} *</Label>
             <Textarea
-              placeholder="보고서 내용을 입력해주세요."
+              placeholder={t('form.contentPlaceholder')}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={12}
@@ -95,7 +96,7 @@ export function ReportFormPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label>첨부 파일</Label>
+            <Label>{t('form.attachmentLabel')}</Label>
             {file ? (
               <div className="flex items-center gap-2 rounded border px-3 py-2 text-sm">
                 <Paperclip className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -106,7 +107,7 @@ export function ReportFormPage() {
               </div>
             ) : (
               <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
-                <Paperclip className="h-4 w-4 mr-1.5" />파일 첨부
+                <Paperclip className="h-4 w-4 mr-1.5" />{t('form.attachmentLabel')}
               </Button>
             )}
             <input
@@ -118,10 +119,10 @@ export function ReportFormPage() {
           </div>
 
           <div className="flex gap-2 pt-2">
-            <Button variant="outline" onClick={() => navigate('/reports')} disabled={saving}>취소</Button>
-            <Button variant="outline" onClick={() => handleSave(true)} disabled={saving}>초안 저장</Button>
+            <Button variant="outline" onClick={() => navigate('/reports')} disabled={saving}>{t('form.back')}</Button>
+            <Button variant="outline" onClick={() => handleSave(true)} disabled={saving}>{t('form.saving')}</Button>
             <Button onClick={() => handleSave(false)} disabled={saving}>
-              {saving ? '처리 중...' : '제출'}
+              {saving ? t('form.saving') : t('form.submit')}
             </Button>
           </div>
         </div>

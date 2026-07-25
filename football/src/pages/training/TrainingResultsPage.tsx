@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { trainingApi } from '@/services/training.service'
 import type { TrainingResultRow, SessionType, TrainingResultFilters } from '@/types/training'
 import { SESSION_TYPE_LABEL } from '@/types/training'
@@ -23,19 +24,15 @@ import { Pagination } from '@/components/ui/pagination'
 
 const PAGE_SIZE = 10
 
-const ATTENDANCE_LABEL: Record<string, string> = {
-  PRESENT: '출석',
-  ABSENT_AUTHORIZED: '공결',
-  ABSENT_UNAUTHORIZED: '무단결석',
-  LATE_AUTHORIZED: '공결지각',
-  LATE_UNAUTHORIZED: '무단지각',
-}
+const ATTENDANCE_STATUS_KEYS = ['PRESENT', 'ABSENT_AUTHORIZED', 'ABSENT_UNAUTHORIZED', 'LATE_AUTHORIZED', 'LATE_UNAUTHORIZED'] as const
+type AttendanceKey = typeof ATTENDANCE_STATUS_KEYS[number]
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })
 }
 
 export function TrainingResultsPage() {
+  const { t } = useTranslation('training')
   const { user } = useCurrentUser()
   const isAdmin = user?.role === 'ADMIN'
   const [filters, setFilters] = useState<TrainingResultFilters>({ from: '', to: '', sessionType: '', nullOnly: false })
@@ -52,13 +49,13 @@ export function TrainingResultsPage() {
     setCorrecting(true)
     try {
       await trainingApi.correctAttendance(correctTarget.id, correctAttendance, correctReason)
-      toast.success('출석이 정정됐습니다.')
+      toast.success(t('resultsPage.correctSuccess'))
       setCorrectTarget(null)
       setCorrectAttendance('')
       setCorrectReason('')
       await fetchData()
     } catch {
-      toast.error('정정에 실패했습니다.')
+      toast.error(t('resultsPage.correctFailed'))
     } finally {
       setCorrecting(false)
     }
@@ -79,20 +76,20 @@ export function TrainingResultsPage() {
 
   const exportCsv = () => {
     const data = rows.map(r => ({
-      날짜: formatDate(r.session.date),
-      세션유형: SESSION_TYPE_LABEL[r.session.sessionType] ?? r.session.sessionType,
-      선수명: r.player.playerName,
-      포지션: r.player.position,
-      출석: ATTENDANCE_LABEL[r.attendance] ?? r.attendance,
-      달성도: r.performanceScore ?? '',
-      피드백: r.feedback ?? '',
+      [t('resultsPage.csvDate')]: formatDate(r.session.date),
+      [t('resultsPage.csvSessionType')]: t(`sessionType.${r.session.sessionType}`) || r.session.sessionType,
+      [t('resultsPage.csvPlayer')]: r.player.playerName,
+      [t('resultsPage.csvPosition')]: r.player.position,
+      [t('resultsPage.csvAttendance')]: t(`resultsPage.attendanceLabel.${r.attendance}`) || r.attendance,
+      [t('resultsPage.csvScore')]: r.performanceScore ?? '',
+      [t('resultsPage.csvFeedback')]: r.feedback ?? '',
     }))
     const csv = Papa.unparse(data)
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `훈련결과_${filters.from ?? ''}_${filters.to ?? ''}.csv`
+    a.download = `${t('resultsPage.csvFilename')}_${filters.from ?? ''}_${filters.to ?? ''}.csv`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -104,17 +101,17 @@ export function TrainingResultsPage() {
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">훈련 결과</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">전체 {rows.length}건</p>
+          <h1 className="text-lg font-semibold tracking-tight">{t('resultsPage.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{t('resultsPage.total', { count: rows.length })}</p>
         </div>
         <Button variant="outline" size="sm" onClick={exportCsv} disabled={rows.length === 0}>
-          <Download className="w-4 h-4 mr-1" /> CSV 내보내기
+          <Download className="w-4 h-4 mr-1" /> {t('resultsPage.exportCsv')}
         </Button>
       </div>
 
       <div className="border-b px-6 py-3 flex flex-wrap gap-4 items-end shrink-0 bg-muted/30">
         <div className="space-y-1">
-          <Label className="text-xs">시작일</Label>
+          <Label className="text-xs">{t('resultsPage.startDate')}</Label>
           <Input
             type="date"
             value={filters.from}
@@ -123,7 +120,7 @@ export function TrainingResultsPage() {
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">종료일</Label>
+          <Label className="text-xs">{t('resultsPage.endDate')}</Label>
           <Input
             type="date"
             value={filters.to}
@@ -132,25 +129,24 @@ export function TrainingResultsPage() {
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">세션 유형</Label>
+          <Label className="text-xs">{t('resultsPage.sessionType')}</Label>
           <Select
             value={filters.sessionType ?? ''}
             onValueChange={v => setFilters(f => ({ ...f, sessionType: v as SessionType | '' }))}
-            items={{ '': '전체', ...SESSION_TYPE_LABEL }}
           >
             <SelectTrigger className="w-44 h-8 text-sm bg-background">
-              <SelectValue placeholder="전체" />
+              <SelectValue placeholder={t('resultsPage.all')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">전체</SelectItem>
-              {(Object.keys(SESSION_TYPE_LABEL) as SessionType[]).map(t => (
-                <SelectItem key={t} value={t}>{SESSION_TYPE_LABEL[t]}</SelectItem>
+              <SelectItem value="">{t('resultsPage.all')}</SelectItem>
+              {(Object.keys(SESSION_TYPE_LABEL) as SessionType[]).map(st => (
+                <SelectItem key={st} value={st}>{t(`sessionType.${st}`)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
         <Button size="sm" onClick={fetchData} disabled={loading} className="h-8">
-          {loading ? '조회 중...' : '조회'}
+          {loading ? t('resultsPage.searching') : t('resultsPage.search')}
         </Button>
         {isAdmin && (
           <Button
@@ -164,7 +160,7 @@ export function TrainingResultsPage() {
             }}
           >
             <AlertCircle className="w-3.5 h-3.5" />
-            출석 누락만
+            {t('resultsPage.missingOnly')}
           </Button>
         )}
       </div>
@@ -173,27 +169,27 @@ export function TrainingResultsPage() {
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead>날짜</TableHead>
-              <TableHead className="w-32">세션 유형</TableHead>
-              <TableHead>선수</TableHead>
-              <TableHead className="w-24">포지션</TableHead>
-              <TableHead className="w-28">출석</TableHead>
-              <TableHead className="w-20 text-right">달성도</TableHead>
+              <TableHead>{t('resultsPage.dateCol')}</TableHead>
+              <TableHead className="w-32">{t('resultsPage.sessionTypeCol')}</TableHead>
+              <TableHead>{t('resultsPage.playerCol')}</TableHead>
+              <TableHead className="w-24">{t('resultsPage.positionCol')}</TableHead>
+              <TableHead className="w-28">{t('resultsPage.attendanceCol')}</TableHead>
+              <TableHead className="w-20 text-right">{t('resultsPage.scoreCol')}</TableHead>
               {isAdmin && <TableHead className="w-16" />}
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-8 text-muted-foreground">로딩 중...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-8 text-muted-foreground">{t('resultsPage.loading')}</TableCell></TableRow>
             ) : rows.length === 0 ? (
-              <TableRow><TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-8 text-muted-foreground">데이터가 없습니다.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-8 text-muted-foreground">{t('resultsPage.noData')}</TableCell></TableRow>
             ) : paged.map(r => (
               <TableRow key={r.id}>
                 <TableCell className="tabular-nums">{formatDate(r.session.date)}</TableCell>
-                <TableCell>{SESSION_TYPE_LABEL[r.session.sessionType] ?? r.session.sessionType}</TableCell>
+                <TableCell>{t(`sessionType.${r.session.sessionType}`) || r.session.sessionType}</TableCell>
                 <TableCell className="font-medium">{r.player.playerName}</TableCell>
                 <TableCell>{r.player.position}</TableCell>
-                <TableCell>{ATTENDANCE_LABEL[r.attendance] ?? r.attendance}</TableCell>
+                <TableCell>{t(`resultsPage.attendanceLabel.${r.attendance}`) || r.attendance}</TableCell>
                 <TableCell className="text-right tabular-nums">{r.performanceScore ?? '—'}</TableCell>
                 {isAdmin && (
                   <TableCell>
@@ -203,7 +199,7 @@ export function TrainingResultsPage() {
                       className="h-7 text-xs"
                       onClick={() => { setCorrectTarget(r); setCorrectAttendance(r.attendance) }}
                     >
-                      정정
+                      {t('resultsPage.correct')}
                     </Button>
                   </TableCell>
                 )}
@@ -222,27 +218,27 @@ export function TrainingResultsPage() {
 
       <Dialog open={!!correctTarget} onOpenChange={(v) => !v && setCorrectTarget(null)}>
         <DialogContent className="max-w-xs">
-          <DialogHeader><DialogTitle>출석 정정 (ADMIN)</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t('resultsPage.correctTitle')}</DialogTitle></DialogHeader>
           <div className="space-y-3 py-1">
             <div className="space-y-1.5">
-              <Label className="text-xs">선수</Label>
+              <Label className="text-xs">{t('resultsPage.correctPlayer')}</Label>
               <p className="text-sm font-medium">{correctTarget?.player.playerName}</p>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">출석 상태</Label>
+              <Label className="text-xs">{t('resultsPage.correctStatus')}</Label>
               <Select value={correctAttendance} onValueChange={setCorrectAttendance}>
                 <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {Object.entries(ATTENDANCE_LABEL).map(([v, l]) => (
-                    <SelectItem key={v} value={v}>{l}</SelectItem>
+                  {ATTENDANCE_STATUS_KEYS.map((k) => (
+                    <SelectItem key={k} value={k}>{t(`resultsPage.attendanceLabel.${k}`)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">정정 사유 *</Label>
+              <Label className="text-xs">{t('resultsPage.correctReason')} *</Label>
               <Textarea
-                placeholder="정정 사유를 입력해주세요."
+                placeholder={t('resultsPage.correctReasonPlaceholder')}
                 value={correctReason}
                 onChange={(e) => setCorrectReason(e.target.value)}
                 rows={3}
@@ -250,12 +246,12 @@ export function TrainingResultsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCorrectTarget(null)} disabled={correcting}>취소</Button>
+            <Button variant="outline" onClick={() => setCorrectTarget(null)} disabled={correcting}>{t('resultsPage.cancel')}</Button>
             <Button
               onClick={handleCorrect}
               disabled={correcting || !correctAttendance || !correctReason.trim()}
             >
-              {correcting ? '정정 중...' : '정정'}
+              {correcting ? t('resultsPage.correcting') : t('resultsPage.correct')}
             </Button>
           </DialogFooter>
         </DialogContent>

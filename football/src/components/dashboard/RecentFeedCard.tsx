@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export interface FeedItem {
@@ -19,6 +20,8 @@ function formatDate(iso: string) {
 }
 
 export function RecentFeedCard({ title, items, loading }: Props) {
+  const { t } = useTranslation('common')
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -26,9 +29,9 @@ export function RecentFeedCard({ title, items, loading }: Props) {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <p className="text-sm text-muted-foreground">불러오는 중...</p>
+          <p className="text-sm text-muted-foreground">{t('dashboard.recentFeedCard.loading')}</p>
         ) : items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">최근 항목이 없습니다</p>
+          <p className="text-sm text-muted-foreground">{t('dashboard.recentFeedCard.empty')}</p>
         ) : (
           <ul className="space-y-2">
             {items.slice(0, 5).map((item) => (

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { injuryApi } from '@/services/injury.service'
 import type { InjuryAssessment } from '@/types/injury'
 import { Button } from '@/components/ui/button'
@@ -33,6 +34,7 @@ function ScoreField({
 }
 
 export function AssessmentForm({ injuryId, initial, onSaved }: Props) {
+  const { t } = useTranslation('medical')
   const [painLevel, setPainLevel] = useState(initial?.painLevel ?? 0)
   const [hasSwelling, setHasSwelling] = useState(initial?.hasSwelling ?? false)
   const [romScore, setRomScore] = useState(initial?.romScore ?? 100)
@@ -57,13 +59,13 @@ export function AssessmentForm({ injuryId, initial, onSaved }: Props) {
         psychScore, positionRiskScore,
       })
       if (result.triggeredReports) {
-        toast.success('가중치 평가 저장 완료 — 외부 의무보고서가 자동 생성됐습니다.')
+        toast.success(t('assessment.savedWithReport'))
       } else {
-        toast.success('가중치 평가가 저장됐습니다.')
+        toast.success(t('assessment.saved'))
       }
       onSaved(result)
     } catch {
-      toast.error('저장에 실패했습니다.')
+      toast.error(t('assessment.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -72,46 +74,46 @@ export function AssessmentForm({ injuryId, initial, onSaved }: Props) {
   return (
     <div className="space-y-6">
       <div className={`rounded-lg border p-4 ${totalPrev >= 80 ? 'border-destructive bg-destructive/5' : 'border-border bg-muted/30'}`}>
-        <p className="text-xs font-medium text-muted-foreground mb-1">예상 총점</p>
+        <p className="text-xs font-medium text-muted-foreground mb-1">{t('assessment.previewLabel')}</p>
         <p className={`text-3xl font-bold tabular-nums ${totalPrev >= 80 ? 'text-destructive' : ''}`}>
           {totalPrev}
           <span className="text-base font-normal text-muted-foreground ml-1">/ 100</span>
         </p>
         {totalPrev >= 80 && (
-          <p className="text-xs text-destructive mt-1">임계점(80점) 초과 — 외부 의무보고서가 생성됩니다</p>
+          <p className="text-xs text-destructive mt-1">{t('assessment.threshold')}</p>
         )}
         <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
-          <span>의학 {medicalPrev.toFixed(1)}/40</span>
-          <span>기능 {functionalPrev.toFixed(1)}/40</span>
-          <span>보정 {modifierPrev.toFixed(1)}/20</span>
+          <span>{t('assessment.medicalScore', { score: medicalPrev.toFixed(1) })}</span>
+          <span>{t('assessment.functionalScore', { score: functionalPrev.toFixed(1) })}</span>
+          <span>{t('assessment.modifierScore', { score: modifierPrev.toFixed(1) })}</span>
         </div>
       </div>
 
       <div className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">의학적 소견 (40%)</p>
-        <ScoreField label="통증 단계" hint="0=통증 없음, 10=극심한 통증" value={painLevel} onChange={setPainLevel} min={0} max={10} />
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('assessment.medicalSection')}</p>
+        <ScoreField label={t('assessment.painLabel')} hint={t('assessment.painHint')} value={painLevel} onChange={setPainLevel} min={0} max={10} />
         <div className="flex items-center gap-3">
           <Switch checked={hasSwelling} onCheckedChange={setHasSwelling} id="swelling" />
-          <Label htmlFor="swelling" className="text-xs">부종 있음</Label>
+          <Label htmlFor="swelling" className="text-xs">{t('assessment.swellingLabel')}</Label>
         </div>
-        <ScoreField label="ROM (관절 가동 범위 %)" hint="100=완전 정상, 0=전혀 움직이지 않음" value={romScore} onChange={setRomScore} />
+        <ScoreField label={t('assessment.romLabel')} hint={t('assessment.romHint')} value={romScore} onChange={setRomScore} />
       </div>
 
       <div className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">기능성 평가 (40%)</p>
-        <ScoreField label="근력 검사 %" hint="100=정상, 0=전혀 없음" value={strengthScore} onChange={setStrengthScore} />
-        <ScoreField label="스프린트/방향전환 %" hint="100=정상 수행, 0=불가" value={sprintScore} onChange={setSprintScore} />
-        <ScoreField label="점프 테스트 %" hint="100=정상, 0=불가" value={jumpScore} onChange={setJumpScore} />
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('assessment.functionalSection')}</p>
+        <ScoreField label={t('assessment.strengthLabel')} hint={t('assessment.strengthHint')} value={strengthScore} onChange={setStrengthScore} />
+        <ScoreField label={t('assessment.sprintLabel')} hint={t('assessment.sprintHint')} value={sprintScore} onChange={setSprintScore} />
+        <ScoreField label={t('assessment.jumpLabel')} hint={t('assessment.jumpHint')} value={jumpScore} onChange={setJumpScore} />
       </div>
 
       <div className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">환경·심리 보정 (20%)</p>
-        <ScoreField label="심리적 불안도" hint="0=안정, 100=극도의 불안" value={psychScore} onChange={setPsychScore} />
-        <ScoreField label="포지션 접촉 빈도 위험성" hint="0=저위험, 100=고위험" value={positionRiskScore} onChange={setPositionRiskScore} />
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('assessment.modifierSection')}</p>
+        <ScoreField label={t('assessment.psychLabel')} hint={t('assessment.psychHint')} value={psychScore} onChange={setPsychScore} />
+        <ScoreField label={t('assessment.posRiskLabel')} hint={t('assessment.posRiskHint')} value={positionRiskScore} onChange={setPositionRiskScore} />
       </div>
 
       <Button onClick={handleSave} disabled={saving} className="w-full">
-        {saving ? '저장 중...' : '평가 저장'}
+        {saving ? t('assessment.saving') : t('assessment.save')}
       </Button>
     </div>
   )

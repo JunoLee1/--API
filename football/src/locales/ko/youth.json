@@ -36,5 +36,95 @@
     "rejectRegistration": "반려",
     "promoteToFirstTeam": "1군 승격",
     "issueFees": "회비 청구"
+  },
+  "registrationPage": {
+    "title": "유소년 입단 신청",
+    "addButton": "신청 등록",
+    "loading": "불러오는 중...",
+    "noData": "입단 신청이 없습니다.",
+    "col": {
+      "player": "선수명",
+      "team": "팀",
+      "guardian": "학부모",
+      "jerseyNumber": "선호 번호",
+      "status": "상태"
+    },
+    "status": {
+      "PENDING": "대기",
+      "GUARDIAN_APPROVED": "학부모 승인",
+      "CONTRACTED": "입단 완료",
+      "REJECTED": "반려"
+    }
+  },
+  "registrationDialog": {
+    "title": "유소년 입단 신청",
+    "playerNameLabel": "선수 이름",
+    "birthDateLabel": "생년월일",
+    "teamLabel": "소속 팀",
+    "guardianEmailLabel": "학부모 이메일",
+    "jerseyLabel": "선호 등번호 (선택)",
+    "error": "오류가 발생했습니다.",
+    "cancel": "취소",
+    "submitting": "처리 중...",
+    "submit": "신청 등록"
+  },
+  "incidentPage": {
+    "title": "사고 보고서",
+    "addButton": "보고서 작성",
+    "loading": "불러오는 중...",
+    "noData": "사고 보고서가 없습니다.",
+    "typeMatch": "경기 중",
+    "typeTraining": "훈련 중",
+    "supervisorSigned": "감독서명",
+    "medicalSigned": "의무서명",
+    "submitButton": "제출",
+    "signSupervisor": "감독 서명",
+    "signMedical": "의무팀 서명",
+    "status": {
+      "DRAFT": "초안",
+      "SUBMITTED": "제출됨",
+      "SIGNED": "서명완료"
+    }
+  },
+  "incidentDialog": {
+    "title": "사고 보고서 작성",
+    "playerLabel": "선수",
+    "typeLabel": "발생 유형",
+    "descriptionLabel": "사건 내용 (육하원칙)",
+    "descriptionPlaceholder": "언제, 어디서, 누가, 무엇을, 어떻게, 왜...",
+    "error": "오류가 발생했습니다.",
+    "cancel": "취소",
+    "saving": "저장 중...",
+    "submit": "초안 저장"
+  },
+  "feePage": {
+    "title": "아카데미 회비 관리",
+    "filterAll": "전체",
+    "loading": "불러오는 중...",
+    "noData": "해당하는 회비 내역이 없습니다.",
+    "approveButton": "수납 승인",
+    "proofLink": "증빙 확인",
+    "status": {
+      "PENDING": "대기",
+      "SUBMITTED": "확인 중",
+      "PAID": "완료",
+      "OVERDUE": "연체",
+      "LOCKED": "정지"
+    }
+  },
+  "guardianFeeView": {
+    "title": "아카데미 회비 내역",
+    "loading": "불러오는 중...",
+    "noData": "청구된 회비가 없습니다.",
+    "proofPending": "증빙 확인 중입니다",
+    "proofPrompt": "납부 증빙 이미지 URL을 입력하세요",
+    "submitProof": "납부 증빙 제출",
+    "status": {
+      "PENDING": "납부 대기",
+      "SUBMITTED": "확인 중",
+      "PAID": "납부 완료",
+      "OVERDUE": "연체",
+      "LOCKED": "정지"
+    }
   }
 }

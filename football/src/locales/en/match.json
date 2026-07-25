@@ -253,5 +253,65 @@
     "goalsAgainst": "GA",
     "goalDiff": "GD",
     "points": "Pts"
+  },
+  "tactical": {
+    "title": "Tactical Analysis",
+    "description": "Tactical analysis reports by match",
+    "addButton": "Add Analysis",
+    "loadFailed": "Failed to load tactical analyses.",
+    "noData": "No tactical analyses registered.",
+    "phase": {
+      "PRE_MATCH": "Pre-Match",
+      "POST_MATCH": "Post-Match"
+    },
+    "status": {
+      "DRAFT": "Draft",
+      "CONFIRMED": "Confirmed"
+    },
+    "mediaType": {
+      "image": "Image",
+      "video": "Video"
+    },
+    "col": {
+      "match": "Match",
+      "phase": "Phase",
+      "formation": "Formation",
+      "status": "Status",
+      "createdBy": "Author",
+      "createdAt": "Date"
+    },
+    "confirm": "Confirm",
+    "confirmSuccess": "Tactical analysis confirmed.",
+    "confirmFailed": "Failed to confirm.",
+    "deleteSuccess": "Tactical analysis deleted.",
+    "deleteFailed": "Failed to delete.",
+    "form": {
+      "createTitle": "Add Tactical Analysis",
+      "editTitle": "Edit Tactical Analysis",
+      "matchLabel": "Match *",
+      "matchPlaceholder": "Select match",
+      "phaseLabel": "Phase *",
+      "formationLabel": "Formation",
+      "opponentAnalysisLabel": "Opponent Analysis",
+      "opponentFormationLabel": "Opponent Formation",
+      "opponentKeyThreatLabel": "Key Threat",
+      "opponentWeaknessLabel": "Weakness",
+      "opponentKeyPlayerLabel": "Key Player",
+      "tacticalComplianceLabel": "Tactical Compliance",
+      "concededAnalysisLabel": "Conceded Analysis",
+      "momLabel": "MOM",
+      "momNotePlaceholder": "MOM comment",
+      "improvementLabel": "Needs Improvement",
+      "improvementNotePlaceholder": "Improvement comment",
+      "mediaLabel": "Attach Media",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "create": "Add",
+      "update": "Update",
+      "required": "Please fill in required fields.",
+      "createSuccess": "Tactical analysis added.",
+      "editSuccess": "Tactical analysis updated.",
+      "saveFailed": "Failed to save."
+    }
   }
 }

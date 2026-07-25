@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { equipmentApi, loanApi } from '@/services/equipment.service'
 import type { EquipmentItem, EquipmentCategory, EquipmentUnitStatus, EquipmentLoan } from '@/types/equipment'
@@ -62,6 +63,7 @@ interface CreateItemDialogProps {
 }
 
 function CreateItemDialog({ open, onOpenChange, onSaved }: CreateItemDialogProps) {
+  const { t } = useTranslation('admin')
   const [name, setName] = useState('')
   const [category, setCategory] = useState<EquipmentCategory>('CLOTHING')
   const [trackedIndividually, setTrackedIndividually] = useState(false)
@@ -70,7 +72,7 @@ function CreateItemDialog({ open, onOpenChange, onSaved }: CreateItemDialogProps
   const [saving, setSaving] = useState(false)
 
   const handleSave = async () => {
-    if (!name.trim()) { toast.error('장비 이름을 입력해주세요.'); return }
+    if (!name.trim()) { toast.error(t('equipmentPage.createDialog.nameRequired')); return }
     setSaving(true)
     try {
       const dto: CreateEquipmentItemDto = {
@@ -81,10 +83,10 @@ function CreateItemDialog({ open, onOpenChange, onSaved }: CreateItemDialogProps
         ...(lowStockThreshold && { lowStockThreshold: Number(lowStockThreshold) }),
       }
       await equipmentApi.createItem(dto)
-      toast.success('장비가 등록됐습니다.')
+      toast.success(t('equipmentPage.createDialog.saved'))
       onSaved()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('equipmentPage.createDialog.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -93,14 +95,14 @@ function CreateItemDialog({ open, onOpenChange, onSaved }: CreateItemDialogProps
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>장비 등록</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t('equipmentPage.createDialog.title')}</DialogTitle></DialogHeader>
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
-            <Label>이름 *</Label>
-            <Input placeholder="예: 훈련용 축구화" value={name} onChange={(e) => setName(e.target.value)} />
+            <Label>{t('equipmentPage.createDialog.nameLabel')} *</Label>
+            <Input placeholder={t('equipmentPage.createDialog.namePlaceholder')} value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>카테고리 *</Label>
+            <Label>{t('equipmentPage.createDialog.categoryLabel')} *</Label>
             <Select value={category} onValueChange={(v) => setCategory(v as EquipmentCategory)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -116,26 +118,26 @@ function CreateItemDialog({ open, onOpenChange, onSaved }: CreateItemDialogProps
               onChange={(e) => setTrackedIndividually(e.target.checked)}
               className="h-4 w-4 rounded border-gray-300"
             />
-            <Label htmlFor="tracked">개별 추적 (고가 장비)</Label>
+            <Label htmlFor="tracked">{t('equipmentPage.createDialog.trackIndividually')}</Label>
           </div>
           {!trackedIndividually && (
             <>
               <div className="space-y-1.5">
-                <Label>재고 수량</Label>
+                <Label>{t('equipmentPage.createDialog.quantityLabel')}</Label>
                 <Input
                   type="number"
                   min={0}
-                  placeholder="수량"
+                  placeholder={t('equipmentPage.createDialog.quantityLabel')}
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>부족 임계값</Label>
+                <Label>{t('equipmentPage.createDialog.lowStockLabel')}</Label>
                 <Input
                   type="number"
                   min={0}
-                  placeholder="이 수량 이하 시 알림"
+                  placeholder={t('equipmentPage.createDialog.lowStockPlaceholder')}
                   value={lowStockThreshold}
                   onChange={(e) => setLowStockThreshold(e.target.value)}
                 />
@@ -144,8 +146,8 @@ function CreateItemDialog({ open, onOpenChange, onSaved }: CreateItemDialogProps
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? '저장 중...' : '등록'}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t('equipmentPage.createDialog.cancel')}</Button>
+          <Button onClick={handleSave} disabled={saving}>{saving ? t('equipmentPage.createDialog.saving') : t('equipmentPage.createDialog.submit')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -160,6 +162,7 @@ interface AssignDialogProps {
 }
 
 function AssignDialog({ open, onOpenChange, item, onSaved }: AssignDialogProps) {
+  const { t } = useTranslation('admin')
   const { players } = usePlayers()
   const [playerId, setPlayerId] = useState('')
   const [unitId, setUnitId] = useState('')
@@ -168,8 +171,8 @@ function AssignDialog({ open, onOpenChange, item, onSaved }: AssignDialogProps) 
   const availableUnits = item.units?.filter((u) => u.status === 'AVAILABLE') ?? []
 
   const handleSave = async () => {
-    if (!playerId) { toast.error('선수를 선택해주세요.'); return }
-    if (item.trackedIndividually && !unitId) { toast.error('유닛을 선택해주세요.'); return }
+    if (!playerId) { toast.error(t('equipmentPage.assignDialog.playerRequired')); return }
+    if (item.trackedIndividually && !unitId) { toast.error(t('equipmentPage.assignDialog.unitRequired')); return }
     setSaving(true)
     try {
       await equipmentApi.assign(
@@ -177,10 +180,10 @@ function AssignDialog({ open, onOpenChange, item, onSaved }: AssignDialogProps) 
         item.id,
         item.trackedIndividually ? Number(unitId) : undefined,
       )
-      toast.success('장비가 지급됐습니다.')
+      toast.success(t('equipmentPage.assignDialog.saved'))
       onSaved()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('equipmentPage.assignDialog.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -189,12 +192,12 @@ function AssignDialog({ open, onOpenChange, item, onSaved }: AssignDialogProps) 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>{item.name} — 지급</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t('equipmentPage.assignDialog.title', { name: item.name })}</DialogTitle></DialogHeader>
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
-            <Label>선수 *</Label>
+            <Label>{t('equipmentPage.assignDialog.playerLabel')} *</Label>
             <Select value={playerId} onValueChange={(v) => { if (v) setPlayerId(v) }}>
-              <SelectTrigger><SelectValue placeholder="선수 선택" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t('equipmentPage.assignDialog.playerPlaceholder')} /></SelectTrigger>
               <SelectContent>
                 {players.map((p) => <SelectItem key={p.id} value={p.id}>{p.playerName}</SelectItem>)}
               </SelectContent>
@@ -202,12 +205,12 @@ function AssignDialog({ open, onOpenChange, item, onSaved }: AssignDialogProps) 
           </div>
           {item.trackedIndividually && (
             <div className="space-y-1.5">
-              <Label>유닛 *</Label>
+              <Label>{t('equipmentPage.assignDialog.unitLabel')} *</Label>
               {availableUnits.length === 0 ? (
-                <p className="text-sm text-muted-foreground">사용 가능한 유닛이 없습니다.</p>
+                <p className="text-sm text-muted-foreground">{t('equipmentPage.assignDialog.unitPlaceholder')}</p>
               ) : (
                 <Select value={unitId} onValueChange={(v) => { if (v) setUnitId(v) }}>
-                  <SelectTrigger><SelectValue placeholder="유닛 선택" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t('equipmentPage.assignDialog.unitPlaceholder')} /></SelectTrigger>
                   <SelectContent>
                     {availableUnits.map((u) => (
                       <SelectItem key={u.id} value={String(u.id)}>유닛 #{u.id}</SelectItem>
@@ -219,9 +222,9 @@ function AssignDialog({ open, onOpenChange, item, onSaved }: AssignDialogProps) 
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t('equipmentPage.assignDialog.cancel')}</Button>
           <Button onClick={handleSave} disabled={saving || (item.trackedIndividually && availableUnits.length === 0)}>
-            {saving ? '처리 중...' : '지급'}
+            {saving ? t('equipmentPage.assignDialog.saving') : t('equipmentPage.assignDialog.submit')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -232,6 +235,7 @@ function AssignDialog({ open, onOpenChange, item, onSaved }: AssignDialogProps) 
 function LoanRequestDialog({ open, onOpenChange, onSaved }: {
   open: boolean; onOpenChange: (v: boolean) => void; onSaved: () => void
 }) {
+  const { t } = useTranslation('admin')
   const [items, setItems] = useState<EquipmentItem[]>([])
   const [itemId, setItemId] = useState('')
   const [notes, setNotes] = useState('')
@@ -242,26 +246,26 @@ function LoanRequestDialog({ open, onOpenChange, onSaved }: {
   }, [open])
 
   const handleSave = async () => {
-    if (!itemId) { toast.error('장비를 선택해주세요.'); return }
+    if (!itemId) { toast.error(t('equipmentPage.loanRequestDialog.itemRequired')); return }
     setSaving(true)
     try {
       await loanApi.request({ equipmentItemId: Number(itemId), ...(notes && { notes }) })
-      toast.success('대여 신청이 접수됐습니다.')
+      toast.success(t('equipmentPage.loanRequestDialog.saved'))
       onSaved()
       onOpenChange(false)
-    } catch { toast.error('신청에 실패했습니다.') }
+    } catch { toast.error(t('equipmentPage.loanRequestDialog.saveFailed')) }
     finally { setSaving(false) }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader><DialogTitle>장비 대여 신청</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t('equipmentPage.loanRequestDialog.requestTitle')}</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div>
-            <Label>장비 선택 *</Label>
+            <Label>{t('equipmentPage.loanRequestDialog.itemLabel')}</Label>
             <Select value={itemId} onValueChange={setItemId}>
-              <SelectTrigger><SelectValue placeholder="장비를 선택하세요" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t('equipmentPage.loanRequestDialog.itemPlaceholder')} /></SelectTrigger>
               <SelectContent>
                 {items.map((i) => (
                   <SelectItem key={i.id} value={String(i.id)}>{i.name}</SelectItem>
@@ -269,11 +273,11 @@ function LoanRequestDialog({ open, onOpenChange, onSaved }: {
               </SelectContent>
             </Select>
           </div>
-          <div><Label>비고</Label><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} /></div>
+          <div><Label>{t('equipmentPage.loanRequestDialog.notesLabel')}</Label><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} /></div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>취소</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? '신청 중…' : '신청'}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t('equipmentPage.loanRequestDialog.cancel')}</Button>
+          <Button onClick={handleSave} disabled={saving}>{saving ? t('equipmentPage.loanRequestDialog.saving') : t('equipmentPage.loanRequestDialog.submit')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -281,6 +285,7 @@ function LoanRequestDialog({ open, onOpenChange, onSaved }: {
 }
 
 function LoansTab({ isKitManager }: { isKitManager: boolean }) {
+  const { t } = useTranslation('admin')
   const [loans, setLoans] = useState<EquipmentLoan[]>([])
   const [loading, setLoading] = useState(true)
   const [requestOpen, setRequestOpen] = useState(false)
@@ -288,25 +293,25 @@ function LoansTab({ isKitManager }: { isKitManager: boolean }) {
   const loadLoans = () => {
     setLoading(true)
     const fetch = isKitManager ? loanApi.list() : loanApi.my()
-    fetch.then(setLoans).catch(() => toast.error('대여 목록을 불러오지 못했습니다.')).finally(() => setLoading(false))
+    fetch.then(setLoans).catch(() => toast.error(t('equipmentPage.loansLoadFailed'))).finally(() => setLoading(false))
   }
 
   useEffect(() => { loadLoans() }, [isKitManager])
 
-  const handleAction = async (action: () => Promise<unknown>) => {
-    try { await action(); loadLoans() }
-    catch { toast.error('처리에 실패했습니다.') }
+  const handleAction = async (action: () => Promise<unknown>, successMsg?: string, failMsg?: string) => {
+    try { await action(); if (successMsg) toast.success(successMsg); loadLoans() }
+    catch { toast.error(failMsg ?? t('equipmentPage.rejectFailed')) }
   }
 
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
         <p className="text-sm text-muted-foreground">
-          {isKitManager ? '전체 대여 신청 목록' : '내 대여 신청'}
+          {isKitManager ? t('equipmentPage.loansAll') : t('equipmentPage.loansOwn')}
         </p>
         {!isKitManager && (
           <Button size="sm" onClick={() => setRequestOpen(true)}>
-            <Plus className="h-3.5 w-3.5 mr-1.5" />대여 신청
+            <Plus className="h-3.5 w-3.5 mr-1.5" />{t('equipmentPage.loanButton')}
           </Button>
         )}
       </div>
@@ -314,16 +319,16 @@ function LoansTab({ isKitManager }: { isKitManager: boolean }) {
       {loading ? (
         <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}</div>
       ) : loans.length === 0 ? (
-        <p className="text-center text-muted-foreground py-8 text-sm">대여 내역이 없습니다.</p>
+        <p className="text-center text-muted-foreground py-8 text-sm">{t('equipmentPage.noLoans')}</p>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>장비</TableHead>
-              {isKitManager && <TableHead>신청자</TableHead>}
-              <TableHead>신청일</TableHead>
-              <TableHead>상태</TableHead>
-              {isKitManager && <TableHead>액션</TableHead>}
+              <TableHead>{t('equipmentPage.loansTable.item')}</TableHead>
+              {isKitManager && <TableHead>{t('equipmentPage.loansTable.requester')}</TableHead>}
+              <TableHead>{t('equipmentPage.loansTable.requestedAt')}</TableHead>
+              <TableHead>{t('equipmentPage.loansTable.status')}</TableHead>
+              {isKitManager && <TableHead>{t('equipmentPage.loansTable.notes')}</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -344,15 +349,15 @@ function LoansTab({ isKitManager }: { isKitManager: boolean }) {
                     <div className="flex gap-1.5">
                       {loan.status === 'REQUESTED' && (
                         <>
-                          <Button size="sm" variant="outline" onClick={() => handleAction(() => loanApi.approve(loan.id))}>승인</Button>
-                          <Button size="sm" variant="ghost" onClick={() => handleAction(() => loanApi.reject(loan.id))}>거절</Button>
+                          <Button size="sm" variant="outline" onClick={() => handleAction(() => loanApi.approve(loan.id), t('equipmentPage.approveSuccess'), t('equipmentPage.approveFailed'))}>{t('equipmentPage.approveButton')}</Button>
+                          <Button size="sm" variant="ghost" onClick={() => handleAction(() => loanApi.reject(loan.id), t('equipmentPage.rejectSuccess'), t('equipmentPage.rejectFailed'))}>{t('equipmentPage.rejectButton')}</Button>
                         </>
                       )}
                       {loan.status === 'APPROVED' && (
-                        <Button size="sm" onClick={() => handleAction(() => loanApi.issue(loan.id))}>지급</Button>
+                        <Button size="sm" onClick={() => handleAction(() => loanApi.issue(loan.id), t('equipmentPage.approveSuccess'), t('equipmentPage.approveFailed'))}>{t('equipmentPage.assignButton')}</Button>
                       )}
                       {loan.status === 'ISSUED' && (
-                        <Button size="sm" variant="outline" onClick={() => handleAction(() => loanApi.return(loan.id))}>반납 확인</Button>
+                        <Button size="sm" variant="outline" onClick={() => handleAction(() => loanApi.return(loan.id), t('equipmentPage.approveSuccess'), t('equipmentPage.approveFailed'))}>{t('equipmentPage.rejectButton')}</Button>
                       )}
                     </div>
                   </TableCell>
@@ -369,6 +374,7 @@ function LoansTab({ isKitManager }: { isKitManager: boolean }) {
 }
 
 export function EquipmentPage() {
+  const { t } = useTranslation('admin')
   const { user } = useCurrentUser()
   const [items, setItems] = useState<EquipmentItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -389,7 +395,7 @@ export function EquipmentPage() {
     equipmentApi
       .listItems()
       .then(setItems)
-      .catch(() => toast.error('장비 목록을 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('equipmentPage.loadFailed')))
       .finally(() => setLoading(false))
 
   useEffect(() => { void fetchItems() }, [])
@@ -397,10 +403,10 @@ export function EquipmentPage() {
   const handleUnitStatusChange = async (unitId: number, status: EquipmentUnitStatus) => {
     try {
       await equipmentApi.updateUnitStatus(unitId, status)
-      toast.success('상태가 변경됐습니다.')
+      toast.success(t('equipmentPage.approveSuccess'))
       void fetchItems()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '변경에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('equipmentPage.approveFailed'))
     }
   }
 
@@ -416,12 +422,12 @@ export function EquipmentPage() {
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 flex items-center justify-between gap-4 shrink-0">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">장비 관리</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">장비 재고 및 개별 유닛 현황</p>
+          <h1 className="text-lg font-semibold tracking-tight">{t('equipmentPage.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{t('equipmentPage.description')}</p>
         </div>
         {canWrite && (
           <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />장비 등록
+            <Plus className="h-4 w-4 mr-1" />{t('equipmentPage.addItem')}
           </Button>
         )}
       </div>
@@ -429,8 +435,8 @@ export function EquipmentPage() {
       <div className="flex-1 overflow-auto p-6">
         <Tabs defaultValue="items">
           <TabsList className="mb-4">
-            <TabsTrigger value="items">장비 목록</TabsTrigger>
-            <TabsTrigger value="loans">대여 신청</TabsTrigger>
+            <TabsTrigger value="items">{t('equipmentPage.tabItems')}</TabsTrigger>
+            <TabsTrigger value="loans">{t('equipmentPage.tabLoans')}</TabsTrigger>
           </TabsList>
           <TabsContent value="items">
             <div className="flex items-center gap-3 mb-4">
@@ -449,7 +455,7 @@ export function EquipmentPage() {
                 {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
               </div>
             ) : filtered.length === 0 ? (
-              <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">등록된 장비가 없습니다.</div>
+              <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">{t('equipmentPage.noItems')}</div>
             ) : (
               <div className="divide-y border rounded-md">
                 {filtered.map((item) => (
@@ -461,7 +467,7 @@ export function EquipmentPage() {
                             <span className="text-sm font-medium">{item.name}</span>
                             {isLowStock(item) && (
                               <span className="flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
-                                <AlertTriangle className="h-3 w-3" />재고 부족
+                                <AlertTriangle className="h-3 w-3" />{t('equipmentPage.lowStock')}
                               </span>
                             )}
                           </div>
@@ -471,7 +477,7 @@ export function EquipmentPage() {
                             </span>
                             {!item.trackedIndividually && item.quantity != null && (
                               <span className="text-xs text-muted-foreground">
-                                재고 {item.quantity}개
+                                {t('equipmentPage.stockCount', { count: item.quantity })}
                                 {item.lowStockThreshold != null && ` / 임계 ${item.lowStockThreshold}`}
                               </span>
                             )}
@@ -491,7 +497,7 @@ export function EquipmentPage() {
                           className="h-7 text-xs shrink-0"
                           onClick={() => setAssignItem(item)}
                         >
-                          지급
+                          {t('equipmentPage.assignButton')}
                         </Button>
                       )}
                     </div>

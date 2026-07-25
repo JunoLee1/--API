@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { trainingApi } from '@/services/training.service'
 import type { TrainingSessionDetail, AttendanceStatus } from '@/types/training'
 import {
@@ -48,6 +49,7 @@ function formatDate(d: string) {
 export function TrainingDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { t } = useTranslation('training')
   const { user } = useCurrentUser()
 
   const coachPositions = getCoachPositions(user?.coachingRole)
@@ -88,13 +90,13 @@ export function TrainingDetailPage() {
     setSavingContent(true)
     try {
       await trainingApi.addContent(session.id, newContentPhase, newContentDesc.trim())
-      toast.success('세션 구성이 추가됐습니다.')
+      toast.success(t('detail.contentAdded'))
       const updated = await trainingApi.get(session.id)
       setSession(updated)
       setNewContentDesc('')
       setAddingContent(false)
     } catch {
-      toast.error('추가에 실패했습니다.')
+      toast.error(t('detail.addFailed'))
     } finally {
       setSavingContent(false)
     }
@@ -135,7 +137,7 @@ export function TrainingDetailPage() {
         }
         setResultInputs(init)
       })
-      .catch(() => toast.error('훈련 세션을 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('detail.loadFailed')))
       .finally(() => setLoading(false))
   }, [id])
 
@@ -143,10 +145,10 @@ export function TrainingDetailPage() {
     if (!session) return
     try {
       await trainingApi.approve(session.id)
-      toast.success('승인됐습니다.')
+      toast.success(t('detail.approveSuccess'))
       setSession((prev) => prev ? { ...prev, isApproved: true } : prev)
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '승인에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('detail.approveFailed'))
     }
   }
 
@@ -164,11 +166,11 @@ export function TrainingDetailPage() {
           })
         )
       )
-      toast.success('평가가 저장됐습니다.')
+      toast.success(t('detail.evalSaved'))
       const updated = await trainingApi.get(session.id)
       setSession(updated)
     } catch {
-      toast.error('저장에 실패했습니다.')
+      toast.error(t('detail.evalSaveFailed'))
     } finally {
       setSaving(false)
     }
@@ -181,8 +183,8 @@ export function TrainingDetailPage() {
   if (!session) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3 text-muted-foreground">
-        <p className="text-sm">훈련 세션을 찾을 수 없습니다.</p>
-        <Button variant="ghost" size="sm" onClick={() => navigate('/training')}>목록으로</Button>
+        <p className="text-sm">{t('detail.notFound')}</p>
+        <Button variant="ghost" size="sm" onClick={() => navigate('/training')}>{t('detail.backToList')}</Button>
       </div>
     )
   }
@@ -196,11 +198,11 @@ export function TrainingDetailPage() {
         <div className="flex-1" />
         {canScore && Object.keys(resultInputs).length > 0 && (
           <Button size="sm" variant="outline" onClick={handleSaveAll} disabled={saving}>
-            <Save className="h-3.5 w-3.5 mr-1" />{saving ? '저장 중...' : '평가 저장'}
+            <Save className="h-3.5 w-3.5 mr-1" />{saving ? t('detail.saving') : t('detail.saveEval')}
           </Button>
         )}
         {canApprove && !session.isApproved && (
-          <Button size="sm" onClick={handleApprove}>승인</Button>
+          <Button size="sm" onClick={handleApprove}>{t('detail.approve')}</Button>
         )}
       </div>
 
@@ -212,11 +214,11 @@ export function TrainingDetailPage() {
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs ${SESSION_TYPE_STYLE[session.sessionType]}`}>
-                    {SESSION_TYPE_LABEL[session.sessionType]}
+                    {t(`sessionType.${session.sessionType}`)}
                   </span>
                   {session.isApproved
-                    ? <span className="flex items-center gap-1 text-xs text-green-700"><CheckCircle className="h-3.5 w-3.5" />승인됨</span>
-                    : <span className="flex items-center gap-1 text-xs text-muted-foreground"><Clock className="h-3.5 w-3.5" />미승인</span>}
+                    ? <span className="flex items-center gap-1 text-xs text-green-700"><CheckCircle className="h-3.5 w-3.5" />{t('detail.approved')}</span>
+                    : <span className="flex items-center gap-1 text-xs text-muted-foreground"><Clock className="h-3.5 w-3.5" />{t('detail.notApproved')}</span>}
                 </div>
                 <p className="mt-2 font-semibold text-base">{session.goal}</p>
                 <p className="text-sm text-muted-foreground mt-0.5">{formatDate(session.date)}</p>
@@ -227,22 +229,22 @@ export function TrainingDetailPage() {
           {/* 세션 구성 */}
           <div className="rounded-lg border bg-card p-5">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold">세션 구성</h3>
+              <h3 className="text-sm font-semibold">{t('detail.sessionStructure')}</h3>
               {canAddRef && !addingContent && (
                 <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setAddingContent(true)}>
-                  <Plus className="h-3 w-3 mr-1" />추가
+                  <Plus className="h-3 w-3 mr-1" />{t('detail.add')}
                 </Button>
               )}
             </div>
             <Separator className="mb-3" />
             {session.contents.length === 0 && !addingContent && (
-              <p className="text-xs text-muted-foreground">등록된 세션 구성이 없습니다.</p>
+              <p className="text-xs text-muted-foreground">{t('detail.noContent')}</p>
             )}
             <div className="space-y-2">
               {session.contents.map((c) => (
                 <div key={c.id} className="flex gap-3">
                   <span className="text-xs text-muted-foreground bg-muted rounded px-1.5 py-0.5 shrink-0 self-start mt-0.5">
-                    {PHASE_LABEL[c.phase]}
+                    {t(`phase.${c.phase}`)}
                   </span>
                   <p className="text-sm">{c.description}</p>
                 </div>
@@ -257,13 +259,13 @@ export function TrainingDetailPage() {
                     </SelectTrigger>
                     <SelectContent>
                       {(Object.keys(PHASE_LABEL) as ContentPhase[]).map((p) => (
-                        <SelectItem key={p} value={p}>{PHASE_LABEL[p]}</SelectItem>
+                        <SelectItem key={p} value={p}>{t(`phase.${p}`)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <Input
                     className="flex-1 h-8 text-sm"
-                    placeholder="내용 입력"
+                    placeholder={t('detail.contentPlaceholder')}
                     value={newContentDesc}
                     onChange={(e) => setNewContentDesc(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleAddContent() }}
@@ -271,9 +273,9 @@ export function TrainingDetailPage() {
                   />
                 </div>
                 <div className="flex justify-end gap-2">
-                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setAddingContent(false); setNewContentDesc('') }}>취소</Button>
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setAddingContent(false); setNewContentDesc('') }}>{t('detail.cancel')}</Button>
                   <Button size="sm" className="h-7 text-xs" onClick={handleAddContent} disabled={savingContent || !newContentDesc.trim()}>
-                    {savingContent ? '추가 중...' : '추가'}
+                    {savingContent ? t('detail.adding') : t('detail.add')}
                   </Button>
                 </div>
               </div>
@@ -285,7 +287,7 @@ export function TrainingDetailPage() {
             <div className="rounded-lg border bg-card p-5">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold">
-                  출석 · 평가
+                  {t('detail.attendanceEval')}
                   <span className="ml-2 text-xs font-normal text-muted-foreground">
                     {session.participants.length}명
                   </span>
@@ -293,7 +295,7 @@ export function TrainingDetailPage() {
                 {hasPositionFilter && (
                   <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
                     <Switch checked={showAll} onCheckedChange={handleShowAllToggle} className="scale-75" />
-                    전체 보기
+                    {t('detail.showAll')}
                   </label>
                 )}
               </div>
@@ -302,10 +304,10 @@ export function TrainingDetailPage() {
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="w-8" />
-                    <TableHead>선수</TableHead>
-                    <TableHead className="w-36">출석</TableHead>
-                    <TableHead className="w-24 text-center">점수 (1–10)</TableHead>
-                    <TableHead>피드백</TableHead>
+                    <TableHead>{t('detail.player')}</TableHead>
+                    <TableHead className="w-36">{t('detail.attendanceCol')}</TableHead>
+                    <TableHead className="w-24 text-center">{t('detail.scoreLabel')}</TableHead>
+                    <TableHead>{t('detail.feedback')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -345,14 +347,14 @@ export function TrainingDetailPage() {
                               </SelectTrigger>
                               <SelectContent>
                                 {(Object.keys(ATTENDANCE_LABEL) as AttendanceStatus[]).map((s) => (
-                                  <SelectItem key={s} value={s}>{ATTENDANCE_LABEL[s]}</SelectItem>
+                                  <SelectItem key={s} value={s}>{t(`attendanceStatus.${s}`)}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
                           ) : (
                             input && (
                               <span className={`inline-flex rounded border px-1.5 py-0.5 text-xs ${ATTENDANCE_STYLE[input.attendance]}`}>
-                                {ATTENDANCE_LABEL[input.attendance]}
+                                {t(`attendanceStatus.${input.attendance}`)}
                               </span>
                             )
                           )}
@@ -380,7 +382,7 @@ export function TrainingDetailPage() {
                           {canScore && input && isOwner ? (
                             <Input
                               className="h-7 text-sm"
-                              placeholder="피드백 (선택)"
+                              placeholder={t('detail.feedbackPlaceholder')}
                               value={input.feedback}
                               onChange={(e) =>
                                 setResultInputs((prev) => ({
@@ -404,14 +406,14 @@ export function TrainingDetailPage() {
           {/* 훈련 부하 */}
           {session.participants.length > 0 && (
             <div className="rounded-lg border bg-card p-5">
-              <h3 className="text-sm font-semibold mb-2">훈련 부하</h3>
+              <h3 className="text-sm font-semibold mb-2">{t('detail.trainingLoad')}</h3>
               <Separator className="mb-2" />
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead>선수</TableHead>
+                    <TableHead>{t('detail.player')}</TableHead>
                     <TableHead className="w-28 text-center">RPE (1–10)</TableHead>
-                    <TableHead className="w-28 text-center">부하</TableHead>
+                    <TableHead className="w-28 text-center">{t('detail.loadLabel')}</TableHead>
                     <TableHead className="w-16" />
                   </TableRow>
                 </TableHeader>
@@ -479,15 +481,15 @@ export function TrainingDetailPage() {
                                   if (isOwnRpe && input.rpe) payload.rpe = Number(input.rpe)
                                   if (canSetLoad && input.load) payload.load = Number(input.load)
                                   await trainingLoadApi.upsert(payload)
-                                  toast.success('저장됐습니다.')
+                                  toast.success(t('detail.saved'))
                                   const updated = await trainingLoadApi.list({ sessionId: session.id })
                                   setLoads(updated)
                                 } catch (err) {
-                                  toast.error(err instanceof Error ? err.message : '저장 실패')
+                                  toast.error(err instanceof Error ? err.message : t('detail.saveFailed'))
                                 }
                               }}
                             >
-                              저장
+                              {t('detail.save')}
                             </Button>
                           )}
                         </TableCell>
@@ -502,10 +504,10 @@ export function TrainingDetailPage() {
           {/* 훈련 레퍼런스 */}
           <div className="border rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">훈련 레퍼런스</h3>
+              <h3 className="text-sm font-semibold">{t('detail.references')}</h3>
               {canAddRef && (
                 <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setAddingRef(v => !v)}>
-                  <Plus className="h-3 w-3 mr-1" />추가
+                  <Plus className="h-3 w-3 mr-1" />{t('detail.add')}
                 </Button>
               )}
             </div>
@@ -514,37 +516,36 @@ export function TrainingDetailPage() {
               <div className="space-y-2 border-t pt-3">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-xs">제목 *</Label>
+                    <Label className="text-xs">{t('detail.refTitleLabel')} *</Label>
                     <Input value={newRefTitle} onChange={e => setNewRefTitle(e.target.value)} className="h-8 text-sm" />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">URL *</Label>
+                    <Label className="text-xs">{t('detail.refUrlLabel')} *</Label>
                     <Input value={newRefUrl} onChange={e => setNewRefUrl(e.target.value)} className="h-8 text-sm" placeholder="https://" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-xs">출처</Label>
+                    <Label className="text-xs">{t('detail.refSourceLabel')}</Label>
                     <Select
                       value={newRefSource}
                       onValueChange={v => setNewRefSource(v as ReferenceSource)}
-                      items={REFERENCE_SOURCE_LABEL}
                     >
                       <SelectTrigger className="h-8 text-sm bg-background"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {(Object.keys(REFERENCE_SOURCE_LABEL) as ReferenceSource[]).map(s => (
-                          <SelectItem key={s} value={s}>{REFERENCE_SOURCE_LABEL[s]}</SelectItem>
+                          <SelectItem key={s} value={s}>{t(`referenceSource.${s}`)}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">태그 (쉼표 구분)</Label>
-                    <Input value={newRefTags} onChange={e => setNewRefTags(e.target.value)} className="h-8 text-sm" placeholder="압박, 빌드업" />
+                    <Label className="text-xs">{t('detail.refTagsLabel')}</Label>
+                    <Input value={newRefTags} onChange={e => setNewRefTags(e.target.value)} className="h-8 text-sm" placeholder={t('detail.refTagsPlaceholder')} />
                   </div>
                 </div>
                 <div className="flex justify-end gap-2">
-                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setAddingRef(false)}>취소</Button>
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setAddingRef(false)}>{t('detail.cancel')}</Button>
                   <Button size="sm" className="h-7 text-xs" disabled={refLoading} onClick={async () => {
                     if (!newRefTitle.trim() || !newRefUrl.trim()) return
                     setRefLoading(true)
@@ -554,20 +555,20 @@ export function TrainingDetailPage() {
                         title: newRefTitle.trim(),
                         url: newRefUrl.trim(),
                         source: newRefSource,
-                        tags: newRefTags.split(',').map(t => t.trim()).filter(Boolean),
+                        tags: newRefTags.split(',').map(tag => tag.trim()).filter(Boolean),
                       })
                       setNewRefTitle(''); setNewRefUrl(''); setNewRefTags(''); setAddingRef(false)
                       fetchRefs(session)
-                      toast.success('레퍼런스가 등록됐습니다.')
-                    } catch { toast.error('등록에 실패했습니다.') }
+                      toast.success(t('detail.refAdded'))
+                    } catch { toast.error(t('detail.refAddFailed')) }
                     finally { setRefLoading(false) }
-                  }}>등록</Button>
+                  }}>{t('detail.refSubmit')}</Button>
                 </div>
               </div>
             )}
 
             {refs.length === 0 ? (
-              <p className="text-xs text-muted-foreground">등록된 레퍼런스가 없습니다.</p>
+              <p className="text-xs text-muted-foreground">{t('detail.noRefs')}</p>
             ) : (
               <ul className="space-y-1.5">
                 {refs.map(r => (
@@ -577,9 +578,9 @@ export function TrainingDetailPage() {
                       <span className="truncate">{r.title}</span>
                     </a>
                     <div className="flex items-center gap-1 shrink-0">
-                      <span className="text-xs text-muted-foreground">{REFERENCE_SOURCE_LABEL[r.source]}</span>
-                      {r.tags.map(t => (
-                        <span key={t} className="text-xs border rounded px-1">{t}</span>
+                      <span className="text-xs text-muted-foreground">{t(`referenceSource.${r.source}`)}</span>
+                      {r.tags.map(tg => (
+                        <span key={tg} className="text-xs border rounded px-1">{tg}</span>
                       ))}
                       {canAddRef && (user?.id === r.addedBy.id || user?.role === 'ADMIN') && (
                         <Button size="icon" variant="ghost" className="h-5 w-5" onClick={async () => {

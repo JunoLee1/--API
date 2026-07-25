@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { PositionDiversityEntry } from '@/services/playerPdi.service'
 
 const COLORS = [
@@ -10,8 +11,9 @@ interface Props {
 }
 
 export function PositionDiversityChart({ data }: Props) {
+  const { t } = useTranslation('player')
   if (data.length === 0) {
-    return <p className="text-sm text-muted-foreground">출전 기록이 없습니다.</p>
+    return <p className="text-sm text-muted-foreground">{t('positionDiversity.empty')}</p>
   }
 
   const cx = 80
@@ -46,7 +48,7 @@ export function PositionDiversityChart({ data }: Props) {
             <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ background: s.color }} />
             <span className="text-muted-foreground w-24">{s.entry.position}</span>
             <span className="font-medium">{s.entry.percentage}%</span>
-            <span className="text-muted-foreground text-xs">({s.entry.minutes}분)</span>
+            <span className="text-muted-foreground text-xs">({t('positionDiversity.minutes', { count: s.entry.minutes })})</span>
           </div>
         ))}
       </div>

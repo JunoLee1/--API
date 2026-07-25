@@ -1,25 +1,28 @@
 {
-  "title": "Squad",
-  "lineup": "Lineup",
-  "formation": "Formation",
-  "field": {
+  "zone": {
+    "GK": "GK",
+    "DEF": "DEF",
+    "MID": "MID",
+    "FWD": "FWD"
+  },
+  "planner": {
+    "title": "Team Builder",
+    "available": "{{count}} available",
+    "injured": "{{count}} injured",
+    "emptySlots": "{{count}} empty slots",
+    "zoneWarning": "{{zone}}: {{count}} available (min {{min}})",
     "formation": "Formation",
-    "matchDate": "Match Date",
-    "opponent": "Opponent"
+    "spanishGrid": "Spanish Grid",
+    "loadFailed": "Failed to load data."
   },
-  "position": {
-    "starter": "Starter",
-    "substitute": "Substitute",
-    "notSelected": "Not Selected"
+  "slot": {
+    "dragHint": "Drag to move / double-click to remove",
+    "confirmSuggestion": "Confirm {{name}}",
+    "findProspect": "Find prospect for {{position}}"
   },
-  "action": {
-    "setFormation": "Set Formation",
-    "confirmLineup": "Confirm Lineup",
-    "autoGenerate": "Auto Generate",
-    "dragDrop": "Drag to position"
-  },
-  "message": {
-    "lineupConfirmed": "Lineup has been confirmed.",
-    "notificationSent": "Players have been notified."
+  "bench": {
+    "title": "Bench",
+    "unplacedCount": "{{count}} unplaced",
+    "injured": "Injured"
   }
 }

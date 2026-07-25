@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { api } from '@/services/api'
 import { adminApi } from '@/services/admin.service'
@@ -62,6 +63,7 @@ function subRoleLabel(user: AdminUserDto): string {
 }
 
 export function UsersPage() {
+  const { t } = useTranslation('admin')
   const confirm = useConfirm()
 
   const [users, setUsers] = useState<AdminUserDto[]>([])
@@ -108,7 +110,7 @@ export function UsersPage() {
       setUsers(data)
       setPlayersWithoutAccounts(playersData)
     } catch {
-      toast.error('사용자 목록을 불러오지 못했습니다.')
+      toast.error(t('usersPage.loadFailed'))
     } finally {
       setLoading(false)
     }
@@ -117,35 +119,35 @@ export function UsersPage() {
   useEffect(() => { void fetchUsers() }, [filterRole, filterCoachingRole, filterFrontOfficeRole, showDeleted])
 
   const handleDeactivate = async (user: AdminUserDto) => {
-    const ok = await confirm({ title: '비활성화', description: `${user.nickname} 계정을 비활성화하시겠습니까?`, confirmText: '비활성화' })
+    const ok = await confirm({ title: t('usersPage.deactivateTitle'), description: t('usersPage.deactivateDesc'), confirmText: t('usersPage.deactivateConfirm') })
     if (!ok) return
     try {
       await adminApi.deactivate(user.id)
-      toast.success(`${user.nickname} 계정이 비활성화됐습니다.`)
+      toast.success(t('usersPage.deactivateSuccess'))
       void fetchUsers()
-    } catch { toast.error('비활성화에 실패했습니다.') }
+    } catch { toast.error(t('usersPage.deactivateFailed')) }
   }
 
   const handleReactivate = async (user: AdminUserDto) => {
     try {
       await adminApi.reactivate(user.id)
-      toast.success(`${user.nickname} 계정이 재활성화됐습니다.`)
+      toast.success(t('usersPage.reactivateSuccess'))
       void fetchUsers()
-    } catch { toast.error('재활성화에 실패했습니다.') }
+    } catch { toast.error(t('usersPage.reactivateFailed')) }
   }
 
   const handleDelete = async (user: AdminUserDto) => {
-    const ok = await confirm({ title: '완전 삭제', description: `${user.nickname} 계정을 영구 삭제합니까? 되돌릴 수 없습니다.`, confirmText: '삭제', variant: 'destructive' })
+    const ok = await confirm({ title: t('usersPage.deleteTitle'), description: t('usersPage.deleteDesc'), confirmText: t('usersPage.deleteConfirm'), variant: 'destructive' })
     if (!ok) return
     try {
       await adminApi.deleteUser(user.id)
-      toast.success(`${user.nickname} 계정이 삭제됐습니다.`)
+      toast.success(t('usersPage.deleteSuccess'))
       void fetchUsers()
     } catch (err: unknown) {
       if (err instanceof Error && err.message === 'USER_HAS_LINKED_DATA') {
-        toast.error('연결된 데이터가 있어 삭제할 수 없습니다.')
+        toast.error(t('usersPage.hasLinkedData'))
       } else {
-        toast.error('삭제에 실패했습니다.')
+        toast.error(t('usersPage.deleteFailed'))
       }
     }
   }
@@ -167,19 +169,19 @@ export function UsersPage() {
         ...(editRole === 'FRONT_OFFICE' && editFrontOfficeRole && { frontOfficeRole: editFrontOfficeRole as FrontOfficeRole }),
       }
       await adminApi.updateRole(editingUser.id, dto)
-      toast.success('역할이 변경됐습니다.')
+      toast.success(t('usersPage.roleSaved'))
       setEditingUser(null)
       void fetchUsers()
-    } catch { toast.error('역할 변경에 실패했습니다.') } finally { setEditSaving(false) }
+    } catch { toast.error(t('usersPage.roleSaveFailed')) } finally { setEditSaving(false) }
   }
 
   const handleCreate = async () => {
     if (!cEmail.trim() || !cUsername.trim() || !cNickname.trim() || !cPassword) {
-      toast.error('필수 항목을 모두 입력해주세요.')
+      toast.error(t('usersPage.createCard.required'))
       return
     }
-    if (cRole === 'COACHING_STAFF' && !cCoachingRole) { toast.error('코칭스태프 역할을 선택해주세요.'); return }
-    if (cRole === 'FRONT_OFFICE' && !cFrontOfficeRole) { toast.error('프런트오피스 역할을 선택해주세요.'); return }
+    if (cRole === 'COACHING_STAFF' && !cCoachingRole) { toast.error(t('usersPage.createCard.coachingRoleRequired')); return }
+    if (cRole === 'FRONT_OFFICE' && !cFrontOfficeRole) { toast.error(t('usersPage.createCard.frontOfficeRoleRequired')); return }
     setCsaving(true)
     try {
       await api.post('/auth/users', {
@@ -191,28 +193,28 @@ export function UsersPage() {
         ...(cRole === 'COACHING_STAFF' && cCoachingRole && { coachingRole: cCoachingRole }),
         ...(cRole === 'FRONT_OFFICE' && cFrontOfficeRole && { frontOfficeRole: cFrontOfficeRole }),
       })
-      toast.success(`${cNickname} 계정이 생성됐습니다.`)
+      toast.success(t('usersPage.createCard.createSuccess'))
       setCEmail(''); setCUsername(''); setCNickname(''); setCPassword('')
       setCRole('FRONT_OFFICE'); setCCoachingRole(''); setCFrontOfficeRole('')
       void fetchUsers()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '생성에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('usersPage.createCard.createFailed'))
     } finally { setCsaving(false) }
   }
 
   return (
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 shrink-0">
-        <h1 className="text-lg font-semibold tracking-tight">사용자 관리</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">구단 구성원 계정을 관리합니다.</p>
+        <h1 className="text-lg font-semibold tracking-tight">{t('usersPage.title')}</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{t('usersPage.description')}</p>
       </div>
 
       <div className="flex-1 overflow-auto p-6 space-y-6">
         <div className="flex flex-wrap gap-3 items-end">
           <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">이름 검색</Label>
+            <Label className="text-xs text-muted-foreground">{t('usersPage.searchLabel')}</Label>
             <Input
-              placeholder="username 검색"
+              placeholder={t('usersPage.searchPlaceholder')}
               className="h-8 w-44 text-sm"
               value={filterUsername}
               onChange={(e) => setFilterUsername(e.target.value)}
@@ -220,22 +222,22 @@ export function UsersPage() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">역할</Label>
+            <Label className="text-xs text-muted-foreground">{t('usersPage.roleFilterLabel')}</Label>
             <Select value={filterRole} onValueChange={(v) => { setFilterRole(v as Role | ''); setFilterCoachingRole(''); setFilterFrontOfficeRole('') }}>
-              <SelectTrigger className="h-8 w-36 text-sm"><SelectValue placeholder="전체" /></SelectTrigger>
+              <SelectTrigger className="h-8 w-36 text-sm"><SelectValue placeholder={t('usersPage.allRoles')} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">전체</SelectItem>
+                <SelectItem value="">{t('usersPage.allRoles')}</SelectItem>
                 {ALL_ROLES.map((r) => <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           {filterRole === 'COACHING_STAFF' && (
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">코칭 역할</Label>
+              <Label className="text-xs text-muted-foreground">{t('usersPage.coachingRoleLabel')}</Label>
               <Select value={filterCoachingRole} onValueChange={(v) => setFilterCoachingRole(v as CoachingRole | '')}>
-                <SelectTrigger className="h-8 w-36 text-sm"><SelectValue placeholder="전체" /></SelectTrigger>
+                <SelectTrigger className="h-8 w-36 text-sm"><SelectValue placeholder={t('usersPage.allRoles')} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">전체</SelectItem>
+                  <SelectItem value="">{t('usersPage.allRoles')}</SelectItem>
                   {COACHING_ROLES.map((r) => <SelectItem key={r} value={r}>{COACHING_ROLE_LABEL[r]}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -243,41 +245,41 @@ export function UsersPage() {
           )}
           {filterRole === 'FRONT_OFFICE' && (
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">프런트 역할</Label>
+              <Label className="text-xs text-muted-foreground">{t('usersPage.frontOfficeRoleLabel')}</Label>
               <Select value={filterFrontOfficeRole} onValueChange={(v) => setFilterFrontOfficeRole(v as FrontOfficeRole | '')}>
-                <SelectTrigger className="h-8 w-40 text-sm"><SelectValue placeholder="전체" /></SelectTrigger>
+                <SelectTrigger className="h-8 w-40 text-sm"><SelectValue placeholder={t('usersPage.allRoles')} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">전체</SelectItem>
+                  <SelectItem value="">{t('usersPage.allRoles')}</SelectItem>
                   {FRONT_OFFICE_ROLES.map((r) => <SelectItem key={r} value={r}>{FRONT_OFFICE_ROLE_LABEL[r]}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
           )}
           <Button variant="outline" size="sm" className="h-8" onClick={() => setShowDeleted((v) => !v)}>
-            {showDeleted ? '활성 계정 보기' : '비활성 계정 보기'}
+            {showDeleted ? t('usersPage.showActive') : t('usersPage.showInactive')}
           </Button>
-          <Button size="sm" className="h-8" onClick={() => void fetchUsers()}>검색</Button>
+          <Button size="sm" className="h-8" onClick={() => void fetchUsers()}>{t('usersPage.searchButton')}</Button>
         </div>
 
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>닉네임</TableHead>
-                <TableHead>Username</TableHead>
-                <TableHead>이메일</TableHead>
-                <TableHead>역할</TableHead>
-                <TableHead>서브역할</TableHead>
-                <TableHead>선수명</TableHead>
-                <TableHead>상태</TableHead>
+                <TableHead>{t('usersPage.table.nickname')}</TableHead>
+                <TableHead>{t('usersPage.table.username')}</TableHead>
+                <TableHead>{t('usersPage.table.email')}</TableHead>
+                <TableHead>{t('usersPage.table.role')}</TableHead>
+                <TableHead>{t('usersPage.table.subRole')}</TableHead>
+                <TableHead>{t('usersPage.table.playerName')}</TableHead>
+                <TableHead>{t('usersPage.table.status')}</TableHead>
                 <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">불러오는 중...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">{t('usersPage.loading')}</TableCell></TableRow>
               ) : users.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">사용자 없음</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">{t('usersPage.noUsers')}</TableCell></TableRow>
               ) : users.map((user) => (
                 <TableRow key={user.id} className={user.isDeleted ? 'opacity-50' : ''}>
                   <TableCell className="font-medium">{user.nickname}</TableCell>
@@ -290,8 +292,8 @@ export function UsersPage() {
                   </TableCell>
                   <TableCell>
                     {user.isDeleted
-                      ? <Badge variant="destructive">비활성</Badge>
-                      : <Badge variant="secondary">활성</Badge>}
+                      ? <Badge variant="destructive">{t('usersPage.statusInactive')}</Badge>
+                      : <Badge variant="secondary">{t('usersPage.statusActive')}</Badge>}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -301,14 +303,14 @@ export function UsersPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openEditModal(user)}>역할 변경</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openEditModal(user)}>{t('usersPage.changeRole')}</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         {user.isDeleted ? (
-                          <DropdownMenuItem onClick={() => void handleReactivate(user)}>재활성화</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => void handleReactivate(user)}>{t('usersPage.reactivate')}</DropdownMenuItem>
                         ) : (
-                          <DropdownMenuItem onClick={() => void handleDeactivate(user)} className="text-destructive">비활성화</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => void handleDeactivate(user)} className="text-destructive">{t('usersPage.deactivate')}</DropdownMenuItem>
                         )}
-                        <DropdownMenuItem onClick={() => void handleDelete(user)} className="text-destructive">완전 삭제</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => void handleDelete(user)} className="text-destructive">{t('usersPage.permanentDelete')}</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -320,14 +322,14 @@ export function UsersPage() {
 
         {playersWithoutAccounts.length > 0 && (
           <div>
-            <h2 className="text-sm font-semibold text-muted-foreground mb-2">계정 없는 선수 ({playersWithoutAccounts.length}명)</h2>
+            <h2 className="text-sm font-semibold text-muted-foreground mb-2">{t('usersPage.playersWithoutAccounts')} ({playersWithoutAccounts.length}명)</h2>
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>선수명</TableHead>
-                    <TableHead>포지션</TableHead>
-                    <TableHead>상태</TableHead>
+                    <TableHead>{t('usersPage.noAccountPlayers.name')}</TableHead>
+                    <TableHead>{t('usersPage.noAccountPlayers.position')}</TableHead>
+                    <TableHead>{t('usersPage.noAccountPlayers.status')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -354,7 +356,7 @@ export function UsersPage() {
             onClick={() => setShowCreate((v) => !v)}
           >
             <UserPlus className="h-4 w-4" />
-            신규 계정 생성
+            {t('usersPage.createAccountButton')}
             <ChevronDown className={`h-3 w-3 transition-transform ${showCreate ? 'rotate-180' : ''}`} />
           </Button>
 
@@ -363,27 +365,27 @@ export function UsersPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label>이메일 *</Label>
-                    <Input type="email" placeholder="user@example.com" value={cEmail} onChange={(e) => setCEmail(e.target.value)} />
+                    <Label>{t('usersPage.createCard.emailLabel')} *</Label>
+                    <Input type="email" placeholder={t('usersPage.createCard.emailPlaceholder')} value={cEmail} onChange={(e) => setCEmail(e.target.value)} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>사용자명 *</Label>
-                    <Input placeholder="username" value={cUsername} onChange={(e) => setCUsername(e.target.value)} />
+                    <Label>{t('usersPage.createCard.usernameLabel')} *</Label>
+                    <Input placeholder={t('usersPage.createCard.usernamePlaceholder')} value={cUsername} onChange={(e) => setCUsername(e.target.value)} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label>닉네임 *</Label>
-                    <Input placeholder="표시 이름" value={cNickname} onChange={(e) => setCNickname(e.target.value)} />
+                    <Label>{t('usersPage.createCard.nicknameLabel')} *</Label>
+                    <Input placeholder={t('usersPage.createCard.nicknamePlaceholder')} value={cNickname} onChange={(e) => setCNickname(e.target.value)} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>임시 비밀번호 *</Label>
+                    <Label>{t('usersPage.createCard.passwordLabel')} *</Label>
                     <Input type="password" placeholder="••••••••" value={cPassword} onChange={(e) => setCPassword(e.target.value)} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label>역할 *</Label>
+                    <Label>{t('usersPage.createCard.roleLabel')} *</Label>
                     <Select value={cRole} onValueChange={(v) => { setCRole(v as Role); setCCoachingRole(''); setCFrontOfficeRole('') }}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -393,9 +395,9 @@ export function UsersPage() {
                   </div>
                   {cRole === 'COACHING_STAFF' && (
                     <div className="space-y-1.5">
-                      <Label>코칭 역할 *</Label>
+                      <Label>{t('usersPage.createCard.coachingRoleLabel')} *</Label>
                       <Select value={cCoachingRole} onValueChange={(v) => setCCoachingRole(v as CoachingRole)}>
-                        <SelectTrigger><SelectValue placeholder="역할 선택" /></SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder={t('usersPage.roleSelectPlaceholder')} /></SelectTrigger>
                         <SelectContent>
                           {COACHING_ROLES.map((r) => <SelectItem key={r} value={r}>{COACHING_ROLE_LABEL[r]}</SelectItem>)}
                         </SelectContent>
@@ -404,9 +406,9 @@ export function UsersPage() {
                   )}
                   {cRole === 'FRONT_OFFICE' && (
                     <div className="space-y-1.5">
-                      <Label>프런트 역할 *</Label>
+                      <Label>{t('usersPage.createCard.frontOfficeRoleLabel')} *</Label>
                       <Select value={cFrontOfficeRole} onValueChange={(v) => setCFrontOfficeRole(v as FrontOfficeRole)}>
-                        <SelectTrigger><SelectValue placeholder="역할 선택" /></SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder={t('usersPage.roleSelectPlaceholder')} /></SelectTrigger>
                         <SelectContent>
                           {FRONT_OFFICE_ROLES.map((r) => <SelectItem key={r} value={r}>{FRONT_OFFICE_ROLE_LABEL[r]}</SelectItem>)}
                         </SelectContent>
@@ -415,7 +417,7 @@ export function UsersPage() {
                   )}
                 </div>
                 <Button className="w-full mt-2" onClick={() => void handleCreate()} disabled={cSaving}>
-                  {cSaving ? '생성 중...' : '계정 생성'}
+                  {cSaving ? t('usersPage.createCard.creating') : t('usersPage.createCard.create')}
                 </Button>
               </div>
             </Card>
@@ -426,11 +428,11 @@ export function UsersPage() {
       <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingUser?.nickname} 역할 변경</DialogTitle>
+            <DialogTitle>{editingUser?.nickname} {t('usersPage.roleDialogTitle')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label>역할</Label>
+              <Label>{t('usersPage.roleLabel')}</Label>
               <Select value={editRole} onValueChange={(v) => { setEditRole(v as Role); setEditCoachingRole(''); setEditFrontOfficeRole('') }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -440,9 +442,9 @@ export function UsersPage() {
             </div>
             {editRole === 'COACHING_STAFF' && (
               <div className="space-y-1.5">
-                <Label>코칭 역할</Label>
+                <Label>{t('usersPage.coachingRoleLabel')}</Label>
                 <Select value={editCoachingRole} onValueChange={(v) => setEditCoachingRole(v as CoachingRole)}>
-                  <SelectTrigger><SelectValue placeholder="역할 선택" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t('usersPage.roleSelectPlaceholder')} /></SelectTrigger>
                   <SelectContent>
                     {COACHING_ROLES.map((r) => <SelectItem key={r} value={r}>{COACHING_ROLE_LABEL[r]}</SelectItem>)}
                   </SelectContent>
@@ -451,9 +453,9 @@ export function UsersPage() {
             )}
             {editRole === 'FRONT_OFFICE' && (
               <div className="space-y-1.5">
-                <Label>프런트 역할</Label>
+                <Label>{t('usersPage.frontOfficeRoleLabel')}</Label>
                 <Select value={editFrontOfficeRole} onValueChange={(v) => setEditFrontOfficeRole(v as FrontOfficeRole)}>
-                  <SelectTrigger><SelectValue placeholder="역할 선택" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t('usersPage.roleSelectPlaceholder')} /></SelectTrigger>
                   <SelectContent>
                     {FRONT_OFFICE_ROLES.map((r) => <SelectItem key={r} value={r}>{FRONT_OFFICE_ROLE_LABEL[r]}</SelectItem>)}
                   </SelectContent>
@@ -462,9 +464,9 @@ export function UsersPage() {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingUser(null)}>취소</Button>
+            <Button variant="outline" onClick={() => setEditingUser(null)}>{t('usersPage.cancel')}</Button>
             <Button onClick={() => void handleEditSave()} disabled={editSaving}>
-              {editSaving ? '저장 중...' : '저장'}
+              {editSaving ? t('usersPage.saving') : t('usersPage.save')}
             </Button>
           </DialogFooter>
         </DialogContent>

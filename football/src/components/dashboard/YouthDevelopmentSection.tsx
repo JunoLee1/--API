@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { YouthDevelopmentStats } from '@/types/dashboard'
 
 interface Props {
@@ -5,25 +6,27 @@ interface Props {
 }
 
 export function YouthDevelopmentSection({ data }: Props) {
+  const { t } = useTranslation('common')
+
   if (data.teams.length === 0) {
     return (
       <div className="rounded-lg border p-4 text-sm text-muted-foreground">
-        유소년 팀 경기 데이터가 없습니다.
+        {t('dashboard.youthDev.noData')}
       </div>
     )
   }
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold">유소년 포지션 편중 현황</h3>
+      <h3 className="text-lg font-semibold">{t('dashboard.youthDev.title')}</h3>
       {data.teams.map(team => (
         <div key={team.teamId} className="rounded-lg border p-4 space-y-3">
           <div className="flex items-center justify-between">
             <span className="font-medium">{team.teamName}</span>
             <span className="text-sm text-muted-foreground">
-              {team.playerCount}명 중{' '}
+              {t('dashboard.youthDev.biasedOf', { count: team.playerCount })}{' '}
               <span className={team.biasedPlayerCount > 0 ? 'text-red-500 font-semibold' : ''}>
-                {team.biasedPlayerCount}명 편중
+                {t('dashboard.youthDev.biasedCount', { count: team.biasedPlayerCount })}
               </span>
             </span>
           </div>
@@ -31,10 +34,10 @@ export function YouthDevelopmentSection({ data }: Props) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-muted-foreground text-xs border-b">
-                  <th className="text-left py-1 font-normal">선수</th>
-                  <th className="text-right py-1 font-normal">주 포지션</th>
-                  <th className="text-right py-1 font-normal">편중도</th>
-                  <th className="text-right py-1 font-normal">총 출전</th>
+                  <th className="text-left py-1 font-normal">{t('dashboard.youthDev.col.player')}</th>
+                  <th className="text-right py-1 font-normal">{t('dashboard.youthDev.col.mainPosition')}</th>
+                  <th className="text-right py-1 font-normal">{t('dashboard.youthDev.col.bias')}</th>
+                  <th className="text-right py-1 font-normal">{t('dashboard.youthDev.col.totalMinutes')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -49,7 +52,7 @@ export function YouthDevelopmentSection({ data }: Props) {
                         <span>{player.biasedPct}%</span>
                       )}
                     </td>
-                    <td className="text-right py-1.5 text-muted-foreground">{player.totalMinutes}분</td>
+                    <td className="text-right py-1.5 text-muted-foreground">{player.totalMinutes}{t('dashboard.youthDev.minuteUnit')}</td>
                   </tr>
                 ))}
               </tbody>

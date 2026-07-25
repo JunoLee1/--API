@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { trainingApi } from '@/services/training.service'
 import { seasonApi } from '@/services/season.service'
 import type { TrainingSessionDetail, AttendanceStatus } from '@/types/training'
-import { ATTENDANCE_LABEL, ATTENDANCE_STYLE } from '@/types/training'
+import { ATTENDANCE_STYLE } from '@/types/training'
 import type { Season } from '@/types/season'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Pagination } from '@/components/ui/pagination'
@@ -45,6 +46,7 @@ const ATTENDANCE_WEIGHT: Record<AttendanceStatus, number> = {
 }
 
 export function TrainingAttendancePage() {
+  const { t } = useTranslation('training')
   const [seasons, setSeasons] = useState<Season[]>([])
   const [activeSeason, setActiveSeason] = useState<Season | null>(null)
   const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(null)
@@ -118,7 +120,7 @@ export function TrainingAttendancePage() {
         const sorted = Array.from(playerMap.values()).sort((a, b) => b.score / (b.total || 1) - a.score / (a.total || 1))
         setStats(sorted)
       })
-      .catch(() => toast.error('출석 현황을 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('attendancePage.loadFailed')))
       .finally(() => setLoading(false))
   }, [selectedSeasonId])
 
@@ -134,9 +136,11 @@ export function TrainingAttendancePage() {
   return (
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 shrink-0">
-        <h1 className="text-lg font-semibold tracking-tight">출석 현황</h1>
+        <h1 className="text-lg font-semibold tracking-tight">{t('attendancePage.title')}</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          {sessionCount > 0 ? `최근 ${sessionCount}개 승인 세션 기준` : '승인된 세션 기준'}
+          {sessionCount > 0
+            ? t('attendancePage.basisN', { count: sessionCount })
+            : t('attendancePage.basisAll')}
         </p>
       </div>
 
@@ -146,13 +150,13 @@ export function TrainingAttendancePage() {
           onValueChange={(v) => setSelectedSeasonId(v)}
         >
           <SelectTrigger className="w-36 h-8 text-sm bg-background">
-            <SelectValue placeholder="시즌 선택" />
+            <SelectValue placeholder={t('attendancePage.seasonSelect')} />
           </SelectTrigger>
           <SelectContent>
             {seasons.map((s) => (
               <SelectItem key={s.id} value={String(s.id)}>
                 {s.name}
-                {s.id === activeSeason?.id ? ' (현재)' : ''}
+                {s.id === activeSeason?.id ? ` ${t('attendancePage.currentSeason')}` : ''}
               </SelectItem>
             ))}
           </SelectContent>
@@ -165,28 +169,28 @@ export function TrainingAttendancePage() {
             {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
           </div>
         ) : !selectedSeasonId ? (
-          <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">시즌을 선택해주세요.</div>
+          <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">{t('attendancePage.selectSeason')}</div>
         ) : stats.length === 0 ? (
-          <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">출석 기록이 없습니다.</div>
+          <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">{t('attendancePage.noData')}</div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead>선수</TableHead>
-                <TableHead className="w-24 text-center">출석</TableHead>
+                <TableHead>{t('attendancePage.player')}</TableHead>
+                <TableHead className="w-24 text-center">{t('attendancePage.presentCol')}</TableHead>
                 <TableHead className="w-24 text-center">
                   <span className={`inline-flex rounded border px-1.5 py-0.5 text-xs ${ATTENDANCE_STYLE['LATE_UNAUTHORIZED']}`}>
-                    {ATTENDANCE_LABEL['LATE_UNAUTHORIZED']}
+                    {t('attendanceStatus.LATE_UNAUTHORIZED')}
                   </span>
                 </TableHead>
                 <TableHead className="w-24 text-center">
                   <span className={`inline-flex rounded border px-1.5 py-0.5 text-xs ${ATTENDANCE_STYLE['ABSENT_UNAUTHORIZED']}`}>
-                    {ATTENDANCE_LABEL['ABSENT_UNAUTHORIZED']}
+                    {t('attendanceStatus.ABSENT_UNAUTHORIZED')}
                   </span>
                 </TableHead>
-                <TableHead className="w-24 text-center">공결</TableHead>
-                <TableHead className="w-24 text-center">환산결석</TableHead>
-                <TableHead className="w-24 text-right">출석률</TableHead>
+                <TableHead className="w-24 text-center">{t('attendancePage.authorizedAbsence')}</TableHead>
+                <TableHead className="w-24 text-center">{t('attendancePage.effectiveAbsences')}</TableHead>
+                <TableHead className="w-24 text-right">{t('attendancePage.attendanceRate')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { contractApi } from '@/services/contract.service'
 import type { ContractSummary, ContractStatus } from '@/types/contract'
 import {
-  CONTRACT_STATUS_LABEL,
   CONTRACT_STATUS_STYLE,
   formatSalary,
 } from '@/types/contract'
@@ -43,11 +43,12 @@ function formatDate(d: string) {
 }
 
 function ContractStatusBadge({ status }: { status: ContractStatus }) {
+  const { t } = useTranslation('contract')
   return (
     <span
       className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${CONTRACT_STATUS_STYLE[status]}`}
     >
-      {CONTRACT_STATUS_LABEL[status]}
+      {t(`contracts.status.${status}`)}
     </span>
   )
 }
@@ -60,6 +61,7 @@ interface CreateContractDialogProps {
 }
 
 function CreateContractDialog({ open, onOpenChange, playerId, onSaved }: CreateContractDialogProps) {
+  const { t } = useTranslation('contract')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [salary, setSalary] = useState('')
@@ -67,16 +69,16 @@ function CreateContractDialog({ open, onOpenChange, playerId, onSaved }: CreateC
 
   const handleSave = async () => {
     if (!startDate || !endDate || !salary) {
-      toast.error('필수 항목을 모두 입력해주세요.')
+      toast.error(t('contracts.createDialog.required'))
       return
     }
     setSaving(true)
     try {
       await contractApi.create({ playerId, startDate, endDate, salary: Number(salary) })
-      toast.success('계약이 등록됐습니다.')
+      toast.success(t('contracts.createDialog.saved'))
       onSaved()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('contracts.createDialog.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -86,30 +88,30 @@ function CreateContractDialog({ open, onOpenChange, playerId, onSaved }: CreateC
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>계약 등록</DialogTitle>
+          <DialogTitle>{t('contracts.createDialog.title')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
-            <Label>계약 시작일 *</Label>
+            <Label>{t('contracts.createDialog.startDate')}</Label>
             <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>계약 종료일 *</Label>
+            <Label>{t('contracts.createDialog.endDate')}</Label>
             <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>연봉 (원) *</Label>
+            <Label>{t('contracts.createDialog.salary')}</Label>
             <Input
               type="number"
-              placeholder="예: 500000000"
+              placeholder={t('contracts.createDialog.salaryPlaceholder')}
               value={salary}
               onChange={(e) => setSalary(e.target.value)}
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? '저장 중...' : '등록'}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t('contracts.createDialog.cancel')}</Button>
+          <Button onClick={handleSave} disabled={saving}>{saving ? t('contracts.createDialog.saving') : t('contracts.createDialog.submit')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -117,6 +119,7 @@ function CreateContractDialog({ open, onOpenChange, playerId, onSaved }: CreateC
 }
 
 export function ContractsPage() {
+  const { t } = useTranslation('contract')
   const { user } = useCurrentUser()
   const navigate = useNavigate()
   const { players, loading: playersLoading } = usePlayers()
@@ -133,7 +136,7 @@ export function ContractsPage() {
     contractApi
       .byPlayer(pid)
       .then(setContracts)
-      .catch(() => toast.error('계약 목록을 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('contracts.loadFailed')))
       .finally(() => setLoadingContracts(false))
   }
 
@@ -146,10 +149,10 @@ export function ContractsPage() {
   const handleStatusChange = async (contractId: number, status: ContractStatus) => {
     try {
       await contractApi.updateStatus(contractId, status)
-      toast.success('계약 상태가 변경됐습니다.')
+      toast.success(t('contracts.statusChanged'))
       fetchContracts(selectedPlayerId)
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '변경에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('contracts.statusChangeFailed'))
     }
   }
 
@@ -159,8 +162,8 @@ export function ContractsPage() {
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 flex items-center justify-between gap-4 shrink-0">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">계약 관리</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">선수를 선택하면 계약 목록이 표시됩니다.</p>
+          <h1 className="text-lg font-semibold tracking-tight">{t('contracts.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{t('contracts.subtitle')}</p>
         </div>
       </div>
 
@@ -170,7 +173,7 @@ export function ContractsPage() {
         ) : (
           <Select value={selectedPlayerId} onValueChange={(v) => v && handlePlayerChange(v)}>
             <SelectTrigger className="w-56 h-8 text-sm bg-background">
-              <SelectValue placeholder="선수 선택" />
+              <SelectValue placeholder={t('contracts.playerSelectPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
               {players.map((p) => (
@@ -182,7 +185,7 @@ export function ContractsPage() {
         {canWrite && selectedPlayerId && (
           <Button size="sm" variant="outline" onClick={() => setCreateOpen(true)}>
             <Plus className="h-3.5 w-3.5 mr-1.5" />
-            계약 등록
+            {t('contracts.addBtn')}
           </Button>
         )}
       </div>
@@ -190,7 +193,7 @@ export function ContractsPage() {
       <div className="flex-1 overflow-auto">
         {!selectedPlayerId ? (
           <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-            선수를 선택해주세요.
+            {t('contracts.selectPlayer')}
           </div>
         ) : loadingContracts ? (
           <div className="p-6 space-y-3">
@@ -198,17 +201,17 @@ export function ContractsPage() {
           </div>
         ) : contracts.length === 0 ? (
           <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-            {selectedPlayer?.playerName}의 계약이 없습니다.
+            {t('contracts.noContracts', { name: selectedPlayer?.playerName ?? '' })}
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead>계약 시작</TableHead>
-                <TableHead>계약 종료</TableHead>
-                <TableHead>연봉</TableHead>
-                <TableHead>상태</TableHead>
-                {canChangeStatus && <TableHead className="w-32">상태 변경</TableHead>}
+                <TableHead>{t('contracts.col.start')}</TableHead>
+                <TableHead>{t('contracts.col.end')}</TableHead>
+                <TableHead>{t('contracts.col.salary')}</TableHead>
+                <TableHead>{t('contracts.col.status')}</TableHead>
+                {canChangeStatus && <TableHead className="w-32">{t('contracts.col.changeStatus')}</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -229,7 +232,7 @@ export function ContractsPage() {
                         </SelectTrigger>
                         <SelectContent>
                           {(['ACTIVE', 'EXPIRED', 'TERMINATED'] as ContractStatus[]).map((s) => (
-                            <SelectItem key={s} value={s}>{CONTRACT_STATUS_LABEL[s]}</SelectItem>
+                            <SelectItem key={s} value={s}>{t(`contracts.status.${s}`)}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>

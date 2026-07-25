@@ -1,25 +1,28 @@
 {
-  "title": "스쿼드",
-  "lineup": "라인업",
-  "formation": "포메이션",
-  "field": {
+  "zone": {
+    "GK": "골키퍼",
+    "DEF": "수비",
+    "MID": "미드필더",
+    "FWD": "공격"
+  },
+  "planner": {
+    "title": "팀 빌더",
+    "available": "가용 {{count}}명",
+    "injured": "부상 {{count}}명",
+    "emptySlots": "빈 슬롯 {{count}}개",
+    "zoneWarning": "{{zone}} 가용 {{count}}명 (최소 {{min}}명)",
     "formation": "포메이션",
-    "matchDate": "경기 일자",
-    "opponent": "상대팀"
+    "spanishGrid": "스페인 그리드",
+    "loadFailed": "데이터를 불러오지 못했습니다."
   },
-  "position": {
-    "starter": "선발",
-    "substitute": "교체 대기",
-    "notSelected": "미선발"
+  "slot": {
+    "dragHint": "드래그로 이동 / 더블클릭으로 해제",
+    "confirmSuggestion": "{{name}} 배치 확정",
+    "findProspect": "{{position}} 영입 후보 찾기"
   },
-  "action": {
-    "setFormation": "포메이션 설정",
-    "confirmLineup": "라인업 확정",
-    "autoGenerate": "자동 생성",
-    "dragDrop": "드래그하여 배치"
-  },
-  "message": {
-    "lineupConfirmed": "라인업이 확정되었습니다.",
-    "notificationSent": "선수에게 알림이 발송되었습니다."
+  "bench": {
+    "title": "벤치",
+    "unplacedCount": "{{count}}명 미배치",
+    "injured": "부상"
   }
 }

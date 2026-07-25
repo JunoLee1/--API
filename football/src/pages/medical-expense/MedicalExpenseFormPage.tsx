@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { medicalExpenseApi } from '@/services/medical-expense.service'
 import type { ExpenseCostCategory, ExpensePayerType, MedicalExpense } from '@/types/medical-expense'
-import { COST_CATEGORY_LABEL, PAYER_TYPE_LABEL } from '@/types/medical-expense'
 import { playerApi } from '@/services/player.service'
 import type { Player } from '@/types/player'
 import { POSITION_LABEL } from '@/types/player'
@@ -24,6 +24,7 @@ const COST_CATEGORIES: ExpenseCostCategory[] = ['OUTPATIENT', 'EXAMINATION', 'SU
 const PAYER_TYPES: ExpensePayerType[] = ['CLUB', 'ASSOCIATION', 'INDIVIDUAL']
 
 export function MedicalExpenseFormPage() {
+  const { t } = useTranslation('medical')
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const isEdit = Boolean(id)
@@ -58,12 +59,12 @@ export function MedicalExpenseFormPage() {
         setPlayerId(e.playerId ?? '')
         setDescription(e.description ?? '')
       })
-      .catch(() => { toast.error('불러오지 못했습니다.'); navigate('/medical-expenses') })
+      .catch(() => { toast.error(t('expenseForm.loadFailed')); navigate('/medical-expenses') })
       .finally(() => setExpenseLoading(false))
   }, [id, navigate])
 
   const handleSave = async (andSubmit = false) => {
-    if (!receiptDate || !totalAmount) { toast.error('날짜와 금액을 입력해주세요.'); return }
+    if (!receiptDate || !totalAmount) { toast.error(t('expenseForm.required')); return }
     setSaving(true)
     try {
       const dto = {
@@ -83,13 +84,13 @@ export function MedicalExpenseFormPage() {
       }
       if (andSubmit) {
         await medicalExpenseApi.submit(saved.id)
-        toast.success('상신됐습니다.')
+        toast.success(t('expenseForm.submitted'))
       } else {
-        toast.success(isEdit ? '저장됐습니다.' : '초안으로 저장됐습니다.')
+        toast.success(isEdit ? t('expenseForm.saved') : t('expenseForm.draftSaved'))
       }
       navigate(`/medical-expenses/${saved.id}`)
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('expenseForm.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -110,62 +111,62 @@ export function MedicalExpenseFormPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h1 className="text-lg font-semibold tracking-tight">
-          {isEdit ? '의료비 수정' : '의료비 청구'}
+          {isEdit ? t('expenseForm.editTitle') : t('expenseForm.createTitle')}
         </h1>
       </div>
 
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-lg space-y-4">
           <div className="space-y-1.5">
-            <Label>영수증 날짜 *</Label>
+            <Label>{t('expenseForm.receiptDate')}</Label>
             <Input type="date" value={receiptDate} onChange={(e) => setReceiptDate(e.target.value)} />
           </div>
 
           <div className="space-y-1.5">
-            <Label>비용 항목 *</Label>
+            <Label>{t('expenseForm.category')}</Label>
             <Select value={costCategory} onValueChange={(v) => setCostCategory(v as ExpenseCostCategory)}>
-              <SelectTrigger><span>{COST_CATEGORY_LABEL[costCategory]}</span></SelectTrigger>
+              <SelectTrigger><span>{t(`expense.costCategory.${costCategory}`)}</span></SelectTrigger>
               <SelectContent>
                 {COST_CATEGORIES.map((c) => (
-                  <SelectItem key={c} value={c}>{COST_CATEGORY_LABEL[c]}</SelectItem>
+                  <SelectItem key={c} value={c}>{t(`expense.costCategory.${c}`)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-1.5">
-            <Label>금액 (원) *</Label>
+            <Label>{t('expenseForm.amount')}</Label>
             <Input
               type="number"
               min={0}
-              placeholder="예: 50000"
+              placeholder={t('expenseForm.amountPlaceholder')}
               value={totalAmount}
               onChange={(e) => setTotalAmount(e.target.value)}
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label>납부 주체 *</Label>
+            <Label>{t('expenseForm.payer')}</Label>
             <Select value={payerType} onValueChange={(v) => setPayerType(v as ExpensePayerType)}>
-              <SelectTrigger><span>{PAYER_TYPE_LABEL[payerType]}</span></SelectTrigger>
+              <SelectTrigger><span>{t(`expense.payerType.${payerType}`)}</span></SelectTrigger>
               <SelectContent>
                 {PAYER_TYPES.map((p) => (
-                  <SelectItem key={p} value={p}>{PAYER_TYPE_LABEL[p]}</SelectItem>
+                  <SelectItem key={p} value={p}>{t(`expense.payerType.${p}`)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-1.5">
-            <Label>대상 선수 (선택)</Label>
+            <Label>{t('expenseForm.player')}</Label>
             <Select value={playerId} onValueChange={setPlayerId}>
               <SelectTrigger>
                 {playerId
                   ? <span className="truncate">{players.find(p => p.id === playerId)?.playerName ?? playerId}</span>
-                  : <span className="text-muted-foreground">선수 선택</span>}
+                  : <span className="text-muted-foreground">{t('expenseForm.playerPlaceholder')}</span>}
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">선수 미지정</SelectItem>
+                <SelectItem value="">{t('expenseForm.playerNone')}</SelectItem>
                 {players.map((p) => (
                   <SelectItem key={p.id} value={p.id}>
                     {p.playerName} ({POSITION_LABEL[p.position]})
@@ -176,9 +177,9 @@ export function MedicalExpenseFormPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label>비고</Label>
+            <Label>{t('expenseForm.description')}</Label>
             <Textarea
-              placeholder="추가 설명 (선택)"
+              placeholder={t('expenseForm.descriptionPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
@@ -186,16 +187,16 @@ export function MedicalExpenseFormPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label>영수증 파일 (선택)</Label>
+            <Label>{t('expenseForm.file')}</Label>
             <Input type="file" onChange={(e) => setFile(e.target.files?.[0])} />
           </div>
 
           <div className="flex gap-2 pt-2">
             <Button variant="outline" onClick={() => handleSave(false)} disabled={saving}>
-              {saving ? '저장 중...' : '임시 저장'}
+              {saving ? t('expenseForm.saving') : t('expenseForm.saveDraft')}
             </Button>
             <Button onClick={() => handleSave(true)} disabled={saving}>
-              {saving ? '처리 중...' : '저장 후 상신'}
+              {saving ? t('expenseForm.submitting') : t('expenseForm.submit')}
             </Button>
           </div>
         </div>

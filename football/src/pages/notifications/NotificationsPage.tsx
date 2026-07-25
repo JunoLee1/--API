@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { notificationApi } from '@/services/notification.service'
 import type { NotificationItem } from '@/services/notification.service'
@@ -17,6 +18,7 @@ function formatDate(d: string) {
 }
 
 export function NotificationsPage() {
+  const { t } = useTranslation('common')
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [loading, setLoading] = useState(true)
   const [markingAll, setMarkingAll] = useState(false)
@@ -25,7 +27,7 @@ export function NotificationsPage() {
     notificationApi
       .my()
       .then(setNotifications)
-      .catch(() => toast.error('알림을 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('notificationsPage.loadFailed')))
       .finally(() => setLoading(false))
 
   useEffect(() => { void fetchNotifications() }, [])
@@ -37,7 +39,7 @@ export function NotificationsPage() {
         prev.map((n) => n.id === id ? { ...n, readAt: new Date().toISOString() } : n),
       )
     } catch {
-      toast.error('읽음 처리에 실패했습니다.')
+      toast.error(t('notificationsPage.markReadFailed'))
     }
   }
 
@@ -48,9 +50,9 @@ export function NotificationsPage() {
     try {
       await Promise.all(unread.map((n) => notificationApi.markRead(n.id)))
       setNotifications((prev) => prev.map((n) => ({ ...n, readAt: n.readAt ?? new Date().toISOString() })))
-      toast.success('모든 알림을 읽음 처리했습니다.')
+      toast.success(t('notificationsPage.markAllReadSuccess'))
     } catch {
-      toast.error('읽음 처리에 실패했습니다.')
+      toast.error(t('notificationsPage.markAllReadFailed'))
     } finally {
       setMarkingAll(false)
     }
@@ -62,15 +64,15 @@ export function NotificationsPage() {
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 flex items-center justify-between gap-4 shrink-0">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">알림</h1>
+          <h1 className="text-lg font-semibold tracking-tight">{t('notificationsPage.title')}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {unreadCount > 0 ? `읽지 않은 알림 ${unreadCount}개` : '모든 알림을 읽었습니다.'}
+            {unreadCount > 0 ? t('notificationsPage.unreadCount', { count: unreadCount }) : t('notificationsPage.allRead')}
           </p>
         </div>
         {unreadCount > 0 && (
           <Button size="sm" variant="outline" onClick={handleMarkAllRead} disabled={markingAll}>
             <CheckCheck className="h-3.5 w-3.5 mr-1.5" />
-            모두 읽음
+            {t('notificationsPage.markAllRead')}
           </Button>
         )}
       </div>
@@ -83,7 +85,7 @@ export function NotificationsPage() {
         ) : notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 gap-2 text-muted-foreground">
             <Bell className="h-8 w-8 opacity-30" />
-            <p className="text-sm">알림이 없습니다.</p>
+            <p className="text-sm">{t('notificationsPage.noNotifications')}</p>
           </div>
         ) : (
           <ul className="divide-y">
@@ -108,7 +110,7 @@ export function NotificationsPage() {
                     className="shrink-0 h-7 text-xs"
                     onClick={() => handleMarkRead(n.id)}
                   >
-                    읽음
+                    {t('notificationsPage.markRead')}
                   </Button>
                 )}
               </li>

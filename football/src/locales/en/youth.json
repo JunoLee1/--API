@@ -36,5 +36,95 @@
     "rejectRegistration": "Reject",
     "promoteToFirstTeam": "Promote to First Team",
     "issueFees": "Issue Fees"
+  },
+  "registrationPage": {
+    "title": "Youth Registration",
+    "addButton": "New Application",
+    "loading": "Loading...",
+    "noData": "No registration applications.",
+    "col": {
+      "player": "Player",
+      "team": "Team",
+      "guardian": "Guardian",
+      "jerseyNumber": "Jersey #",
+      "status": "Status"
+    },
+    "status": {
+      "PENDING": "Pending",
+      "GUARDIAN_APPROVED": "Guardian Approved",
+      "CONTRACTED": "Contracted",
+      "REJECTED": "Rejected"
+    }
+  },
+  "registrationDialog": {
+    "title": "Youth Registration",
+    "playerNameLabel": "Player Name",
+    "birthDateLabel": "Date of Birth",
+    "teamLabel": "Team",
+    "guardianEmailLabel": "Guardian Email",
+    "jerseyLabel": "Preferred Jersey # (optional)",
+    "error": "An error occurred.",
+    "cancel": "Cancel",
+    "submitting": "Processing...",
+    "submit": "Submit Application"
+  },
+  "incidentPage": {
+    "title": "Incident Reports",
+    "addButton": "New Report",
+    "loading": "Loading...",
+    "noData": "No incident reports.",
+    "typeMatch": "During Match",
+    "typeTraining": "During Training",
+    "supervisorSigned": "Supervisor",
+    "medicalSigned": "Medical",
+    "submitButton": "Submit",
+    "signSupervisor": "Supervisor Sign",
+    "signMedical": "Medical Sign",
+    "status": {
+      "DRAFT": "Draft",
+      "SUBMITTED": "Submitted",
+      "SIGNED": "Signed"
+    }
+  },
+  "incidentDialog": {
+    "title": "New Incident Report",
+    "playerLabel": "Player",
+    "typeLabel": "Type",
+    "descriptionLabel": "Incident Description (5W1H)",
+    "descriptionPlaceholder": "When, where, who, what, how, why...",
+    "error": "An error occurred.",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "submit": "Save Draft"
+  },
+  "feePage": {
+    "title": "Academy Fee Management",
+    "filterAll": "All",
+    "loading": "Loading...",
+    "noData": "No fee records found.",
+    "approveButton": "Approve Payment",
+    "proofLink": "View Proof",
+    "status": {
+      "PENDING": "Pending",
+      "SUBMITTED": "Under Review",
+      "PAID": "Paid",
+      "OVERDUE": "Overdue",
+      "LOCKED": "Suspended"
+    }
+  },
+  "guardianFeeView": {
+    "title": "Academy Fee History",
+    "loading": "Loading...",
+    "noData": "No fees billed.",
+    "proofPending": "Proof under review",
+    "proofPrompt": "Enter payment proof image URL",
+    "submitProof": "Submit Proof",
+    "status": {
+      "PENDING": "Pending",
+      "SUBMITTED": "Under Review",
+      "PAID": "Paid",
+      "OVERDUE": "Overdue",
+      "LOCKED": "Suspended"
+    }
   }
 }

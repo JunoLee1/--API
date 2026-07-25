@@ -12,6 +12,6 @@ export interface Team {
 }
 
 export const TEAM_TYPE_LABEL: Record<TeamType, string> = {
-  FIRST_TEAM: '1군',
-  YOUTH: '유소년',
+  FIRST_TEAM: 'First Team',
+  YOUTH: 'Youth',
 }

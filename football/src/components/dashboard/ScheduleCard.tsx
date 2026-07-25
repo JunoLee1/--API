@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export interface ScheduleItem {
@@ -17,16 +18,18 @@ function formatDateTime(iso: string) {
 }
 
 export function ScheduleCard({ items, loading }: Props) {
+  const { t } = useTranslation('common')
+
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">다가오는 일정</CardTitle>
+        <CardTitle className="text-sm font-medium text-muted-foreground">{t('dashboard.schedule.title')}</CardTitle>
       </CardHeader>
       <CardContent>
         {loading ? (
-          <p className="text-sm text-muted-foreground">불러오는 중...</p>
+          <p className="text-sm text-muted-foreground">{t('dashboard.schedule.loading')}</p>
         ) : items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">예정된 일정이 없습니다</p>
+          <p className="text-sm text-muted-foreground">{t('dashboard.schedule.empty')}</p>
         ) : (
           <ul className="space-y-2">
             {items.slice(0, 3).map((item) => (

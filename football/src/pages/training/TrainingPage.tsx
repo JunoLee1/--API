@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { trainingApi } from '@/services/training.service'
 import { seasonApi } from '@/services/season.service'
 import type { CoachingRole } from '@/types/auth'
@@ -83,10 +84,6 @@ const SESSION_CONTENT_TEMPLATE: Record<SessionType, ContentRow[]> = {
   ],
 }
 
-function formatDate(d: string) {
-  return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' })
-}
-
 interface CreateSessionDialogProps {
   open: boolean
   onOpenChange: (v: boolean) => void
@@ -97,6 +94,7 @@ interface CreateSessionDialogProps {
 }
 
 function CreateSessionDialog({ open, onOpenChange, seasons, activeSeason, onSaved, coachingRole }: CreateSessionDialogProps) {
+  const { t } = useTranslation('training')
   const defaultType: SessionType =
     (coachingRole && DEFAULT_SESSION_TYPE[coachingRole]) ?? 'TACTICAL_FULL_TEAM'
 
@@ -104,16 +102,16 @@ function CreateSessionDialog({ open, onOpenChange, seasons, activeSeason, onSave
   const [goal, setGoal] = useState('')
   const [sessionType, setSessionType] = useState<SessionType>(defaultType)
   const [seasonId, setSeasonId] = useState<string>(activeSeason ? String(activeSeason.id) : '')
-  const [contents, setContents] = useState<ContentRow[]>(() => SESSION_CONTENT_TEMPLATE[defaultType])
+  const [contents, setContents] = useState<ContentRow[]>(() => SESSION_CONTENT_TEMPLATE[defaultType] ?? [])
   const [newPhase, setNewPhase] = useState<ContentPhase>('WARMUP')
   const [newDesc, setNewDesc] = useState('')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (open) {
-      const t = (coachingRole && DEFAULT_SESSION_TYPE[coachingRole]) ?? 'TACTICAL_FULL_TEAM'
-      setSessionType(t)
-      setContents(SESSION_CONTENT_TEMPLATE[t])
+      const defaultSType = (coachingRole && DEFAULT_SESSION_TYPE[coachingRole]) ?? 'TACTICAL_FULL_TEAM'
+      setSessionType(defaultSType)
+      setContents(SESSION_CONTENT_TEMPLATE[defaultSType] ?? [])
       setDate('')
       setGoal('')
       setSeasonId(activeSeason ? String(activeSeason.id) : '')
@@ -131,7 +129,7 @@ function CreateSessionDialog({ open, onOpenChange, seasons, activeSeason, onSave
 
   const handleSave = async () => {
     if (!date || !goal.trim() || !seasonId) {
-      toast.error('필수 항목을 모두 입력해주세요.')
+      toast.error(t('createDialog.required'))
       return
     }
     setSaving(true)
@@ -143,10 +141,10 @@ function CreateSessionDialog({ open, onOpenChange, seasons, activeSeason, onSave
         seasonId: Number(seasonId),
         ...(contents.length > 0 ? { contents } : {}),
       })
-      toast.success('훈련 세션이 등록됐습니다.')
+      toast.success(t('createDialog.saved'))
       onSaved()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('createDialog.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -155,37 +153,36 @@ function CreateSessionDialog({ open, onOpenChange, seasons, activeSeason, onSave
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>훈련 세션 등록</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t('createDialog.title')}</DialogTitle></DialogHeader>
         <div className="space-y-3 py-2 max-h-[70vh] overflow-y-auto pr-1">
           <div className="space-y-1.5">
-            <Label>날짜 *</Label>
+            <Label>{t('createDialog.dateLabel')} *</Label>
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>목표 *</Label>
-            <Textarea placeholder="이번 세션의 훈련 목표" value={goal} onChange={(e) => setGoal(e.target.value)} rows={2} />
+            <Label>{t('createDialog.goalLabel')} *</Label>
+            <Textarea placeholder={t('createDialog.goalPlaceholder')} value={goal} onChange={(e) => setGoal(e.target.value)} rows={2} />
           </div>
           <div className="space-y-1.5">
-            <Label>유형 *</Label>
+            <Label>{t('createDialog.typeLabel')} *</Label>
             <Select
               value={sessionType}
               onValueChange={(v) => {
-                const t = v as SessionType
-                setSessionType(t)
-                setContents(SESSION_CONTENT_TEMPLATE[t])
+                const sType = v as SessionType
+                setSessionType(sType)
+                setContents(SESSION_CONTENT_TEMPLATE[sType] ?? [])
               }}
-              items={SESSION_TYPE_LABEL}
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {SESSION_TYPES.map((t) => <SelectItem key={t} value={t}>{SESSION_TYPE_LABEL[t]}</SelectItem>)}
+                {SESSION_TYPES.map((st) => <SelectItem key={st} value={st}>{t(`sessionType.${st}`)}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>시즌 *</Label>
-            <Select value={seasonId} onValueChange={(v) => { if (v) setSeasonId(v) }} items={Object.fromEntries(seasons.map((s) => [String(s.id), s.name]))}>
-              <SelectTrigger><SelectValue placeholder="시즌 선택" /></SelectTrigger>
+            <Label>{t('createDialog.seasonLabel')} *</Label>
+            <Select value={seasonId} onValueChange={(v) => { if (v) setSeasonId(v) }}>
+              <SelectTrigger><SelectValue placeholder={t('createDialog.seasonPlaceholder')} /></SelectTrigger>
               <SelectContent>
                 {seasons.map((s) => <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>)}
               </SelectContent>
@@ -194,13 +191,13 @@ function CreateSessionDialog({ open, onOpenChange, seasons, activeSeason, onSave
 
           {/* 세션 구성 */}
           <div className="space-y-1.5">
-            <Label>세션 구성 <span className="text-muted-foreground font-normal">(선택)</span></Label>
+            <Label>{t('createDialog.contentLabel')} <span className="text-muted-foreground font-normal">{t('createDialog.optional')}</span></Label>
             {contents.length > 0 && (
               <div className="space-y-1 mb-2">
                 {contents.map((c, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm bg-muted/50 rounded px-2 py-1">
                     <span className="text-xs text-muted-foreground bg-background border rounded px-1.5 py-0.5 shrink-0">
-                      {PHASE_LABEL[c.phase]}
+                      {t(`phase.${c.phase}`)}
                     </span>
                     <span className="flex-1 truncate">{c.description}</span>
                     <Button size="icon" variant="ghost" className="h-5 w-5 shrink-0" onClick={() => removeContent(i)}>
@@ -214,12 +211,12 @@ function CreateSessionDialog({ open, onOpenChange, seasons, activeSeason, onSave
               <Select value={newPhase} onValueChange={(v) => setNewPhase(v as ContentPhase)}>
                 <SelectTrigger className="w-24 h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {PHASES.map((p) => <SelectItem key={p} value={p}>{PHASE_LABEL[p]}</SelectItem>)}
+                  {PHASES.map((p) => <SelectItem key={p} value={p}>{t(`phase.${p}`)}</SelectItem>)}
                 </SelectContent>
               </Select>
               <Input
                 className="flex-1 h-8 text-sm"
-                placeholder="내용 입력 후 추가"
+                placeholder={t('createDialog.contentPlaceholder')}
                 value={newDesc}
                 onChange={(e) => setNewDesc(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addContent() } }}
@@ -231,8 +228,8 @@ function CreateSessionDialog({ open, onOpenChange, seasons, activeSeason, onSave
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? '저장 중...' : '등록'}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t('createDialog.cancel')}</Button>
+          <Button onClick={handleSave} disabled={saving}>{saving ? t('createDialog.saving') : t('createDialog.submit')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -240,6 +237,7 @@ function CreateSessionDialog({ open, onOpenChange, seasons, activeSeason, onSave
 }
 
 export function TrainingPage() {
+  const { t, i18n } = useTranslation('training')
   const navigate = useNavigate()
   const { user } = useCurrentUser()
   const [sessions, setSessions] = useState<TrainingSession[]>([])
@@ -270,7 +268,7 @@ export function TrainingPage() {
     setPage(1)
     trainingApi.list(seasonId)
       .then(setSessions)
-      .catch(() => toast.error('훈련 목록을 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('page.loadFailed')))
       .finally(() => setLoading(false))
   }
 
@@ -283,10 +281,10 @@ export function TrainingPage() {
     e.stopPropagation()
     try {
       await trainingApi.approve(id)
-      toast.success('훈련 세션이 승인됐습니다.')
+      toast.success(t('page.approveSuccess'))
       setSessions((prev) => prev.map((s) => s.id === id ? { ...s, isApproved: true } : s))
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '승인에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('page.approveFailed'))
     }
   }
 
@@ -316,34 +314,38 @@ export function TrainingPage() {
   ]
   const toCalDateStr = (day: number) =>
     `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-  const monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' })
+  const locale = i18n.language === 'ko' ? 'ko-KR' : 'en-US'
+  const monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString(locale, { year: 'numeric', month: 'long' })
   const prevMonth = () => viewMonth === 0 ? (setViewYear(y => y - 1), setViewMonth(11)) : setViewMonth(m => m - 1)
   const nextMonth = () => viewMonth === 11 ? (setViewYear(y => y + 1), setViewMonth(0)) : setViewMonth(m => m + 1)
-  const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
+  const DAY_LABELS = [0, 1, 2, 3, 4, 5, 6].map(i => t(`day.${i}`))
+
+  const dateSubtitle = selectedDate
+    ? t('page.dateSubtitle', {
+        date: new Date(selectedDate + 'T00:00:00').toLocaleDateString(locale, { month: 'long', day: 'numeric' }),
+        count: filteredSessions.length,
+      })
+    : t('page.selectDateHint')
 
   return (
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 flex items-center justify-between gap-4 shrink-0">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">훈련 일정</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {selectedDate
-              ? `${new Date(selectedDate + 'T00:00:00').toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })} · ${filteredSessions.length}개 세션`
-              : '날짜를 선택하세요'}
-          </p>
+          <h1 className="text-lg font-semibold tracking-tight">{t('page.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{dateSubtitle}</p>
         </div>
         {canCreate && (
           <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />훈련 등록
+            <Plus className="h-4 w-4 mr-1" />{t('page.addSession')}
           </Button>
         )}
       </div>
 
       <div className="border-b px-6 py-3 flex items-center gap-3 shrink-0 bg-muted/30">
-        <Select value={selectedSeasonId ?? 'ALL'} onValueChange={(v) => setSelectedSeasonId(v ?? 'ALL')} items={{ ALL: '전체 시즌', ...Object.fromEntries(seasons.map((s) => [String(s.id), s.name])) }}>
+        <Select value={selectedSeasonId ?? 'ALL'} onValueChange={(v) => setSelectedSeasonId(v ?? 'ALL')}>
           <SelectTrigger className="w-36 h-8 text-sm bg-background"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">전체 시즌</SelectItem>
+            <SelectItem value="ALL">{t('page.allSeasons')}</SelectItem>
             {seasons.map((s) => <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -400,7 +402,7 @@ export function TrainingPage() {
                           : SESSION_TYPE_STYLE[type],
                       )}
                     >
-                      {SESSION_TYPE_LABEL[type]}
+                      {t(`sessionType.${type}`)}
                     </span>
                   ))}
                   {daySessions.length > 2 && (
@@ -417,7 +419,7 @@ export function TrainingPage() {
       <div className="flex-1 overflow-auto">
         {!selectedDate ? (
           <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-            날짜를 선택하면 세션이 표시됩니다
+            {t('page.selectDateBody')}
           </div>
         ) : loading ? (
           <div className="p-4 space-y-3">
@@ -425,7 +427,7 @@ export function TrainingPage() {
           </div>
         ) : filteredSessions.length === 0 ? (
           <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
-            해당 날짜에 훈련 세션이 없습니다.
+            {t('page.noSession')}
           </div>
         ) : (
           <div className="divide-y">
@@ -439,7 +441,7 @@ export function TrainingPage() {
                   <p className="text-sm font-medium truncate">{s.goal}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     <span className={`inline-flex items-center rounded border px-1.5 py-0.5 ${SESSION_TYPE_STYLE[s.sessionType]}`}>
-                      {SESSION_TYPE_LABEL[s.sessionType]}
+                      {t(`sessionType.${s.sessionType}`)}
                     </span>
                   </p>
                 </div>
@@ -449,7 +451,7 @@ export function TrainingPage() {
                     : <Clock className="h-4 w-4 text-muted-foreground" />}
                   {canApprove && !s.isApproved && (
                     <Button size="sm" variant="outline" className="h-7 text-xs" onClick={(e) => handleApprove(s.id, e)}>
-                      승인
+                      {t('page.approve')}
                     </Button>
                   )}
                 </div>

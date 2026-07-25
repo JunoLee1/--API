@@ -253,5 +253,65 @@
     "goalsAgainst": "실점",
     "goalDiff": "득실",
     "points": "승점"
+  },
+  "tactical": {
+    "title": "전술 분석",
+    "description": "경기별 전술 분석 리포트",
+    "addButton": "전술 분석 추가",
+    "loadFailed": "전술 분석 목록을 불러오지 못했습니다.",
+    "noData": "등록된 전술 분석이 없습니다.",
+    "phase": {
+      "PRE_MATCH": "경기 전",
+      "POST_MATCH": "경기 후"
+    },
+    "status": {
+      "DRAFT": "초안",
+      "CONFIRMED": "확정"
+    },
+    "mediaType": {
+      "image": "사진",
+      "video": "영상"
+    },
+    "col": {
+      "match": "경기",
+      "phase": "단계",
+      "formation": "포메이션",
+      "status": "상태",
+      "createdBy": "작성자",
+      "createdAt": "작성일"
+    },
+    "confirm": "확정",
+    "confirmSuccess": "전술 분석이 확정됐습니다.",
+    "confirmFailed": "확정에 실패했습니다.",
+    "deleteSuccess": "전술 분석이 삭제됐습니다.",
+    "deleteFailed": "삭제에 실패했습니다.",
+    "form": {
+      "createTitle": "전술 분석 등록",
+      "editTitle": "전술 분석 수정",
+      "matchLabel": "경기 *",
+      "matchPlaceholder": "경기 선택",
+      "phaseLabel": "단계 *",
+      "formationLabel": "포메이션",
+      "opponentAnalysisLabel": "상대 분석",
+      "opponentFormationLabel": "상대 포메이션",
+      "opponentKeyThreatLabel": "상대 주요 위협",
+      "opponentWeaknessLabel": "상대 약점",
+      "opponentKeyPlayerLabel": "상대 핵심 선수",
+      "tacticalComplianceLabel": "전술 이행도",
+      "concededAnalysisLabel": "실점 분석",
+      "momLabel": "MOM",
+      "momNotePlaceholder": "MOM 코멘트",
+      "improvementLabel": "개선 필요 선수",
+      "improvementNotePlaceholder": "개선 코멘트",
+      "mediaLabel": "미디어 첨부",
+      "cancel": "취소",
+      "saving": "저장 중...",
+      "create": "등록",
+      "update": "수정",
+      "required": "필수 항목을 입력해주세요.",
+      "createSuccess": "전술 분석이 등록됐습니다.",
+      "editSuccess": "전술 분석이 수정됐습니다.",
+      "saveFailed": "저장에 실패했습니다."
+    }
   }
 }

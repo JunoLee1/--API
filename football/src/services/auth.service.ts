@@ -9,6 +9,9 @@ export const authApi = {
 
   me: (): Promise<UserDto> => api.get<UserDto>('/auth/me'),
 
+  updateLanguage: (language: 'ko' | 'en'): Promise<{ ok: boolean }> =>
+    api.patch('/auth/me/language', { language }),
+
   logout: async () => {
     try {
       await api.post('/auth/logout')

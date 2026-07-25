@@ -9,9 +9,9 @@ export interface Season {
 }
 
 export const SEASON_STATUS_LABEL: Record<SeasonStatus, string> = {
-  UPCOMING: '예정',
-  ACTIVE: '진행 중',
-  CLOSED: '종료',
+  UPCOMING: 'Upcoming',
+  ACTIVE: 'Active',
+  CLOSED: 'Closed',
 }
 
 export const SEASON_STATUS_STYLE: Record<SeasonStatus, string> = {

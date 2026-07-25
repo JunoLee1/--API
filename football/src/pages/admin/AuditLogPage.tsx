@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { auditLogApi } from '@/services/admin.service'
 import type { AuditLogEntry, AuditLogFilters } from '@/types/auditLog'
@@ -21,6 +22,7 @@ function formatDate(d: string) {
 }
 
 export function AuditLogPage() {
+  const { t } = useTranslation('admin')
   const [filters, setFilters] = useState<AuditLogFilters>({
     from: '', to: '', action: '', page: 1, limit: PAGE_SIZE,
   })
@@ -35,11 +37,11 @@ export function AuditLogPage() {
       setLogs(res.logs)
       setTotal(res.total)
     } catch {
-      toast.error('감사 로그를 불러오지 못했습니다.')
+      toast.error(t('auditLogPage.loadFailed'))
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [t])
 
   useEffect(() => { void fetchLogs(filters) }, [])
 
@@ -56,13 +58,13 @@ export function AuditLogPage() {
   return (
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 shrink-0">
-        <h1 className="text-lg font-semibold tracking-tight">감사 로그</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">전체 {total}건</p>
+        <h1 className="text-lg font-semibold tracking-tight">{t('auditLogPage.title')}</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{t('auditLogPage.total', { count: total })}</p>
       </div>
 
       <div className="border-b px-6 py-3 flex flex-wrap gap-4 items-end shrink-0 bg-muted/30">
         <div className="space-y-1">
-          <Label className="text-xs">시작일</Label>
+          <Label className="text-xs">{t('auditLogPage.startDateLabel')}</Label>
           <Input
             type="date"
             value={filters.from ?? ''}
@@ -71,7 +73,7 @@ export function AuditLogPage() {
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">종료일</Label>
+          <Label className="text-xs">{t('auditLogPage.endDateLabel')}</Label>
           <Input
             type="date"
             value={filters.to ?? ''}
@@ -80,16 +82,16 @@ export function AuditLogPage() {
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">액션</Label>
+          <Label className="text-xs">{t('auditLogPage.actionLabel')}</Label>
           <Input
-            placeholder="ROLE_UPDATE"
+            placeholder={t('auditLogPage.actionPlaceholder')}
             value={filters.action ?? ''}
             onChange={e => setFilters(f => ({ ...f, action: e.target.value }))}
             className="w-40 h-8 text-sm"
           />
         </div>
         <Button size="sm" onClick={handleSearch} disabled={loading} className="h-8">
-          {loading ? '조회 중...' : '조회'}
+          {loading ? t('auditLogPage.searching') : t('auditLogPage.searchButton')}
         </Button>
       </div>
 
@@ -104,18 +106,18 @@ export function AuditLogPage() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-44">일시</TableHead>
-                <TableHead className="w-40">액션</TableHead>
-                <TableHead>수행자</TableHead>
-                <TableHead className="w-32">대상 ID</TableHead>
-                <TableHead>상세</TableHead>
+                <TableHead className="w-44">{t('auditLogPage.table.timestamp')}</TableHead>
+                <TableHead className="w-40">{t('auditLogPage.table.action')}</TableHead>
+                <TableHead>{t('auditLogPage.table.actor')}</TableHead>
+                <TableHead className="w-32">{t('auditLogPage.table.targetId')}</TableHead>
+                <TableHead>{t('auditLogPage.table.detail')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {logs.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                    로그가 없습니다.
+                    {t('auditLogPage.noLogs')}
                   </TableCell>
                 </TableRow>
               ) : logs.map(log => (

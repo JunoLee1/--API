@@ -1,3 +1,5 @@
+import i18n from '@/i18n'
+
 const BASE_URL = '/api'
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
@@ -59,17 +61,17 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown): Pro
         res = await doFetch(method, path, body)
       } catch {
         forceLogout()
-        throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.')
+        throw new Error(i18n.t('common:loginPage.apiError.authExpired'))
       }
     }
 
     if (res.status === 401) {
       forceLogout()
-      throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.')
+      throw new Error(i18n.t('common:loginPage.apiError.authExpired'))
     }
 
     if (!res.ok) {
-      const error = await res.json().catch(() => ({ message: '서버 오류가 발생했습니다.' }))
+      const error = await res.json().catch(() => ({ message: i18n.t('common:loginPage.apiError.serverError') }))
       throw new Error((error as { message: string }).message)
     }
 
@@ -100,12 +102,12 @@ async function requestForm<T>(method: 'POST' | 'PATCH', path: string, form: Form
         res = await doForm()
       } catch {
         forceLogout()
-        throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.')
+        throw new Error(i18n.t('common:loginPage.apiError.authExpired'))
       }
     }
-    if (res.status === 401) { forceLogout(); throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.') }
+    if (res.status === 401) { forceLogout(); throw new Error(i18n.t('common:loginPage.apiError.authExpired')) }
     if (!res.ok) {
-      const error = await res.json().catch(() => ({ message: '서버 오류가 발생했습니다.' }))
+      const error = await res.json().catch(() => ({ message: i18n.t('common:loginPage.apiError.serverError') }))
       throw new Error((error as { message: string }).message)
     }
     if (res.status === 204) return undefined as T

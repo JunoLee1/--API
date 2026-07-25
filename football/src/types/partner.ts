@@ -43,14 +43,14 @@ export interface CreatePartnerContractDto {
 }
 
 export const PARTNER_TYPE_LABEL: Record<PartnerType, string> = {
-  MANUFACTURER: '제조사',
-  HOSPITAL: '협진병원',
+  MANUFACTURER: 'Manufacturer',
+  HOSPITAL: 'Partner Hospital',
 }
 
 export const CONTRACT_STATUS_LABEL: Record<PartnerContractStatus, string> = {
-  ACTIVE: '유효',
-  EXPIRED: '만료',
-  TERMINATED: '해지',
+  ACTIVE: 'Active',
+  EXPIRED: 'Expired',
+  TERMINATED: 'Terminated',
 }
 
 export const CONTRACT_STATUS_STYLE: Record<PartnerContractStatus, string> = {

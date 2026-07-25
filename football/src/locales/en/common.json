@@ -79,5 +79,179 @@
     "loading": "Loading...",
     "empty": "No new notifications",
     "viewAll": "View all →"
+  },
+  "notificationsPage": {
+    "title": "Notifications",
+    "unreadCount": "{{count}} unread",
+    "allRead": "All caught up.",
+    "markAllRead": "Mark all read",
+    "loading": "Loading...",
+    "noNotifications": "No notifications.",
+    "markReadFailed": "Failed to mark as read.",
+    "markAllReadSuccess": "All notifications marked as read.",
+    "markAllReadFailed": "Failed to mark as read.",
+    "loadFailed": "Failed to load notifications.",
+    "markRead": "Read"
+  },
+  "mePage": {
+    "title": "My Profile",
+    "description": "Currently logged-in account information.",
+    "usernameLabel": "Username",
+    "emailLabel": "Email",
+    "roleLabel": "Role",
+    "statusLabel": "Status",
+    "outOfOffice": "Out of Office"
+  },
+  "loginPage": {
+    "subtitle": "Sign in to continue",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "emailPlaceholder": "example@club.com",
+    "loginButton": "Sign In",
+    "loggingIn": "Signing in...",
+    "loginFailed": "Sign-in failed.",
+    "quickLogin": "Quick login (dev)",
+    "apiError": {
+      "authExpired": "Session expired. Please sign in again.",
+      "serverError": "A server error occurred."
+    }
+  },
+  "liteMode": {
+    "blocked": "This feature is not available for Lite Mode clubs."
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "greeting": "Hello, {{name}}",
+    "loading": "Loading...",
+    "stat": {
+      "activePlayerCount": "Active Players",
+      "expiringContractCount": "Expiring Contracts",
+      "injuredPlayerCount": "Injured Players",
+      "lowStockEquipmentCount": "Low Stock Items",
+      "activeTransferCount": "Active Transfers",
+      "prospectCount": "Prospects",
+      "totalActiveContractCount": "Active Contracts",
+      "thisMonthProspectCount": "New Prospects (Mo.)",
+      "totalEquipmentItemCount": "Equipment Items",
+      "myDraftAnalysisCount": "My Draft Analyses",
+      "thisMonthMatchCount": "Matches (Mo.)",
+      "thisMonthSessionCount": "Sessions (Mo.)",
+      "attendanceWarningPlayerCount": "Attendance Warnings",
+      "myActiveInjuryCaseCount": "My Injury Cases",
+      "thisMonthReturnReadyCount": "Return Ready (Mo.)",
+      "totalInjuredPlayerCount": "Total Injured",
+      "assignedPlayerCount": "Assigned Players",
+      "myThisMonthSessionCount": "My Sessions (Mo.)",
+      "thisSeasonMatchCount": "Matches (Season)",
+      "thisMonthAttendanceRate": "Attendance Rate (Mo.)",
+      "managedPlayerCount": "Managed Players",
+      "injuredManagedPlayerCount": "Injured Managed",
+      "expiringManagedContractCount": "Expiring Contracts",
+      "unit": {
+        "person": "",
+        "case": "",
+        "item": "",
+        "match": "",
+        "session": "",
+        "rate": "%"
+      }
+    },
+    "recentFeed": {
+      "recentTransfers": "Recent Transfers",
+      "recentProspects": "Recent Prospects",
+      "recentContracts": "Recent Contracts",
+      "recentProspectList": "Recent Prospects",
+      "recentAssignments": "Recent Assignments",
+      "recentMatches": "Recent Results",
+      "recentInjuries": "Recent Injuries",
+      "recentSessions": "Recent Sessions",
+      "recentPlayerMatches": "Recent Matches"
+    },
+    "actionQueue": {
+      "title": "Action Queue",
+      "loading": "Loading...",
+      "empty": "No pending actions",
+      "more": "+{{count}} more",
+      "labels": {
+        "RECALL_APPROVAL_REQUESTED": "Recall Approval",
+        "TRAINING_SESSION_CONFIRM_REQUESTED": "Session Confirm",
+        "TACTICAL_ANALYSIS_CONFIRM_REQUESTED": "Tactical Confirm",
+        "INJURY_READY_TO_RETURN": "Return Ready",
+        "CONTRACT_EXPIRY": "Contract Expiry",
+        "PERFORMANCE_BONUS_ACHIEVED": "Bonus Achieved",
+        "EQUIPMENT_LOW_STOCK": "Low Stock",
+        "TRAINING_ATTENDANCE_WARNING": "Attendance Warning",
+        "PLAYER_EXTERNAL_ID_UNMAPPED": "Unmapped ID",
+        "LOAN_OUT_EXPIRED": "Loan Expired"
+      }
+    },
+    "schedule": {
+      "title": "Upcoming",
+      "loading": "Loading...",
+      "empty": "No upcoming events"
+    },
+    "recentFeedCard": {
+      "loading": "Loading...",
+      "empty": "No recent items"
+    },
+    "ranking": {
+      "title": "League Standing",
+      "loading": "Loading...",
+      "empty": "No ranking data",
+      "rank": "",
+      "points": "pts",
+      "played": "P",
+      "won": "W",
+      "drawn": "D",
+      "lost": "L",
+      "goalsFor": "GF",
+      "goalsAgainst": "GA"
+    },
+    "medical": {
+      "sectionTitle": "Medical Overview",
+      "injuryStatus": "Injuries",
+      "adminStatus": "Admin",
+      "positionTrend": "Injuries by Position (all time)",
+      "noInjuryData": "No injury data.",
+      "kpi": {
+        "currentInjured": "Currently Injured",
+        "weekNewInjury": "New This Week",
+        "returningIn7Days": "Returning in 7 Days",
+        "reinjuryRisk": "Re-injury Risk",
+        "incompleteDoc": "Incomplete Docs",
+        "pendingApproval": "Pending Approval",
+        "avgRecoveryDays": "Avg. Recovery Days",
+        "unit": {
+          "person": "",
+          "case": "",
+          "day": "d"
+        }
+      }
+    },
+    "youthDev": {
+      "title": "Youth Position Bias",
+      "noData": "No youth team match data.",
+      "col": {
+        "player": "Player",
+        "mainPosition": "Main Position",
+        "bias": "Bias",
+        "totalMinutes": "Total Min"
+      },
+      "biasedOf": "of {{count}}",
+      "biasedCount": "{{count}} biased",
+      "minuteUnit": "min"
+    },
+    "academyFinance": {
+      "title": "Academy Fee Overview",
+      "monthlyRate": "Monthly Rate",
+      "totalRevenue": "Total Revenue",
+      "overdueCount": "Overdue",
+      "lockedPlayers": "Suspended"
+    },
+    "matchResult": {
+      "WIN": "W",
+      "DRAW": "D",
+      "LOSS": "L"
+    }
   }
 }

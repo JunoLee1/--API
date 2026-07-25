@@ -2,10 +2,12 @@ import { useEffect, useState, useCallback } from 'react'
 import { SafeguardButton } from '@/components/layout/SafeguardButton'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { useLanguage } from '@/hooks/useLanguage'
 import { useLiteMode } from '@/hooks/useLiteMode'
 import { useConfirm } from '@/lib/confirm-dialog'
 import { useApiPending } from '@/lib/useApiPending'
 import { authApi } from '@/services/auth.service'
+import i18n from '@/i18n'
 import { notificationApi } from '@/services/notification.service'
 import { NotificationPopover } from '@/components/common/NotificationPopover'
 import { connectSocket, disconnectSocket } from '@/lib/socket'
@@ -368,6 +370,7 @@ const NAV_ITEMS: NavItem[] = [
 
 export function AppShell() {
   const { user, loading } = useCurrentUser()
+  const { language, changeLanguage } = useLanguage(user?.language ?? 'ko')
   const isLite = useLiteMode()
   const navigate = useNavigate()
   const location = useLocation()
@@ -420,6 +423,7 @@ export function AppShell() {
 
   const clearLocalSession = () => {
     authApi.logout()
+    void i18n.changeLanguage('ko')
     navigate('/login')
   }
 
@@ -590,11 +594,20 @@ export function AppShell() {
       <aside className="w-60 border-r bg-card hidden md:flex flex-col">
         <div className="px-4 h-14 border-b flex items-center justify-between shrink-0">
           <h1 className="text-base font-semibold tracking-tight">Football ERP</h1>
-          <NotificationPopover
-            unreadCount={unreadCount}
-            onUnreadCountChange={setUnreadCount}
-            iconSize="sm"
-          />
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => void changeLanguage(language === 'ko' ? 'en' : 'ko')}
+              className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded"
+              title={language === 'ko' ? 'Switch to English' : '한국어로 전환'}
+            >
+              {language === 'ko' ? 'EN' : 'KO'}
+            </button>
+            <NotificationPopover
+              unreadCount={unreadCount}
+              onUnreadCountChange={setUnreadCount}
+              iconSize="sm"
+            />
+          </div>
         </div>
 
         <nav
@@ -662,6 +675,13 @@ export function AppShell() {
             <Menu className="h-5 w-5" />
           </Button>
           <span className="flex-1 text-base font-semibold tracking-tight">Football ERP</span>
+          <button
+            onClick={() => void changeLanguage(language === 'ko' ? 'en' : 'ko')}
+            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded"
+            title={language === 'ko' ? 'Switch to English' : '한국어로 전환'}
+          >
+            {language === 'ko' ? 'EN' : 'KO'}
+          </button>
           <NotificationPopover
             unreadCount={unreadCount}
             onUnreadCountChange={setUnreadCount}

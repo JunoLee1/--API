@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { dashboardApi } from '@/services/dashboard.service'
 import { notificationApi, type NotificationItem } from '@/services/notification.service'
@@ -33,7 +34,7 @@ function toScheduleItems(matches: Match[]): ScheduleItem[] {
     }))
 }
 
-function toFeedItems(matches: Match[]): FeedItem[] {
+function toFeedItems(matches: Match[], tFn: (key: string) => string): FeedItem[] {
   const now = new Date()
   return matches
     .filter((m) => new Date(m.date) < now && m.homeScore != null && m.awayScore != null)
@@ -43,18 +44,19 @@ function toFeedItems(matches: Match[]): FeedItem[] {
       const ourIsHome = m.homeTeamName === OUR_TEAM_NAME
       const ourScore = ourIsHome ? m.homeScore! : m.awayScore!
       const oppScore = ourIsHome ? m.awayScore! : m.homeScore!
-      const result = ourScore > oppScore ? '승' : ourScore === oppScore ? '무' : '패'
+      const resultKey = ourScore > oppScore ? 'dashboard.matchResult.WIN' : ourScore === oppScore ? 'dashboard.matchResult.DRAW' : 'dashboard.matchResult.LOSS'
       const score = `${m.homeScore} : ${m.awayScore}`
       return {
         id: m.id,
         label: `${m.homeTeamName} vs ${m.awayTeamName}`,
-        sub: `${score} · ${result} · ${COMPETITION_LABEL[m.competitionType]}`,
+        sub: `${score} · ${tFn(resultKey)} · ${COMPETITION_LABEL[m.competitionType]}`,
         date: m.date,
       }
     })
 }
 
 export function DashboardPage() {
+  const { t } = useTranslation('common')
   const { user, loading: userLoading } = useCurrentUser()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
@@ -99,7 +101,7 @@ export function DashboardPage() {
   }, [user])
 
   if (userLoading) {
-    return <div className="p-8 text-muted-foreground">불러오는 중...</div>
+    return <div className="p-8 text-muted-foreground">{t('dashboard.loading')}</div>
   }
   if (!user) return null
 
@@ -108,8 +110,8 @@ export function DashboardPage() {
   return (
     <div className="p-8 space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold mb-1">대시보드</h2>
-        <p className="text-muted-foreground text-sm">{user.nickname}님, 안녕하세요</p>
+        <h2 className="text-2xl font-semibold mb-1">{t('dashboard.title')}</h2>
+        <p className="text-muted-foreground text-sm">{t('dashboard.greeting', { name: user.nickname })}</p>
       </div>
 
       {/* 숫자 카드 */}
@@ -117,9 +119,9 @@ export function DashboardPage() {
         {config.statCards.map((card) => (
           <StatCard
             key={card.label}
-            label={card.label}
+            label={t(card.label)}
             value={stats ? card.getValue(stats) : '—'}
-            unit={card.unit}
+            unit={card.unit ? t(card.unit) : undefined}
             highlight={card.highlight && stats ? (card.getValue(stats) as number) > 0 : false}
           />
         ))}
@@ -141,8 +143,8 @@ export function DashboardPage() {
         )}
         {config.recentFeedTitle && (
           <RecentFeedCard
-            title={config.recentFeedTitle}
-            items={toFeedItems(matches)}
+            title={t(config.recentFeedTitle)}
+            items={toFeedItems(matches, t)}
             loading={matchesLoading}
           />
         )}
