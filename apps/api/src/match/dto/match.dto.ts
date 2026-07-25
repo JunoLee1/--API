@@ -31,18 +31,25 @@ export interface UpsertPlayerStatsDto {
   playerId: string;
   goals?: number;
   assists?: number;
+  xG?: number;
+  xA?: number;
   shots?: number;
   passesAttempted?: number;
   passesCompleted?: number;
   keyPasses?: number;
   tackles?: number;
-  tackleSuccessRate?: number;
+  tacklesAttempted?: number;
   clearances?: number;
   interceptions?: number;
   saves?: number;
   cleanSheet?: boolean;
   minutesPlayed?: number;
-  aerialDuelSuccessRate?: number;
+  aerialDuels?: number;
+  aerialDuelsAttempted?: number;
+  groundDuels?: number;
+  groundDuelsAttempted?: number;
+  ballRecoveries?: number;
+  turnovers?: number;
   sprint?: number;
   clearCutChanceRate?: number;
   penaltyConversionRate?: number;
@@ -51,6 +58,7 @@ export interface UpsertPlayerStatsDto {
   crossesCompleted?: number;
   shotsAllowed?: number;
   shotBlocked?: number;
+  distanceCovered?: number;
 }
 
 export interface UpsertTeamStatsDto {

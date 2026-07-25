@@ -1,8 +1,13 @@
-import { PrismaClient } from "../generated/client";
+import { PrismaClient, Prisma } from "../generated/client";
 import { ShotResult } from "../generated/enums";
 import { CreateMatchDto, UpdateMatchDto, MatchListQuery, UpsertPlayerStatsDto, UpsertTeamStatsDto, CreateShotEventDto } from "./dto/match.dto";
 
 const n = <T>(v: T | undefined): T | null => v ?? null;
+
+const calcTackleRate = (successes: number | undefined, attempts: number | undefined): number | null => {
+  if (!attempts || attempts === 0 || successes == null) return null;
+  return Math.round((successes / attempts) * 1000) / 10;
+};
 
 const XA_WEIGHT: Record<string, number> = {
   STRIKER: 0.7,
@@ -54,7 +59,8 @@ export class MatchRepository {
       where: { id },
       select: {
         ...MATCH_SELECT,
-        _count: { select: { squadPlayers: true } },
+        statSheetRaw: true,
+        statSheetImagePath: true,
         playerMatchStats: {
           select: {
             id: true,
@@ -68,13 +74,22 @@ export class MatchRepository {
             passesCompleted: true,
             keyPasses: true,
             tackles: true,
+            tacklesAttempted: true,
             tackleSuccessRate: true,
             clearances: true,
             interceptions: true,
             saves: true,
             cleanSheet: true,
             minutesPlayed: true,
+            aerialDuels: true,
+            aerialDuelsAttempted: true,
             aerialDuelSuccessRate: true,
+            groundDuels: true,
+            groundDuelsAttempted: true,
+            groundDuelSuccessRate: true,
+            ballRecoveries: true,
+            turnovers: true,
+            distanceCovered: true,
             sprint: true,
             clearCutChanceRate: true,
             penaltyConversionRate: true,
@@ -90,8 +105,8 @@ export class MatchRepository {
       },
     });
     if (!row) return null;
-    const { _count, ...rest } = row;
-    return { ...rest, hasSquad: _count.squadPlayers > 0 };
+    const squadCount = await this.prisma.matchSquad.count({ where: { matchId: id } });
+    return { ...row, hasSquad: squadCount > 0 };
   }
 
   create(data: CreateMatchDto) {
@@ -143,13 +158,22 @@ export class MatchRepository {
         passesCompleted: n(dto.passesCompleted),
         keyPasses: n(dto.keyPasses),
         tackles: n(dto.tackles),
-        tackleSuccessRate: n(dto.tackleSuccessRate),
+        tacklesAttempted: n(dto.tacklesAttempted),
+        tackleSuccessRate: calcTackleRate(dto.tackles, dto.tacklesAttempted),
         clearances: n(dto.clearances),
         interceptions: n(dto.interceptions),
         saves: n(dto.saves),
         cleanSheet: n(dto.cleanSheet),
         minutesPlayed: n(dto.minutesPlayed),
-        aerialDuelSuccessRate: n(dto.aerialDuelSuccessRate),
+        aerialDuels: n(dto.aerialDuels),
+        aerialDuelsAttempted: n(dto.aerialDuelsAttempted),
+        aerialDuelSuccessRate: calcTackleRate(dto.aerialDuels, dto.aerialDuelsAttempted),
+        groundDuels: n(dto.groundDuels),
+        groundDuelsAttempted: n(dto.groundDuelsAttempted),
+        groundDuelSuccessRate: calcTackleRate(dto.groundDuels, dto.groundDuelsAttempted),
+        ballRecoveries: n(dto.ballRecoveries),
+        turnovers: n(dto.turnovers),
+        distanceCovered: n(dto.distanceCovered),
         sprint: n(dto.sprint),
         clearCutChanceRate: n(dto.clearCutChanceRate),
         penaltyConversionRate: n(dto.penaltyConversionRate),
@@ -173,13 +197,22 @@ export class MatchRepository {
         passesCompleted: n(dto.passesCompleted),
         keyPasses: n(dto.keyPasses),
         tackles: n(dto.tackles),
-        tackleSuccessRate: n(dto.tackleSuccessRate),
+        tacklesAttempted: n(dto.tacklesAttempted),
+        tackleSuccessRate: calcTackleRate(dto.tackles, dto.tacklesAttempted),
         clearances: n(dto.clearances),
         interceptions: n(dto.interceptions),
         saves: n(dto.saves),
         cleanSheet: n(dto.cleanSheet),
         minutesPlayed: n(dto.minutesPlayed),
-        aerialDuelSuccessRate: n(dto.aerialDuelSuccessRate),
+        aerialDuels: n(dto.aerialDuels),
+        aerialDuelsAttempted: n(dto.aerialDuelsAttempted),
+        aerialDuelSuccessRate: calcTackleRate(dto.aerialDuels, dto.aerialDuelsAttempted),
+        groundDuels: n(dto.groundDuels),
+        groundDuelsAttempted: n(dto.groundDuelsAttempted),
+        groundDuelSuccessRate: calcTackleRate(dto.groundDuels, dto.groundDuelsAttempted),
+        ballRecoveries: n(dto.ballRecoveries),
+        turnovers: n(dto.turnovers),
+        distanceCovered: n(dto.distanceCovered),
         sprint: n(dto.sprint),
         clearCutChanceRate: n(dto.clearCutChanceRate),
         penaltyConversionRate: n(dto.penaltyConversionRate),
@@ -326,5 +359,13 @@ export class MatchRepository {
         update: {                    ...(xG != null && { xG }), ...(xA != null && { xA }), ...(keyPasses != null && { keyPasses }) },
       });
     }
+  }
+
+  updateStatSheet(id: number, statSheetRaw: unknown, statSheetImagePath: string) {
+    return this.prisma.match.update({
+      where: { id },
+      data: { statSheetRaw: statSheetRaw as Prisma.InputJsonValue, statSheetImagePath },
+      select: { id: true, statSheetRaw: true, statSheetImagePath: true },
+    });
   }
 }

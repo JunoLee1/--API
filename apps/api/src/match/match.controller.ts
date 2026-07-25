@@ -106,4 +106,22 @@ export class MatchController {
       next(err);
     }
   };
+
+  uploadStatSheet = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const ALLOWED = ["ADMIN", "COACHING_STAFF"] as const;
+      if (!(ALLOWED as readonly string[]).includes(req.user!.role))
+        throw new AppError(403, "FORBIDDEN");
+      const file = req.file;
+      if (!file) throw new AppError(400, "IMAGE_REQUIRED");
+      const result = await this.service.uploadStatSheet(
+        Number(req.params["id"]),
+        file.path,
+        file.originalname,
+      );
+      res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
 }

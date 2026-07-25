@@ -1,5 +1,8 @@
 import { Router } from "express";
 import passport from "passport";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 import { MatchController } from "./match.controller";
 import { MatchService } from "./match.service";
 import { MatchRepository } from "./match.repo";
@@ -15,6 +18,24 @@ const controller = new MatchController(service);
 
 const auth = passport.authenticate("accessToken", { session: false });
 
+const statSheetUploadDir = path.join(process.cwd(), "uploads", "stat-sheets");
+if (!fs.existsSync(statSheetUploadDir)) fs.mkdirSync(statSheetUploadDir, { recursive: true });
+const statSheetStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, statSheetUploadDir),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
+  },
+});
+const uploadStatSheet = multer({
+  storage: statSheetStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) cb(null, true);
+    else cb(new Error("이미지 파일만 업로드할 수 있습니다."));
+  },
+});
+
 // 경기 목록 조회 (?seasonId=&competitionType=)
 router.get("/", auth, controller.getMatches);
 
@@ -26,6 +47,9 @@ router.post("/", auth, controller.createMatch);
 
 // 경기 정보 수정 — 스코어 입력 포함 (ADMIN, FRONT_OFFICE)
 router.patch("/:id", auth, controller.updateMatch);
+
+// 스탯 시트 OCR 업로드 (ADMIN, COACHING_STAFF)
+router.post("/:id/stat-sheet", auth, uploadStatSheet.single("image"), controller.uploadStatSheet);
 
 // 선수별 매치 스탯 입력/수정 (ADMIN, COACHING_STAFF)
 router.put("/:id/player-stats", auth, controller.upsertPlayerStats);
