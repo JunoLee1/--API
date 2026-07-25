@@ -1,0 +1,25 @@
+{
+  "title": "Squad",
+  "lineup": "Lineup",
+  "formation": "Formation",
+  "field": {
+    "formation": "Formation",
+    "matchDate": "Match Date",
+    "opponent": "Opponent"
+  },
+  "position": {
+    "starter": "Starter",
+    "substitute": "Substitute",
+    "notSelected": "Not Selected"
+  },
+  "action": {
+    "setFormation": "Set Formation",
+    "confirmLineup": "Confirm Lineup",
+    "autoGenerate": "Auto Generate",
+    "dragDrop": "Drag to position"
+  },
+  "message": {
+    "lineupConfirmed": "Lineup has been confirmed.",
+    "notificationSent": "Players have been notified."
+  }
+}

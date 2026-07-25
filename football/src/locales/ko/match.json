@@ -1,0 +1,50 @@
+{
+  "title": "경기",
+  "list": "경기 목록",
+  "detail": "경기 상세",
+  "schedule": "경기 일정",
+  "result": "경기 결과",
+  "stats": "경기 통계",
+  "lineup": "라인업",
+  "rankings": "순위표",
+  "field": {
+    "date": "경기 일시",
+    "home": "홈",
+    "away": "어웨이",
+    "venue": "경기장",
+    "competition": "대회",
+    "score": "스코어",
+    "possession": "점���율",
+    "shots": "슈팅",
+    "shotsOnTarget": "유효 슈팅",
+    "corners": "코너킥",
+    "fouls": "파울",
+    "yellowCards": "경고",
+    "redCards": "퇴장",
+    "goals": "득점",
+    "scorers": "득점자"
+  },
+  "status": {
+    "upcoming": "예정",
+    "ongoing": "진행 중",
+    "finished": "종료"
+  },
+  "action": {
+    "enterScore": "스코어 입력",
+    "enterTeamStats": "팀 통계 입력",
+    "enterPlayerStats": "선수 통계 입력",
+    "scanStatSheet": "스탯 시트 스캔",
+    "confirmLineup": "라인업 확정"
+  },
+  "outcome": {
+    "win": "승",
+    "draw": "무",
+    "loss": "패"
+  },
+  "statSheet": {
+    "title": "스탯 시트 (AI 분석)",
+    "rescan": "다시 스캔",
+    "scanning": "스캔 분석 중...",
+    "noData": "스탯 시트 없음"
+  }
+}

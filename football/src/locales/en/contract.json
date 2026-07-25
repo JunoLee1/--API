@@ -1,0 +1,41 @@
+{
+  "title": "Contracts",
+  "list": "Contract List",
+  "detail": "Contract Detail",
+  "transfer": "Transfer",
+  "loan": "Loan",
+  "workPermit": "Work Permit",
+  "field": {
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "salary": "Salary",
+    "currency": "Currency",
+    "type": "Contract Type",
+    "status": "Status",
+    "club": "Club"
+  },
+  "status": {
+    "ACTIVE": "Active",
+    "EXPIRED": "Expired",
+    "TERMINATED": "Terminated",
+    "PENDING": "Pending"
+  },
+  "transferType": {
+    "PERMANENT": "Permanent",
+    "LOAN_IN": "Loan In",
+    "LOAN_OUT": "Loan Out",
+    "FREE": "Free Transfer"
+  },
+  "workPermitStatus": {
+    "PENDING": "Pending",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected",
+    "EXPIRED": "Expired"
+  },
+  "action": {
+    "createContract": "Create Contract",
+    "renewContract": "Renew Contract",
+    "terminateContract": "Terminate Contract",
+    "applyWorkPermit": "Apply Work Permit"
+  }
+}

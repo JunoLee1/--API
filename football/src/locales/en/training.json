@@ -1,0 +1,44 @@
+{
+  "title": "Training",
+  "sessions": "Sessions",
+  "attendance": "Attendance",
+  "videos": "Videos",
+  "references": "Tactical References",
+  "field": {
+    "date": "Training Date",
+    "sessionType": "Session Type",
+    "goal": "Training Goal",
+    "result": "Result",
+    "attendance": "Attendance"
+  },
+  "sessionType": {
+    "TACTICAL": "Tactical",
+    "PHYSICAL": "Physical",
+    "TECHNICAL": "Technical",
+    "MATCH": "Match",
+    "RECOVERY": "Recovery"
+  },
+  "attendanceStatus": {
+    "PRESENT": "Present",
+    "ABSENT_AUTHORIZED": "Authorized Absence",
+    "ABSENT_UNAUTHORIZED": "Unauthorized Absence",
+    "LATE_AUTHORIZED": "Authorized Late",
+    "LATE_UNAUTHORIZED": "Unauthorized Late",
+    "INJURED": "Injured"
+  },
+  "video": {
+    "title": "Video Title",
+    "url": "Video URL",
+    "tags": "Tags",
+    "aiSummary": "AI Summary",
+    "generateSummary": "Generate AI Summary",
+    "regenerateSummary": "Regenerate"
+  },
+  "action": {
+    "createSession": "Create Session",
+    "approveSession": "Approve Session",
+    "recordAttendance": "Record Attendance",
+    "uploadVideo": "Upload Video",
+    "addReference": "Add Reference"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "title": "관리자",
+  "users": "사용자 관리",
+  "roles": "역할 관리",
+  "audit": "감사 로그",
+  "settings": "설정",
+  "field": {
+    "email": "이메일",
+    "role": "역할",
+    "createdAt": "생성일",
+    "lastLogin": "최근 로그인",
+    "status": "상태"
+  },
+  "role": {
+    "ADMIN": "관리자",
+    "FRONT_OFFICE": "프런트",
+    "COACHING_STAFF": "코칭스태프",
+    "PLAYER": "선수",
+    "AGENT": "에이전트"
+  },
+  "action": {
+    "inviteUser": "사용자 초대",
+    "deactivateUser": "비활성화",
+    "resetPassword": "비밀번호 초기���",
+    "viewAuditLog": "감사 로그 보기"
+  }
+}

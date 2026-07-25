@@ -1,0 +1,40 @@
+{
+  "title": "Youth",
+  "players": "Youth Players",
+  "registration": "Registration",
+  "academyFee": "Academy Fee",
+  "growthReport": "Growth Report",
+  "developmentPlan": "Development Plan",
+  "callup": "Callup",
+  "field": {
+    "guardianName": "Guardian Name",
+    "guardianEmail": "Guardian Email",
+    "guardianPhone": "Guardian Phone",
+    "school": "School",
+    "grade": "Grade",
+    "team": "Team",
+    "feeAmount": "Fee Amount",
+    "dueDate": "Due Date"
+  },
+  "registrationStatus": {
+    "PENDING": "Pending",
+    "GUARDIAN_APPROVED": "Guardian Approved",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected",
+    "CONTRACTED": "Contracted"
+  },
+  "feeStatus": {
+    "PENDING": "Pending",
+    "SUBMITTED": "Submitted",
+    "PAID": "Paid",
+    "OVERDUE": "Overdue",
+    "LOCKED": "Suspended"
+  },
+  "action": {
+    "submitRegistration": "Submit Registration",
+    "approveRegistration": "Approve",
+    "rejectRegistration": "Reject",
+    "promoteToFirstTeam": "Promote to First Team",
+    "issueFees": "Issue Fees"
+  }
+}

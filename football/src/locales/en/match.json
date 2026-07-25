@@ -1,0 +1,50 @@
+{
+  "title": "Matches",
+  "list": "Match List",
+  "detail": "Match Detail",
+  "schedule": "Schedule",
+  "result": "Result",
+  "stats": "Statistics",
+  "lineup": "Lineup",
+  "rankings": "Rankings",
+  "field": {
+    "date": "Match Date",
+    "home": "Home",
+    "away": "Away",
+    "venue": "Venue",
+    "competition": "Competition",
+    "score": "Score",
+    "possession": "Possession",
+    "shots": "Shots",
+    "shotsOnTarget": "Shots on Target",
+    "corners": "Corners",
+    "fouls": "Fouls",
+    "yellowCards": "Yellow Cards",
+    "redCards": "Red Cards",
+    "goals": "Goals",
+    "scorers": "Scorers"
+  },
+  "status": {
+    "upcoming": "Upcoming",
+    "ongoing": "Ongoing",
+    "finished": "Finished"
+  },
+  "action": {
+    "enterScore": "Enter Score",
+    "enterTeamStats": "Enter Team Stats",
+    "enterPlayerStats": "Enter Player Stats",
+    "scanStatSheet": "Scan Stat Sheet",
+    "confirmLineup": "Confirm Lineup"
+  },
+  "outcome": {
+    "win": "W",
+    "draw": "D",
+    "loss": "L"
+  },
+  "statSheet": {
+    "title": "Stat Sheet (AI Analysis)",
+    "rescan": "Re-scan",
+    "scanning": "Analyzing scan...",
+    "noData": "No stat sheet"
+  }
+}

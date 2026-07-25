@@ -1,0 +1,25 @@
+{
+  "title": "스쿼드",
+  "lineup": "라인업",
+  "formation": "포메이션",
+  "field": {
+    "formation": "포메이션",
+    "matchDate": "경기 일자",
+    "opponent": "상대팀"
+  },
+  "position": {
+    "starter": "선발",
+    "substitute": "교체 대기",
+    "notSelected": "미선발"
+  },
+  "action": {
+    "setFormation": "포메이션 설정",
+    "confirmLineup": "라인업 확정",
+    "autoGenerate": "자동 생성",
+    "dragDrop": "드래그하여 배치"
+  },
+  "message": {
+    "lineupConfirmed": "라인업이 확정되었습니다.",
+    "notificationSent": "선수에게 알림이 발송되었습니다."
+  }
+}

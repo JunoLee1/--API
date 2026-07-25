@@ -1,0 +1,41 @@
+{
+  "title": "계약",
+  "list": "계약 목록",
+  "detail": "계약 상세",
+  "transfer": "이적",
+  "loan": "임대",
+  "workPermit": "취업비자",
+  "field": {
+    "startDate": "계약 시작일",
+    "endDate": "계약 종료일",
+    "salary": "급여",
+    "currency": "통화",
+    "type": "계약 유형",
+    "status": "상태",
+    "club": "구단"
+  },
+  "status": {
+    "ACTIVE": "유효",
+    "EXPIRED": "만료",
+    "TERMINATED": "해지",
+    "PENDING": "대기"
+  },
+  "transferType": {
+    "PERMANENT": "완전 이적",
+    "LOAN_IN": "임대 영입",
+    "LOAN_OUT": "임대 방출",
+    "FREE": "자유 이적"
+  },
+  "workPermitStatus": {
+    "PENDING": "신청 중",
+    "APPROVED": "승인",
+    "REJECTED": "거절",
+    "EXPIRED": "만료"
+  },
+  "action": {
+    "createContract": "계약 등록",
+    "renewContract": "계약 갱신",
+    "terminateContract": "계약 해지",
+    "applyWorkPermit": "취업비자 신청"
+  }
+}

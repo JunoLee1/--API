@@ -1,0 +1,63 @@
+{
+  "title": "선수",
+  "list": "선수 목록",
+  "detail": "선수 상세",
+  "profile": "프로필",
+  "stats": "스탯",
+  "field": {
+    "name": "선수명",
+    "position": "포지션",
+    "subPosition": "부 포지션",
+    "jerseyNumber": "등번호",
+    "nationality": "국적",
+    "birthDate": "생년월일",
+    "height": "신장",
+    "weight": "체중",
+    "foot": "주발",
+    "status": "상태",
+    "level": "레벨",
+    "marketValue": "시장가치"
+  },
+  "position": {
+    "GK": "골키퍼",
+    "DEF": "수비수",
+    "MID": "미드필더",
+    "FWD": "공격수"
+  },
+  "foot": {
+    "RIGHT": "오른발",
+    "LEFT": "왼발",
+    "BOTH": "양발"
+  },
+  "status": {
+    "ACTIVE": "활성",
+    "INJURED": "부상",
+    "ON_LOAN": "임대 중",
+    "SUSPENDED": "출전 정지",
+    "RETIRED": "은퇴",
+    "TRANSFERRED": "이적"
+  },
+  "level": {
+    "FIRST_TEAM": "1군",
+    "YOUTH": "유소년"
+  },
+  "tab": {
+    "overview": "개요",
+    "stats": "스탯",
+    "contracts": "계약",
+    "injuries": "부상",
+    "transfers": "이적",
+    "callups": "국가대표",
+    "development": "성장",
+    "equipment": "용품"
+  },
+  "radar": {
+    "goals": "득점",
+    "assists": "도움",
+    "xG": "xG",
+    "shots": "슈팅",
+    "passAccuracy": "패스%",
+    "keyPasses": "키패스",
+    "stability": "안정성"
+  }
+}

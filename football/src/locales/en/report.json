@@ -1,0 +1,34 @@
+{
+  "title": "Reports",
+  "list": "Report List",
+  "detail": "Report Detail",
+  "field": {
+    "title": "Title",
+    "content": "Content",
+    "type": "Type",
+    "author": "Author",
+    "submittedAt": "Submitted At",
+    "reviewedAt": "Reviewed At"
+  },
+  "type": {
+    "WEEKLY": "Weekly",
+    "MONTHLY": "Monthly",
+    "MATCH": "Match",
+    "TRAINING": "Training",
+    "INJURY": "Injury",
+    "SCOUTING": "Scouting"
+  },
+  "status": {
+    "DRAFT": "Draft",
+    "SUBMITTED": "Submitted",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected"
+  },
+  "action": {
+    "createReport": "Create Report",
+    "submitReport": "Submit",
+    "approveReport": "Approve",
+    "rejectReport": "Reject",
+    "requestRevision": "Request Revision"
+  }
+}

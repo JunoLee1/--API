@@ -1,0 +1,39 @@
+{
+  "title": "Medical",
+  "injury": "Injury",
+  "expense": "Medical Expense",
+  "externalReport": "External Report",
+  "field": {
+    "bodyPart": "Body Part",
+    "injuryType": "Injury Type",
+    "cause": "Cause",
+    "occurredAt": "Date of Injury",
+    "expectedReturn": "Expected Return Date",
+    "status": "Status",
+    "amount": "Amount",
+    "receiptDate": "Receipt Date",
+    "category": "Category",
+    "payer": "Payer"
+  },
+  "injuryStatus": {
+    "ACUTE": "Acute",
+    "CHRONIC": "Chronic",
+    "UNDER_TREATMENT": "Under Treatment",
+    "READY_TO_RETURN": "Ready to Return",
+    "RETURNED": "Returned"
+  },
+  "expenseStatus": {
+    "DRAFT": "Draft",
+    "SUBMITTED": "Submitted",
+    "LEADER_APPROVED": "1st Approval",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected"
+  },
+  "action": {
+    "reportInjury": "Report Injury",
+    "updateStatus": "Update Status",
+    "submitExpense": "Submit Expense",
+    "approveExpense": "Approve Expense",
+    "rejectExpense": "Reject Expense"
+  }
+}

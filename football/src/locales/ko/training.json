@@ -1,0 +1,44 @@
+{
+  "title": "훈련",
+  "sessions": "훈련 세션",
+  "attendance": "출결",
+  "videos": "영상",
+  "references": "전술 레퍼런스",
+  "field": {
+    "date": "훈련 일자",
+    "sessionType": "세션 유형",
+    "goal": "훈련 목표",
+    "result": "훈련 결과",
+    "attendance": "출석 현황"
+  },
+  "sessionType": {
+    "TACTICAL": "전술",
+    "PHYSICAL": "체력",
+    "TECHNICAL": "기술",
+    "MATCH": "경기",
+    "RECOVERY": "회복"
+  },
+  "attendanceStatus": {
+    "PRESENT": "출석",
+    "ABSENT_AUTHORIZED": "공결",
+    "ABSENT_UNAUTHORIZED": "무단 결��",
+    "LATE_AUTHORIZED": "지각(공인)",
+    "LATE_UNAUTHORIZED": "무단 지각",
+    "INJURED": "부상"
+  },
+  "video": {
+    "title": "영상 제목",
+    "url": "영상 URL",
+    "tags": "태그",
+    "aiSummary": "AI 요약",
+    "generateSummary": "AI 요약 생성",
+    "regenerateSummary": "재생성"
+  },
+  "action": {
+    "createSession": "세션 등록",
+    "approveSession": "세션 승인",
+    "recordAttendance": "출결 기록",
+    "uploadVideo": "영상 업로드",
+    "addReference": "레퍼런스 추가"
+  }
+}

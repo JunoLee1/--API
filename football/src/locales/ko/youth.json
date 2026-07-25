@@ -1,0 +1,40 @@
+{
+  "title": "유소년",
+  "players": "유소년 선수",
+  "registration": "입단 신청",
+  "academyFee": "아카데미 회비",
+  "growthReport": "성장 보고서",
+  "developmentPlan": "발전 계획",
+  "callup": "콜업",
+  "field": {
+    "guardianName": "보호자 이름",
+    "guardianEmail": "보호자 이메일",
+    "guardianPhone": "보호자 연락처",
+    "school": "학교",
+    "grade": "학년",
+    "team": "소속 팀",
+    "feeAmount": "회비 금액",
+    "dueDate": "납부 기한"
+  },
+  "registrationStatus": {
+    "PENDING": "대기",
+    "GUARDIAN_APPROVED": "보호자 승인",
+    "APPROVED": "승인",
+    "REJECTED": "반려",
+    "CONTRACTED": "입단 완료"
+  },
+  "feeStatus": {
+    "PENDING": "미납",
+    "SUBMITTED": "납부 확인 중",
+    "PAID": "납부 완료",
+    "OVERDUE": "연체",
+    "LOCKED": "참가 정지"
+  },
+  "action": {
+    "submitRegistration": "입단 신청",
+    "approveRegistration": "승인",
+    "rejectRegistration": "반려",
+    "promoteToFirstTeam": "1군 승격",
+    "issueFees": "회비 청구"
+  }
+}

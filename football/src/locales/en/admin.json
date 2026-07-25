@@ -1,0 +1,27 @@
+{
+  "title": "Admin",
+  "users": "User Management",
+  "roles": "Role Management",
+  "audit": "Audit Log",
+  "settings": "Settings",
+  "field": {
+    "email": "Email",
+    "role": "Role",
+    "createdAt": "Created At",
+    "lastLogin": "Last Login",
+    "status": "Status"
+  },
+  "role": {
+    "ADMIN": "Admin",
+    "FRONT_OFFICE": "Front Office",
+    "COACHING_STAFF": "Coaching Staff",
+    "PLAYER": "Player",
+    "AGENT": "Agent"
+  },
+  "action": {
+    "inviteUser": "Invite User",
+    "deactivateUser": "Deactivate",
+    "resetPassword": "Reset Password",
+    "viewAuditLog": "View Audit Log"
+  }
+}

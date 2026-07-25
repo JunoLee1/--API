@@ -1,0 +1,63 @@
+{
+  "title": "Players",
+  "list": "Player List",
+  "detail": "Player Detail",
+  "profile": "Profile",
+  "stats": "Stats",
+  "field": {
+    "name": "Player Name",
+    "position": "Position",
+    "subPosition": "Secondary Position",
+    "jerseyNumber": "Jersey Number",
+    "nationality": "Nationality",
+    "birthDate": "Date of Birth",
+    "height": "Height",
+    "weight": "Weight",
+    "foot": "Preferred Foot",
+    "status": "Status",
+    "level": "Level",
+    "marketValue": "Market Value"
+  },
+  "position": {
+    "GK": "Goalkeeper",
+    "DEF": "Defender",
+    "MID": "Midfielder",
+    "FWD": "Forward"
+  },
+  "foot": {
+    "RIGHT": "Right",
+    "LEFT": "Left",
+    "BOTH": "Both"
+  },
+  "status": {
+    "ACTIVE": "Active",
+    "INJURED": "Injured",
+    "ON_LOAN": "On Loan",
+    "SUSPENDED": "Suspended",
+    "RETIRED": "Retired",
+    "TRANSFERRED": "Transferred"
+  },
+  "level": {
+    "FIRST_TEAM": "First Team",
+    "YOUTH": "Youth"
+  },
+  "tab": {
+    "overview": "Overview",
+    "stats": "Stats",
+    "contracts": "Contracts",
+    "injuries": "Injuries",
+    "transfers": "Transfers",
+    "callups": "Callups",
+    "development": "Development",
+    "equipment": "Equipment"
+  },
+  "radar": {
+    "goals": "Goals",
+    "assists": "Assists",
+    "xG": "xG",
+    "shots": "Shots",
+    "passAccuracy": "Pass%",
+    "keyPasses": "Key Passes",
+    "stability": "Stability"
+  }
+}

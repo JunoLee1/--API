@@ -1,0 +1,39 @@
+{
+  "title": "의무",
+  "injury": "부상",
+  "expense": "의료비",
+  "externalReport": "외부 보고서",
+  "field": {
+    "bodyPart": "부상 부위",
+    "injuryType": "부상 유형",
+    "cause": "원인",
+    "occurredAt": "발생일",
+    "expectedReturn": "복귀 예정일",
+    "status": "상태",
+    "amount": "금액",
+    "receiptDate": "영수증 날짜",
+    "category": "분류",
+    "payer": "납부자"
+  },
+  "injuryStatus": {
+    "ACUTE": "급성",
+    "CHRONIC": "만성",
+    "UNDER_TREATMENT": "치료 중",
+    "READY_TO_RETURN": "복귀 준비",
+    "RETURNED": "복귀"
+  },
+  "expenseStatus": {
+    "DRAFT": "임시저장",
+    "SUBMITTED": "제출됨",
+    "LEADER_APPROVED": "1차 승인",
+    "APPROVED": "최종 승인",
+    "REJECTED": "반려"
+  },
+  "action": {
+    "reportInjury": "부상 보고",
+    "updateStatus": "상태 변경",
+    "submitExpense": "의료비 청구",
+    "approveExpense": "의료비 승인",
+    "rejectExpense": "의료비 반려"
+  }
+}
