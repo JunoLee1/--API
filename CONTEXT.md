@@ -315,7 +315,7 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 **externalId 매핑 실패 시:** 해당 선수 스탯 스킵 + FRONT_OFFICE에 미매핑 선수 목록 알림. `Player.externalId` 연결 후 재처리 가능.
 
 ### PlayerMatchStats (경기 선수 스탯)
-경기별 선수 수치 데이터 (골·어시스트·패스 정확도·태클 성공률 등). 내부 평가·코멘트는 포함하지 않는다. 선수 본인·AGENT 포함 전 역할 열람 가능 (본인 또는 담당 선수 범위 내).
+경기별 선수 수치 데이터 (골·어시스트·패스 시도/성공 수·태클 성공률 등). 내부 평가·코멘트는 포함하지 않는다. 선수 본인·AGENT 포함 전 역할 열람 가능 (본인 또는 담당 선수 범위 내).
 
 **Position Diversity Index (유소년 전용):** `LineupSlot.slotKey` → Position 매핑 + `PlayerMatchStats.minutesPlayed`를 온디맨드 집계하여 포지션별 출전 시간 비율을 반환. 별도 테이블 없음. 훈련 포지션 추적은 미지원(TrainingParticipant에 positionAssigned 없음). `GET /players/:id/position-diversity` 엔드포인트로 제공. `Team.type !== 'YOUTH'`인 선수는 빈 응답.
 
@@ -327,9 +327,9 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 | | 찬스 메이킹 | `xA`, `assist` |
 | | 드리블/활동량 | `sprint` |
 | | 슈팅 정확도 | `clear_cut_chance_rate` |
-| | 패스 | `passing_accuracy` |
+| | 패스 | `passesCompleted / passesAttempted` 역산 |
 | | 세트피스 | `penalty_conversion_rate`, `free_kick_conversion_rate` |
-| **미드필더** (CDM·CM·CAM) | 패스 | `passing_accuracy` |
+| **미드필더** (CDM·CM·CAM) | 패스 | `passesCompleted / passesAttempted` 역산 |
 | | 기회창출 | `xA`, `assist` |
 | | 수비 기여 | `tackle_success_rate`, `interception` |
 | | 활동량 | `sprint` |
@@ -339,10 +339,10 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 | | 인터셉트 | `interception` |
 | | 클리어런스 | `clearance` |
 | | 공중볼 | `aerial_duel_success_rate` |
-| | 빌드업 패스 | `passing_accuracy` |
+| | 빌드업 패스 | `passesCompleted / passesAttempted` 역산 |
 | | 활동량 | `sprint` |
 | **골키퍼** | 세이브율 | `saves / (saves + shotsAllowed)` 역산 |
-| | 빌드업 패스 | `passing_accuracy` |
+| | 빌드업 패스 | `passesCompleted / passesAttempted` 역산 |
 | | 크로스 처리 | `crosses_completed` |
 | | 슈팅 방어 | `shot_blocked` |
 | | 실점 방어 | `shot_allowed` |
@@ -357,7 +357,10 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 - 자동 인제스트: 외부 API 대회 정보 → 내부 enum 매핑 테이블로 변환
 - 수동 입력: FRONT_OFFICE / COACHING_STAFF가 직접 선택
 
-**수동 입력:** FRONT_OFFICE 또는 COACHING_STAFF가 `PlayerMatchStats` 직접 입력 가능. API 장애·미커버 대회 대응. `xG`·`xA`는 예외 — `ShotEvent` 기반 자동 집계(`recalculateXgXa`)가 단일 출처이며 수동 입력 경로 없음.
+**수동 입력:** FRONT_OFFICE 또는 COACHING_STAFF가 `PlayerMatchStats` 직접 입력 가능. API 장애·미커버 대회 대응. 아래 필드는 수동 입력 경로 없이 자동 집계된다:
+- `xG`·`xA`·`keyPasses`: `ShotEvent` 기반 `recalculateXgXa` 단일 출처
+- `TeamMatchStats.shots`·`passes`·`passAccuracy`·`fouls`·`tackles`·`interceptions`·`clearances`·`shotsOnTarget`·`xG`: `PlayerMatchStats` 집계(`recalculateTeamStats`)로 자동 계산. 팀 스탯 입력 폼에는 점유율·경고·퇴장·코너킥·오프사이드만 수동 입력.
+- `TeamMatchStats.passAccuracy`: `passesCompleted / passesAttempted × 100`. `PlayerMatchStats`에는 원시 카운트(`passesAttempted Int`, `passesCompleted Int`)만 저장되며, 성공률은 항상 역산.
 
 ### MatchLineup / LineupSlot (경기 라인업)
 
