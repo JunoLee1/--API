@@ -121,8 +121,8 @@ export class MatchRepository {
   }
 
   findPlayerStats(matchId: number, playerId: string) {
-    return this.prisma.playerMatchStats.findFirst({
-      where: { matchId, playerId },
+    return this.prisma.playerMatchStats.findUnique({
+      where: { matchId_playerId: { matchId, playerId } },
     });
   }
 
