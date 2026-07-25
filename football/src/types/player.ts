@@ -74,6 +74,7 @@ export interface PlayerListQuery {
   status?: PlayerStatus
   position?: Position
   level?: PlayerLevel
+  excludeYouth?: boolean
 }
 
 export interface CreatePlayerPayload {

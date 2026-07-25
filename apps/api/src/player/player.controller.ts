@@ -18,6 +18,7 @@ export class PlayerController {
       if (q["position"]) query.position = q["position"] as Position;
       if (q["level"]) query.level = q["level"] as PlayerLevel;
       if (q["nationalityId"]) query.nationalityId = Number(q["nationalityId"]);
+      if (q["excludeYouth"] === "true") query.excludeYouth = true;
       const players = await this.service.getPlayers(query);
       res.status(200).json(players);
     } catch (err) {

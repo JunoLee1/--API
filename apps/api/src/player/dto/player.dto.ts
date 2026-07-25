@@ -36,4 +36,5 @@ export interface PlayerListQuery {
   position?: Position;
   level?: PlayerLevel;
   nationalityId?: number;
+  excludeYouth?: boolean;
 }

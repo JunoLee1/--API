@@ -258,7 +258,6 @@ export function PlayerDetailPage() {
             <TabsList>
               <TabsTrigger value="info">기본 정보</TabsTrigger>
               <TabsTrigger value="stats">스탯</TabsTrigger>
-              <TabsTrigger value="jersey">등번호</TabsTrigger>
               {isOwnProfile && <TabsTrigger value="motivation">동기부여</TabsTrigger>}
               <TabsTrigger value="pdp">발전 계획</TabsTrigger>
               {isYouthPlayer && <TabsTrigger value="growth">성장 보고서</TabsTrigger>}
@@ -482,6 +481,18 @@ export function PlayerDetailPage() {
                   </div>
                 </LiteModeGate>
               )}
+
+              {/* 등번호 */}
+              <div className="rounded-lg border bg-card p-5">
+                <h3 className="text-sm font-semibold text-foreground mb-4">등번호</h3>
+                <JerseyTab
+                  playerId={player.id}
+                  teamId={player.teamId ?? null}
+                  canAssign={canAssignJersey}
+                  canRetire={canRetireJersey}
+                  canReactivate={canReactivateJersey}
+                />
+              </div>
             </div>
           </TabsContent>
           <TabsContent value="pdp" className="flex-1 overflow-auto mt-0">
@@ -489,15 +500,6 @@ export function PlayerDetailPage() {
           </TabsContent>
           <TabsContent value="stats" className="flex-1 overflow-auto mt-0">
             <StatsTab playerId={player.id} />
-          </TabsContent>
-          <TabsContent value="jersey" className="flex-1 overflow-auto mt-0">
-            <JerseyTab
-              playerId={player.id}
-              teamId={player.teamId ?? null}
-              canAssign={canAssignJersey}
-              canRetire={canRetireJersey}
-              canReactivate={canReactivateJersey}
-            />
           </TabsContent>
           {isOwnProfile && (
             <TabsContent value="motivation" className="flex-1 overflow-auto mt-0">

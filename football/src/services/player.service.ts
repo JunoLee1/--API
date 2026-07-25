@@ -19,6 +19,7 @@ function buildQuery(q: PlayerListQuery): string {
   if (q.status) params.set('status', q.status)
   if (q.position) params.set('position', q.position)
   if (q.level) params.set('level', q.level)
+  if (q.excludeYouth) params.set('excludeYouth', 'true')
   const qs = params.toString()
   return qs ? `?${qs}` : ''
 }
