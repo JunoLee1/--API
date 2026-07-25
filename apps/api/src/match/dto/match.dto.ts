@@ -31,8 +31,6 @@ export interface UpsertPlayerStatsDto {
   playerId: string;
   goals?: number;
   assists?: number;
-  xG?: number;
-  xA?: number;
   shots?: number;
   passAccuracy?: number;
   keyPasses?: number;
