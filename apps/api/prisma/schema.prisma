@@ -524,6 +524,8 @@ model User {
   isSuspended              Boolean                 @default(false)
   safeguardReportsAccused  SafeguardReport[]       @relation("SafeguardAccused")
   guardianFees             AcademyFee[]            @relation("GuardianFees")
+  givenEvaluations         CoachingStaffEvaluation[] @relation("EvaluationGiver")
+  receivedEvaluations      CoachingStaffEvaluation[] @relation("EvaluationReceiver")
 }
 
 model Season {
@@ -592,6 +594,7 @@ model Player {
   growthEvaluations      GrowthEvaluation[]
   badges                 PlayerBadge[]
   academyFees            AcademyFee[]
+  secondaryPositions     PlayerSecondaryPosition[]
 }
 
 model Contract {
@@ -848,6 +851,7 @@ model PlayerMatchStats {
   shots             Int?
   keyPasses         Int?
   tackles           Int?
+  tacklesAttempted  Int?
   tackleSuccessRate Float?
   clearances        Int?
   interceptions     Int?
@@ -856,7 +860,15 @@ model PlayerMatchStats {
   minutesPlayed          Int?
   passesAttempted        Int?
   passesCompleted        Int?
+  aerialDuels            Int?
+  aerialDuelsAttempted   Int?
   aerialDuelSuccessRate  Float?
+  groundDuels            Int?
+  groundDuelsAttempted   Int?
+  groundDuelSuccessRate  Float?
+  ballRecoveries         Int?
+  turnovers              Int?
+  distanceCovered        Float?
   sprint                 Float?
   clearCutChanceRate     Float?
   penaltyConversionRate  Float?
@@ -1363,6 +1375,30 @@ model CoachTier2Evaluation {
   evaluatedAt DateTime?
 
   coach Coach @relation(fields: [coachId], references: [id])
+}
+
+model PlayerSecondaryPosition {
+  id            Int      @id @default(autoincrement())
+  playerId      String
+  position      Position
+  fitnessTarget Float
+  createdAt     DateTime @default(now())
+
+  player Player @relation(fields: [playerId], references: [id])
+
+  @@unique([playerId, position])
+}
+
+model CoachingStaffEvaluation {
+  id          Int      @id @default(autoincrement())
+  staffUserId Int
+  evaluatorId Int
+  score       Int
+  comment     String?
+  evaluatedAt DateTime @default(now())
+
+  staffUser User @relation("EvaluationReceiver", fields: [staffUserId], references: [id])
+  evaluator User @relation("EvaluationGiver", fields: [evaluatorId], references: [id])
 }
 
 model CoachTutorAssignment {

@@ -9,12 +9,14 @@ import { JerseyController } from "./jersey.controller";
 import { JerseyRepository } from "./jersey.repo";
 import { MarketValueRepository } from "./market-value.repo";
 import { NotificationRepository } from "../notification/notification.repo";
+import { SecondaryPositionRepository } from "./secondary-position.repo";
 
 const router = Router();
 const repo = new PlayerRepository(getPrisma());
 const mvRepo = new MarketValueRepository(getPrisma());
 const service = new PlayerService(repo, mvRepo);
-const controller = new PlayerController(service);
+const spRepo = new SecondaryPositionRepository(getPrisma());
+const controller = new PlayerController(service, spRepo);
 const jerseyRepo = new JerseyRepository(getPrisma());
 const notifRepo = new NotificationRepository(getPrisma());
 const jerseyService = new JerseyService(jerseyRepo, notifRepo);
@@ -75,5 +77,10 @@ router.get("/:id/radar", auth, controller.getRadar);
 
 // 포지션 다양성 지수 (유스 선수 전용)
 router.get("/:id/position-diversity", auth, controller.getPositionDiversity);
+
+// 부 포지션 조회/등록/삭제
+router.get("/:playerId/secondary-positions", auth, controller.listSecondaryPositions);
+router.put("/:playerId/secondary-positions", auth, controller.upsertSecondaryPosition);
+router.delete("/:playerId/secondary-positions/:position", auth, controller.deleteSecondaryPosition);
 
 export default router;

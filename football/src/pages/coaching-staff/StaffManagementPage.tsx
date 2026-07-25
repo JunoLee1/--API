@@ -21,7 +21,8 @@ import { Separator } from '@/components/ui/separator'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
-import { Plus, X, UserCheck, UserX } from 'lucide-react'
+import { Plus, X, UserCheck, UserX, ClipboardList } from 'lucide-react'
+import { StaffEvaluationDialog } from '@/components/coaching-staff/StaffEvaluationDialog'
 
 function getThisWeekRange(): { from: string; to: string; label: string } {
   const now = new Date()
@@ -132,12 +133,14 @@ function AbsenceDialog({ open, onClose, staffId, onCreated }: AbsenceDialogProps
 interface StaffCardProps {
   member: CoachingStaffMember
   canEdit: boolean
+  canEval: boolean
   currentUserId: number
   onRefresh: () => void
 }
 
-function StaffCard({ member, canEdit, currentUserId, onRefresh }: StaffCardProps) {
+function StaffCard({ member, canEdit, canEval, currentUserId, onRefresh }: StaffCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [evalOpen, setEvalOpen] = useState(false)
   const absent = isAbsentToday(member.coachAvailabilities)
 
   const handleDeleteAbsence = async (absenceId: number) => {
@@ -164,14 +167,26 @@ function StaffCard({ member, canEdit, currentUserId, onRefresh }: StaffCardProps
             {member.coachingRole ? (COACHING_ROLE_LABEL[member.coachingRole] ?? member.coachingRole) : '—'}
           </p>
         </div>
-        {canEdit && (
-          <Button
-            variant="ghost" size="icon" className="h-6 w-6 shrink-0"
-            onClick={() => setDialogOpen(true)}
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </Button>
-        )}
+        <div className="flex items-center gap-1">
+          {(canEval || canEdit) && (
+            <Button
+              variant="ghost" size="icon" className="h-6 w-6 shrink-0"
+              onClick={() => setEvalOpen(true)}
+              title="평가"
+            >
+              <ClipboardList className="h-3.5 w-3.5" />
+            </Button>
+          )}
+          {canEdit && (
+            <Button
+              variant="ghost" size="icon" className="h-6 w-6 shrink-0"
+              onClick={() => setDialogOpen(true)}
+              title="부재 등록"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {member.coachAvailabilities.length > 0 && (
@@ -201,6 +216,13 @@ function StaffCard({ member, canEdit, currentUserId, onRefresh }: StaffCardProps
           onCreated={onRefresh}
         />
       )}
+      <StaffEvaluationDialog
+        open={evalOpen}
+        onClose={() => setEvalOpen(false)}
+        staffUserId={member.id}
+        staffNickname={member.nickname ?? '(닉네임 없음)'}
+        canCreate={canEval}
+      />
     </div>
   )
 }
@@ -217,6 +239,7 @@ export function StaffManagementPage() {
   const [dataLoading, setDataLoading] = useState(true)
 
   const canEdit = user?.role === 'ADMIN' || user?.coachingRole === 'HEAD_COACH'
+  const canEval = user?.role === 'ADMIN' || user?.coachingRole === 'HEAD_COACH'
 
   const fetchStaff = useCallback(() => {
     setStaffLoading(true)
@@ -273,6 +296,7 @@ export function StaffManagementPage() {
                   key={member.id}
                   member={member}
                   canEdit={canEdit}
+                  canEval={canEval}
                   currentUserId={user?.id ?? 0}
                   onRefresh={fetchStaff}
                 />

@@ -27,6 +27,7 @@ import { JerseyTab } from './tabs/JerseyTab'
 import { MotivationTab } from './tabs/MotivationTab'
 import { GrowthReportTab } from './tabs/GrowthReportTab'
 import { PositionDiversityChart } from '@/components/players/PositionDiversityChart'
+import { SecondaryPositionsModule } from '@/components/player/SecondaryPositionsModule'
 import { playerPdiApi, type PositionDiversityEntry } from '@/services/playerPdi.service'
 import { LiteModeGate } from '@/components/ui/LiteModeGate'
 import {
@@ -481,6 +482,13 @@ export function PlayerDetailPage() {
                   </div>
                 </LiteModeGate>
               )}
+
+              {/* 부 포지션 */}
+              <SecondaryPositionsModule
+                playerId={player.id}
+                primaryPosition={player.position}
+                canEdit={canCoachGrowth}
+              />
 
               {/* 등번호 */}
               <div className="rounded-lg border bg-card p-5">

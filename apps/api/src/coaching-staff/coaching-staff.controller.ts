@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { CoachingStaffService } from "./coaching-staff.service";
+import { CoachingStaffEvalRepository } from "./coaching-staff-eval.repo";
 
 function getWeekBounds(refDate: Date): { start: Date; end: Date } {
   const day = refDate.getDay();
@@ -15,7 +16,7 @@ function getWeekBounds(refDate: Date): { start: Date; end: Date } {
 }
 
 export class CoachingStaffController {
-  constructor(private service: CoachingStaffService) {}
+  constructor(private service: CoachingStaffService, private evalRepo?: CoachingStaffEvalRepository) {}
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -34,5 +35,26 @@ export class CoachingStaffController {
     } catch (err) {
       next(err);
     }
+  };
+
+  listEvaluations = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, coachingRole } = req.user!;
+      if (role !== "ADMIN" && role !== "COACHING_STAFF") throw new AppError(403, "FORBIDDEN");
+      const staffUserId = parseInt(String(req.params["staffUserId"]));
+      res.json(await this.evalRepo!.listForStaff(staffUserId));
+    } catch (err) { next(err); }
+  };
+
+  createEvaluation = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, coachingRole } = req.user!;
+      if (role !== "ADMIN" && !(role === "COACHING_STAFF" && coachingRole === "HEAD_COACH"))
+        throw new AppError(403, "FORBIDDEN");
+      const staffUserId = parseInt(String(req.params["staffUserId"]));
+      const { score, comment } = req.body as { score: number; comment?: string };
+      const row = await this.evalRepo!.create(staffUserId, req.user!.id, score, comment);
+      res.status(201).json(row);
+    } catch (err) { next(err); }
   };
 }
