@@ -74,6 +74,18 @@ export class AuthController {
     }
   };
 
+  updateLanguage = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = this.getAuthenticatedUser(req);
+      const { language } = req.body;
+      if (language !== 'ko' && language !== 'en') throw new AppError(400, 'INVALID_LANGUAGE');
+      await this.repo.updateLanguage(id, language);
+      res.status(200).json({ ok: true });
+    } catch (err) {
+      next(err);
+    }
+  };
+
   createUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userInfo = this.getAuthenticatedUser(req);

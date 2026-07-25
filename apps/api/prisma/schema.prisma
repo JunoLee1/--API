@@ -466,6 +466,7 @@ model User {
   frontOfficeRole FrontOfficeRole?
   isDeleted       Boolean          @default(false)
   isOutOfOffice   Boolean          @default(false)
+  language        String           @default("ko")
   dateOfBirth     DateTime
   phoneNumberId   Int              @unique
   nationalityId   Int
