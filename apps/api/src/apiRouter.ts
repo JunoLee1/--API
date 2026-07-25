@@ -31,6 +31,7 @@ import incidentReportRouter from "./incident-report/incident-report.routes";
 import growthReportRouter from "./growth-report/growth-report.routes";
 import safeguardRouter from "./safeguard/safeguard.routes";
 import academyFeeRouter from "./academy-fee/academy-fee.routes";
+import coachingStaffRouter from "./coaching-staff/coaching-staff.routes";
 
 const apiRouter = Router();
 
@@ -66,5 +67,6 @@ apiRouter.use("/incident-reports", incidentReportRouter);
 apiRouter.use("/growth-reports", growthReportRouter);
 apiRouter.use("/safeguard-reports", safeguardRouter);
 apiRouter.use("/academy-fees", academyFeeRouter);
+apiRouter.use("/coaching-staff", coachingStaffRouter);
 
 export default apiRouter;
