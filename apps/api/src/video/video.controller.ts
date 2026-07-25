@@ -73,4 +73,15 @@ export class VideoController {
       ));
     } catch (err) { next(err); }
   };
+
+  generateAiSummary = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!CAN_WRITE.includes(req.user!.role)) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(
+        await this.service.generateAiSummary(Number(req.params["id"])),
+      );
+    } catch (err) {
+      next(err);
+    }
+  };
 }
