@@ -830,6 +830,8 @@ model Match {
   externalId      String?         @unique
   seasonId        Int
   teamId          Int?
+  statSheetRaw       Json?
+  statSheetImagePath String?
 
   season           Season             @relation(fields: [seasonId], references: [id])
   team             Team?              @relation(fields: [teamId], references: [id])
@@ -1471,6 +1473,7 @@ model TrainingVideo {
   sessionType  SessionType?
   uploadedById Int
   createdAt    DateTime     @default(now())
+  aiSummary    String?
 
   uploader    User              @relation("VideoUploader", fields: [uploadedById], references: [id])
   assignments VideoAssignment[]
