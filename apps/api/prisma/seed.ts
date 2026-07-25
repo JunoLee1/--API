@@ -715,6 +715,16 @@ async function main() {
     },
   });
 
+  // MatchSquad — match1 (18명: p1~p15 중 가용 인원)
+  await prisma.matchSquad.createMany({
+    data: [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15].map((p) => ({
+      matchId: match1.id,
+      playerId: p.id,
+      isConfirmed: true,
+    })),
+    skipDuplicates: true,
+  });
+
   // PlayerMatchStats — match1
   await prisma.playerMatchStats.upsert({
     where: { id: 1 },

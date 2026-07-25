@@ -49,6 +49,9 @@ export class MatchService {
     if (dto.venue !== undefined && !VALID_VENUES.includes(dto.venue)) {
       throw new AppError(400, "INVALID_VENUE");
     }
+    if ((dto.homeScore !== undefined || dto.awayScore !== undefined) && !match.hasSquad) {
+      throw new AppError(409, "SQUAD_REQUIRED");
+    }
     return this.repo.update(id, dto);
   }
 

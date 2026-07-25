@@ -49,11 +49,12 @@ export class MatchRepository {
     });
   }
 
-  findById(id: number) {
-    return this.prisma.match.findUnique({
+  async findById(id: number) {
+    const row = await this.prisma.match.findUnique({
       where: { id },
       select: {
         ...MATCH_SELECT,
+        _count: { select: { squadPlayers: true } },
         playerMatchStats: {
           select: {
             id: true,
@@ -88,6 +89,9 @@ export class MatchRepository {
         teamMatchStats: true,
       },
     });
+    if (!row) return null;
+    const { _count, ...rest } = row;
+    return { ...rest, hasSquad: _count.squadPlayers > 0 };
   }
 
   create(data: CreateMatchDto) {

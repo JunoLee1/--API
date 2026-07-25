@@ -79,6 +79,7 @@ export interface ShotEvent {
 }
 
 export interface MatchDetail extends Match {
+  hasSquad: boolean
   playerMatchStats: PlayerMatchStat[]
   teamMatchStats: TeamMatchStat | null
 }

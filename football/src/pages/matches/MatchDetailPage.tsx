@@ -715,7 +715,13 @@ export function MatchDetailPage() {
           </>
         )}
         {canWrite && (
-          <Button variant="outline" size="sm" onClick={() => setScoreOpen(true)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setScoreOpen(true)}
+            disabled={!match.hasSquad}
+            title={!match.hasSquad ? '스쿼드를 먼저 등록해야 스코어를 입력할 수 있습니다.' : undefined}
+          >
             <Pencil className="h-3.5 w-3.5 mr-1.5" />스코어 입력
           </Button>
         )}
