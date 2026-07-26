@@ -42,7 +42,7 @@ function CreateDialog({ open, onOpenChange, onSaved }: CreateDialogProps) {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    playerApi.list({ level: 'YOUTH' }).then((r) => setYouthPlayers(r.data)).catch(() => null)
+    playerApi.list({ level: 'YOUTH' }).then(setYouthPlayers).catch(() => null)
   }, [])
 
   const handlePlayerSelect = (playerId: string) => {
