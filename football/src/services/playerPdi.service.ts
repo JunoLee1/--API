@@ -8,5 +8,5 @@ export interface PositionDiversityEntry {
 
 export const playerPdiApi = {
   get: (playerId: string) =>
-    api.get<PositionDiversityEntry[]>(`/players/${playerId}/position-diversity`).then(r => r.data),
+    api.get<PositionDiversityEntry[]>(`/players/${playerId}/position-diversity`),
 }
