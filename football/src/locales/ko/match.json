@@ -193,6 +193,8 @@
     "aerialDuelsAttempted": "공중 경합 시도",
     "aerialDuelRate": "공중 경합%",
     "saves": "선방",
+    "shotsAllowed": "허용 슈팅",
+    "shotBlocked": "슈팅 블록",
     "cleanSheet": "클린시트",
     "activity": "활동량",
     "foulsCommitted": "파울",

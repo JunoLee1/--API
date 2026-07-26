@@ -1071,6 +1071,8 @@ export function MatchDetailPage() {
                                       { label: t('playerStatsTable.groundDuels'),   value: fmtRate(s.groundDuels, s.groundDuelsAttempted) },
                                       { label: t('playerStatsTable.aerialDuels'),   value: fmtRate(s.aerialDuels, s.aerialDuelsAttempted) },
                                       { label: t('playerStatsTable.saves'),            value: s.saves },
+                                      { label: t('playerStatsTable.shotsAllowed'),     value: s.shotsAllowed },
+                                      { label: t('playerStatsTable.shotBlocked'),      value: s.shotBlocked },
                                       { label: t('playerStatsTable.cleanSheet'),       value: s.cleanSheet != null ? (s.cleanSheet ? '✓' : '✗') : null },
                                       { label: t('playerStatsTable.activity'),         value: (s.distanceCovered != null || s.sprint != null) ? `${s.distanceCovered != null ? s.distanceCovered.toFixed(1) + 'km' : '—'} / ${s.sprint != null ? Math.round(s.sprint) + '회' : '—'}` : null },
                                       { label: t('playerStatsTable.foulsCommitted'),   value: s.foulsCommitted },

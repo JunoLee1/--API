@@ -93,6 +93,7 @@ export function StatsTab({ playerId }: Props) {
                   <th className="text-right pr-3">{t('statsTab.tableHeaders.groundRate')}</th>
                   <th className="text-right pr-3">{t('statsTab.tableHeaders.aerialRate')}</th>
                   <th className="text-right pr-3">{t('statsTab.tableHeaders.longPass')}</th>
+                  <th className="text-right pr-3">{t('statsTab.tableHeaders.shotBlocked')}</th>
                   <th className="text-right pr-3">{t('statsTab.tableHeaders.saves')}</th>
                   <th className="text-right">{t('statsTab.tableHeaders.distance')}</th>
                 </tr>
@@ -138,6 +139,7 @@ export function StatsTab({ playerId }: Props) {
                         ? `${s.longPassesCompleted ?? 0}/${s.longPassesAttempted} (${Math.round((s.longPassesCompleted ?? 0) / s.longPassesAttempted * 100)}%)`
                         : '-'}
                     </td>
+                    <td className="text-right pr-3">{fmt(s.shotBlocked)}</td>
                     <td className="text-right pr-3">{fmt(s.saves)}</td>
                     <td className="text-right">
                       {(s.distanceCovered != null || s.sprint != null)

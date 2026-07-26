@@ -193,6 +193,8 @@
     "aerialDuelsAttempted": "AD Att",
     "aerialDuelRate": "AD%",
     "saves": "Saves",
+    "shotsAllowed": "Shots Allowed",
+    "shotBlocked": "Blk Shots",
     "cleanSheet": "CS",
     "activity": "Activity",
     "foulsCommitted": "Fouls",
