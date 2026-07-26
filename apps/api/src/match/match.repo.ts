@@ -323,9 +323,19 @@ export class MatchRepository {
     const xG = Math.round(shotEvents.reduce((s, e) => s + e.xG, 0) * 100) / 100;
     const passAccuracy = attempted > 0 ? Math.round((completed / attempted) * 1000) / 10 : 0;
 
-    await this.prisma.teamMatchStats.updateMany({
+    const autoFields = { shots, shotsOnTarget, passes: attempted, passAccuracy, fouls, xG, tackles, interceptions, clearances };
+    await this.prisma.teamMatchStats.upsert({
       where: { matchId },
-      data: { shots, shotsOnTarget, passes: attempted, passAccuracy, fouls, xG, tackles, interceptions, clearances },
+      update: autoFields,
+      create: {
+        matchId,
+        possession: 0,
+        yellowCards: 0,
+        redCards: 0,
+        corners: 0,
+        offsides: 0,
+        ...autoFields,
+      },
     });
   }
 
