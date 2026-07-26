@@ -370,6 +370,7 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
   const fieldError = (key: string): boolean => {
     if (key === 'xA' && assistsVal > 0 && !form.xA) return true
     if (key === 'xG' && goalsVal   > 0 && !form.xG) return true
+    if (key === 'shotsOnTarget' && goalsVal > 0 && (Number(form.shotsOnTarget) || 0) < goalsVal) return true
     if (key === 'passesAttempted' && keyPassVal > 0 && !form.passesAttempted) return true
     if (key === 'distanceCovered' && minutesVal > 0 && !form.distanceCovered) return true
     if (key === 'sprint'          && minutesVal > 0 && !form.sprint) return true
@@ -380,6 +381,10 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
     if (!form.playerId) { toast.error(t('playerStats.selectRequired')); return }
     if (goalsVal > 0 && !form.xG) {
       toast.error(t('playerStats.xgRequired'))
+      return
+    }
+    if (goalsVal > 0 && (Number(form.shotsOnTarget) || 0) < goalsVal) {
+      toast.error(t('playerStats.sotBelowGoals'))
       return
     }
     if (assistsVal > 0 && !form.xA) {
