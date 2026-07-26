@@ -291,6 +291,7 @@ export class MatchRepository {
       where: { matchId },
       select: {
         shots: true,
+        goals: true,
         passesAttempted: true,
         passesCompleted: true,
         foulsCommitted: true,
@@ -302,6 +303,7 @@ export class MatchRepository {
     });
 
     const shots        = stats.reduce((s, r) => s + (r.shots        ?? 0), 0);
+    const goals        = stats.reduce((s, r) => s + (r.goals        ?? 0), 0);
     const attempted    = stats.reduce((s, r) => s + (r.passesAttempted ?? 0), 0);
     const completed    = stats.reduce((s, r) => s + (r.passesCompleted ?? 0), 0);
     const fouls        = stats.reduce((s, r) => s + (r.foulsCommitted  ?? 0), 0);
@@ -313,7 +315,11 @@ export class MatchRepository {
       where: { matchId },
       select: { xG: true, result: true },
     });
-    const shotsOnTarget = shotEvents.filter(e => e.result === 'GOAL' || e.result === 'ON_TARGET').length;
+    // 골은 반드시 유효 슈팅이므로 goals를 floor로 보장
+    const shotsOnTarget = Math.max(
+      shotEvents.filter(e => e.result === 'GOAL' || e.result === 'ON_TARGET').length,
+      goals,
+    );
     const xG = Math.round(shotEvents.reduce((s, e) => s + e.xG, 0) * 100) / 100;
     const passAccuracy = attempted > 0 ? Math.round((completed / attempted) * 1000) / 10 : 0;
 
