@@ -1,10 +1,21 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { youthRegistrationApi } from '@/services/youthRegistration.service'
 import type { YouthRegistration, YouthRegistrationStatus } from '@/types/youth-registration'
 import { YouthRegistrationFormDialog } from './YouthRegistrationFormDialog'
+
+const PAGE_SIZE = 10
 
 const STATUS_VARIANT: Record<YouthRegistrationStatus, 'default' | 'secondary' | 'destructive' | 'outline'> = {
   PENDING: 'outline',
@@ -18,6 +29,9 @@ export default function YouthRegistrationPage() {
   const [registrations, setRegistrations] = useState<YouthRegistration[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const [teamFilter, setTeamFilter] = useState('ALL')
+  const [page, setPage] = useState(1)
 
   const load = async () => {
     setLoading(true)
@@ -31,7 +45,34 @@ export default function YouthRegistrationPage() {
 
   useEffect(() => { load() }, [])
 
-  const uniqueTeams = [...new Map(registrations.map(r => [r.teamId, r.team])).values()]
+  const uniqueTeams = useMemo(
+    () => [...new Map(registrations.map(r => [r.teamId, r.team])).values()],
+    [registrations],
+  )
+
+  const filtered = useMemo(() => {
+    let list = registrations
+    if (search) list = list.filter(r => r.playerName.toLowerCase().includes(search.toLowerCase()))
+    if (teamFilter !== 'ALL') list = list.filter(r => String(r.teamId) === teamFilter)
+    return list
+  }, [registrations, search, teamFilter])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage = Math.min(Math.max(1, page), totalPages)
+  const paginated = useMemo(
+    () => filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
+    [filtered, safePage],
+  )
+
+  const handleFilterChange = (value: string) => {
+    setTeamFilter(value)
+    setPage(1)
+  }
+
+  const handleSearch = (value: string) => {
+    setSearch(value)
+    setPage(1)
+  }
 
   return (
     <div className="p-6 space-y-4">
@@ -40,9 +81,29 @@ export default function YouthRegistrationPage() {
         <Button onClick={() => setDialogOpen(true)}>{t('registrationPage.addButton')}</Button>
       </div>
 
+      <div className="flex gap-2 flex-wrap">
+        <Input
+          placeholder={t('registrationPage.searchPlaceholder')}
+          value={search}
+          onChange={e => handleSearch(e.target.value)}
+          className="max-w-xs"
+        />
+        <Select value={teamFilter} onValueChange={handleFilterChange}>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">{t('registrationPage.allTeams')}</SelectItem>
+            {uniqueTeams.map(team => (
+              <SelectItem key={team.id} value={String(team.id)}>{team.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       {loading ? (
         <p className="text-muted-foreground">{t('registrationPage.loading')}</p>
-      ) : registrations.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <p className="text-muted-foreground">{t('registrationPage.noData')}</p>
       ) : (
         <table className="w-full text-sm border-collapse">
@@ -56,7 +117,7 @@ export default function YouthRegistrationPage() {
             </tr>
           </thead>
           <tbody>
-            {registrations.map(r => (
+            {paginated.map(r => (
               <tr key={r.id} className="border-b hover:bg-muted/40">
                 <td className="py-2 pr-4 font-medium">{r.playerName}</td>
                 <td className="py-2 pr-4">{r.team.name}</td>
@@ -69,6 +130,23 @@ export default function YouthRegistrationPage() {
             ))}
           </tbody>
         </table>
+      )}
+
+      {!loading && filtered.length > PAGE_SIZE && (
+        <div className="border-t pt-3 flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">
+            {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} / {filtered.length}
+          </span>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="h-7 w-7" disabled={safePage <= 1} onClick={() => setPage(p => p - 1)}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-xs tabular-nums px-1">{safePage} / {totalPages}</span>
+            <Button variant="ghost" size="icon" className="h-7 w-7" disabled={safePage >= totalPages} onClick={() => setPage(p => p + 1)}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       )}
 
       <YouthRegistrationFormDialog

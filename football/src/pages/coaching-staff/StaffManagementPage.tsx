@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { coachingStaffApi } from '@/services/coaching-staff.service'
 import { coachAvailabilityApi } from '@/services/coach-availability.service'
 import { trainingApi } from '@/services/training.service'
@@ -24,7 +25,8 @@ import {
 import { Plus, X, UserCheck, UserX, ClipboardList } from 'lucide-react'
 import { StaffEvaluationDialog } from '@/components/coaching-staff/StaffEvaluationDialog'
 
-function getThisWeekRange(): { from: string; to: string; label: string } {
+// Date math only — no locale, stable across renders
+const WEEK = (() => {
   const now = new Date()
   const day = now.getDay()
   const diff = day === 0 ? -6 : 1 - day
@@ -34,21 +36,19 @@ function getThisWeekRange(): { from: string; to: string; label: string } {
   const sunday = new Date(monday)
   sunday.setDate(monday.getDate() + 6)
   const fmt = (d: Date) => d.toISOString().slice(0, 10)
-  const label = `${monday.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })} – ${sunday.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}`
-  return { from: fmt(monday), to: fmt(sunday), label }
-}
+  return { from: fmt(monday), to: fmt(sunday), start: monday, end: sunday }
+})()
 
-function getThisMonthRange(): { from: string; to: string; label: string } {
+const MONTH = (() => {
   const now = new Date()
   const first = new Date(now.getFullYear(), now.getMonth(), 1)
   const last = new Date(now.getFullYear(), now.getMonth() + 1, 0)
   const fmt = (d: Date) => d.toISOString().slice(0, 10)
-  const label = `${now.getFullYear()}년 ${now.getMonth() + 1}월`
-  return { from: fmt(first), to: fmt(last), label }
-}
+  return { from: fmt(first), to: fmt(last), date: now }
+})()
 
-function formatDateKR(iso: string) {
-  return new Date(iso).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
+function formatDate(iso: string, language: string) {
+  return new Date(iso).toLocaleDateString(language, { month: 'short', day: 'numeric' })
 }
 
 function isAbsentToday(absences: CoachingStaffMember['coachAvailabilities']) {
@@ -71,12 +71,13 @@ interface AbsenceDialogProps {
 }
 
 function AbsenceDialog({ open, onClose, staffId, onCreated }: AbsenceDialogProps) {
+  const { t } = useTranslation('admin')
   const [form, setForm] = useState({ startDate: '', endDate: '', reason: '' })
   const [saving, setSaving] = useState(false)
 
   const handleCreate = async () => {
     if (!form.startDate || !form.endDate) {
-      toast.error('날짜를 모두 입력해주세요.')
+      toast.error(t('staffManagementPage.absence.dateRequired'))
       return
     }
     setSaving(true)
@@ -87,12 +88,12 @@ function AbsenceDialog({ open, onClose, staffId, onCreated }: AbsenceDialogProps
         endDate: form.endDate,
         reason: form.reason.trim() || undefined,
       })
-      toast.success('부재 등록됐습니다.')
+      toast.success(t('staffManagementPage.absence.registered'))
       setForm({ startDate: '', endDate: '', reason: '' })
       onCreated()
       onClose()
     } catch {
-      toast.error('등록에 실패했습니다.')
+      toast.error(t('staffManagementPage.absence.registerFailed'))
     } finally {
       setSaving(false)
     }
@@ -101,28 +102,30 @@ function AbsenceDialog({ open, onClose, staffId, onCreated }: AbsenceDialogProps
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>부재 등록</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t('staffManagementPage.absence.dialogTitle')}</DialogTitle></DialogHeader>
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
-            <Label>시작일 *</Label>
+            <Label>{t('staffManagementPage.absence.startDate')}</Label>
             <Input type="date" value={form.startDate}
               onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))} />
           </div>
           <div className="space-y-1.5">
-            <Label>종료일 *</Label>
+            <Label>{t('staffManagementPage.absence.endDate')}</Label>
             <Input type="date" value={form.endDate}
               onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))} />
           </div>
           <div className="space-y-1.5">
-            <Label>사유</Label>
-            <Textarea rows={2} placeholder="사유 (선택)" value={form.reason}
+            <Label>{t('staffManagementPage.absence.reason')}</Label>
+            <Textarea rows={2} placeholder={t('staffManagementPage.absence.reasonPlaceholder')} value={form.reason}
               onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={saving}>취소</Button>
+          <Button variant="outline" onClick={onClose} disabled={saving}>
+            {t('staffManagementPage.absence.cancel')}
+          </Button>
           <Button onClick={() => void handleCreate()} disabled={saving}>
-            {saving ? '저장 중...' : '등록'}
+            {saving ? t('staffManagementPage.absence.saving') : t('staffManagementPage.absence.register')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -135,10 +138,12 @@ interface StaffCardProps {
   canEdit: boolean
   canEval: boolean
   currentUserId: number
+  language: string
   onRefresh: () => void
 }
 
-function StaffCard({ member, canEdit, canEval, currentUserId, onRefresh }: StaffCardProps) {
+function StaffCard({ member, canEdit, canEval, currentUserId, language, onRefresh }: StaffCardProps) {
+  const { t } = useTranslation('admin')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [evalOpen, setEvalOpen] = useState(false)
   const absent = isAbsentToday(member.coachAvailabilities)
@@ -146,10 +151,10 @@ function StaffCard({ member, canEdit, canEval, currentUserId, onRefresh }: Staff
   const handleDeleteAbsence = async (absenceId: number) => {
     try {
       await coachAvailabilityApi.delete(absenceId)
-      toast.success('삭제됐습니다.')
+      toast.success(t('staffManagementPage.absence.deleted'))
       onRefresh()
     } catch {
-      toast.error('삭제에 실패했습니다.')
+      toast.error(t('staffManagementPage.absence.deleteFailed'))
     }
   }
 
@@ -161,7 +166,7 @@ function StaffCard({ member, canEdit, canEval, currentUserId, onRefresh }: Staff
             {absent
               ? <UserX className="h-4 w-4 text-destructive" />
               : <UserCheck className="h-4 w-4 text-green-600" />}
-            <span className="font-medium text-sm">{member.nickname ?? '(닉네임 없음)'}</span>
+            <span className="font-medium text-sm">{member.nickname ?? t('staffManagementPage.noNickname')}</span>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
             {member.coachingRole ? (COACHING_ROLE_LABEL[member.coachingRole] ?? member.coachingRole) : '—'}
@@ -172,7 +177,7 @@ function StaffCard({ member, canEdit, canEval, currentUserId, onRefresh }: Staff
             <Button
               variant="ghost" size="icon" className="h-6 w-6 shrink-0"
               onClick={() => setEvalOpen(true)}
-              title="평가"
+              title={t('staffManagementPage.tooltip.evaluate')}
             >
               <ClipboardList className="h-3.5 w-3.5" />
             </Button>
@@ -181,7 +186,7 @@ function StaffCard({ member, canEdit, canEval, currentUserId, onRefresh }: Staff
             <Button
               variant="ghost" size="icon" className="h-6 w-6 shrink-0"
               onClick={() => setDialogOpen(true)}
-              title="부재 등록"
+              title={t('staffManagementPage.tooltip.registerAbsence')}
             >
               <Plus className="h-3.5 w-3.5" />
             </Button>
@@ -193,7 +198,7 @@ function StaffCard({ member, canEdit, canEval, currentUserId, onRefresh }: Staff
         <div className="flex flex-wrap gap-1.5">
           {member.coachAvailabilities.map((a) => (
             <Badge key={a.id} variant="secondary" className="text-xs gap-1">
-              {formatDateKR(a.startDate)}–{formatDateKR(a.endDate)}
+              {formatDate(a.startDate, language)}–{formatDate(a.endDate, language)}
               {a.reason && <span className="text-muted-foreground">· {a.reason}</span>}
               {(canEdit || a.createdById === currentUserId) && (
                 <button
@@ -220,23 +225,24 @@ function StaffCard({ member, canEdit, canEval, currentUserId, onRefresh }: Staff
         open={evalOpen}
         onClose={() => setEvalOpen(false)}
         staffUserId={member.id}
-        staffNickname={member.nickname ?? '(닉네임 없음)'}
+        staffNickname={member.nickname ?? t('staffManagementPage.noNickname')}
         canCreate={canEval}
       />
     </div>
   )
 }
 
-const week = getThisWeekRange()
-const month = getThisMonthRange()
-
 export function StaffManagementPage() {
+  const { t, i18n } = useTranslation('admin')
   const { user } = useCurrentUser()
   const [staff, setStaff] = useState<CoachingStaffMember[]>([])
   const [staffLoading, setStaffLoading] = useState(true)
   const [sessions, setSessions] = useState<TrainingSession[]>([])
   const [results, setResults] = useState<TrainingResultRow[]>([])
   const [dataLoading, setDataLoading] = useState(true)
+
+  const weekLabel = `${new Intl.DateTimeFormat(i18n.language, { month: 'short', day: 'numeric' }).format(WEEK.start)} – ${new Intl.DateTimeFormat(i18n.language, { month: 'short', day: 'numeric' }).format(WEEK.end)}`
+  const monthLabel = new Intl.DateTimeFormat(i18n.language, { year: 'numeric', month: 'long' }).format(MONTH.date)
 
   const canEdit = user?.role === 'ADMIN' || user?.coachingRole === 'HEAD_COACH'
   const canEval = user?.role === 'ADMIN' || user?.coachingRole === 'HEAD_COACH'
@@ -246,8 +252,9 @@ export function StaffManagementPage() {
     coachingStaffApi
       .list()
       .then(setStaff)
-      .catch(() => toast.error('스태프 목록을 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('staffManagementPage.loadFailed')))
       .finally(() => setStaffLoading(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -255,32 +262,33 @@ export function StaffManagementPage() {
     setDataLoading(true)
     Promise.all([
       trainingApi.list(),
-      trainingApi.getResults({ from: month.from, to: month.to }),
+      trainingApi.getResults({ from: MONTH.from, to: MONTH.to }),
     ])
       .then(([allSessions, allResults]) => {
         setSessions(
           allSessions.filter((s) => {
             const d = s.date.slice(0, 10)
-            return d >= week.from && d <= week.to
+            return d >= WEEK.from && d <= WEEK.to
           }),
         )
         setResults(allResults)
       })
-      .catch(() => toast.error('훈련 데이터를 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('staffManagementPage.dataLoadFailed')))
       .finally(() => setDataLoading(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchStaff])
 
   return (
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 shrink-0">
-        <h1 className="text-lg font-semibold tracking-tight">스태프 관리</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">코칭스태프 현황 · 세션 배정 · 성과</p>
+        <h1 className="text-lg font-semibold tracking-tight">{t('staffManagementPage.title')}</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{t('staffManagementPage.subtitle')}</p>
       </div>
 
       <div className="flex-1 overflow-auto p-6 space-y-8">
         {/* Section 1: 스태프 현황 */}
         <section>
-          <h2 className="text-sm font-semibold mb-3">이번 주 스태프 현황</h2>
+          <h2 className="text-sm font-semibold mb-3">{t('staffManagementPage.sectionStaff')}</h2>
           {staffLoading ? (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -288,7 +296,7 @@ export function StaffManagementPage() {
               ))}
             </div>
           ) : staff.length === 0 ? (
-            <p className="text-sm text-muted-foreground">등록된 코칭스태프가 없습니다.</p>
+            <p className="text-sm text-muted-foreground">{t('staffManagementPage.noStaff')}</p>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {staff.map((member) => (
@@ -298,6 +306,7 @@ export function StaffManagementPage() {
                   canEdit={canEdit}
                   canEval={canEval}
                   currentUserId={user?.id ?? 0}
+                  language={i18n.language}
                   onRefresh={fetchStaff}
                 />
               ))}
@@ -307,14 +316,14 @@ export function StaffManagementPage() {
 
         <Separator />
 
-        {/* Section 2: 이번 주 세션 배정 */}
+        {/* Section 2: 세션 배정 */}
         <section>
-          <h2 className="text-sm font-semibold mb-1">이번 주 세션 배정</h2>
-          <p className="text-xs text-muted-foreground mb-3">{week.label}</p>
+          <h2 className="text-sm font-semibold mb-1">{t('staffManagementPage.sectionSessions')}</h2>
+          <p className="text-xs text-muted-foreground mb-3">{weekLabel}</p>
           {dataLoading ? (
             <Skeleton className="h-32 w-full" />
           ) : sessions.length === 0 ? (
-            <p className="text-sm text-muted-foreground">이번 주 등록된 세션이 없습니다.</p>
+            <p className="text-sm text-muted-foreground">{t('staffManagementPage.noSessions')}</p>
           ) : (
             <div className="space-y-2">
               {staff.map((member) => {
@@ -341,10 +350,10 @@ export function StaffManagementPage() {
 
         <Separator />
 
-        {/* Section 3: 코치별 포지션 성과 */}
+        {/* Section 3: 성과 */}
         <section>
-          <h2 className="text-sm font-semibold mb-1">코치별 포지션 성과</h2>
-          <p className="text-xs text-muted-foreground mb-3">{month.label} 훈련 결과 기준</p>
+          <h2 className="text-sm font-semibold mb-1">{t('staffManagementPage.sectionPerformance')}</h2>
+          <p className="text-xs text-muted-foreground mb-3">{t('staffManagementPage.performanceSubtitle', { label: monthLabel })}</p>
           {dataLoading ? (
             <Skeleton className="h-40 w-full" />
           ) : (
@@ -369,17 +378,17 @@ export function StaffManagementPage() {
                         </p>
                         {avg != null ? (
                           <span className="text-lg font-bold tabular-nums">
-                            {avg}<span className="text-xs font-normal text-muted-foreground">점</span>
+                            {avg}<span className="text-xs font-normal text-muted-foreground">{t('staffManagementPage.scoreUnit')}</span>
                           </span>
                         ) : (
-                          <span className="text-xs text-muted-foreground">데이터 없음</span>
+                          <span className="text-xs text-muted-foreground">{t('staffManagementPage.noData')}</span>
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        담당: {positions.map((p) => POSITION_LABEL[p] ?? p).join(', ')}
+                        {t('staffManagementPage.assignedPositions', { positions: positions.map((p) => POSITION_LABEL[p] ?? p).join(', ') })}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        평가 결과 {posResults.length}건
+                        {t('staffManagementPage.resultCount', { count: posResults.length })}
                       </p>
                     </div>
                   )

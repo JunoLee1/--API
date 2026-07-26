@@ -289,6 +289,42 @@
     "successAnonymity": "신고자의 신원은 보호됩니다.",
     "close": "닫기"
   },
+  "staffManagementPage": {
+    "title": "스태프 관리",
+    "subtitle": "코칭스태프 현황 · 세션 배정 · 성과",
+    "loadFailed": "스태프 목록을 불러오지 못했습니다.",
+    "dataLoadFailed": "훈련 데이터를 불러오지 못했습니다.",
+    "sectionStaff": "이번 주 스태프 현황",
+    "noStaff": "등록된 코칭스태프가 없습니다.",
+    "sectionSessions": "이번 주 세션 배정",
+    "noSessions": "이번 주 등록된 세션이 없습니다.",
+    "sectionPerformance": "코치별 포지션 성과",
+    "performanceSubtitle": "{{label}} 훈련 결과 기준",
+    "noData": "데이터 없음",
+    "assignedPositions": "담당: {{positions}}",
+    "resultCount": "평가 결과 {{count}}건",
+    "scoreUnit": "점",
+    "noNickname": "(닉네임 없음)",
+    "absence": {
+      "dialogTitle": "부재 등록",
+      "startDate": "시작일 *",
+      "endDate": "종료일 *",
+      "reason": "사유",
+      "reasonPlaceholder": "사유 (선택)",
+      "dateRequired": "날짜를 모두 입력해주세요.",
+      "registered": "부재 등록됐습니다.",
+      "registerFailed": "등록에 실패했습니다.",
+      "deleted": "삭제됐습니다.",
+      "deleteFailed": "삭제에 실패했습니다.",
+      "cancel": "취소",
+      "saving": "저장 중...",
+      "register": "등록"
+    },
+    "tooltip": {
+      "evaluate": "평가",
+      "registerAbsence": "부재 등록"
+    }
+  },
   "teamSettingsPage": {
     "title": "구단 설정",
     "description": "Lite Mode를 활성화하면 복잡한 기능이 비활성화되고 핵심 기능만 사용할 수 있습니다.",

@@ -3,21 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
-import { notificationApi, type NotificationItem } from '@/services/notification.service'
+import { notificationApi, NOTIFICATION_ROUTES, type NotificationItem } from '@/services/notification.service'
 import { useTranslation } from 'react-i18next'
-
-const NOTIFICATION_ROUTES: Record<string, string> = {
-  CONTRACT_EXPIRY: '/contracts',
-  PERFORMANCE_BONUS_ACHIEVED: '/contracts',
-  INJURY_READY_TO_RETURN: '/injuries',
-  TRAINING_ATTENDANCE_WARNING: '/training/attendance',
-  LOAN_OUT_EXPIRED: '/transfers',
-  PLAYER_EXTERNAL_ID_UNMAPPED: '/matches',
-  RECALL_APPROVAL_REQUESTED: '/transfers',
-  TACTICAL_ANALYSIS_CONFIRM_REQUESTED: '/matches/analysis',
-  TRAINING_SESSION_CONFIRM_REQUESTED: '/training',
-  EQUIPMENT_LOW_STOCK: '/equipment',
-}
 
 interface Props {
   unreadCount: number

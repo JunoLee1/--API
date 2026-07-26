@@ -54,7 +54,16 @@
       "GUARDIAN_APPROVED": "학부모 승인",
       "CONTRACTED": "입단 완료",
       "REJECTED": "반려"
-    }
+    },
+    "searchPlaceholder": "선수명 검색...",
+    "allTeams": "전체 팀"
+  },
+  "growthReportListPage": {
+    "title": "성장 보고서",
+    "searchPlaceholder": "선수명 검색...",
+    "noData": "유소년 선수가 없습니다.",
+    "viewReport": "보고서 보기",
+    "yearsOld": "세"
   },
   "registrationDialog": {
     "title": "유소년 입단 신청",

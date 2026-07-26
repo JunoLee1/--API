@@ -289,6 +289,42 @@
     "successAnonymity": "Your identity is protected.",
     "close": "Close"
   },
+  "staffManagementPage": {
+    "title": "Staff Management",
+    "subtitle": "Coaching staff overview · Session assignments · Performance",
+    "loadFailed": "Failed to load staff list.",
+    "dataLoadFailed": "Failed to load training data.",
+    "sectionStaff": "This Week's Staff Status",
+    "noStaff": "No coaching staff registered.",
+    "sectionSessions": "This Week's Session Assignments",
+    "noSessions": "No sessions registered this week.",
+    "sectionPerformance": "Performance by Coach",
+    "performanceSubtitle": "{{label}} training results",
+    "noData": "No data",
+    "assignedPositions": "Assigned: {{positions}}",
+    "resultCount": "{{count}} evaluation results",
+    "scoreUnit": "pts",
+    "noNickname": "(No nickname)",
+    "absence": {
+      "dialogTitle": "Register Absence",
+      "startDate": "Start Date *",
+      "endDate": "End Date *",
+      "reason": "Reason",
+      "reasonPlaceholder": "Reason (optional)",
+      "dateRequired": "Please enter both dates.",
+      "registered": "Absence registered.",
+      "registerFailed": "Failed to register.",
+      "deleted": "Deleted.",
+      "deleteFailed": "Failed to delete.",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "register": "Register"
+    },
+    "tooltip": {
+      "evaluate": "Evaluate",
+      "registerAbsence": "Register Absence"
+    }
+  },
   "teamSettingsPage": {
     "title": "Club Settings",
     "description": "Enabling Lite Mode disables complex features and enables only core functionality.",

@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
+import { getCountryName } from '@/lib/countryName'
 import { playerApi } from '@/services/player.service'
 import type { Player, PlayerStatus, Position, PositionZone } from '@/types/player'
 import {
@@ -55,7 +56,7 @@ function calcAge(dateOfBirth: string): number {
 }
 
 export function YouthPlayersPage() {
-  const { t } = useTranslation('player')
+  const { t, i18n } = useTranslation('player')
   const navigate = useNavigate()
   const { user } = useCurrentUser()
   const [players, setPlayers] = useState<Player[]>([])
@@ -231,7 +232,7 @@ export function YouthPlayersPage() {
                       </span>
                     </TableCell>
                     <TableCell className="py-2">
-                      <span className="text-sm">{player.nationality.name}</span>
+                      <span className="text-sm">{getCountryName(player.nationality.code, i18n.language)}</span>
                     </TableCell>
                     <TableCell className="py-2 text-center tabular-nums text-sm">
                       {calcAge(player.dateOfBirth)}
