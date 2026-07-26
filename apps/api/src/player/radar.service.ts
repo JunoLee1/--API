@@ -1,4 +1,4 @@
-export type PositionGroup = "FWD" | "MID" | "DEF" | "GK";
+export type PositionGroup = "FWD" | "MID" | "CB" | "DEF" | "GK";
 
 export const POSITION_GROUP: Record<string, PositionGroup> = {
   STRIKER: "FWD",
@@ -10,7 +10,7 @@ export const POSITION_GROUP: Record<string, PositionGroup> = {
   CENTRAL_DEFENSIVE_MIDFIELDER: "MID",
   LEFT_DEFENSIVE_MIDFIELDER: "MID",
   RIGHT_DEFENSIVE_MIDFIELDER: "MID",
-  CENTER_BACK: "DEF",
+  CENTER_BACK: "CB",
   LEFT_WING_BACK: "DEF",
   RIGHT_WING_BACK: "DEF",
   LEFT_FULL_BACK: "DEF",
@@ -46,6 +46,8 @@ type StatRow = {
   shotsAllowed?: number | null;
   ballRecoveries?: number | null;
   turnovers?: number | null;
+  longPassesAttempted?: number | null;
+  longPassesCompleted?: number | null;
 };
 
 
@@ -57,6 +59,16 @@ export function computeRadarScores(
   const group = POSITION_GROUP[position] ?? "MID";
   const passing = clamp(scale(avg.passAccuracy, 100) - clamp(scale(avg.turnovers, 6) * 35));
   const stability = clamp(scale(avg.ballRecoveries, 10) * 100 * 0.4 + clamp(100 - scale(avg.turnovers, 6) * 100) * 0.6);
+
+  // CB 전용: 롱패스 정확도(60%) + 단패스(40%) → 데이터 없으면 일반 passing fallback
+  const longPassAcc =
+    avg.longPassesAttempted != null && avg.longPassesAttempted > 0
+      ? clamp(((avg.longPassesCompleted ?? 0) / avg.longPassesAttempted) * 100)
+      : null;
+  const cbDistribution =
+    longPassAcc != null
+      ? clamp(scale(longPassAcc, 100) * 0.6 + scale(avg.passAccuracy, 100) * 0.4)
+      : passing;
 
   switch (group) {
     case "FWD":
@@ -84,6 +96,16 @@ export function computeRadarScores(
         shooting: clamp(scale(avg.xG, 1.5) * 0.5 + scale(avg.goals, 10) * 0.5),
         stability,
         setpiece: scale(avg.freeKickConversionRate, 1.0),
+      };
+    case "CB":
+      return {
+        tackling: scale(avg.tackleSuccessRate, 100),
+        interception: scale(avg.interceptions, 5),
+        clearing: scale(avg.clearances, 8),
+        aerial: scale(avg.aerialDuelSuccessRate, 1.0),
+        distribution: cbDistribution,
+        stability,
+        speed: scale(avg.sprint, 36),
       };
     case "DEF":
       return {
@@ -146,6 +168,7 @@ export async function getPlayerRadarData(
     "tackleSuccessRate", "interceptions", "clearances",
     "aerialDuelSuccessRate", "crossesCompleted", "saves", "shotsAllowed",
     "ballRecoveries", "turnovers",
+    "longPassesAttempted", "longPassesCompleted",
   ];
 
   for (const key of keys) {
