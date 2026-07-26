@@ -105,6 +105,7 @@
     "xaRequired": "도움이 있으면 xA를 입력해야 합니다.",
     "keyPassRequired": "키패스가 있으면 패스 시도 횟수를 입력해야 합니다.",
     "selectRequired": "선수를 선택해주세요.",
+    "activityRequired": "출전 시간이 있으면 뛴 거리와 스프린트를 입력해야 합니다.",
     "required": "*필수",
     "fields": {
       "minutesPlayed": "출전(분)",

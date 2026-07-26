@@ -105,6 +105,7 @@
     "xaRequired": "xA is required when assists > 0.",
     "keyPassRequired": "Pass attempts required when key passes > 0.",
     "selectRequired": "Please select a player.",
+    "activityRequired": "Distance covered and sprints are required when minutes played > 0.",
     "required": "* required",
     "fields": {
       "minutesPlayed": "Minutes Played",

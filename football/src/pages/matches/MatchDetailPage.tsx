@@ -308,10 +308,14 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
   const goalsVal    = Number(form.goals)        || 0
   const keyPassVal  = Number(form.keyPasses)    || 0
 
+  const minutesVal = Number(form.minutesPlayed) || 0
+
   const fieldError = (key: string): boolean => {
     if (key === 'xA' && assistsVal > 0 && !form.xA) return true
     if (key === 'xG' && goalsVal   > 0 && !form.xG) return true
     if (key === 'passesAttempted' && keyPassVal > 0 && !form.passesAttempted) return true
+    if (key === 'distanceCovered' && minutesVal > 0 && !form.distanceCovered) return true
+    if (key === 'sprint'          && minutesVal > 0 && !form.sprint) return true
     return false
   }
 
@@ -327,6 +331,10 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
     }
     if (keyPassVal > 0 && !form.passesAttempted) {
       toast.error(t('playerStats.keyPassRequired'))
+      return
+    }
+    if (minutesVal > 0 && (!form.distanceCovered || !form.sprint)) {
+      toast.error(t('playerStats.activityRequired'))
       return
     }
     setSaving(true)
