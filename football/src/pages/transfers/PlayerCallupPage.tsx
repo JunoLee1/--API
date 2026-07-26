@@ -5,7 +5,8 @@ import { callupApi } from '@/services/player-callup.service'
 import type { PlayerCallup, PlayerCallupStatus, CreateCallupDto } from '@/types/player-callup'
 import { CALLUP_STATUS_STYLE } from '@/types/player-callup'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
-import { usePlayers } from '@/hooks/usePlayers'
+import { playerApi } from '@/services/player.service'
+import type { Player } from '@/types/player'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -36,12 +37,21 @@ interface CreateDialogProps {
 
 function CreateDialog({ open, onOpenChange, onSaved }: CreateDialogProps) {
   const { t } = useTranslation('contract')
-  const { players } = usePlayers()
+  const [youthPlayers, setYouthPlayers] = useState<Player[]>([])
   const [form, setForm] = useState<Partial<CreateCallupDto>>({})
   const [saving, setSaving] = useState(false)
 
+  useEffect(() => {
+    playerApi.list({ level: 'YOUTH' }).then((r) => setYouthPlayers(r.data)).catch(() => null)
+  }, [])
+
+  const handlePlayerSelect = (playerId: string) => {
+    const player = youthPlayers.find((p) => p.id === playerId)
+    setForm((f) => ({ ...f, playerId, fromTeamId: player?.teamId ?? undefined }))
+  }
+
   const handleSave = async () => {
-    if (!form.playerId || !form.fromTeamId || !form.toTeamId || !form.reason?.trim() || !form.startDate) {
+    if (!form.playerId || !form.toTeamId || !form.reason?.trim() || !form.startDate) {
       toast.error(t('callup.createDialog.required'))
       return
     }
@@ -66,24 +76,15 @@ function CreateDialog({ open, onOpenChange, onSaved }: CreateDialogProps) {
             <Label>{t('callup.createDialog.player')}</Label>
             <Select
               value={form.playerId ?? ''}
-              onValueChange={(v) => setForm((f) => ({ ...f, playerId: v }))}
+              onValueChange={handlePlayerSelect}
             >
               <SelectTrigger><SelectValue placeholder={t('callup.createDialog.playerPlaceholder')} /></SelectTrigger>
               <SelectContent>
-                {players.map((p) => (
+                {youthPlayers.map((p) => (
                   <SelectItem key={p.id} value={p.id}>{p.playerName}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>{t('callup.createDialog.fromTeamId')}</Label>
-            <Input
-              type="number"
-              placeholder={t('callup.createDialog.fromTeamIdPlaceholder')}
-              value={form.fromTeamId ?? ''}
-              onChange={(e) => setForm((f) => ({ ...f, fromTeamId: Number(e.target.value) }))}
-            />
           </div>
           <div className="space-y-1.5">
             <Label>{t('callup.createDialog.toTeamId')}</Label>
