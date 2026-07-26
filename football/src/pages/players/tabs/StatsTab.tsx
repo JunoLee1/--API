@@ -122,9 +122,7 @@ export function StatsTab({ playerId }: Props) {
                     </td>
                     <td className="text-right pr-3">{fmt(s.keyPasses)}</td>
                     <td className="text-right pr-3">
-                      {(s.passesAttempted != null && s.passesAttempted > 0)
-                        ? `${Math.round((s.passesCompleted ?? 0) / s.passesAttempted * 100)}%`
-                        : '-'}
+                      {(() => { const att = (s.passesAttempted ?? 0) + (s.longPassesAttempted ?? 0); const cmp = (s.passesCompleted ?? 0) + (s.longPassesCompleted ?? 0); return att > 0 ? `${Math.round(cmp / att * 100)}%` : '-' })()}
                     </td>
                     <td className="text-right pr-3">{fmt(s.tackles)}</td>
                     <td className="text-right pr-3">{s.tackleSuccessRate != null ? `${s.tackleSuccessRate}%` : '-'}</td>

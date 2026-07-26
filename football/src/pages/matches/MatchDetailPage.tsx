@@ -1062,7 +1062,7 @@ export function MatchDetailPage() {
                                       { label: t('playerStatsTable.keyPasses'),     value: s.keyPasses },
                                       { label: t('playerStatsTable.passAttempted'), value: s.passesAttempted },
                                       { label: t('playerStatsTable.passCompleted'), value: s.passesCompleted },
-                                      { label: t('playerStatsTable.passRate'),      value: (s.passesAttempted != null && s.passesAttempted > 0) ? `${Math.round((s.passesCompleted ?? 0) / s.passesAttempted * 100)}%` : null },
+                                      { label: t('playerStatsTable.passRate'),      value: (() => { const att = (s.passesAttempted ?? 0) + (s.longPassesAttempted ?? 0); const cmp = (s.passesCompleted ?? 0) + (s.longPassesCompleted ?? 0); return att > 0 ? `${Math.round(cmp / att * 100)}%` : null })() },
                                       { label: t('playerStatsTable.tackles'),     value: fmtRate(s.tackles, s.tacklesAttempted) },
                                       { label: t('playerStatsTable.interceptions'), value: s.interceptions },
                                       { label: t('playerStatsTable.clearances'),    value: s.clearances },

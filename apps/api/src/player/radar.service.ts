@@ -59,11 +59,10 @@ export function computeRadarScores(
   teamAvg: StatRow | null,
 ): Record<string, number> {
   const group = POSITION_GROUP[position] ?? "MID";
-  // passAccuracy를 DB 필드가 아닌 passesAttempted/Completed로 직접 계산
-  const computedPassAcc =
-    avg.passesAttempted != null && avg.passesAttempted > 0
-      ? ((avg.passesCompleted ?? 0) / avg.passesAttempted) * 100
-      : avg.passAccuracy ?? null;
+  // 총 패스 성공률 = 단패스 + 롱패스 합산
+  const totalAtt = (avg.passesAttempted ?? 0) + (avg.longPassesAttempted ?? 0);
+  const totalCmp = (avg.passesCompleted ?? 0) + (avg.longPassesCompleted ?? 0);
+  const computedPassAcc = totalAtt > 0 ? (totalCmp / totalAtt) * 100 : avg.passAccuracy ?? null;
   const passing = clamp(scale(computedPassAcc, 100) - clamp(scale(avg.turnovers, 6) * 35));
   const stability = clamp(scale(avg.ballRecoveries, 10) * 100 * 0.4 + clamp(100 - scale(avg.turnovers, 6) * 100) * 0.6);
 
