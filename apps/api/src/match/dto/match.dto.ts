@@ -56,6 +56,7 @@ export interface UpsertPlayerStatsDto {
   freeKickConversionRate?: number;
   foulsCommitted?: number;
   crossesCompleted?: number;
+  shotsOnTarget?: number;
   shotsAllowed?: number;
   shotBlocked?: number;
   distanceCovered?: number;

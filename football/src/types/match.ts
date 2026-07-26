@@ -42,6 +42,7 @@ export interface PlayerMatchStat {
   distanceCovered: number | null
   sprint: number | null
   foulsCommitted: number | null
+  shotsOnTarget: number | null
   shotsAllowed: number | null
   shotBlocked: number | null
   dribblesAttempted: number | null

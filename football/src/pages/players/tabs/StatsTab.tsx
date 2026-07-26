@@ -80,6 +80,7 @@ export function StatsTab({ playerId }: Props) {
                   <th className="text-right pr-3">{t('statsTab.tableHeaders.goals')}</th>
                   <th className="text-right pr-3">{t('statsTab.tableHeaders.assists')}</th>
                   <th className="text-right pr-3">{t('statsTab.tableHeaders.shots')}</th>
+                  <th className="text-right pr-3">{t('statsTab.tableHeaders.shotsOnTarget')}</th>
                   <th className="text-right pr-3">xG</th>
                   <th className="text-right pr-3">xA</th>
                   <th className="text-right pr-3">{t('statsTab.tableHeaders.keyPasses')}</th>
@@ -106,6 +107,7 @@ export function StatsTab({ playerId }: Props) {
                     <td className="text-right pr-3 font-medium">{fmt(s.goals)}</td>
                     <td className="text-right pr-3">{fmt(s.assists)}</td>
                     <td className="text-right pr-3">{fmt(s.shots)}</td>
+                    <td className="text-right pr-3">{fmt(s.shotsOnTarget)}</td>
                     <td className="text-right pr-3">
                       {(s.xG != null && s.xG > 0)
                         ? s.xG.toFixed(2)
