@@ -194,6 +194,10 @@ type PlayerStatsForm = {
   aerialDuelsAttempted: string
   distanceCovered: string
   sprint: string
+  foulsCommitted: string
+  dribblesAttempted: string
+  dribblesCompleted: string
+  dribblesFailed: string
 }
 
 const PLAYER_STAT_FIELDS: { key: keyof Omit<PlayerStatsForm, 'playerId' | 'cleanSheet'>; label: string; float?: boolean }[] = [
@@ -219,6 +223,10 @@ const PLAYER_STAT_FIELDS: { key: keyof Omit<PlayerStatsForm, 'playerId' | 'clean
   { key: 'aerialDuelsAttempted', label: 'playerStats.fields.aerialDuelsAttempted' },
   { key: 'distanceCovered', label: 'playerStats.fields.distanceCovered', float: true },
   { key: 'sprint', label: 'playerStats.fields.sprint', float: true },
+  { key: 'foulsCommitted', label: 'playerStats.fields.foulsCommitted' },
+  { key: 'dribblesAttempted', label: 'playerStats.fields.dribblesAttempted' },
+  { key: 'dribblesCompleted', label: 'playerStats.fields.dribblesCompleted' },
+  { key: 'dribblesFailed', label: 'playerStats.fields.dribblesFailed' },
 ]
 
 const EMPTY_PLAYER_FORM: PlayerStatsForm = {
@@ -226,6 +234,7 @@ const EMPTY_PLAYER_FORM: PlayerStatsForm = {
   shots: '', passesAttempted: '', passesCompleted: '', keyPasses: '',
   tackles: '', tacklesAttempted: '', interceptions: '', clearances: '', saves: '', cleanSheet: false,
   ballRecoveries: '', turnovers: '', groundDuels: '', groundDuelsAttempted: '', aerialDuels: '', aerialDuelsAttempted: '', distanceCovered: '', sprint: '',
+  foulsCommitted: '', dribblesAttempted: '', dribblesCompleted: '', dribblesFailed: '',
 }
 
 interface PlayerStatsDialogProps {
@@ -278,6 +287,10 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
         aerialDuelsAttempted: existing.aerialDuelsAttempted != null ? String(existing.aerialDuelsAttempted) : '',
         distanceCovered: existing.distanceCovered != null ? String(existing.distanceCovered) : '',
         sprint: existing.sprint != null ? String(existing.sprint) : '',
+        foulsCommitted: existing.foulsCommitted != null ? String(existing.foulsCommitted) : '',
+        dribblesAttempted: existing.dribblesAttempted != null ? String(existing.dribblesAttempted) : '',
+        dribblesCompleted: existing.dribblesCompleted != null ? String(existing.dribblesCompleted) : '',
+        dribblesFailed: existing.dribblesFailed != null ? String(existing.dribblesFailed) : '',
       })
     } else {
       setForm({ ...EMPTY_PLAYER_FORM, playerId })
@@ -295,10 +308,14 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
   const goalsVal    = Number(form.goals)        || 0
   const keyPassVal  = Number(form.keyPasses)    || 0
 
+  const minutesVal = Number(form.minutesPlayed) || 0
+
   const fieldError = (key: string): boolean => {
     if (key === 'xA' && assistsVal > 0 && !form.xA) return true
     if (key === 'xG' && goalsVal   > 0 && !form.xG) return true
     if (key === 'passesAttempted' && keyPassVal > 0 && !form.passesAttempted) return true
+    if (key === 'distanceCovered' && minutesVal > 0 && !form.distanceCovered) return true
+    if (key === 'sprint'          && minutesVal > 0 && !form.sprint) return true
     return false
   }
 
@@ -314,6 +331,10 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
     }
     if (keyPassVal > 0 && !form.passesAttempted) {
       toast.error(t('playerStats.keyPassRequired'))
+      return
+    }
+    if (minutesVal > 0 && (!form.distanceCovered || !form.sprint)) {
+      toast.error(t('playerStats.activityRequired'))
       return
     }
     setSaving(true)
@@ -343,6 +364,10 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
         aerialDuelsAttempted: num(form.aerialDuelsAttempted),
         distanceCovered: numPos(form.distanceCovered),
         sprint: numPos(form.sprint),
+        foulsCommitted: num(form.foulsCommitted),
+        dribblesAttempted: num(form.dribblesAttempted),
+        dribblesCompleted: num(form.dribblesCompleted),
+        dribblesFailed: num(form.dribblesFailed),
       })
       toast.success(t('playerStats.savedSuccess'))
       onSaved()
@@ -1018,17 +1043,26 @@ export function MatchDetailPage() {
                                       { label: t('playerStatsTable.passAttempted'), value: s.passesAttempted },
                                       { label: t('playerStatsTable.passCompleted'), value: s.passesCompleted },
                                       { label: t('playerStatsTable.passRate'),      value: (s.passesAttempted != null && s.passesAttempted > 0) ? `${Math.round((s.passesCompleted ?? 0) / s.passesAttempted * 100)}%` : null },
-                                      { label: t('playerStatsTable.tackles'),       value: s.tackles },
-                                      { label: t('playerStatsTable.tackleRate'),    value: s.tackleSuccessRate != null ? `${s.tackleSuccessRate}%` : null },
+                                      { label: t('playerStatsTable.tackles'),          value: s.tackles },
+                                      { label: t('playerStatsTable.tacklesAttempted'), value: s.tacklesAttempted },
+                                      { label: t('playerStatsTable.tackleRate'),        value: s.tackleSuccessRate != null ? `${s.tackleSuccessRate}%` : null },
                                       { label: t('playerStatsTable.interceptions'), value: s.interceptions },
                                       { label: t('playerStatsTable.clearances'),    value: s.clearances },
                                       { label: t('playerStatsTable.ballRecoveries'),value: s.ballRecoveries },
                                       { label: t('playerStatsTable.turnovers'),     value: s.turnovers },
-                                      { label: t('playerStatsTable.groundDuelRate'),value: s.groundDuelSuccessRate != null ? `${s.groundDuelSuccessRate}%` : null },
-                                      { label: t('playerStatsTable.aerialDuelRate'),value: s.aerialDuelSuccessRate != null ? `${s.aerialDuelSuccessRate}%` : null },
-                                      { label: t('playerStatsTable.saves'),         value: s.saves },
-                                      { label: t('playerStatsTable.cleanSheet'),    value: s.cleanSheet != null ? (s.cleanSheet ? '✓' : '✗') : null },
-                                      { label: t('playerStatsTable.activity'),      value: (s.distanceCovered != null || s.sprint != null) ? `${s.distanceCovered != null ? s.distanceCovered.toFixed(1) + 'km' : '—'} / ${s.sprint != null ? Math.round(s.sprint) + '회' : '—'}` : null },
+                                      { label: t('playerStatsTable.groundDuels'),         value: s.groundDuels },
+                                      { label: t('playerStatsTable.groundDuelsAttempted'), value: s.groundDuelsAttempted },
+                                      { label: t('playerStatsTable.groundDuelRate'),        value: s.groundDuelSuccessRate != null ? `${s.groundDuelSuccessRate}%` : null },
+                                      { label: t('playerStatsTable.aerialDuels'),           value: s.aerialDuels },
+                                      { label: t('playerStatsTable.aerialDuelsAttempted'),  value: s.aerialDuelsAttempted },
+                                      { label: t('playerStatsTable.aerialDuelRate'),         value: s.aerialDuelSuccessRate != null ? `${s.aerialDuelSuccessRate}%` : null },
+                                      { label: t('playerStatsTable.saves'),            value: s.saves },
+                                      { label: t('playerStatsTable.cleanSheet'),       value: s.cleanSheet != null ? (s.cleanSheet ? '✓' : '✗') : null },
+                                      { label: t('playerStatsTable.activity'),         value: (s.distanceCovered != null || s.sprint != null) ? `${s.distanceCovered != null ? s.distanceCovered.toFixed(1) + 'km' : '—'} / ${s.sprint != null ? Math.round(s.sprint) + '회' : '—'}` : null },
+                                      { label: t('playerStatsTable.foulsCommitted'),   value: s.foulsCommitted },
+                                      { label: t('playerStatsTable.dribblesAttempted'),value: s.dribblesAttempted },
+                                      { label: t('playerStatsTable.dribblesCompleted'),value: s.dribblesCompleted },
+                                      { label: t('playerStatsTable.dribblesFailed'),   value: s.dribblesFailed },
                                     ] as { label: string; value: string | number | null }[]).map(({ label, value }) => (
                                       <div key={label} className="text-center">
                                         <div className="text-[12px] font-semibold text-slate-700 tabular-nums">{value ?? '—'}</div>

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { SafeguardButton } from '@/components/layout/SafeguardButton'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
@@ -64,7 +65,7 @@ interface NavItem {
   label: string
   icon: LucideIcon
   end?: boolean
-  section?: '선수 관리' | '계약·영입' | '부상·의료' | '훈련' | '경기·분석' | '유소년' | '코칭스태프' | '관리'
+  section?: 'nav.section.playerMgmt' | 'nav.section.contractTransfer' | 'nav.section.injuryMedical' | 'nav.section.training' | 'nav.section.matchAnalysis' | 'nav.section.youth' | 'nav.section.coachingStaff' | 'nav.section.management'
   roles?: Role[]
   coachingRoles?: CoachingRole[]
   frontOfficeRoles?: FrontOfficeRole[]
@@ -74,72 +75,72 @@ interface NavItem {
 
 
 const SECTION_ORDER: Array<NavItem['section'] & string> = [
-  '선수 관리',
-  '계약·영입',
-  '부상·의료',
-  '훈련',
-  '경기·분석',
-  '유소년',
-  '코칭스태프',
-  '관리',
+  'nav.section.playerMgmt',
+  'nav.section.contractTransfer',
+  'nav.section.injuryMedical',
+  'nav.section.training',
+  'nav.section.matchAnalysis',
+  'nav.section.youth',
+  'nav.section.coachingStaff',
+  'nav.section.management',
 ]
 
 const NAV_ITEMS: NavItem[] = [
-  { to: '/dashboard', label: '대시보드', icon: BarChart3, end: true },
+  { to: '/dashboard', label: 'nav.item.dashboard', icon: BarChart3, end: true },
 
   // 선수 관리
   {
     to: '/players',
-    label: '선수 목록',
+    label: 'nav.item.playerList',
     icon: Users,
-    section: '선수 관리',
+    section: 'nav.section.playerMgmt',
     end: true,
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
   },
   {
     to: '/youth-players',
-    label: '유소년 선수',
+    label: 'nav.item.youthPlayers',
     icon: GraduationCap,
-    section: '선수 관리',
+    section: 'nav.section.playerMgmt',
     end: true,
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
   },
   {
     to: '/prospects',
-    label: '영입 후보',
+    label: 'nav.item.prospects',
     icon: UserSearch,
-    section: '선수 관리',
+    section: 'nav.section.playerMgmt',
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
   },
 
   // 계약·영입
   {
     to: '/contracts',
-    label: '계약 목록',
+    label: 'nav.item.contractList',
     icon: ScrollText,
-    section: '계약·영입',
+    section: 'nav.section.contractTransfer',
     roles: ['ADMIN', 'FRONT_OFFICE'],
   },
   {
     to: '/transfers',
-    label: '이적 현황',
+    label: 'nav.item.transferStatus',
     icon: Activity,
-    section: '계약·영입',
+    section: 'nav.section.contractTransfer',
     roles: ['ADMIN', 'FRONT_OFFICE'],
   },
   {
     to: '/player-callups',
-    label: '유소년 콜업',
+    label: 'nav.item.youthCallup',
     icon: ArrowUpCircle,
-    section: '계약·영입',
+    section: 'nav.section.contractTransfer',
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
     coachingRoles: ['HEAD_COACH'],
   },
   {
     to: '/coaches/rounds',
-    label: '코치 채용',
+    label: 'nav.item.coachHiring',
     icon: Briefcase,
-    section: '계약·영입',
+    section: 'nav.section.contractTransfer',
     roles: ['ADMIN', 'FRONT_OFFICE'],
     frontOfficeRoles: ['GM', 'TD'],
   },
@@ -147,25 +148,25 @@ const NAV_ITEMS: NavItem[] = [
   // 부상·의료
   {
     to: '/injuries',
-    label: '부상 현황',
+    label: 'nav.item.injuryStatus',
     icon: Stethoscope,
-    section: '부상·의료',
+    section: 'nav.section.injuryMedical',
     end: true,
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
   },
   {
     to: '/injuries/stats',
-    label: '부상 통계',
+    label: 'nav.item.injuryStats',
     icon: TrendingUp,
-    section: '부상·의료',
+    section: 'nav.section.injuryMedical',
     roles: ['ADMIN', 'COACHING_STAFF'],
     coachingRoles: ['HEAD_COACH', 'ASSISTANT_COACH', 'MEDICAL', 'MEDICAL_DIRECTOR'],
   },
   {
     to: '/medical-expenses',
-    label: '의료비 결재',
+    label: 'nav.item.medicalExpenses',
     icon: Receipt,
-    section: '부상·의료',
+    section: 'nav.section.injuryMedical',
     roles: ['ADMIN', 'COACHING_STAFF'],
     coachingRoles: ['MEDICAL', 'MEDICAL_DIRECTOR'],
   },
@@ -173,112 +174,112 @@ const NAV_ITEMS: NavItem[] = [
   // 훈련
   {
     to: '/training',
-    label: '훈련 일정',
+    label: 'nav.item.trainingSchedule',
     icon: ClipboardList,
-    section: '훈련',
+    section: 'nav.section.training',
     end: true,
     roles: ['ADMIN', 'COACHING_STAFF', 'PLAYER'],
   },
   {
     to: '/training/attendance',
-    label: '출석 현황',
+    label: 'nav.item.attendance',
     icon: Shield,
-    section: '훈련',
+    section: 'nav.section.training',
     roles: ['ADMIN', 'COACHING_STAFF'],
   },
   {
     to: '/training/results',
-    label: '훈련 결과',
+    label: 'nav.item.trainingResults',
     icon: BarChart2,
-    section: '훈련',
+    section: 'nav.section.training',
     roles: ['ADMIN', 'COACHING_STAFF'],
   },
   {
     to: '/training/videos',
-    label: '훈련 영상',
+    label: 'nav.item.trainingVideos',
     icon: Video,
-    section: '훈련',
+    section: 'nav.section.training',
     roles: ['ADMIN', 'COACHING_STAFF'],
   },
   {
     to: '/training/references',
-    label: '전술 레퍼런스',
+    label: 'nav.item.tacticalReferences',
     icon: BookOpen,
-    section: '훈련',
+    section: 'nav.section.training',
     roles: ['ADMIN', 'COACHING_STAFF'],
   },
   {
     to: '/training/coach-availability',
-    label: '코치 가용성',
+    label: 'nav.item.coachAvailability',
     icon: CalendarX2,
-    section: '훈련',
+    section: 'nav.section.training',
     roles: ['ADMIN', 'COACHING_STAFF'],
   },
   {
     to: '/training/dashboard',
-    label: '코치 대시보드',
+    label: 'nav.item.coachDashboard',
     icon: BarChart2,
-    section: '훈련',
+    section: 'nav.section.training',
     roles: ['COACHING_STAFF'],
   },
 
   // 경기·분석
   {
     to: '/matches',
-    label: '경기 목록',
+    label: 'nav.item.matchList',
     icon: Trophy,
-    section: '경기·분석',
+    section: 'nav.section.matchAnalysis',
     end: true,
     roles: ['ADMIN', 'COACHING_STAFF', 'PLAYER'],
   },
   {
     to: '/matches/analysis',
-    label: '전술 분석',
+    label: 'nav.item.tacticalAnalysis',
     icon: FileText,
-    section: '경기·분석',
+    section: 'nav.section.matchAnalysis',
     roles: ['ADMIN', 'COACHING_STAFF'],
   },
   {
     to: '/matches/rankings',
-    label: '팀 순위',
+    label: 'nav.item.rankings',
     icon: BarChart3,
-    section: '경기·분석',
+    section: 'nav.section.matchAnalysis',
   },
   {
     to: '/squad',
-    label: '팀 빌더',
+    label: 'nav.item.teamBuilder',
     icon: LayoutGrid,
-    section: '경기·분석',
+    section: 'nav.section.matchAnalysis',
     roles: ['ADMIN', 'COACHING_STAFF'],
   },
 
   // 유소년
   {
     to: '/youth-registrations',
-    label: '입단 신청',
+    label: 'nav.item.youthRegistrations',
     icon: ClipboardList,
-    section: '유소년',
+    section: 'nav.section.youth',
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF', 'GUARDIAN'],
   },
   {
     to: '/incident-reports',
-    label: '사고 보고서',
+    label: 'nav.item.incidentReports',
     icon: FileText,
-    section: '유소년',
+    section: 'nav.section.youth',
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
   },
   {
-    to: '/youth-players',
-    label: '성장 보고서',
+    to: '/growth-reports',
+    label: 'nav.item.growthReports',
     icon: TrendingUp,
-    section: '유소년',
+    section: 'nav.section.youth',
     roles: ['ADMIN', 'COACHING_STAFF', 'GUARDIAN'],
   },
   {
     to: '/academy-fees',
-    label: '회비 관리',
+    label: 'nav.item.academyFees',
     icon: FileText,
-    section: '유소년',
+    section: 'nav.section.youth',
     roles: ['ADMIN', 'FRONT_OFFICE'],
     liteBlocked: true,
   },
@@ -286,9 +287,9 @@ const NAV_ITEMS: NavItem[] = [
   // 코칭스태프
   {
     to: '/coaching-staff/management',
-    label: '스태프 관리',
+    label: 'nav.item.staffMgmt',
     icon: Users2,
-    section: '코칭스태프',
+    section: 'nav.section.coachingStaff',
     roles: ['ADMIN', 'COACHING_STAFF'],
     coachingRoles: ['HEAD_COACH'],
   },
@@ -296,79 +297,80 @@ const NAV_ITEMS: NavItem[] = [
   // 관리
   {
     to: '/reports',
-    label: '보고서 결재',
+    label: 'nav.item.reportApproval',
     icon: FileText,
-    section: '관리',
+    section: 'nav.section.management',
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
     frontOfficeRoles: ['GM'],
   },
   {
     to: '/equipment',
-    label: '장비 관리',
+    label: 'nav.item.equipment',
     icon: Package,
-    section: '관리',
+    section: 'nav.section.management',
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
   },
   {
     to: '/admin/partners',
-    label: '파트너 관리',
+    label: 'nav.item.partnerMgmt',
     icon: Building2,
-    section: '관리',
+    section: 'nav.section.management',
     roles: ['ADMIN', 'FRONT_OFFICE'],
     frontOfficeRoles: ['EQUIPMENT_MANAGER'],
   },
   {
     to: '/admin/users',
-    label: '사용자 관리',
+    label: 'nav.item.userMgmt',
     icon: Settings,
-    section: '관리',
+    section: 'nav.section.management',
     roles: ['ADMIN'],
   },
   {
     to: '/admin/teams',
-    label: '팀 관리',
+    label: 'nav.item.teamMgmt',
     icon: Users2,
-    section: '관리',
+    section: 'nav.section.management',
     roles: ['ADMIN'],
   },
   {
     to: '/admin/seasons',
-    label: '시즌 관리',
+    label: 'nav.item.seasonMgmt',
     icon: CalendarDays,
-    section: '관리',
+    section: 'nav.section.management',
     roles: ['ADMIN'],
   },
   {
     to: '/admin/audit-logs',
-    label: '감사 로그',
+    label: 'nav.item.auditLogs',
     icon: ClipboardList,
-    section: '관리',
+    section: 'nav.section.management',
     roles: ['ADMIN'],
   },
   {
     to: '/admin/login-history',
-    label: '로그인 이력',
+    label: 'nav.item.loginHistory',
     icon: History,
-    section: '관리',
+    section: 'nav.section.management',
     roles: ['ADMIN'],
   },
   {
     to: '/safeguard-reports',
-    label: '보호 신고 현황',
+    label: 'nav.item.safeguardReports',
     icon: Shield,
-    section: '관리',
+    section: 'nav.section.management',
     roles: ['ADMIN'],
   },
   {
     to: '/admin/team-settings',
-    label: '구단 설정',
+    label: 'nav.item.teamSettings',
     icon: Settings,
-    section: '관리',
+    section: 'nav.section.management',
     roles: ['ADMIN'],
   },
 ]
 
 export function AppShell() {
+  const { t } = useTranslation('common')
   const { user, loading } = useCurrentUser()
   const { language, changeLanguage } = useLanguage(user?.language ?? 'ko')
   const isLite = useLiteMode()
@@ -481,7 +483,7 @@ export function AppShell() {
       }}
     >
       <item.icon className="h-4 w-4 shrink-0" aria-hidden />
-      <span className="flex-1">{item.label}</span>
+      <span className="flex-1">{t(item.label)}</span>
     </NavLink>
   )
 
@@ -511,7 +513,7 @@ export function AppShell() {
               className={cn('h-3.5 w-3.5 transition-transform shrink-0', isOpen && 'rotate-90')}
               aria-hidden
             />
-            <span className="flex-1 text-left">{g.section}</span>
+            <span className="flex-1 text-left">{t(g.section!)}</span>
             {hasActive && !isOpen && (
               <span
                 className="h-1.5 w-1.5 rounded-full bg-foreground"
@@ -582,7 +584,7 @@ export function AppShell() {
             void handleLogout()
           }}
         >
-          로그아웃
+          {t('nav.logout')}
         </Button>
       </div>
     </>
@@ -600,7 +602,7 @@ export function AppShell() {
               className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded"
               title={language === 'ko' ? 'Switch to English' : '한국어로 전환'}
             >
-              {language === 'ko' ? 'EN' : 'KO'}
+              {language === 'ko' ? 'KO' : 'EN'}
             </button>
             <NotificationPopover
               unreadCount={unreadCount}
@@ -680,7 +682,7 @@ export function AppShell() {
             className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded"
             title={language === 'ko' ? 'Switch to English' : '한국어로 전환'}
           >
-            {language === 'ko' ? 'EN' : 'KO'}
+            {language === 'ko' ? 'KO' : 'EN'}
           </button>
           <NotificationPopover
             unreadCount={unreadCount}

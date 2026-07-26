@@ -51,6 +51,7 @@ import { MedicalExpenseFormPage } from '@/pages/medical-expense/MedicalExpenseFo
 import { MedicalExpenseDetailPage } from '@/pages/medical-expense/MedicalExpenseDetailPage'
 import { SquadPlannerPage } from '@/pages/squad/SquadPlannerPage'
 import YouthRegistrationPage from '@/pages/youth/YouthRegistrationPage'
+import { GrowthReportsListPage } from '@/pages/players/GrowthReportsListPage'
 import IncidentReportPage from '@/pages/youth/IncidentReportPage'
 import AcademyFeePage from '@/pages/youth/AcademyFeePage'
 
@@ -89,6 +90,7 @@ function App() {
             <Route path="/youth-registrations" element={<YouthRegistrationPage />} />
             <Route path="/incident-reports" element={<IncidentReportPage />} />
             <Route path="/academy-fees" element={<AcademyFeePage />} />
+            <Route path="/growth-reports" element={<GrowthReportsListPage />} />
             <Route path="/growth-reports/:playerId" element={<GrowthReportRedirect />} />
             <Route path="/injuries" element={<InjuriesPage />} />
             <Route path="/injuries/:id" element={<InjuryDetailPage />} />

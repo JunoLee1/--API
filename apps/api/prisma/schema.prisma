@@ -880,6 +880,9 @@ model PlayerMatchStats {
   crossesCompleted       Int?
   shotsAllowed           Int?
   shotBlocked            Int?
+  dribblesAttempted      Int?
+  dribblesCompleted      Int?
+  dribblesFailed         Int?
   matchId                Int
   playerId          String
 

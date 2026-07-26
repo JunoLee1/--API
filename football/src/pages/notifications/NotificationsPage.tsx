@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { notificationApi } from '@/services/notification.service'
+import { notificationApi, NOTIFICATION_ROUTES } from '@/services/notification.service'
 import type { NotificationItem } from '@/services/notification.service'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
@@ -19,6 +20,7 @@ function formatDate(d: string) {
 
 export function NotificationsPage() {
   const { t } = useTranslation('common')
+  const navigate = useNavigate()
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [loading, setLoading] = useState(true)
   const [markingAll, setMarkingAll] = useState(false)
@@ -41,6 +43,12 @@ export function NotificationsPage() {
     } catch {
       toast.error(t('notificationsPage.markReadFailed'))
     }
+  }
+
+  const handleItemClick = async (n: NotificationItem) => {
+    if (!n.readAt) await handleMarkRead(n.id)
+    const target = NOTIFICATION_ROUTES[n.type]
+    if (target) navigate(target)
   }
 
   const handleMarkAllRead = async () => {
@@ -89,32 +97,37 @@ export function NotificationsPage() {
           </div>
         ) : (
           <ul className="divide-y">
-            {notifications.map((n) => (
-              <li
-                key={n.id}
-                className={cn(
-                  'flex items-start gap-3 px-6 py-4 transition-colors',
-                  !n.readAt && 'bg-blue-50/60 dark:bg-blue-950/20',
-                )}
-              >
-                <div className={cn('mt-1 h-2 w-2 rounded-full shrink-0', !n.readAt ? 'bg-blue-500' : 'bg-transparent')} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{n.title}</p>
-                  <p className="text-sm text-muted-foreground mt-0.5">{n.body}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{formatDate(n.createdAt)}</p>
-                </div>
-                {!n.readAt && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="shrink-0 h-7 text-xs"
-                    onClick={() => handleMarkRead(n.id)}
-                  >
-                    {t('notificationsPage.markRead')}
-                  </Button>
-                )}
-              </li>
-            ))}
+            {notifications.map((n) => {
+              const hasRoute = !!NOTIFICATION_ROUTES[n.type]
+              return (
+                <li
+                  key={n.id}
+                  className={cn(
+                    'flex items-start gap-3 px-6 py-4 transition-colors',
+                    !n.readAt && 'bg-blue-50/60 dark:bg-blue-950/20',
+                    hasRoute && 'cursor-pointer hover:bg-accent/50',
+                  )}
+                  onClick={hasRoute ? () => void handleItemClick(n) : undefined}
+                >
+                  <div className={cn('mt-1 h-2 w-2 rounded-full shrink-0', !n.readAt ? 'bg-blue-500' : 'bg-transparent')} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium">{n.title}</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">{n.body}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{formatDate(n.createdAt)}</p>
+                  </div>
+                  {!n.readAt && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="shrink-0 h-7 text-xs"
+                      onClick={(e) => { e.stopPropagation(); void handleMarkRead(n.id) }}
+                    >
+                      {t('notificationsPage.markRead')}
+                    </Button>
+                  )}
+                </li>
+              )
+            })}
           </ul>
         )}
       </div>

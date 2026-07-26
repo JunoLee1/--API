@@ -105,6 +105,7 @@
     "xaRequired": "xA is required when assists > 0.",
     "keyPassRequired": "Pass attempts required when key passes > 0.",
     "selectRequired": "Please select a player.",
+    "activityRequired": "Distance covered and sprints are required when minutes played > 0.",
     "required": "* required",
     "fields": {
       "minutesPlayed": "Minutes Played",
@@ -126,7 +127,11 @@
       "aerialDuels": "Aerial Duels Won",
       "aerialDuelsAttempted": "Aerial Duels Attempted",
       "distanceCovered": "Distance Covered (km)",
-      "sprint": "Sprints"
+      "sprint": "Sprints",
+      "foulsCommitted": "Fouls",
+      "dribblesAttempted": "Dribbles Attempted",
+      "dribblesCompleted": "Dribbles Completed",
+      "dribblesFailed": "Dribbles Failed"
     }
   },
   "scoreDialog": {
@@ -172,17 +177,26 @@
     "passAttempted": "PA",
     "passCompleted": "PC",
     "passRate": "Pass%",
-    "tackles": "Tackles",
+    "tackles": "Tackles Won",
+    "tacklesAttempted": "Tackles Att",
     "tackleRate": "Tackle%",
     "interceptions": "Int",
     "clearances": "Clr",
     "ballRecoveries": "Rcv",
     "turnovers": "TO",
+    "groundDuels": "GD Won",
+    "groundDuelsAttempted": "GD Att",
     "groundDuelRate": "GD%",
+    "aerialDuels": "AD Won",
+    "aerialDuelsAttempted": "AD Att",
     "aerialDuelRate": "AD%",
     "saves": "Saves",
     "cleanSheet": "CS",
-    "activity": "Activity"
+    "activity": "Activity",
+    "foulsCommitted": "Fouls",
+    "dribblesAttempted": "Drb Att",
+    "dribblesCompleted": "Drb Cmp",
+    "dribblesFailed": "Drb Fail"
   },
   "statSheetOcr": {
     "uploadHint": "Upload a match sheet image and AI will extract stats automatically.",

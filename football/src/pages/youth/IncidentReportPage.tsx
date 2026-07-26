@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { incidentReportApi } from '@/services/incidentReport.service'
 import { playerApi } from '@/services/player.service'
 import type { IncidentReport } from '@/types/incident-report'
 import { IncidentReportFormDialog } from './IncidentReportFormDialog'
+
+const PAGE_SIZE = 10
 
 const STATUS_VARIANT: Record<string, 'outline' | 'secondary' | 'default'> = {
   DRAFT: 'outline', SUBMITTED: 'secondary', SIGNED: 'default',
@@ -17,6 +20,14 @@ export default function IncidentReportPage() {
   const [players, setPlayers] = useState<{ id: string; playerName: string; teamId: number }[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [page, setPage] = useState(1)
+
+  const totalPages = Math.max(1, Math.ceil(reports.length / PAGE_SIZE))
+  const safePage = Math.min(Math.max(1, page), totalPages)
+  const paginated = useMemo(
+    () => reports.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
+    [reports, safePage],
+  )
 
   const load = async () => {
     setLoading(true)
@@ -50,7 +61,7 @@ export default function IncidentReportPage() {
 
       {loading ? <p className="text-muted-foreground">{t('incidentPage.loading')}</p> : (
         <div className="space-y-3">
-          {reports.map(r => (
+          {paginated.map(r => (
             <div key={r.id} className="border rounded-lg p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <div>
@@ -82,6 +93,23 @@ export default function IncidentReportPage() {
             </div>
           ))}
           {reports.length === 0 && <p className="text-muted-foreground">{t('incidentPage.noData')}</p>}
+        </div>
+      )}
+
+      {!loading && reports.length > PAGE_SIZE && (
+        <div className="border-t pt-3 flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">
+            {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, reports.length)} / {reports.length}
+          </span>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="h-7 w-7" disabled={safePage <= 1} onClick={() => setPage((p) => p - 1)}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-xs tabular-nums px-1">{safePage} / {totalPages}</span>
+            <Button variant="ghost" size="icon" className="h-7 w-7" disabled={safePage >= totalPages} onClick={() => setPage((p) => p + 1)}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       )}
 

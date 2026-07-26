@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
+import { getCountryName } from '@/lib/countryName'
 import { playerApi } from '@/services/player.service'
 import type { PlayerDetail, PlayerStatus, PositionZone, MarketValueEntry } from '@/types/player'
 import {
@@ -95,9 +96,10 @@ function StatRow({ label, value }: StatRowProps) {
 }
 
 export function PlayerDetailPage() {
-  const { t } = useTranslation('player')
+  const { t, i18n } = useTranslation('player')
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { user } = useCurrentUser()
   const [player, setPlayer] = useState<PlayerDetail | null>(null)
   const [loading, setLoading] = useState(true)
@@ -245,7 +247,7 @@ export function PlayerDetailPage() {
       </div>
 
       <div className="flex-1 overflow-auto">
-        <Tabs defaultValue="info" className="h-full flex flex-col">
+        <Tabs defaultValue={searchParams.get('tab') ?? 'info'} className="h-full flex flex-col">
           <div className="px-6 pt-4 border-b shrink-0">
             <TabsList>
               <TabsTrigger value="info">{t('detailPage.tabInfo')}</TabsTrigger>
@@ -287,7 +289,7 @@ export function PlayerDetailPage() {
                     <span className="inline-flex items-center text-xs text-muted-foreground mt-1">{t('detailPage.unclassified')}</span>
                   )}
                   <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
-                    <span>{player.nationality.name}</span>
+                    <span>{getCountryName(player.nationality.code, i18n.language)}</span>
                     <span>·</span>
                     <span>{t(`level.${player.level}`)}</span>
                     <span>·</span>

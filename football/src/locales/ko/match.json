@@ -105,6 +105,7 @@
     "xaRequired": "도움이 있으면 xA를 입력해야 합니다.",
     "keyPassRequired": "키패스가 있으면 패스 시도 횟수를 입력해야 합니다.",
     "selectRequired": "선수를 선택해주세요.",
+    "activityRequired": "출전 시간이 있으면 뛴 거리와 스프린트를 입력해야 합니다.",
     "required": "*필수",
     "fields": {
       "minutesPlayed": "출전(분)",
@@ -126,7 +127,11 @@
       "aerialDuels": "공중 경합 성공",
       "aerialDuelsAttempted": "공중 경합 시도",
       "distanceCovered": "뛴 거리(km)",
-      "sprint": "스프린트(회)"
+      "sprint": "스프린트(회)",
+      "foulsCommitted": "파울",
+      "dribblesAttempted": "드리블 시도",
+      "dribblesCompleted": "드리블 성공",
+      "dribblesFailed": "드리블 실패"
     }
   },
   "scoreDialog": {
@@ -172,17 +177,26 @@
     "passAttempted": "패스 시도",
     "passCompleted": "패스 성공",
     "passRate": "패스%",
-    "tackles": "태클",
+    "tackles": "태클 성공",
+    "tacklesAttempted": "태클 시도",
     "tackleRate": "태클%",
     "interceptions": "인터셉트",
     "clearances": "클리어링",
     "ballRecoveries": "볼 회수",
     "turnovers": "턴오버",
+    "groundDuels": "지상 경합 성공",
+    "groundDuelsAttempted": "지상 경합 시도",
     "groundDuelRate": "지상 경합%",
+    "aerialDuels": "공중 경합 성공",
+    "aerialDuelsAttempted": "공중 경합 시도",
     "aerialDuelRate": "공중 경합%",
     "saves": "선방",
     "cleanSheet": "클린시트",
-    "activity": "활동량"
+    "activity": "활동량",
+    "foulsCommitted": "파울",
+    "dribblesAttempted": "드리블 시도",
+    "dribblesCompleted": "드리블 성공",
+    "dribblesFailed": "드리블 실패"
   },
   "statSheetOcr": {
     "uploadHint": "경기 기록지 이미지를 업로드하면 AI가 스탯을 자동 추출합니다.",

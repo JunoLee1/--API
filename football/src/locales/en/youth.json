@@ -54,7 +54,16 @@
       "GUARDIAN_APPROVED": "Guardian Approved",
       "CONTRACTED": "Contracted",
       "REJECTED": "Rejected"
-    }
+    },
+    "searchPlaceholder": "Search by name...",
+    "allTeams": "All Teams"
+  },
+  "growthReportListPage": {
+    "title": "Growth Reports",
+    "searchPlaceholder": "Search by name...",
+    "noData": "No youth players found.",
+    "viewReport": "View Report",
+    "yearsOld": " yrs"
   },
   "registrationDialog": {
     "title": "Youth Registration",
