@@ -30,7 +30,7 @@ export class IncidentReportController {
     try {
       if (!ALLOWED_ROLES.includes(req.user!.role as any)) throw new AppError(403, "FORBIDDEN");
       const body = req.body as CreateIncidentReportDto;
-      if (!body.playerId || !body.teamId || !body.type || !body.description) {
+      if (!body.playerId || body.teamId == null || !body.type || !body.description) {
         throw new AppError(400, "MISSING_FIELDS");
       }
       if (body.description.length < 10) throw new AppError(400, "DESCRIPTION_TOO_SHORT");
