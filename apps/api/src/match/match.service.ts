@@ -74,6 +74,10 @@ export class MatchService {
     if ((dto.goals ?? 0) > 0 && !dto.xG) {
       throw new AppError(400, "GOAL_REQUIRES_XG");
     }
+    // 득점이 있으면 유효슈팅 >= 득점
+    if ((dto.goals ?? 0) > 0 && (dto.shotsOnTarget ?? 0) < (dto.goals ?? 0)) {
+      throw new AppError(400, "SHOTS_ON_TARGET_BELOW_GOALS");
+    }
 
     const existing = await this.repo.findPlayerStats(matchId, dto.playerId);
     const result = existing
