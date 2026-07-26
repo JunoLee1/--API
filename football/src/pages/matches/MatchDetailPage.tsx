@@ -38,6 +38,17 @@ const ZONE_STYLE: Record<string, string> = {
   FWD: 'bg-rose-100 text-rose-800 border-rose-200',
 }
 
+// 성공/시도 (%) 형식 — 시도가 MIN_ATTEMPTS 미만이면 % 생략으로 착시 방지
+const MIN_RATE_ATTEMPTS = 3
+function fmtRate(success: number | null, attempts: number | null): string | null {
+  if (success == null && attempts == null) return null
+  const s = success ?? 0
+  const a = attempts ?? 0
+  if (a === 0) return s > 0 ? `${s}/0` : null
+  const pct = Math.round((s / a) * 1000) / 10
+  return a >= MIN_RATE_ATTEMPTS ? `${s}/${a} (${pct}%)` : `${s}/${a}`
+}
+
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
 }
@@ -1043,19 +1054,13 @@ export function MatchDetailPage() {
                                       { label: t('playerStatsTable.passAttempted'), value: s.passesAttempted },
                                       { label: t('playerStatsTable.passCompleted'), value: s.passesCompleted },
                                       { label: t('playerStatsTable.passRate'),      value: (s.passesAttempted != null && s.passesAttempted > 0) ? `${Math.round((s.passesCompleted ?? 0) / s.passesAttempted * 100)}%` : null },
-                                      { label: t('playerStatsTable.tackles'),          value: s.tackles },
-                                      { label: t('playerStatsTable.tacklesAttempted'), value: s.tacklesAttempted },
-                                      { label: t('playerStatsTable.tackleRate'),        value: s.tackleSuccessRate != null ? `${s.tackleSuccessRate}%` : null },
+                                      { label: t('playerStatsTable.tackles'),     value: fmtRate(s.tackles, s.tacklesAttempted) },
                                       { label: t('playerStatsTable.interceptions'), value: s.interceptions },
                                       { label: t('playerStatsTable.clearances'),    value: s.clearances },
                                       { label: t('playerStatsTable.ballRecoveries'),value: s.ballRecoveries },
                                       { label: t('playerStatsTable.turnovers'),     value: s.turnovers },
-                                      { label: t('playerStatsTable.groundDuels'),         value: s.groundDuels },
-                                      { label: t('playerStatsTable.groundDuelsAttempted'), value: s.groundDuelsAttempted },
-                                      { label: t('playerStatsTable.groundDuelRate'),        value: s.groundDuelSuccessRate != null ? `${s.groundDuelSuccessRate}%` : null },
-                                      { label: t('playerStatsTable.aerialDuels'),           value: s.aerialDuels },
-                                      { label: t('playerStatsTable.aerialDuelsAttempted'),  value: s.aerialDuelsAttempted },
-                                      { label: t('playerStatsTable.aerialDuelRate'),         value: s.aerialDuelSuccessRate != null ? `${s.aerialDuelSuccessRate}%` : null },
+                                      { label: t('playerStatsTable.groundDuels'),   value: fmtRate(s.groundDuels, s.groundDuelsAttempted) },
+                                      { label: t('playerStatsTable.aerialDuels'),   value: fmtRate(s.aerialDuels, s.aerialDuelsAttempted) },
                                       { label: t('playerStatsTable.saves'),            value: s.saves },
                                       { label: t('playerStatsTable.cleanSheet'),       value: s.cleanSheet != null ? (s.cleanSheet ? '✓' : '✗') : null },
                                       { label: t('playerStatsTable.activity'),         value: (s.distanceCovered != null || s.sprint != null) ? `${s.distanceCovered != null ? s.distanceCovered.toFixed(1) + 'km' : '—'} / ${s.sprint != null ? Math.round(s.sprint) + '회' : '—'}` : null },
