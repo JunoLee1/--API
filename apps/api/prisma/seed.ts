@@ -1672,6 +1672,26 @@ async function main() {
     skipDuplicates: false,
   });
 
+  // Mock distanceCovered + sprint for all players who played (distanceCovered/sprint 미입력 레코드만)
+  const playedStats = await prisma.playerMatchStats.findMany({
+    where: { minutesPlayed: { gt: 0 }, distanceCovered: null },
+    select: { id: true, minutesPlayed: true, saves: true },
+  });
+  for (const s of playedStats) {
+    const mins = s.minutesPlayed ?? 0;
+    const ratio = mins / 90;
+    const isGK = (s.saves ?? 0) > 0;
+    // GK: 5.5~6.5 km / 10~18 스프린트, 필드: 9.5~11.5 km / 35~55 스프린트
+    const baseKm     = isGK ? 5.5  : 9.5;
+    const rangeKm    = isGK ? 1.0  : 2.0;
+    const baseSprint = isGK ? 10   : 35;
+    const rangeSprint = isGK ? 8   : 20;
+    const distanceCovered = Math.round((baseKm + Math.random() * rangeKm) * ratio * 10) / 10;
+    const sprint          = Math.round((baseSprint + Math.random() * rangeSprint) * ratio);
+    await prisma.playerMatchStats.update({ where: { id: s.id }, data: { distanceCovered, sprint } });
+  }
+  if (playedStats.length) console.log(`   - Activity mock: ${playedStats.length}개 레코드 패치 완료`);
+
   console.log("✅ Seed complete");
   console.log(`   - Countries: 2`);
   console.log(`   - Users: 14 + 10 유소년 / pw: Password1!`);
