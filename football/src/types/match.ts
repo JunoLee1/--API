@@ -45,6 +45,8 @@ export interface PlayerMatchStat {
   dribblesAttempted: number | null
   dribblesCompleted: number | null
   dribblesFailed: number | null
+  longPassesAttempted: number | null
+  longPassesCompleted: number | null
   player: { playerName: string; position: string }
 }
 

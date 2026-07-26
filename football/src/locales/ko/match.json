@@ -131,7 +131,9 @@
       "foulsCommitted": "파울",
       "dribblesAttempted": "드리블 시도",
       "dribblesCompleted": "드리블 성공",
-      "dribblesFailed": "드리블 실패"
+      "dribblesFailed": "드리블 실패",
+      "longPassesAttempted": "롱킥 시도",
+      "longPassesCompleted": "롱킥 성공"
     }
   },
   "scoreDialog": {
@@ -196,7 +198,8 @@
     "foulsCommitted": "파울",
     "dribblesAttempted": "드리블 시도",
     "dribblesCompleted": "드리블 성공",
-    "dribblesFailed": "드리블 실패"
+    "dribblesFailed": "드리블 실패",
+    "longPasses": "롱킥 정확도"
   },
   "statSheetOcr": {
     "uploadHint": "경기 기록지 이미지를 업로드하면 AI가 스탯을 자동 추출합니다.",

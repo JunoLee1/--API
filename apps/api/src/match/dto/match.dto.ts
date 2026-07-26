@@ -62,6 +62,8 @@ export interface UpsertPlayerStatsDto {
   dribblesAttempted?: number;
   dribblesCompleted?: number;
   dribblesFailed?: number;
+  longPassesAttempted?: number;
+  longPassesCompleted?: number;
 }
 
 export interface UpsertTeamStatsDto {

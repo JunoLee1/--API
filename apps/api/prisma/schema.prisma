@@ -883,6 +883,8 @@ model PlayerMatchStats {
   dribblesAttempted      Int?
   dribblesCompleted      Int?
   dribblesFailed         Int?
+  longPassesAttempted    Int?
+  longPassesCompleted    Int?
   matchId                Int
   playerId          String
 

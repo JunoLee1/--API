@@ -209,6 +209,8 @@ type PlayerStatsForm = {
   dribblesAttempted: string
   dribblesCompleted: string
   dribblesFailed: string
+  longPassesAttempted: string
+  longPassesCompleted: string
 }
 
 const PLAYER_STAT_FIELDS: { key: keyof Omit<PlayerStatsForm, 'playerId' | 'cleanSheet'>; label: string; float?: boolean }[] = [
@@ -238,6 +240,8 @@ const PLAYER_STAT_FIELDS: { key: keyof Omit<PlayerStatsForm, 'playerId' | 'clean
   { key: 'dribblesAttempted', label: 'playerStats.fields.dribblesAttempted' },
   { key: 'dribblesCompleted', label: 'playerStats.fields.dribblesCompleted' },
   { key: 'dribblesFailed', label: 'playerStats.fields.dribblesFailed' },
+  { key: 'longPassesAttempted', label: 'playerStats.fields.longPassesAttempted' },
+  { key: 'longPassesCompleted', label: 'playerStats.fields.longPassesCompleted' },
 ]
 
 const EMPTY_PLAYER_FORM: PlayerStatsForm = {
@@ -246,6 +250,7 @@ const EMPTY_PLAYER_FORM: PlayerStatsForm = {
   tackles: '', tacklesAttempted: '', interceptions: '', clearances: '', saves: '', cleanSheet: false,
   ballRecoveries: '', turnovers: '', groundDuels: '', groundDuelsAttempted: '', aerialDuels: '', aerialDuelsAttempted: '', distanceCovered: '', sprint: '',
   foulsCommitted: '', dribblesAttempted: '', dribblesCompleted: '', dribblesFailed: '',
+  longPassesAttempted: '', longPassesCompleted: '',
 }
 
 interface PlayerStatsDialogProps {
@@ -302,6 +307,8 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
         dribblesAttempted: existing.dribblesAttempted != null ? String(existing.dribblesAttempted) : '',
         dribblesCompleted: existing.dribblesCompleted != null ? String(existing.dribblesCompleted) : '',
         dribblesFailed: existing.dribblesFailed != null ? String(existing.dribblesFailed) : '',
+        longPassesAttempted: existing.longPassesAttempted != null ? String(existing.longPassesAttempted) : '',
+        longPassesCompleted: existing.longPassesCompleted != null ? String(existing.longPassesCompleted) : '',
       })
     } else {
       setForm({ ...EMPTY_PLAYER_FORM, playerId })
@@ -379,6 +386,8 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
         dribblesAttempted: num(form.dribblesAttempted),
         dribblesCompleted: num(form.dribblesCompleted),
         dribblesFailed: num(form.dribblesFailed),
+        longPassesAttempted: num(form.longPassesAttempted),
+        longPassesCompleted: num(form.longPassesCompleted),
       })
       toast.success(t('playerStats.savedSuccess'))
       onSaved()
@@ -1068,6 +1077,7 @@ export function MatchDetailPage() {
                                       { label: t('playerStatsTable.dribblesAttempted'),value: s.dribblesAttempted },
                                       { label: t('playerStatsTable.dribblesCompleted'),value: s.dribblesCompleted },
                                       { label: t('playerStatsTable.dribblesFailed'),   value: s.dribblesFailed },
+                                      { label: t('playerStatsTable.longPasses'),        value: fmtRate(s.longPassesCompleted, s.longPassesAttempted) },
                                     ] as { label: string; value: string | number | null }[]).map(({ label, value }) => (
                                       <div key={label} className="text-center">
                                         <div className="text-[12px] font-semibold text-slate-700 tabular-nums">{value ?? '—'}</div>

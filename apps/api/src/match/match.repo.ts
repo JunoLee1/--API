@@ -101,6 +101,8 @@ export class MatchRepository {
             dribblesAttempted: true,
             dribblesCompleted: true,
             dribblesFailed: true,
+            longPassesAttempted: true,
+            longPassesCompleted: true,
             player: { select: { playerName: true, position: true } },
           },
         },
@@ -188,6 +190,8 @@ export class MatchRepository {
         dribblesAttempted: n(dto.dribblesAttempted),
         dribblesCompleted: n(dto.dribblesCompleted),
         dribblesFailed: n(dto.dribblesFailed),
+        longPassesAttempted: n(dto.longPassesAttempted),
+        longPassesCompleted: n(dto.longPassesCompleted),
       },
     });
   }
@@ -230,6 +234,8 @@ export class MatchRepository {
         dribblesAttempted: n(dto.dribblesAttempted),
         dribblesCompleted: n(dto.dribblesCompleted),
         dribblesFailed: n(dto.dribblesFailed),
+        longPassesAttempted: n(dto.longPassesAttempted),
+        longPassesCompleted: n(dto.longPassesCompleted),
       },
     });
   }
