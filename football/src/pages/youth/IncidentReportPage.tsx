@@ -38,7 +38,7 @@ export default function IncidentReportPage() {
   useEffect(() => {
     load()
     playerApi.list({ level: 'YOUTH' })
-      .then(r => setPlayers(r.data.map(p => ({ id: p.id, playerName: p.playerName, teamId: p.teamId ?? 0 }))))
+      .then(r => setPlayers(r.map(p => ({ id: p.id, playerName: p.playerName, teamId: p.teamId ?? 0 }))))
       .catch(() => {})
   }, [])
 
