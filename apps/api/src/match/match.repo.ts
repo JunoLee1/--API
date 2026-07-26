@@ -96,6 +96,7 @@ export class MatchRepository {
             freeKickConversionRate: true,
             foulsCommitted: true,
             crossesCompleted: true,
+            shotsOnTarget: true,
             shotsAllowed: true,
             shotBlocked: true,
             dribblesAttempted: true,
@@ -185,6 +186,7 @@ export class MatchRepository {
         freeKickConversionRate: n(dto.freeKickConversionRate),
         foulsCommitted: n(dto.foulsCommitted),
         crossesCompleted: n(dto.crossesCompleted),
+        shotsOnTarget: n(dto.shotsOnTarget),
         shotsAllowed: n(dto.shotsAllowed),
         shotBlocked: n(dto.shotBlocked),
         dribblesAttempted: n(dto.dribblesAttempted),
@@ -229,6 +231,7 @@ export class MatchRepository {
         freeKickConversionRate: n(dto.freeKickConversionRate),
         foulsCommitted: n(dto.foulsCommitted),
         crossesCompleted: n(dto.crossesCompleted),
+        shotsOnTarget: n(dto.shotsOnTarget),
         shotsAllowed: n(dto.shotsAllowed),
         shotBlocked: n(dto.shotBlocked),
         dribblesAttempted: n(dto.dribblesAttempted),
@@ -292,6 +295,7 @@ export class MatchRepository {
       select: {
         shots: true,
         goals: true,
+        shotsOnTarget: true,
         passesAttempted: true,
         passesCompleted: true,
         foulsCommitted: true,
@@ -302,8 +306,9 @@ export class MatchRepository {
       },
     });
 
-    const shots        = stats.reduce((s, r) => s + (r.shots        ?? 0), 0);
-    const goals        = stats.reduce((s, r) => s + (r.goals        ?? 0), 0);
+    const shots           = stats.reduce((s, r) => s + (r.shots        ?? 0), 0);
+    const goals           = stats.reduce((s, r) => s + (r.goals        ?? 0), 0);
+    const playerOnTarget  = stats.reduce((s, r) => s + (r.shotsOnTarget ?? 0), 0);
     const attempted    = stats.reduce((s, r) => s + (r.passesAttempted ?? 0), 0);
     const completed    = stats.reduce((s, r) => s + (r.passesCompleted ?? 0), 0);
     const fouls        = stats.reduce((s, r) => s + (r.foulsCommitted  ?? 0), 0);
@@ -315,9 +320,10 @@ export class MatchRepository {
       where: { matchId },
       select: { xG: true, result: true },
     });
-    // 골은 반드시 유효 슈팅이므로 goals를 floor로 보장
+    // 우선순위: shot events > player shotsOnTarget 합산 > goals (floor)
     const shotsOnTarget = Math.max(
       shotEvents.filter(e => e.result === 'GOAL' || e.result === 'ON_TARGET').length,
+      playerOnTarget,
       goals,
     );
     const xG = Math.round(shotEvents.reduce((s, e) => s + e.xG, 0) * 100) / 100;

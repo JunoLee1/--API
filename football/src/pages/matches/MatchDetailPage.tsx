@@ -242,6 +242,7 @@ type PlayerStatsForm = {
   distanceCovered: string
   sprint: string
   foulsCommitted: string
+  shotsOnTarget: string
   dribblesAttempted: string
   dribblesCompleted: string
   dribblesFailed: string
@@ -256,6 +257,7 @@ const PLAYER_STAT_FIELDS: { key: keyof Omit<PlayerStatsForm, 'playerId' | 'clean
   { key: 'xG', label: 'xG', float: true },
   { key: 'xA', label: 'xA', float: true },
   { key: 'shots', label: 'playerStats.fields.shots' },
+  { key: 'shotsOnTarget', label: 'playerStats.fields.shotsOnTarget' },
   { key: 'passesAttempted', label: 'playerStats.fields.passesAttempted' },
   { key: 'passesCompleted', label: 'playerStats.fields.passesCompleted' },
   { key: 'keyPasses', label: 'playerStats.fields.keyPasses' },
@@ -285,7 +287,7 @@ const EMPTY_PLAYER_FORM: PlayerStatsForm = {
   shots: '', passesAttempted: '', passesCompleted: '', keyPasses: '',
   tackles: '', tacklesAttempted: '', interceptions: '', clearances: '', saves: '', cleanSheet: false,
   ballRecoveries: '', turnovers: '', groundDuels: '', groundDuelsAttempted: '', aerialDuels: '', aerialDuelsAttempted: '', distanceCovered: '', sprint: '',
-  foulsCommitted: '', dribblesAttempted: '', dribblesCompleted: '', dribblesFailed: '',
+  foulsCommitted: '', shotsOnTarget: '', dribblesAttempted: '', dribblesCompleted: '', dribblesFailed: '',
   longPassesAttempted: '', longPassesCompleted: '',
 }
 
@@ -340,6 +342,7 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
         distanceCovered: existing.distanceCovered != null ? String(existing.distanceCovered) : '',
         sprint: existing.sprint != null ? String(existing.sprint) : '',
         foulsCommitted: existing.foulsCommitted != null ? String(existing.foulsCommitted) : '',
+        shotsOnTarget: existing.shotsOnTarget != null ? String(existing.shotsOnTarget) : '',
         dribblesAttempted: existing.dribblesAttempted != null ? String(existing.dribblesAttempted) : '',
         dribblesCompleted: existing.dribblesCompleted != null ? String(existing.dribblesCompleted) : '',
         dribblesFailed: existing.dribblesFailed != null ? String(existing.dribblesFailed) : '',
@@ -419,6 +422,7 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
         distanceCovered: numPos(form.distanceCovered),
         sprint: numPos(form.sprint),
         foulsCommitted: num(form.foulsCommitted),
+        shotsOnTarget: num(form.shotsOnTarget),
         dribblesAttempted: num(form.dribblesAttempted),
         dribblesCompleted: num(form.dribblesCompleted),
         dribblesFailed: num(form.dribblesFailed),
@@ -1099,6 +1103,7 @@ export function MatchDetailPage() {
                                   <div className="grid grid-cols-4 gap-x-2 gap-y-3">
                                     {([
                                       { label: t('playerStatsTable.shots'),         value: s.shots },
+                                      { label: t('playerStatsTable.shotsOnTarget'), value: s.shotsOnTarget },
                                       { label: 'xG',                                value: (s.xG != null && s.xG > 0) ? s.xG.toFixed(2) : null },
                                       { label: 'xA',                                value: (s.xA != null && s.xA > 0) ? s.xA.toFixed(2) : null },
                                       { label: t('playerStatsTable.keyPasses'),     value: s.keyPasses },

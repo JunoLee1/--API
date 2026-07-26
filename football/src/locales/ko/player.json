@@ -319,6 +319,7 @@
       "goals": "골",
       "assists": "도움",
       "shots": "슈팅",
+      "shotsOnTarget": "유효슈팅",
       "keyPasses": "키패스",
       "passRate": "패스%",
       "tackles": "태클",

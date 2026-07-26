@@ -319,6 +319,7 @@
       "goals": "G",
       "assists": "A",
       "shots": "Sh",
+      "shotsOnTarget": "SOT",
       "keyPasses": "KP",
       "passRate": "Pass%",
       "tackles": "Tkl",

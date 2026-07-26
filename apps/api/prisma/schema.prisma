@@ -878,6 +878,7 @@ model PlayerMatchStats {
   freeKickConversionRate Float?
   foulsCommitted         Int?
   crossesCompleted       Int?
+  shotsOnTarget          Int?
   shotsAllowed           Int?
   shotBlocked            Int?
   dribblesAttempted      Int?
