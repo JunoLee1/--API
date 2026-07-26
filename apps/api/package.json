@@ -3,11 +3,13 @@
   "version": "1.0.0",
   "main": "dist/server.js",
   "scripts": {
+    "predev": "prisma generate",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "jest",
-    "seed": "ts-node --transpile-only prisma/seed.ts"
+    "seed": "ts-node --transpile-only prisma/seed.ts",
+    "generate": "prisma generate"
   },
   "prisma": {
     "seed": "npm run seed"
