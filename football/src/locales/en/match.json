@@ -93,7 +93,15 @@
     "savedSuccess": "Team stats saved.",
     "dialogTitle": "Enter Team Stats ({{team}})",
     "possession": "Possession (%)",
-    "offsides": "Offsides"
+    "offsides": "Offsides",
+    "oppShots": "Opp. Shots",
+    "oppShotsOnTarget": "Opp. On Target",
+    "oppCorners": "Opp. Corners",
+    "oppFouls": "Opp. Fouls",
+    "oppYellowCards": "Opp. Yellow Cards",
+    "oppRedCards": "Opp. Red Cards",
+    "oppXG": "Opp. xG",
+    "oppOffsides": "Opp. Offsides"
   },
   "playerStats": {
     "savedSuccess": "Player stats saved.",

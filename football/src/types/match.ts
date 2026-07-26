@@ -68,6 +68,14 @@ export interface TeamMatchStat {
   tackles: number
   interceptions: number
   clearances: number
+  oppShots: number | null
+  oppShotsOnTarget: number | null
+  oppCorners: number | null
+  oppFouls: number | null
+  oppYellowCards: number | null
+  oppRedCards: number | null
+  oppXG: number | null
+  oppOffsides: number | null
 }
 
 export type ShotResult = 'GOAL' | 'ON_TARGET' | 'OFF_TARGET' | 'BLOCKED'

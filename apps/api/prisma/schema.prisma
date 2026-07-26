@@ -934,6 +934,14 @@ model TeamMatchStats {
   tackles       Int
   interceptions Int
   clearances    Int
+  oppShots         Int?
+  oppShotsOnTarget Int?
+  oppCorners       Int?
+  oppFouls         Int?
+  oppYellowCards   Int?
+  oppRedCards      Int?
+  oppXG            Float?
+  oppOffsides      Int?
   matchId       Int   @unique
 
   match Match @relation(fields: [matchId], references: [id])

@@ -92,24 +92,52 @@ type TeamStatsForm = {
   redCards: string
   corners: string
   offsides: string
+  oppShots: string
+  oppShotsOnTarget: string
+  oppCorners: string
+  oppFouls: string
+  oppYellowCards: string
+  oppRedCards: string
+  oppXG: string
+  oppOffsides: string
 }
 
-const TEAM_STATS_FIELDS: { key: keyof TeamStatsForm; label: string }[] = [
+const TEAM_STATS_FIELDS: { key: keyof TeamStatsForm; label: string; float?: boolean }[] = [
   { key: 'possession', label: 'teamStats.possession' },
   { key: 'yellowCards', label: 'field.yellowCards' },
   { key: 'redCards', label: 'field.redCards' },
   { key: 'corners', label: 'field.corners' },
   { key: 'offsides', label: 'teamStats.offsides' },
+  { key: 'oppShots', label: 'teamStats.oppShots' },
+  { key: 'oppShotsOnTarget', label: 'teamStats.oppShotsOnTarget' },
+  { key: 'oppCorners', label: 'teamStats.oppCorners' },
+  { key: 'oppFouls', label: 'teamStats.oppFouls' },
+  { key: 'oppYellowCards', label: 'teamStats.oppYellowCards' },
+  { key: 'oppRedCards', label: 'teamStats.oppRedCards' },
+  { key: 'oppXG', label: 'teamStats.oppXG', float: true },
+  { key: 'oppOffsides', label: 'teamStats.oppOffsides' },
 ]
 
 function makeEmptyForm(ts?: MatchDetail['teamMatchStats']): TeamStatsForm {
-  if (!ts) return { possession: '', yellowCards: '', redCards: '', corners: '', offsides: '' }
+  if (!ts) return {
+    possession: '', yellowCards: '', redCards: '', corners: '', offsides: '',
+    oppShots: '', oppShotsOnTarget: '', oppCorners: '', oppFouls: '',
+    oppYellowCards: '', oppRedCards: '', oppXG: '', oppOffsides: '',
+  }
   return {
     possession: String(ts.possession),
     yellowCards: String(ts.yellowCards),
     redCards: String(ts.redCards),
     corners: String(ts.corners),
     offsides: String(ts.offsides),
+    oppShots: ts.oppShots != null ? String(ts.oppShots) : '',
+    oppShotsOnTarget: ts.oppShotsOnTarget != null ? String(ts.oppShotsOnTarget) : '',
+    oppCorners: ts.oppCorners != null ? String(ts.oppCorners) : '',
+    oppFouls: ts.oppFouls != null ? String(ts.oppFouls) : '',
+    oppYellowCards: ts.oppYellowCards != null ? String(ts.oppYellowCards) : '',
+    oppRedCards: ts.oppRedCards != null ? String(ts.oppRedCards) : '',
+    oppXG: ts.oppXG != null ? String(ts.oppXG) : '',
+    oppOffsides: ts.oppOffsides != null ? String(ts.oppOffsides) : '',
   }
 }
 
@@ -141,6 +169,14 @@ function TeamStatsDialog({ open, onOpenChange, match, onSaved }: TeamStatsDialog
         redCards: Number(form.redCards),
         corners: Number(form.corners),
         offsides: Number(form.offsides),
+        ...(form.oppShots !== '' && { oppShots: Number(form.oppShots) }),
+        ...(form.oppShotsOnTarget !== '' && { oppShotsOnTarget: Number(form.oppShotsOnTarget) }),
+        ...(form.oppCorners !== '' && { oppCorners: Number(form.oppCorners) }),
+        ...(form.oppFouls !== '' && { oppFouls: Number(form.oppFouls) }),
+        ...(form.oppYellowCards !== '' && { oppYellowCards: Number(form.oppYellowCards) }),
+        ...(form.oppRedCards !== '' && { oppRedCards: Number(form.oppRedCards) }),
+        ...(form.oppXG !== '' && { oppXG: Number(form.oppXG) }),
+        ...(form.oppOffsides !== '' && { oppOffsides: Number(form.oppOffsides) }),
       })
       toast.success(t('teamStats.savedSuccess'))
       onSaved()
@@ -911,8 +947,8 @@ export function MatchDetailPage() {
               <StatRow
                 label={t('teamStatsBar.shots')}
                 homeVal={ts.shots}
-                awayVal={null}
-                homeMax={ts.shots}
+                awayVal={ts.oppShots ?? null}
+                homeMax={ts.oppShots == null ? ts.shots : undefined}
                 sub={t('teamStatsBar.shotsOnTargetSub', { count: ts.shotsOnTarget })}
               />
               <StatRow
@@ -926,26 +962,32 @@ export function MatchDetailPage() {
               <StatRow
                 label="xG"
                 homeVal={ts.xG}
-                awayVal={null}
-                homeMax={Math.max(ts.xG, 3)}
+                awayVal={ts.oppXG ?? null}
+                homeMax={ts.oppXG == null ? Math.max(ts.xG, 3) : undefined}
                 fmt={(v) => v.toFixed(2)}
                 homeColor="#10b981"
               />
             </div>
           )}
 
-          {/* 보조 통계 칩 (3열) */}
+          {/* 보조 통계 칩 */}
           {ts && (
             <div className="grid grid-cols-3 gap-2">
               {([
-                { label: t('chipStats.corners'), value: ts.corners, accent: false },
-                { label: t('chipStats.yellowCards'), value: ts.yellowCards, accent: true },
-                { label: t('chipStats.fouls'), value: ts.fouls, accent: false },
-              ] as const).map(({ label, value, accent }) => (
+                { label: t('chipStats.corners'), home: ts.corners, away: ts.oppCorners, accent: false },
+                { label: t('chipStats.yellowCards'), home: ts.yellowCards, away: ts.oppYellowCards, accent: true },
+                { label: t('chipStats.fouls'), home: ts.fouls, away: ts.oppFouls, accent: false },
+              ]).map(({ label, home, away, accent }) => (
                 <div key={label} className="rounded-lg border bg-white p-3 text-center">
-                  <div className={cn('text-sm font-bold tabular-nums', accent ? 'text-amber-500' : 'text-slate-900')}>
-                    {value}
-                  </div>
+                  {away != null ? (
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className={cn('text-sm font-bold tabular-nums', accent ? 'text-amber-500' : 'text-blue-600')}>{home}</span>
+                      <span className="text-[10px] text-slate-300">:</span>
+                      <span className={cn('text-sm font-bold tabular-nums', accent ? 'text-amber-400' : 'text-red-500')}>{away}</span>
+                    </div>
+                  ) : (
+                    <div className={cn('text-sm font-bold tabular-nums', accent ? 'text-amber-500' : 'text-slate-900')}>{home}</div>
+                  )}
                   <div className="text-[9px] text-slate-400 mt-0.5">{label}</div>
                 </div>
               ))}

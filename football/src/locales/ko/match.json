@@ -93,7 +93,15 @@
     "savedSuccess": "팀 통계가 저장됐습니다.",
     "dialogTitle": "팀 통계 입력 ({{team}})",
     "possession": "점유율 (%)",
-    "offsides": "오프사이드"
+    "offsides": "오프사이드",
+    "oppShots": "상대 슈팅",
+    "oppShotsOnTarget": "상대 유효슈팅",
+    "oppCorners": "상대 코너킥",
+    "oppFouls": "상대 파울",
+    "oppYellowCards": "상대 경고",
+    "oppRedCards": "상대 퇴장",
+    "oppXG": "상대 xG",
+    "oppOffsides": "상대 오프사이드"
   },
   "playerStats": {
     "savedSuccess": "선수 기록이 저장됐습니다.",

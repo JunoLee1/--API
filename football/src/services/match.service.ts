@@ -63,6 +63,14 @@ export const matchApi = {
       redCards: number
       corners: number
       offsides: number
+      oppShots?: number
+      oppShotsOnTarget?: number
+      oppCorners?: number
+      oppFouls?: number
+      oppYellowCards?: number
+      oppRedCards?: number
+      oppXG?: number
+      oppOffsides?: number
     },
   ) => api.put(`/matches/${id}/team-stats`, payload),
 
