@@ -225,6 +225,12 @@ export interface MatchStat {
   freeKickConversionRate: number | null
   crossesCompleted: number | null
   shotsAllowed: number | null
+  foulsCommitted: number | null
+  dribblesAttempted: number | null
+  dribblesCompleted: number | null
+  dribblesFailed: number | null
+  longPassesAttempted: number | null
+  longPassesCompleted: number | null
   minutesPlayed: number | null
   match: {
     id: number

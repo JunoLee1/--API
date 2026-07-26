@@ -35,6 +35,8 @@ type StatRow = {
   sprint?: number | null;
   clearCutChanceRate?: number | null;
   passAccuracy?: number | null;
+  passesAttempted?: number | null;
+  passesCompleted?: number | null;
   penaltyConversionRate?: number | null;
   freeKickConversionRate?: number | null;
   tackleSuccessRate?: number | null;
@@ -57,7 +59,12 @@ export function computeRadarScores(
   teamAvg: StatRow | null,
 ): Record<string, number> {
   const group = POSITION_GROUP[position] ?? "MID";
-  const passing = clamp(scale(avg.passAccuracy, 100) - clamp(scale(avg.turnovers, 6) * 35));
+  // passAccuracy를 DB 필드가 아닌 passesAttempted/Completed로 직접 계산
+  const computedPassAcc =
+    avg.passesAttempted != null && avg.passesAttempted > 0
+      ? ((avg.passesCompleted ?? 0) / avg.passesAttempted) * 100
+      : avg.passAccuracy ?? null;
+  const passing = clamp(scale(computedPassAcc, 100) - clamp(scale(avg.turnovers, 6) * 35));
   const stability = clamp(scale(avg.ballRecoveries, 10) * 100 * 0.4 + clamp(100 - scale(avg.turnovers, 6) * 100) * 0.6);
 
   // CB 전용: 롱패스 정확도(60%) + 단패스(40%) → 데이터 없으면 일반 passing fallback
@@ -164,7 +171,8 @@ export async function getPlayerRadarData(
   const avg: StatRow = {};
   const keys: (keyof StatRow)[] = [
     "xG", "xA", "goals", "assists", "sprint", "clearCutChanceRate",
-    "passAccuracy", "penaltyConversionRate", "freeKickConversionRate",
+    "passesAttempted", "passesCompleted",
+    "penaltyConversionRate", "freeKickConversionRate",
     "tackleSuccessRate", "interceptions", "clearances",
     "aerialDuelSuccessRate", "crossesCompleted", "saves", "shotsAllowed",
     "ballRecoveries", "turnovers",

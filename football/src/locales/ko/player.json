@@ -329,6 +329,7 @@
       "turnover": "턴오버",
       "groundRate": "지상%",
       "aerialRate": "공중%",
+      "longPass": "롱킥%",
       "saves": "선방",
       "distance": "활동량"
     },

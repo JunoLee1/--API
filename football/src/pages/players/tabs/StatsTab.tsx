@@ -92,6 +92,7 @@ export function StatsTab({ playerId }: Props) {
                   <th className="text-right pr-3">{t('statsTab.tableHeaders.turnover')}</th>
                   <th className="text-right pr-3">{t('statsTab.tableHeaders.groundRate')}</th>
                   <th className="text-right pr-3">{t('statsTab.tableHeaders.aerialRate')}</th>
+                  <th className="text-right pr-3">{t('statsTab.tableHeaders.longPass')}</th>
                   <th className="text-right pr-3">{t('statsTab.tableHeaders.saves')}</th>
                   <th className="text-right">{t('statsTab.tableHeaders.distance')}</th>
                 </tr>
@@ -132,6 +133,11 @@ export function StatsTab({ playerId }: Props) {
                     <td className="text-right pr-3">{fmt(s.turnovers)}</td>
                     <td className="text-right pr-3">{s.groundDuelSuccessRate != null ? `${s.groundDuelSuccessRate}%` : '-'}</td>
                     <td className="text-right pr-3">{s.aerialDuelSuccessRate != null ? `${s.aerialDuelSuccessRate}%` : '-'}</td>
+                    <td className="text-right pr-3">
+                      {(s.longPassesAttempted != null && s.longPassesAttempted > 0)
+                        ? `${s.longPassesCompleted ?? 0}/${s.longPassesAttempted} (${Math.round((s.longPassesCompleted ?? 0) / s.longPassesAttempted * 100)}%)`
+                        : '-'}
+                    </td>
                     <td className="text-right pr-3">{fmt(s.saves)}</td>
                     <td className="text-right">
                       {(s.distanceCovered != null || s.sprint != null)

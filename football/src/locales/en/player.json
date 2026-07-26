@@ -329,6 +329,7 @@
       "turnover": "TO",
       "groundRate": "Grd%",
       "aerialRate": "Air%",
+      "longPass": "LngP%",
       "saves": "Sv",
       "distance": "Dist"
     },
