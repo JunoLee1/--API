@@ -101,6 +101,8 @@ export class MatchRepository {
             dribblesAttempted: true,
             dribblesCompleted: true,
             dribblesFailed: true,
+            longPassesAttempted: true,
+            longPassesCompleted: true,
             player: { select: { playerName: true, position: true } },
           },
         },
@@ -188,6 +190,8 @@ export class MatchRepository {
         dribblesAttempted: n(dto.dribblesAttempted),
         dribblesCompleted: n(dto.dribblesCompleted),
         dribblesFailed: n(dto.dribblesFailed),
+        longPassesAttempted: n(dto.longPassesAttempted),
+        longPassesCompleted: n(dto.longPassesCompleted),
       },
     });
   }
@@ -230,6 +234,8 @@ export class MatchRepository {
         dribblesAttempted: n(dto.dribblesAttempted),
         dribblesCompleted: n(dto.dribblesCompleted),
         dribblesFailed: n(dto.dribblesFailed),
+        longPassesAttempted: n(dto.longPassesAttempted),
+        longPassesCompleted: n(dto.longPassesCompleted),
       },
     });
   }
@@ -253,6 +259,14 @@ export class MatchRepository {
         tackles: 0,
         interceptions: 0,
         clearances: 0,
+        ...(dto.oppShots !== undefined && { oppShots: dto.oppShots }),
+        ...(dto.oppShotsOnTarget !== undefined && { oppShotsOnTarget: dto.oppShotsOnTarget }),
+        ...(dto.oppCorners !== undefined && { oppCorners: dto.oppCorners }),
+        ...(dto.oppFouls !== undefined && { oppFouls: dto.oppFouls }),
+        ...(dto.oppYellowCards !== undefined && { oppYellowCards: dto.oppYellowCards }),
+        ...(dto.oppRedCards !== undefined && { oppRedCards: dto.oppRedCards }),
+        ...(dto.oppXG !== undefined && { oppXG: dto.oppXG }),
+        ...(dto.oppOffsides !== undefined && { oppOffsides: dto.oppOffsides }),
       },
       update: {
         possession: dto.possession,
@@ -260,6 +274,14 @@ export class MatchRepository {
         redCards: dto.redCards,
         corners: dto.corners,
         offsides: dto.offsides,
+        ...(dto.oppShots !== undefined && { oppShots: dto.oppShots }),
+        ...(dto.oppShotsOnTarget !== undefined && { oppShotsOnTarget: dto.oppShotsOnTarget }),
+        ...(dto.oppCorners !== undefined && { oppCorners: dto.oppCorners }),
+        ...(dto.oppFouls !== undefined && { oppFouls: dto.oppFouls }),
+        ...(dto.oppYellowCards !== undefined && { oppYellowCards: dto.oppYellowCards }),
+        ...(dto.oppRedCards !== undefined && { oppRedCards: dto.oppRedCards }),
+        ...(dto.oppXG !== undefined && { oppXG: dto.oppXG }),
+        ...(dto.oppOffsides !== undefined && { oppOffsides: dto.oppOffsides }),
       },
     });
   }

@@ -329,6 +329,8 @@
       "turnover": "TO",
       "groundRate": "Grd%",
       "aerialRate": "Air%",
+      "longPass": "LngP%",
+      "shotBlocked": "Blk",
       "saves": "Sv",
       "distance": "Dist"
     },

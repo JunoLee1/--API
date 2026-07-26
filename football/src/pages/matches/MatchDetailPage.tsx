@@ -38,6 +38,17 @@ const ZONE_STYLE: Record<string, string> = {
   FWD: 'bg-rose-100 text-rose-800 border-rose-200',
 }
 
+// 성공/시도 (%) 형식 — 시도가 MIN_ATTEMPTS 미만이면 % 생략으로 착시 방지
+const MIN_RATE_ATTEMPTS = 3
+function fmtRate(success: number | null, attempts: number | null): string | null {
+  if (success == null && attempts == null) return null
+  const s = success ?? 0
+  const a = attempts ?? 0
+  if (a === 0) return s > 0 ? `${s}/0` : null
+  const pct = Math.round((s / a) * 1000) / 10
+  return a >= MIN_RATE_ATTEMPTS ? `${s}/${a} (${pct}%)` : `${s}/${a}`
+}
+
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
 }
@@ -81,24 +92,52 @@ type TeamStatsForm = {
   redCards: string
   corners: string
   offsides: string
+  oppShots: string
+  oppShotsOnTarget: string
+  oppCorners: string
+  oppFouls: string
+  oppYellowCards: string
+  oppRedCards: string
+  oppXG: string
+  oppOffsides: string
 }
 
-const TEAM_STATS_FIELDS: { key: keyof TeamStatsForm; label: string }[] = [
+const TEAM_STATS_FIELDS: { key: keyof TeamStatsForm; label: string; float?: boolean }[] = [
   { key: 'possession', label: 'teamStats.possession' },
   { key: 'yellowCards', label: 'field.yellowCards' },
   { key: 'redCards', label: 'field.redCards' },
   { key: 'corners', label: 'field.corners' },
   { key: 'offsides', label: 'teamStats.offsides' },
+  { key: 'oppShots', label: 'teamStats.oppShots' },
+  { key: 'oppShotsOnTarget', label: 'teamStats.oppShotsOnTarget' },
+  { key: 'oppCorners', label: 'teamStats.oppCorners' },
+  { key: 'oppFouls', label: 'teamStats.oppFouls' },
+  { key: 'oppYellowCards', label: 'teamStats.oppYellowCards' },
+  { key: 'oppRedCards', label: 'teamStats.oppRedCards' },
+  { key: 'oppXG', label: 'teamStats.oppXG', float: true },
+  { key: 'oppOffsides', label: 'teamStats.oppOffsides' },
 ]
 
 function makeEmptyForm(ts?: MatchDetail['teamMatchStats']): TeamStatsForm {
-  if (!ts) return { possession: '', yellowCards: '', redCards: '', corners: '', offsides: '' }
+  if (!ts) return {
+    possession: '', yellowCards: '', redCards: '', corners: '', offsides: '',
+    oppShots: '', oppShotsOnTarget: '', oppCorners: '', oppFouls: '',
+    oppYellowCards: '', oppRedCards: '', oppXG: '', oppOffsides: '',
+  }
   return {
     possession: String(ts.possession),
     yellowCards: String(ts.yellowCards),
     redCards: String(ts.redCards),
     corners: String(ts.corners),
     offsides: String(ts.offsides),
+    oppShots: ts.oppShots != null ? String(ts.oppShots) : '',
+    oppShotsOnTarget: ts.oppShotsOnTarget != null ? String(ts.oppShotsOnTarget) : '',
+    oppCorners: ts.oppCorners != null ? String(ts.oppCorners) : '',
+    oppFouls: ts.oppFouls != null ? String(ts.oppFouls) : '',
+    oppYellowCards: ts.oppYellowCards != null ? String(ts.oppYellowCards) : '',
+    oppRedCards: ts.oppRedCards != null ? String(ts.oppRedCards) : '',
+    oppXG: ts.oppXG != null ? String(ts.oppXG) : '',
+    oppOffsides: ts.oppOffsides != null ? String(ts.oppOffsides) : '',
   }
 }
 
@@ -130,6 +169,14 @@ function TeamStatsDialog({ open, onOpenChange, match, onSaved }: TeamStatsDialog
         redCards: Number(form.redCards),
         corners: Number(form.corners),
         offsides: Number(form.offsides),
+        ...(form.oppShots !== '' && { oppShots: Number(form.oppShots) }),
+        ...(form.oppShotsOnTarget !== '' && { oppShotsOnTarget: Number(form.oppShotsOnTarget) }),
+        ...(form.oppCorners !== '' && { oppCorners: Number(form.oppCorners) }),
+        ...(form.oppFouls !== '' && { oppFouls: Number(form.oppFouls) }),
+        ...(form.oppYellowCards !== '' && { oppYellowCards: Number(form.oppYellowCards) }),
+        ...(form.oppRedCards !== '' && { oppRedCards: Number(form.oppRedCards) }),
+        ...(form.oppXG !== '' && { oppXG: Number(form.oppXG) }),
+        ...(form.oppOffsides !== '' && { oppOffsides: Number(form.oppOffsides) }),
       })
       toast.success(t('teamStats.savedSuccess'))
       onSaved()
@@ -198,6 +245,8 @@ type PlayerStatsForm = {
   dribblesAttempted: string
   dribblesCompleted: string
   dribblesFailed: string
+  longPassesAttempted: string
+  longPassesCompleted: string
 }
 
 const PLAYER_STAT_FIELDS: { key: keyof Omit<PlayerStatsForm, 'playerId' | 'cleanSheet'>; label: string; float?: boolean }[] = [
@@ -227,6 +276,8 @@ const PLAYER_STAT_FIELDS: { key: keyof Omit<PlayerStatsForm, 'playerId' | 'clean
   { key: 'dribblesAttempted', label: 'playerStats.fields.dribblesAttempted' },
   { key: 'dribblesCompleted', label: 'playerStats.fields.dribblesCompleted' },
   { key: 'dribblesFailed', label: 'playerStats.fields.dribblesFailed' },
+  { key: 'longPassesAttempted', label: 'playerStats.fields.longPassesAttempted' },
+  { key: 'longPassesCompleted', label: 'playerStats.fields.longPassesCompleted' },
 ]
 
 const EMPTY_PLAYER_FORM: PlayerStatsForm = {
@@ -235,6 +286,7 @@ const EMPTY_PLAYER_FORM: PlayerStatsForm = {
   tackles: '', tacklesAttempted: '', interceptions: '', clearances: '', saves: '', cleanSheet: false,
   ballRecoveries: '', turnovers: '', groundDuels: '', groundDuelsAttempted: '', aerialDuels: '', aerialDuelsAttempted: '', distanceCovered: '', sprint: '',
   foulsCommitted: '', dribblesAttempted: '', dribblesCompleted: '', dribblesFailed: '',
+  longPassesAttempted: '', longPassesCompleted: '',
 }
 
 interface PlayerStatsDialogProps {
@@ -291,6 +343,8 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
         dribblesAttempted: existing.dribblesAttempted != null ? String(existing.dribblesAttempted) : '',
         dribblesCompleted: existing.dribblesCompleted != null ? String(existing.dribblesCompleted) : '',
         dribblesFailed: existing.dribblesFailed != null ? String(existing.dribblesFailed) : '',
+        longPassesAttempted: existing.longPassesAttempted != null ? String(existing.longPassesAttempted) : '',
+        longPassesCompleted: existing.longPassesCompleted != null ? String(existing.longPassesCompleted) : '',
       })
     } else {
       setForm({ ...EMPTY_PLAYER_FORM, playerId })
@@ -368,6 +422,8 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
         dribblesAttempted: num(form.dribblesAttempted),
         dribblesCompleted: num(form.dribblesCompleted),
         dribblesFailed: num(form.dribblesFailed),
+        longPassesAttempted: num(form.longPassesAttempted),
+        longPassesCompleted: num(form.longPassesCompleted),
       })
       toast.success(t('playerStats.savedSuccess'))
       onSaved()
@@ -891,8 +947,8 @@ export function MatchDetailPage() {
               <StatRow
                 label={t('teamStatsBar.shots')}
                 homeVal={ts.shots}
-                awayVal={null}
-                homeMax={ts.shots}
+                awayVal={ts.oppShots ?? null}
+                homeMax={ts.oppShots == null ? ts.shots : undefined}
                 sub={t('teamStatsBar.shotsOnTargetSub', { count: ts.shotsOnTarget })}
               />
               <StatRow
@@ -906,26 +962,32 @@ export function MatchDetailPage() {
               <StatRow
                 label="xG"
                 homeVal={ts.xG}
-                awayVal={null}
-                homeMax={Math.max(ts.xG, 3)}
+                awayVal={ts.oppXG ?? null}
+                homeMax={ts.oppXG == null ? Math.max(ts.xG, 3) : undefined}
                 fmt={(v) => v.toFixed(2)}
                 homeColor="#10b981"
               />
             </div>
           )}
 
-          {/* 보조 통계 칩 (3열) */}
+          {/* 보조 통계 칩 */}
           {ts && (
             <div className="grid grid-cols-3 gap-2">
               {([
-                { label: t('chipStats.corners'), value: ts.corners, accent: false },
-                { label: t('chipStats.yellowCards'), value: ts.yellowCards, accent: true },
-                { label: t('chipStats.fouls'), value: ts.fouls, accent: false },
-              ] as const).map(({ label, value, accent }) => (
+                { label: t('chipStats.corners'), home: ts.corners, away: ts.oppCorners, accent: false },
+                { label: t('chipStats.yellowCards'), home: ts.yellowCards, away: ts.oppYellowCards, accent: true },
+                { label: t('chipStats.fouls'), home: ts.fouls, away: ts.oppFouls, accent: false },
+              ]).map(({ label, home, away, accent }) => (
                 <div key={label} className="rounded-lg border bg-white p-3 text-center">
-                  <div className={cn('text-sm font-bold tabular-nums', accent ? 'text-amber-500' : 'text-slate-900')}>
-                    {value}
-                  </div>
+                  {away != null ? (
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className={cn('text-sm font-bold tabular-nums', accent ? 'text-amber-500' : 'text-blue-600')}>{home}</span>
+                      <span className="text-[10px] text-slate-300">:</span>
+                      <span className={cn('text-sm font-bold tabular-nums', accent ? 'text-amber-400' : 'text-red-500')}>{away}</span>
+                    </div>
+                  ) : (
+                    <div className={cn('text-sm font-bold tabular-nums', accent ? 'text-amber-500' : 'text-slate-900')}>{home}</div>
+                  )}
                   <div className="text-[9px] text-slate-400 mt-0.5">{label}</div>
                 </div>
               ))}
@@ -1042,27 +1104,24 @@ export function MatchDetailPage() {
                                       { label: t('playerStatsTable.keyPasses'),     value: s.keyPasses },
                                       { label: t('playerStatsTable.passAttempted'), value: s.passesAttempted },
                                       { label: t('playerStatsTable.passCompleted'), value: s.passesCompleted },
-                                      { label: t('playerStatsTable.passRate'),      value: (s.passesAttempted != null && s.passesAttempted > 0) ? `${Math.round((s.passesCompleted ?? 0) / s.passesAttempted * 100)}%` : null },
-                                      { label: t('playerStatsTable.tackles'),          value: s.tackles },
-                                      { label: t('playerStatsTable.tacklesAttempted'), value: s.tacklesAttempted },
-                                      { label: t('playerStatsTable.tackleRate'),        value: s.tackleSuccessRate != null ? `${s.tackleSuccessRate}%` : null },
+                                      { label: t('playerStatsTable.passRate'),      value: (() => { const att = (s.passesAttempted ?? 0) + (s.longPassesAttempted ?? 0); const cmp = (s.passesCompleted ?? 0) + (s.longPassesCompleted ?? 0); return att > 0 ? `${Math.round(cmp / att * 100)}%` : null })() },
+                                      { label: t('playerStatsTable.tackles'),     value: fmtRate(s.tackles, s.tacklesAttempted) },
                                       { label: t('playerStatsTable.interceptions'), value: s.interceptions },
                                       { label: t('playerStatsTable.clearances'),    value: s.clearances },
                                       { label: t('playerStatsTable.ballRecoveries'),value: s.ballRecoveries },
                                       { label: t('playerStatsTable.turnovers'),     value: s.turnovers },
-                                      { label: t('playerStatsTable.groundDuels'),         value: s.groundDuels },
-                                      { label: t('playerStatsTable.groundDuelsAttempted'), value: s.groundDuelsAttempted },
-                                      { label: t('playerStatsTable.groundDuelRate'),        value: s.groundDuelSuccessRate != null ? `${s.groundDuelSuccessRate}%` : null },
-                                      { label: t('playerStatsTable.aerialDuels'),           value: s.aerialDuels },
-                                      { label: t('playerStatsTable.aerialDuelsAttempted'),  value: s.aerialDuelsAttempted },
-                                      { label: t('playerStatsTable.aerialDuelRate'),         value: s.aerialDuelSuccessRate != null ? `${s.aerialDuelSuccessRate}%` : null },
+                                      { label: t('playerStatsTable.groundDuels'),   value: fmtRate(s.groundDuels, s.groundDuelsAttempted) },
+                                      { label: t('playerStatsTable.aerialDuels'),   value: fmtRate(s.aerialDuels, s.aerialDuelsAttempted) },
                                       { label: t('playerStatsTable.saves'),            value: s.saves },
+                                      { label: t('playerStatsTable.shotsAllowed'),     value: s.shotsAllowed },
+                                      { label: t('playerStatsTable.shotBlocked'),      value: s.shotBlocked },
                                       { label: t('playerStatsTable.cleanSheet'),       value: s.cleanSheet != null ? (s.cleanSheet ? '✓' : '✗') : null },
                                       { label: t('playerStatsTable.activity'),         value: (s.distanceCovered != null || s.sprint != null) ? `${s.distanceCovered != null ? s.distanceCovered.toFixed(1) + 'km' : '—'} / ${s.sprint != null ? Math.round(s.sprint) + '회' : '—'}` : null },
                                       { label: t('playerStatsTable.foulsCommitted'),   value: s.foulsCommitted },
                                       { label: t('playerStatsTable.dribblesAttempted'),value: s.dribblesAttempted },
                                       { label: t('playerStatsTable.dribblesCompleted'),value: s.dribblesCompleted },
                                       { label: t('playerStatsTable.dribblesFailed'),   value: s.dribblesFailed },
+                                      { label: t('playerStatsTable.longPasses'),        value: fmtRate(s.longPassesCompleted, s.longPassesAttempted) },
                                     ] as { label: string; value: string | number | null }[]).map(({ label, value }) => (
                                       <div key={label} className="text-center">
                                         <div className="text-[12px] font-semibold text-slate-700 tabular-nums">{value ?? '—'}</div>

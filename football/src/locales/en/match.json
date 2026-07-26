@@ -93,7 +93,15 @@
     "savedSuccess": "Team stats saved.",
     "dialogTitle": "Enter Team Stats ({{team}})",
     "possession": "Possession (%)",
-    "offsides": "Offsides"
+    "offsides": "Offsides",
+    "oppShots": "Opp. Shots",
+    "oppShotsOnTarget": "Opp. On Target",
+    "oppCorners": "Opp. Corners",
+    "oppFouls": "Opp. Fouls",
+    "oppYellowCards": "Opp. Yellow Cards",
+    "oppRedCards": "Opp. Red Cards",
+    "oppXG": "Opp. xG",
+    "oppOffsides": "Opp. Offsides"
   },
   "playerStats": {
     "savedSuccess": "Player stats saved.",
@@ -131,7 +139,9 @@
       "foulsCommitted": "Fouls",
       "dribblesAttempted": "Dribbles Attempted",
       "dribblesCompleted": "Dribbles Completed",
-      "dribblesFailed": "Dribbles Failed"
+      "dribblesFailed": "Dribbles Failed",
+      "longPassesAttempted": "Long Pass Att",
+      "longPassesCompleted": "Long Pass Cmp"
     }
   },
   "scoreDialog": {
@@ -191,12 +201,15 @@
     "aerialDuelsAttempted": "AD Att",
     "aerialDuelRate": "AD%",
     "saves": "Saves",
+    "shotsAllowed": "Shots Allowed",
+    "shotBlocked": "Blk Shots",
     "cleanSheet": "CS",
     "activity": "Activity",
     "foulsCommitted": "Fouls",
     "dribblesAttempted": "Drb Att",
     "dribblesCompleted": "Drb Cmp",
-    "dribblesFailed": "Drb Fail"
+    "dribblesFailed": "Drb Fail",
+    "longPasses": "Long Pass Acc"
   },
   "statSheetOcr": {
     "uploadHint": "Upload a match sheet image and AI will extract stats automatically.",

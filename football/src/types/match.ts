@@ -42,9 +42,13 @@ export interface PlayerMatchStat {
   distanceCovered: number | null
   sprint: number | null
   foulsCommitted: number | null
+  shotsAllowed: number | null
+  shotBlocked: number | null
   dribblesAttempted: number | null
   dribblesCompleted: number | null
   dribblesFailed: number | null
+  longPassesAttempted: number | null
+  longPassesCompleted: number | null
   player: { playerName: string; position: string }
 }
 
@@ -64,6 +68,14 @@ export interface TeamMatchStat {
   tackles: number
   interceptions: number
   clearances: number
+  oppShots: number | null
+  oppShotsOnTarget: number | null
+  oppCorners: number | null
+  oppFouls: number | null
+  oppYellowCards: number | null
+  oppRedCards: number | null
+  oppXG: number | null
+  oppOffsides: number | null
 }
 
 export type ShotResult = 'GOAL' | 'ON_TARGET' | 'OFF_TARGET' | 'BLOCKED'
