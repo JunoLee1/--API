@@ -110,6 +110,7 @@
     "selectPlayer": "선수 선택...",
     "cleanSheet": "클린시트",
     "xgRequired": "득점이 있으면 xG를 입력해야 합니다.",
+    "sotBelowGoals": "유효 슈팅은 득점 수 이상이어야 합니다.",
     "xaRequired": "도움이 있으면 xA를 입력해야 합니다.",
     "keyPassRequired": "키패스가 있으면 패스 시도 횟수를 입력해야 합니다.",
     "selectRequired": "선수를 선택해주세요.",
