@@ -48,11 +48,11 @@ export interface SignProspectDto {
 }
 
 export const STATUS_LABEL: Record<ProspectStatus, string> = {
-  ACTIVE: '추적 중',
-  MEDICAL_TEST: '메디컬 테스트',
-  CONTRACT_PENDING: '계약 협상 중',
-  SIGNED: '영입 완료',
-  ARCHIVED: '종료',
+  ACTIVE: 'Tracking',
+  MEDICAL_TEST: 'Medical Test',
+  CONTRACT_PENDING: 'Contract Pending',
+  SIGNED: 'Signed',
+  ARCHIVED: 'Archived',
 }
 
 export const STATUS_STYLE: Record<ProspectStatus, string> = {
@@ -64,14 +64,14 @@ export const STATUS_STYLE: Record<ProspectStatus, string> = {
 }
 
 export const VISA_ELIGIBILITY_LABEL: Record<VisaEligibility, string> = {
-  NOT_REQUIRED: '해당 없음',
-  CONFIRMED: '취득 가능',
-  UNCERTAIN: '불확실',
+  NOT_REQUIRED: 'N/A',
+  CONFIRMED: 'Confirmed',
+  UNCERTAIN: 'Uncertain',
 }
 
 export const WORK_PERMIT_LABEL: Record<WorkPermitStatus, string> = {
-  NOT_REQUIRED: '해당 없음',
-  PENDING: '신청 중',
-  APPROVED: '승인',
-  REJECTED: '거절',
+  NOT_REQUIRED: 'N/A',
+  PENDING: 'Pending',
+  APPROVED: 'Approved',
+  REJECTED: 'Rejected',
 }

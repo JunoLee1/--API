@@ -1,0 +1,28 @@
+{
+  "zone": {
+    "GK": "골키퍼",
+    "DEF": "수비",
+    "MID": "미드필더",
+    "FWD": "공격"
+  },
+  "planner": {
+    "title": "팀 빌더",
+    "available": "가용 {{count}}명",
+    "injured": "부상 {{count}}명",
+    "emptySlots": "빈 슬롯 {{count}}개",
+    "zoneWarning": "{{zone}} 가용 {{count}}명 (최소 {{min}}명)",
+    "formation": "포메이션",
+    "spanishGrid": "스페인 그리드",
+    "loadFailed": "데이터를 불러오지 못했습니다."
+  },
+  "slot": {
+    "dragHint": "드래그로 이동 / 더블클릭으로 해제",
+    "confirmSuggestion": "{{name}} 배치 확정",
+    "findProspect": "{{position}} 영입 후보 찾기"
+  },
+  "bench": {
+    "title": "벤치",
+    "unplacedCount": "{{count}}명 미배치",
+    "injured": "부상"
+  }
+}

@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { playerApi } from '@/services/player.service'
-import type { PlayerDetail, PlayerStatus, PositionZone, TransferType, MarketValueEntry } from '@/types/player'
+import type { PlayerDetail, PlayerStatus, PositionZone, MarketValueEntry } from '@/types/player'
 import {
   POSITION_ABBR,
-  POSITION_LABEL,
   POSITION_ZONE,
-  LEVEL_LABEL,
-  STATUS_LABEL,
 } from '@/types/player'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
@@ -83,14 +81,6 @@ function fmtMvTick(v: number): string {
   return String(v)
 }
 
-const TRANSFER_TYPE_LABEL: Record<TransferType, string> = {
-  PERMANENT: '완전 이적',
-  LOAN_OUT: '임대 출신',
-  LOAN_IN: '임대 영입',
-  FREE: '자유 계약',
-  RELEASE: '방출',
-}
-
 interface StatRowProps {
   label: string
   value: string | number
@@ -105,6 +95,7 @@ function StatRow({ label, value }: StatRowProps) {
 }
 
 export function PlayerDetailPage() {
+  const { t } = useTranslation('player')
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user } = useCurrentUser()
@@ -139,17 +130,17 @@ export function PlayerDetailPage() {
   const handleDelete = async () => {
     if (!player) return
     const ok = await confirm({
-      title: '선수 삭제',
-      description: `${player.playerName} 선수를 완전히 삭제합니다. 이 작업은 되돌릴 수 없습니다.`,
-      confirmText: '삭제',
+      title: t('detailPage.deleteTitle'),
+      description: t('detailPage.deleteDescription', { name: player.playerName }),
+      confirmText: t('detailPage.deleteConfirm'),
     })
     if (!ok) return
     try {
       await playerApi.delete(player.id)
-      toast.success('선수가 삭제됐습니다.')
+      toast.success(t('detailPage.deleted'))
       navigate('/players')
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : '삭제에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('detailPage.deleteFailed'))
     }
   }
 
@@ -159,7 +150,7 @@ export function PlayerDetailPage() {
     playerApi
       .get(id)
       .then(setPlayer)
-      .catch(() => toast.error('선수 정보를 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('detailPage.loadFailed')))
       .finally(() => setLoading(false))
   }
 
@@ -180,16 +171,16 @@ export function PlayerDetailPage() {
   const handleMvUpdate = async () => {
     if (!id || !mvInput) return
     const val = Number(mvInput.replace(/[^0-9]/g, ''))
-    if (!val || val <= 0) { toast.error('올바른 금액을 입력해주세요.'); return }
+    if (!val || val <= 0) { toast.error(t('detailPage.mvInvalidAmount')); return }
     setMvSaving(true)
     try {
       await playerApi.updateMarketValue(id, val)
-      toast.success('시장가치가 업데이트됐습니다.')
+      toast.success(t('detailPage.mvUpdated'))
       setMvInput('')
       fetchPlayer()
       playerApi.getMarketValueHistory(id).then(setMvHistory).catch(() => null)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : '업데이트에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('detailPage.mvUpdateFailed'))
     } finally {
       setMvSaving(false)
     }
@@ -208,9 +199,9 @@ export function PlayerDetailPage() {
   if (!player) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3 text-muted-foreground">
-        <p className="text-sm">선수를 찾을 수 없습니다.</p>
+        <p className="text-sm">{t('detailPage.notFound')}</p>
         <Button variant="ghost" size="sm" onClick={() => navigate('/players')}>
-          목록으로
+          {t('detailPage.toList')}
         </Button>
       </div>
     )
@@ -236,19 +227,19 @@ export function PlayerDetailPage() {
         {canWrite && (
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
             <Pencil className="h-3.5 w-3.5 mr-1.5" />
-            정보 수정
+            {t('detailPage.editBtn')}
           </Button>
         )}
         {canChangeStatus && (
           <Button variant="outline" size="sm" onClick={() => setStatusOpen(true)}>
             <ShieldAlert className="h-3.5 w-3.5 mr-1.5" />
-            상태 변경
+            {t('detailPage.statusBtn')}
           </Button>
         )}
         {user?.role === 'ADMIN' && (
           <Button variant="destructive" size="sm" onClick={() => void handleDelete()}>
             <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-            삭제
+            {t('detailPage.deleteBtn')}
           </Button>
         )}
       </div>
@@ -257,11 +248,11 @@ export function PlayerDetailPage() {
         <Tabs defaultValue="info" className="h-full flex flex-col">
           <div className="px-6 pt-4 border-b shrink-0">
             <TabsList>
-              <TabsTrigger value="info">기본 정보</TabsTrigger>
-              <TabsTrigger value="stats">스탯</TabsTrigger>
-              {isOwnProfile && <TabsTrigger value="motivation">동기부여</TabsTrigger>}
-              <TabsTrigger value="pdp">발전 계획</TabsTrigger>
-              {isYouthPlayer && <TabsTrigger value="growth">성장 보고서</TabsTrigger>}
+              <TabsTrigger value="info">{t('detailPage.tabInfo')}</TabsTrigger>
+              <TabsTrigger value="stats">{t('detailPage.tabStats')}</TabsTrigger>
+              {isOwnProfile && <TabsTrigger value="motivation">{t('detailPage.tabMotivation')}</TabsTrigger>}
+              <TabsTrigger value="pdp">{t('detailPage.tabPdp')}</TabsTrigger>
+              {isYouthPlayer && <TabsTrigger value="growth">{t('detailPage.tabGrowth')}</TabsTrigger>}
             </TabsList>
           </div>
           <TabsContent value="info" className="flex-1 overflow-auto p-6 mt-0">
@@ -284,23 +275,23 @@ export function PlayerDetailPage() {
                     <span
                       className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${STATUS_STYLE[player.status]}`}
                     >
-                      {STATUS_LABEL[player.status]}
+                      {t(`status.${player.status}`)}
                     </span>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-0.5">{POSITION_LABEL[player.position]}</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">{t(`position.${player.position}`)}</p>
                   {player.playStyle ? (
                     <span className="inline-flex items-center text-xs bg-violet-100 text-violet-800 px-2 py-0.5 rounded-full mt-1">
                       {player.playStyle}
                     </span>
                   ) : (
-                    <span className="inline-flex items-center text-xs text-muted-foreground mt-1">미분류</span>
+                    <span className="inline-flex items-center text-xs text-muted-foreground mt-1">{t('detailPage.unclassified')}</span>
                   )}
                   <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
                     <span>{player.nationality.name}</span>
                     <span>·</span>
-                    <span>{LEVEL_LABEL[player.level]}</span>
+                    <span>{t(`level.${player.level}`)}</span>
                     <span>·</span>
-                    <span>{calcAge(player.dateOfBirth)}세</span>
+                    <span>{t('detailPage.ageValue', { age: calcAge(player.dateOfBirth) })}</span>
                   </div>
                 </div>
               </div>
@@ -308,28 +299,28 @@ export function PlayerDetailPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* 신체 정보 */}
                 <div className="rounded-lg border bg-card p-5">
-                  <h3 className="text-sm font-semibold text-foreground mb-1">신체 정보</h3>
+                  <h3 className="text-sm font-semibold text-foreground mb-1">{t('detailPage.physicalTitle')}</h3>
                   <Separator className="mb-1" />
-                  <StatRow label="생년월일" value={formatDate(player.dateOfBirth)} />
+                  <StatRow label={t('detailPage.dob')} value={formatDate(player.dateOfBirth)} />
                   <Separator />
-                  <StatRow label="나이" value={`${calcAge(player.dateOfBirth)}세`} />
+                  <StatRow label={t('detailPage.age')} value={t('detailPage.ageValue', { age: calcAge(player.dateOfBirth) })} />
                   <Separator />
-                  <StatRow label="신장" value={`${player.height} cm`} />
+                  <StatRow label={t('detailPage.height')} value={`${player.height} cm`} />
                   <Separator />
-                  <StatRow label="체중" value={`${player.weight} kg`} />
+                  <StatRow label={t('detailPage.weight')} value={`${player.weight} kg`} />
                   <Separator />
-                  <StatRow label="주발" value={player.preferredFoot === 'LEFT' ? '왼발' : '오른발'} />
+                  <StatRow label={t('detailPage.foot')} value={t(`foot.${player.preferredFoot}`)} />
                   {player.externalId && (
                     <>
                       <Separator />
-                      <StatRow label="외부 ID" value={player.externalId} />
+                      <StatRow label={t('detailPage.externalId')} value={player.externalId} />
                     </>
                   )}
                   {canSeeMarketValue && (
                     <>
                       <Separator />
                       <StatRow
-                        label="시장가치"
+                        label={t('detailPage.marketValue')}
                         value={
                           player.currentMarketValue != null
                             ? formatSalary(player.currentMarketValue)
@@ -342,21 +333,21 @@ export function PlayerDetailPage() {
 
                 {/* 최근 계약 */}
                 <div className="rounded-lg border bg-card p-5">
-                  <h3 className="text-sm font-semibold text-foreground mb-1">최근 계약</h3>
+                  <h3 className="text-sm font-semibold text-foreground mb-1">{t('detailPage.contractTitle')}</h3>
                   <Separator className="mb-1" />
                   {latestContract ? (
                     <>
-                      <StatRow label="계약 시작" value={formatDate(latestContract.startDate)} />
+                      <StatRow label={t('detailPage.contractStart')} value={formatDate(latestContract.startDate)} />
                       <Separator />
-                      <StatRow label="계약 만료" value={formatDate(latestContract.endDate)} />
+                      <StatRow label={t('detailPage.contractEnd')} value={formatDate(latestContract.endDate)} />
                       <Separator />
-                      <StatRow label="연봉" value={formatSalary(latestContract.salary)} />
+                      <StatRow label={t('detailPage.salary')} value={formatSalary(latestContract.salary)} />
                       <Separator />
-                      <StatRow label="계약 상태" value={latestContract.status} />
+                      <StatRow label={t('detailPage.contractStatus')} value={latestContract.status} />
                     </>
                   ) : (
                     <p className="text-sm text-muted-foreground py-4 text-center">
-                      등록된 계약이 없습니다.
+                      {t('detailPage.noContract')}
                     </p>
                   )}
                 </div>
@@ -365,29 +356,29 @@ export function PlayerDetailPage() {
               {/* 이적 이력 */}
               {player.transfers.length > 0 && (
                 <div className="rounded-lg border bg-card p-5">
-                  <h3 className="text-sm font-semibold text-foreground mb-1">이적 이력</h3>
+                  <h3 className="text-sm font-semibold text-foreground mb-1">{t('detailPage.transferTitle')}</h3>
                   <Separator className="mb-1" />
                   <div className="space-y-0">
-                    {player.transfers.map((t, i) => (
-                      <div key={t.id}>
+                    {player.transfers.map((tr, i) => (
+                      <div key={tr.id}>
                         {i > 0 && <Separator />}
                         <div className="flex items-center justify-between py-2.5 gap-2">
                           <div className="flex items-center gap-2 min-w-0">
                             <span className="text-xs bg-muted px-1.5 py-0.5 rounded shrink-0">
-                              {TRANSFER_TYPE_LABEL[t.type]}
+                              {t(`transferType.${tr.type}`)}
                             </span>
                             <span className="text-sm text-muted-foreground truncate">
-                              {t.fromClub && t.toClub
-                                ? `${t.fromClub} → ${t.toClub}`
-                                : t.fromClub ?? t.toClub ?? '—'}
+                              {tr.fromClub && tr.toClub
+                                ? `${tr.fromClub} → ${tr.toClub}`
+                                : tr.fromClub ?? tr.toClub ?? '—'}
                             </span>
                           </div>
                           <div className="text-right shrink-0">
                             <div className="text-sm font-medium">
-                              {t.fee != null ? formatSalary(t.fee) : '비공개'}
+                              {tr.fee != null ? formatSalary(tr.fee) : t('detailPage.feePrivate')}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {formatDate(t.date)}
+                              {formatDate(tr.date)}
                             </div>
                           </div>
                         </div>
@@ -403,13 +394,13 @@ export function PlayerDetailPage() {
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
                       <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
-                      시장가치 추이
+                      {t('detailPage.mvHistoryTitle')}
                     </h3>
                     {canUpdateMarketValue && (
                       <div className="flex items-center gap-1.5">
                         <Input
                           type="number"
-                          placeholder="금액 (원)"
+                          placeholder={t('detailPage.mvPlaceholder')}
                           value={mvInput}
                           onChange={(e) => setMvInput(e.target.value)}
                           className="h-7 w-32 text-xs"
@@ -421,14 +412,14 @@ export function PlayerDetailPage() {
                           disabled={mvSaving || !mvInput}
                           onClick={() => void handleMvUpdate()}
                         >
-                          {mvSaving ? '저장 중' : '업데이트'}
+                          {mvSaving ? t('detailPage.mvUpdating') : t('detailPage.mvUpdate')}
                         </Button>
                       </div>
                     )}
                   </div>
                   {mvHistory.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-6">
-                      시장가치 이력이 없습니다.
+                      {t('detailPage.mvNoHistory')}
                     </p>
                   ) : (
                     <ResponsiveContainer width="100%" height={180}>
@@ -456,7 +447,7 @@ export function PlayerDetailPage() {
                           width={40}
                         />
                         <Tooltip
-                          formatter={(v: number) => [fmtMv(v), '시장가치']}
+                          formatter={(v: number) => [fmtMv(v), t('detailPage.mvChartLabel')]}
                           contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}
                         />
                         <Area
@@ -477,7 +468,7 @@ export function PlayerDetailPage() {
               {player.team?.type === 'YOUTH' && (
                 <LiteModeGate blocked>
                   <div className="rounded-lg border bg-card p-5">
-                    <h3 className="text-sm font-semibold text-foreground mb-3">포지션 다양성 지수</h3>
+                    <h3 className="text-sm font-semibold text-foreground mb-3">{t('detailPage.positionDiversityTitle')}</h3>
                     <PositionDiversityChart data={pdiData} />
                   </div>
                 </LiteModeGate>
@@ -492,7 +483,7 @@ export function PlayerDetailPage() {
 
               {/* 등번호 */}
               <div className="rounded-lg border bg-card p-5">
-                <h3 className="text-sm font-semibold text-foreground mb-4">등번호</h3>
+                <h3 className="text-sm font-semibold text-foreground mb-4">{t('detailPage.jerseyTitle')}</h3>
                 <JerseyTab
                   playerId={player.id}
                   teamId={player.teamId ?? null}

@@ -1,9 +1,9 @@
 export type PlanStatus = 'DRAFT' | 'ACTIVE' | 'REVIEWED'
 
 export const PLAN_STATUS_LABEL: Record<PlanStatus, string> = {
-  DRAFT: '초안',
-  ACTIVE: '활성',
-  REVIEWED: '검토 완료',
+  DRAFT: 'Draft',
+  ACTIVE: 'Active',
+  REVIEWED: 'Reviewed',
 }
 
 export const PLAN_STATUS_STYLE: Record<PlanStatus, string> = {

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { MedicalDashboardStats } from '@/types/dashboard'
 
@@ -52,6 +53,7 @@ function BarRow({ label, count, max }: { label: string; count: number; max: numb
 }
 
 export function MedicalSection({ data, role }: Props) {
+  const { t } = useTranslation('common')
   const isHeadCoach = role === 'HEAD_COACH'
   const pos = data.injuriesByPosition
   const maxPos = Math.max(pos.GK, pos.DF, pos.MF, pos.FW, 1)
@@ -66,35 +68,35 @@ export function MedicalSection({ data, role }: Props) {
     <div className="space-y-6">
       <div className="border-t pt-6">
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-          의료 현황
+          {t('dashboard.medical.sectionTitle')}
         </h3>
 
         {/* 부상 현황 */}
         <div className="space-y-3 mb-6">
-          <p className="text-xs font-medium text-muted-foreground">부상 현황</p>
+          <p className="text-xs font-medium text-muted-foreground">{t('dashboard.medical.injuryStatus')}</p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            <KpiCard label="현재 부상자" value={data.currentInjuredCount} unit="명" color="red" />
-            <KpiCard label="금주 신규 부상" value={data.weekNewInjuryCount} unit="건" color="amber" />
-            <KpiCard label="7일 내 복귀 예정" value={data.returningIn7DaysCount} unit="명" color="green" />
+            <KpiCard label={t('dashboard.medical.kpi.currentInjured')} value={data.currentInjuredCount} unit={t('dashboard.medical.kpi.unit.person')} color="red" />
+            <KpiCard label={t('dashboard.medical.kpi.weekNewInjury')} value={data.weekNewInjuryCount} unit={t('dashboard.medical.kpi.unit.case')} color="amber" />
+            <KpiCard label={t('dashboard.medical.kpi.returningIn7Days')} value={data.returningIn7DaysCount} unit={t('dashboard.medical.kpi.unit.person')} color="green" />
             {!isHeadCoach && (
-              <KpiCard label="재부상 위험군" value={data.reinjuryRiskCount} unit="명" color="amber" />
+              <KpiCard label={t('dashboard.medical.kpi.reinjuryRisk')} value={data.reinjuryRiskCount} unit={t('dashboard.medical.kpi.unit.person')} color="amber" />
             )}
           </div>
         </div>
 
         {/* 행정 현황 */}
         <div className="space-y-3 mb-6">
-          <p className="text-xs font-medium text-muted-foreground">행정 현황</p>
+          <p className="text-xs font-medium text-muted-foreground">{t('dashboard.medical.adminStatus')}</p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {!isHeadCoach && (
-              <KpiCard label="서류 미비" value={data.incompleteDocCount} unit="건" color="amber" />
+              <KpiCard label={t('dashboard.medical.kpi.incompleteDoc')} value={data.incompleteDocCount} unit={t('dashboard.medical.kpi.unit.case')} color="amber" />
             )}
-            <KpiCard label="승인 대기" value={data.pendingApprovalCount} unit="건" color="amber" />
+            <KpiCard label={t('dashboard.medical.kpi.pendingApproval')} value={data.pendingApprovalCount} unit={t('dashboard.medical.kpi.unit.case')} color="amber" />
             {!isHeadCoach && (
               <KpiCard
-                label="평균 복귀 소요일"
+                label={t('dashboard.medical.kpi.avgRecoveryDays')}
                 value={data.avgRecoveryDays != null ? data.avgRecoveryDays : '—'}
-                unit={data.avgRecoveryDays != null ? '일' : undefined}
+                unit={data.avgRecoveryDays != null ? t('dashboard.medical.kpi.unit.day') : undefined}
                 color="blue"
               />
             )}
@@ -103,13 +105,13 @@ export function MedicalSection({ data, role }: Props) {
 
         {/* 포지션별 부상 추이 */}
         <div className="space-y-3">
-          <p className="text-xs font-medium text-muted-foreground">포지션별 부상 추이 (전체 이력)</p>
+          <p className="text-xs font-medium text-muted-foreground">{t('dashboard.medical.positionTrend')}</p>
           <div className="space-y-2 max-w-sm">
-            {posEntries.map(([label, count]) => (
-              <BarRow key={label} label={label} count={count} max={maxPos} />
+            {posEntries.map(([posLabel, count]) => (
+              <BarRow key={posLabel} label={posLabel} count={count} max={maxPos} />
             ))}
             {posEntries.every(([, count]) => count === 0) && (
-              <p className="text-sm text-muted-foreground">부상 데이터가 없습니다.</p>
+              <p className="text-sm text-muted-foreground">{t('dashboard.medical.noInjuryData')}</p>
             )}
           </div>
         </div>

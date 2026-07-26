@@ -25,11 +25,11 @@ export interface Recall {
 }
 
 export const TRANSFER_TYPE_LABEL: Record<TransferType, string> = {
-  PERMANENT: '완전 이적',
-  LOAN_OUT: '임대 출',
-  LOAN_IN: '임대 영입',
-  FREE: '자유 계약',
-  RELEASE: '방출',
+  PERMANENT: 'Permanent',
+  LOAN_OUT: 'Loan Out',
+  LOAN_IN: 'Loan In',
+  FREE: 'Free Transfer',
+  RELEASE: 'Release',
 }
 
 export const TRANSFER_TYPE_STYLE: Record<TransferType, string> = {
@@ -41,9 +41,9 @@ export const TRANSFER_TYPE_STYLE: Record<TransferType, string> = {
 }
 
 export const RECALL_STATUS_LABEL: Record<RecallStatus, string> = {
-  PENDING: '대기',
-  APPROVED: '승인',
-  REJECTED: '거절',
+  PENDING: 'Pending',
+  APPROVED: 'Approved',
+  REJECTED: 'Rejected',
 }
 
 export const RECALL_STATUS_STYLE: Record<RecallStatus, string> = {

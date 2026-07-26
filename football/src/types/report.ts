@@ -42,17 +42,17 @@ export interface UpdateReportDto {
 }
 
 export const REPORT_TYPE_LABEL: Record<ReportType, string> = {
-  FINANCIAL: '재무',
-  PERFORMANCE: '성과',
-  MEDICAL: '의무보고서',
-  TRAINING: '훈련',
+  FINANCIAL: 'Financial',
+  PERFORMANCE: 'Performance',
+  MEDICAL: 'Medical',
+  TRAINING: 'Training',
 }
 
 export const REPORT_STATUS_LABEL: Record<ReportStatus, string> = {
-  DRAFT: '초안',
-  SUBMITTED: '제출됨',
-  APPROVED: '승인',
-  REJECTED: '반려',
+  DRAFT: 'Draft',
+  SUBMITTED: 'Submitted',
+  APPROVED: 'Approved',
+  REJECTED: 'Rejected',
 }
 
 export const REPORT_STATUS_STYLE: Record<ReportStatus, string> = {

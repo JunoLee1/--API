@@ -30,8 +30,10 @@ export class PlayerCallupService {
       .createForYouthHeadCoach(
         callup.fromTeam.id,
         "CALLUP_REQUESTED",
-        "유소년 콜업 서류 요청",
-        `${callup.player.playerName} 선수의 1군 콜업 서류 확인이 필요합니다.`,
+        () => ({
+          title: "유소년 콜업 서류 요청",
+          body: `${callup.player.playerName} 선수의 1군 콜업 서류 확인이 필요합니다.`,
+        }),
         callup.id,
       )
       .catch(console.error);
@@ -39,8 +41,10 @@ export class PlayerCallupService {
     void this.notifRepo
       .createForMedicalStaff(
         "CALLUP_REQUESTED",
-        "유소년 콜업 서류 요청",
-        `${callup.player.playerName} 선수의 1군 콜업 의무 서류 확인이 필요합니다.`,
+        () => ({
+          title: "유소년 콜업 서류 요청",
+          body: `${callup.player.playerName} 선수의 1군 콜업 의무 서류 확인이 필요합니다.`,
+        }),
         callup.id,
       )
       .catch(console.error);
@@ -51,8 +55,10 @@ export class PlayerCallupService {
         .createForGuardian(
           guardianId,
           "CALLUP_REQUESTED",
-          "1군 콜업 요청",
-          `${callup.player.playerName} 선수에게 1군 콜업 요청이 들어왔습니다.`,
+          () => ({
+            title: "1군 콜업 요청",
+            body: `${callup.player.playerName} 선수에게 1군 콜업 요청이 들어왔습니다.`,
+          }),
           callup.id,
         )
         .catch(console.error);
@@ -74,8 +80,10 @@ export class PlayerCallupService {
       .createForUser(
         callup.requestedBy.id,
         "CALLUP_APPROVED",
-        "콜업 승인",
-        `${callup.player.playerName} 선수의 1군 콜업이 승인됐습니다.`,
+        () => ({
+          title: "콜업 승인",
+          body: `${callup.player.playerName} 선수의 1군 콜업이 승인됐습니다.`,
+        }),
         id,
       )
       .catch(console.error);
@@ -96,8 +104,10 @@ export class PlayerCallupService {
       .createForUser(
         callup.requestedBy.id,
         "CALLUP_REJECTED",
-        "콜업 거절",
-        `${callup.player.playerName} 선수의 1군 콜업이 거절됐습니다. 사유: ${dto.reason}`,
+        () => ({
+          title: "콜업 거절",
+          body: `${callup.player.playerName} 선수의 1군 콜업이 거절됐습니다. 사유: ${dto.reason}`,
+        }),
         id,
       )
       .catch(console.error);
@@ -116,8 +126,8 @@ export class PlayerCallupService {
 
     if (updated.medicalConfirmed) {
       const submitted = await this.repo.submitDocs(id);
-      void this.notifRepo.createForGM("CALLUP_DOCS_READY", "콜업 서류 완료", `${callup.player.playerName} 선수 콜업 서류가 완료됐습니다. 최종 승인을 진행해주세요.`, id).catch(console.error);
-      void this.notifRepo.createForTD("CALLUP_DOCS_READY", "콜업 서류 완료", `${callup.player.playerName} 선수 콜업 서류가 완료됐습니다.`, id).catch(console.error);
+      void this.notifRepo.createForGM("CALLUP_DOCS_READY", () => ({ title: "콜업 서류 완료", body: `${callup.player.playerName} 선수 콜업 서류가 완료됐습니다. 최종 승인을 진행해주세요.` }), id).catch(console.error);
+      void this.notifRepo.createForTD("CALLUP_DOCS_READY", () => ({ title: "콜업 서류 완료", body: `${callup.player.playerName} 선수 콜업 서류가 완료됐습니다.` }), id).catch(console.error);
       return submitted;
     }
 
@@ -133,8 +143,8 @@ export class PlayerCallupService {
 
     if (updated.youthCoachConfirmed) {
       const submitted = await this.repo.submitDocs(id);
-      void this.notifRepo.createForGM("CALLUP_DOCS_READY", "콜업 서류 완료", `${callup.player.playerName} 선수 콜업 서류가 완료됐습니다. 최종 승인을 진행해주세요.`, id).catch(console.error);
-      void this.notifRepo.createForTD("CALLUP_DOCS_READY", "콜업 서류 완료", `${callup.player.playerName} 선수 콜업 서류가 완료됐습니다.`, id).catch(console.error);
+      void this.notifRepo.createForGM("CALLUP_DOCS_READY", () => ({ title: "콜업 서류 완료", body: `${callup.player.playerName} 선수 콜업 서류가 완료됐습니다. 최종 승인을 진행해주세요.` }), id).catch(console.error);
+      void this.notifRepo.createForTD("CALLUP_DOCS_READY", () => ({ title: "콜업 서류 완료", body: `${callup.player.playerName} 선수 콜업 서류가 완료됐습니다.` }), id).catch(console.error);
       return submitted;
     }
 

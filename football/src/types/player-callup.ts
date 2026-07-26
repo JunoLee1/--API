@@ -1,11 +1,11 @@
 export type PlayerCallupStatus = 'REQUESTED' | 'DOCS_SUBMITTED' | 'APPROVED' | 'REJECTED' | 'COMPLETED'
 
 export const CALLUP_STATUS_LABEL: Record<PlayerCallupStatus, string> = {
-  REQUESTED: '요청',
-  DOCS_SUBMITTED: '서류제출',
-  APPROVED: '승인',
-  REJECTED: '거절',
-  COMPLETED: '완료',
+  REQUESTED: 'Requested',
+  DOCS_SUBMITTED: 'Docs Submitted',
+  APPROVED: 'Approved',
+  REJECTED: 'Rejected',
+  COMPLETED: 'Completed',
 }
 
 export const CALLUP_STATUS_STYLE: Record<PlayerCallupStatus, string> = {

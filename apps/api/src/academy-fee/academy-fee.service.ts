@@ -33,8 +33,10 @@ export class AcademyFeeService {
       void this.notifRepo.createForGuardian(
         p.guardianId!,
         "FEE_INVOICE_ISSUED",
-        `${month}월 아카데미 회비 청구서`,
-        `${p.playerName} 선수의 ${month}월 회비(${amount.toLocaleString()}원)가 청구됐습니다. 기한: ${dueDate.toLocaleDateString("ko-KR")}`,
+        () => ({
+          title: `${month}월 아카데미 회비 청구서`,
+          body: `${p.playerName} 선수의 ${month}월 회비(${amount.toLocaleString()}원)가 청구됐습니다. 기한: ${dueDate.toLocaleDateString("ko-KR")}`,
+        }),
       ).catch(console.error);
     }
   }
@@ -49,23 +51,29 @@ export class AcademyFeeService {
         if ((fee.player.status as string) !== "SUSPENDED") await this.repo.lockPlayer(fee.playerId);
         void this.notifRepo.createForGuardian(
           fee.guardianId, "FEE_ACCOUNT_LOCKED",
-          "아카데미 회비 미납 — 훈련/경기 참가 정지",
-          `${fee.player.playerName} 선수가 30일 이상 회비를 미납하여 참가가 정지됐습니다.`,
+          () => ({
+            title: "아카데미 회비 미납 — 훈련/경기 참가 정지",
+            body: `${fee.player.playerName} 선수가 30일 이상 회비를 미납하여 참가가 정지됐습니다.`,
+          }),
           fee.id,
         ).catch(console.error);
       } else if (days >= 7) {
         await this.repo.updateStatus(fee.id, "OVERDUE");
         void this.notifRepo.createForGuardian(
           fee.guardianId, "FEE_OVERDUE_WARNING",
-          "아카데미 회비 미납 2차 안내",
-          `${fee.player.playerName} 선수의 회비가 ${days}일째 미납 중입니다.`,
+          () => ({
+            title: "아카데미 회비 미납 2차 안내",
+            body: `${fee.player.playerName} 선수의 회비가 ${days}일째 미납 중입니다.`,
+          }),
           fee.id,
         ).catch(console.error);
       } else if (days >= 1) {
         void this.notifRepo.createForGuardian(
           fee.guardianId, "FEE_REMINDER",
-          "아카데미 회비 납부 안내",
-          `${fee.player.playerName} 선수의 회비 납부 기한이 지났습니다.`,
+          () => ({
+            title: "아카데미 회비 납부 안내",
+            body: `${fee.player.playerName} 선수의 회비 납부 기한이 지났습니다.`,
+          }),
           fee.id,
         ).catch(console.error);
       }
@@ -86,8 +94,10 @@ export class AcademyFeeService {
     const paid = await this.repo.approvePayment(id);
     void this.notifRepo.createForGuardian(
       fee.guardianId, "FEE_INVOICE_ISSUED",
-      "아카데미 회비 수납 확인",
-      `${fee.player.playerName} 선수의 회비 납부가 확인됐습니다.`,
+      () => ({
+        title: "아카데미 회비 수납 확인",
+        body: `${fee.player.playerName} 선수의 회비 납부가 확인됐습니다.`,
+      }),
       id,
     ).catch(console.error);
     return paid;

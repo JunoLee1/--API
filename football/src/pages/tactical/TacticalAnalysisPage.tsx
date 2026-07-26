@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { tacticalApi } from '@/services/tactical.service'
 import { matchApi } from '@/services/match.service'
@@ -11,9 +12,7 @@ import type {
 } from '@/types/tactical'
 import {
   FORMATION_OPTIONS,
-  PHASE_LABEL,
   PHASE_STYLE,
-  STATUS_LABEL,
   STATUS_STYLE,
 } from '@/types/tactical'
 import type { Match } from '@/types/match'
@@ -151,6 +150,7 @@ function AnalysisFormDialog({
   initial,
   onSaved,
 }: AnalysisFormDialogProps) {
+  const { t } = useTranslation('match')
   // ── common ──
   const [matchId, setMatchId] = useState(initial ? String(initial.matchId) : '')
   const [phase, setPhase] = useState<TacticalPhase>(initial?.phase ?? 'PRE_MATCH')
@@ -238,15 +238,15 @@ function AnalysisFormDialog({
     setSaving(true)
     try {
       if (mode === 'create') {
-        if (!matchId) { toast.error('경기를 선택해주세요.'); setSaving(false); return }
+        if (!matchId) { toast.error(t('tactical.form.required')); setSaving(false); return }
         const phaseDto = phase === 'PRE_MATCH' ? buildPreDto() : buildPostDto()
         const result = await tacticalApi.create({ matchId: Number(matchId), phase, ...phaseDto })
         if (files.length > 0) {
           await tacticalApi.addMedia(result.id, files).catch(() => {
-            toast.error('분석은 등록됐지만 파일 업로드에 실패했습니다.')
+            toast.error(t('tactical.form.saveFailed'))
           })
         }
-        toast.success('전술 분석이 등록됐습니다.')
+        toast.success(t('tactical.form.createSuccess'))
       } else {
         const phaseDto: UpdateTacticalDto = phase === 'PRE_MATCH'
           ? {
@@ -268,22 +268,20 @@ function AnalysisFormDialog({
               opponentAnalysis,
             }
         await tacticalApi.update(initial!.id, phaseDto)
-        toast.success('전술 분석이 수정됐습니다.')
+        toast.success(t('tactical.form.editSuccess'))
       }
       reset()
       onSaved()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('tactical.form.saveFailed'))
     } finally {
       setSaving(false)
     }
   }
 
   const title = mode === 'create'
-    ? '전술 분석 등록'
-    : phase === 'PRE_MATCH'
-      ? '🛡️ 사전 전력 분석 수정'
-      : '⚔️ 사후 경기 리뷰 수정'
+    ? t('tactical.form.createTitle')
+    : t('tactical.form.editTitle')
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) { reset(); onOpenChange(false) } }}>
@@ -293,10 +291,10 @@ function AnalysisFormDialog({
         <div className="flex-1 overflow-y-auto space-y-3 py-2 pr-1">
           {/* ── 공통: 경기 + 시점 ── */}
           <div className="space-y-1.5">
-            <Label>경기 *</Label>
+            <Label>{t('tactical.form.matchLabel')} *</Label>
             <Select value={matchId} onValueChange={setMatchId} disabled={mode === 'edit'}>
               <SelectTrigger>
-                <SelectValue placeholder="경기 선택">
+                <SelectValue placeholder={t('tactical.form.matchPlaceholder')}>
                   {matchId ? matchLabel(matches.find((m) => String(m.id) === matchId)!) : undefined}
                 </SelectValue>
               </SelectTrigger>
@@ -308,14 +306,14 @@ function AnalysisFormDialog({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>분석 시점 *</Label>
+            <Label>{t('tactical.form.phaseLabel')} *</Label>
             <Select value={phase} onValueChange={(v) => setPhase(v as TacticalPhase)} disabled={mode === 'edit'}>
               <SelectTrigger>
-                <SelectValue>{PHASE_LABEL[phase]}</SelectValue>
+                <SelectValue>{t(`tactical.phase.${phase}`)}</SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {PHASES.map((p) => (
-                  <SelectItem key={p} value={p}>{PHASE_LABEL[p]}</SelectItem>
+                {PHASES.map((ph) => (
+                  <SelectItem key={ph} value={ph}>{t(`tactical.phase.${ph}`)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -326,17 +324,17 @@ function AnalysisFormDialog({
             <div className="space-y-3 rounded-lg border border-blue-100 bg-blue-50/40 p-3">
               <p className="text-xs font-semibold text-blue-700">🛡️ 사전 전력 분석 — 상대팀 파악</p>
               <FormationSelect
-                label="우리 팀 계획 포메이션"
+                label={t('tactical.form.formationLabel')}
                 value={formation}
                 onChange={setFormation}
               />
               <FormationSelect
-                label="상대 팀 예상 포메이션"
+                label={t('tactical.form.opponentFormationLabel')}
                 value={opponentFormation}
                 onChange={setOpponentFormation}
               />
               <div className="space-y-1.5">
-                <Label>상대 팀 빌드업/공격 전개 특징 (Key Threat)</Label>
+                <Label>{t('tactical.form.opponentKeyThreatLabel')}</Label>
                 <Textarea
                   placeholder="예: 좌측 윙백의 오버래핑, 전방 압박 강도"
                   value={opponentKeyThreat}
@@ -345,7 +343,7 @@ function AnalysisFormDialog({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>상대 팀 수비 취약점 및 공략 포인트</Label>
+                <Label>{t('tactical.form.opponentWeaknessLabel')}</Label>
                 <Textarea
                   placeholder="예: 백라인 뒷공간, 세트피스 허용률"
                   value={opponentWeakness}
@@ -354,7 +352,7 @@ function AnalysisFormDialog({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>요주의 인물 (Opponent Key Player)</Label>
+                <Label>{t('tactical.form.opponentKeyPlayerLabel')}</Label>
                 <Input
                   placeholder="예: 10번 공격형 미드필더"
                   value={opponentKeyPlayer}
@@ -362,7 +360,7 @@ function AnalysisFormDialog({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>기타 메모</Label>
+                <Label>{t('tactical.form.opponentAnalysisLabel')}</Label>
                 <Textarea
                   placeholder="추가 분석 내용"
                   value={opponentAnalysis}
@@ -378,12 +376,12 @@ function AnalysisFormDialog({
             <div className="space-y-3 rounded-lg border border-purple-100 bg-purple-50/40 p-3">
               <p className="text-xs font-semibold text-purple-700">⚔️ 사후 경기 리뷰 — 우리 팀 수행도</p>
               <FormationSelect
-                label="우리 팀 실제 가동 포메이션"
+                label={t('tactical.form.formationLabel')}
                 value={formation}
                 onChange={setFormation}
               />
               <div className="space-y-1.5">
-                <Label>전술 지시 이행도 평가</Label>
+                <Label>{t('tactical.form.tacticalComplianceLabel')}</Label>
                 <Textarea
                   placeholder="예: 전방 압박 이행 80%, 측면 전환 부족"
                   value={tacticalCompliance}
@@ -392,7 +390,7 @@ function AnalysisFormDialog({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>실점/위기 발생 원인 분석</Label>
+                <Label>{t('tactical.form.concededAnalysisLabel')}</Label>
                 <Textarea
                   placeholder="예: 코너킥 수비 마크 이탈, 2선 압박 타이밍 지연"
                   value={concededAnalysis}
@@ -401,7 +399,7 @@ function AnalysisFormDialog({
                 />
               </div>
               <PlayerSelectRow
-                label="수훈 선수 (MOM)"
+                label={t('tactical.form.momLabel')}
                 players={players}
                 playerId={momPlayerId}
                 note={momNote}
@@ -409,7 +407,7 @@ function AnalysisFormDialog({
                 onNoteChange={setMomNote}
               />
               <PlayerSelectRow
-                label="보완 필요 선수"
+                label={t('tactical.form.improvementLabel')}
                 players={players}
                 playerId={improvementPlayerId}
                 note={improvementNote}
@@ -417,7 +415,7 @@ function AnalysisFormDialog({
                 onNoteChange={setImprovementNote}
               />
               <div className="space-y-1.5">
-                <Label>기타 메모</Label>
+                <Label>{t('tactical.form.opponentAnalysisLabel')}</Label>
                 <Textarea
                   placeholder="추가 리뷰 내용"
                   value={opponentAnalysis}
@@ -431,7 +429,7 @@ function AnalysisFormDialog({
           {/* ── 파일 업로드 (create 모드만) ── */}
           {mode === 'create' && (
             <div className="space-y-1.5">
-              <Label>사진 / 영상</Label>
+              <Label>{t('tactical.form.mediaLabel')}</Label>
               <input
                 ref={inputRef}
                 type="file"
@@ -476,10 +474,10 @@ function AnalysisFormDialog({
 
         <DialogFooter className="border-t pt-3">
           <Button variant="outline" onClick={() => { reset(); onOpenChange(false) }} disabled={saving}>
-            취소
+            {t('tactical.form.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? '저장 중...' : mode === 'create' ? '등록' : '저장'}
+            {saving ? t('tactical.form.saving') : mode === 'create' ? t('tactical.form.create') : t('tactical.form.update')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -490,6 +488,7 @@ function AnalysisFormDialog({
 // ─── 메인 페이지 ───────────────────────────────────────────────────────────────
 
 export function TacticalAnalysisPage() {
+  const { t } = useTranslation('match')
   const { user } = useCurrentUser()
   const [analyses, setAnalyses] = useState<TacticalAnalysis[]>([])
   const [matches, setMatches] = useState<Match[]>([])
@@ -509,7 +508,7 @@ export function TacticalAnalysisPage() {
     tacticalApi
       .list()
       .then(setAnalyses)
-      .catch(() => toast.error('전술 분석 목록을 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('tactical.loadFailed')))
       .finally(() => setLoading(false))
 
   useEffect(() => {
@@ -522,10 +521,10 @@ export function TacticalAnalysisPage() {
     e.stopPropagation()
     try {
       await tacticalApi.confirm(id)
-      toast.success('전술 분석이 확정됐습니다.')
+      toast.success(t('tactical.confirmSuccess'))
       setAnalyses((prev) => prev.map((a) => a.id === id ? { ...a, status: 'CONFIRMED' } : a))
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '확정에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('tactical.confirmFailed'))
     }
   }
 
@@ -538,12 +537,12 @@ export function TacticalAnalysisPage() {
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 flex items-center justify-between gap-4 shrink-0">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">전술 분석</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">경기 전·후 전술 분석 목록</p>
+          <h1 className="text-lg font-semibold tracking-tight">{t('tactical.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{t('tactical.description')}</p>
         </div>
         {canWrite && (
           <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />전술 등록
+            <Plus className="h-4 w-4 mr-1" />{t('tactical.addButton')}
           </Button>
         )}
       </div>
@@ -555,17 +554,17 @@ export function TacticalAnalysisPage() {
           </div>
         ) : analyses.length === 0 ? (
           <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-            등록된 전술 분석이 없습니다.
+            {t('tactical.noData')}
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead>경기</TableHead>
-                <TableHead className="w-24">시점</TableHead>
-                <TableHead className="w-28">포메이션</TableHead>
-                <TableHead className="w-20">상태</TableHead>
-                <TableHead className="w-24 text-muted-foreground">작성자</TableHead>
+                <TableHead>{t('tactical.col.match')}</TableHead>
+                <TableHead className="w-24">{t('tactical.col.phase')}</TableHead>
+                <TableHead className="w-28">{t('tactical.col.formation')}</TableHead>
+                <TableHead className="w-20">{t('tactical.col.status')}</TableHead>
+                <TableHead className="w-24 text-muted-foreground">{t('tactical.col.createdBy')}</TableHead>
                 {canConfirm && <TableHead className="w-20" />}
               </TableRow>
             </TableHeader>
@@ -582,13 +581,13 @@ export function TacticalAnalysisPage() {
                   </TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${PHASE_STYLE[a.phase]}`}>
-                      {PHASE_LABEL[a.phase]}
+                      {t(`tactical.phase.${a.phase}`)}
                     </span>
                   </TableCell>
                   <TableCell className="font-mono text-sm">{a.formation ?? '—'}</TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${STATUS_STYLE[a.status]}`}>
-                      {STATUS_LABEL[a.status]}
+                      {t(`tactical.status.${a.status}`)}
                     </span>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{a.createdBy.nickname}</TableCell>
@@ -601,7 +600,7 @@ export function TacticalAnalysisPage() {
                           className="h-7 text-xs"
                           onClick={(e) => handleConfirm(a.id, e)}
                         >
-                          <Check className="h-3 w-3 mr-1" />확정
+                          <Check className="h-3 w-3 mr-1" />{t('tactical.confirm')}
                         </Button>
                       )}
                     </TableCell>

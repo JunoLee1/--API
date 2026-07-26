@@ -1,5 +1,6 @@
 import { useState, useEffect, Fragment } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { videoApi } from '@/services/video.service'
 import type { TrainingVideo, CreateVideoPayload } from '@/types/video'
 import type { SessionType } from '@/types/training'
@@ -35,6 +36,7 @@ interface CreateVideoDialogProps {
 }
 
 function CreateVideoDialog({ open, onOpenChange, onSaved }: CreateVideoDialogProps) {
+  const { t } = useTranslation('training')
   const [title, setTitle] = useState('')
   const [url, setUrl] = useState('')
   const [tags, setTags] = useState('')
@@ -43,7 +45,7 @@ function CreateVideoDialog({ open, onOpenChange, onSaved }: CreateVideoDialogPro
 
   const handleSave = async () => {
     if (!title.trim() || !url.trim()) {
-      toast.error('제목과 URL은 필수입니다.')
+      toast.error(t('videoPage.createDialog.required'))
       return
     }
     setSaving(true)
@@ -51,15 +53,15 @@ function CreateVideoDialog({ open, onOpenChange, onSaved }: CreateVideoDialogPro
       const payload: CreateVideoPayload = {
         title: title.trim(),
         url: url.trim(),
-        tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+        tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
         sessionType: sessionType || undefined,
       }
       await videoApi.create(payload)
-      toast.success('영상이 등록됐습니다.')
+      toast.success(t('videoPage.createDialog.saved'))
       onSaved()
       setTitle(''); setUrl(''); setTags(''); setSessionType('')
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('videoPage.createDialog.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -68,40 +70,39 @@ function CreateVideoDialog({ open, onOpenChange, onSaved }: CreateVideoDialogPro
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>영상 등록</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t('videoPage.createDialog.title')}</DialogTitle></DialogHeader>
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
-            <Label>제목 *</Label>
-            <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="영상 제목" />
+            <Label>{t('videoPage.createDialog.titleLabel')} *</Label>
+            <Input value={title} onChange={e => setTitle(e.target.value)} placeholder={t('videoPage.createDialog.titleLabel')} />
           </div>
           <div className="space-y-1.5">
-            <Label>URL *</Label>
+            <Label>{t('videoPage.createDialog.urlLabel')} *</Label>
             <Input value={url} onChange={e => setUrl(e.target.value)} placeholder="https://..." />
           </div>
           <div className="space-y-1.5">
-            <Label>태그 (쉼표 구분)</Label>
-            <Input value={tags} onChange={e => setTags(e.target.value)} placeholder="수비, 압박" />
+            <Label>{t('videoPage.createDialog.tagsLabel')}</Label>
+            <Input value={tags} onChange={e => setTags(e.target.value)} placeholder={t('videoPage.createDialog.tagsPlaceholder')} />
           </div>
           <div className="space-y-1.5">
-            <Label>세션 유형</Label>
+            <Label>{t('videoPage.createDialog.sessionTypeLabel')}</Label>
             <Select
               value={sessionType}
               onValueChange={v => setSessionType(v as SessionType | '')}
-              items={{ '': '전체', ...SESSION_TYPE_LABEL }}
             >
-              <SelectTrigger><SelectValue placeholder="선택 안함" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t('videoPage.createDialog.noSessionType')} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">선택 안함</SelectItem>
-                {(Object.keys(SESSION_TYPE_LABEL) as SessionType[]).map(t => (
-                  <SelectItem key={t} value={t}>{SESSION_TYPE_LABEL[t]}</SelectItem>
+                <SelectItem value="">{t('videoPage.createDialog.noSessionType')}</SelectItem>
+                {(Object.keys(SESSION_TYPE_LABEL) as SessionType[]).map(st => (
+                  <SelectItem key={st} value={st}>{t(`sessionType.${st}`)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? '저장 중...' : '등록'}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t('videoPage.createDialog.cancel')}</Button>
+          <Button onClick={handleSave} disabled={saving}>{saving ? t('videoPage.createDialog.saving') : t('videoPage.createDialog.submit')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -109,6 +110,7 @@ function CreateVideoDialog({ open, onOpenChange, onSaved }: CreateVideoDialogPro
 }
 
 export function TrainingVideoPage() {
+  const { t } = useTranslation('training')
   const { user } = useCurrentUser()
   const [videos, setVideos] = useState<TrainingVideo[]>([])
   const [loading, setLoading] = useState(true)
@@ -125,7 +127,7 @@ export function TrainingVideoPage() {
     setLoading(true)
     videoApi.list()
       .then(setVideos)
-      .catch(() => toast.error('영상 목록을 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('videoPage.loadFailed')))
       .finally(() => setLoading(false))
   }
 
@@ -136,9 +138,9 @@ export function TrainingVideoPage() {
     try {
       const result = await videoApi.generateAiSummary(id)
       setVideos(prev => prev.map(v => v.id === id ? { ...v, aiSummary: result.aiSummary } : v))
-      toast.success('AI 요약이 생성됐습니다.')
+      toast.success(t('videoPage.summaryGenerated'))
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'AI 요약 생성에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('videoPage.summaryFailed'))
     } finally {
       setGeneratingSummaryId(null)
     }
@@ -147,15 +149,15 @@ export function TrainingVideoPage() {
   const handleDelete = async (id: number) => {
     try {
       await videoApi.delete(id)
-      toast.success('삭제됐습니다.')
+      toast.success(t('videoPage.deleted'))
       setVideos(prev => prev.filter(v => v.id !== id))
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '삭제에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('videoPage.deleteFailed'))
     }
   }
 
   const filtered = filterTag.trim()
-    ? videos.filter(v => v.tags.some(t => t.includes(filterTag.trim())))
+    ? videos.filter(v => v.tags.some(tg => tg.includes(filterTag.trim())))
     : videos
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
@@ -165,19 +167,19 @@ export function TrainingVideoPage() {
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">훈련 영상</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">전체 {filtered.length}개</p>
+          <h1 className="text-lg font-semibold tracking-tight">{t('videoPage.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{t('videoPage.total', { count: filtered.length })}</p>
         </div>
         {canWrite && (
           <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />영상 등록
+            <Plus className="h-4 w-4 mr-1" />{t('videoPage.addVideo')}
           </Button>
         )}
       </div>
 
       <div className="border-b px-6 py-3 flex items-center gap-3 shrink-0 bg-muted/30">
         <Input
-          placeholder="태그 검색"
+          placeholder={t('videoPage.tagSearch')}
           value={filterTag}
           onChange={e => { setFilterTag(e.target.value); setPage(1) }}
           className="w-44 h-8 text-sm bg-background"
@@ -191,17 +193,17 @@ export function TrainingVideoPage() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-            등록된 영상이 없습니다.
+            {t('videoPage.noVideos')}
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead>제목</TableHead>
-                <TableHead className="w-32">세션 유형</TableHead>
-                <TableHead>태그</TableHead>
-                <TableHead className="w-20 text-center">할당 수</TableHead>
-                <TableHead className="w-32">등록일</TableHead>
+                <TableHead>{t('videoPage.titleCol')}</TableHead>
+                <TableHead className="w-32">{t('videoPage.sessionTypeCol')}</TableHead>
+                <TableHead>{t('videoPage.tagsCol')}</TableHead>
+                <TableHead className="w-20 text-center">{t('videoPage.countCol')}</TableHead>
+                <TableHead className="w-32">{t('videoPage.dateCol')}</TableHead>
                 <TableHead className="w-20" />
               </TableRow>
             </TableHeader>
@@ -219,14 +221,14 @@ export function TrainingVideoPage() {
                     <TableCell>
                       {v.sessionType ? (
                         <span className="text-xs border rounded px-1.5 py-0.5">
-                          {SESSION_TYPE_LABEL[v.sessionType]}
+                          {t(`sessionType.${v.sessionType}`)}
                         </span>
                       ) : '—'}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {v.tags.map(t => (
-                          <Badge key={t} variant="outline" className="text-xs">{t}</Badge>
+                        {v.tags.map(tg => (
+                          <Badge key={tg} variant="outline" className="text-xs">{tg}</Badge>
                         ))}
                       </div>
                     </TableCell>
@@ -243,7 +245,7 @@ export function TrainingVideoPage() {
                             className="h-7 w-7 text-muted-foreground hover:text-primary"
                             onClick={() => handleGenerateSummary(v.id)}
                             disabled={generatingSummaryId === v.id}
-                            title={v.aiSummary ? 'AI 요약 재생성' : 'AI 요약 생성'}
+                            title={v.aiSummary ? t('videoPage.regenerateSummary') : t('videoPage.generateSummary')}
                           >
                             {generatingSummaryId === v.id
                               ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />

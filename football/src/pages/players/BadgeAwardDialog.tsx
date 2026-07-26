@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { growthReportApi } from '@/services/growthReport.service'
 import type { BadgeType } from '@/types/growth-report'
 import { BADGE_LABEL } from '@/types/growth-report'
@@ -23,6 +24,7 @@ interface Props {
 const BADGE_TYPES = Object.keys(BADGE_LABEL) as BadgeType[]
 
 export function BadgeAwardDialog({ open, onOpenChange, playerId, onSaved }: Props) {
+  const { t } = useTranslation('player')
   const [badgeType, setBadgeType] = useState<BadgeType>('PASSION_KING')
   const [note, setNote] = useState('')
   const [loading, setLoading] = useState(false)
@@ -32,12 +34,12 @@ export function BadgeAwardDialog({ open, onOpenChange, playerId, onSaved }: Prop
     setLoading(true)
     try {
       await growthReportApi.awardBadge({ playerId, badgeType, note: note || undefined })
-      toast.success('배지가 수여됐습니다.')
+      toast.success(t('badgeDialog.saved'))
       onSaved()
       onOpenChange(false)
       setNote('')
     } catch {
-      toast.error('배지 수여에 실패했습니다.')
+      toast.error(t('badgeDialog.saveFailed'))
     } finally {
       setLoading(false)
     }
@@ -47,11 +49,11 @@ export function BadgeAwardDialog({ open, onOpenChange, playerId, onSaved }: Prop
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>배지 수여</DialogTitle>
+          <DialogTitle>{t('badgeDialog.title')}</DialogTitle>
         </DialogHeader>
         <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4 mt-2">
           <div className="space-y-2">
-            <Label>배지 종류</Label>
+            <Label>{t('badgeDialog.typeLabel')}</Label>
             <div className="grid grid-cols-2 gap-2">
               {BADGE_TYPES.map((type) => (
                 <button
@@ -64,21 +66,21 @@ export function BadgeAwardDialog({ open, onOpenChange, playerId, onSaved }: Prop
                       : 'hover:bg-muted'
                   }`}
                 >
-                  {BADGE_LABEL[type]}
+                  {t(`badge.${type}`)}
                 </button>
               ))}
             </div>
           </div>
           <div className="space-y-1">
-            <Label>메모 (선택)</Label>
+            <Label>{t('badgeDialog.memoLabel')}</Label>
             <Input
-              placeholder="수여 이유 등"
+              placeholder={t('badgeDialog.memoPlaceholder')}
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? '수여 중...' : '배지 수여'}
+            {loading ? t('badgeDialog.awarding') : t('badgeDialog.submit')}
           </Button>
         </form>
       </DialogContent>

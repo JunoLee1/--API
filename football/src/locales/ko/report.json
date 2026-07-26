@@ -1,0 +1,100 @@
+{
+  "title": "보고서",
+  "list": "보고서 목록",
+  "detail": "보고서 상세",
+  "field": {
+    "title": "제목",
+    "content": "내용",
+    "type": "유형",
+    "author": "작성자",
+    "submittedAt": "제출일",
+    "reviewedAt": "검토일"
+  },
+  "type": {
+    "WEEKLY": "주간",
+    "MONTHLY": "월간",
+    "MATCH": "경기",
+    "TRAINING": "훈련",
+    "INJURY": "부상",
+    "SCOUTING": "스카우팅",
+    "FINANCIAL": "재무",
+    "PERFORMANCE": "성과",
+    "MEDICAL": "의무보고서"
+  },
+  "status": {
+    "DRAFT": "초안",
+    "SUBMITTED": "제출됨",
+    "APPROVED": "승인",
+    "REJECTED": "반려"
+  },
+  "action": {
+    "createReport": "보고서 작성",
+    "submitReport": "제출",
+    "approveReport": "승인",
+    "rejectReport": "반려",
+    "requestRevision": "수정 요청"
+  },
+  "page": {
+    "title": "보고서 결재",
+    "descGm": "GM 결재 대기 보고서 포함 전체 목록",
+    "descHeadCoach": "훈련 보고서 결재 대기 포함 목록",
+    "descDefault": "내가 작성한 보고서 목록",
+    "addReport": "보고서 작성",
+    "loadFailed": "보고서 목록을 불러오지 못했습니다.",
+    "noReports": "등록된 보고서가 없습니다.",
+    "col": {
+      "title": "제목",
+      "type": "유형",
+      "status": "상태",
+      "author": "작성자",
+      "createdAt": "작성일"
+    }
+  },
+  "form": {
+    "title": "보고서 작성",
+    "typeLabel": "유형 *",
+    "titleLabel": "제목 *",
+    "titlePlaceholder": "보고서 제목",
+    "contentLabel": "내용 *",
+    "contentPlaceholder": "보고서 내용을 입력해주세요.",
+    "attachLabel": "첨부 파일",
+    "attachButton": "파일 첨부",
+    "titleRequired": "제목을 입력해주세요.",
+    "contentRequired": "내용을 입력해주세요.",
+    "saveDraft": "초안 저장",
+    "submit": "제출",
+    "cancel": "취소",
+    "processing": "처리 중...",
+    "submitted": "보고서가 제출됐습니다.",
+    "draftSaved": "초안으로 저장됐습니다.",
+    "saveFailed": "저장에 실패했습니다."
+  },
+  "detail": {
+    "authorLabel": "작성자",
+    "createdAtLabel": "작성일",
+    "submittedAtLabel": "제출일",
+    "reviewedAtLabel": "결재일",
+    "rejectionReasonLabel": "반려 사유",
+    "contentLabel": "내용",
+    "attachLabel": "첨부 파일",
+    "defaultAttachName": "첨부 파일",
+    "submitButton": "제출",
+    "rejectButton": "반려",
+    "approveButton": "승인",
+    "submitSuccess": "보고서가 제출됐습니다.",
+    "submitFailed": "제출에 실패했습니다.",
+    "approveSuccess": "보고서가 승인됐습니다.",
+    "approveFailed": "승인에 실패했습니다.",
+    "rejectSuccess": "보고서가 반려됐습니다.",
+    "loadFailed": "보고서를 불러오지 못했습니다.",
+    "rejectDialog": {
+      "title": "보고서 반려",
+      "reasonLabel": "반려 사유 *",
+      "reasonPlaceholder": "반려 사유를 입력해주세요.",
+      "reasonRequired": "반려 사유를 입력해주세요.",
+      "cancel": "취소",
+      "processing": "처리 중...",
+      "confirm": "반려"
+    }
+  }
+}

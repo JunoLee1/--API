@@ -8,13 +8,13 @@ export type BadgeType =
   | 'GOAL_MACHINE'
 
 export const BADGE_LABEL: Record<BadgeType, string> = {
-  PASSION_KING: '열정왕',
-  SPACE_WIZARD: '공간마법사',
-  BEST_PASSER: '패스마스터',
-  TEAM_PLAYER: '팀플레이어',
-  MOST_IMPROVED: '최고성장',
-  DEFENSIVE_WALL: '수비의 벽',
-  GOAL_MACHINE: '득점기계',
+  PASSION_KING: 'Passion King',
+  SPACE_WIZARD: 'Space Wizard',
+  BEST_PASSER: 'Best Passer',
+  TEAM_PLAYER: 'Team Player',
+  MOST_IMPROVED: 'Most Improved',
+  DEFENSIVE_WALL: 'Defensive Wall',
+  GOAL_MACHINE: 'Goal Machine',
 }
 
 export interface GrowthEvaluation {

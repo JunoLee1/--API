@@ -1,0 +1,117 @@
+<h2>라인업 관리 페이지 — UI 형태</h2>
+<p class="subtitle">어떤 방식으로 선수를 포지션에 배치할까요?</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#1a5c1a;border-radius:8px;padding:12px 8px;font-size:10px;color:white;min-height:180px;position:relative;">
+        <div style="text-align:center;margin-bottom:8px;font-size:9px;opacity:0.7">4-3-3</div>
+        <!-- GK -->
+        <div style="display:flex;justify-content:center;margin-bottom:10px">
+          <div style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.5);border-radius:20px;padding:3px 10px;font-size:9px">GK 이선우</div>
+        </div>
+        <!-- DEF -->
+        <div style="display:flex;justify-content:space-around;margin-bottom:10px">
+          <div style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.5);border-radius:20px;padding:3px 8px;font-size:8px">LB 김민준</div>
+          <div style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.5);border-radius:20px;padding:3px 8px;font-size:8px">CB 박지훈</div>
+          <div style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.5);border-radius:20px;padding:3px 8px;font-size:8px">CB 최현우</div>
+          <div style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.5);border-radius:20px;padding:3px 8px;font-size:8px">RB 정태양</div>
+        </div>
+        <!-- MID -->
+        <div style="display:flex;justify-content:space-around;margin-bottom:10px">
+          <div style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.5);border-radius:20px;padding:3px 8px;font-size:8px">CM 이준혁</div>
+          <div style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.5);border-radius:20px;padding:3px 8px;font-size:8px">CM 윤서준</div>
+          <div style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.5);border-radius:20px;padding:3px 8px;font-size:8px">CAM 한도현</div>
+        </div>
+        <!-- FWD -->
+        <div style="display:flex;justify-content:space-around">
+          <div style="background:rgba(255,215,0,0.3);border:1px solid rgba(255,215,0,0.7);border-radius:20px;padding:3px 8px;font-size:8px">LW 오세진</div>
+          <div style="background:rgba(255,215,0,0.3);border:1px solid rgba(255,215,0,0.7);border-radius:20px;padding:3px 8px;font-size:8px">ST 이서준</div>
+          <div style="background:rgba(255,215,0,0.3);border:1px solid rgba(255,215,0,0.7);border-radius:20px;padding:3px 8px;font-size:8px">RW 강민재</div>
+        </div>
+        <div style="margin-top:8px;padding-top:6px;border-top:1px dashed rgba(255,255,255,0.3);font-size:8px;opacity:0.6;text-align:center">후보: 장원준, 김태현 외 4명</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. 풋볼 피치 뷰</h3>
+      <p>포메이션을 선택하면 슬롯이 피치 위에 배치됨. 각 슬롯을 클릭해서 선수를 선택. 기존 SquadPlannerPage 컴포넌트 재사용 가능.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="display:flex;gap:8px;min-height:180px">
+        <!-- Left panel: player pool -->
+        <div style="flex:0 0 38%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px;font-size:9px">
+          <div style="font-weight:600;margin-bottom:6px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em">선수 풀</div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div style="background:white;border:1px solid #e2e8f0;border-radius:6px;padding:4px 6px;cursor:pointer">ST 이서준</div>
+            <div style="background:white;border:1px solid #e2e8f0;border-radius:6px;padding:4px 6px;cursor:pointer">LW 오세진</div>
+            <div style="background:white;border:1px solid #e2e8f0;border-radius:6px;padding:4px 6px;cursor:pointer">CM 이준혁</div>
+            <div style="background:#dbeafe;border:1px solid #93c5fd;border-radius:6px;padding:4px 6px;font-size:8px;color:#1e40af">↳ 드래그해서 배치</div>
+          </div>
+        </div>
+        <!-- Right panel: pitch -->
+        <div style="flex:1;background:#1a5c1a;border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px;align-items:center">
+          <div style="font-size:8px;color:rgba(255,255,255,0.6)">4-3-3</div>
+          <div style="display:flex;justify-content:center">
+            <div style="background:rgba(255,255,255,0.15);border:1px dashed rgba(255,255,255,0.4);border-radius:20px;padding:3px 10px;font-size:8px;color:white">GK —</div>
+          </div>
+          <div style="display:flex;gap:4px">
+            <div style="background:rgba(255,255,255,0.15);border:1px dashed rgba(255,255,255,0.4);border-radius:20px;padding:3px 6px;font-size:8px;color:white">LB —</div>
+            <div style="background:rgba(255,255,255,0.15);border:1px dashed rgba(255,255,255,0.4);border-radius:20px;padding:3px 6px;font-size:8px;color:white">CB —</div>
+            <div style="background:rgba(255,255,255,0.15);border:1px dashed rgba(255,255,255,0.4);border-radius:20px;padding:3px 6px;font-size:8px;color:white">CB —</div>
+            <div style="background:rgba(255,255,255,0.15);border:1px dashed rgba(255,255,255,0.4);border-radius:20px;padding:3px 6px;font-size:8px;color:white">RB —</div>
+          </div>
+          <div style="display:flex;gap:4px">
+            <div style="background:rgba(255,255,255,0.15);border:1px dashed rgba(255,255,255,0.4);border-radius:20px;padding:3px 6px;font-size:8px;color:white">CM —</div>
+            <div style="background:rgba(255,255,255,0.15);border:1px dashed rgba(255,255,255,0.4);border-radius:20px;padding:3px 6px;font-size:8px;color:white">CM —</div>
+            <div style="background:rgba(255,255,255,0.15);border:1px dashed rgba(255,255,255,0.4);border-radius:20px;padding:3px 6px;font-size:8px;color:white">CAM—</div>
+          </div>
+          <div style="display:flex;gap:4px">
+            <div style="background:rgba(255,255,255,0.15);border:1px dashed rgba(255,255,255,0.4);border-radius:20px;padding:3px 6px;font-size:8px;color:white">LW —</div>
+            <div style="background:rgba(255,255,255,0.15);border:1px dashed rgba(255,255,255,0.4);border-radius:20px;padding:3px 6px;font-size:8px;color:white">ST —</div>
+            <div style="background:rgba(255,255,255,0.15);border:1px dashed rgba(255,255,255,0.4);border-radius:20px;padding:3px 6px;font-size:8px;color:white">RW —</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. 드래그앤드롭 (피치 + 선수풀)</h3>
+      <p>왼쪽 선수 목록에서 오른쪽 피치 슬롯으로 드래그해서 배치. 직관적이지만 구현 복잡도가 높음.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;min-height:180px;font-size:9px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+          <span style="font-weight:600;color:#334155">포메이션</span>
+          <div style="border:1px solid #e2e8f0;border-radius:4px;padding:2px 8px;background:white;font-size:9px">4-3-3 ▾</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px">
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-size:8px;color:#64748b;font-weight:600;margin-bottom:2px">선발 (11)</div>
+            <div style="background:white;border:1px solid #e2e8f0;border-radius:4px;padding:4px 6px;display:flex;justify-content:space-between"><span>GK</span><span style="color:#1e40af">이선우</span></div>
+            <div style="background:white;border:1px solid #e2e8f0;border-radius:4px;padding:4px 6px;display:flex;justify-content:space-between"><span>LB</span><span style="color:#1e40af">김민준</span></div>
+            <div style="background:white;border:1px solid #e2e8f0;border-radius:4px;padding:4px 6px;display:flex;justify-content:space-between"><span>CB</span><span style="color:#64748b;font-style:italic">선택...</span></div>
+            <div style="background:white;border:1px solid #e2e8f0;border-radius:4px;padding:4px 6px;display:flex;justify-content:space-between"><span>CB</span><span style="color:#64748b;font-style:italic">선택...</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-size:8px;color:#64748b;font-weight:600;margin-bottom:2px">후보 (최대 7)</div>
+            <div style="background:white;border:1px solid #e2e8f0;border-radius:4px;padding:4px 6px;color:#64748b">장원준</div>
+            <div style="background:white;border:1px solid #e2e8f0;border-radius:4px;padding:4px 6px;color:#64748b">김태현</div>
+            <div style="background:#f1f5f9;border:1px dashed #cbd5e1;border-radius:4px;padding:4px 6px;color:#94a3b8;font-style:italic">+ 선수 추가</div>
+          </div>
+        </div>
+        <div style="border-top:1px solid #e2e8f0;padding-top:6px;display:flex;justify-content:flex-end">
+          <div style="background:#1e40af;color:white;border-radius:4px;padding:3px 10px;font-size:9px">라인업 확정</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. 심플 리스트뷰</h3>
+      <p>피치 없이 포메이션 선택 + 선발/후보 두 칼럼. 각 슬롯에 드롭다운으로 선수 선택. 구현 빠름.</p>
+    </div>
+  </div>
+</div>

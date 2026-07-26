@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useNavigate } from 'react-router-dom'
 import { type NotificationItem } from '@/services/notification.service'
@@ -7,20 +8,21 @@ interface Props {
   loading: boolean
 }
 
-const ACTION_LABELS: Record<string, string> = {
-  RECALL_APPROVAL_REQUESTED: 'Recall 승인 대기',
-  TRAINING_SESSION_CONFIRM_REQUESTED: '훈련 세션 확인 요청',
-  TACTICAL_ANALYSIS_CONFIRM_REQUESTED: '전술 분석 확인 요청',
-  INJURY_READY_TO_RETURN: '부상 복귀 가능',
-  CONTRACT_EXPIRY: '계약 만료 임박',
-  PERFORMANCE_BONUS_ACHIEVED: '성과 보너스 달성',
-  EQUIPMENT_LOW_STOCK: '장비 재고 부족',
-  TRAINING_ATTENDANCE_WARNING: '훈련 출석 경고',
-  PLAYER_EXTERNAL_ID_UNMAPPED: '선수 외부 ID 미매핑',
-  LOAN_OUT_EXPIRED: '임대 만료',
+const ACTION_LABEL_KEYS: Record<string, string> = {
+  RECALL_APPROVAL_REQUESTED: 'dashboard.actionQueue.labels.RECALL_APPROVAL_REQUESTED',
+  TRAINING_SESSION_CONFIRM_REQUESTED: 'dashboard.actionQueue.labels.TRAINING_SESSION_CONFIRM_REQUESTED',
+  TACTICAL_ANALYSIS_CONFIRM_REQUESTED: 'dashboard.actionQueue.labels.TACTICAL_ANALYSIS_CONFIRM_REQUESTED',
+  INJURY_READY_TO_RETURN: 'dashboard.actionQueue.labels.INJURY_READY_TO_RETURN',
+  CONTRACT_EXPIRY: 'dashboard.actionQueue.labels.CONTRACT_EXPIRY',
+  PERFORMANCE_BONUS_ACHIEVED: 'dashboard.actionQueue.labels.PERFORMANCE_BONUS_ACHIEVED',
+  EQUIPMENT_LOW_STOCK: 'dashboard.actionQueue.labels.EQUIPMENT_LOW_STOCK',
+  TRAINING_ATTENDANCE_WARNING: 'dashboard.actionQueue.labels.TRAINING_ATTENDANCE_WARNING',
+  PLAYER_EXTERNAL_ID_UNMAPPED: 'dashboard.actionQueue.labels.PLAYER_EXTERNAL_ID_UNMAPPED',
+  LOAN_OUT_EXPIRED: 'dashboard.actionQueue.labels.LOAN_OUT_EXPIRED',
 }
 
 export function ActionQueueCard({ notifications, loading }: Props) {
+  const { t } = useTranslation('common')
   const navigate = useNavigate()
   const unread = notifications.filter((n) => n.readAt === null)
 
@@ -28,17 +30,17 @@ export function ActionQueueCard({ notifications, loading }: Props) {
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
-          처리 대기 항목
+          {t('dashboard.actionQueue.title')}
           {unread.length > 0 && (
-            <span className="ml-2 text-xs font-bold text-destructive">{unread.length}건</span>
+            <span className="ml-2 text-xs font-bold text-destructive">{t('dashboard.actionQueue.more', { count: unread.length })}</span>
           )}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {loading ? (
-          <p className="text-sm text-muted-foreground">불러오는 중...</p>
+          <p className="text-sm text-muted-foreground">{t('dashboard.actionQueue.loading')}</p>
         ) : unread.length === 0 ? (
-          <p className="text-sm text-muted-foreground">처리할 항목이 없습니다</p>
+          <p className="text-sm text-muted-foreground">{t('dashboard.actionQueue.empty')}</p>
         ) : (
           <ul className="space-y-2">
             {unread.slice(0, 5).map((n) => (
@@ -48,7 +50,7 @@ export function ActionQueueCard({ notifications, loading }: Props) {
                   className="w-full text-left text-sm hover:underline truncate"
                   onClick={() => navigate('/notifications')}
                 >
-                  {ACTION_LABELS[n.type] ?? n.title} — {n.body}
+                  {ACTION_LABEL_KEYS[n.type] ? t(ACTION_LABEL_KEYS[n.type]) : n.title} — {n.body}
                 </button>
               </li>
             ))}
@@ -59,7 +61,7 @@ export function ActionQueueCard({ notifications, loading }: Props) {
                   className="text-xs text-muted-foreground hover:text-foreground"
                   onClick={() => navigate('/notifications')}
                 >
-                  +{unread.length - 5}건 더 보기
+                  {t('dashboard.actionQueue.more', { count: unread.length - 5 })}
                 </button>
               </li>
             )}

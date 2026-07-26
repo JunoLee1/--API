@@ -25,6 +25,9 @@ router.post("/logout", auth, controller.logout);
 // 내 정보
 router.get("/me", auth, controller.me);
 
+// 언어 설정
+router.patch("/me/language", auth, controller.updateLanguage);
+
 // 유저 생성 (ADMIN 전용)
 router.post("/users", auth, controller.createUser);
 

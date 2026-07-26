@@ -4,16 +4,16 @@ export type BodyPart =
   | 'SHIN_CALF' | 'ANKLE' | 'FOOT_TOE' | 'OTHER'
 
 export const BODY_PART_LABEL: Record<BodyPart, string> = {
-  HEAD_FACE:      '머리/얼굴',
-  NECK_SHOULDER:  '목/어깨',
-  TORSO_BACK:     '몸통/허리',
-  THIGH_FRONT:    '허벅지(앞)',
-  THIGH_BACK:     '허벅지(뒤)',
-  KNEE:           '무릎',
-  SHIN_CALF:      '정강이/종아리',
-  ANKLE:          '발목',
-  FOOT_TOE:       '발/발가락',
-  OTHER:          '기타',
+  HEAD_FACE:      'Head/Face',
+  NECK_SHOULDER:  'Neck/Shoulder',
+  TORSO_BACK:     'Torso/Back',
+  THIGH_FRONT:    'Thigh (Front)',
+  THIGH_BACK:     'Thigh (Back)',
+  KNEE:           'Knee',
+  SHIN_CALF:      'Shin/Calf',
+  ANKLE:          'Ankle',
+  FOOT_TOE:       'Foot/Toe',
+  OTHER:          'Other',
 }
 
 export const BODY_PARTS: BodyPart[] = [
@@ -52,17 +52,17 @@ export interface InjuryDetail extends Injury {
 }
 
 export const CAUSE_LABEL: Record<InjuryCause, string> = {
-  TRAINING: '훈련 중',
-  MATCH: '경기 중',
-  OTHER: '기타',
+  TRAINING: 'Training',
+  MATCH: 'Match',
+  OTHER: 'Other',
 }
 
 export const INJURY_STATUS_LABEL: Record<InjuryStatus, string> = {
-  OCCURRED: '발생',
-  DIAGNOSED: '진단 완료',
-  REHABILITATING: '재활 중',
-  READY_TO_RETURN: '복귀 준비',
-  RETURNED: '복귀 완료',
+  OCCURRED: 'Occurred',
+  DIAGNOSED: 'Diagnosed',
+  REHABILITATING: 'Rehabilitating',
+  READY_TO_RETURN: 'Ready to Return',
+  RETURNED: 'Returned',
 }
 
 export const INJURY_STATUS_STYLE: Record<InjuryStatus, string> = {
@@ -112,17 +112,17 @@ export interface InjuryReport {
 }
 
 export const REHAB_STAGE_LABEL: Record<RehabStage, string> = {
-  INITIAL_TREATMENT: '초기 처치',
-  ACUTE_TREATMENT: '급성기 치료',
-  REHABILITATION: '재활 운동',
-  RETURN_TRAINING: '복귀 훈련',
-  CLEARED: '완전 복귀',
+  INITIAL_TREATMENT: 'Initial Treatment',
+  ACUTE_TREATMENT: 'Acute Treatment',
+  REHABILITATION: 'Rehabilitation',
+  RETURN_TRAINING: 'Return Training',
+  CLEARED: 'Cleared',
 }
 
 export const RISK_LEVEL_LABEL: Record<RiskLevel, string> = {
-  LOW: '낮음',
-  MEDIUM: '중간',
-  HIGH: '높음',
+  LOW: 'Low',
+  MEDIUM: 'Medium',
+  HIGH: 'High',
 }
 
 export const RISK_LEVEL_STYLE: Record<RiskLevel, string> = {
@@ -132,9 +132,9 @@ export const RISK_LEVEL_STYLE: Record<RiskLevel, string> = {
 }
 
 export const SECURITY_LEVEL_LABEL: Record<SecurityLevel, string> = {
-  INTERNAL: '내부',
-  MEDICAL: '의료팀만',
-  PRIVATE: '선수 + 의료팀',
+  INTERNAL: 'Internal',
+  MEDICAL: 'Medical Staff Only',
+  PRIVATE: 'Player + Medical',
 }
 
 export interface InjuryAssessment {
@@ -163,18 +163,18 @@ export type ExternalReportStatus =
   | 'PENDING_SUBMISSION' | 'SUBMITTED' | 'SUPPLEMENT_REQUESTED' | 'COMPLETED'
 
 export const EXTERNAL_REPORT_TARGET_LABEL: Record<ExternalReportTarget, string> = {
-  EDUCATION_OFFICE: '교육청',
-  SCHOOL_SAFETY:    '학교안전공제회',
-  LEAGUE:           '리그 연맹',
-  FEDERATION:       '협회',
-  INSURANCE:        '보험사',
+  EDUCATION_OFFICE: 'Education Office',
+  SCHOOL_SAFETY:    'School Safety Board',
+  LEAGUE:           'League',
+  FEDERATION:       'Federation',
+  INSURANCE:        'Insurance',
 }
 
 export const EXTERNAL_REPORT_STATUS_LABEL: Record<ExternalReportStatus, string> = {
-  PENDING_SUBMISSION:   '제출 대기',
-  SUBMITTED:            '제출 완료',
-  SUPPLEMENT_REQUESTED: '보완 요청',
-  COMPLETED:            '완료',
+  PENDING_SUBMISSION:   'Pending Submission',
+  SUBMITTED:            'Submitted',
+  SUPPLEMENT_REQUESTED: 'Supplement Requested',
+  COMPLETED:            'Completed',
 }
 
 export const EXTERNAL_REPORT_STATUS_STYLE: Record<ExternalReportStatus, string> = {

@@ -24,6 +24,6 @@ export interface TrainingReferenceRecommendation {
 }
 
 export const REFERENCE_SOURCE_LABEL: Record<ReferenceSource, string> = {
-  INTERNAL: '내부',
-  EXTERNAL: '외부',
+  INTERNAL: 'Internal',
+  EXTERNAL: 'External',
 }

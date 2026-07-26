@@ -1,0 +1,28 @@
+{
+  "zone": {
+    "GK": "GK",
+    "DEF": "DEF",
+    "MID": "MID",
+    "FWD": "FWD"
+  },
+  "planner": {
+    "title": "Team Builder",
+    "available": "{{count}} available",
+    "injured": "{{count}} injured",
+    "emptySlots": "{{count}} empty slots",
+    "zoneWarning": "{{zone}}: {{count}} available (min {{min}})",
+    "formation": "Formation",
+    "spanishGrid": "Spanish Grid",
+    "loadFailed": "Failed to load data."
+  },
+  "slot": {
+    "dragHint": "Drag to move / double-click to remove",
+    "confirmSuggestion": "Confirm {{name}}",
+    "findProspect": "Find prospect for {{position}}"
+  },
+  "bench": {
+    "title": "Bench",
+    "unplacedCount": "{{count}} unplaced",
+    "injured": "Injured"
+  }
+}

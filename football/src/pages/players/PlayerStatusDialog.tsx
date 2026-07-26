@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { playerApi } from '@/services/player.service'
 import type { Player, PlayerDetail, PlayerStatus } from '@/types/player'
 import { STATUS_LABEL } from '@/types/player'
@@ -31,6 +32,7 @@ interface Props {
 }
 
 export function PlayerStatusDialog({ open, onOpenChange, player, onSaved }: Props) {
+  const { t } = useTranslation('player')
   const [status, setStatus] = useState<PlayerStatus>(player.status)
   const [saving, setSaving] = useState(false)
 
@@ -42,10 +44,10 @@ export function PlayerStatusDialog({ open, onOpenChange, player, onSaved }: Prop
     setSaving(true)
     try {
       await playerApi.updateStatus(player.id, status)
-      toast.success('선수 상태가 변경됐습니다.')
+      toast.success(t('statusDialog.saved'))
       onSaved()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '상태 변경에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('statusDialog.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -55,12 +57,12 @@ export function PlayerStatusDialog({ open, onOpenChange, player, onSaved }: Prop
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>선수 상태 변경</DialogTitle>
-          <DialogDescription>{player.playerName}의 상태를 변경합니다.</DialogDescription>
+          <DialogTitle>{t('statusDialog.title')}</DialogTitle>
+          <DialogDescription>{t('statusDialog.description', { name: player.playerName })}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-1.5 py-2">
-          <Label>상태</Label>
+          <Label>{t('statusDialog.statusLabel')}</Label>
           <Select value={status} onValueChange={(v) => setStatus(v as PlayerStatus)}>
             <SelectTrigger>
               <SelectValue />
@@ -68,7 +70,7 @@ export function PlayerStatusDialog({ open, onOpenChange, player, onSaved }: Prop
             <SelectContent>
               {STATUSES.map((s) => (
                 <SelectItem key={s} value={s}>
-                  {STATUS_LABEL[s]}
+                  {t(`status.${s}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -77,10 +79,10 @@ export function PlayerStatusDialog({ open, onOpenChange, player, onSaved }: Prop
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-            취소
+            {t('statusDialog.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? '변경 중...' : '변경'}
+            {saving ? t('statusDialog.confirming') : t('statusDialog.confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>

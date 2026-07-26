@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Skeleton } from '@/components/ui/skeleton'
 import { COACHING_ROLE_LABEL, ROLE_LABEL } from '@/types/auth'
@@ -13,6 +14,7 @@ function Field({ label, value }: { label: string; value: string }) {
 }
 
 export function MePage() {
+  const { t } = useTranslation('common')
   const { user, loading } = useCurrentUser()
 
   if (loading) {
@@ -36,8 +38,8 @@ export function MePage() {
   return (
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 shrink-0">
-        <h1 className="text-lg font-semibold tracking-tight">내 정보</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">현재 로그인된 계정 정보입니다.</p>
+        <h1 className="text-lg font-semibold tracking-tight">{t('mePage.title')}</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{t('mePage.description')}</p>
       </div>
 
       <div className="flex-1 overflow-auto p-6">
@@ -54,11 +56,11 @@ export function MePage() {
             </div>
 
             <dl className="grid sm:grid-cols-2 gap-4">
-              <Field label="사용자명" value={user.username} />
-              <Field label="이메일" value={user.email} />
-              <Field label="역할" value={roleLabel} />
+              <Field label={t('mePage.usernameLabel')} value={user.username} />
+              <Field label={t('mePage.emailLabel')} value={user.email} />
+              <Field label={t('mePage.roleLabel')} value={roleLabel} />
               {user.isOutOfOffice && (
-                <Field label="상태" value="부재 중" />
+                <Field label={t('mePage.statusLabel')} value={t('mePage.outOfOffice')} />
               )}
             </dl>
           </div>

@@ -130,22 +130,22 @@ export interface CreateTutorDto {
 // ── Labels ───────────────────────────────────────────────────────────────────
 
 export const COACHING_ROLE_LABEL: Record<CoachingRole, string> = {
-  HEAD_COACH: '감독',
-  ASSISTANT_COACH: '수석 코치',
-  DEFENSIVE_COACH: '수비 코치',
-  ATTACKING_COACH: '공격 코치',
-  GOALKEEPER_COACH: 'GK 코치',
-  PHYSICAL_COACH: '피지컬 코치',
-  SET_PIECE_COACH: '세트피스 코치',
+  HEAD_COACH: 'Head Coach',
+  ASSISTANT_COACH: 'Assistant Coach',
+  DEFENSIVE_COACH: 'Defensive Coach',
+  ATTACKING_COACH: 'Attacking Coach',
+  GOALKEEPER_COACH: 'GK Coach',
+  PHYSICAL_COACH: 'Physical Coach',
+  SET_PIECE_COACH: 'Set Piece Coach',
 }
 
 export const COACH_STATUS_LABEL: Record<CoachStatus, string> = {
-  CANDIDATE: '후보',
-  SHORTLISTED: '숏리스트',
-  APPROVAL_PENDING: '승인 대기',
-  CONTRACTED: '채용 완료',
-  RETIRED: '퇴임',
-  ARCHIVED: '탈락',
+  CANDIDATE: 'Candidate',
+  SHORTLISTED: 'Shortlisted',
+  APPROVAL_PENDING: 'Pending Approval',
+  CONTRACTED: 'Contracted',
+  RETIRED: 'Retired',
+  ARCHIVED: 'Archived',
 }
 
 export const COACH_STATUS_STYLE: Record<CoachStatus, string> = {
@@ -158,19 +158,19 @@ export const COACH_STATUS_STYLE: Record<CoachStatus, string> = {
 }
 
 export const ROUND_STATUS_LABEL: Record<HiringRoundStatus, string> = {
-  OPEN: '진행 중',
-  CLOSED: '완료',
-  CANCELLED: '취소',
+  OPEN: 'Open',
+  CLOSED: 'Closed',
+  CANCELLED: 'Cancelled',
 }
 
 export const LANGUAGE_LABEL: Record<LanguageProficiency, string> = {
-  A1: 'A1 (입문)', A2: 'A2 (초급)', B1: 'B1 (중급)',
-  B2: 'B2 (상급)', C1: 'C1 (고급)', C2: 'C2 (원어민급)',
+  A1: 'A1 (Beginner)', A2: 'A2 (Elementary)', B1: 'B1 (Intermediate)',
+  B2: 'B2 (Upper-Int.)', C1: 'C1 (Advanced)', C2: 'C2 (Native-level)',
 }
 
 export const SHORTLIST_SOURCE_LABEL: Record<ShortlistSource, string> = {
-  SYSTEM: '자동(시스템)',
-  MANUAL: '수동(GM/TD)',
+  SYSTEM: 'Auto (System)',
+  MANUAL: 'Manual (GM/TD)',
 }
 
 export const TIER1_ROLES: CoachingRole[] = [

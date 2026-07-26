@@ -20,33 +20,33 @@ export type FrontOfficeRole =
   | 'TACTICAL_ANALYST'
 
 export const ROLE_LABEL: Record<Role, string> = {
-  ADMIN: '관리자',
-  FRONT_OFFICE: '프런트오피스',
-  COACHING_STAFF: '코칭스태프',
-  PLAYER: '선수',
-  AGENT: '에이전트',
-  GUARDIAN: '학부모',
+  ADMIN: 'Admin',
+  FRONT_OFFICE: 'Front Office',
+  COACHING_STAFF: 'Coaching Staff',
+  PLAYER: 'Player',
+  AGENT: 'Agent',
+  GUARDIAN: 'Guardian',
 }
 
 export const COACHING_ROLE_LABEL: Record<CoachingRole, string> = {
-  HEAD_COACH: '감독',
-  ASSISTANT_COACH: '수석코치',
-  DEFENSIVE_COACH: '수비코치',
-  ATTACKING_COACH: '공격코치',
-  PHYSICAL_COACH: '피지컬코치',
-  SET_PIECE_COACH: '세트피스코치',
-  GOALKEEPER_COACH: '골키퍼코치',
-  MEDICAL: '의료진',
-  MEDICAL_DIRECTOR: '의료 디렉터',
+  HEAD_COACH: 'Head Coach',
+  ASSISTANT_COACH: 'Assistant Coach',
+  DEFENSIVE_COACH: 'Defensive Coach',
+  ATTACKING_COACH: 'Attacking Coach',
+  PHYSICAL_COACH: 'Physical Coach',
+  SET_PIECE_COACH: 'Set Piece Coach',
+  GOALKEEPER_COACH: 'Goalkeeper Coach',
+  MEDICAL: 'Medical',
+  MEDICAL_DIRECTOR: 'Medical Director',
 }
 
 export const FRONT_OFFICE_ROLE_LABEL: Record<FrontOfficeRole, string> = {
-  GM: '단장',
-  TD: '테크니컬 디렉터',
-  CONTRACT_MANAGER: '계약 담당',
-  SCOUT: '스카우트',
-  EQUIPMENT_MANAGER: '장비 담당',
-  TACTICAL_ANALYST: '전술 분석가',
+  GM: 'GM',
+  TD: 'Technical Director',
+  CONTRACT_MANAGER: 'Contract Manager',
+  SCOUT: 'Scout',
+  EQUIPMENT_MANAGER: 'Equipment Manager',
+  TACTICAL_ANALYST: 'Tactical Analyst',
 }
 
 export interface UserDto {
@@ -59,6 +59,7 @@ export interface UserDto {
   frontOfficeRole: FrontOfficeRole | null
   teamId: number | null
   isOutOfOffice: boolean
+  language: 'ko' | 'en'
 }
 
 export interface TokenPair {

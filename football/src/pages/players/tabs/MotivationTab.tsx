@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { playerApi } from '@/services/player.service'
 import type { MatchStat, TrainingResultEntry } from '@/types/player'
 import {
@@ -30,6 +31,7 @@ interface Props {
 }
 
 export function MotivationTab({ playerId }: Props) {
+  const { t } = useTranslation('player')
   const [matchStats, setMatchStats] = useState<MatchStat[]>([])
   const [trainingResults, setTrainingResults] = useState<TrainingResultEntry[]>([])
   const [loading, setLoading] = useState(true)
@@ -57,12 +59,14 @@ export function MotivationTab({ playerId }: Props) {
   }
 
   // (A) 훈련-경기 상관관계 차트 데이터 (최근 10경기와 훈련 점수 추세 오버레이)
+  const matchScoreKey = t('motivationTab.matchScore')
+  const trainingScoreKey = t('motivationTab.trainingScore')
   const correlationData = matchStats.slice(0, 10).reverse().map((ms, i) => {
     const training = trainingResults[i]
     return {
       date: formatDate(ms.match.date),
-      경기점수: ms.goals != null ? (ms.goals * 20 + (ms.assists ?? 0) * 10) : null,
-      훈련점수: training?.performanceScore ?? null,
+      [matchScoreKey]: ms.goals != null ? (ms.goals * 20 + (ms.assists ?? 0) * 10) : null,
+      [trainingScoreKey]: training?.performanceScore ?? null,
     }
   })
 
@@ -80,10 +84,10 @@ export function MotivationTab({ playerId }: Props) {
     <div className="p-6 space-y-8 max-w-3xl mx-auto">
       {/* (A) 훈련-경기 상관관계 */}
       <section>
-        <h3 className="text-sm font-semibold mb-1">훈련과 경기 성과 추세</h3>
-        <p className="text-xs text-muted-foreground mb-3">최근 10경기 기준</p>
+        <h3 className="text-sm font-semibold mb-1">{t('motivationTab.correlationTitle')}</h3>
+        <p className="text-xs text-muted-foreground mb-3">{t('motivationTab.correlationSubtitle')}</p>
         {correlationData.length === 0 ? (
-          <p className="text-sm text-muted-foreground">데이터가 부족합니다.</p>
+          <p className="text-sm text-muted-foreground">{t('motivationTab.noData')}</p>
         ) : (
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={correlationData}>
@@ -92,8 +96,8 @@ export function MotivationTab({ playerId }: Props) {
               <YAxis tick={{ fontSize: 10 }} />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="경기점수" stroke="#3b82f6" dot={false} connectNulls />
-              <Line type="monotone" dataKey="훈련점수" stroke="#10b981" dot={false} connectNulls />
+              <Line type="monotone" dataKey={matchScoreKey} stroke="#3b82f6" dot={false} connectNulls />
+              <Line type="monotone" dataKey={trainingScoreKey} stroke="#10b981" dot={false} connectNulls />
             </LineChart>
           </ResponsiveContainer>
         )}
@@ -101,29 +105,29 @@ export function MotivationTab({ playerId }: Props) {
 
       {/* (B) 훈련 성실도 배지 */}
       <section>
-        <h3 className="text-sm font-semibold mb-3">훈련 성실도</h3>
+        <h3 className="text-sm font-semibold mb-3">{t('motivationTab.diligenceTitle')}</h3>
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-lg border bg-card p-4 text-center">
             <p className="text-3xl font-bold text-blue-600">{attendanceRate}%</p>
-            <p className="text-xs text-muted-foreground mt-1">출석률</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('motivationTab.attendanceRate')}</p>
           </div>
           <div className="rounded-lg border bg-card p-4 text-center">
             <p className="text-3xl font-bold text-emerald-600">{completionRate}%</p>
-            <p className="text-xs text-muted-foreground mt-1">훈련 완료율</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('motivationTab.completionRate')}</p>
           </div>
         </div>
       </section>
 
       {/* (C) 현재 폼 vs 시즌 평균 */}
       <section>
-        <h3 className="text-sm font-semibold mb-3">현재 폼 (최근 5경기 xG)</h3>
+        <h3 className="text-sm font-semibold mb-3">{t('motivationTab.formTitle')}</h3>
         <div className="rounded-lg border bg-card p-4 flex items-center justify-between">
           <div>
-            <p className="text-xs text-muted-foreground">최근 5경기 평균 xG</p>
+            <p className="text-xs text-muted-foreground">{t('motivationTab.recentXg')}</p>
             <p className="text-2xl font-bold">{recent5Xg.toFixed(2)}</p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-muted-foreground">시즌 평균 대비</p>
+            <p className="text-xs text-muted-foreground">{t('motivationTab.vsSeasonAvg')}</p>
             <p className={`text-xl font-semibold ${xgDiff >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {xgDiff >= 0 ? '+' : ''}{xgDiff.toFixed(1)}%
             </p>

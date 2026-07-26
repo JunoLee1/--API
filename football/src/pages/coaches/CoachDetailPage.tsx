@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { coachApi } from '@/services/coach.service'
 import type {
   Coach, TutorAssignment, TutorType, LanguageProficiency,
 } from '@/types/coach'
 import {
-  COACHING_ROLE_LABEL, COACH_STATUS_LABEL, COACH_STATUS_STYLE,
+  COACH_STATUS_STYLE,
   LANGUAGE_LABEL, TIER1_ROLES,
 } from '@/types/coach'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
@@ -51,6 +52,7 @@ interface EvalSectionProps {
 }
 
 function EvaluationSection({ coach, canWrite, onSaved }: EvalSectionProps) {
+  const { t } = useTranslation('contract')
   const isTier1 = (TIER1_ROLES as string[]).includes(coach.coachingRole)
 
   // HEAD_COACH
@@ -145,10 +147,10 @@ function EvaluationSection({ coach, canWrite, onSaved }: EvalSectionProps) {
     setSaving(true)
     try {
       await coachApi.upsertEvaluation(coach.id, buildDto())
-      toast.success('평가 데이터가 저장됐습니다.')
+      toast.success(t('coachDetail.eval.saved'))
       onSaved()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('coachDetail.eval.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -157,23 +159,23 @@ function EvaluationSection({ coach, canWrite, onSaved }: EvalSectionProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold">평가 데이터</h2>
+        <h2 className="text-sm font-semibold">{t('coachDetail.eval.title')}</h2>
         {canWrite && (
           <Button size="sm" onClick={handleSave} disabled={saving}>
-            {saving ? '저장 중...' : '저장'}
+            {saving ? t('coachDetail.eval.saving') : t('coachDetail.eval.save')}
           </Button>
         )}
       </div>
 
       {coach.coachingRole === 'HEAD_COACH' && (
         <div className="grid grid-cols-2 gap-3">
-          <NumericField label="점유율 (%)" value={hcPossession} onChange={setHcPossession} />
-          <NumericField label="압박 강도" value={hcPressing} onChange={setHcPressing} />
-          <NumericField label="전진패스 성공률 (%)" value={hcPassAcc} onChange={setHcPassAcc} />
-          <NumericField label="활동량" value={hcActivity} onChange={setHcActivity} />
-          <NumericField label="철학 부합도 (0–100)" value={hcPhilosophy} onChange={setHcPhilosophy} />
+          <NumericField label={t('coachDetail.eval.hcPossession')} value={hcPossession} onChange={setHcPossession} />
+          <NumericField label={t('coachDetail.eval.hcPressing')} value={hcPressing} onChange={setHcPressing} />
+          <NumericField label={t('coachDetail.eval.hcPassAcc')} value={hcPassAcc} onChange={setHcPassAcc} />
+          <NumericField label={t('coachDetail.eval.hcActivity')} value={hcActivity} onChange={setHcActivity} />
+          <NumericField label={t('coachDetail.eval.hcPhilosophy')} value={hcPhilosophy} onChange={setHcPhilosophy} />
           <div className="space-y-1.5">
-            <Label className="text-xs">데이터 출처</Label>
+            <Label className="text-xs">{t('coachDetail.eval.dataSource')}</Label>
             <Input className="h-8 text-sm" value={hcSource} onChange={(e) => setHcSource(e.target.value)} />
           </div>
         </div>
@@ -181,14 +183,14 @@ function EvaluationSection({ coach, canWrite, onSaved }: EvalSectionProps) {
 
       {coach.coachingRole === 'DEFENSIVE_COACH' && (
         <div className="grid grid-cols-2 gap-3">
-          <NumericField label="태클 성공률 (%)" value={dcTackle} onChange={setDcTackle} />
-          <NumericField label="클리어" value={dcClear} onChange={setDcClear} />
-          <NumericField label="블록" value={dcBlocks} onChange={setDcBlocks} />
-          <NumericField label="수비 실책" value={dcErrors} onChange={setDcErrors} />
-          <NumericField label="볼 리커버리" value={dcRecovery} onChange={setDcRecovery} />
-          <NumericField label="압박 강도" value={dcPressing} onChange={setDcPressing} />
+          <NumericField label={t('coachDetail.eval.dcTackle')} value={dcTackle} onChange={setDcTackle} />
+          <NumericField label={t('coachDetail.eval.dcClear')} value={dcClear} onChange={setDcClear} />
+          <NumericField label={t('coachDetail.eval.dcBlocks')} value={dcBlocks} onChange={setDcBlocks} />
+          <NumericField label={t('coachDetail.eval.dcErrors')} value={dcErrors} onChange={setDcErrors} />
+          <NumericField label={t('coachDetail.eval.dcRecovery')} value={dcRecovery} onChange={setDcRecovery} />
+          <NumericField label={t('coachDetail.eval.dcPressing')} value={dcPressing} onChange={setDcPressing} />
           <div className="space-y-1.5 col-span-2">
-            <Label className="text-xs">데이터 출처</Label>
+            <Label className="text-xs">{t('coachDetail.eval.dataSource')}</Label>
             <Input className="h-8 text-sm" value={dcSource} onChange={(e) => setDcSource(e.target.value)} />
           </div>
         </div>
@@ -198,13 +200,13 @@ function EvaluationSection({ coach, canWrite, onSaved }: EvalSectionProps) {
         <div className="grid grid-cols-2 gap-3">
           <NumericField label="xG" value={acXG} onChange={setAcXG} />
           <NumericField label="xA" value={acXA} onChange={setAcXA} />
-          <NumericField label="찬스 메이킹" value={acChance} onChange={setAcChance} />
-          <NumericField label="드리블 성공률 (%)" value={acDribble} onChange={setAcDribble} />
-          <NumericField label="전진패스 성공률 (%)" value={acPassAcc} onChange={setAcPassAcc} />
-          <NumericField label="샷 전환율 (%)" value={acShot} onChange={setAcShot} />
-          <NumericField label="득점 관여율 (%)" value={acGoalInv} onChange={setAcGoalInv} />
+          <NumericField label={t('coachDetail.eval.acChance')} value={acChance} onChange={setAcChance} />
+          <NumericField label={t('coachDetail.eval.acDribble')} value={acDribble} onChange={setAcDribble} />
+          <NumericField label={t('coachDetail.eval.acPassAcc')} value={acPassAcc} onChange={setAcPassAcc} />
+          <NumericField label={t('coachDetail.eval.acShot')} value={acShot} onChange={setAcShot} />
+          <NumericField label={t('coachDetail.eval.acGoalInv')} value={acGoalInv} onChange={setAcGoalInv} />
           <div className="space-y-1.5">
-            <Label className="text-xs">데이터 출처</Label>
+            <Label className="text-xs">{t('coachDetail.eval.dataSource')}</Label>
             <Input className="h-8 text-sm" value={acSource} onChange={(e) => setAcSource(e.target.value)} />
           </div>
         </div>
@@ -213,10 +215,10 @@ function EvaluationSection({ coach, canWrite, onSaved }: EvalSectionProps) {
       {coach.coachingRole === 'GOALKEEPER_COACH' && (
         <div className="grid grid-cols-2 gap-3">
           <NumericField label="PSxG" value={gkPsxG} onChange={setGkPsxG} />
-          <NumericField label="xG 대비 실점 차" value={gkDiff} onChange={setGkDiff} />
-          <NumericField label="빌드업 패스 성공률 (%)" value={gkPass} onChange={setGkPass} />
+          <NumericField label={t('coachDetail.eval.gkDiff')} value={gkDiff} onChange={setGkDiff} />
+          <NumericField label={t('coachDetail.eval.gkPass')} value={gkPass} onChange={setGkPass} />
           <div className="space-y-1.5">
-            <Label className="text-xs">데이터 출처</Label>
+            <Label className="text-xs">{t('coachDetail.eval.dataSource')}</Label>
             <Input className="h-8 text-sm" value={gkSource} onChange={(e) => setGkSource(e.target.value)} />
           </div>
         </div>
@@ -229,7 +231,7 @@ function EvaluationSection({ coach, canWrite, onSaved }: EvalSectionProps) {
             <Input type="number" className="h-8 text-sm" value={t2Score} onChange={(e) => setT2Score(e.target.value)} />
           </div>
           <div className="space-y-1.5 col-span-2">
-            <Label className="text-xs">메모</Label>
+            <Label className="text-xs">{t('coachDetail.eval.notes')}</Label>
             <Textarea rows={2} className="text-sm" value={t2Notes} onChange={(e) => setT2Notes(e.target.value)} />
           </div>
         </div>
@@ -248,6 +250,7 @@ interface TutorSectionProps {
 }
 
 function TutorSection({ coachId, tutors, canWrite, onSaved }: TutorSectionProps) {
+  const { t } = useTranslation('contract')
   const [addOpen, setAddOpen] = useState(false)
   const [type, setType] = useState<TutorType>('EXTERNAL')
   const [externalName, setExternalName] = useState('')
@@ -259,7 +262,7 @@ function TutorSection({ coachId, tutors, canWrite, onSaved }: TutorSectionProps)
 
   const handleAdd = async () => {
     if (type === 'EXTERNAL' && !externalName.trim()) {
-      toast.error('외부 튜터 이름을 입력해주세요.')
+      toast.error(t('coachDetail.tutor.externalNameRequired'))
       return
     }
     setSaving(true)
@@ -270,12 +273,12 @@ function TutorSection({ coachId, tutors, canWrite, onSaved }: TutorSectionProps)
         ...(type === 'EXTERNAL' && externalContact.trim() && { externalContact: externalContact.trim() }),
         ...(language && { languageProficiency: language }),
       })
-      toast.success('튜터가 배정됐습니다.')
+      toast.success(t('coachDetail.tutor.assigned'))
       setType('EXTERNAL'); setExternalName(''); setExternalContact(''); setLanguage('')
       setAddOpen(false)
       onSaved()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('coachDetail.tutor.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -286,49 +289,49 @@ function TutorSection({ coachId, tutors, canWrite, onSaved }: TutorSectionProps)
       await coachApi.updateTutor(coachId, tutor.id, { sessionCount: tutor.sessionCount + delta })
       onSaved()
     } catch {
-      toast.error('세션 수 변경에 실패했습니다.')
+      toast.error(t('coachDetail.tutor.sessionFailed'))
     }
   }
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold">튜터 배정</h2>
+        <h2 className="text-sm font-semibold">{t('coachDetail.tutor.title')}</h2>
         {canWrite && (
           <Button size="sm" variant="outline" onClick={() => setAddOpen(true)}>
-            <Plus className="h-3 w-3 mr-1" />튜터 추가
+            <Plus className="h-3 w-3 mr-1" />{t('coachDetail.tutor.addBtn')}
           </Button>
         )}
       </div>
 
       {tutors.length === 0 ? (
-        <p className="text-sm text-muted-foreground">배정된 튜터가 없습니다.</p>
+        <p className="text-sm text-muted-foreground">{t('coachDetail.tutor.noTutors')}</p>
       ) : (
         <div className="space-y-2">
-          {tutors.map((t) => (
-            <div key={t.id} className="rounded border px-3 py-2 text-sm flex items-center justify-between gap-2">
+          {tutors.map((ta) => (
+            <div key={ta.id} className="rounded border px-3 py-2 text-sm flex items-center justify-between gap-2">
               <div>
                 <span className="font-medium">
-                  {t.type === 'INTERNAL' ? t.internalTutor?.nickname ?? '—' : t.externalName}
+                  {ta.type === 'INTERNAL' ? ta.internalTutor?.nickname ?? '—' : ta.externalName}
                 </span>
                 <span className="ml-2 text-xs text-muted-foreground">
-                  {t.type === 'EXTERNAL' ? '외부' : '내부'}
-                  {t.languageProficiency && ` · ${LANGUAGE_LABEL[t.languageProficiency]}`}
-                  {t.tacticalImplementationRate !== null && ` · 전술이행률 ${t.tacticalImplementationRate}%`}
+                  {ta.type === 'EXTERNAL' ? t('coachDetail.tutor.typeExternal') : t('coachDetail.tutor.typeInternal')}
+                  {ta.languageProficiency && ` · ${LANGUAGE_LABEL[ta.languageProficiency]}`}
+                  {ta.tacticalImplementationRate !== null && ` · ${t('coachDetail.tutor.tacticalRate', { rate: ta.tacticalImplementationRate })}`}
                 </span>
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 {canWrite && (
                   <Button size="sm" variant="ghost" className="h-6 w-6 p-0"
-                    onClick={() => void handleUpdateSession(t, -1)}
-                    disabled={t.sessionCount <= 0}>−</Button>
+                    onClick={() => void handleUpdateSession(ta, -1)}
+                    disabled={ta.sessionCount <= 0}>−</Button>
                 )}
                 <span className="text-xs tabular-nums w-12 text-center">
-                  {t.sessionCount}세션
+                  {t('coachDetail.tutor.sessions', { count: ta.sessionCount })}
                 </span>
                 {canWrite && (
                   <Button size="sm" variant="ghost" className="h-6 w-6 p-0"
-                    onClick={() => void handleUpdateSession(t, 1)}>+</Button>
+                    onClick={() => void handleUpdateSession(ta, 1)}>+</Button>
                 )}
               </div>
             </div>
@@ -338,34 +341,34 @@ function TutorSection({ coachId, tutors, canWrite, onSaved }: TutorSectionProps)
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="max-w-xs">
-          <DialogHeader><DialogTitle>튜터 배정</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t('coachDetail.tutor.dialogTitle')}</DialogTitle></DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
-              <Label>유형</Label>
+              <Label>{t('coachDetail.tutor.typeLabel')}</Label>
               <Select value={type} onValueChange={(v) => setType(v as TutorType)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="EXTERNAL">외부 전문가</SelectItem>
-                  <SelectItem value="INTERNAL">내부 코칭스태프</SelectItem>
+                  <SelectItem value="EXTERNAL">{t('coachDetail.tutor.typeExternal')}</SelectItem>
+                  <SelectItem value="INTERNAL">{t('coachDetail.tutor.typeInternal')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             {type === 'EXTERNAL' && (
               <>
                 <div className="space-y-1.5">
-                  <Label>이름 *</Label>
+                  <Label>{t('coachDetail.tutor.externalName')}</Label>
                   <Input value={externalName} onChange={(e) => setExternalName(e.target.value)} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>연락처</Label>
+                  <Label>{t('coachDetail.tutor.externalContact')}</Label>
                   <Input placeholder="010-0000-0000" value={externalContact} onChange={(e) => setExternalContact(e.target.value)} />
                 </div>
               </>
             )}
             <div className="space-y-1.5">
-              <Label>언어 숙련도 (CEFR)</Label>
+              <Label>{t('coachDetail.tutor.languageLabel')}</Label>
               <Select value={language} onValueChange={(v) => setLanguage(v as LanguageProficiency)}>
-                <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t('coachDetail.tutor.languagePlaceholder')} /></SelectTrigger>
                 <SelectContent>
                   {LANGS.map((l) => <SelectItem key={l} value={l}>{LANGUAGE_LABEL[l]}</SelectItem>)}
                 </SelectContent>
@@ -373,8 +376,8 @@ function TutorSection({ coachId, tutors, canWrite, onSaved }: TutorSectionProps)
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddOpen(false)} disabled={saving}>취소</Button>
-            <Button onClick={handleAdd} disabled={saving}>{saving ? '저장 중...' : '배정'}</Button>
+            <Button variant="outline" onClick={() => setAddOpen(false)} disabled={saving}>{t('coachDetail.tutor.cancel')}</Button>
+            <Button onClick={handleAdd} disabled={saving}>{saving ? t('coachDetail.tutor.saving') : t('coachDetail.tutor.assign')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -385,6 +388,7 @@ function TutorSection({ coachId, tutors, canWrite, onSaved }: TutorSectionProps)
 // ─── CoachDetailPage ─────────────────────────────────────────────────────────
 
 export function CoachDetailPage() {
+  const { t } = useTranslation('contract')
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user } = useCurrentUser()
@@ -402,7 +406,7 @@ export function CoachDetailPage() {
     setLoading(true)
     coachApi.getById(Number(id))
       .then(setCoach)
-      .catch(() => toast.error('코치 정보를 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('coachDetail.loadFailed')))
       .finally(() => setLoading(false))
   }
 
@@ -411,7 +415,7 @@ export function CoachDetailPage() {
   if (!canRead) {
     return (
       <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-        접근 권한이 없습니다.
+        {t('coaches.noAccess')}
       </div>
     )
   }
@@ -436,39 +440,39 @@ export function CoachDetailPage() {
         <div>
           <h1 className="text-lg font-semibold tracking-tight">{coach.name}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {COACHING_ROLE_LABEL[coach.coachingRole]}
+            {t(`coaches.coachingRole.${coach.coachingRole}`)}
             {coach.nationality && ` · ${coach.nationality}`}
           </p>
         </div>
         <span className={`ml-auto inline-flex items-center rounded border px-2 py-0.5 text-xs ${COACH_STATUS_STYLE[coach.status]}`}>
-          {COACH_STATUS_LABEL[coach.status]}
+          {t(`coaches.status.${coach.status}`)}
         </span>
       </div>
 
       <div className="flex-1 overflow-auto p-6 space-y-8">
         {/* 기본 정보 */}
         <div className="space-y-2">
-          <h2 className="text-sm font-semibold">기본 정보</h2>
+          <h2 className="text-sm font-semibold">{t('coachDetail.basicInfo')}</h2>
           <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
             <div className="flex gap-2">
-              <span className="text-muted-foreground w-20 shrink-0">역할</span>
-              <span>{COACHING_ROLE_LABEL[coach.coachingRole]}</span>
+              <span className="text-muted-foreground w-20 shrink-0">{t('coachDetail.role')}</span>
+              <span>{t(`coaches.coachingRole.${coach.coachingRole}`)}</span>
             </div>
             <div className="flex gap-2">
-              <span className="text-muted-foreground w-20 shrink-0">국적</span>
+              <span className="text-muted-foreground w-20 shrink-0">{t('coachDetail.nationality')}</span>
               <span>{coach.nationality ?? '—'}</span>
             </div>
             <div className="flex gap-2">
-              <span className="text-muted-foreground w-20 shrink-0">채용 라운드</span>
+              <span className="text-muted-foreground w-20 shrink-0">{t('coachDetail.hiringRound')}</span>
               <span>{coach.hiringRoundId ? `#${coach.hiringRoundId}` : '—'}</span>
             </div>
             <div className="flex gap-2">
-              <span className="text-muted-foreground w-20 shrink-0">패키지 리드</span>
+              <span className="text-muted-foreground w-20 shrink-0">{t('coachDetail.packageLead')}</span>
               <span>{coach.packageLead ? coach.packageLead.name : '—'}</span>
             </div>
             {coach.notes && (
               <div className="flex gap-2 col-span-2">
-                <span className="text-muted-foreground w-20 shrink-0">메모</span>
+                <span className="text-muted-foreground w-20 shrink-0">{t('coachDetail.notes')}</span>
                 <span className="text-sm">{coach.notes}</span>
               </div>
             )}

@@ -22,8 +22,10 @@ export function startExternalReportReminderJob() {
       try {
         await notifRepo.createForMedicalDirector(
           "EXTERNAL_REPORT_DUE_SOON",
-          "외부 의무보고서 마감 임박",
-          `마감 2일 이내 미제출 보고서가 ${upcoming.length}건 있습니다.`,
+          () => ({
+            title: "외부 의무보고서 마감 임박",
+            body: `마감 2일 이내 미제출 보고서가 ${upcoming.length}건 있습니다.`,
+          }),
         );
       } catch (err) {
         console.error("[cron] 마감 임박 알림 실패:", err);
@@ -41,8 +43,10 @@ export function startExternalReportReminderJob() {
       try {
         await notifRepo.createForMedicalDirector(
           "EXTERNAL_REPORT_OVERDUE",
-          "외부 의무보고서 마감 초과",
-          `미제출 보고서 ${overdue.length}건이 마감을 초과했습니다.`,
+          () => ({
+            title: "외부 의무보고서 마감 초과",
+            body: `미제출 보고서 ${overdue.length}건이 마감을 초과했습니다.`,
+          }),
         );
       } catch (err) {
         console.error("[cron] 마감 초과 알림 실패:", err);

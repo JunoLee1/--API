@@ -1,17 +1,11 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { playerApi } from '@/services/player.service'
 import type { JerseyNumber, TeamJerseyEntry } from '@/types/player'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-
-const STATUS_KO: Record<string, string> = {
-  AVAILABLE: '미배정',
-  OCCUPIED: '사용중',
-  RETIRED: '결번',
-  RESERVED: '예약',
-}
 
 const STATUS_VARIANT: Record<string, 'secondary' | 'default' | 'destructive' | 'outline'> = {
   AVAILABLE: 'secondary',
@@ -36,6 +30,7 @@ interface Props {
 }
 
 export function JerseyTab({ playerId, teamId, canAssign, canRetire, canReactivate }: Props) {
+  const { t } = useTranslation('player')
   const [jerseys, setJerseys] = useState<JerseyNumber[]>([])
   const [teamJerseys, setTeamJerseys] = useState<TeamJerseyEntry[]>([])
   const [loading, setLoading] = useState(true)
@@ -52,7 +47,7 @@ export function JerseyTab({ playerId, teamId, canAssign, canRetire, canReactivat
         setJerseys(myJerseys)
         setTeamJerseys(team)
       })
-      .catch(() => toast.error('등번호 조회 실패'))
+      .catch(() => toast.error(t('jerseyTab.loadFailed')))
       .finally(() => setLoading(false))
   }
 
@@ -60,20 +55,20 @@ export function JerseyTab({ playerId, teamId, canAssign, canRetire, canReactivat
 
   const handleAssign = async (num: number) => {
     if (!teamId || !num || num < 1 || num > 99) {
-      toast.error('1~99 사이 번호를 입력하세요.')
+      toast.error(t('jerseyTab.invalidNumber'))
       return
     }
     setSaving(true)
     try {
       await playerApi.assignJersey(playerId, { number: num, teamId })
-      toast.success(`${num}번 배정 완료`)
+      toast.success(t('jerseyTab.assigned', { number: num }))
       setAssignNumber('')
       load()
     } catch (err: unknown) {
       const code = (err as any)?.response?.data?.code
-      if (code === 'JERSEY_NUMBER_OCCUPIED') toast.error('이미 다른 선수가 사용 중인 번호입니다.')
-      else if (code === 'JERSEY_NUMBER_RETIRED') toast.error('영구 결번 처리된 번호입니다.')
-      else toast.error('배정에 실패했습니다.')
+      if (code === 'JERSEY_NUMBER_OCCUPIED') toast.error(t('jerseyTab.occupied'))
+      else if (code === 'JERSEY_NUMBER_RETIRED') toast.error(t('jerseyTab.retired'))
+      else toast.error(t('jerseyTab.assignFailed'))
     } finally {
       setSaving(false)
     }
@@ -84,16 +79,16 @@ export function JerseyTab({ playerId, teamId, canAssign, canRetire, canReactivat
     setSaving(true)
     try {
       await playerApi.releaseJersey(playerId, { teamId, number: jersey.number })
-      toast.success(`${jersey.number}번 해제`)
+      toast.success(t('jerseyTab.released', { number: jersey.number }))
       load()
     } catch {
-      toast.error('해제에 실패했습니다.')
+      toast.error(t('jerseyTab.releaseFailed'))
     } finally {
       setSaving(false)
     }
   }
 
-  if (loading) return <div className="p-6 text-sm text-muted-foreground">불러오는 중...</div>
+  if (loading) return <div className="p-6 text-sm text-muted-foreground">{t('jerseyTab.loading')}</div>
 
   const teamMap = new Map<number, TeamJerseyEntry>()
   teamJerseys.forEach((j) => teamMap.set(j.number, j))
@@ -101,10 +96,10 @@ export function JerseyTab({ playerId, teamId, canAssign, canRetire, canReactivat
   return (
     <div className="space-y-6 max-w-2xl">
 
-      {/* 배정된 등번호 */}
+      {/* current jerseys */}
       <div>
         {jerseys.length === 0 ? (
-          <p className="text-sm text-muted-foreground">배정된 등번호가 없습니다.</p>
+          <p className="text-sm text-muted-foreground">{t('jerseyTab.noJersey')}</p>
         ) : (
           <div className="space-y-2">
             {jerseys.map((j) => (
@@ -112,12 +107,12 @@ export function JerseyTab({ playerId, teamId, canAssign, canRetire, canReactivat
                 <div className="flex items-center gap-3">
                   <span className="text-lg font-bold font-mono">{j.number}</span>
                   <Badge variant={STATUS_VARIANT[j.status] ?? 'secondary'} className="text-xs">
-                    {STATUS_KO[j.status] ?? j.status}
+                    {t(`jerseyStatus.${j.status}`, j.status)}
                   </Badge>
                 </div>
                 {canAssign && j.status === 'OCCUPIED' && (
                   <Button variant="outline" size="sm" onClick={() => void handleRelease(j)} disabled={saving}>
-                    해제
+                    {t('jerseyTab.release')}
                   </Button>
                 )}
               </div>
@@ -126,25 +121,25 @@ export function JerseyTab({ playerId, teamId, canAssign, canRetire, canReactivat
         )}
       </div>
 
-      {/* 팀 등번호 현황 그리드 */}
+      {/* team jersey grid */}
       {teamId && (
         <div>
-          <h3 className="text-sm font-semibold mb-1">팀 등번호 현황</h3>
+          <h3 className="text-sm font-semibold mb-1">{t('jerseyTab.teamTitle')}</h3>
           <div className="flex flex-wrap gap-3 mb-2 text-xs text-muted-foreground">
             {(['AVAILABLE', 'OCCUPIED', 'RETIRED', 'RESERVED'] as const).map((s) => (
               <span key={s} className="flex items-center gap-1">
                 <span className={`inline-block w-3 h-3 rounded border ${CELL_CLASS[s].split(' ').slice(0, 2).join(' ')}`} />
-                {STATUS_KO[s]}
+                {t(`jerseyStatus.${s}`)}
               </span>
             ))}
-            {canAssign && <span className="ml-1">· 초록색 클릭 시 즉시 배정</span>}
+            {canAssign && <span className="ml-1">{t('jerseyTab.clickToAssign')}</span>}
           </div>
           <div className="grid grid-cols-10 gap-1">
             {Array.from({ length: 99 }, (_, i) => i + 1).map((num) => {
               const entry = teamMap.get(num)
               const status = entry?.status ?? 'AVAILABLE'
               const isClickable = canAssign && status === 'AVAILABLE'
-              const label = entry?.player?.playerName ?? (status === 'RESERVED' ? '예약' : undefined)
+              const label = entry?.player?.playerName ?? (status === 'RESERVED' ? t('jerseyTab.reserved') : undefined)
               return (
                 <button
                   key={num}
@@ -165,10 +160,10 @@ export function JerseyTab({ playerId, teamId, canAssign, canRetire, canReactivat
         </div>
       )}
 
-      {/* 번호 직접 입력 배정 */}
+      {/* manual number input */}
       {canAssign && teamId && (
         <div>
-          <h3 className="text-sm font-semibold mb-2">번호 직접 입력</h3>
+          <h3 className="text-sm font-semibold mb-2">{t('jerseyTab.manualTitle')}</h3>
           <div className="flex gap-2">
             <Input
               type="number"
@@ -183,7 +178,7 @@ export function JerseyTab({ playerId, teamId, canAssign, canRetire, canReactivat
               onClick={() => void handleAssign(Number(assignNumber))}
               disabled={saving || !assignNumber}
             >
-              배정
+              {t('jerseyTab.assign')}
             </Button>
           </div>
         </div>

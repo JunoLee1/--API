@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { authApi } from '@/services/auth.service'
 import type { UserDto } from '@/types/auth'
+import i18n from '@/i18n'
 
 export function useCurrentUser() {
   const [user, setUser] = useState<UserDto | null>(null)
@@ -11,7 +12,10 @@ export function useCurrentUser() {
     authApi
       .me()
       .then((u) => {
-        if (!cancelled) setUser(u)
+        if (!cancelled) {
+          setUser(u)
+          void i18n.changeLanguage(u.language ?? 'ko')
+        }
       })
       .catch(() => {
         if (!cancelled) setUser(null)
@@ -28,6 +32,7 @@ export function useCurrentUser() {
     try {
       const u = await authApi.me()
       setUser(u)
+      void i18n.changeLanguage(u.language ?? 'ko')
     } catch {
       setUser(null)
     }

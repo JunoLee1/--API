@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { playerApi } from '@/services/player.service'
 import { api } from '@/services/api'
 import type { Player, PlayerDetail, Position, PlayerLevel } from '@/types/player'
-import { POSITION_ABBR, POSITION_LABEL, LEVEL_LABEL } from '@/types/player'
+import { POSITION_ABBR, LEVEL_LABEL } from '@/types/player'
 import {
   Sheet,
   SheetContent,
@@ -18,7 +19,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select'
 
 interface Country {
@@ -37,7 +37,6 @@ interface Props {
 const POSITIONS = Object.keys(POSITION_ABBR) as Position[]
 const LEVELS = Object.keys(LEVEL_LABEL) as PlayerLevel[]
 const FEET = ['LEFT', 'RIGHT', 'BOTH'] as const
-const FOOT_LABEL: Record<string, string> = { LEFT: '왼발', RIGHT: '오른발', BOTH: '양발' }
 
 function calcAge(dob: string): number | null {
   if (!dob) return null
@@ -58,6 +57,7 @@ function inferLevel(dob: string): PlayerLevel | null {
 }
 
 export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props) {
+  const { t } = useTranslation('player')
   const isEdit = !!player
 
   const [name, setName] = useState('')
@@ -114,16 +114,16 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
 
   const handleSave = async () => {
     if (!name.trim() || !dob || !height || !weight || !nationalityId) {
-      toast.error('필수 항목을 모두 입력해주세요.')
+      toast.error(t('form.required'))
       return
     }
     const age = calcAge(dob)
     if (level === 'YOUTH' && (age === null || age < 8 || age > 18)) {
-      toast.error('유스 선수는 만 8세~18세이어야 합니다.')
+      toast.error(t('form.youthAgeError'))
       return
     }
     if (age !== null && age >= 8 && age <= 18 && level !== 'YOUTH') {
-      toast.error('만 8~18세 선수는 레벨을 유스로 설정해야 합니다.')
+      toast.error(t('form.youthLevelError'))
       return
     }
     setSaving(true)
@@ -140,14 +140,14 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
       }
       if (isEdit && player) {
         await playerApi.update(player.id, payload)
-        toast.success('선수 정보가 수정됐습니다.')
+        toast.success(t('form.savedEdit'))
       } else {
         await playerApi.create(payload)
-        toast.success('선수가 등록됐습니다.')
+        toast.success(t('form.savedCreate'))
       }
       onSaved()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('form.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -157,25 +157,25 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-[480px] flex flex-col">
         <SheetHeader>
-          <SheetTitle>{isEdit ? '선수 정보 수정' : '선수 등록'}</SheetTitle>
+          <SheetTitle>{isEdit ? t('form.titleEdit') : t('form.titleCreate')}</SheetTitle>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
           {/* 이름 */}
           <div className="space-y-1.5">
-            <Label htmlFor="playerName">이름 *</Label>
+            <Label htmlFor="playerName">{t('form.name')} *</Label>
             <Input
               id="playerName"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="선수 이름"
+              placeholder={t('form.namePlaceholder')}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             {/* 생년월일 */}
             <div className="space-y-1.5">
-              <Label htmlFor="dob">생년월일 *</Label>
+              <Label htmlFor="dob">{t('form.dob')} *</Label>
               <Input
                 id="dob"
                 type="date"
@@ -185,22 +185,24 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
               {dob && (() => {
                 const age = calcAge(dob)
                 return age !== null ? (
-                  <p className="text-xs text-muted-foreground">만 {age}세</p>
+                  <p className="text-xs text-muted-foreground">{t('form.ageHint', { age })}</p>
                 ) : null
               })()}
             </div>
 
             {/* 주발 */}
             <div className="space-y-1.5">
-              <Label>주발 *</Label>
+              <Label>{t('form.foot')} *</Label>
               <Select value={foot} onValueChange={setFoot}>
                 <SelectTrigger>
-                  {foot ? <span>{FOOT_LABEL[foot]}</span> : <span className="text-muted-foreground">선택</span>}
+                  {foot
+                    ? <span>{t(`foot.${foot}`)}</span>
+                    : <span className="text-muted-foreground">{t('form.footPlaceholder')}</span>}
                 </SelectTrigger>
                 <SelectContent>
                   {FEET.map((f) => (
                     <SelectItem key={f} value={f}>
-                      {FOOT_LABEL[f]}
+                      {t(`foot.${f}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -209,7 +211,7 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
 
             {/* 신장 */}
             <div className="space-y-1.5">
-              <Label htmlFor="height">신장 (cm) *</Label>
+              <Label htmlFor="height">{t('form.height')} *</Label>
               <Input
                 id="height"
                 type="number"
@@ -217,13 +219,13 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
                 max={220}
                 value={height}
                 onChange={(e) => setHeight(e.target.value)}
-                placeholder="예: 180"
+                placeholder={t('form.heightPlaceholder')}
               />
             </div>
 
             {/* 체중 */}
             <div className="space-y-1.5">
-              <Label htmlFor="weight">체중 (kg) *</Label>
+              <Label htmlFor="weight">{t('form.weight')} *</Label>
               <Input
                 id="weight"
                 type="number"
@@ -231,7 +233,7 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
                 max={150}
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
-                placeholder="예: 75"
+                placeholder={t('form.weightPlaceholder')}
               />
             </div>
           </div>
@@ -239,17 +241,17 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
           <div className="grid grid-cols-2 gap-3">
             {/* 포지션 */}
             <div className="space-y-1.5">
-              <Label>포지션 *</Label>
+              <Label>{t('form.position')} *</Label>
               <Select value={position} onValueChange={(v) => setPosition(v as Position)}>
                 <SelectTrigger>
                   {position
-                    ? <span>{POSITION_ABBR[position]} · {POSITION_LABEL[position]}</span>
-                    : <span className="text-muted-foreground">선택</span>}
+                    ? <span>{POSITION_ABBR[position]} · {t(`position.${position}`)}</span>
+                    : <span className="text-muted-foreground">{t('form.positionPlaceholder')}</span>}
                 </SelectTrigger>
                 <SelectContent>
                   {POSITIONS.map((p) => (
                     <SelectItem key={p} value={p}>
-                      {POSITION_ABBR[p]} · {POSITION_LABEL[p]}
+                      {POSITION_ABBR[p]} · {t(`position.${p}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -258,17 +260,17 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
 
             {/* 레벨 */}
             <div className="space-y-1.5">
-              <Label>레벨 *</Label>
+              <Label>{t('form.level')} *</Label>
               <Select value={level} onValueChange={(v) => setLevel(v as PlayerLevel)}>
                 <SelectTrigger>
                   {level
-                    ? <span>{LEVEL_LABEL[level]}{level === 'YOUTH' ? ' (만 8–18세)' : ''}</span>
-                    : <span className="text-muted-foreground">선택</span>}
+                    ? <span>{t(`level.${level}`)}{level === 'YOUTH' ? t('form.youthHint') : ''}</span>
+                    : <span className="text-muted-foreground">{t('form.levelPlaceholder')}</span>}
                 </SelectTrigger>
                 <SelectContent>
                   {LEVELS.map((l) => (
                     <SelectItem key={l} value={l}>
-                      {LEVEL_LABEL[l]}{l === 'YOUTH' ? ' (만 8–18세)' : ''}
+                      {t(`level.${l}`)}{l === 'YOUTH' ? t('form.youthHint') : ''}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -278,7 +280,7 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
 
           {/* 국적 */}
           <div className="space-y-1.5">
-            <Label>국적 *</Label>
+            <Label>{t('form.nationality')} *</Label>
             <Select
               value={nationalityId === '' ? '' : String(nationalityId)}
               onValueChange={(v) => setNationalityId(Number(v))}
@@ -287,9 +289,11 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
                 {nationalityId !== ''
                   ? (() => {
                       const c = countries.find((c) => c.id === nationalityId)
-                      return c ? <span>{c.code} · {c.name}</span> : <span className="text-muted-foreground">국적 선택</span>
+                      return c
+                        ? <span>{c.code} · {c.name}</span>
+                        : <span className="text-muted-foreground">{t('form.nationalityPlaceholder')}</span>
                     })()
-                  : <span className="text-muted-foreground">국적 선택</span>}
+                  : <span className="text-muted-foreground">{t('form.nationalityPlaceholder')}</span>}
               </SelectTrigger>
               <SelectContent>
                 {countries.map((c) => (
@@ -305,10 +309,10 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
         {/* Footer */}
         <div className="border-t px-5 py-4 flex justify-end gap-2 shrink-0">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-            취소
+            {t('form.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? '저장 중...' : isEdit ? '수정' : '등록'}
+            {saving ? t('form.saving') : isEdit ? t('form.submitEdit') : t('form.submit')}
           </Button>
         </div>
       </SheetContent>

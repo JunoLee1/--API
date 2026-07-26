@@ -47,12 +47,12 @@ export interface CreateEquipmentItemDto {
 }
 
 export const CATEGORY_LABEL: Record<EquipmentCategory, string> = {
-  CLOTHING: '의류',
-  FOOTWEAR: '신발',
-  BALL_AND_TOOLS: '볼·도구',
-  REHABILITATION: '재활 장비',
-  TACTICAL: '전술 장비',
-  OTHER: '기타',
+  CLOTHING: 'Clothing',
+  FOOTWEAR: 'Footwear',
+  BALL_AND_TOOLS: 'Balls & Tools',
+  REHABILITATION: 'Rehabilitation',
+  TACTICAL: 'Tactical',
+  OTHER: 'Other',
 }
 
 export const CATEGORY_STYLE: Record<EquipmentCategory, string> = {
@@ -65,10 +65,10 @@ export const CATEGORY_STYLE: Record<EquipmentCategory, string> = {
 }
 
 export const UNIT_STATUS_LABEL: Record<EquipmentUnitStatus, string> = {
-  AVAILABLE: '사용 가능',
-  IN_USE: '사용 중',
-  MAINTENANCE: '정비 중',
-  RETIRED: '폐기',
+  AVAILABLE: 'Available',
+  IN_USE: 'In Use',
+  MAINTENANCE: 'In Maintenance',
+  RETIRED: 'Retired',
 }
 
 export const UNIT_STATUS_STYLE: Record<EquipmentUnitStatus, string> = {
@@ -96,11 +96,11 @@ export interface EquipmentLoan {
 }
 
 export const LOAN_STATUS_LABEL: Record<EquipmentLoanStatus, string> = {
-  REQUESTED: '신청 중',
-  APPROVED: '승인됨',
-  REJECTED: '거절됨',
-  ISSUED: '지급됨',
-  RETURNED: '반납 완료',
+  REQUESTED: 'Requested',
+  APPROVED: 'Approved',
+  REJECTED: 'Rejected',
+  ISSUED: 'Issued',
+  RETURNED: 'Returned',
 }
 
 export const LOAN_STATUS_STYLE: Record<EquipmentLoanStatus, string> = {

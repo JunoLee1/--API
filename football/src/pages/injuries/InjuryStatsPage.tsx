@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { injuryApi } from '@/services/injury.service'
 import { reportApi } from '@/services/report.service'
 import { Skeleton } from '@/components/ui/skeleton'
-import { CAUSE_LABEL, BODY_PART_LABEL } from '@/types/injury'
 import type { InjuryCause, BodyPart } from '@/types/injury'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
@@ -12,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { ClipboardList } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 type Stats = {
   activeCount: number
@@ -44,6 +44,7 @@ function BarRow({ label, count, max }: { label: string; count: number; max: numb
 }
 
 export function InjuryStatsPage() {
+  const { t } = useTranslation('medical')
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -67,20 +68,21 @@ export function InjuryStatsPage() {
     const totalCount = bodyPartEntries.reduce((s, [, n]) => s + n, 0)
 
     const lines: string[] = [
-      `## 부상 현황 요약 (${today})`,
-      `- 현재 활성 부상: ${stats.activeCount}건`,
-      `- 평균 회복 기간: ${stats.avgRecoveryDays != null ? `${stats.avgRecoveryDays}일` : '데이터 없음'}`,
-      `- 총 부상 기록: ${totalCount}건`,
+      t('stats.snapshotHeader', { date: today }),
+      t('stats.snapshotActive', { count: stats.activeCount }),
+      stats.avgRecoveryDays != null
+        ? t('stats.snapshotAvgRecovery', { days: stats.avgRecoveryDays })
+        : t('stats.snapshotAvgRecoveryNone'),
+      t('stats.snapshotTotal', { count: totalCount }),
     ]
     if (bodyPartEntries.length > 0) {
-      lines.push('', '### 부상 부위별')
-      bodyPartEntries.forEach(([part, count]) => lines.push(`- ${BODY_PART_LABEL[part as BodyPart] ?? part}: ${count}건`))
+      lines.push('', t('stats.snapshotBodyPartHeader'))
+      bodyPartEntries.forEach(([part, count]) => lines.push(t('stats.snapshotCount', { label: t(`injuries.bodyPart.${part as BodyPart}`), count })))
     }
     if (causeEntries.length > 0) {
-      lines.push('', '### 발생 원인별')
+      lines.push('', t('stats.snapshotCauseHeader'))
       causeEntries.forEach(([cause, count]) => {
-        const label = CAUSE_LABEL[cause as InjuryCause] ?? cause
-        lines.push(`- ${label}: ${count}건`)
+        lines.push(t('stats.snapshotCount', { label: t(`injuries.cause.${cause as InjuryCause}`), count }))
       })
     }
 
@@ -88,21 +90,21 @@ export function InjuryStatsPage() {
   }
 
   const handleSave = async (andSubmit: boolean) => {
-    if (!title.trim()) { toast.error('제목을 입력해주세요.'); return }
-    if (!content.trim()) { toast.error('내용을 입력해주세요.'); return }
+    if (!title.trim()) { toast.error(t('report.titleRequired')); return }
+    if (!content.trim()) { toast.error(t('report.contentRequired')); return }
     setSaving(true)
     try {
       const report = await reportApi.create({ type: 'MEDICAL', title: title.trim(), content: content.trim() })
       if (andSubmit) {
         await reportApi.submit(report.id)
-        toast.success('의무보고서가 상신됐습니다.')
+        toast.success(t('report.submitted'))
       } else {
-        toast.success('의무보고서 초안이 저장됐습니다.')
+        toast.success(t('report.draftSaved'))
       }
       setSheetOpen(false)
       resetForm()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('report.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -112,7 +114,7 @@ export function InjuryStatsPage() {
     injuryApi
       .stats()
       .then(setStats)
-      .catch((e: unknown) => setError(e instanceof Error ? e.message : '불러오지 못했습니다.'))
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : t('stats.loadFailed')))
       .finally(() => setLoading(false))
   }, [])
 
@@ -129,12 +131,12 @@ export function InjuryStatsPage() {
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 flex items-center justify-between gap-4 shrink-0">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">부상 통계</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">전체 부상 이력 집계</p>
+          <h1 className="text-lg font-semibold tracking-tight">{t('stats.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{t('stats.subtitle')}</p>
         </div>
         {isMedical && (
           <Button size="sm" onClick={() => setSheetOpen(true)}>
-            <ClipboardList className="h-4 w-4 mr-1" />의무보고서 작성
+            <ClipboardList className="h-4 w-4 mr-1" />{t('stats.writeReportBtn')}
           </Button>
         )}
       </div>
@@ -152,26 +154,26 @@ export function InjuryStatsPage() {
           <div className="space-y-8 max-w-2xl">
             {/* 요약 카드 */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <StatCard label="현재 활성 부상" value={stats.activeCount} sub="복귀 완료 제외" />
+              <StatCard label={t('stats.activeInjuries')} value={stats.activeCount} sub={t('stats.activeSub')} />
               <StatCard
-                label="평균 회복 기간"
-                value={stats.avgRecoveryDays != null ? `${stats.avgRecoveryDays}일` : '—'}
-                sub="예상 복귀일 기준"
+                label={t('stats.avgRecovery')}
+                value={stats.avgRecoveryDays != null ? t('stats.avgRecoveryValue', { days: stats.avgRecoveryDays }) : '—'}
+                sub={t('stats.avgRecoverySub')}
               />
               <StatCard
-                label="총 부상 기록"
+                label={t('stats.totalRecords')}
                 value={bodyPartEntries.reduce((s, [, n]) => s + n, 0)}
-                sub="전체 이력"
+                sub={t('stats.totalSub')}
               />
             </div>
 
             {/* 부위별 */}
             {bodyPartEntries.length > 0 && (
               <div className="space-y-3">
-                <h2 className="text-sm font-semibold">부상 부위별</h2>
+                <h2 className="text-sm font-semibold">{t('stats.byBodyPart')}</h2>
                 <div className="space-y-2">
                   {bodyPartEntries.map(([part, count]) => (
-                    <BarRow key={part} label={BODY_PART_LABEL[part as BodyPart] ?? part} count={count} max={maxBodyPart} />
+                    <BarRow key={part} label={t(`injuries.bodyPart.${part as BodyPart}`)} count={count} max={maxBodyPart} />
                   ))}
                 </div>
               </div>
@@ -180,12 +182,12 @@ export function InjuryStatsPage() {
             {/* 원인별 */}
             {causeEntries.length > 0 && (
               <div className="space-y-3">
-                <h2 className="text-sm font-semibold">발생 원인별</h2>
+                <h2 className="text-sm font-semibold">{t('stats.byCause')}</h2>
                 <div className="space-y-2">
                   {causeEntries.map(([cause, count]) => (
                     <BarRow
                       key={cause}
-                      label={CAUSE_LABEL[cause as InjuryCause] ?? cause}
+                      label={t(`injuries.cause.${cause as InjuryCause}`)}
                       count={count}
                       max={maxCause}
                     />
@@ -195,7 +197,7 @@ export function InjuryStatsPage() {
             )}
 
             {bodyPartEntries.length === 0 && (
-              <p className="text-sm text-muted-foreground">부상 데이터가 없습니다.</p>
+              <p className="text-sm text-muted-foreground">{t('stats.noData')}</p>
             )}
           </div>
         ) : null}
@@ -204,20 +206,20 @@ export function InjuryStatsPage() {
       <Sheet open={sheetOpen} onOpenChange={(v) => { setSheetOpen(v); if (!v) resetForm() }}>
         <SheetContent className="w-[480px] sm:max-w-[480px] overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>의무보고서 작성</SheetTitle>
+            <SheetTitle>{t('report.title')}</SheetTitle>
           </SheetHeader>
           <div className="space-y-4 mt-4">
             <div className="space-y-1.5">
-              <Label>제목 *</Label>
+              <Label>{t('report.titleLabel')}</Label>
               <Input
-                placeholder="예: 2026-07 부상 현황 보고"
+                placeholder={t('report.titlePlaceholder')}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
             </div>
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label>내용 *</Label>
+                <Label>{t('report.contentLabel')}</Label>
                 <Button
                   type="button"
                   variant="outline"
@@ -226,11 +228,11 @@ export function InjuryStatsPage() {
                   onClick={insertStatsSnapshot}
                   disabled={!stats}
                 >
-                  현재 통계 삽입
+                  {t('report.insertStats')}
                 </Button>
               </div>
               <Textarea
-                placeholder="부상 현황, 의견, 조치 사항 등을 입력해주세요."
+                placeholder={t('report.contentPlaceholder')}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 rows={12}
@@ -239,10 +241,10 @@ export function InjuryStatsPage() {
             </div>
             <div className="flex gap-2 pt-2">
               <Button variant="outline" className="flex-1" onClick={() => handleSave(false)} disabled={saving}>
-                {saving ? '저장 중...' : '임시 저장'}
+                {saving ? t('report.saving') : t('report.saveDraft')}
               </Button>
               <Button className="flex-1" onClick={() => handleSave(true)} disabled={saving}>
-                {saving ? '처리 중...' : '상신'}
+                {saving ? t('report.submitting') : t('report.submit')}
               </Button>
             </div>
           </div>

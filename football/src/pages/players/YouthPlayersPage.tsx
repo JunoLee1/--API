@@ -1,11 +1,11 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { playerApi } from '@/services/player.service'
 import type { Player, PlayerStatus, Position, PositionZone } from '@/types/player'
 import {
   POSITION_ABBR,
-  POSITION_LABEL,
   POSITION_ZONE,
   STATUS_LABEL,
 } from '@/types/player'
@@ -55,6 +55,7 @@ function calcAge(dateOfBirth: string): number {
 }
 
 export function YouthPlayersPage() {
+  const { t } = useTranslation('player')
   const navigate = useNavigate()
   const { user } = useCurrentUser()
   const [players, setPlayers] = useState<Player[]>([])
@@ -76,7 +77,7 @@ export function YouthPlayersPage() {
     playerApi
       .list(query)
       .then(setPlayers)
-      .catch(() => toast.error('유소년 선수 목록을 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('youthPage.loadFailed')))
       .finally(() => setLoading(false))
   }
 
@@ -110,15 +111,16 @@ export function YouthPlayersPage() {
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 flex items-center justify-between gap-4 shrink-0">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">유소년 선수 목록</h1>
+          <h1 className="text-lg font-semibold tracking-tight">{t('youthPage.title')}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            전체 {players.length}명{activeCount < players.length && ` · 활성 ${activeCount}명`}
+            {t('playersPage.totalCount', { count: players.length })}
+            {activeCount < players.length && ` · ${t('playersPage.activeCount', { count: activeCount })}`}
           </p>
         </div>
         {canWrite && (
           <Button size="sm" onClick={() => setCreateOpen(true)}>
             <Plus className="h-4 w-4 mr-1" />
-            선수 등록
+            {t('playersPage.addPlayer')}
           </Button>
         )}
       </div>
@@ -127,7 +129,7 @@ export function YouthPlayersPage() {
         <div className="relative flex-1 min-w-48 max-w-64">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
-            placeholder="이름·국적 검색"
+            placeholder={t('playersPage.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8 h-8 text-sm bg-background"
@@ -142,13 +144,13 @@ export function YouthPlayersPage() {
             onValueChange={(v) => setStatusFilter(v as PlayerStatus | 'ALL')}
           >
             <SelectTrigger className="h-8 text-sm w-28 bg-background">
-              <span>{statusFilter === 'ALL' ? '전체 상태' : STATUS_LABEL[statusFilter]}</span>
+              <span>{statusFilter === 'ALL' ? t('playersPage.statusAll') : t(`status.${statusFilter}`)}</span>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">전체 상태</SelectItem>
+              <SelectItem value="ALL">{t('playersPage.statusAll')}</SelectItem>
               {(Object.keys(STATUS_LABEL) as PlayerStatus[]).map((s) => (
                 <SelectItem key={s} value={s}>
-                  {STATUS_LABEL[s]}
+                  {t(`status.${s}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -161,16 +163,16 @@ export function YouthPlayersPage() {
             <SelectTrigger className="h-8 text-sm w-36 bg-background">
               <span>
                 {positionFilter === 'ALL'
-                  ? '전체 포지션'
-                  : `${POSITION_ABBR[positionFilter]} ${POSITION_LABEL[positionFilter]}`}
+                  ? t('playersPage.positionAll')
+                  : `${POSITION_ABBR[positionFilter]} ${t(`position.${positionFilter}`)}`}
               </span>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">전체 포지션</SelectItem>
+              <SelectItem value="ALL">{t('playersPage.positionAll')}</SelectItem>
               {(Object.keys(POSITION_ABBR) as Position[]).map((p) => (
                 <SelectItem key={p} value={p}>
                   <span className="font-mono text-xs">{POSITION_ABBR[p]}</span>
-                  <span className="ml-2 text-muted-foreground">{POSITION_LABEL[p]}</span>
+                  <span className="ml-2 text-muted-foreground">{t(`position.${p}`)}</span>
                 </SelectItem>
               ))}
             </SelectContent>
@@ -188,7 +190,7 @@ export function YouthPlayersPage() {
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
             <p className="text-sm">
-              {search ? `"${search}"에 해당하는 선수가 없습니다.` : '등록된 유소년 선수가 없습니다.'}
+              {search ? t('youthPage.noResults', { search }) : t('youthPage.noPlayers')}
             </p>
           </div>
         ) : (
@@ -196,12 +198,12 @@ export function YouthPlayersPage() {
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="w-10" />
-                <TableHead>이름</TableHead>
-                <TableHead className="w-24">포지션</TableHead>
-                <TableHead className="w-24">국적</TableHead>
-                <TableHead className="w-16 text-center">나이</TableHead>
-                <TableHead className="w-20 text-center">신장</TableHead>
-                <TableHead className="w-24">상태</TableHead>
+                <TableHead>{t('playersPage.tableHeader.name')}</TableHead>
+                <TableHead className="w-24">{t('playersPage.tableHeader.position')}</TableHead>
+                <TableHead className="w-24">{t('playersPage.tableHeader.nationality')}</TableHead>
+                <TableHead className="w-16 text-center">{t('playersPage.tableHeader.age')}</TableHead>
+                <TableHead className="w-20 text-center">{t('playersPage.tableHeader.height')}</TableHead>
+                <TableHead className="w-24">{t('playersPage.tableHeader.status')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -241,7 +243,7 @@ export function YouthPlayersPage() {
                       <span
                         className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${STATUS_STYLE[player.status]}`}
                       >
-                        {STATUS_LABEL[player.status]}
+                        {t(`status.${player.status}`)}
                       </span>
                     </TableCell>
                   </TableRow>
@@ -255,7 +257,11 @@ export function YouthPlayersPage() {
       {!loading && filtered.length > PAGE_SIZE && (
         <div className="border-t px-6 py-3 flex items-center justify-between shrink-0">
           <span className="text-xs text-muted-foreground">
-            {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} / {filtered.length}명
+            {t('playersPage.pagination', {
+              from: (safePage - 1) * PAGE_SIZE + 1,
+              to: Math.min(safePage * PAGE_SIZE, filtered.length),
+              total: filtered.length,
+            })}
           </span>
           <div className="flex items-center gap-1">
             <Button

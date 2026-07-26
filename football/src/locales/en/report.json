@@ -1,0 +1,100 @@
+{
+  "title": "Reports",
+  "list": "Report List",
+  "detail": "Report Detail",
+  "field": {
+    "title": "Title",
+    "content": "Content",
+    "type": "Type",
+    "author": "Author",
+    "submittedAt": "Submitted At",
+    "reviewedAt": "Reviewed At"
+  },
+  "type": {
+    "WEEKLY": "Weekly",
+    "MONTHLY": "Monthly",
+    "MATCH": "Match",
+    "TRAINING": "Training",
+    "INJURY": "Injury",
+    "SCOUTING": "Scouting",
+    "FINANCIAL": "Financial",
+    "PERFORMANCE": "Performance",
+    "MEDICAL": "Medical"
+  },
+  "status": {
+    "DRAFT": "Draft",
+    "SUBMITTED": "Submitted",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected"
+  },
+  "action": {
+    "createReport": "Create Report",
+    "submitReport": "Submit",
+    "approveReport": "Approve",
+    "rejectReport": "Reject",
+    "requestRevision": "Request Revision"
+  },
+  "page": {
+    "title": "Report Approvals",
+    "descGm": "All reports including those pending GM approval",
+    "descHeadCoach": "Reports including training approvals",
+    "descDefault": "Reports submitted by me",
+    "addReport": "New Report",
+    "loadFailed": "Failed to load reports.",
+    "noReports": "No reports registered.",
+    "col": {
+      "title": "Title",
+      "type": "Type",
+      "status": "Status",
+      "author": "Author",
+      "createdAt": "Date"
+    }
+  },
+  "form": {
+    "title": "Write Report",
+    "typeLabel": "Type *",
+    "titleLabel": "Title *",
+    "titlePlaceholder": "Report title",
+    "contentLabel": "Content *",
+    "contentPlaceholder": "Enter report content.",
+    "attachLabel": "Attachment",
+    "attachButton": "Attach File",
+    "titleRequired": "Please enter a title.",
+    "contentRequired": "Please enter content.",
+    "saveDraft": "Save Draft",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "processing": "Processing...",
+    "submitted": "Report submitted.",
+    "draftSaved": "Saved as draft.",
+    "saveFailed": "Failed to save."
+  },
+  "detail": {
+    "authorLabel": "Author",
+    "createdAtLabel": "Created",
+    "submittedAtLabel": "Submitted",
+    "reviewedAtLabel": "Reviewed",
+    "rejectionReasonLabel": "Rejection Reason",
+    "contentLabel": "Content",
+    "attachLabel": "Attachment",
+    "defaultAttachName": "Attachment",
+    "submitButton": "Submit",
+    "rejectButton": "Reject",
+    "approveButton": "Approve",
+    "submitSuccess": "Report submitted.",
+    "submitFailed": "Failed to submit.",
+    "approveSuccess": "Report approved.",
+    "approveFailed": "Failed to approve.",
+    "rejectSuccess": "Report rejected.",
+    "loadFailed": "Failed to load report.",
+    "rejectDialog": {
+      "title": "Reject Report",
+      "reasonLabel": "Rejection Reason *",
+      "reasonPlaceholder": "Enter rejection reason.",
+      "reasonRequired": "Please enter a rejection reason.",
+      "cancel": "Cancel",
+      "processing": "Processing...",
+      "confirm": "Reject"
+    }
+  }
+}

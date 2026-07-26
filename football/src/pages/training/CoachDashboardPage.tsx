@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { trainingApi } from '@/services/training.service'
 import type { TrainingResultRow } from '@/types/training'
 import type { Position } from '@/types/player'
 import { POSITION_LABEL } from '@/types/player'
-import { COACHING_ROLE_LABEL } from '@/types/auth'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { getCoachPositions } from '@/lib/coachPositionMap'
 import { Button } from '@/components/ui/button'
@@ -108,6 +108,7 @@ const LINE_COLORS = [
 ]
 
 export function CoachDashboardPage() {
+  const { t } = useTranslation('training')
   const { user } = useCurrentUser()
   const coachPositions = getCoachPositions(user?.coachingRole)
 
@@ -124,7 +125,7 @@ export function CoachDashboardPage() {
       const data = await trainingApi.getResults({ from: range.from, to: range.to })
       setRows(data)
     } catch {
-      toast.error('데이터를 불러오지 못했습니다.')
+      toast.error(t('dashboard.loadFailed'))
     } finally {
       setLoading(false)
     }
@@ -146,68 +147,68 @@ export function CoachDashboardPage() {
   const uniqueMissing = [...new Set(missingData)]
 
   const roleLabel = user?.coachingRole
-    ? COACHING_ROLE_LABEL[user.coachingRole]
-    : '코치'
+    ? t(`coachingRole.${user.coachingRole}`)
+    : t('dashboard.defaultRole')
 
   const copySlack = async () => {
     const posLines = positionStats
-      .map(p => `  • ${p.label}: ${p.avgScore > 0 ? p.avgScore.toFixed(1) : '—'} / 출석 ${p.attendanceRate}%`)
+      .map(p => `  • ${p.label}: ${p.avgScore > 0 ? p.avgScore.toFixed(1) : '—'} / ${t('dashboard.slackAttendanceLabel')} ${p.attendanceRate}%`)
       .join('\n')
     const missingLine = uniqueMissing.length > 0
-      ? uniqueMissing.slice(0, 5).join(', ') + (uniqueMissing.length > 5 ? ` 외 ${uniqueMissing.length - 5}명` : '')
-      : '없음'
+      ? uniqueMissing.slice(0, 5).join(', ') + (uniqueMissing.length > 5 ? ` ${t('dashboard.more', { count: uniqueMissing.length - 5 })}` : '')
+      : t('dashboard.none')
 
     const text = [
-      `📊 *[${range.from.slice(0, 7)} 훈련 리포트]* — ${roleLabel}`,
-      `📅 기간: ${range.from} – ${range.to} | 세션 수: ${totalSessions}회`,
+      t('dashboard.slackHeader', { month: range.from.slice(0, 7), role: roleLabel }),
+      t('dashboard.slackPeriod', { from: range.from, to: range.to, sessions: totalSessions }),
       `━━━━━━━━━━━━━━━━━━━━`,
-      `👥 포지션별 평균 점수 / 출석률`,
+      t('dashboard.slackPositions'),
       posLines,
-      `📋 전체 출석률: ${overallAttendance}%`,
-      `⚠️ 미평가 선수: ${missingLine}`,
+      t('dashboard.slackAttendance', { rate: overallAttendance }),
+      t('dashboard.slackMissing', { names: missingLine }),
     ].join('\n')
 
     try {
       await navigator.clipboard.writeText(text)
-      toast.success('슬랙용 텍스트가 복사됐습니다.')
+      toast.success(t('dashboard.slackCopied'))
     } catch {
-      toast.error('복사에 실패했습니다.')
+      toast.error(t('dashboard.copyFailed'))
     }
   }
 
   const copyEmail = async () => {
-    const header = `포지션`.padEnd(24) + `평균 점수`.padEnd(12) + `출석률`
+    const header = t('dashboard.emailPositionCol').padEnd(24) + t('dashboard.emailAvgScoreCol').padEnd(12) + t('dashboard.emailAttendanceRateCol')
     const divider = '-'.repeat(44)
     const tableRows = positionStats
       .map(p => p.label.padEnd(24) + (p.avgScore > 0 ? p.avgScore.toFixed(1) : '—').padEnd(12) + `${p.attendanceRate}%`)
       .join('\n')
     const missingLine = uniqueMissing.length > 0
-      ? uniqueMissing.slice(0, 10).join(', ') + (uniqueMissing.length > 10 ? ` 외 ${uniqueMissing.length - 10}명` : '')
-      : '없음'
+      ? uniqueMissing.slice(0, 10).join(', ') + (uniqueMissing.length > 10 ? ` ${t('dashboard.more', { count: uniqueMissing.length - 10 })}` : '')
+      : t('dashboard.none')
 
     const text = [
-      `제목: [${range.from.slice(0, 7)} 훈련 결과 보고] ${roleLabel}`,
+      t('dashboard.emailSubject', { month: range.from.slice(0, 7), role: roleLabel }),
       '',
-      `[요약]`,
-      `기간: ${range.from} ~ ${range.to}, 총 ${totalSessions}회 세션 진행`,
+      t('dashboard.emailSummaryHeader'),
+      t('dashboard.emailSummary', { from: range.from, to: range.to, sessions: totalSessions }),
       '',
-      `[포지션별 지표]`,
+      t('dashboard.emailPositionHeader'),
       header,
       divider,
       tableRows,
       '',
-      `[코치 코멘트]`,
-      `(작성 필요)`,
+      t('dashboard.emailCoachComment'),
+      t('dashboard.emailCoachCommentPlaceholder'),
       '',
-      `[누락 데이터 알림]`,
+      t('dashboard.emailMissingHeader'),
       missingLine,
     ].join('\n')
 
     try {
       await navigator.clipboard.writeText(text)
-      toast.success('이메일용 텍스트가 복사됐습니다.')
+      toast.success(t('dashboard.emailCopied'))
     } catch {
-      toast.error('복사에 실패했습니다.')
+      toast.error(t('dashboard.copyFailed'))
     }
   }
 
@@ -216,18 +217,18 @@ export function CoachDashboardPage() {
       {/* 헤더 */}
       <div className="border-b px-6 py-4 flex items-center justify-between shrink-0 print:hidden">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">코치 대시보드</h1>
+          <h1 className="text-lg font-semibold tracking-tight">{t('dashboard.title')}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{roleLabel}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={copySlack} disabled={rows.length === 0}>
-            <Clipboard className="h-3.5 w-3.5 mr-1" />슬랙용 복사
+            <Clipboard className="h-3.5 w-3.5 mr-1" />{t('dashboard.copySlack')}
           </Button>
           <Button variant="outline" size="sm" onClick={copyEmail} disabled={rows.length === 0}>
-            <Clipboard className="h-3.5 w-3.5 mr-1" />이메일용 복사
+            <Clipboard className="h-3.5 w-3.5 mr-1" />{t('dashboard.copyEmail')}
           </Button>
           <Button variant="outline" size="sm" onClick={() => window.print()} disabled={rows.length === 0}>
-            <Printer className="h-3.5 w-3.5 mr-1" />PDF 인쇄
+            <Printer className="h-3.5 w-3.5 mr-1" />{t('dashboard.printPdf')}
           </Button>
         </div>
       </div>
@@ -235,7 +236,7 @@ export function CoachDashboardPage() {
       {/* 필터 바 */}
       <div className="border-b px-6 py-3 flex flex-wrap gap-4 items-end shrink-0 bg-muted/30 print:hidden">
         <div className="space-y-1">
-          <Label className="text-xs">시작일</Label>
+          <Label className="text-xs">{t('dashboard.startDate')}</Label>
           <Input
             type="date"
             value={range.from}
@@ -244,7 +245,7 @@ export function CoachDashboardPage() {
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">종료일</Label>
+          <Label className="text-xs">{t('dashboard.endDate')}</Label>
           <Input
             type="date"
             value={range.to}
@@ -254,25 +255,25 @@ export function CoachDashboardPage() {
         </div>
         {coachPositions && (
           <div className="space-y-1">
-            <Label className="text-xs">포지션 범위</Label>
+            <Label className="text-xs">{t('dashboard.positionRange')}</Label>
             <Select value={positionFilter} onValueChange={v => setPositionFilter(v as 'own' | 'all')}>
               <SelectTrigger className="w-36 h-8 text-sm bg-background"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="own">내 담당만</SelectItem>
-                <SelectItem value="all">전체</SelectItem>
+                <SelectItem value="own">{t('dashboard.ownOnly')}</SelectItem>
+                <SelectItem value="all">{t('dashboard.all')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
         )}
         <Button size="sm" onClick={fetchData} disabled={loading} className="h-8">
-          {loading ? '조회 중...' : '조회'}
+          {loading ? t('dashboard.searching') : t('dashboard.search')}
         </Button>
       </div>
 
       {/* 인쇄 헤더 (화면에선 숨김) */}
       <div className="hidden print:block px-6 py-4 border-b">
-        <h1 className="text-xl font-bold">{range.from.slice(0, 7)} 훈련 리포트 — {roleLabel}</h1>
-        <p className="text-sm text-muted-foreground">기간: {range.from} ~ {range.to} | 세션 수: {totalSessions}회 | 출석률: {overallAttendance}%</p>
+        <h1 className="text-xl font-bold">{t('dashboard.printTitle', { month: range.from.slice(0, 7), role: roleLabel })}</h1>
+        <p className="text-sm text-muted-foreground">{t('dashboard.printSubtitle', { from: range.from, to: range.to, sessions: totalSessions, rate: overallAttendance })}</p>
       </div>
 
       <div className="flex-1 overflow-auto p-6 space-y-6 min-h-0">
@@ -283,7 +284,7 @@ export function CoachDashboardPage() {
           </div>
         ) : rows.length === 0 ? (
           <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-            해당 기간에 훈련 결과가 없습니다.
+            {t('dashboard.noData')}
           </div>
         ) : (
           <>
@@ -291,15 +292,15 @@ export function CoachDashboardPage() {
             <div className="grid grid-cols-3 gap-4">
               <div className="rounded-lg border bg-card p-4 text-center">
                 <p className="text-2xl font-bold tabular-nums">{totalSessions}</p>
-                <p className="text-xs text-muted-foreground mt-1">총 세션</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('dashboard.totalSessions')}</p>
               </div>
               <div className="rounded-lg border bg-card p-4 text-center">
                 <p className="text-2xl font-bold tabular-nums">{overallAttendance}%</p>
-                <p className="text-xs text-muted-foreground mt-1">전체 출석률</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('dashboard.attendanceRate')}</p>
               </div>
               <div className="rounded-lg border bg-card p-4 text-center">
                 <p className="text-2xl font-bold tabular-nums">{uniqueMissing.length}</p>
-                <p className="text-xs text-muted-foreground mt-1">미평가 선수</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('dashboard.uneval')}</p>
               </div>
             </div>
 
@@ -307,28 +308,28 @@ export function CoachDashboardPage() {
             <div className="grid grid-cols-2 gap-4">
               {/* 포지션별 평균 점수 */}
               <div className="rounded-lg border bg-card p-4">
-                <h3 className="text-sm font-semibold mb-3">포지션별 평균 점수</h3>
+                <h3 className="text-sm font-semibold mb-3">{t('dashboard.positionAvgScore')}</h3>
                 <ResponsiveContainer width="100%" height={200}>
                   <BarChart data={positionStats} margin={{ top: 4, right: 8, bottom: 24, left: -20 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="label" tick={{ fontSize: 10 }} angle={-30} textAnchor="end" />
                     <YAxis domain={[0, 10]} tick={{ fontSize: 10 }} />
                     <Tooltip formatter={(v: number) => v.toFixed(1)} />
-                    <Bar dataKey="avgScore" fill="#3b82f6" name="평균 점수" radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="avgScore" fill="#3b82f6" name={t('dashboard.chartAvgScore')} radius={[2, 2, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
 
               {/* 세션별 출석률 추이 */}
               <div className="rounded-lg border bg-card p-4">
-                <h3 className="text-sm font-semibold mb-3">세션별 출석률 추이</h3>
+                <h3 className="text-sm font-semibold mb-3">{t('dashboard.sessionAttendanceTrend')}</h3>
                 <ResponsiveContainer width="100%" height={200}>
                   <LineChart data={sessionTrend} margin={{ top: 4, right: 8, bottom: 24, left: -20 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" tick={{ fontSize: 10 }} angle={-30} textAnchor="end" />
                     <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} unit="%" />
                     <Tooltip formatter={(v: number) => `${v}%`} />
-                    <Line type="monotone" dataKey="attendanceRate" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} name="출석률" />
+                    <Line type="monotone" dataKey="attendanceRate" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} name={t('dashboard.chartAttendanceRate')} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -337,7 +338,7 @@ export function CoachDashboardPage() {
             {/* 선수별 점수 추이 */}
             {playerTrends.length > 0 && (
               <div className="rounded-lg border bg-card p-4">
-                <h3 className="text-sm font-semibold mb-3">선수별 점수 추이 (최대 10명)</h3>
+                <h3 className="text-sm font-semibold mb-3">{t('dashboard.playerScoreTrend')}</h3>
                 <ResponsiveContainer width="100%" height={240}>
                   <LineChart
                     data={playerTrends[0].data.map((d, i) => ({
@@ -370,7 +371,7 @@ export function CoachDashboardPage() {
             {/* 미평가 선수 알림 */}
             {uniqueMissing.length > 0 && (
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                <p className="text-xs font-semibold text-amber-800 mb-1">⚠️ 미평가 선수 ({uniqueMissing.length}명)</p>
+                <p className="text-xs font-semibold text-amber-800 mb-1">{t('dashboard.unevalAlert', { count: uniqueMissing.length })}</p>
                 <p className="text-xs text-amber-700">{uniqueMissing.join(', ')}</p>
               </div>
             )}

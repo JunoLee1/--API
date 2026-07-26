@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { prospectApi } from '@/services/prospect.service'
 import { api } from '@/services/api'
@@ -8,8 +9,7 @@ import type {
   VisaEligibility, WorkPermitStatus,
 } from '@/types/prospect'
 import {
-  STATUS_LABEL, STATUS_STYLE,
-  VISA_ELIGIBILITY_LABEL, WORK_PERMIT_LABEL,
+  STATUS_STYLE,
 } from '@/types/prospect'
 import type { Position } from '@/types/player'
 import { POSITION_LABEL } from '@/types/player'
@@ -56,6 +56,7 @@ interface CreateProspectDialogProps {
 }
 
 function CreateProspectDialog({ open, onOpenChange, onSaved }: CreateProspectDialogProps) {
+  const { t } = useTranslation('contract')
   const [name, setName] = useState('')
   const [nationality, setNationality] = useState('')
   const [position, setPosition] = useState<Position | ''>('')
@@ -66,7 +67,7 @@ function CreateProspectDialog({ open, onOpenChange, onSaved }: CreateProspectDia
   const [saving, setSaving] = useState(false)
 
   const handleSave = async () => {
-    if (!name.trim()) { toast.error('이름을 입력해주세요.'); return }
+    if (!name.trim()) { toast.error(t('prospects.form.required')); return }
     setSaving(true)
     try {
       const dto: CreateProspectDto = {
@@ -80,10 +81,10 @@ function CreateProspectDialog({ open, onOpenChange, onSaved }: CreateProspectDia
       if (visaRequired) {
         await prospectApi.update(prospect.id, { visaRequired: true, visaEligibility })
       }
-      toast.success('영입 후보가 등록됐습니다.')
+      toast.success(t('prospects.form.createSuccess'))
       onSaved()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('prospects.form.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -92,31 +93,31 @@ function CreateProspectDialog({ open, onOpenChange, onSaved }: CreateProspectDia
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>영입 후보 등록</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t('prospects.form.createTitle')}</DialogTitle></DialogHeader>
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
-            <Label>이름 *</Label>
+            <Label>{t('prospects.form.nameLabel')} *</Label>
             <Input placeholder="선수 이름" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>국적</Label>
+            <Label>{t('prospects.form.nationalityLabel')}</Label>
             <Input placeholder="예: 대한민국" value={nationality} onChange={(e) => setNationality(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>포지션</Label>
+            <Label>{t('prospects.form.positionLabel')}</Label>
             <Select value={position} onValueChange={(v) => setPosition(v as Position)}>
               <SelectTrigger><SelectValue placeholder="포지션 선택" /></SelectTrigger>
               <SelectContent>
-                {POSITIONS.map((p) => <SelectItem key={p} value={p}>{POSITION_LABEL[p]}</SelectItem>)}
+                {POSITIONS.map((pos) => <SelectItem key={pos} value={pos}>{POSITION_LABEL[pos]}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>현 소속팀</Label>
+            <Label>{t('prospects.form.currentTeamLabel')}</Label>
             <Input placeholder="예: FC 서울" value={currentTeam} onChange={(e) => setCurrentTeam(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>메모</Label>
+            <Label>{t('prospects.form.notesLabel')}</Label>
             <Textarea placeholder="스카우트 노트" value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
           </div>
           <div className="flex items-center gap-2 pt-1">
@@ -125,23 +126,23 @@ function CreateProspectDialog({ open, onOpenChange, onSaved }: CreateProspectDia
               checked={visaRequired}
               onCheckedChange={(v) => setVisaRequired(!!v)}
             />
-            <Label htmlFor="visaRequired" className="cursor-pointer">외국 선수 — 비자/노동허가 필요</Label>
+            <Label htmlFor="visaRequired" className="cursor-pointer">{t('prospects.form.visaRequiredLabel')}</Label>
           </div>
           {visaRequired && (
             <div className="space-y-1.5 pl-6">
-              <Label>취득 가능성</Label>
+              <Label>{t('prospects.form.visaEligibilityLabel')}</Label>
               <Select value={visaEligibility} onValueChange={(v) => setVisaEligibility(v as VisaEligibility)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {VISA_OPTIONS.map((v) => <SelectItem key={v} value={v}>{VISA_ELIGIBILITY_LABEL[v]}</SelectItem>)}
+                  {VISA_OPTIONS.map((vo) => <SelectItem key={vo} value={vo}>{VISA_ELIGIBILITY_LABEL[vo]}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? '저장 중...' : '등록'}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t('prospects.form.cancel')}</Button>
+          <Button onClick={handleSave} disabled={saving}>{saving ? t('prospects.form.saving') : t('prospects.form.create')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -158,6 +159,7 @@ interface SignProspectDialogProps {
 }
 
 function SignProspectDialog({ prospect, open, onOpenChange, onSaved }: SignProspectDialogProps) {
+  const { t } = useTranslation('contract')
   const [countries, setCountries] = useState<Country[]>([])
   const [nationalityId, setNationalityId] = useState<string>('')
   const [dob, setDob] = useState('')
@@ -183,7 +185,7 @@ function SignProspectDialog({ prospect, open, onOpenChange, onSaved }: SignProsp
 
   const handleSave = async () => {
     if (!dob || !height || !weight || !nationalityId || !contractStart || !contractEnd || !salary) {
-      toast.error('필수 항목을 모두 입력해주세요.')
+      toast.error(t('prospects.signForm.required'))
       return
     }
     setSaving(true)
@@ -202,10 +204,10 @@ function SignProspectDialog({ prospect, open, onOpenChange, onSaved }: SignProsp
         ...(workPermitExpiry && { workPermitExpiry }),
       }
       await prospectApi.sign(prospect.id, dto)
-      toast.success('계약 성사! 선수가 등록됐습니다.')
+      toast.success(t('prospects.signForm.success'))
       onSaved()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '처리에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('prospects.signForm.failed'))
     } finally {
       setSaving(false)
     }
@@ -215,7 +217,7 @@ function SignProspectDialog({ prospect, open, onOpenChange, onSaved }: SignProsp
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>계약 성사 — {prospect.name}</DialogTitle>
+          <DialogTitle>{t('prospects.signForm.title', { name: prospect.name })}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2 max-h-[65vh] overflow-y-auto pr-1">
           <p className="text-xs text-muted-foreground">선수 등록 및 계약 정보를 입력하면 단일 트랜잭션으로 처리됩니다.</p>
@@ -224,11 +226,11 @@ function SignProspectDialog({ prospect, open, onOpenChange, onSaved }: SignProsp
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">선수 기본 정보</p>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5">
-                <Label>생년월일 *</Label>
+                <Label>{t('prospects.signForm.dobLabel')} *</Label>
                 <Input type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
               </div>
               <div className="space-y-1.5">
-                <Label>국적 *</Label>
+                <Label>{t('prospects.signForm.nationalityLabel')} *</Label>
                 <Select value={nationalityId} onValueChange={setNationalityId}>
                   <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
                   <SelectContent>
@@ -237,17 +239,17 @@ function SignProspectDialog({ prospect, open, onOpenChange, onSaved }: SignProsp
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>키 (cm) *</Label>
+                <Label>{t('prospects.signForm.heightLabel')} *</Label>
                 <Input type="number" placeholder="183" value={height} onChange={(e) => setHeight(e.target.value)} />
               </div>
               <div className="space-y-1.5">
-                <Label>몸무게 (kg) *</Label>
+                <Label>{t('prospects.signForm.weightLabel')} *</Label>
                 <Input type="number" placeholder="78" value={weight} onChange={(e) => setWeight(e.target.value)} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5">
-                <Label>주발</Label>
+                <Label>{t('prospects.signForm.footLabel')}</Label>
                 <Select value={foot} onValueChange={(v) => setFoot(v as typeof foot)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -258,11 +260,11 @@ function SignProspectDialog({ prospect, open, onOpenChange, onSaved }: SignProsp
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>포지션</Label>
+                <Label>{t('prospects.signForm.positionLabel')}</Label>
                 <Select value={position} onValueChange={(v) => setPosition(v as Position)}>
                   <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
                   <SelectContent>
-                    {POSITIONS.map((p) => <SelectItem key={p} value={p}>{POSITION_LABEL[p]}</SelectItem>)}
+                    {POSITIONS.map((pos) => <SelectItem key={pos} value={pos}>{POSITION_LABEL[pos]}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -273,16 +275,16 @@ function SignProspectDialog({ prospect, open, onOpenChange, onSaved }: SignProsp
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">계약 정보</p>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5">
-                <Label>계약 시작일 *</Label>
+                <Label>{t('prospects.signForm.contractStartLabel')} *</Label>
                 <Input type="date" value={contractStart} onChange={(e) => setContractStart(e.target.value)} />
               </div>
               <div className="space-y-1.5">
-                <Label>계약 종료일 *</Label>
+                <Label>{t('prospects.signForm.contractEndLabel')} *</Label>
                 <Input type="date" value={contractEnd} onChange={(e) => setContractEnd(e.target.value)} />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>연봉 (원) *</Label>
+              <Label>{t('prospects.signForm.salaryLabel')} *</Label>
               <Input type="number" placeholder="500000000" value={salary} onChange={(e) => setSalary(e.target.value)} />
             </div>
           </div>
@@ -292,16 +294,16 @@ function SignProspectDialog({ prospect, open, onOpenChange, onSaved }: SignProsp
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">노동허가 / 비자</p>
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1.5">
-                  <Label>노동허가 상태</Label>
+                  <Label>{t('prospects.signForm.workPermitLabel')}</Label>
                   <Select value={workPermitStatus} onValueChange={(v) => setWorkPermitStatus(v as WorkPermitStatus)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {WORK_PERMIT_OPTIONS.map((s) => <SelectItem key={s} value={s}>{WORK_PERMIT_LABEL[s]}</SelectItem>)}
+                      {WORK_PERMIT_OPTIONS.map((wp) => <SelectItem key={wp} value={wp}>{t(`prospects.workPermit.${wp}`)}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>만료일</Label>
+                  <Label>{t('prospects.signForm.workPermitExpiryLabel')}</Label>
                   <Input type="date" value={workPermitExpiry} onChange={(e) => setWorkPermitExpiry(e.target.value)} />
                 </div>
               </div>
@@ -309,8 +311,8 @@ function SignProspectDialog({ prospect, open, onOpenChange, onSaved }: SignProsp
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? '처리 중...' : '계약 성사 처리'}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t('prospects.signForm.cancel')}</Button>
+          <Button onClick={handleSave} disabled={saving}>{saving ? t('prospects.signForm.saving') : t('prospects.signForm.submit')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -320,6 +322,7 @@ function SignProspectDialog({ prospect, open, onOpenChange, onSaved }: SignProsp
 // ─── ProspectsPage ──────────────────────────────────────────────────────────
 
 export function ProspectsPage() {
+  const { t } = useTranslation('contract')
   const { user } = useCurrentUser()
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [loading, setLoading] = useState(true)
@@ -354,7 +357,7 @@ export function ProspectsPage() {
     prospectApi
       .list(status)
       .then(setProspects)
-      .catch(() => toast.error('영입 후보 목록을 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('prospects.loadFailed')))
       .finally(() => setLoading(false))
   }
 
@@ -366,18 +369,18 @@ export function ProspectsPage() {
   const handleTransition = async (id: number, status: ProspectStatus) => {
     try {
       await prospectApi.transition(id, status)
-      toast.success(`상태가 '${STATUS_LABEL[status]}'로 변경됐습니다.`)
+      toast.success(t('prospects.deleteSuccess'))
       const s = statusFilter === 'ALL' ? undefined : statusFilter
       void fetchProspects(s)
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '변경에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('prospects.deleteFailed'))
     }
   }
 
   if (!canRead) {
     return (
       <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-        접근 권한이 없습니다.
+        {t('prospects.noData')}
       </div>
     )
   }
@@ -389,18 +392,18 @@ export function ProspectsPage() {
         return canWrite ? (
           <div className="flex gap-1">
             <Button size="sm" variant="outline" className="h-7 text-xs"
-              onClick={() => handleTransition(p.id, 'MEDICAL_TEST')}>메디컬 테스트</Button>
+              onClick={() => handleTransition(p.id, 'MEDICAL_TEST')}>{t('prospects.status.MEDICAL_TEST')}</Button>
             <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground"
-              onClick={() => handleTransition(p.id, 'ARCHIVED')}>종료</Button>
+              onClick={() => handleTransition(p.id, 'ARCHIVED')}>{t('prospects.deleteButton')}</Button>
           </div>
         ) : null
       case 'MEDICAL_TEST':
         return canWrite ? (
           <div className="flex gap-1">
             <Button size="sm" variant="outline" className="h-7 text-xs"
-              onClick={() => handleTransition(p.id, 'CONTRACT_PENDING')}>계약 협상 시작</Button>
+              onClick={() => handleTransition(p.id, 'CONTRACT_PENDING')}>{t('prospects.status.CONTRACT_PENDING')}</Button>
             <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground"
-              onClick={() => handleTransition(p.id, 'ARCHIVED')}>종료</Button>
+              onClick={() => handleTransition(p.id, 'ARCHIVED')}>{t('prospects.deleteButton')}</Button>
           </div>
         ) : null
       case 'CONTRACT_PENDING':
@@ -408,11 +411,11 @@ export function ProspectsPage() {
           <div className="flex gap-1">
             {canSign && (
               <Button size="sm" className="h-7 text-xs"
-                onClick={() => setSignTarget(p)}>계약 성사</Button>
+                onClick={() => setSignTarget(p)}>{t('prospects.signButton')}</Button>
             )}
             {canWrite && (
               <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground"
-                onClick={() => handleTransition(p.id, 'ARCHIVED')}>협상 결렬</Button>
+                onClick={() => handleTransition(p.id, 'ARCHIVED')}>{t('prospects.deleteButton')}</Button>
             )}
           </div>
         )
@@ -425,12 +428,12 @@ export function ProspectsPage() {
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 flex items-center justify-between gap-4 shrink-0">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">영입 후보</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">스카우트 추적 중인 선수 목록</p>
+          <h1 className="text-lg font-semibold tracking-tight">{t('prospects.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{t('prospects.description')}</p>
         </div>
         {canWrite && (
           <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />후보 등록
+            <Plus className="h-4 w-4 mr-1" />{t('prospects.addButton')}
           </Button>
         )}
       </div>
@@ -439,8 +442,8 @@ export function ProspectsPage() {
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as ProspectStatus | 'ALL')}>
           <SelectTrigger className="w-40 h-8 text-sm bg-background"><SelectValue /></SelectTrigger>
           <SelectContent>
-            {STATUSES.map((s) => (
-              <SelectItem key={s} value={s}>{s === 'ALL' ? '전체' : STATUS_LABEL[s]}</SelectItem>
+            {STATUSES.map((st) => (
+              <SelectItem key={st} value={st}>{st === 'ALL' ? '전체' : t(`prospects.status.${st}`)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -448,8 +451,8 @@ export function ProspectsPage() {
           <SelectTrigger className="w-40 h-8 text-sm bg-background"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">전체 포지션</SelectItem>
-            {POSITIONS.map((p) => (
-              <SelectItem key={p} value={p}>{POSITION_LABEL[p]}</SelectItem>
+            {POSITIONS.map((pos) => (
+              <SelectItem key={pos} value={pos}>{POSITION_LABEL[pos]}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -462,18 +465,18 @@ export function ProspectsPage() {
           </div>
         ) : prospects.length === 0 ? (
           <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-            등록된 영입 후보가 없습니다.
+            {t('prospects.noData')}
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead>이름</TableHead>
-                <TableHead className="w-24">포지션</TableHead>
-                <TableHead>소속팀</TableHead>
-                <TableHead className="w-20">국적</TableHead>
-                <TableHead className="w-28">상태</TableHead>
-                <TableHead className="w-20">비자</TableHead>
+                <TableHead>{t('prospects.col.name')}</TableHead>
+                <TableHead className="w-24">{t('prospects.col.position')}</TableHead>
+                <TableHead>{t('prospects.col.currentTeam')}</TableHead>
+                <TableHead className="w-20">{t('prospects.col.nationality')}</TableHead>
+                <TableHead className="w-28">{t('prospects.col.status')}</TableHead>
+                <TableHead className="w-20">{t('prospects.col.visa')}</TableHead>
                 <TableHead className="w-28 text-muted-foreground">등록일</TableHead>
                 <TableHead className="w-28 text-muted-foreground">등록자</TableHead>
                 {(canWrite || canSign) && <TableHead className="w-48" />}
@@ -488,7 +491,7 @@ export function ProspectsPage() {
                   <TableCell className="text-sm">{p.nationality ?? '—'}</TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${STATUS_STYLE[p.status]}`}>
-                      {STATUS_LABEL[p.status]}
+                      {t(`prospects.status.${p.status}`)}
                     </span>
                   </TableCell>
                   <TableCell>
@@ -498,7 +501,7 @@ export function ProspectsPage() {
                         p.visaEligibility === 'UNCERTAIN' ? 'bg-red-50 text-red-700 border-red-200' :
                         'bg-gray-50 text-gray-500 border-gray-200'
                       }`}>
-                        {VISA_ELIGIBILITY_LABEL[p.visaEligibility]}
+                        {t(`prospects.visaEligibility.${p.visaEligibility}`)}
                       </span>
                     ) : p.visaRequired ? (
                       <span className="text-xs text-muted-foreground">미확인</span>

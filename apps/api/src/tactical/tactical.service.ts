@@ -35,8 +35,10 @@ export class TacticalService {
       void this.notifRepo
         .createForHeadCoach(
           "TACTICAL_ANALYSIS_CONFIRM_REQUESTED",
-          "전술 분석 확정 요청",
-          `새 전술 분석(${dto.phase})이 등록되어 확정이 필요합니다.`,
+          () => ({
+            title: "전술 분석 확정 요청",
+            body: `새 전술 분석(${dto.phase})이 등록되어 확정이 필요합니다.`,
+          }),
           analysis.id,
         )
         .catch(console.error);

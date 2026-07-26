@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { transferApi } from '@/services/transfer.service'
 import type { Transfer, Recall, TransferType } from '@/types/transfer'
 import {
-  TRANSFER_TYPE_LABEL,
   TRANSFER_TYPE_STYLE,
-  RECALL_STATUS_LABEL,
   RECALL_STATUS_STYLE,
 } from '@/types/transfer'
 import { usePlayers } from '@/hooks/usePlayers'
@@ -61,6 +60,7 @@ interface CreateTransferDialogProps {
 }
 
 function CreateTransferDialog({ open, onOpenChange, playerId, onSaved }: CreateTransferDialogProps) {
+  const { t } = useTranslation('contract')
   const [type, setType] = useState<TransferType>('PERMANENT')
   const [date, setDate] = useState('')
   const [fromClub, setFromClub] = useState('')
@@ -69,7 +69,7 @@ function CreateTransferDialog({ open, onOpenChange, playerId, onSaved }: CreateT
   const [saving, setSaving] = useState(false)
 
   const handleSave = async () => {
-    if (!date) { toast.error('이적 날짜를 입력해주세요.'); return }
+    if (!date) { toast.error(t('transfers.createDialog.required')); return }
     setSaving(true)
     try {
       await transferApi.create({
@@ -80,10 +80,10 @@ function CreateTransferDialog({ open, onOpenChange, playerId, onSaved }: CreateT
         ...(toClub && { toClub }),
         ...(fee && { fee: Number(fee) }),
       })
-      toast.success('이적이 등록됐습니다.')
+      toast.success(t('transfers.createDialog.saved'))
       onSaved()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('transfers.createDialog.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -92,39 +92,39 @@ function CreateTransferDialog({ open, onOpenChange, playerId, onSaved }: CreateT
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>이적 등록</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t('transfers.createDialog.title')}</DialogTitle></DialogHeader>
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
-            <Label>유형 *</Label>
+            <Label>{t('transfers.createDialog.type')}</Label>
             <Select value={type} onValueChange={(v) => setType(v as TransferType)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {TYPES.map((t) => <SelectItem key={t} value={t}>{TRANSFER_TYPE_LABEL[t]}</SelectItem>)}
+                {TYPES.map((tp) => <SelectItem key={tp} value={tp}>{t(`transfers.type.${tp}`)}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>이적 날짜 *</Label>
+            <Label>{t('transfers.createDialog.date')}</Label>
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1.5">
-              <Label>출발 클럽</Label>
-              <Input placeholder="이전 소속" value={fromClub} onChange={(e) => setFromClub(e.target.value)} />
+              <Label>{t('transfers.createDialog.fromClub')}</Label>
+              <Input placeholder={t('transfers.createDialog.fromClubPlaceholder')} value={fromClub} onChange={(e) => setFromClub(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label>도착 클럽</Label>
-              <Input placeholder="새 소속" value={toClub} onChange={(e) => setToClub(e.target.value)} />
+              <Label>{t('transfers.createDialog.toClub')}</Label>
+              <Input placeholder={t('transfers.createDialog.toClubPlaceholder')} value={toClub} onChange={(e) => setToClub(e.target.value)} />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>이적료 (원)</Label>
-            <Input type="number" placeholder="예: 5000000000" value={fee} onChange={(e) => setFee(e.target.value)} />
+            <Label>{t('transfers.createDialog.fee')}</Label>
+            <Input type="number" placeholder={t('transfers.createDialog.feePlaceholder')} value={fee} onChange={(e) => setFee(e.target.value)} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? '저장 중...' : '등록'}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t('transfers.createDialog.cancel')}</Button>
+          <Button onClick={handleSave} disabled={saving}>{saving ? t('transfers.createDialog.saving') : t('transfers.createDialog.submit')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -132,6 +132,7 @@ function CreateTransferDialog({ open, onOpenChange, playerId, onSaved }: CreateT
 }
 
 export function TransfersPage() {
+  const { t } = useTranslation('contract')
   const { user } = useCurrentUser()
   const { players, loading: playersLoading } = usePlayers()
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>('')
@@ -160,7 +161,7 @@ export function TransfersPage() {
     transferApi
       .byPlayer(pid)
       .then(setTransfers)
-      .catch(() => toast.error('이적 이력을 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('transfers.loadFailed')))
       .finally(() => setLoadingTransfers(false))
   }
 
@@ -176,25 +177,25 @@ export function TransfersPage() {
       a.click()
       URL.revokeObjectURL(url)
     } catch {
-      toast.error('데이터 내보내기에 실패했습니다.')
+      toast.error(t('transfers.exportFailed'))
     }
   }
 
   const handleRecallAction = async (id: number, status: 'APPROVED' | 'REJECTED') => {
     try {
       await transferApi.updateRecallStatus(id, status)
-      toast.success(`복귀 요청이 ${status === 'APPROVED' ? '승인' : '거절'}됐습니다.`)
+      toast.success(status === 'APPROVED' ? t('transfers.recallApproved') : t('transfers.recallRejected'))
       const updated = await transferApi.recalls()
       setRecalls(updated)
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '처리에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('transfers.recallFailed'))
     }
   }
 
   return (
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 shrink-0">
-        <h1 className="text-lg font-semibold tracking-tight">이적 현황</h1>
+        <h1 className="text-lg font-semibold tracking-tight">{t('transfers.title')}</h1>
       </div>
 
       <div className="flex-1 overflow-hidden">
@@ -202,10 +203,10 @@ export function TransfersPage() {
           <div className="border-b px-6 shrink-0">
             <TabsList className="h-9 bg-transparent p-0 gap-4">
               <TabsTrigger value="transfers" className="h-9 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent">
-                선수별 이적
+                {t('transfers.tabTransfers')}
               </TabsTrigger>
               <TabsTrigger value="recalls" className="h-9 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent">
-                복귀 요청
+                {t('transfers.tabRecalls')}
                 {recalls.filter((r) => r.status === 'PENDING').length > 0 && (
                   <span className="ml-1.5 rounded-full bg-amber-500 text-white text-[10px] px-1.5 py-0.5">
                     {recalls.filter((r) => r.status === 'PENDING').length}
@@ -220,7 +221,7 @@ export function TransfersPage() {
             <div className="border-b px-6 py-3 flex items-center gap-3 shrink-0 bg-muted/30">
               {playersLoading ? <Skeleton className="h-8 w-56" /> : (
                 <Select value={selectedPlayerId} onValueChange={(pid) => { if (pid) { setSelectedPlayerId(pid); setTransfers([]); fetchTransfers(pid) } }}>
-                  <SelectTrigger className="w-56 h-8 text-sm bg-background"><SelectValue placeholder="선수 선택" /></SelectTrigger>
+                  <SelectTrigger className="w-56 h-8 text-sm bg-background"><SelectValue placeholder={t('transfers.playerSelectPlaceholder')} /></SelectTrigger>
                   <SelectContent>
                     {players.map((p) => <SelectItem key={p.id} value={p.id}>{p.playerName}</SelectItem>)}
                   </SelectContent>
@@ -228,59 +229,59 @@ export function TransfersPage() {
               )}
               {canWrite && selectedPlayerId && (
                 <Button size="sm" variant="outline" onClick={() => setCreateOpen(true)}>
-                  <Plus className="h-3.5 w-3.5 mr-1.5" />이적 등록
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />{t('transfers.addBtn')}
                 </Button>
               )}
             </div>
             <div className="flex-1 overflow-auto">
               {!selectedPlayerId ? (
-                <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">선수를 선택해주세요.</div>
+                <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">{t('transfers.selectPlayer')}</div>
               ) : loadingTransfers ? (
                 <div className="p-6 space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
               ) : transfers.length === 0 ? (
-                <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">이적 이력이 없습니다.</div>
+                <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">{t('transfers.noHistory')}</div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
-                      <TableHead>유형</TableHead>
-                      <TableHead>이적일</TableHead>
-                      <TableHead>출발 클럽</TableHead>
-                      <TableHead>도착 클럽</TableHead>
-                      <TableHead>이적료</TableHead>
-                      <TableHead>복귀 요청</TableHead>
-                      {canExport && <TableHead className="w-24">내보내기</TableHead>}
+                      <TableHead>{t('transfers.col.type')}</TableHead>
+                      <TableHead>{t('transfers.col.date')}</TableHead>
+                      <TableHead>{t('transfers.col.fromClub')}</TableHead>
+                      <TableHead>{t('transfers.col.toClub')}</TableHead>
+                      <TableHead>{t('transfers.col.fee')}</TableHead>
+                      <TableHead>{t('transfers.col.recall')}</TableHead>
+                      {canExport && <TableHead className="w-24">{t('transfers.col.export')}</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {transfers.map((t) => (
-                      <TableRow key={t.id}>
+                    {transfers.map((tr) => (
+                      <TableRow key={tr.id}>
                         <TableCell>
-                          <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${TRANSFER_TYPE_STYLE[t.type]}`}>
-                            {TRANSFER_TYPE_LABEL[t.type]}
+                          <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${TRANSFER_TYPE_STYLE[tr.type]}`}>
+                            {t(`transfers.type.${tr.type}`)}
                           </span>
                         </TableCell>
-                        <TableCell className="tabular-nums">{formatDate(t.date)}</TableCell>
-                        <TableCell>{t.fromClub ?? '—'}</TableCell>
-                        <TableCell>{t.toClub ?? '—'}</TableCell>
-                        <TableCell className="tabular-nums">{formatFee(t.fee)}</TableCell>
+                        <TableCell className="tabular-nums">{formatDate(tr.date)}</TableCell>
+                        <TableCell>{tr.fromClub ?? '—'}</TableCell>
+                        <TableCell>{tr.toClub ?? '—'}</TableCell>
+                        <TableCell className="tabular-nums">{formatFee(tr.fee)}</TableCell>
                         <TableCell>
-                          {t.recall ? (
-                            <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${RECALL_STATUS_STYLE[t.recall.status]}`}>
-                              {RECALL_STATUS_LABEL[t.recall.status]}
+                          {tr.recall ? (
+                            <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${RECALL_STATUS_STYLE[tr.recall.status]}`}>
+                              {t(`transfers.recall.${tr.recall.status}`)}
                             </span>
                           ) : '—'}
                         </TableCell>
                         {canExport && (
                           <TableCell>
-                            {t.type === 'LOAN_IN' ? (
+                            {tr.type === 'LOAN_IN' ? (
                               <Button
                                 size="sm"
                                 variant="outline"
                                 className="h-7 text-xs"
-                                onClick={(e) => { e.stopPropagation(); handleExport(t.id, '') }}
+                                onClick={(e) => { e.stopPropagation(); handleExport(tr.id, '') }}
                               >
-                                <Download className="h-3 w-3 mr-1" />내보내기
+                                <Download className="h-3 w-3 mr-1" />{t('transfers.exportBtn')}
                               </Button>
                             ) : '—'}
                           </TableCell>
@@ -298,14 +299,14 @@ export function TransfersPage() {
             {loadingRecalls ? (
               <div className="p-6 space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
             ) : recalls.length === 0 ? (
-              <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">복귀 요청이 없습니다.</div>
+              <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">{t('transfers.noRecalls')}</div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead>이적 ID</TableHead>
-                    <TableHead>상태</TableHead>
-                    {canApproveRecall && <TableHead className="w-40">처리</TableHead>}
+                    <TableHead>{t('transfers.col.transferId')}</TableHead>
+                    <TableHead>{t('transfers.col.status')}</TableHead>
+                    {canApproveRecall && <TableHead className="w-40">{t('transfers.col.action')}</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -314,15 +315,15 @@ export function TransfersPage() {
                       <TableCell className="tabular-nums">#{r.transferId}</TableCell>
                       <TableCell>
                         <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${RECALL_STATUS_STYLE[r.status]}`}>
-                          {RECALL_STATUS_LABEL[r.status]}
+                          {t(`transfers.recall.${r.status}`)}
                         </span>
                       </TableCell>
                       {canApproveRecall && (
                         <TableCell>
                           {r.status === 'PENDING' ? (
                             <div className="flex gap-2">
-                              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleRecallAction(r.id, 'APPROVED')}>승인</Button>
-                              <Button size="sm" variant="outline" className="h-7 text-xs text-destructive hover:text-destructive" onClick={() => handleRecallAction(r.id, 'REJECTED')}>거절</Button>
+                              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleRecallAction(r.id, 'APPROVED')}>{t('transfers.approveBtn')}</Button>
+                              <Button size="sm" variant="outline" className="h-7 text-xs text-destructive hover:text-destructive" onClick={() => handleRecallAction(r.id, 'REJECTED')}>{t('transfers.rejectBtn')}</Button>
                             </div>
                           ) : '—'}
                         </TableCell>

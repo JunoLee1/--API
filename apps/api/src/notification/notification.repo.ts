@@ -1,5 +1,7 @@
 import { PrismaClient } from "../generated/client";
 
+type MsgFactory = (locale: string) => { title: string; body: string };
+
 export class NotificationRepository {
   constructor(private prisma: PrismaClient) {}
 
@@ -21,142 +23,182 @@ export class NotificationRepository {
     return this.prisma.notification.create({ data: data as any });
   }
 
-  createForStaff(type: string, title: string, body: string, entityId?: number) {
+  createForStaff(type: string, getMsg: MsgFactory, entityId?: number) {
     return this.prisma.$transaction(async (tx) => {
       const staffUsers = await tx.user.findMany({
         where: { role: { in: ["ADMIN", "FRONT_OFFICE"] } },
-        select: { id: true },
+        select: { id: true, language: true },
       });
       await tx.notification.createMany({
-        data: staffUsers.map((u) => ({ userId: u.id, type, title, body, entityId })) as any,
+        data: staffUsers.map((u) => {
+          const { title, body } = getMsg(u.language);
+          return { userId: u.id, type, title, body, entityId };
+        }) as any,
       });
     });
   }
 
-  createForGM(type: string, title: string, body: string, entityId?: number) {
+  createForGM(type: string, getMsg: MsgFactory, entityId?: number) {
     return this.prisma.$transaction(async (tx) => {
       const gmUsers = await tx.user.findMany({
         where: { role: "FRONT_OFFICE", frontOfficeRole: "GM" },
-        select: { id: true },
+        select: { id: true, language: true },
       });
       if (gmUsers.length === 0) return;
       await tx.notification.createMany({
-        data: gmUsers.map((u) => ({ userId: u.id, type, title, body, entityId })) as any,
+        data: gmUsers.map((u) => {
+          const { title, body } = getMsg(u.language);
+          return { userId: u.id, type, title, body, entityId };
+        }) as any,
       });
     });
   }
 
-  createForMedicalDirector(type: string, title: string, body: string, entityId?: number) {
+  createForMedicalDirector(type: string, getMsg: MsgFactory, entityId?: number) {
     return this.prisma.$transaction(async (tx) => {
       const directors = await tx.user.findMany({
         where: { role: "COACHING_STAFF", coachingRole: "MEDICAL_DIRECTOR" },
-        select: { id: true },
+        select: { id: true, language: true },
       });
       if (directors.length === 0) return;
       await tx.notification.createMany({
-        data: directors.map((u) => ({ userId: u.id, type, title, body, entityId })) as any,
+        data: directors.map((u) => {
+          const { title, body } = getMsg(u.language);
+          return { userId: u.id, type, title, body, entityId };
+        }) as any,
       });
     });
   }
 
-  createForAdmin(type: string, title: string, body: string, entityId?: number) {
+  createForAdmin(type: string, getMsg: MsgFactory, entityId?: number) {
     return this.prisma.$transaction(async (tx) => {
       const admins = await tx.user.findMany({
         where: { role: "ADMIN" },
-        select: { id: true },
+        select: { id: true, language: true },
       });
       if (admins.length === 0) return;
       await tx.notification.createMany({
-        data: admins.map((u) => ({ userId: u.id, type, title, body, entityId })) as any,
+        data: admins.map((u) => {
+          const { title, body } = getMsg(u.language);
+          return { userId: u.id, type, title, body, entityId };
+        }) as any,
       });
     });
   }
 
-  createForTD(type: string, title: string, body: string, entityId?: number) {
+  createForTD(type: string, getMsg: MsgFactory, entityId?: number) {
     return this.prisma.$transaction(async (tx) => {
       const tdUsers = await tx.user.findMany({
         where: { role: "FRONT_OFFICE", frontOfficeRole: "TD" },
-        select: { id: true },
+        select: { id: true, language: true },
       });
       if (tdUsers.length === 0) return;
       await tx.notification.createMany({
-        data: tdUsers.map((u) => ({ userId: u.id, type, title, body, entityId })) as any,
+        data: tdUsers.map((u) => {
+          const { title, body } = getMsg(u.language);
+          return { userId: u.id, type, title, body, entityId };
+        }) as any,
       });
     });
   }
 
-  createForHeadCoach(type: string, title: string, body: string, entityId?: number) {
+  createForHeadCoach(type: string, getMsg: MsgFactory, entityId?: number) {
     return this.prisma.$transaction(async (tx) => {
       const headCoaches = await tx.user.findMany({
         where: { role: "COACHING_STAFF", coachingRole: "HEAD_COACH" },
-        select: { id: true },
+        select: { id: true, language: true },
       });
       if (headCoaches.length === 0) return;
       await tx.notification.createMany({
-        data: headCoaches.map((u) => ({ userId: u.id, type, title, body, entityId })) as any,
+        data: headCoaches.map((u) => {
+          const { title, body } = getMsg(u.language);
+          return { userId: u.id, type, title, body, entityId };
+        }) as any,
       });
     });
   }
 
-  createForYouthHeadCoach(fromTeamId: number, type: string, title: string, body: string, entityId?: number) {
+  createForYouthHeadCoach(fromTeamId: number, type: string, getMsg: MsgFactory, entityId?: number) {
     return this.prisma.$transaction(async (tx) => {
       const coaches = await tx.user.findMany({
         where: { role: "COACHING_STAFF", coachingRole: "HEAD_COACH", teamId: fromTeamId },
-        select: { id: true },
+        select: { id: true, language: true },
       });
       if (coaches.length === 0) return;
       await tx.notification.createMany({
-        data: coaches.map((u) => ({ userId: u.id, type, title, body, entityId })) as any,
+        data: coaches.map((u) => {
+          const { title, body } = getMsg(u.language);
+          return { userId: u.id, type, title, body, entityId };
+        }) as any,
       });
     });
   }
 
-  createForMedicalStaff(type: string, title: string, body: string, entityId?: number) {
+  createForMedicalStaff(type: string, getMsg: MsgFactory, entityId?: number) {
     return this.prisma.$transaction(async (tx) => {
       const medics = await tx.user.findMany({
         where: { role: "COACHING_STAFF", coachingRole: "MEDICAL" },
-        select: { id: true },
+        select: { id: true, language: true },
       });
       if (medics.length === 0) return;
       await tx.notification.createMany({
-        data: medics.map((u) => ({ userId: u.id, type, title, body, entityId })) as any,
+        data: medics.map((u) => {
+          const { title, body } = getMsg(u.language);
+          return { userId: u.id, type, title, body, entityId };
+        }) as any,
       });
     });
   }
 
-  createForCoachingStaff(type: string, title: string, body: string, entityId?: number) {
+  createForCoachingStaff(type: string, getMsg: MsgFactory, entityId?: number) {
     return this.prisma.$transaction(async (tx) => {
       const coaches = await tx.user.findMany({
         where: { role: "COACHING_STAFF" },
-        select: { id: true },
+        select: { id: true, language: true },
       });
       if (coaches.length === 0) return;
       await tx.notification.createMany({
-        data: coaches.map((u) => ({ userId: u.id, type, title, body, entityId })) as any,
+        data: coaches.map((u) => {
+          const { title, body } = getMsg(u.language);
+          return { userId: u.id, type, title, body, entityId };
+        }) as any,
       });
     });
   }
 
-  createForPhysicalCoach(type: string, title: string, body: string, entityId?: number) {
+  createForPhysicalCoach(type: string, getMsg: MsgFactory, entityId?: number) {
     return this.prisma.$transaction(async (tx) => {
       const users = await tx.user.findMany({
         where: { role: "COACHING_STAFF", coachingRole: "PHYSICAL_COACH" },
-        select: { id: true },
+        select: { id: true, language: true },
       });
       if (users.length === 0) return;
       await tx.notification.createMany({
-        data: users.map((u) => ({ userId: u.id, type, title, body, entityId })) as any,
+        data: users.map((u) => {
+          const { title, body } = getMsg(u.language);
+          return { userId: u.id, type, title, body, entityId };
+        }) as any,
       });
     });
   }
 
-  createForUser(userId: number, type: string, title: string, body: string, entityId?: number) {
+  async createForUser(userId: number, type: string, getMsg: MsgFactory, entityId?: number) {
+    const userRecord = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { language: true },
+    });
+    const { title, body } = getMsg(userRecord?.language ?? 'ko');
     return this.prisma.notification.create({
       data: { userId, type, title, body, ...(entityId && { entityId }) } as any,
     });
   }
 
-  createForGuardian(guardianUserId: number, type: string, title: string, body: string, entityId?: number) {
+  async createForGuardian(guardianUserId: number, type: string, getMsg: MsgFactory, entityId?: number) {
+    const userRecord = await this.prisma.user.findUnique({
+      where: { id: guardianUserId },
+      select: { language: true },
+    });
+    const { title, body } = getMsg(userRecord?.language ?? 'ko');
     return this.prisma.notification.create({
       data: { userId: guardianUserId, type, title, body, ...(entityId && { entityId }) } as any,
     });

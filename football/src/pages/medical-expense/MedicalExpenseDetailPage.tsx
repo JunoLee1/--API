@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { medicalExpenseApi } from '@/services/medical-expense.service'
 import type { MedicalExpense } from '@/types/medical-expense'
 import {
-  COST_CATEGORY_LABEL,
-  PAYER_TYPE_LABEL,
-  EXPENSE_STATUS_LABEL,
   EXPENSE_STATUS_STYLE,
 } from '@/types/medical-expense'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
@@ -41,11 +39,12 @@ function RejectDialog({ open, onOpenChange, onConfirm, title }: {
   onConfirm: (reason: string) => Promise<void>
   title: string
 }) {
+  const { t } = useTranslation('medical')
   const [reason, setReason] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleConfirm = async () => {
-    if (!reason.trim()) { toast.error('반려 사유를 입력해주세요.'); return }
+    if (!reason.trim()) { toast.error(t('expenseDetail.rejectReasonRequired')); return }
     setLoading(true)
     try { await onConfirm(reason.trim()) } finally { setLoading(false) }
   }
@@ -55,18 +54,18 @@ function RejectDialog({ open, onOpenChange, onConfirm, title }: {
       <DialogContent className="max-w-sm">
         <DialogHeader><DialogTitle>{title}</DialogTitle></DialogHeader>
         <div className="space-y-1.5 py-2">
-          <Label>반려 사유 *</Label>
+          <Label>{t('expenseDetail.rejectReasonLabel')}</Label>
           <Textarea
-            placeholder="반려 사유를 입력해주세요."
+            placeholder={t('expenseDetail.rejectReasonPlaceholder')}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             rows={4}
           />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>취소</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>{t('expenseDetail.cancel')}</Button>
           <Button variant="destructive" onClick={handleConfirm} disabled={loading}>
-            {loading ? '처리 중...' : '반려'}
+            {loading ? t('expenseDetail.processing') : t('expenseDetail.reject')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -75,6 +74,7 @@ function RejectDialog({ open, onOpenChange, onConfirm, title }: {
 }
 
 export function MedicalExpenseDetailPage() {
+  const { t } = useTranslation('medical')
   const { id } = useParams<{ id: string }>()
   const { user } = useCurrentUser()
   const navigate = useNavigate()
@@ -92,7 +92,7 @@ export function MedicalExpenseDetailPage() {
     medicalExpenseApi
       .get(Number(id))
       .then(setExpense)
-      .catch(() => { toast.error('불러오지 못했습니다.'); navigate('/medical-expenses') })
+      .catch(() => { toast.error(t('expenseDetail.loadFailed')); navigate('/medical-expenses') })
       .finally(() => setLoading(false))
   }, [id, navigate])
 
@@ -102,7 +102,7 @@ export function MedicalExpenseDetailPage() {
       const updated = await fn()
       setExpense(updated)
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '처리에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('expenseDetail.actionFailed'))
     } finally {
       setActing(false)
     }
@@ -111,14 +111,14 @@ export function MedicalExpenseDetailPage() {
   const handleSubmit = () =>
     withActing(async () => {
       const r = await medicalExpenseApi.submit(expense!.id)
-      toast.success('상신됐습니다.')
+      toast.success(t('expenseDetail.submitted'))
       return r
     })
 
   const handleLeaderApprove = () =>
     withActing(async () => {
       const r = await medicalExpenseApi.leaderApprove(expense!.id)
-      toast.success('1차 승인됐습니다.')
+      toast.success(t('expenseDetail.leaderApproved'))
       return r
     })
 
@@ -126,13 +126,13 @@ export function MedicalExpenseDetailPage() {
     const updated = await medicalExpenseApi.leaderReject(expense!.id, reason)
     setExpense(updated)
     setRejectOpen(false)
-    toast.success('1차 반려됐습니다.')
+    toast.success(t('expenseDetail.leaderRejected'))
   }
 
   const handleApprove = () =>
     withActing(async () => {
       const r = await medicalExpenseApi.approve(expense!.id)
-      toast.success('최종 승인됐습니다.')
+      toast.success(t('expenseDetail.approved'))
       return r
     })
 
@@ -140,7 +140,7 @@ export function MedicalExpenseDetailPage() {
     const updated = await medicalExpenseApi.reject(expense!.id, reason)
     setExpense(updated)
     setRejectOpen(false)
-    toast.success('최종 반려됐습니다.')
+    toast.success(t('expenseDetail.rejected'))
   }
 
   if (loading) {
@@ -157,7 +157,7 @@ export function MedicalExpenseDetailPage() {
   const canSubmit = isAuthor && (expense.status === 'DRAFT' || expense.status === 'REJECTED')
   const canLeaderAct = isMedicalDirector && expense.status === 'SUBMITTED'
   const canAdminAct = isAdmin && expense.status === 'LEADER_APPROVED'
-  const rejectTitle = canLeaderAct ? '1차 반려' : '최종 반려'
+  const rejectTitle = canLeaderAct ? t('expenseDetail.leaderRejectTitle') : t('expenseDetail.finalRejectTitle')
   const onReject = canLeaderAct ? handleLeaderReject : handleReject
 
   return (
@@ -167,27 +167,27 @@ export function MedicalExpenseDetailPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-lg font-semibold tracking-tight">의료비 상세</h1>
+          <h1 className="text-lg font-semibold tracking-tight">{t('expenseDetail.title')}</h1>
           <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs mt-0.5 ${EXPENSE_STATUS_STYLE[expense.status]}`}>
-            {EXPENSE_STATUS_LABEL[expense.status]}
+            {t(`expense.status.${expense.status}`)}
           </span>
         </div>
         <div className="flex gap-2">
           {canEdit && (
             <Button size="sm" variant="outline" onClick={() => navigate(`/medical-expenses/${expense.id}/edit`)}>
-              <Pencil className="h-3.5 w-3.5 mr-1" />수정
+              <Pencil className="h-3.5 w-3.5 mr-1" />{t('expenseDetail.edit')}
             </Button>
           )}
           {canSubmit && (
-            <Button size="sm" onClick={handleSubmit} disabled={acting}>상신</Button>
+            <Button size="sm" onClick={handleSubmit} disabled={acting}>{t('expenseDetail.submit')}</Button>
           )}
           {(canLeaderAct || canAdminAct) && (
             <>
               <Button size="sm" variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={() => setRejectOpen(true)} disabled={acting}>
-                <X className="h-3.5 w-3.5 mr-1" />반려
+                <X className="h-3.5 w-3.5 mr-1" />{t('expenseDetail.reject')}
               </Button>
               <Button size="sm" onClick={canLeaderAct ? handleLeaderApprove : handleApprove} disabled={acting}>
-                <Check className="h-3.5 w-3.5 mr-1" />{canLeaderAct ? '1차 승인' : '최종 승인'}
+                <Check className="h-3.5 w-3.5 mr-1" />{canLeaderAct ? t('expenseDetail.leaderApprove') : t('expenseDetail.finalApprove')}
               </Button>
             </>
           )}
@@ -212,40 +212,40 @@ export function MedicalExpenseDetailPage() {
 
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-muted-foreground text-xs mb-0.5">영수증 날짜</p>
+              <p className="text-muted-foreground text-xs mb-0.5">{t('expenseDetail.receiptDate')}</p>
               <p className="font-medium">{new Date(expense.receiptDate).toLocaleDateString('ko-KR')}</p>
             </div>
             <div>
-              <p className="text-muted-foreground text-xs mb-0.5">비용 항목</p>
-              <p className="font-medium">{COST_CATEGORY_LABEL[expense.costCategory]}</p>
+              <p className="text-muted-foreground text-xs mb-0.5">{t('expenseDetail.category')}</p>
+              <p className="font-medium">{t(`expense.costCategory.${expense.costCategory}`)}</p>
             </div>
             <div>
-              <p className="text-muted-foreground text-xs mb-0.5">금액</p>
+              <p className="text-muted-foreground text-xs mb-0.5">{t('expenseDetail.amount')}</p>
               <p className="font-medium tabular-nums">{formatAmount(expense.totalAmount)}</p>
             </div>
             <div>
-              <p className="text-muted-foreground text-xs mb-0.5">납부 주체</p>
-              <p className="font-medium">{PAYER_TYPE_LABEL[expense.payerType]}</p>
+              <p className="text-muted-foreground text-xs mb-0.5">{t('expenseDetail.payer')}</p>
+              <p className="font-medium">{t(`expense.payerType.${expense.payerType}`)}</p>
             </div>
             <div>
-              <p className="text-muted-foreground text-xs mb-0.5">신청자</p>
+              <p className="text-muted-foreground text-xs mb-0.5">{t('expenseDetail.submitter')}</p>
               <p>{expense.submittedBy.nickname}</p>
             </div>
             {expense.submittedAt && (
               <div>
-                <p className="text-muted-foreground text-xs mb-0.5">상신일</p>
+                <p className="text-muted-foreground text-xs mb-0.5">{t('expenseDetail.submittedAt')}</p>
                 <p>{formatDateTime(expense.submittedAt)}</p>
               </div>
             )}
             {expense.leaderReviewedAt && expense.leaderReviewer && (
               <div>
-                <p className="text-muted-foreground text-xs mb-0.5">1차 결재일</p>
+                <p className="text-muted-foreground text-xs mb-0.5">{t('expenseDetail.leaderReviewedAt')}</p>
                 <p>{formatDateTime(expense.leaderReviewedAt)} ({expense.leaderReviewer.nickname})</p>
               </div>
             )}
             {expense.adminReviewedAt && expense.adminReviewer && (
               <div>
-                <p className="text-muted-foreground text-xs mb-0.5">최종 결재일</p>
+                <p className="text-muted-foreground text-xs mb-0.5">{t('expenseDetail.adminReviewedAt')}</p>
                 <p>{formatDateTime(expense.adminReviewedAt)} ({expense.adminReviewer.nickname})</p>
               </div>
             )}
@@ -253,28 +253,28 @@ export function MedicalExpenseDetailPage() {
 
           {expense.rejectionReason && (
             <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              <p className="font-medium mb-0.5">반려 사유</p>
+              <p className="font-medium mb-0.5">{t('expenseDetail.rejectionReasonLabel')}</p>
               <p className="whitespace-pre-wrap">{expense.rejectionReason}</p>
             </div>
           )}
 
           {expense.description && (
             <div>
-              <p className="text-muted-foreground text-xs mb-1.5">비고</p>
+              <p className="text-muted-foreground text-xs mb-1.5">{t('expenseDetail.notes')}</p>
               <div className="rounded border p-4 text-sm whitespace-pre-wrap">{expense.description}</div>
             </div>
           )}
 
           {expense.fileUrl && (
             <div>
-              <p className="text-muted-foreground text-xs mb-1.5">첨부 파일</p>
+              <p className="text-muted-foreground text-xs mb-1.5">{t('expenseDetail.attachment')}</p>
               <a
                 href={expense.fileUrl}
                 download={expense.fileName ?? true}
                 className="inline-flex items-center gap-2 rounded border px-3 py-2 text-sm hover:bg-muted transition-colors"
               >
                 <Download className="h-4 w-4" />
-                {expense.fileName ?? '첨부 파일'}
+                {expense.fileName ?? t('expenseDetail.attachmentDefault')}
               </a>
             </div>
           )}

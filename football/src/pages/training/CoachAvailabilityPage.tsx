@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { coachAvailabilityApi } from '@/services/coach-availability.service'
 import type { CoachAvailability } from '@/types/coach-availability'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
@@ -24,6 +25,7 @@ function formatDate(d: string) {
 }
 
 export function CoachAvailabilityPage() {
+  const { t } = useTranslation('training')
   const { user } = useCurrentUser()
   const [items, setItems] = useState<CoachAvailability[]>([])
   const [loading, setLoading] = useState(true)
@@ -39,7 +41,7 @@ export function CoachAvailabilityPage() {
     coachAvailabilityApi
       .list()
       .then(setItems)
-      .catch(() => toast.error('가용성 목록을 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('availabilityPage.loadFailed')))
       .finally(() => setLoading(false))
   }
 
@@ -47,7 +49,7 @@ export function CoachAvailabilityPage() {
 
   const handleCreate = async () => {
     if (!form.startDate || !form.endDate) {
-      toast.error('날짜를 모두 입력해주세요.')
+      toast.error(t('availabilityPage.createDialog.required'))
       return
     }
     if (!user) return
@@ -60,12 +62,12 @@ export function CoachAvailabilityPage() {
       }
       if (form.reason.trim()) payload.reason = form.reason.trim()
       await coachAvailabilityApi.create(payload)
-      toast.success('등록됐습니다.')
+      toast.success(t('availabilityPage.createDialog.saved'))
       setDialogOpen(false)
       setForm({ startDate: '', endDate: '', reason: '' })
       fetchItems()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : '등록에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('availabilityPage.createDialog.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -74,10 +76,10 @@ export function CoachAvailabilityPage() {
   const handleDelete = async (id: number) => {
     try {
       await coachAvailabilityApi.delete(id)
-      toast.success('삭제됐습니다.')
+      toast.success(t('availabilityPage.createDialog.deleted'))
       setItems((prev) => prev.filter((i) => i.id !== id))
     } catch {
-      toast.error('삭제에 실패했습니다.')
+      toast.error(t('availabilityPage.createDialog.deleteFailed'))
     }
   }
 
@@ -88,12 +90,12 @@ export function CoachAvailabilityPage() {
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">코치 가용성</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">훈련 불가 일정 관리</p>
+          <h1 className="text-lg font-semibold tracking-tight">{t('availabilityPage.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{t('availabilityPage.description')}</p>
         </div>
         {canCreate && (
           <Button size="sm" onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />등록
+            <Plus className="h-4 w-4 mr-1" />{t('availabilityPage.addBlock')}
           </Button>
         )}
       </div>
@@ -107,17 +109,17 @@ export function CoachAvailabilityPage() {
           </div>
         ) : items.length === 0 ? (
           <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-            등록된 가용성 블록이 없습니다.
+            {t('availabilityPage.noBlocks')}
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead>코치</TableHead>
-                <TableHead>역할</TableHead>
-                <TableHead>시작일</TableHead>
-                <TableHead>종료일</TableHead>
-                <TableHead>사유</TableHead>
+                <TableHead>{t('availabilityPage.coachCol')}</TableHead>
+                <TableHead>{t('availabilityPage.roleCol')}</TableHead>
+                <TableHead>{t('availabilityPage.startDateCol')}</TableHead>
+                <TableHead>{t('availabilityPage.endDateCol')}</TableHead>
+                <TableHead>{t('availabilityPage.reasonCol')}</TableHead>
                 <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
@@ -162,10 +164,10 @@ export function CoachAvailabilityPage() {
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>가용성 블록 등록</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t('availabilityPage.createDialog.title')}</DialogTitle></DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
-              <Label>시작일 *</Label>
+              <Label>{t('availabilityPage.createDialog.startDateLabel')} *</Label>
               <Input
                 type="date"
                 value={form.startDate}
@@ -173,7 +175,7 @@ export function CoachAvailabilityPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label>종료일 *</Label>
+              <Label>{t('availabilityPage.createDialog.endDateLabel')} *</Label>
               <Input
                 type="date"
                 value={form.endDate}
@@ -181,10 +183,10 @@ export function CoachAvailabilityPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label>사유</Label>
+              <Label>{t('availabilityPage.createDialog.reasonLabel')}</Label>
               <Textarea
                 rows={2}
-                placeholder="사유 (선택)"
+                placeholder={t('availabilityPage.createDialog.reasonPlaceholder')}
                 value={form.reason}
                 onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))}
               />
@@ -192,10 +194,10 @@ export function CoachAvailabilityPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={saving}>
-              취소
+              {t('availabilityPage.createDialog.cancel')}
             </Button>
             <Button onClick={() => void handleCreate()} disabled={saving}>
-              {saving ? '저장 중...' : '등록'}
+              {saving ? t('availabilityPage.createDialog.saving') : t('availabilityPage.createDialog.submit')}
             </Button>
           </DialogFooter>
         </DialogContent>

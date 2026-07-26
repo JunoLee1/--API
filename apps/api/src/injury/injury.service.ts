@@ -40,7 +40,7 @@ export class InjuryService {
       const playerName = player?.playerName ?? "선수";
       const title = "부상 발생";
       const body = `${playerName} 선수에게 부상이 발생했습니다. 부상 기록을 확인하세요.`;
-      await this.notifRepo.createForCoachingStaff("INJURY_OCCURRED", title, body, result.id);
+      await this.notifRepo.createForCoachingStaff("INJURY_OCCURRED", () => ({ title, body }), result.id);
       getIO().to("staff-room").emit("notification:injury", {
         type: "INJURY_OCCURRED", title, body, createdAt: new Date().toISOString(),
       });
@@ -61,14 +61,14 @@ export class InjuryService {
       if (dto.status === "READY_TO_RETURN") {
         const title = "선수 복귀 준비 완료";
         const body = `${playerName} 선수가 복귀 준비 단계에 들어섰습니다. 최종 복귀 여부를 검토하세요.`;
-        await this.notifRepo.createForCoachingStaff("INJURY_READY_TO_RETURN", title, body, id);
+        await this.notifRepo.createForCoachingStaff("INJURY_READY_TO_RETURN", () => ({ title, body }), id);
         getIO().to("staff-room").emit("notification:injury", {
           type: "INJURY_READY_TO_RETURN", title, body, createdAt: new Date().toISOString(),
         });
       } else if (dto.status === "RETURNED") {
         const title = "선수 부상 복귀";
         const body = `${playerName} 선수가 부상에서 복귀하여 훈련에 합류했습니다.`;
-        await this.notifRepo.createForCoachingStaff("INJURY_RETURNED", title, body, id);
+        await this.notifRepo.createForCoachingStaff("INJURY_RETURNED", () => ({ title, body }), id);
         getIO().to("staff-room").emit("notification:injury", {
           type: "INJURY_RETURNED", title, body, createdAt: new Date().toISOString(),
         });
@@ -93,7 +93,7 @@ export class InjuryService {
     );
     const title = "스쿼드 가용 인원 부족";
     const body = `가용 인원이 부족한 포지션이 있습니다 — ${lines.join(", ")}. 영입 또는 포지션 조정을 검토하세요.`;
-    await this.notifRepo.createForHeadCoach("SQUAD_DEPTH_LOW", title, body, entityId);
+    await this.notifRepo.createForHeadCoach("SQUAD_DEPTH_LOW", () => ({ title, body }), entityId);
     getIO().to("staff-room").emit("notification:squad-depth", {
       type: "SQUAD_DEPTH_LOW", title, body, createdAt: new Date().toISOString(),
     });
@@ -169,8 +169,10 @@ export class InjuryService {
       try {
         await this.notifRepo.createForMedicalDirector(
           "EXTERNAL_REPORT_CREATED",
-          "외부 의무보고서 생성됨",
-          `부상 #${injuryId}에 대해 외부 의무보고서 ${targets.length}건이 생성됐습니다. 제출 기한을 확인하세요.`,
+          () => ({
+            title: "외부 의무보고서 생성됨",
+            body: `부상 #${injuryId}에 대해 외부 의무보고서 ${targets.length}건이 생성됐습니다. 제출 기한을 확인하세요.`,
+          }),
           injuryId,
         );
       } catch {

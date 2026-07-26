@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface PaginationProps {
   page: number
@@ -10,6 +11,7 @@ interface PaginationProps {
 }
 
 export function Pagination({ page, totalPages, totalItems, pageSize, onPageChange }: PaginationProps) {
+  const { t } = useTranslation('common')
   if (totalPages <= 1) return null
   const from = (page - 1) * pageSize + 1
   const to = Math.min(page * pageSize, totalItems)
@@ -17,7 +19,7 @@ export function Pagination({ page, totalPages, totalItems, pageSize, onPageChang
   return (
     <div className="flex items-center justify-between px-6 py-3 border-t shrink-0 bg-background">
       <span className="text-xs text-muted-foreground tabular-nums">
-        {from}–{to} / {totalItems}건
+        {t('pagination.showing', { from, to, total: totalItems })}
       </span>
       <div className="flex items-center gap-1">
         <Button

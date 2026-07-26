@@ -120,21 +120,21 @@ export const POSITION_ABBR: Record<Position, string> = {
 }
 
 export const POSITION_LABEL: Record<Position, string> = {
-  GOALKEEPER: '골키퍼',
-  STRIKER: '공격수',
-  SHADOW_STRIKER: '쉐도우 스트라이커',
-  WINGER: '윙어',
-  CENTRAL_ATTACK_MIDFIELDER: '중앙 공격형 MF',
-  RIGHT_ATTACK_MIDFIELDER: '우측 공격형 MF',
-  LEFT_ATTACK_MIDFIELDER: '좌측 공격형 MF',
-  CENTRAL_DEFENSIVE_MIDFIELDER: '중앙 수비형 MF',
-  LEFT_DEFENSIVE_MIDFIELDER: '좌측 수비형 MF',
-  RIGHT_DEFENSIVE_MIDFIELDER: '우측 수비형 MF',
-  CENTER_BACK: '센터백',
-  LEFT_WING_BACK: '좌측 윙백',
-  LEFT_FULL_BACK: '좌측 풀백',
-  RIGHT_WING_BACK: '우측 윙백',
-  RIGHT_FULL_BACK: '우측 풀백',
+  GOALKEEPER: 'Goalkeeper',
+  STRIKER: 'Striker',
+  SHADOW_STRIKER: 'Shadow Striker',
+  WINGER: 'Winger',
+  CENTRAL_ATTACK_MIDFIELDER: 'CAM',
+  RIGHT_ATTACK_MIDFIELDER: 'RAM',
+  LEFT_ATTACK_MIDFIELDER: 'LAM',
+  CENTRAL_DEFENSIVE_MIDFIELDER: 'CDM',
+  LEFT_DEFENSIVE_MIDFIELDER: 'LDM',
+  RIGHT_DEFENSIVE_MIDFIELDER: 'RDM',
+  CENTER_BACK: 'Center Back',
+  LEFT_WING_BACK: 'LWB',
+  LEFT_FULL_BACK: 'LB',
+  RIGHT_WING_BACK: 'RWB',
+  RIGHT_FULL_BACK: 'RB',
 }
 
 export type PositionZone = 'GK' | 'DEF' | 'MID' | 'FWD'
@@ -158,17 +158,17 @@ export const POSITION_ZONE: Record<Position, PositionZone> = {
 }
 
 export const LEVEL_LABEL: Record<PlayerLevel, string> = {
-  YOUTH: '유스',
-  ROOKIE: '루키',
-  SENIOR: '시니어',
-  VETERAN: '베테랑',
+  YOUTH: 'Youth',
+  ROOKIE: 'Rookie',
+  SENIOR: 'Senior',
+  VETERAN: 'Veteran',
 }
 
 export const STATUS_LABEL: Record<PlayerStatus, string> = {
-  ACTIVE: '활성',
-  ON_LOAN: '임대 중',
-  RELEASED: '방출',
-  RETIRED: '은퇴',
+  ACTIVE: 'Active',
+  ON_LOAN: 'On Loan',
+  RELEASED: 'Released',
+  RETIRED: 'Retired',
 }
 
 export interface JerseyNumber {

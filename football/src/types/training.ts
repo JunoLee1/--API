@@ -51,13 +51,13 @@ export interface TrainingSessionDetail extends TrainingSession {
 }
 
 export const SESSION_TYPE_LABEL: Record<SessionType, string> = {
-  INDIVIDUAL_SKILL: '개인 기술',
-  TACTICAL_DEFENSIVE: '수비 전술',
-  TACTICAL_ATTACKING: '공격 전술',
-  TACTICAL_FULL_TEAM: '팀 전술',
-  PHYSICAL: '피지컬',
-  PSYCHOLOGICAL_SOCIAL: '심리·사회',
-  SET_PIECE: '세트피스',
+  INDIVIDUAL_SKILL: 'Individual Skill',
+  TACTICAL_DEFENSIVE: 'Defensive Tactics',
+  TACTICAL_ATTACKING: 'Attacking Tactics',
+  TACTICAL_FULL_TEAM: 'Full Team Tactics',
+  PHYSICAL: 'Physical',
+  PSYCHOLOGICAL_SOCIAL: 'Psychological / Social',
+  SET_PIECE: 'Set Piece',
 }
 
 export const SESSION_TYPE_STYLE: Record<SessionType, string> = {
@@ -71,17 +71,17 @@ export const SESSION_TYPE_STYLE: Record<SessionType, string> = {
 }
 
 export const PHASE_LABEL: Record<ContentPhase, string> = {
-  WARMUP: '워밍업',
-  DRILL: '드릴',
-  TACTICAL: '전술',
-  GAME: '게임',
+  WARMUP: 'Warm-Up',
+  DRILL: 'Drill',
+  TACTICAL: 'Tactical',
+  GAME: 'Game',
 }
 
 export const ATTENDANCE_LABEL: Record<AttendanceStatus, string> = {
-  PRESENT: '출석',
-  ABSENT_UNAUTHORIZED: '무단 결석',
-  LATE_UNAUTHORIZED: '무단 지각',
-  ABSENT_AUTHORIZED: '공결',
+  PRESENT: 'Present',
+  ABSENT_UNAUTHORIZED: 'Unauth. Absence',
+  LATE_UNAUTHORIZED: 'Unauth. Late',
+  ABSENT_AUTHORIZED: 'Auth. Absence',
 }
 
 export const ATTENDANCE_STYLE: Record<AttendanceStatus, string> = {

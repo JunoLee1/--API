@@ -39,8 +39,10 @@ export class TrainingService {
       void this.notifRepo
         .createForHeadCoach(
           "TRAINING_SESSION_PENDING",
-          "훈련 세션 승인 요청",
-          `${new Date(dto.date).toLocaleDateString("ko-KR")} 훈련 세션(${dto.sessionType})이 등록되어 승인이 필요합니다.`,
+          () => ({
+            title: "훈련 세션 승인 요청",
+            body: `${new Date(dto.date).toLocaleDateString("ko-KR")} 훈련 세션(${dto.sessionType})이 등록되어 승인이 필요합니다.`,
+          }),
           session.id,
         )
         .catch(console.error);
@@ -105,14 +107,17 @@ export class TrainingService {
     if (!session) throw new AppError(404, "SESSION_NOT_FOUND");
     const updated = await this.repo.updateSession(id, data);
     if (session.team?.type === "YOUTH" && this.notifRepo) {
+      const teamName = session.team.name;
       const guardianIds = await this.repo.findGuardiansByTeam(session.teamId!);
       for (const guardianId of guardianIds) {
         void this.notifRepo
           .createForGuardian(
             guardianId,
             "YOUTH_SESSION_CHANGED",
-            `${session.team.name} 훈련 일정 변경`,
-            `훈련 일정이 변경됐습니다. 앱에서 확인해주세요.`,
+            () => ({
+              title: `${teamName} 훈련 일정 변경`,
+              body: `훈련 일정이 변경됐습니다. 앱에서 확인해주세요.`,
+            }),
             session.id,
           )
           .catch(console.error);
@@ -126,14 +131,17 @@ export class TrainingService {
     if (!session) throw new AppError(404, "SESSION_NOT_FOUND");
     const result = await this.repo.cancelSession(id);
     if (session.team?.type === "YOUTH" && this.notifRepo) {
+      const teamName = session.team.name;
       const guardianIds = await this.repo.findGuardiansByTeam(session.teamId!);
       for (const guardianId of guardianIds) {
         void this.notifRepo
           .createForGuardian(
             guardianId,
             "YOUTH_SESSION_CHANGED",
-            `${session.team.name} 훈련 취소`,
-            `훈련이 취소됐습니다.`,
+            () => ({
+              title: `${teamName} 훈련 취소`,
+              body: `훈련이 취소됐습니다.`,
+            }),
             session.id,
           )
           .catch(console.error);
@@ -142,7 +150,7 @@ export class TrainingService {
     return result;
   }
 
-  getResults(filters: { from?: string; to?: string; sessionType?: string; playerId?: string }) {
+  getResults(filters: { from?: string; to?: string; sessionType?: string; playerId?: string; nullOnly?: boolean }) {
     return this.repo.findResults(filters)
   }
 

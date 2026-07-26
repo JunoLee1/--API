@@ -73,25 +73,25 @@ export interface UpdateExpenseDto {
 }
 
 export const COST_CATEGORY_LABEL: Record<ExpenseCostCategory, string> = {
-  OUTPATIENT: '외래',
-  EXAMINATION: '검사',
-  SURGERY: '수술',
-  REHABILITATION: '재활',
-  MEDICATION: '약제',
+  OUTPATIENT: 'Outpatient',
+  EXAMINATION: 'Examination',
+  SURGERY: 'Surgery',
+  REHABILITATION: 'Rehabilitation',
+  MEDICATION: 'Medication',
 }
 
 export const PAYER_TYPE_LABEL: Record<ExpensePayerType, string> = {
-  CLUB: '구단',
-  ASSOCIATION: '협회',
-  INDIVIDUAL: '개인',
+  CLUB: 'Club',
+  ASSOCIATION: 'Association',
+  INDIVIDUAL: 'Individual',
 }
 
 export const EXPENSE_STATUS_LABEL: Record<MedicalExpenseStatus, string> = {
-  DRAFT: '초안',
-  SUBMITTED: '상신됨',
-  LEADER_APPROVED: '1차승인',
-  APPROVED: '최종승인',
-  REJECTED: '반려',
+  DRAFT: 'Draft',
+  SUBMITTED: 'Submitted',
+  LEADER_APPROVED: '1st Approved',
+  APPROVED: 'Approved',
+  REJECTED: 'Rejected',
 }
 
 export const EXPENSE_STATUS_STYLE: Record<MedicalExpenseStatus, string> = {

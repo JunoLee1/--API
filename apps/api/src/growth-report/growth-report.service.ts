@@ -45,8 +45,10 @@ export class GrowthReportService {
         .createForGuardian(
           ev.player.guardianId,
           "GROWTH_REPORT_PUBLISHED",
-          "성장 보고서 발행",
-          `${ev.player.playerName} 선수의 ${ev.year}년 ${ev.month}월 성장 보고서가 발행됐습니다.`,
+          () => ({
+            title: "성장 보고서 발행",
+            body: `${ev.player.playerName} 선수의 ${ev.year}년 ${ev.month}월 성장 보고서가 발행됐습니다.`,
+          }),
           id,
         )
         .catch(console.error);

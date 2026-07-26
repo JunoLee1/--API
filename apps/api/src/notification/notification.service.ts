@@ -18,7 +18,7 @@ export class NotificationService {
   async notifyProspectSigned(playerName: string) {
     const title = "선수 영입 완료";
     const body = `${playerName} 선수의 계약이 체결되어 선수단에 합류했습니다.`;
-    await this.repo.createForStaff("PLAYER_CONTRACT_SIGNED", title, body);
+    await this.repo.createForStaff("PLAYER_CONTRACT_SIGNED", () => ({ title, body }));
     getIO().to("staff-room").emit("notification:player-contract", {
       type: "PLAYER_CONTRACT_SIGNED",
       title,
@@ -30,21 +30,21 @@ export class NotificationService {
   async notifyCoachShortlisted(coachName: string, coachId: number) {
     const title = "코치 후보 숏리스트 등록";
     const body = `${coachName} 코치가 숏리스트에 추가됐습니다. 검토 바랍니다.`;
-    await this.repo.createForTD("COACH_SHORTLISTED", title, body, coachId);
+    await this.repo.createForTD("COACH_SHORTLISTED", () => ({ title, body }), coachId);
     getIO().to("staff-room").emit("notification:coach", { type: "COACH_SHORTLISTED", title, body, createdAt: new Date().toISOString() });
   }
 
   async notifyCoachApprovalPending(coachName: string, coachId: number) {
     const title = "코치 채용 승인 요청";
     const body = `${coachName} 코치 채용 건에 GM 최종 승인이 필요합니다.`;
-    await this.repo.createForGM("COACH_APPROVAL_PENDING", title, body, coachId);
+    await this.repo.createForGM("COACH_APPROVAL_PENDING", () => ({ title, body }), coachId);
     getIO().to("staff-room").emit("notification:coach", { type: "COACH_APPROVAL_PENDING", title, body, createdAt: new Date().toISOString() });
   }
 
   async notifyCoachContracted(coachName: string, coachId: number) {
     const title = "코치 채용 완료 — 계정 생성 필요";
     const body = `${coachName} 코치 계약이 확정됐습니다. ADMIN이 User 계정을 생성하고 초대해주세요.`;
-    await this.repo.createForAdmin("COACH_CONTRACTED", title, body, coachId);
+    await this.repo.createForAdmin("COACH_CONTRACTED", () => ({ title, body }), coachId);
     getIO().to("staff-room").emit("notification:coach", { type: "COACH_CONTRACTED", title, body, createdAt: new Date().toISOString() });
   }
 
@@ -57,7 +57,7 @@ export class NotificationService {
   async notifyAttendancePenalty(playerName: string, effectiveAbsences: number) {
     const title = "훈련 출결 페널티 발생";
     const body = `${playerName} 선수의 누적 무단 결석이 ${effectiveAbsences}회에 도달했습니다.`;
-    await this.repo.createForHeadCoach("ATTENDANCE_PENALTY", title, body);
+    await this.repo.createForHeadCoach("ATTENDANCE_PENALTY", () => ({ title, body }));
     getIO().to("staff-room").emit("notification:attendance", {
       type: "ATTENDANCE_PENALTY", title, body, createdAt: new Date().toISOString(),
     });
@@ -75,7 +75,7 @@ export class NotificationService {
     };
     const title = `등번호 ${number}번 선택 불가`;
     const body = `요청하신 ${number}번은 ${reasonText[reason]}. 다른 번호를 선택해 주세요.`;
-    await this.repo.createForUser(playerUserId, "JERSEY_NUMBER_CONFLICT", title, body);
+    await this.repo.createForUser(playerUserId, "JERSEY_NUMBER_CONFLICT", () => ({ title, body }));
   }
 
   async notifyAttendanceUnauthorized(
@@ -89,13 +89,13 @@ export class NotificationService {
     const dateStr = date.toLocaleDateString("ko-KR");
     const title = `${typeText} 기록 안내`;
     const body = `${dateStr} ${typeText}이 기록됐습니다. 현재 누적 무단 결근 환산 ${effectiveAbsences}회 (무단 지각 ${lateCount}회 포함).`;
-    await this.repo.createForUser(playerUserId, "ATTENDANCE_UNAUTHORIZED", title, body);
+    await this.repo.createForUser(playerUserId, "ATTENDANCE_UNAUTHORIZED", () => ({ title, body }));
   }
 
   async notifyAttendancePenaltyPlayer(playerUserId: number, effectiveAbsences: number) {
     const title = "출결 페널티 경고";
     const body = `무단 결근 누적 환산 ${effectiveAbsences}회로 규정에 따른 페널티(벌금, 출전 정지 등)가 부여될 수 있습니다. 코치진에게 문의하세요.`;
-    await this.repo.createForUser(playerUserId, "ATTENDANCE_PENALTY_PLAYER", title, body);
+    await this.repo.createForUser(playerUserId, "ATTENDANCE_PENALTY_PLAYER", () => ({ title, body }));
   }
 
   async notifyMatchDayReminder(
@@ -113,7 +113,7 @@ export class NotificationService {
     });
     const title = "내일 경기 알림";
     const body = `${dateStr} ${timeStr} | ${matchInfo.homeTeamName} vs ${matchInfo.awayTeamName}${matchInfo.venue ? ` @ ${matchInfo.venue}` : ""}. 경기 준비 바랍니다.`;
-    await this.repo.createForUser(playerUserId, "MATCH_DAY_REMINDER", title, body);
+    await this.repo.createForUser(playerUserId, "MATCH_DAY_REMINDER", () => ({ title, body }));
   }
 
   async notifyLineupConfirmed(
@@ -125,7 +125,7 @@ export class NotificationService {
     const role = isStarter ? "선발" : "후보";
     const title = "라인업 확정";
     const body = `${matchInfo.homeTeamName} vs ${matchInfo.awayTeamName} 경기 ${role}로 확정되었습니다.`;
-    await this.repo.createForUser(playerUserId, "LINEUP_CONFIRMED", title, body, matchId);
+    await this.repo.createForUser(playerUserId, "LINEUP_CONFIRMED", () => ({ title, body }), matchId);
   }
 
   async getPartnerAlerts() {

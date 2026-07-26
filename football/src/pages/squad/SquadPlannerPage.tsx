@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { playerApi } from '@/services/player.service'
 import { injuryApi } from '@/services/injury.service'
 import { tacticalApi } from '@/services/tactical.service'
@@ -24,9 +25,6 @@ import { getCandidates, buildInitialPlacement } from '@/components/squad/squad-u
 type ViewMode = 'formation' | 'grid'
 
 const ZONE_MIN: Record<PositionZone, number> = { GK: 2, DEF: 4, MID: 3, FWD: 2 }
-const ZONE_LABEL_KR: Record<PositionZone, string> = {
-  GK: '골키퍼', DEF: '수비', MID: '미드필더', FWD: '공격',
-}
 
 interface ActiveInjury {
   playerId: string
@@ -34,6 +32,7 @@ interface ActiveInjury {
 }
 
 export function SquadPlannerPage() {
+  const { t } = useTranslation('squad')
   const [allPlayers, setAllPlayers] = useState<Player[]>([])
   const [activeInjuries, setActiveInjuries] = useState<ActiveInjury[]>([])
   const [formation, setFormation] = useState<SupportedFormation>('4-3-3')
@@ -74,7 +73,7 @@ export function SquadPlannerPage() {
         const supported = SUPPORTED_FORMATIONS.find((f) => f === lastFormation)
         if (supported) setFormation(supported)
       })
-      .catch(() => toast.error('데이터를 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('planner.loadFailed')))
       .finally(() => setLoading(false))
   }, [])
 
@@ -140,11 +139,11 @@ export function SquadPlannerPage() {
       {/* 헤더 */}
       <div className="border-b px-6 py-3 flex items-center justify-between gap-4 shrink-0">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">팀 빌더</h1>
+          <h1 className="text-lg font-semibold tracking-tight">{t('planner.title')}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            가용 {availablePlayers.length}명 &nbsp;·&nbsp; 부상 {injuredIds.size}명
+            {t('planner.available', { count: availablePlayers.length })} &nbsp;·&nbsp; {t('planner.injured', { count: injuredIds.size })}
             {voidCount > 0 && (
-              <span className="ml-2 text-red-400 font-medium">빈 슬롯 {voidCount}개</span>
+              <span className="ml-2 text-red-400 font-medium">{t('planner.emptySlots', { count: voidCount })}</span>
             )}
           </p>
           {squadWarnings.length > 0 && (
@@ -155,7 +154,7 @@ export function SquadPlannerPage() {
                   className="inline-flex items-center gap-1 rounded border border-red-300 bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-400"
                 >
                   <AlertTriangle className="size-3 shrink-0" />
-                  {ZONE_LABEL_KR[zone]} 가용 {count}명 (최소 {min}명)
+                  {t('planner.zoneWarning', { zone: t(`zone.${zone}`), count, min })}
                 </span>
               ))}
             </div>
@@ -182,7 +181,7 @@ export function SquadPlannerPage() {
                   : 'text-muted-foreground hover:bg-accent'
               }`}
             >
-              포메이션
+              {t('planner.formation')}
             </button>
             <button
               type="button"
@@ -193,7 +192,7 @@ export function SquadPlannerPage() {
                   : 'text-muted-foreground hover:bg-accent'
               }`}
             >
-              스페인 그리드
+              {t('planner.spanishGrid')}
             </button>
           </div>
         </div>

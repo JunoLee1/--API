@@ -1,16 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { injuryApi } from '@/services/injury.service'
 import type {
   InjuryDetail, InjuryReport, RehabStage, RiskLevel, SecurityLevel,
   InjuryAssessment, ExternalReport, ExternalReportStatus,
 } from '@/types/injury'
 import {
-  INJURY_STATUS_LABEL, INJURY_STATUS_STYLE,
-  CAUSE_LABEL, BODY_PART_LABEL,
-  REHAB_STAGE_LABEL, RISK_LEVEL_LABEL, RISK_LEVEL_STYLE, SECURITY_LEVEL_LABEL,
-  EXTERNAL_REPORT_TARGET_LABEL, EXTERNAL_REPORT_STATUS_LABEL, EXTERNAL_REPORT_STATUS_STYLE,
+  INJURY_STATUS_STYLE,
+  RISK_LEVEL_STYLE, EXTERNAL_REPORT_STATUS_STYLE,
   type BodyPart,
 } from '@/types/injury'
 import { AssessmentForm } from '@/components/injury/AssessmentForm'
@@ -35,6 +34,7 @@ const STATUS_STEPS: InjuryDetail['status'][] = [
 ]
 
 function StatusTimeline({ current }: { current: InjuryDetail['status'] }) {
+  const { t } = useTranslation('medical')
   const currentIdx = STATUS_STEPS.indexOf(current)
   return (
     <div className="flex items-center gap-0 w-full">
@@ -52,7 +52,7 @@ function StatusTimeline({ current }: { current: InjuryDetail['status'] }) {
                 {done ? '✓' : idx + 1}
               </div>
               <span className={`text-[10px] mt-1 text-center whitespace-nowrap ${active ? 'font-semibold text-primary' : 'text-muted-foreground'}`}>
-                {INJURY_STATUS_LABEL[step]}
+                {t(`injuries.status.${step}`)}
               </span>
             </div>
             {idx < STATUS_STEPS.length - 1 && (
@@ -66,21 +66,22 @@ function StatusTimeline({ current }: { current: InjuryDetail['status'] }) {
 }
 
 function ReturnChecklist({ assessment }: { assessment: InjuryAssessment }) {
+  const { t } = useTranslation('medical')
   const avgFunctional = (assessment.strengthScore + assessment.sprintScore + assessment.jumpScore) / 3
   const criteria: { label: string; met: boolean }[] = [
-    { label: '통증 정상화 (통증 단계 ≤ 2)', met: assessment.painLevel <= 2 },
-    { label: '부종 해소', met: !assessment.hasSwelling },
-    { label: 'ROM 80% 이상 회복', met: assessment.romScore >= 80 },
-    { label: '근력·기능 80% 이상 회복', met: avgFunctional >= 80 },
-    { label: '심리적 준비 (불안도 ≤ 30)', met: assessment.psychScore <= 30 },
+    { label: t('returnReadiness.painNormal'), met: assessment.painLevel <= 2 },
+    { label: t('returnReadiness.swellingGone'), met: !assessment.hasSwelling },
+    { label: t('returnReadiness.romRecovered'), met: assessment.romScore >= 80 },
+    { label: t('returnReadiness.strengthRecovered'), met: avgFunctional >= 80 },
+    { label: t('returnReadiness.psychReady'), met: assessment.psychScore <= 30 },
   ]
   const metCount = criteria.filter((c) => c.met).length
 
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-sm font-medium">복귀 준비도</span>
-        <span className="text-xs text-muted-foreground">{metCount}/{criteria.length} 충족</span>
+        <span className="text-sm font-medium">{t('returnReadiness.title')}</span>
+        <span className="text-xs text-muted-foreground">{t('returnReadiness.met', { count: metCount, total: criteria.length })}</span>
       </div>
       {criteria.map((c) => (
         <div key={c.label} className="flex items-center gap-2">
@@ -107,6 +108,7 @@ function ExternalReportRow({
   isMedical: boolean
   onUpdated: (updated: ExternalReport) => void
 }) {
+  const { t } = useTranslation('medical')
   const [editing, setEditing] = useState(false)
   const [newStatus, setNewStatus] = useState<ExternalReportStatus>(report.status)
   const [note, setNote] = useState(report.submittedNote ?? '')
@@ -119,7 +121,7 @@ function ExternalReportRow({
       onUpdated(updated)
       setEditing(false)
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '상태 변경에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('detail.extReportStatusFailed'))
     } finally {
       setSaving(false)
     }
@@ -129,26 +131,26 @@ function ExternalReportRow({
     <div className="py-2 border-b last:border-0 space-y-2">
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
-          <span className="text-sm font-medium">{EXTERNAL_REPORT_TARGET_LABEL[report.target]}</span>
+          <span className="text-sm font-medium">{t(`externalTarget.${report.target}`)}</span>
           {report.dueDate && (
             <p className="text-xs text-muted-foreground">
-              마감: {new Date(report.dueDate).toLocaleDateString('ko-KR')}
+              {t('detail.extDue', { date: new Date(report.dueDate).toLocaleDateString('ko-KR') })}
             </p>
           )}
           {report.submittedAt && (
             <p className="text-xs text-muted-foreground">
-              제출: {new Date(report.submittedAt).toLocaleDateString('ko-KR')}
+              {t('detail.extSubmitted', { date: new Date(report.submittedAt).toLocaleDateString('ko-KR') })}
               {report.submittedNote && ` · ${report.submittedNote}`}
             </p>
           )}
         </div>
         <div className="flex items-center gap-2">
           <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs ${EXTERNAL_REPORT_STATUS_STYLE[report.status]}`}>
-            {EXTERNAL_REPORT_STATUS_LABEL[report.status]}
+            {t(`externalStatus.${report.status}`)}
           </span>
           {isMedical && report.status !== 'COMPLETED' && !editing && (
             <Button size="sm" variant="outline" onClick={() => { setNewStatus(report.status); setNote(report.submittedNote ?? ''); setEditing(true) }}>
-              변경
+              {t('detail.extStatusChange')}
             </Button>
           )}
         </div>
@@ -157,16 +159,16 @@ function ExternalReportRow({
         <div className="space-y-2 pt-1">
           <Select value={newStatus} onValueChange={(v) => setNewStatus(v as ExternalReportStatus)}>
             <SelectTrigger className="h-8 text-xs">
-              <span>{EXTERNAL_REPORT_STATUS_LABEL[newStatus]}</span>
+              <span>{t(`externalStatus.${newStatus}`)}</span>
             </SelectTrigger>
             <SelectContent>
               {ALL_EXTERNAL_STATUSES.map((s) => (
-                <SelectItem key={s} value={s}>{EXTERNAL_REPORT_STATUS_LABEL[s]}</SelectItem>
+                <SelectItem key={s} value={s}>{t(`externalStatus.${s}`)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Textarea
-            placeholder="비고 (선택)"
+            placeholder={t('detail.extNotePlaceholder')}
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={2}
@@ -174,10 +176,10 @@ function ExternalReportRow({
           />
           <div className="flex gap-2">
             <Button size="sm" onClick={handleSave} disabled={saving}>
-              {saving ? '저장 중...' : '저장'}
+              {saving ? t('detail.extSaving') : t('detail.extSave')}
             </Button>
             <Button size="sm" variant="outline" onClick={() => setEditing(false)} disabled={saving}>
-              취소
+              {t('detail.extCancel')}
             </Button>
           </div>
         </div>
@@ -187,6 +189,7 @@ function ExternalReportRow({
 }
 
 export function InjuryDetailPage() {
+  const { t } = useTranslation('medical')
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user } = useCurrentUser()
@@ -236,7 +239,7 @@ export function InjuryDetailPage() {
         setAssessment(assess)
         setExternalReports(reports)
       })
-      .catch(() => { toast.error('불러오지 못했습니다.'); navigate('/injuries') })
+      .catch(() => { toast.error(t('detail.loadFailed')); navigate('/injuries') })
       .finally(() => setLoading(false))
   }, [id, navigate])
 
@@ -255,9 +258,9 @@ export function InjuryDetailPage() {
         securityLevel,
       })
       setReport(updated)
-      toast.success('의료 보고서가 저장됐습니다.')
+      toast.success(t('detail.reportSaved'))
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('detail.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -282,9 +285,9 @@ export function InjuryDetailPage() {
         ? await injuryApi.unsignReport(Number(id))
         : await injuryApi.signReport(Number(id))
       setReport(updated)
-      toast.success(isSigned ? '서명이 취소됐습니다.' : '서명했습니다.')
+      toast.success(isSigned ? t('detail.unsignSuccess') : t('detail.signSuccess'))
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '서명 처리에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('detail.signFailed'))
     } finally {
       setSigning(false)
     }
@@ -306,14 +309,14 @@ export function InjuryDetailPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-lg font-semibold tracking-tight">부상 상세 / 의료 보고서</h1>
+          <h1 className="text-lg font-semibold tracking-tight">{t('detail.title')}</h1>
           <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs mt-0.5 ${INJURY_STATUS_STYLE[injury.status]}`}>
-            {INJURY_STATUS_LABEL[injury.status]}
+            {t(`injuries.status.${injury.status}`)}
           </span>
         </div>
         {isMedical && (
           <Button size="sm" onClick={handleSave} disabled={saving}>
-            {saving ? '저장 중...' : '저장'}
+            {saving ? t('detail.saving') : t('detail.save')}
           </Button>
         )}
       </div>
@@ -322,7 +325,7 @@ export function InjuryDetailPage() {
         <div className="max-w-2xl space-y-8">
 
           <div>
-            <h2 className="text-sm font-semibold mb-3">기본 정보</h2>
+            <h2 className="text-sm font-semibold mb-3">{t('detail.basicInfo')}</h2>
             <div className="rounded-lg border bg-muted/40 px-4 py-3 flex items-center gap-3 mb-4">
               <User className="h-4 w-4 text-muted-foreground shrink-0" />
               <div className="text-sm">
@@ -334,21 +337,21 @@ export function InjuryDetailPage() {
             </div>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-muted-foreground text-xs mb-0.5">부상 부위</p>
-                <p className="font-medium">{BODY_PART_LABEL[injury.bodyPart as BodyPart] ?? injury.bodyPart}</p>
+                <p className="text-muted-foreground text-xs mb-0.5">{t('detail.fieldBodyPart')}</p>
+                <p className="font-medium">{t(`injuries.bodyPart.${injury.bodyPart as BodyPart}`)}</p>
               </div>
               <div>
-                <p className="text-muted-foreground text-xs mb-0.5">발생 원인</p>
-                <p className="font-medium">{CAUSE_LABEL[injury.cause]}</p>
+                <p className="text-muted-foreground text-xs mb-0.5">{t('detail.fieldCause')}</p>
+                <p className="font-medium">{t(`injuries.cause.${injury.cause}`)}</p>
               </div>
               <div>
-                <p className="text-muted-foreground text-xs mb-0.5">부상 일자</p>
+                <p className="text-muted-foreground text-xs mb-0.5">{t('detail.fieldOccurredAt')}</p>
                 <p className="font-medium tabular-nums">
                   {new Date(injury.occurredAt).toLocaleDateString('ko-KR')}
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground text-xs mb-0.5">복귀 예정일</p>
+                <p className="text-muted-foreground text-xs mb-0.5">{t('detail.fieldExpectedReturn')}</p>
                 <p className="font-medium tabular-nums">
                   {injury.expectedReturnDate
                     ? new Date(injury.expectedReturnDate).toLocaleDateString('ko-KR')
@@ -359,15 +362,15 @@ export function InjuryDetailPage() {
           </div>
 
           <div>
-            <h2 className="text-sm font-semibold mb-3">의료 보고서</h2>
+            <h2 className="text-sm font-semibold mb-3">{t('detail.medicalReport')}</h2>
             {!isMedical && (
-              <p className="text-sm text-muted-foreground mb-4">의료팀만 작성할 수 있습니다.</p>
+              <p className="text-sm text-muted-foreground mb-4">{t('detail.medicalOnlyNote')}</p>
             )}
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label>진단명</Label>
+                <Label>{t('detail.fieldDiagnosis')}</Label>
                 <Input
-                  placeholder="예: 우측 전방십자인대 파열"
+                  placeholder={t('detail.fieldDiagnosisPlaceholder')}
                   value={diagnosisName}
                   onChange={(e) => setDiagnosisName(e.target.value)}
                   disabled={!isMedical}
@@ -375,9 +378,9 @@ export function InjuryDetailPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label>치료 내용</Label>
+                <Label>{t('detail.fieldTreatment')}</Label>
                 <Textarea
-                  placeholder="치료 방법, 처방 내용 등"
+                  placeholder={t('detail.fieldTreatmentPlaceholder')}
                   value={treatmentContent}
                   onChange={(e) => setTreatmentContent(e.target.value)}
                   rows={3}
@@ -386,18 +389,18 @@ export function InjuryDetailPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label>재활 단계</Label>
+                <Label>{t('detail.fieldRehabStage')}</Label>
                 <Select
                   value={rehabStage}
                   onValueChange={(v) => setRehabStage(v as RehabStage)}
                   disabled={!isMedical}
                 >
                   <SelectTrigger>
-                    <span>{rehabStage ? REHAB_STAGE_LABEL[rehabStage] : <span className="text-muted-foreground">선택 안 함</span>}</span>
+                    <span>{rehabStage ? t(`rehabStage.${rehabStage}`) : <span className="text-muted-foreground">{t('detail.fieldRehabNone')}</span>}</span>
                   </SelectTrigger>
                   <SelectContent>
                     {REHAB_STAGES.map((s) => (
-                      <SelectItem key={s} value={s}>{REHAB_STAGE_LABEL[s]}</SelectItem>
+                      <SelectItem key={s} value={s}>{t(`rehabStage.${s}`)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -405,7 +408,7 @@ export function InjuryDetailPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label>훈련 복귀 가능 시점</Label>
+                  <Label>{t('detail.fieldTrainingReturn')}</Label>
                   <Input
                     type="date"
                     value={trainingReturnDate}
@@ -414,7 +417,7 @@ export function InjuryDetailPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>경기 출전 가능 여부</Label>
+                  <Label>{t('detail.fieldMatchAvailable')}</Label>
                   <Select
                     value={matchAvailable === '' ? '' : String(matchAvailable)}
                     onValueChange={(v) => setMatchAvailable(v === '' ? '' : v === 'true')}
@@ -423,20 +426,20 @@ export function InjuryDetailPage() {
                     <SelectTrigger>
                       <span>
                         {matchAvailable === ''
-                          ? <span className="text-muted-foreground">선택 안 함</span>
-                          : matchAvailable ? '가능' : '불가'}
+                          ? <span className="text-muted-foreground">{t('detail.fieldMatchNone')}</span>
+                          : matchAvailable ? t('detail.fieldMatchYes') : t('detail.fieldMatchNo')}
                       </span>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="true">가능</SelectItem>
-                      <SelectItem value="false">불가</SelectItem>
+                      <SelectItem value="true">{t('detail.fieldMatchYes')}</SelectItem>
+                      <SelectItem value="false">{t('detail.fieldMatchNo')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <Label>재부상 위험</Label>
+                <Label>{t('detail.fieldReinjuryRisk')}</Label>
                 <Select
                   value={reinjuryRisk}
                   onValueChange={(v) => setReinjuryRisk(v as RiskLevel)}
@@ -444,21 +447,21 @@ export function InjuryDetailPage() {
                 >
                   <SelectTrigger>
                     {reinjuryRisk
-                      ? <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${RISK_LEVEL_STYLE[reinjuryRisk]}`}>{RISK_LEVEL_LABEL[reinjuryRisk]}</span>
-                      : <span className="text-muted-foreground">선택 안 함</span>}
+                      ? <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${RISK_LEVEL_STYLE[reinjuryRisk]}`}>{t(`riskLevel.${reinjuryRisk}`)}</span>
+                      : <span className="text-muted-foreground">{t('detail.fieldRiskNone')}</span>}
                   </SelectTrigger>
                   <SelectContent>
                     {RISK_LEVELS.map((r) => (
-                      <SelectItem key={r} value={r}>{RISK_LEVEL_LABEL[r]}</SelectItem>
+                      <SelectItem key={r} value={r}>{t(`riskLevel.${r}`)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-1.5">
-                <Label>의학적 소견</Label>
+                <Label>{t('detail.fieldOpinion')}</Label>
                 <Textarea
-                  placeholder="의사 소견, 권고 사항 등"
+                  placeholder={t('detail.fieldOpinionPlaceholder')}
                   value={medicalOpinion}
                   onChange={(e) => setMedicalOpinion(e.target.value)}
                   rows={4}
@@ -468,18 +471,18 @@ export function InjuryDetailPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label>보안 등급</Label>
+                <Label>{t('detail.fieldSecurity')}</Label>
                 <Select
                   value={securityLevel}
                   onValueChange={(v) => setSecurityLevel(v as SecurityLevel)}
                   disabled={!isMedical}
                 >
                   <SelectTrigger>
-                    <span>{SECURITY_LEVEL_LABEL[securityLevel]}</span>
+                    <span>{t(`securityLevel.${securityLevel}`)}</span>
                   </SelectTrigger>
                   <SelectContent>
                     {SECURITY_LEVELS.map((s) => (
-                      <SelectItem key={s} value={s}>{SECURITY_LEVEL_LABEL[s]}</SelectItem>
+                      <SelectItem key={s} value={s}>{t(`securityLevel.${s}`)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -489,7 +492,7 @@ export function InjuryDetailPage() {
           {/* 상태 타임라인 */}
           {injury && (
             <section className="border rounded-lg p-5">
-              <h2 className="text-sm font-semibold mb-4">부상 진행 상태</h2>
+              <h2 className="text-sm font-semibold mb-4">{t('detail.statusTimeline')}</h2>
               <StatusTimeline current={injury.status} />
             </section>
           )}
@@ -497,9 +500,9 @@ export function InjuryDetailPage() {
           {/* 가중치 평가 */}
           {isMedical && injury && (
             <section className="border rounded-lg p-5">
-              <h2 className="text-sm font-semibold mb-1">가중치 평가 (RTP)</h2>
+              <h2 className="text-sm font-semibold mb-1">{t('detail.assessmentSection')}</h2>
               <p className="text-xs text-muted-foreground mb-4">
-                Medical 40% · Functional 40% · Modifier 20% — 80점 이상 시 외부 의무보고서 자동 생성
+                {t('detail.assessmentNote')}
               </p>
               <AssessmentForm
                 injuryId={injury.id}
@@ -517,7 +520,7 @@ export function InjuryDetailPage() {
           {/* 외부 의무보고서 */}
           {externalReports.length > 0 && (
             <section className="border rounded-lg p-5">
-              <h2 className="text-sm font-semibold mb-3">외부 의무보고서</h2>
+              <h2 className="text-sm font-semibold mb-3">{t('detail.externalReports')}</h2>
               <div>
                 {externalReports.map((r) => (
                   <ExternalReportRow
@@ -537,22 +540,22 @@ export function InjuryDetailPage() {
           {/* 복귀 체크리스트 */}
           {assessment && (
             <section className="border rounded-lg p-5">
-              <h2 className="text-sm font-semibold mb-3">복귀 체크리스트 (RTP Criteria)</h2>
+              <h2 className="text-sm font-semibold mb-3">{t('detail.returnChecklist')}</h2>
               <ReturnChecklist assessment={assessment} />
             </section>
           )}
 
           {report && (
             <div>
-              <h2 className="text-sm font-semibold mb-3">복귀 계획 조율</h2>
+              <h2 className="text-sm font-semibold mb-3">{t('detail.returnPlan')}</h2>
               <p className="text-xs text-muted-foreground mb-3">
-                감독·트레이너·의료팀 3자 모두 서명해야 복귀 계획이 확정됩니다.
+                {t('detail.returnPlanNote')}
               </p>
               <div className="space-y-2">
                 {([
-                  { role: 'COACH' as const, label: '감독', signedAt: report.coachSignedAt, signer: report.coachSigner },
-                  { role: 'TRAINER' as const, label: '트레이너', signedAt: report.trainerSignedAt, signer: report.trainerSigner },
-                  { role: 'MEDICAL' as const, label: '의료팀', signedAt: report.medicalSignedAt, signer: report.medicalSigner },
+                  { role: 'COACH' as const, label: t('detail.roleCoach'), signedAt: report.coachSignedAt, signer: report.coachSigner },
+                  { role: 'TRAINER' as const, label: t('detail.roleTrainer'), signedAt: report.trainerSignedAt, signer: report.trainerSigner },
+                  { role: 'MEDICAL' as const, label: t('detail.roleMedical'), signedAt: report.medicalSignedAt, signer: report.medicalSigner },
                 ]).map(({ role, label, signedAt, signer }) => (
                   <div key={role} className={`flex items-center justify-between rounded-lg border px-4 py-2.5 ${signedAt ? 'border-green-200 bg-green-50' : 'bg-muted/30'}`}>
                     <div className="text-sm">
@@ -562,7 +565,7 @@ export function InjuryDetailPage() {
                           {signer.nickname} · {new Date(signedAt).toLocaleDateString('ko-KR')}
                         </span>
                       )}
-                      {!signedAt && <span className="text-xs text-muted-foreground ml-2">미서명</span>}
+                      {!signedAt && <span className="text-xs text-muted-foreground ml-2">{t('detail.unsigned')}</span>}
                     </div>
                     {mySignRole === role && (
                       <Button
@@ -572,7 +575,7 @@ export function InjuryDetailPage() {
                         disabled={signing}
                         className={signedAt ? 'text-red-600 border-red-300 hover:bg-red-50' : ''}
                       >
-                        {signing ? '처리 중...' : signedAt ? '서명 취소' : '서명'}
+                        {signing ? t('detail.signing') : signedAt ? t('detail.unsign') : t('detail.sign')}
                       </Button>
                     )}
                   </div>

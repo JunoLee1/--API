@@ -39,9 +39,9 @@ export interface ContractDetail extends ContractSummary {
 }
 
 export const CONTRACT_STATUS_LABEL: Record<ContractStatus, string> = {
-  ACTIVE: '활성',
-  EXPIRED: '만료',
-  TERMINATED: '해지',
+  ACTIVE: 'Active',
+  EXPIRED: 'Expired',
+  TERMINATED: 'Terminated',
 }
 
 export const CONTRACT_STATUS_STYLE: Record<ContractStatus, string> = {
@@ -51,24 +51,24 @@ export const CONTRACT_STATUS_STYLE: Record<ContractStatus, string> = {
 }
 
 export const BONUS_METRIC_LABEL: Record<BonusMetric, string> = {
-  GOALS: '골',
-  ASSISTS: '어시스트',
-  APPEARANCES: '출전',
-  CLEAN_SHEETS: '무실점',
-  SAVES: '선방',
-  PASS_ACCURACY: '패스 정확도(%)',
-  TACKLE_SUCCESS_RATE: '태클 성공률(%)',
-  CLEARANCES: '클리어',
-  INTERCEPTIONS: '인터셉트',
+  GOALS: 'Goals',
+  ASSISTS: 'Assists',
+  APPEARANCES: 'Appearances',
+  CLEAN_SHEETS: 'Clean Sheets',
+  SAVES: 'Saves',
+  PASS_ACCURACY: 'Pass Accuracy (%)',
+  TACKLE_SUCCESS_RATE: 'Tackle Success (%)',
+  CLEARANCES: 'Clearances',
+  INTERCEPTIONS: 'Interceptions',
   XG: 'xG',
-  TEAM_RANK: '팀 순위',
-  TEAM_WINS: '팀 승수',
+  TEAM_RANK: 'Team Rank',
+  TEAM_WINS: 'Team Wins',
 }
 
 export const BONUS_PERIOD_LABEL: Record<BonusPeriod, string> = {
-  SEASON: '시즌',
-  MONTH: '월',
-  MATCH: '경기',
+  SEASON: 'Season',
+  MONTH: 'Monthly',
+  MATCH: 'Per Match',
 }
 
 export interface CreateExtensionDto {
