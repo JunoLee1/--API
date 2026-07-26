@@ -27,7 +27,7 @@ export function GrowthReportsListPage() {
 
   useEffect(() => {
     playerApi.list({ level: 'YOUTH' })
-      .then(r => setPlayers(r.data))
+      .then(setPlayers)
       .finally(() => setLoading(false))
   }, [])
 
