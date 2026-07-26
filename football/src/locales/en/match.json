@@ -126,7 +126,11 @@
       "aerialDuels": "Aerial Duels Won",
       "aerialDuelsAttempted": "Aerial Duels Attempted",
       "distanceCovered": "Distance Covered (km)",
-      "sprint": "Sprints"
+      "sprint": "Sprints",
+      "foulsCommitted": "Fouls",
+      "dribblesAttempted": "Dribbles Attempted",
+      "dribblesCompleted": "Dribbles Completed",
+      "dribblesFailed": "Dribbles Failed"
     }
   },
   "scoreDialog": {
@@ -182,7 +186,11 @@
     "aerialDuelRate": "AD%",
     "saves": "Saves",
     "cleanSheet": "CS",
-    "activity": "Activity"
+    "activity": "Activity",
+    "foulsCommitted": "Fouls",
+    "dribblesAttempted": "Drb Att",
+    "dribblesCompleted": "Drb Cmp",
+    "dribblesFailed": "Drb Fail"
   },
   "statSheetOcr": {
     "uploadHint": "Upload a match sheet image and AI will extract stats automatically.",

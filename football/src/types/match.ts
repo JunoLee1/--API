@@ -41,6 +41,10 @@ export interface PlayerMatchStat {
   turnovers: number | null
   distanceCovered: number | null
   sprint: number | null
+  foulsCommitted: number | null
+  dribblesAttempted: number | null
+  dribblesCompleted: number | null
+  dribblesFailed: number | null
   player: { playerName: string; position: string }
 }
 

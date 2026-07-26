@@ -98,6 +98,9 @@ export class MatchRepository {
             crossesCompleted: true,
             shotsAllowed: true,
             shotBlocked: true,
+            dribblesAttempted: true,
+            dribblesCompleted: true,
+            dribblesFailed: true,
             player: { select: { playerName: true, position: true } },
           },
         },
@@ -182,6 +185,9 @@ export class MatchRepository {
         crossesCompleted: n(dto.crossesCompleted),
         shotsAllowed: n(dto.shotsAllowed),
         shotBlocked: n(dto.shotBlocked),
+        dribblesAttempted: n(dto.dribblesAttempted),
+        dribblesCompleted: n(dto.dribblesCompleted),
+        dribblesFailed: n(dto.dribblesFailed),
       },
     });
   }
@@ -221,6 +227,9 @@ export class MatchRepository {
         crossesCompleted: n(dto.crossesCompleted),
         shotsAllowed: n(dto.shotsAllowed),
         shotBlocked: n(dto.shotBlocked),
+        dribblesAttempted: n(dto.dribblesAttempted),
+        dribblesCompleted: n(dto.dribblesCompleted),
+        dribblesFailed: n(dto.dribblesFailed),
       },
     });
   }

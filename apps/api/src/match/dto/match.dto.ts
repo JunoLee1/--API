@@ -59,6 +59,9 @@ export interface UpsertPlayerStatsDto {
   shotsAllowed?: number;
   shotBlocked?: number;
   distanceCovered?: number;
+  dribblesAttempted?: number;
+  dribblesCompleted?: number;
+  dribblesFailed?: number;
 }
 
 export interface UpsertTeamStatsDto {
