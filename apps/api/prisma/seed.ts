@@ -1076,9 +1076,6 @@ async function main() {
   await prisma.playerMatchStats.upsert({ where: { id: 90 }, update: { passesAttempted: 26, passesCompleted: 23 }, create: { matchId: 8, playerId: p13.id, shots: 1, xG: 0.4, shotsOnTarget: 0, passesAttempted: 26, passesCompleted: 23, minutesPlayed: 85 } });
   await prisma.playerMatchStats.upsert({ where: { id: 91 }, update: { passesAttempted: 35, passesCompleted: 32 }, create: { matchId: 8, playerId: p15.id, saves: 2, cleanSheet: true, passesAttempted: 35, passesCompleted: 32, minutesPlayed: 90 } });
 
-  // match1/p3 — id:18 was occupied; create under id:92
-  await prisma.playerMatchStats.upsert({ where: { id: 92 }, update: {}, create: { matchId: match1.id, playerId: p3.id, shots: 3, xG: 0.7, keyPasses: 2, shotsOnTarget: 1, passesAttempted: 28, passesCompleted: 23, minutesPlayed: 90 } });
-
   // ── TrainingSession ───────────────────────────────────
   const ts1 = await prisma.trainingSession.upsert({
     where: { id: 1 },
