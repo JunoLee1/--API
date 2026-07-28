@@ -51,15 +51,19 @@ export class TrainingLoadService {
           this.notifRepo
             .createForPhysicalCoach(
               "TRAINING_LOAD_ALERT",
-              "훈련 부하 초과",
-              `${playerName} 선수의 이번 주 누적 부하(${total})가 임계값(${WEEKLY_LOAD_THRESHOLD})을 초과했습니다.`,
+              () => ({
+                title: "훈련 부하 초과",
+                body: `${playerName} 선수의 이번 주 누적 부하(${total})가 임계값(${WEEKLY_LOAD_THRESHOLD})을 초과했습니다.`,
+              }),
             )
             .catch(console.error),
           this.notifRepo
             .createForHeadCoach(
               "TRAINING_LOAD_ALERT",
-              "훈련 부하 초과",
-              `${playerName} 선수의 이번 주 누적 부하(${total})가 임계값(${WEEKLY_LOAD_THRESHOLD})을 초과했습니다.`,
+              () => ({
+                title: "훈련 부하 초과",
+                body: `${playerName} 선수의 이번 주 누적 부하(${total})가 임계값(${WEEKLY_LOAD_THRESHOLD})을 초과했습니다.`,
+              }),
             )
             .catch(console.error),
         ]);

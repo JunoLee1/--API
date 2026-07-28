@@ -36,14 +36,16 @@ export class JerseyService {
               return this.notifRepo!.createForUser(
                 p.userId,
                 "JERSEY_NUMBER_CONFLICT",
-                `등번호 ${dto.number}번 선택 불가`,
-                `요청하신 ${dto.number}번은 ${
-                  existing.status === "OCCUPIED"
-                    ? "이미 다른 선수가 사용 중입니다"
-                    : existing.status === "RETIRED"
-                    ? "구단 영구결번입니다"
-                    : "계약 진행 중인 선수가 선점한 번호입니다"
-                }. 다른 번호를 선택해 주세요.`,
+                () => ({
+                  title: `등번호 ${dto.number}번 선택 불가`,
+                  body: `요청하신 ${dto.number}번은 ${
+                    existing.status === "OCCUPIED"
+                      ? "이미 다른 선수가 사용 중입니다"
+                      : existing.status === "RETIRED"
+                      ? "구단 영구결번입니다"
+                      : "계약 진행 중인 선수가 선점한 번호입니다"
+                  }. 다른 번호를 선택해 주세요.`,
+                }),
               );
             }
           })

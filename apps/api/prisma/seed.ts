@@ -717,293 +717,6 @@ async function main() {
     },
   });
 
-  // MatchSquad — match1 (스코어 있는 경기는 일괄 처리)
-  await prisma.matchSquad.createMany({
-    data: [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15].map((p) => ({
-      matchId: match1.id,
-      playerId: p.id,
-      isConfirmed: true,
-    })),
-    skipDuplicates: true,
-  });
-
-  // PlayerMatchStats — match1
-  await prisma.playerMatchStats.upsert({
-    where: { id: 1 },
-    update: { passesAttempted: 32, passesCompleted: 26, xA: 0.65 },
-    create: {
-      matchId: match1.id,
-      playerId: p1.id,
-      goals: 2,
-      assists: 1,
-      xG: 2.3,
-      xA: 0.65,
-      shots: 5,
-      passesAttempted: 32,
-      passesCompleted: 26,
-      minutesPlayed: 90,
-    },
-  });
-
-  await prisma.playerMatchStats.upsert({
-    where: { id: 2 },
-    update: { passesAttempted: 72, passesCompleted: 64 },
-    create: {
-      matchId: match1.id,
-      playerId: p2.id,
-      goals: 1,
-      assists: 2,
-      keyPasses: 4,
-      passesAttempted: 72,
-      passesCompleted: 64,
-      minutesPlayed: 90,
-    },
-  });
-
-  // match2: Incheon 0-2 FC Seoul (원정승) — p1 2골
-  await prisma.playerMatchStats.upsert({
-    where: { id: 3 },
-    update: { passesAttempted: 29, passesCompleted: 23 },
-    create: { matchId: 2, playerId: p1.id, goals: 2, assists: 0, xG: 1.9, shots: 4, passesAttempted: 29, passesCompleted: 23, minutesPlayed: 90 },
-  });
-  await prisma.playerMatchStats.upsert({
-    where: { id: 4 },
-    update: { passesAttempted: 30, passesCompleted: 25, xA: 0.9 },
-    create: { matchId: 2, playerId: p3.id, goals: 0, assists: 2, xG: 0.4, xA: 0.9, shots: 2, passesAttempted: 30, passesCompleted: 25, minutesPlayed: 90 },
-  });
-
-  // match3: FC Seoul 1-1 Suwon — p2 1골
-  await prisma.playerMatchStats.upsert({
-    where: { id: 5 },
-    update: { passesAttempted: 68, passesCompleted: 59 },
-    create: { matchId: 3, playerId: p2.id, goals: 1, assists: 0, xG: 1.1, shots: 3, passesAttempted: 68, passesCompleted: 59, minutesPlayed: 90 },
-  });
-  await prisma.playerMatchStats.upsert({
-    where: { id: 6 },
-    update: { passesAttempted: 28, passesCompleted: 22, xA: 0.55 },
-    create: { matchId: 3, playerId: p1.id, goals: 0, assists: 1, xG: 0.6, xA: 0.55, shots: 3, passesAttempted: 28, passesCompleted: 22, minutesPlayed: 82 },
-  });
-
-  // match4: Jeonbuk 2-0 FC Seoul (원정패) — 무득점
-  await prisma.playerMatchStats.upsert({
-    where: { id: 7 },
-    update: { passesAttempted: 31, passesCompleted: 24 },
-    create: { matchId: 4, playerId: p1.id, goals: 0, assists: 0, xG: 0.5, shots: 2, passesAttempted: 31, passesCompleted: 24, minutesPlayed: 90 },
-  });
-  await prisma.playerMatchStats.upsert({
-    where: { id: 8 },
-    update: { passesAttempted: 49, passesCompleted: 43 },
-    create: { matchId: 4, playerId: p5.id, goals: 0, assists: 0, xG: 0.2, shots: 1, passesAttempted: 49, passesCompleted: 43, minutesPlayed: 90 },
-  });
-
-  // match5: FC Seoul 2-1 Daegu — p1 1골, p3 1골
-  await prisma.playerMatchStats.upsert({
-    where: { id: 9 },
-    update: { passesAttempted: 30, passesCompleted: 24 },
-    create: { matchId: 5, playerId: p1.id, goals: 1, assists: 0, xG: 1.4, shots: 4, passesAttempted: 30, passesCompleted: 24, minutesPlayed: 90 },
-  });
-  await prisma.playerMatchStats.upsert({
-    where: { id: 10 },
-    update: { passesAttempted: 28, passesCompleted: 23 },
-    create: { matchId: 5, playerId: p3.id, goals: 1, assists: 0, xG: 0.9, shots: 3, passesAttempted: 28, passesCompleted: 23, minutesPlayed: 90 },
-  });
-  await prisma.playerMatchStats.upsert({
-    where: { id: 11 },
-    update: { passesAttempted: 70, passesCompleted: 62 },
-    create: { matchId: 5, playerId: p2.id, goals: 0, assists: 2, xG: 0.3, keyPasses: 5, passesAttempted: 70, passesCompleted: 62, minutesPlayed: 90 },
-  });
-
-  // match6: Ulsan 3-1 FC Seoul (원정패) — p2 1골
-  await prisma.playerMatchStats.upsert({
-    where: { id: 12 },
-    update: { passesAttempted: 60, passesCompleted: 52 },
-    create: { matchId: 6, playerId: p2.id, goals: 1, assists: 0, xG: 0.8, shots: 2, passesAttempted: 60, passesCompleted: 52, minutesPlayed: 90 },
-  });
-  await prisma.playerMatchStats.upsert({
-    where: { id: 13 },
-    update: { passesAttempted: 27, passesCompleted: 21, xA: 0.5 },
-    create: { matchId: 6, playerId: p1.id, goals: 0, assists: 1, xG: 0.7, xA: 0.5, shots: 3, passesAttempted: 27, passesCompleted: 21, minutesPlayed: 90 },
-  });
-
-  // match7: FC Seoul 0-0 Pohang — 무득점
-  await prisma.playerMatchStats.upsert({
-    where: { id: 14 },
-    update: { passesAttempted: 33, passesCompleted: 26 },
-    create: { matchId: 7, playerId: p1.id, goals: 0, assists: 0, xG: 0.4, shots: 2, passesAttempted: 33, passesCompleted: 26, minutesPlayed: 90 },
-  });
-
-  // match8: FC Seoul 3-0 Gangwon FA컵 — p1 2골, p2 1골
-  await prisma.playerMatchStats.upsert({
-    where: { id: 15 },
-    update: { passesAttempted: 35, passesCompleted: 29 },
-    create: { matchId: 8, playerId: p1.id, goals: 2, assists: 0, xG: 2.1, shots: 5, passesAttempted: 35, passesCompleted: 29, minutesPlayed: 90 },
-  });
-  await prisma.playerMatchStats.upsert({
-    where: { id: 16 },
-    update: { passesAttempted: 73, passesCompleted: 65 },
-    create: { matchId: 8, playerId: p2.id, goals: 1, assists: 1, xG: 1.0, shots: 3, passesAttempted: 73, passesCompleted: 65, minutesPlayed: 90 },
-  });
-  await prisma.playerMatchStats.upsert({
-    where: { id: 17 },
-    update: { passesAttempted: 32, passesCompleted: 27 },
-    create: { matchId: 8, playerId: p3.id, goals: 0, assists: 2, xG: 0.5, shots: 2, passesAttempted: 32, passesCompleted: 27, minutesPlayed: 90 },
-  });
-
-  // ── PlayerMatchStats (추가 — 스타팅 XI 전원) ─────────────
-
-  // match1 additions: 3-1 홈승
-  await prisma.playerMatchStats.upsert({ where: { id: 18 }, update: {}, create: { matchId: match1.id, playerId: p3.id,  shots: 3, xG: 0.7,  keyPasses: 2, passesAttempted: 28, passesCompleted: 23, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 19 }, update: { passesAttempted: 52, passesCompleted: 46 }, create: { matchId: match1.id, playerId: p5.id,  tackles: 4, interceptions: 2, clearances: 5, passesAttempted: 52, passesCompleted: 46, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 20 }, update: { passesAttempted: 55, passesCompleted: 49 }, create: { matchId: match1.id, playerId: p6.id,  tackles: 5, interceptions: 3, clearances: 7, passesAttempted: 55, passesCompleted: 49, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 21 }, update: {}, create: { matchId: match1.id, playerId: p7.id,  tackles: 3, interceptions: 2, clearances: 2, passesAttempted: 51, passesCompleted: 44, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 22 }, update: {}, create: { matchId: match1.id, playerId: p8.id,  tackles: 2, interceptions: 1, clearances: 1, passesAttempted: 46, passesCompleted: 39, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 23 }, update: {}, create: { matchId: match1.id, playerId: p9.id,  tackles: 6, interceptions: 4, passesAttempted: 70, passesCompleted: 62, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 24 }, update: {}, create: { matchId: match1.id, playerId: p10.id, tackles: 4, interceptions: 3, passesAttempted: 58, passesCompleted: 50, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 25 }, update: { passesAttempted: 24, passesCompleted: 20 }, create: { matchId: match1.id, playerId: p13.id, shots: 2, xG: 0.4, keyPasses: 1, passesAttempted: 24, passesCompleted: 20, minutesPlayed: 72 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 26 }, update: { passesAttempted: 7, passesCompleted: 5 }, create: { matchId: match1.id, playerId: p14.id, shots: 1, xG: 0.3, passesAttempted: 7, passesCompleted: 5, minutesPlayed: 18 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 27 }, update: { passesAttempted: 32, passesCompleted: 29 }, create: { matchId: match1.id, playerId: p15.id, saves: 3, cleanSheet: false, passesAttempted: 32, passesCompleted: 29, minutesPlayed: 90 } });
-
-  // match2 additions: Incheon 0-2 FC Seoul 원정승
-  await prisma.playerMatchStats.upsert({ where: { id: 28 }, update: {}, create: { matchId: 2, playerId: p2.id,  shots: 1, xG: 0.3, keyPasses: 3, passesAttempted: 64, passesCompleted: 56, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 29 }, update: { passesAttempted: 48, passesCompleted: 43 }, create: { matchId: 2, playerId: p5.id,  tackles: 5, interceptions: 4, clearances: 6, passesAttempted: 48, passesCompleted: 43, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 30 }, update: { passesAttempted: 51, passesCompleted: 46 }, create: { matchId: 2, playerId: p6.id,  tackles: 6, interceptions: 5, clearances: 8, passesAttempted: 51, passesCompleted: 46, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 31 }, update: {}, create: { matchId: 2, playerId: p7.id,  tackles: 3, interceptions: 2, passesAttempted: 47, passesCompleted: 40, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 32 }, update: {}, create: { matchId: 2, playerId: p8.id,  tackles: 2, interceptions: 2, passesAttempted: 43, passesCompleted: 37, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 33 }, update: {}, create: { matchId: 2, playerId: p9.id,  tackles: 7, interceptions: 5, passesAttempted: 65, passesCompleted: 57, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 34 }, update: {}, create: { matchId: 2, playerId: p10.id, tackles: 5, interceptions: 4, passesAttempted: 54, passesCompleted: 47, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 35 }, update: { passesAttempted: 22, passesCompleted: 18 }, create: { matchId: 2, playerId: p13.id, shots: 1, xG: 0.3, passesAttempted: 22, passesCompleted: 18, minutesPlayed: 85 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 36 }, update: { passesAttempted: 28, passesCompleted: 25 }, create: { matchId: 2, playerId: p15.id, saves: 5, cleanSheet: true, passesAttempted: 28, passesCompleted: 25, minutesPlayed: 90 } });
-
-  // match3 additions: FC Seoul 1-1 Suwon 홈무
-  await prisma.playerMatchStats.upsert({ where: { id: 37 }, update: { passesAttempted: 26, passesCompleted: 22 }, create: { matchId: 3, playerId: p3.id,  shots: 2, xG: 0.5, keyPasses: 2, passesAttempted: 26, passesCompleted: 22, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 38 }, update: { passesAttempted: 50, passesCompleted: 44 }, create: { matchId: 3, playerId: p5.id,  tackles: 4, interceptions: 3, clearances: 6, passesAttempted: 50, passesCompleted: 44, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 39 }, update: { passesAttempted: 53, passesCompleted: 47 }, create: { matchId: 3, playerId: p6.id,  tackles: 5, interceptions: 4, clearances: 7, passesAttempted: 53, passesCompleted: 47, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 40 }, update: {}, create: { matchId: 3, playerId: p7.id,  tackles: 3, interceptions: 2, passesAttempted: 48, passesCompleted: 41, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 41 }, update: {}, create: { matchId: 3, playerId: p8.id,  tackles: 2, interceptions: 1, passesAttempted: 44, passesCompleted: 38, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 42 }, update: {}, create: { matchId: 3, playerId: p9.id,  tackles: 5, interceptions: 4, passesAttempted: 63, passesCompleted: 55, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 43 }, update: {}, create: { matchId: 3, playerId: p10.id, tackles: 4, interceptions: 3, passesAttempted: 52, passesCompleted: 45, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 44 }, update: { passesAttempted: 8, passesCompleted: 6 }, create: { matchId: 3, playerId: p11.id, shots: 1, xG: 0.2, keyPasses: 1, passesAttempted: 8, passesCompleted: 6, minutesPlayed: 20 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 45 }, update: { passesAttempted: 20, passesCompleted: 17 }, create: { matchId: 3, playerId: p13.id, shots: 2, xG: 0.4, passesAttempted: 20, passesCompleted: 17, minutesPlayed: 70 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 46 }, update: { passesAttempted: 30, passesCompleted: 27 }, create: { matchId: 3, playerId: p15.id, saves: 3, cleanSheet: false, passesAttempted: 30, passesCompleted: 27, minutesPlayed: 90 } });
-
-  // match4 additions: Jeonbuk 2-0 FC Seoul 원정패
-  await prisma.playerMatchStats.upsert({ where: { id: 47 }, update: {}, create: { matchId: 4, playerId: p2.id,  shots: 1, xG: 0.2, keyPasses: 2, passesAttempted: 58, passesCompleted: 48, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 48 }, update: { passesAttempted: 20, passesCompleted: 16 }, create: { matchId: 4, playerId: p3.id,  shots: 1, xG: 0.3, passesAttempted: 20, passesCompleted: 16, minutesPlayed: 75 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 49 }, update: { passesAttempted: 46, passesCompleted: 40 }, create: { matchId: 4, playerId: p6.id,  tackles: 5, interceptions: 4, clearances: 8, passesAttempted: 46, passesCompleted: 40, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 50 }, update: {}, create: { matchId: 4, playerId: p7.id,  tackles: 3, interceptions: 2, clearances: 3, passesAttempted: 44, passesCompleted: 37, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 51 }, update: {}, create: { matchId: 4, playerId: p8.id,  tackles: 2, interceptions: 2, clearances: 2, passesAttempted: 40, passesCompleted: 34, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 52 }, update: {}, create: { matchId: 4, playerId: p9.id,  tackles: 6, interceptions: 5, passesAttempted: 61, passesCompleted: 52, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 53 }, update: {}, create: { matchId: 4, playerId: p10.id, tackles: 5, interceptions: 3, passesAttempted: 50, passesCompleted: 43, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 54 }, update: { passesAttempted: 18, passesCompleted: 14 }, create: { matchId: 4, playerId: p13.id, shots: 1, xG: 0.2, passesAttempted: 18, passesCompleted: 14, minutesPlayed: 65 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 55 }, update: { passesAttempted: 25, passesCompleted: 22 }, create: { matchId: 4, playerId: p15.id, saves: 6, cleanSheet: false, passesAttempted: 25, passesCompleted: 22, minutesPlayed: 90 } });
-
-  // match5 additions: FC Seoul 2-1 Daegu 홈승
-  await prisma.playerMatchStats.upsert({ where: { id: 56 }, update: { passesAttempted: 51, passesCompleted: 45 }, create: { matchId: 5, playerId: p5.id,  tackles: 4, interceptions: 3, clearances: 5, passesAttempted: 51, passesCompleted: 45, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 57 }, update: { passesAttempted: 54, passesCompleted: 48 }, create: { matchId: 5, playerId: p6.id,  tackles: 5, interceptions: 3, clearances: 6, passesAttempted: 54, passesCompleted: 48, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 58 }, update: {}, create: { matchId: 5, playerId: p7.id,  tackles: 3, interceptions: 2, passesAttempted: 50, passesCompleted: 43, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 59 }, update: {}, create: { matchId: 5, playerId: p8.id,  tackles: 2, interceptions: 1, passesAttempted: 45, passesCompleted: 39, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 60 }, update: {}, create: { matchId: 5, playerId: p9.id,  tackles: 5, interceptions: 4, passesAttempted: 66, passesCompleted: 58, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 61 }, update: {}, create: { matchId: 5, playerId: p10.id, tackles: 4, interceptions: 3, passesAttempted: 55, passesCompleted: 48, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 62 }, update: { passesAttempted: 22, passesCompleted: 19 }, create: { matchId: 5, playerId: p13.id, shots: 1, xG: 0.3, passesAttempted: 22, passesCompleted: 19, minutesPlayed: 80 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 63 }, update: { passesAttempted: 31, passesCompleted: 28 }, create: { matchId: 5, playerId: p15.id, saves: 3, cleanSheet: false, passesAttempted: 31, passesCompleted: 28, minutesPlayed: 90 } });
-
-  // match6 additions: Ulsan 3-1 FC Seoul 원정패
-  await prisma.playerMatchStats.upsert({ where: { id: 64 }, update: { passesAttempted: 19, passesCompleted: 15 }, create: { matchId: 6, playerId: p3.id,  shots: 1, xG: 0.3, passesAttempted: 19, passesCompleted: 15, minutesPlayed: 75 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 65 }, update: { passesAttempted: 44, passesCompleted: 38 }, create: { matchId: 6, playerId: p5.id,  tackles: 5, interceptions: 3, clearances: 9, passesAttempted: 44, passesCompleted: 38, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 66 }, update: { passesAttempted: 47, passesCompleted: 41 }, create: { matchId: 6, playerId: p6.id,  tackles: 6, interceptions: 4, clearances: 10, passesAttempted: 47, passesCompleted: 41, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 67 }, update: {}, create: { matchId: 6, playerId: p7.id,  tackles: 4, interceptions: 3, clearances: 3, passesAttempted: 42, passesCompleted: 35, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 68 }, update: {}, create: { matchId: 6, playerId: p8.id,  tackles: 3, interceptions: 2, clearances: 2, passesAttempted: 38, passesCompleted: 32, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 69 }, update: {}, create: { matchId: 6, playerId: p9.id,  tackles: 7, interceptions: 5, passesAttempted: 60, passesCompleted: 51, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 70 }, update: {}, create: { matchId: 6, playerId: p10.id, tackles: 5, interceptions: 4, passesAttempted: 49, passesCompleted: 42, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 71 }, update: { passesAttempted: 17, passesCompleted: 13 }, create: { matchId: 6, playerId: p13.id, shots: 1, xG: 0.2, passesAttempted: 17, passesCompleted: 13, minutesPlayed: 60 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 72 }, update: { passesAttempted: 11, passesCompleted: 8 }, create: { matchId: 6, playerId: p14.id, shots: 2, xG: 0.5, passesAttempted: 11, passesCompleted: 8, minutesPlayed: 30 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 73 }, update: { passesAttempted: 26, passesCompleted: 23 }, create: { matchId: 6, playerId: p15.id, saves: 7, cleanSheet: false, passesAttempted: 26, passesCompleted: 23, minutesPlayed: 90 } });
-
-  // match7 additions: FC Seoul 0-0 Pohang 홈무
-  await prisma.playerMatchStats.upsert({ where: { id: 74 }, update: {}, create: { matchId: 7, playerId: p2.id,  shots: 1, xG: 0.3, keyPasses: 3, passesAttempted: 65, passesCompleted: 58, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 75 }, update: { passesAttempted: 27, passesCompleted: 23 }, create: { matchId: 7, playerId: p3.id,  shots: 2, xG: 0.5, passesAttempted: 27, passesCompleted: 23, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 76 }, update: { passesAttempted: 52, passesCompleted: 47 }, create: { matchId: 7, playerId: p5.id,  tackles: 5, interceptions: 4, clearances: 6, passesAttempted: 52, passesCompleted: 47, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 77 }, update: { passesAttempted: 55, passesCompleted: 50 }, create: { matchId: 7, playerId: p6.id,  tackles: 6, interceptions: 4, clearances: 7, passesAttempted: 55, passesCompleted: 50, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 78 }, update: {}, create: { matchId: 7, playerId: p7.id,  tackles: 4, interceptions: 3, passesAttempted: 50, passesCompleted: 44, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 79 }, update: {}, create: { matchId: 7, playerId: p8.id,  tackles: 3, interceptions: 2, passesAttempted: 46, passesCompleted: 40, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 80 }, update: {}, create: { matchId: 7, playerId: p9.id,  tackles: 6, interceptions: 5, passesAttempted: 68, passesCompleted: 61, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 81 }, update: {}, create: { matchId: 7, playerId: p10.id, tackles: 5, interceptions: 4, passesAttempted: 57, passesCompleted: 51, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 82 }, update: { passesAttempted: 25, passesCompleted: 22 }, create: { matchId: 7, playerId: p13.id, shots: 1, xG: 0.3, passesAttempted: 25, passesCompleted: 22, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 83 }, update: { passesAttempted: 33, passesCompleted: 30 }, create: { matchId: 7, playerId: p15.id, saves: 4, cleanSheet: true, passesAttempted: 33, passesCompleted: 30, minutesPlayed: 90 } });
-
-  // match8 additions: FC Seoul 3-0 Gangwon FA컵 홈승
-  await prisma.playerMatchStats.upsert({ where: { id: 84 }, update: { passesAttempted: 55, passesCompleted: 50 }, create: { matchId: 8, playerId: p5.id,  tackles: 3, interceptions: 2, clearances: 4, passesAttempted: 55, passesCompleted: 50, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 85 }, update: { passesAttempted: 58, passesCompleted: 53 }, create: { matchId: 8, playerId: p6.id,  tackles: 4, interceptions: 3, clearances: 5, passesAttempted: 58, passesCompleted: 53, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 86 }, update: {}, create: { matchId: 8, playerId: p7.id,  tackles: 2, interceptions: 1, passesAttempted: 53, passesCompleted: 47, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 87 }, update: {}, create: { matchId: 8, playerId: p8.id,  tackles: 2, interceptions: 1, passesAttempted: 49, passesCompleted: 43, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 88 }, update: {}, create: { matchId: 8, playerId: p9.id,  tackles: 5, interceptions: 3, passesAttempted: 72, passesCompleted: 65, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 89 }, update: {}, create: { matchId: 8, playerId: p10.id, tackles: 4, interceptions: 2, passesAttempted: 60, passesCompleted: 54, minutesPlayed: 90 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 90 }, update: { passesAttempted: 26, passesCompleted: 23 }, create: { matchId: 8, playerId: p13.id, shots: 1, xG: 0.4, passesAttempted: 26, passesCompleted: 23, minutesPlayed: 85 } });
-  await prisma.playerMatchStats.upsert({ where: { id: 91 }, update: { passesAttempted: 35, passesCompleted: 32 }, create: { matchId: 8, playerId: p15.id, saves: 2, cleanSheet: true, passesAttempted: 35, passesCompleted: 32, minutesPlayed: 90 } });
-
-  // match1/p3 — id:18 was occupied; create under id:92
-  await prisma.playerMatchStats.upsert({ where: { id: 92 }, update: {}, create: { matchId: match1.id, playerId: p3.id, shots: 3, xG: 0.7, keyPasses: 2, passesAttempted: 28, passesCompleted: 23, minutesPlayed: 90 } });
-
-  // ── TrainingSession ───────────────────────────────────
-  const ts1 = await prisma.trainingSession.upsert({
-    where: { id: 1 },
-    update: {},
-    create: {
-      date: new Date("2026-04-07T10:00:00"),
-      goal: "압박 수비 조직력 강화",
-      sessionType: "TACTICAL_DEFENSIVE",
-      isApproved: true,
-      seasonId: season.id,
-      createdById: coach.id,
-      approvedById: admin.id,
-      contents: {
-        create: [
-          { phase: "WARMUP", description: "10분 조깅 + 동적 스트레칭" },
-          { phase: "TACTICAL", description: "4-4-2 압박 블록 훈련" },
-          { phase: "GAME", description: "11v11 압박 적용 실전 게임" },
-        ],
-      },
-    },
-  });
-
-  // Participants
-  await prisma.trainingParticipant.createMany({
-    data: [
-      { sessionId: ts1.id, playerId: p1.id },
-      { sessionId: ts1.id, playerId: p2.id },
-      { sessionId: ts1.id, playerId: p3.id },
-      { sessionId: ts1.id, playerId: p4.id },
-      { sessionId: ts1.id, playerId: p5.id },
-    ],
-    skipDuplicates: true,
-  });
-
-  // Results
-  await prisma.trainingResult.createMany({
-    data: [
-      { sessionId: ts1.id, playerId: p1.id, attendance: "PRESENT", performanceScore: 8, feedback: "전방 압박 적극적" },
-      { sessionId: ts1.id, playerId: p2.id, attendance: "PRESENT", performanceScore: 9, feedback: "패스 연계 탁월" },
-      { sessionId: ts1.id, playerId: p3.id, attendance: "LATE_UNAUTHORIZED", performanceScore: 6 },
-      { sessionId: ts1.id, playerId: p4.id, attendance: "PRESENT", performanceScore: 8 },
-      { sessionId: ts1.id, playerId: p5.id, attendance: "PRESENT", performanceScore: 7, feedback: "수비 라인 조율 필요" },
-    ],
-    skipDuplicates: true,
-  });
-
-  // ── Injury ────────────────────────────────────────────
-  await prisma.injury.upsert({
-    where: { id: 1 },
-    update: {},
-    create: {
-      playerId: p3.id,
-      bodyPart: "THIGH_BACK",
-      cause: "TRAINING",
-      status: "REHABILITATING",
-      expectedReturnDate: new Date("2026-05-15"),
-      medicalStaffId: coach.id,
-    },
-  });
-
   // ── Additional Matches (2026 시즌 일정) ───────────────
   await prisma.match.upsert({
     where: { id: 3 },
@@ -1075,7 +788,6 @@ async function main() {
     },
   });
 
-  // FA컵
   await prisma.match.upsert({
     where: { id: 8 },
     update: {},
@@ -1090,7 +802,6 @@ async function main() {
     },
   });
 
-  // 예정 경기 (스코어 없음)
   await prisma.match.upsert({
     where: { id: 9 },
     update: {},
@@ -1136,6 +847,295 @@ async function main() {
       awayTeamName: "Jeonbuk Hyundai Motors",
       competitionType: "LEAGUE",
       seasonId: season.id,
+    },
+  });
+
+  // MatchSquad — match1 (스코어 있는 경기는 일괄 처리)
+  await prisma.matchSquad.createMany({
+    data: [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15].map((p) => ({
+      matchId: match1.id,
+      playerId: p.id,
+      isConfirmed: true,
+    })),
+    skipDuplicates: true,
+  });
+
+  // PlayerMatchStats — match1
+  await prisma.playerMatchStats.upsert({
+    where: { id: 1 },
+    update: { passesAttempted: 32, passesCompleted: 26, xA: 0.65, shotsOnTarget: 3 },
+    create: {
+      matchId: match1.id,
+      playerId: p1.id,
+      goals: 2,
+      assists: 1,
+      xG: 2.3,
+      xA: 0.65,
+      shots: 5,
+      shotsOnTarget: 3,
+      passesAttempted: 32,
+      passesCompleted: 26,
+      minutesPlayed: 90,
+    },
+  });
+
+  await prisma.playerMatchStats.upsert({
+    where: { id: 2 },
+    update: { passesAttempted: 72, passesCompleted: 64, shotsOnTarget: 1 },
+    create: {
+      matchId: match1.id,
+      playerId: p2.id,
+      goals: 1,
+      assists: 2,
+      keyPasses: 4,
+      shotsOnTarget: 1,
+      passesAttempted: 72,
+      passesCompleted: 64,
+      minutesPlayed: 90,
+    },
+  });
+
+  // match2: Incheon 0-2 FC Seoul (원정승) — p1 2골
+  await prisma.playerMatchStats.upsert({
+    where: { id: 3 },
+    update: { passesAttempted: 29, passesCompleted: 23, shotsOnTarget: 3 },
+    create: { matchId: 2, playerId: p1.id, goals: 2, assists: 0, xG: 1.9, shots: 4, shotsOnTarget: 3, passesAttempted: 29, passesCompleted: 23, minutesPlayed: 90 },
+  });
+  await prisma.playerMatchStats.upsert({
+    where: { id: 4 },
+    update: { passesAttempted: 30, passesCompleted: 25, xA: 0.9 },
+    create: { matchId: 2, playerId: p3.id, goals: 0, assists: 2, xG: 0.4, xA: 0.9, shots: 2, shotsOnTarget: 1, passesAttempted: 30, passesCompleted: 25, minutesPlayed: 90 },
+  });
+
+  // match3: FC Seoul 1-1 Suwon — p2 1골
+  await prisma.playerMatchStats.upsert({
+    where: { id: 5 },
+    update: { passesAttempted: 68, passesCompleted: 59, shotsOnTarget: 2 },
+    create: { matchId: 3, playerId: p2.id, goals: 1, assists: 0, xG: 1.1, shots: 3, shotsOnTarget: 2, passesAttempted: 68, passesCompleted: 59, minutesPlayed: 90 },
+  });
+  await prisma.playerMatchStats.upsert({
+    where: { id: 6 },
+    update: { passesAttempted: 28, passesCompleted: 22, xA: 0.55 },
+    create: { matchId: 3, playerId: p1.id, goals: 0, assists: 1, xG: 0.6, xA: 0.55, shots: 3, shotsOnTarget: 1, passesAttempted: 28, passesCompleted: 22, minutesPlayed: 82 },
+  });
+
+  // match4: Jeonbuk 2-0 FC Seoul (원정패) — 무득점
+  await prisma.playerMatchStats.upsert({
+    where: { id: 7 },
+    update: { passesAttempted: 31, passesCompleted: 24 },
+    create: { matchId: 4, playerId: p1.id, goals: 0, assists: 0, xG: 0.5, shots: 2, shotsOnTarget: 1, passesAttempted: 31, passesCompleted: 24, minutesPlayed: 90 },
+  });
+  await prisma.playerMatchStats.upsert({
+    where: { id: 8 },
+    update: { passesAttempted: 49, passesCompleted: 43 },
+    create: { matchId: 4, playerId: p5.id, goals: 0, assists: 0, xG: 0.2, shots: 1, shotsOnTarget: 0, passesAttempted: 49, passesCompleted: 43, minutesPlayed: 90 },
+  });
+
+  // match5: FC Seoul 2-1 Daegu — p1 1골, p3 1골
+  await prisma.playerMatchStats.upsert({
+    where: { id: 9 },
+    update: { passesAttempted: 30, passesCompleted: 24, shotsOnTarget: 2 },
+    create: { matchId: 5, playerId: p1.id, goals: 1, assists: 0, xG: 1.4, shots: 4, shotsOnTarget: 2, passesAttempted: 30, passesCompleted: 24, minutesPlayed: 90 },
+  });
+  await prisma.playerMatchStats.upsert({
+    where: { id: 10 },
+    update: { passesAttempted: 28, passesCompleted: 23, shotsOnTarget: 2 },
+    create: { matchId: 5, playerId: p3.id, goals: 1, assists: 0, xG: 0.9, shots: 3, shotsOnTarget: 2, passesAttempted: 28, passesCompleted: 23, minutesPlayed: 90 },
+  });
+  await prisma.playerMatchStats.upsert({
+    where: { id: 11 },
+    update: { passesAttempted: 70, passesCompleted: 62 },
+    create: { matchId: 5, playerId: p2.id, goals: 0, assists: 2, xG: 0.3, keyPasses: 5, shotsOnTarget: 1, passesAttempted: 70, passesCompleted: 62, minutesPlayed: 90 },
+  });
+
+  // match6: Ulsan 3-1 FC Seoul (원정패) — p2 1골
+  await prisma.playerMatchStats.upsert({
+    where: { id: 12 },
+    update: { passesAttempted: 60, passesCompleted: 52, shotsOnTarget: 1 },
+    create: { matchId: 6, playerId: p2.id, goals: 1, assists: 0, xG: 0.8, shots: 2, shotsOnTarget: 1, passesAttempted: 60, passesCompleted: 52, minutesPlayed: 90 },
+  });
+  await prisma.playerMatchStats.upsert({
+    where: { id: 13 },
+    update: { passesAttempted: 27, passesCompleted: 21, xA: 0.5 },
+    create: { matchId: 6, playerId: p1.id, goals: 0, assists: 1, xG: 0.7, xA: 0.5, shots: 3, shotsOnTarget: 1, passesAttempted: 27, passesCompleted: 21, minutesPlayed: 90 },
+  });
+
+  // match7: FC Seoul 0-0 Pohang — 무득점
+  await prisma.playerMatchStats.upsert({
+    where: { id: 14 },
+    update: { passesAttempted: 33, passesCompleted: 26 },
+    create: { matchId: 7, playerId: p1.id, goals: 0, assists: 0, xG: 0.4, shots: 2, shotsOnTarget: 0, passesAttempted: 33, passesCompleted: 26, minutesPlayed: 90 },
+  });
+
+  // match8: FC Seoul 3-0 Gangwon FA컵 — p1 2골, p2 1골
+  await prisma.playerMatchStats.upsert({
+    where: { id: 15 },
+    update: { passesAttempted: 35, passesCompleted: 29, shotsOnTarget: 3 },
+    create: { matchId: 8, playerId: p1.id, goals: 2, assists: 0, xG: 2.1, shots: 5, shotsOnTarget: 3, passesAttempted: 35, passesCompleted: 29, minutesPlayed: 90 },
+  });
+  await prisma.playerMatchStats.upsert({
+    where: { id: 16 },
+    update: { passesAttempted: 73, passesCompleted: 65, shotsOnTarget: 2 },
+    create: { matchId: 8, playerId: p2.id, goals: 1, assists: 1, xG: 1.0, shots: 3, shotsOnTarget: 2, passesAttempted: 73, passesCompleted: 65, minutesPlayed: 90 },
+  });
+  await prisma.playerMatchStats.upsert({
+    where: { id: 17 },
+    update: { passesAttempted: 32, passesCompleted: 27 },
+    create: { matchId: 8, playerId: p3.id, goals: 0, assists: 2, xG: 0.5, shots: 2, shotsOnTarget: 1, passesAttempted: 32, passesCompleted: 27, minutesPlayed: 90 },
+  });
+
+  // ── PlayerMatchStats (추가 — 스타팅 XI 전원) ─────────────
+
+  // match1 additions: 3-1 홈승
+  await prisma.playerMatchStats.upsert({ where: { id: 18 }, update: {}, create: { matchId: match1.id, playerId: p3.id,  shots: 3, xG: 0.7,  keyPasses: 2, shotsOnTarget: 1, passesAttempted: 28, passesCompleted: 23, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 19 }, update: { passesAttempted: 52, passesCompleted: 46 }, create: { matchId: match1.id, playerId: p5.id,  tackles: 4, interceptions: 2, clearances: 5, passesAttempted: 52, passesCompleted: 46, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 20 }, update: { passesAttempted: 55, passesCompleted: 49 }, create: { matchId: match1.id, playerId: p6.id,  tackles: 5, interceptions: 3, clearances: 7, passesAttempted: 55, passesCompleted: 49, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 21 }, update: {}, create: { matchId: match1.id, playerId: p7.id,  tackles: 3, interceptions: 2, clearances: 2, passesAttempted: 51, passesCompleted: 44, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 22 }, update: {}, create: { matchId: match1.id, playerId: p8.id,  tackles: 2, interceptions: 1, clearances: 1, passesAttempted: 46, passesCompleted: 39, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 23 }, update: {}, create: { matchId: match1.id, playerId: p9.id,  tackles: 6, interceptions: 4, passesAttempted: 70, passesCompleted: 62, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 24 }, update: {}, create: { matchId: match1.id, playerId: p10.id, tackles: 4, interceptions: 3, passesAttempted: 58, passesCompleted: 50, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 25 }, update: { passesAttempted: 24, passesCompleted: 20 }, create: { matchId: match1.id, playerId: p13.id, shots: 2, xG: 0.4, keyPasses: 1, shotsOnTarget: 1, passesAttempted: 24, passesCompleted: 20, minutesPlayed: 72 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 26 }, update: { passesAttempted: 7, passesCompleted: 5 }, create: { matchId: match1.id, playerId: p14.id, shots: 1, xG: 0.3, shotsOnTarget: 0, passesAttempted: 7, passesCompleted: 5, minutesPlayed: 18 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 27 }, update: { passesAttempted: 32, passesCompleted: 29 }, create: { matchId: match1.id, playerId: p15.id, saves: 3, cleanSheet: false, passesAttempted: 32, passesCompleted: 29, minutesPlayed: 90 } });
+
+  // match2 additions: Incheon 0-2 FC Seoul 원정승
+  await prisma.playerMatchStats.upsert({ where: { id: 28 }, update: {}, create: { matchId: 2, playerId: p2.id,  shots: 1, xG: 0.3, keyPasses: 3, shotsOnTarget: 1, passesAttempted: 64, passesCompleted: 56, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 29 }, update: { passesAttempted: 48, passesCompleted: 43 }, create: { matchId: 2, playerId: p5.id,  tackles: 5, interceptions: 4, clearances: 6, passesAttempted: 48, passesCompleted: 43, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 30 }, update: { passesAttempted: 51, passesCompleted: 46 }, create: { matchId: 2, playerId: p6.id,  tackles: 6, interceptions: 5, clearances: 8, passesAttempted: 51, passesCompleted: 46, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 31 }, update: {}, create: { matchId: 2, playerId: p7.id,  tackles: 3, interceptions: 2, passesAttempted: 47, passesCompleted: 40, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 32 }, update: {}, create: { matchId: 2, playerId: p8.id,  tackles: 2, interceptions: 2, passesAttempted: 43, passesCompleted: 37, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 33 }, update: {}, create: { matchId: 2, playerId: p9.id,  tackles: 7, interceptions: 5, passesAttempted: 65, passesCompleted: 57, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 34 }, update: {}, create: { matchId: 2, playerId: p10.id, tackles: 5, interceptions: 4, passesAttempted: 54, passesCompleted: 47, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 35 }, update: { passesAttempted: 22, passesCompleted: 18 }, create: { matchId: 2, playerId: p13.id, shots: 1, xG: 0.3, shotsOnTarget: 0, passesAttempted: 22, passesCompleted: 18, minutesPlayed: 85 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 36 }, update: { passesAttempted: 28, passesCompleted: 25 }, create: { matchId: 2, playerId: p15.id, saves: 5, cleanSheet: true, passesAttempted: 28, passesCompleted: 25, minutesPlayed: 90 } });
+
+  // match3 additions: FC Seoul 1-1 Suwon 홈무
+  await prisma.playerMatchStats.upsert({ where: { id: 37 }, update: { passesAttempted: 26, passesCompleted: 22 }, create: { matchId: 3, playerId: p3.id,  shots: 2, xG: 0.5, keyPasses: 2, shotsOnTarget: 1, passesAttempted: 26, passesCompleted: 22, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 38 }, update: { passesAttempted: 50, passesCompleted: 44 }, create: { matchId: 3, playerId: p5.id,  tackles: 4, interceptions: 3, clearances: 6, passesAttempted: 50, passesCompleted: 44, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 39 }, update: { passesAttempted: 53, passesCompleted: 47 }, create: { matchId: 3, playerId: p6.id,  tackles: 5, interceptions: 4, clearances: 7, passesAttempted: 53, passesCompleted: 47, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 40 }, update: {}, create: { matchId: 3, playerId: p7.id,  tackles: 3, interceptions: 2, passesAttempted: 48, passesCompleted: 41, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 41 }, update: {}, create: { matchId: 3, playerId: p8.id,  tackles: 2, interceptions: 1, passesAttempted: 44, passesCompleted: 38, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 42 }, update: {}, create: { matchId: 3, playerId: p9.id,  tackles: 5, interceptions: 4, passesAttempted: 63, passesCompleted: 55, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 43 }, update: {}, create: { matchId: 3, playerId: p10.id, tackles: 4, interceptions: 3, passesAttempted: 52, passesCompleted: 45, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 44 }, update: { passesAttempted: 8, passesCompleted: 6 }, create: { matchId: 3, playerId: p11.id, shots: 1, xG: 0.2, keyPasses: 1, shotsOnTarget: 0, passesAttempted: 8, passesCompleted: 6, minutesPlayed: 20 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 45 }, update: { passesAttempted: 20, passesCompleted: 17 }, create: { matchId: 3, playerId: p13.id, shots: 2, xG: 0.4, shotsOnTarget: 1, passesAttempted: 20, passesCompleted: 17, minutesPlayed: 70 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 46 }, update: { passesAttempted: 30, passesCompleted: 27 }, create: { matchId: 3, playerId: p15.id, saves: 3, cleanSheet: false, passesAttempted: 30, passesCompleted: 27, minutesPlayed: 90 } });
+
+  // match4 additions: Jeonbuk 2-0 FC Seoul 원정패
+  await prisma.playerMatchStats.upsert({ where: { id: 47 }, update: {}, create: { matchId: 4, playerId: p2.id,  shots: 1, xG: 0.2, keyPasses: 2, shotsOnTarget: 0, passesAttempted: 58, passesCompleted: 48, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 48 }, update: { passesAttempted: 20, passesCompleted: 16 }, create: { matchId: 4, playerId: p3.id,  shots: 1, xG: 0.3, shotsOnTarget: 1, passesAttempted: 20, passesCompleted: 16, minutesPlayed: 75 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 49 }, update: { passesAttempted: 46, passesCompleted: 40 }, create: { matchId: 4, playerId: p6.id,  tackles: 5, interceptions: 4, clearances: 8, passesAttempted: 46, passesCompleted: 40, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 50 }, update: {}, create: { matchId: 4, playerId: p7.id,  tackles: 3, interceptions: 2, clearances: 3, passesAttempted: 44, passesCompleted: 37, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 51 }, update: {}, create: { matchId: 4, playerId: p8.id,  tackles: 2, interceptions: 2, clearances: 2, passesAttempted: 40, passesCompleted: 34, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 52 }, update: {}, create: { matchId: 4, playerId: p9.id,  tackles: 6, interceptions: 5, passesAttempted: 61, passesCompleted: 52, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 53 }, update: {}, create: { matchId: 4, playerId: p10.id, tackles: 5, interceptions: 3, passesAttempted: 50, passesCompleted: 43, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 54 }, update: { passesAttempted: 18, passesCompleted: 14 }, create: { matchId: 4, playerId: p13.id, shots: 1, xG: 0.2, shotsOnTarget: 0, passesAttempted: 18, passesCompleted: 14, minutesPlayed: 65 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 55 }, update: { passesAttempted: 25, passesCompleted: 22 }, create: { matchId: 4, playerId: p15.id, saves: 6, cleanSheet: false, passesAttempted: 25, passesCompleted: 22, minutesPlayed: 90 } });
+
+  // match5 additions: FC Seoul 2-1 Daegu 홈승
+  await prisma.playerMatchStats.upsert({ where: { id: 56 }, update: { passesAttempted: 51, passesCompleted: 45 }, create: { matchId: 5, playerId: p5.id,  tackles: 4, interceptions: 3, clearances: 5, passesAttempted: 51, passesCompleted: 45, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 57 }, update: { passesAttempted: 54, passesCompleted: 48 }, create: { matchId: 5, playerId: p6.id,  tackles: 5, interceptions: 3, clearances: 6, passesAttempted: 54, passesCompleted: 48, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 58 }, update: {}, create: { matchId: 5, playerId: p7.id,  tackles: 3, interceptions: 2, passesAttempted: 50, passesCompleted: 43, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 59 }, update: {}, create: { matchId: 5, playerId: p8.id,  tackles: 2, interceptions: 1, passesAttempted: 45, passesCompleted: 39, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 60 }, update: {}, create: { matchId: 5, playerId: p9.id,  tackles: 5, interceptions: 4, passesAttempted: 66, passesCompleted: 58, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 61 }, update: {}, create: { matchId: 5, playerId: p10.id, tackles: 4, interceptions: 3, passesAttempted: 55, passesCompleted: 48, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 62 }, update: { passesAttempted: 22, passesCompleted: 19 }, create: { matchId: 5, playerId: p13.id, shots: 1, xG: 0.3, shotsOnTarget: 0, passesAttempted: 22, passesCompleted: 19, minutesPlayed: 80 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 63 }, update: { passesAttempted: 31, passesCompleted: 28 }, create: { matchId: 5, playerId: p15.id, saves: 3, cleanSheet: false, passesAttempted: 31, passesCompleted: 28, minutesPlayed: 90 } });
+
+  // match6 additions: Ulsan 3-1 FC Seoul 원정패
+  await prisma.playerMatchStats.upsert({ where: { id: 64 }, update: { passesAttempted: 19, passesCompleted: 15 }, create: { matchId: 6, playerId: p3.id,  shots: 1, xG: 0.3, shotsOnTarget: 1, passesAttempted: 19, passesCompleted: 15, minutesPlayed: 75 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 65 }, update: { passesAttempted: 44, passesCompleted: 38 }, create: { matchId: 6, playerId: p5.id,  tackles: 5, interceptions: 3, clearances: 9, passesAttempted: 44, passesCompleted: 38, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 66 }, update: { passesAttempted: 47, passesCompleted: 41 }, create: { matchId: 6, playerId: p6.id,  tackles: 6, interceptions: 4, clearances: 10, passesAttempted: 47, passesCompleted: 41, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 67 }, update: {}, create: { matchId: 6, playerId: p7.id,  tackles: 4, interceptions: 3, clearances: 3, passesAttempted: 42, passesCompleted: 35, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 68 }, update: {}, create: { matchId: 6, playerId: p8.id,  tackles: 3, interceptions: 2, clearances: 2, passesAttempted: 38, passesCompleted: 32, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 69 }, update: {}, create: { matchId: 6, playerId: p9.id,  tackles: 7, interceptions: 5, passesAttempted: 60, passesCompleted: 51, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 70 }, update: {}, create: { matchId: 6, playerId: p10.id, tackles: 5, interceptions: 4, passesAttempted: 49, passesCompleted: 42, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 71 }, update: { passesAttempted: 17, passesCompleted: 13 }, create: { matchId: 6, playerId: p13.id, shots: 1, xG: 0.2, shotsOnTarget: 0, passesAttempted: 17, passesCompleted: 13, minutesPlayed: 60 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 72 }, update: { passesAttempted: 11, passesCompleted: 8 }, create: { matchId: 6, playerId: p14.id, shots: 2, xG: 0.5, shotsOnTarget: 1, passesAttempted: 11, passesCompleted: 8, minutesPlayed: 30 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 73 }, update: { passesAttempted: 26, passesCompleted: 23 }, create: { matchId: 6, playerId: p15.id, saves: 7, cleanSheet: false, passesAttempted: 26, passesCompleted: 23, minutesPlayed: 90 } });
+
+  // match7 additions: FC Seoul 0-0 Pohang 홈무
+  await prisma.playerMatchStats.upsert({ where: { id: 74 }, update: {}, create: { matchId: 7, playerId: p2.id,  shots: 1, xG: 0.3, keyPasses: 3, shotsOnTarget: 0, passesAttempted: 65, passesCompleted: 58, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 75 }, update: { passesAttempted: 27, passesCompleted: 23 }, create: { matchId: 7, playerId: p3.id,  shots: 2, xG: 0.5, shotsOnTarget: 1, passesAttempted: 27, passesCompleted: 23, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 76 }, update: { passesAttempted: 52, passesCompleted: 47 }, create: { matchId: 7, playerId: p5.id,  tackles: 5, interceptions: 4, clearances: 6, passesAttempted: 52, passesCompleted: 47, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 77 }, update: { passesAttempted: 55, passesCompleted: 50 }, create: { matchId: 7, playerId: p6.id,  tackles: 6, interceptions: 4, clearances: 7, passesAttempted: 55, passesCompleted: 50, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 78 }, update: {}, create: { matchId: 7, playerId: p7.id,  tackles: 4, interceptions: 3, passesAttempted: 50, passesCompleted: 44, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 79 }, update: {}, create: { matchId: 7, playerId: p8.id,  tackles: 3, interceptions: 2, passesAttempted: 46, passesCompleted: 40, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 80 }, update: {}, create: { matchId: 7, playerId: p9.id,  tackles: 6, interceptions: 5, passesAttempted: 68, passesCompleted: 61, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 81 }, update: {}, create: { matchId: 7, playerId: p10.id, tackles: 5, interceptions: 4, passesAttempted: 57, passesCompleted: 51, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 82 }, update: { passesAttempted: 25, passesCompleted: 22 }, create: { matchId: 7, playerId: p13.id, shots: 1, xG: 0.3, shotsOnTarget: 0, passesAttempted: 25, passesCompleted: 22, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 83 }, update: { passesAttempted: 33, passesCompleted: 30 }, create: { matchId: 7, playerId: p15.id, saves: 4, cleanSheet: true, passesAttempted: 33, passesCompleted: 30, minutesPlayed: 90 } });
+
+  // match8 additions: FC Seoul 3-0 Gangwon FA컵 홈승
+  await prisma.playerMatchStats.upsert({ where: { id: 84 }, update: { passesAttempted: 55, passesCompleted: 50 }, create: { matchId: 8, playerId: p5.id,  tackles: 3, interceptions: 2, clearances: 4, passesAttempted: 55, passesCompleted: 50, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 85 }, update: { passesAttempted: 58, passesCompleted: 53 }, create: { matchId: 8, playerId: p6.id,  tackles: 4, interceptions: 3, clearances: 5, passesAttempted: 58, passesCompleted: 53, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 86 }, update: {}, create: { matchId: 8, playerId: p7.id,  tackles: 2, interceptions: 1, passesAttempted: 53, passesCompleted: 47, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 87 }, update: {}, create: { matchId: 8, playerId: p8.id,  tackles: 2, interceptions: 1, passesAttempted: 49, passesCompleted: 43, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 88 }, update: {}, create: { matchId: 8, playerId: p9.id,  tackles: 5, interceptions: 3, passesAttempted: 72, passesCompleted: 65, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 89 }, update: {}, create: { matchId: 8, playerId: p10.id, tackles: 4, interceptions: 2, passesAttempted: 60, passesCompleted: 54, minutesPlayed: 90 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 90 }, update: { passesAttempted: 26, passesCompleted: 23 }, create: { matchId: 8, playerId: p13.id, shots: 1, xG: 0.4, shotsOnTarget: 0, passesAttempted: 26, passesCompleted: 23, minutesPlayed: 85 } });
+  await prisma.playerMatchStats.upsert({ where: { id: 91 }, update: { passesAttempted: 35, passesCompleted: 32 }, create: { matchId: 8, playerId: p15.id, saves: 2, cleanSheet: true, passesAttempted: 35, passesCompleted: 32, minutesPlayed: 90 } });
+
+  // match1/p3 — id:18 was occupied; create under id:92
+  await prisma.playerMatchStats.upsert({ where: { id: 92 }, update: {}, create: { matchId: match1.id, playerId: p3.id, shots: 3, xG: 0.7, keyPasses: 2, shotsOnTarget: 1, passesAttempted: 28, passesCompleted: 23, minutesPlayed: 90 } });
+
+  // ── TrainingSession ───────────────────────────────────
+  const ts1 = await prisma.trainingSession.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      date: new Date("2026-04-07T10:00:00"),
+      goal: "압박 수비 조직력 강화",
+      sessionType: "TACTICAL_DEFENSIVE",
+      isApproved: true,
+      seasonId: season.id,
+      createdById: coach.id,
+      approvedById: admin.id,
+      contents: {
+        create: [
+          { phase: "WARMUP", description: "10분 조깅 + 동적 스트레칭" },
+          { phase: "TACTICAL", description: "4-4-2 압박 블록 훈련" },
+          { phase: "GAME", description: "11v11 압박 적용 실전 게임" },
+        ],
+      },
+    },
+  });
+
+  // Participants
+  await prisma.trainingParticipant.createMany({
+    data: [
+      { sessionId: ts1.id, playerId: p1.id },
+      { sessionId: ts1.id, playerId: p2.id },
+      { sessionId: ts1.id, playerId: p3.id },
+      { sessionId: ts1.id, playerId: p4.id },
+      { sessionId: ts1.id, playerId: p5.id },
+    ],
+    skipDuplicates: true,
+  });
+
+  // Results
+  await prisma.trainingResult.createMany({
+    data: [
+      { sessionId: ts1.id, playerId: p1.id, attendance: "PRESENT", performanceScore: 8, feedback: "전방 압박 적극적" },
+      { sessionId: ts1.id, playerId: p2.id, attendance: "PRESENT", performanceScore: 9, feedback: "패스 연계 탁월" },
+      { sessionId: ts1.id, playerId: p3.id, attendance: "LATE_UNAUTHORIZED", performanceScore: 6 },
+      { sessionId: ts1.id, playerId: p4.id, attendance: "PRESENT", performanceScore: 8 },
+      { sessionId: ts1.id, playerId: p5.id, attendance: "PRESENT", performanceScore: 7, feedback: "수비 라인 조율 필요" },
+    ],
+    skipDuplicates: true,
+  });
+
+  // ── Injury ────────────────────────────────────────────
+  await prisma.injury.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      playerId: p3.id,
+      bodyPart: "THIGH_BACK",
+      cause: "TRAINING",
+      status: "REHABILITATING",
+      expectedReturnDate: new Date("2026-05-15"),
+      medicalStaffId: coach.id,
     },
   });
 
