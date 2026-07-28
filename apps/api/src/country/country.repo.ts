@@ -5,7 +5,7 @@ export default class Repository {
   ) {}
 
   async getCountryByCode(code: string) {
-    const result = this.prisma.country.findUnique({
+    const result = this.prisma.country.findFirst({
         where:{code}
     })
     return result

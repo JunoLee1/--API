@@ -44,7 +44,7 @@ export function startMonthlyAttendanceCheckJob() {
       const stat = playerMap.get(r.playerId)!;
       stat.total++;
       if (r.attendance === "PRESENT") stat.present++;
-      else if (r.attendance === "ABSENT_AUTHORIZED" || r.attendance === "LATE_AUTHORIZED") stat.authorized++;
+      else if (r.attendance === "ABSENT_AUTHORIZED") stat.authorized++;
     }
 
     const monthLabel = `${firstOfLastMonth.getFullYear()}년 ${firstOfLastMonth.getMonth() + 1}월`;
@@ -62,9 +62,10 @@ export function startMonthlyAttendanceCheckJob() {
       void notifRepo
         .createForCoachingStaff(
           "TRAINING_ATTENDANCE_WARNING",
-          "월간 출석률 80% 미만",
-          `${player.playerName} 선수의 ${monthLabel} 출석률이 ${Math.round(rate * 100)}%입니다.`,
-          undefined,
+          () => ({
+            title: "월간 출석률 80% 미만",
+            body: `${player.playerName} 선수의 ${monthLabel} 출석률이 ${Math.round(rate * 100)}%입니다.`,
+          }),
         )
         .catch(console.error);
     }
