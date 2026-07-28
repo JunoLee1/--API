@@ -58,7 +58,7 @@ router.put("/:id/player-stats", auth, controller.upsertPlayerStats);
 router.put("/:id/team-stats", auth, controller.upsertTeamStats);
 
 const squadRepo = new MatchSquadRepository(getPrisma());
-const squadService = new MatchSquadService(squadRepo);
+const squadService = new MatchSquadService(squadRepo, getPrisma());
 const squadController = new MatchSquadController(squadService);
 
 router.get("/:id/squad", auth, squadController.getSquad);

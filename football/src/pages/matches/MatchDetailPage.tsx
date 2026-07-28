@@ -306,7 +306,7 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
 
   useEffect(() => {
     if (open) {
-      playerApi.list({ status: 'ACTIVE' }).then(setPlayers).catch(() => null)
+      playerApi.list({ status: 'ACTIVE', excludeYouth: true }).then(setPlayers).catch(() => null)
       setForm(EMPTY_PLAYER_FORM)
     }
   }, [open])
@@ -1191,7 +1191,7 @@ export function MatchDetailPage() {
               open={shotOpen}
               onOpenChange={setShotOpen}
               matchId={match.id}
-              players={match.playerMatchStats.map(s => s.player as { id: string; playerName: string; position: string })}
+              players={match.playerMatchStats.map(s => ({ id: s.playerId, ...s.player }))}
               onSaved={() => { fetchShots(); fetchMatch() }}
             />
           )}

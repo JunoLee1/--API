@@ -147,7 +147,7 @@ export function MatchLineupPage() {
 
   useEffect(() => {
     Promise.all([
-      playerApi.list({ status: 'ACTIVE' }),
+      playerApi.list({ status: 'ACTIVE', excludeYouth: true }),
       lineupApi.get(matchId),
       injuryApi.active().catch(() => [] as { playerId: string }[]),
       matchApi.getSquad(matchId).catch(() => [] as { playerId: string; player: { id: string; playerName: string; position: string } }[]),
