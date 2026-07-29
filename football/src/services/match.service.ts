@@ -43,15 +43,31 @@ export const matchApi = {
       xG?: number
       xA?: number
       shots?: number
+      shotsOnTarget?: number
       passesAttempted?: number
       passesCompleted?: number
       keyPasses?: number
       tackles?: number
+      tacklesAttempted?: number
       interceptions?: number
       clearances?: number
       saves?: number
       cleanSheet?: boolean
       minutesPlayed?: number
+      ballRecoveries?: number
+      turnovers?: number
+      groundDuels?: number
+      groundDuelsAttempted?: number
+      aerialDuels?: number
+      aerialDuelsAttempted?: number
+      distanceCovered?: number
+      sprint?: number
+      foulsCommitted?: number
+      dribblesAttempted?: number
+      dribblesCompleted?: number
+      dribblesFailed?: number
+      longPassesAttempted?: number
+      longPassesCompleted?: number
     },
   ) => api.put(`/matches/${id}/player-stats`, payload),
 

@@ -5,6 +5,7 @@ import { authApi } from '@/services/auth.service'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import i18n from '@/i18n'
 
 const DEV_ACCOUNTS: { group: string; accounts: { label: string; email: string }[] }[] = [
   {
@@ -51,6 +52,13 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [lang, setLang] = useState<'ko' | 'en'>(i18n.language === 'en' ? 'en' : 'ko')
+
+  const toggleLanguage = () => {
+    const next = lang === 'ko' ? 'en' : 'ko'
+    setLang(next)
+    void i18n.changeLanguage(next)
+  }
 
   const login = async (e: string, p: string) => {
     setError(null)
@@ -72,6 +80,11 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="absolute top-4 right-4">
+        <Button variant="ghost" size="sm" onClick={toggleLanguage} className="text-xs font-medium">
+          {lang === 'ko' ? 'EN' : '한국어'}
+        </Button>
+      </div>
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold tracking-tight">Football ERP</h1>
