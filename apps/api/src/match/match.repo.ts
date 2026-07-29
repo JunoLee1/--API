@@ -390,9 +390,13 @@ export class MatchRepository {
     const xgMap: Record<string, number> = {};
     const xaMap: Record<string, number> = {};
     const keyPassMap: Record<string, number> = {};
+    const onTargetMap: Record<string, number> = {};
 
     for (const shot of shots) {
       xgMap[shot.shooterId] = (xgMap[shot.shooterId] ?? 0) + shot.xG;
+      if (shot.result === 'GOAL' || shot.result === 'ON_TARGET') {
+        onTargetMap[shot.shooterId] = (onTargetMap[shot.shooterId] ?? 0) + 1;
+      }
       if (shot.assisterId && shot.assister) {
         const effectivePosition = shot.assisterPositionOverride ?? shot.assister.position;
         const weight = XA_WEIGHT[effectivePosition] ?? 0.7;
@@ -403,13 +407,14 @@ export class MatchRepository {
 
     const playerIds = new Set([...Object.keys(xgMap), ...Object.keys(xaMap), ...Object.keys(keyPassMap)]);
     for (const playerId of playerIds) {
-      const xG        = xgMap[playerId]      != null ? Math.round(xgMap[playerId] * 100) / 100 : undefined;
-      const xA        = xaMap[playerId]      != null ? Math.round(xaMap[playerId] * 100) / 100 : undefined;
-      const keyPasses = keyPassMap[playerId] != null ? keyPassMap[playerId]                      : undefined;
+      const xG           = xgMap[playerId]      != null ? Math.round(xgMap[playerId] * 100) / 100 : undefined;
+      const xA           = xaMap[playerId]      != null ? Math.round(xaMap[playerId] * 100) / 100 : undefined;
+      const keyPasses    = keyPassMap[playerId] != null ? keyPassMap[playerId]                      : undefined;
+      const shotsOnTarget = onTargetMap[playerId] ?? 0;
       await this.prisma.playerMatchStats.upsert({
         where: { matchId_playerId: { matchId, playerId } },
-        create: { matchId, playerId, ...(xG != null && { xG }), ...(xA != null && { xA }), ...(keyPasses != null && { keyPasses }) },
-        update: {                    ...(xG != null && { xG }), ...(xA != null && { xA }), ...(keyPasses != null && { keyPasses }) },
+        create: { matchId, playerId, shotsOnTarget, ...(xG != null && { xG }), ...(xA != null && { xA }), ...(keyPasses != null && { keyPasses }) },
+        update: {                    shotsOnTarget,   ...(xG != null && { xG }), ...(xA != null && { xA }), ...(keyPasses != null && { keyPasses }) },
       });
     }
   }
