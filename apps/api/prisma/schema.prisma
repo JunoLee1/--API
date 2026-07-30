@@ -57,6 +57,7 @@ enum FrontOfficeRole {
   SCOUT
   EQUIPMENT_MANAGER
   TACTICAL_ANALYST
+  FINANCE_MANAGER
 }
 
 enum PlayerLevel {
@@ -312,6 +313,11 @@ enum SeasonStatus {
   CLOSED
 }
 
+enum WageCapType {
+  FIXED
+  RATIO
+}
+
 enum EquipmentCategory {
   CLOTHING
   FOOTWEAR
@@ -527,14 +533,18 @@ model User {
   guardianFees             AcademyFee[]            @relation("GuardianFees")
   givenEvaluations         CoachingStaffEvaluation[] @relation("EvaluationGiver")
   receivedEvaluations      CoachingStaffEvaluation[] @relation("EvaluationReceiver")
+  staffRecordsCreated      StaffRecord[]             @relation("StaffRecordCreator")
+  mealExpensesCreated      MealExpense[]             @relation("MealExpenseCreator")
 }
 
 model Season {
-  id        Int          @id @default(autoincrement())
-  name      String
-  startDate DateTime
-  endDate   DateTime
-  status    SeasonStatus @default(UPCOMING)
+  id           Int          @id @default(autoincrement())
+  name         String
+  startDate    DateTime
+  endDate      DateTime
+  status       SeasonStatus @default(UPCOMING)
+  wageCapType  WageCapType?
+  wageCapValue Float?
 
   matches          Match[]
   trainingSessions TrainingSession[]
@@ -583,6 +593,8 @@ model Player {
   videoAssignments       VideoAssignment[]
   callups                PlayerCallup[]
   playStyle              String?
+  allergies              String[]
+  foodPreferences        String?
   // 최신값 캐시 — MarketValueHistory 항목 생성 시 항상 동시 업데이트할 것 (service 레이어에서 트랜잭션 보장)
   currentMarketValue     Float?
   jerseyNumbers          JerseyNumber[]
@@ -843,6 +855,7 @@ model Match {
   shotEvents       ShotEvent[]
   matchLineup      MatchLineup?
   incidentReports  IncidentReport[]
+  mealExpenses     MealExpense[]
 }
 
 model PlayerMatchStats {
@@ -971,6 +984,7 @@ model TrainingSession {
   trainingLoads   TrainingLoad[]
   incidentReports IncidentReport[]
   playerBadges    PlayerBadge[]
+  mealExpenses    MealExpense[]
 }
 
 model TrainingContent {
@@ -1770,4 +1784,47 @@ model AcademyFee {
   guardian User   @relation("GuardianFees", fields: [guardianId], references: [id])
 
   @@unique([playerId, year, month])
+}
+
+model ClubSettings {
+  id       Int    @id @default(1)
+  currency String @default("KRW")
+}
+
+model StaffRecord {
+  id          Int      @id @default(autoincrement())
+  name        String
+  role        String
+  department  String?
+  phone       String?
+  isActive    Boolean  @default(true)
+  notes       String?
+  createdById Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy User @relation("StaffRecordCreator", fields: [createdById], references: [id])
+}
+
+enum MealExpenseType {
+  TRAINING
+  MATCH
+}
+
+model MealExpense {
+  id             Int             @id @default(autoincrement())
+  type           MealExpenseType
+  sessionId      Int?
+  matchId        Int?
+  date           DateTime
+  amount         Float
+  restaurantName String?
+  note           String?
+  createdById    Int
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  session   TrainingSession? @relation(fields: [sessionId], references: [id])
+  match     Match?           @relation(fields: [matchId], references: [id])
+  createdBy User             @relation("MealExpenseCreator", fields: [createdById], references: [id])
 }
