@@ -20,7 +20,8 @@ CREATE TABLE "ClubSettings" (
     "id" INTEGER NOT NULL DEFAULT 1,
     "currency" TEXT NOT NULL DEFAULT 'KRW',
 
-    CONSTRAINT "ClubSettings_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "ClubSettings_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "ClubSettings_singleton" CHECK ("id" = 1)
 );
 
 -- CreateTable: StaffRecord

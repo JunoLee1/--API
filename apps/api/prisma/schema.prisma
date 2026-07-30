@@ -1211,6 +1211,11 @@ enum MedicalExpenseStatus {
   REJECTED
 }
 
+enum MealExpenseType {
+  TRAINING
+  MATCH
+}
+
 model MedicalExpense {
   id              Int                  @id @default(autoincrement())
   status          MedicalExpenseStatus @default(DRAFT)
@@ -1806,18 +1811,13 @@ model StaffRecord {
   createdBy User @relation("StaffRecordCreator", fields: [createdById], references: [id])
 }
 
-enum MealExpenseType {
-  TRAINING
-  MATCH
-}
-
 model MealExpense {
   id             Int             @id @default(autoincrement())
   type           MealExpenseType
   sessionId      Int?
   matchId        Int?
   date           DateTime
-  amount         Float
+  amount         Int
   restaurantName String?
   note           String?
   createdById    Int
