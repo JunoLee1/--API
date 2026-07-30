@@ -8,11 +8,7 @@ export type WageCapCheckResult =
 export class WageCapService {
   constructor(private prisma: PrismaClient) {}
 
-  async check(
-    newSalary: number,
-    contractStartDate: Date,
-    contractEndDate: Date,
-  ): Promise<WageCapCheckResult> {
+  async check(newSalary: number): Promise<WageCapCheckResult> {
     const season = await this.prisma.season.findFirst({
       where: { status: "ACTIVE" },
       select: { wageCapType: true, wageCapValue: true, startDate: true, endDate: true },

@@ -26,11 +26,7 @@ export class ContractService {
   }
 
   async createContract(dto: CreateContractDto) {
-    const capResult = await this.wageCapService.check(
-      dto.salary,
-      new Date(dto.startDate),
-      new Date(dto.endDate),
-    );
+    const capResult = await this.wageCapService.check(dto.salary);
 
     if (capResult.status === "BLOCKED") {
       throw new AppError(
