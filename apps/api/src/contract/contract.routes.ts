@@ -3,11 +3,13 @@ import passport from "passport";
 import { ContractController } from "./contract.controller";
 import { ContractService } from "./contract.service";
 import { ContractRepository } from "./contract.repo";
+import { WageCapService } from "./wage-cap.service";
 import { getPrisma } from "../lib/prisma";
 
 const router = Router();
 const repo = new ContractRepository(getPrisma());
-const service = new ContractService(repo);
+const wageCapService = new WageCapService(getPrisma());
+const service = new ContractService(repo, wageCapService);
 const controller = new ContractController(service);
 
 const auth = passport.authenticate("accessToken", { session: false });
