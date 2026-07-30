@@ -34,6 +34,7 @@ import academyFeeRouter from "./academy-fee/academy-fee.routes";
 import coachingStaffRouter from "./coaching-staff/coaching-staff.routes";
 import clubSettingsRouter from "./club-settings/club-settings.routes";
 import staffRecordRouter from "./staff-record/staff-record.routes";
+import mealExpenseRouter from "./meal-expense/meal-expense.routes";
 
 const apiRouter = Router();
 
@@ -72,5 +73,6 @@ apiRouter.use("/academy-fees", academyFeeRouter);
 apiRouter.use("/coaching-staff", coachingStaffRouter);
 apiRouter.use("/club-settings", clubSettingsRouter);
 apiRouter.use("/staff-records", staffRecordRouter);
+apiRouter.use("/meal-expenses", mealExpenseRouter);
 
 export default apiRouter;

@@ -312,6 +312,14 @@ const NAV_ITEMS: NavItem[] = [
     frontOfficeRoles: ['GM'],
   },
   {
+    to: '/admin/meal-expenses',
+    label: 'nav.item.mealExpenses',
+    icon: Receipt,
+    section: 'nav.section.management',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['GM', 'FINANCE_MANAGER'],
+  },
+  {
     to: '/equipment',
     label: 'nav.item.equipment',
     icon: Package,

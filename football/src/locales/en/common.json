@@ -59,7 +59,8 @@
       "loginHistory": "Login History",
       "safeguardReports": "Safeguard Reports",
       "teamSettings": "Club Settings",
-      "staffRecords": "Staff Records"
+      "staffRecords": "Staff Records",
+      "mealExpenses": "Meal Expenses"
     }
   },
   "action": {
