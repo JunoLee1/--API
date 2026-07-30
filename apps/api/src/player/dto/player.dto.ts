@@ -25,6 +25,8 @@ export interface UpdatePlayerDto {
   nationalityId?: number;
   externalId?: string;
   agentId?: number;
+  allergies?: string[];
+  foodPreferences?: string | null;
 }
 
 export interface UpdatePlayerStatusDto {

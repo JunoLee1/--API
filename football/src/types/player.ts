@@ -65,6 +65,8 @@ export interface PlayerDetail extends Player {
   agentId: number | null
   teamId: number | null
   playStyle: string | null
+  allergies: string[]
+  foodPreferences: string | null
   team: { id: number; type: 'FIRST_TEAM' | 'YOUTH' } | null
   contracts: PlayerContract[]
   transfers: PlayerTransfer[]

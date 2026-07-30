@@ -1,4 +1,6 @@
 {
+  "allergySection": "Allergies & Diet",
+  "noAllergies": "No allergy information",
   "title": "Players",
   "list": "Player List",
   "detail": "Player Detail",

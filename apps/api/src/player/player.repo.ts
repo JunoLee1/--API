@@ -43,6 +43,8 @@ export class PlayerRepository {
         ...PLAYER_SELECT,
         userId: true,
         agentId: true,
+        allergies: true,
+        foodPreferences: true,
         team: { select: { id: true, type: true } },
         contracts: {
           select: {
@@ -103,6 +105,8 @@ export class PlayerRepository {
         ...(data.nationalityId && { nationalityId: data.nationalityId }),
         ...(data.externalId !== undefined && { externalId: data.externalId }),
         ...(data.agentId !== undefined && { agentId: data.agentId }),
+        ...(data.allergies !== undefined && { allergies: data.allergies }),
+        ...(data.foodPreferences !== undefined && { foodPreferences: data.foodPreferences }),
       },
       select: PLAYER_SELECT,
     });
