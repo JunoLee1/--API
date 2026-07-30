@@ -18,6 +18,7 @@ export type FrontOfficeRole =
   | 'SCOUT'
   | 'EQUIPMENT_MANAGER'
   | 'TACTICAL_ANALYST'
+  | 'FINANCE_MANAGER'
 
 export const ROLE_LABEL: Record<Role, string> = {
   ADMIN: 'Admin',
@@ -47,6 +48,7 @@ export const FRONT_OFFICE_ROLE_LABEL: Record<FrontOfficeRole, string> = {
   SCOUT: 'Scout',
   EQUIPMENT_MANAGER: 'Equipment Manager',
   TACTICAL_ANALYST: 'Tactical Analyst',
+  FINANCE_MANAGER: 'Finance Manager',
 }
 
 export interface UserDto {
