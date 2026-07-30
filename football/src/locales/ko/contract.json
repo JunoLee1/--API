@@ -27,7 +27,8 @@
       "submit": "등록",
       "saved": "계약이 등록됐습니다.",
       "saveFailed": "저장에 실패했습니다.",
-      "required": "필수 항목을 모두 입력해주세요."
+      "required": "필수 항목을 모두 입력해주세요.",
+      "wageCapWarning": "계약이 등록되었으나 임금상한을 {{percent}}% 초과합니다."
     },
     "status": {
       "ACTIVE": "활성",

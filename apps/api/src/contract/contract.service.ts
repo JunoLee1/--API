@@ -26,13 +26,12 @@ export class ContractService {
   }
 
   async createContract(dto: CreateContractDto) {
+    if (dto.salary <= 0) throw new AppError(400, "INVALID_SALARY");
+
     const capResult = await this.wageCapService.check(dto.salary);
 
     if (capResult.status === "BLOCKED") {
-      throw new AppError(
-        400,
-        `WAGE_CAP_EXCEEDED: 임금상한을 ${capResult.percentOver.toFixed(1)}% 초과합니다 (10% 이상 초과 시 계약 불가)`,
-      );
+      throw new AppError(400, "WAGE_CAP_EXCEEDED");
     }
 
     const contract = await this.repo.create(dto);

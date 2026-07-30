@@ -76,7 +76,7 @@ function CreateContractDialog({ open, onOpenChange, playerId, onSaved }: CreateC
     try {
       const result = await contractApi.create({ playerId, startDate, endDate, salary: Number(salary) })
       if (result.wageCapWarning) {
-        toast.warning(`계약이 등록되었으나 임금상한을 ${result.wageCapWarning.percentOver.toFixed(1)}% 초과합니다.`)
+        toast.warning(t('contracts.createDialog.wageCapWarning', { percent: result.wageCapWarning.percentOver.toFixed(1) }))
       } else {
         toast.success(t('contracts.createDialog.saved'))
       }
