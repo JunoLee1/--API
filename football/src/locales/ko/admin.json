@@ -335,6 +335,21 @@
     "enableLite": "Lite Mode 활성화",
     "disableLite": "Lite Mode 비활성화"
   },
+  "staffRecord": {
+    "title": "직원 기록",
+    "add": "직원 추가",
+    "edit": "직원 수정",
+    "name": "이름",
+    "role": "역할",
+    "department": "소속 부서",
+    "phone": "연락처",
+    "notes": "비고",
+    "status": "재직 상태",
+    "active": "재직 중",
+    "inactive": "퇴직",
+    "showInactive": "퇴직자 포함",
+    "confirmDelete": "이 직원 기록을 삭제하시겠습니까?"
+  },
   "equipmentPage": {
     "title": "장비 관리",
     "description": "구단 장비 재고와 지급 현황을 관리합니다.",

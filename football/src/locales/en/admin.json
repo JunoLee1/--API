@@ -335,6 +335,21 @@
     "enableLite": "Enable Lite Mode",
     "disableLite": "Disable Lite Mode"
   },
+  "staffRecord": {
+    "title": "Staff Records",
+    "add": "Add Staff",
+    "edit": "Edit Staff",
+    "name": "Name",
+    "role": "Role",
+    "department": "Department",
+    "phone": "Phone",
+    "notes": "Notes",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "showInactive": "Include inactive",
+    "confirmDelete": "Delete this staff record?"
+  },
   "equipmentPage": {
     "title": "Equipment Management",
     "description": "Manage club equipment inventory and assignments.",

@@ -58,7 +58,8 @@
       "auditLogs": "감사 로그",
       "loginHistory": "로그인 이력",
       "safeguardReports": "보호 신고 현황",
-      "teamSettings": "구단 설정"
+      "teamSettings": "구단 설정",
+      "staffRecords": "직원 기록"
     }
   },
   "action": {

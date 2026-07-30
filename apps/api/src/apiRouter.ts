@@ -33,6 +33,7 @@ import safeguardRouter from "./safeguard/safeguard.routes";
 import academyFeeRouter from "./academy-fee/academy-fee.routes";
 import coachingStaffRouter from "./coaching-staff/coaching-staff.routes";
 import clubSettingsRouter from "./club-settings/club-settings.routes";
+import staffRecordRouter from "./staff-record/staff-record.routes";
 
 const apiRouter = Router();
 
@@ -70,5 +71,6 @@ apiRouter.use("/safeguard-reports", safeguardRouter);
 apiRouter.use("/academy-fees", academyFeeRouter);
 apiRouter.use("/coaching-staff", coachingStaffRouter);
 apiRouter.use("/club-settings", clubSettingsRouter);
+apiRouter.use("/staff-records", staffRecordRouter);
 
 export default apiRouter;
