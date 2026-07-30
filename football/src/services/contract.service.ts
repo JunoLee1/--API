@@ -4,6 +4,10 @@ import type {
   CreateExtensionDto, CreateBonusDto,
 } from '@/types/contract'
 
+export interface ContractCreateResult extends ContractDetail {
+  wageCapWarning?: { percentOver: number }
+}
+
 export const contractApi = {
   byPlayer: (playerId: string) =>
     api.get<ContractSummary[]>(`/contracts/player/${playerId}`),
@@ -17,7 +21,7 @@ export const contractApi = {
     endDate: string
     salary: number
     managedById?: number
-  }) => api.post<ContractDetail>('/contracts', payload),
+  }) => api.post<ContractCreateResult>('/contracts', payload),
 
   updateStatus: (id: number, status: ContractStatus) =>
     api.patch<ContractDetail>(`/contracts/${id}/status`, { status }),
