@@ -1,7 +1,8 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { mealExpenseApi, MealExpense, MealExpenseType } from "@/services/meal-expense.service"
+import { toast } from "sonner"
+import { mealExpenseApi } from "@/services/meal-expense.service"
+import type { MealExpense, MealExpenseType } from "@/services/meal-expense.service"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,11 +20,12 @@ const TYPES: MealExpenseType[] = ["TRAINING", "MATCH"]
 
 export function MealExpensePage() {
   const { t } = useTranslation("admin")
-  const qc = useQueryClient()
+  const [expenses, setExpenses] = useState<MealExpense[]>([])
   const [open, setOpen] = useState(false)
   const [filterType, setFilterType] = useState<MealExpenseType | "">("")
   const [filterFrom, setFilterFrom] = useState("")
   const [filterTo, setFilterTo] = useState("")
+  const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     type: "TRAINING" as MealExpenseType,
     date: "",
@@ -32,41 +34,52 @@ export function MealExpensePage() {
     note: "",
   })
 
-  const { data: expenses = [] } = useQuery({
-    queryKey: ["meal-expenses", filterType, filterFrom, filterTo],
-    queryFn: () =>
-      mealExpenseApi.list({
-        type: filterType || undefined,
-        from: filterFrom || undefined,
-        to: filterTo || undefined,
-      }),
-  })
+  const fetchExpenses = async () => {
+    try {
+      setExpenses(
+        await mealExpenseApi.list({
+          type: filterType || undefined,
+          from: filterFrom || undefined,
+          to: filterTo || undefined,
+        })
+      )
+    } catch {
+      toast.error("불러오기 실패")
+    }
+  }
 
-  const createMutation = useMutation({
-    mutationFn: (data: Parameters<typeof mealExpenseApi.create>[0]) =>
-      mealExpenseApi.create(data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["meal-expenses"] })
+  useEffect(() => { void fetchExpenses() }, [filterType, filterFrom, filterTo])
+
+  const handleSubmit = async () => {
+    const amount = parseInt(form.amount, 10)
+    if (!form.date || isNaN(amount)) { toast.error("날짜와 금액을 입력하세요"); return }
+    setSaving(true)
+    try {
+      await mealExpenseApi.create({
+        type: form.type,
+        date: form.date,
+        amount,
+        restaurantName: form.restaurantName || undefined,
+        note: form.note || undefined,
+      })
       setOpen(false)
       setForm({ type: "TRAINING", date: "", amount: "", restaurantName: "", note: "" })
-    },
-  })
+      void fetchExpenses()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "저장 실패")
+    } finally {
+      setSaving(false)
+    }
+  }
 
-  const deleteMutation = useMutation({
-    mutationFn: mealExpenseApi.delete,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["meal-expenses"] }),
-  })
-
-  const handleSubmit = () => {
-    const amount = parseInt(form.amount, 10)
-    if (!form.date || isNaN(amount)) return
-    createMutation.mutate({
-      type: form.type,
-      date: form.date,
-      amount,
-      restaurantName: form.restaurantName || undefined,
-      note: form.note || undefined,
-    })
+  const handleDelete = async (id: number) => {
+    if (!confirm(t("mealExpense.confirmDelete"))) return
+    try {
+      await mealExpenseApi.delete(id)
+      void fetchExpenses()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "삭제 실패")
+    }
   }
 
   return (
@@ -79,40 +92,25 @@ export function MealExpensePage() {
       <div className="flex items-end gap-3 flex-wrap">
         <div className="space-y-1">
           <Label className="text-xs">{t("mealExpense.type")}</Label>
-          <Select
-            value={filterType}
-            onValueChange={(v) => setFilterType(v as MealExpenseType | "")}
-          >
+          <Select value={filterType} onValueChange={(v) => setFilterType(v as MealExpenseType | "")}>
             <SelectTrigger className="w-36 h-8 text-sm">
               <SelectValue placeholder="전체" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">전체</SelectItem>
               {TYPES.map((tp) => (
-                <SelectItem key={tp} value={tp}>
-                  {t(`mealExpense.${tp}`)}
-                </SelectItem>
+                <SelectItem key={tp} value={tp}>{t(`mealExpense.${tp}`)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-1">
           <Label className="text-xs">{t("mealExpense.date")} (from)</Label>
-          <Input
-            type="date"
-            className="h-8 text-sm w-36"
-            value={filterFrom}
-            onChange={(e) => setFilterFrom(e.target.value)}
-          />
+          <Input type="date" className="h-8 text-sm w-36" value={filterFrom} onChange={(e) => setFilterFrom(e.target.value)} />
         </div>
         <div className="space-y-1">
           <Label className="text-xs">{t("mealExpense.date")} (to)</Label>
-          <Input
-            type="date"
-            className="h-8 text-sm w-36"
-            value={filterTo}
-            onChange={(e) => setFilterTo(e.target.value)}
-          />
+          <Input type="date" className="h-8 text-sm w-36" value={filterTo} onChange={(e) => setFilterTo(e.target.value)} />
         </div>
       </div>
 
@@ -142,14 +140,7 @@ export function MealExpensePage() {
               <td className="py-2 pr-4 text-muted-foreground">{e.note ?? "-"}</td>
               <td className="py-2 pr-4 text-muted-foreground">{e.createdBy.username}</td>
               <td className="py-2 flex gap-2 justify-end">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-destructive"
-                  onClick={() => {
-                    if (confirm(t("mealExpense.confirmDelete"))) deleteMutation.mutate(e.id)
-                  }}
-                >
+                <Button size="sm" variant="ghost" className="text-destructive" onClick={() => void handleDelete(e.id)}>
                   {t("action.delete", { ns: "common" })}
                 </Button>
               </td>
@@ -166,54 +157,32 @@ export function MealExpensePage() {
           <div className="space-y-3">
             <div className="space-y-1">
               <Label>{t("mealExpense.type")}</Label>
-              <Select
-                value={form.type}
-                onValueChange={(v) => setForm((f) => ({ ...f, type: v as MealExpenseType }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+              <Select value={form.type} onValueChange={(v) => setForm((f) => ({ ...f, type: v as MealExpenseType }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {TYPES.map((tp) => (
-                    <SelectItem key={tp} value={tp}>
-                      {t(`mealExpense.${tp}`)}
-                    </SelectItem>
+                    <SelectItem key={tp} value={tp}>{t(`mealExpense.${tp}`)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
               <Label>{t("mealExpense.date")}</Label>
-              <Input
-                type="date"
-                value={form.date}
-                onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-              />
+              <Input type="date" value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} />
             </div>
             <div className="space-y-1">
               <Label>{t("mealExpense.amount")}</Label>
-              <Input
-                type="number"
-                min={0}
-                value={form.amount}
-                onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
-              />
+              <Input type="number" min={0} value={form.amount} onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))} />
             </div>
             <div className="space-y-1">
               <Label>{t("mealExpense.restaurantName")}</Label>
-              <Input
-                value={form.restaurantName}
-                onChange={(e) => setForm((f) => ({ ...f, restaurantName: e.target.value }))}
-              />
+              <Input value={form.restaurantName} onChange={(e) => setForm((f) => ({ ...f, restaurantName: e.target.value }))} />
             </div>
             <div className="space-y-1">
               <Label>{t("mealExpense.note")}</Label>
-              <Input
-                value={form.note}
-                onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
-              />
+              <Input value={form.note} onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))} />
             </div>
-            <Button className="w-full" onClick={handleSubmit} disabled={createMutation.isPending}>
+            <Button className="w-full" onClick={() => void handleSubmit()} disabled={saving}>
               {t("action.save", { ns: "common" })}
             </Button>
           </div>

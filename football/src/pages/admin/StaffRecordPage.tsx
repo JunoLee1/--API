@@ -1,7 +1,8 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { staffRecordApi, StaffRecord } from "@/services/staff-record.service"
+import { toast } from "sonner"
+import { staffRecordApi } from "@/services/staff-record.service"
+import type { StaffRecord } from "@/services/staff-record.service"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,39 +12,22 @@ import { Switch } from "@/components/ui/switch"
 
 export function StaffRecordPage() {
   const { t } = useTranslation("admin")
-  const qc = useQueryClient()
+  const [records, setRecords] = useState<StaffRecord[]>([])
   const [includeInactive, setIncludeInactive] = useState(false)
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<StaffRecord | null>(null)
   const [form, setForm] = useState({ name: "", role: "", department: "", phone: "", notes: "" })
+  const [saving, setSaving] = useState(false)
 
-  const { data: records = [] } = useQuery({
-    queryKey: ["staff-records", includeInactive],
-    queryFn: () => staffRecordApi.list(includeInactive),
-  })
+  const fetchRecords = async () => {
+    try {
+      setRecords(await staffRecordApi.list(includeInactive))
+    } catch {
+      toast.error("불러오기 실패")
+    }
+  }
 
-  const createMutation = useMutation({
-    mutationFn: staffRecordApi.create,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["staff-records"] })
-      setOpen(false)
-    },
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Parameters<typeof staffRecordApi.update>[1] }) =>
-      staffRecordApi.update(id, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["staff-records"] })
-      setOpen(false)
-      setEditing(null)
-    },
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: staffRecordApi.delete,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["staff-records"] }),
-  })
+  useEffect(() => { void fetchRecords() }, [includeInactive])
 
   const openCreate = () => {
     setEditing(null)
@@ -57,11 +41,40 @@ export function StaffRecordPage() {
     setOpen(true)
   }
 
-  const handleSubmit = () => {
-    if (editing) {
-      updateMutation.mutate({ id: editing.id, data: form })
-    } else {
-      createMutation.mutate(form)
+  const handleSubmit = async () => {
+    if (!form.name.trim() || !form.role.trim()) { toast.error("이름과 역할을 입력하세요"); return }
+    setSaving(true)
+    try {
+      if (editing) {
+        await staffRecordApi.update(editing.id, form)
+      } else {
+        await staffRecordApi.create(form)
+      }
+      setOpen(false)
+      void fetchRecords()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "저장 실패")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    if (!confirm(t("staffRecord.confirmDelete"))) return
+    try {
+      await staffRecordApi.delete(id)
+      void fetchRecords()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "삭제 실패")
+    }
+  }
+
+  const handleToggleActive = async (r: StaffRecord, value: boolean) => {
+    try {
+      await staffRecordApi.update(r.id, { isActive: value })
+      void fetchRecords()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "수정 실패")
     }
   }
 
@@ -105,14 +118,7 @@ export function StaffRecordPage() {
                 <Button size="sm" variant="ghost" onClick={() => openEdit(r)}>
                   {t("action.edit", { ns: "common" })}
                 </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-destructive"
-                  onClick={() => {
-                    if (confirm(t("staffRecord.confirmDelete"))) deleteMutation.mutate(r.id)
-                  }}
-                >
+                <Button size="sm" variant="ghost" className="text-destructive" onClick={() => void handleDelete(r.id)}>
                   {t("action.delete", { ns: "common" })}
                 </Button>
               </td>
@@ -140,12 +146,12 @@ export function StaffRecordPage() {
               <div className="flex items-center gap-2">
                 <Switch
                   checked={editing.isActive}
-                  onCheckedChange={(v) => updateMutation.mutate({ id: editing.id, data: { isActive: v } })}
+                  onCheckedChange={(v) => void handleToggleActive(editing, v)}
                 />
                 <Label>{t("staffRecord.active")}</Label>
               </div>
             )}
-            <Button className="w-full" onClick={handleSubmit}>
+            <Button className="w-full" onClick={() => void handleSubmit()} disabled={saving}>
               {t("action.save", { ns: "common" })}
             </Button>
           </div>
