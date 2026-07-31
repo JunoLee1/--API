@@ -535,6 +535,8 @@ model User {
   receivedEvaluations      CoachingStaffEvaluation[] @relation("EvaluationReceiver")
   staffRecordsCreated      StaffRecord[]             @relation("StaffRecordCreator")
   mealExpensesCreated      MealExpense[]             @relation("MealExpenseCreator")
+  budgetOverrideLogs       BudgetOverrideLog[]       @relation("BudgetOverrideLogCreator")
+  operatingExpenses        OperatingExpense[]        @relation("OperatingExpenseCreator")
 }
 
 model Season {
@@ -546,11 +548,12 @@ model Season {
   wageCapType  WageCapType?
   wageCapValue Float?
 
-  matches          Match[]
-  trainingSessions TrainingSession[]
-  tacticalAnalyses TacticalAnalysis[]
-  developmentPlans PlayerDevelopmentPlan[]
-  financialReport  FinancialReport?
+  matches           Match[]
+  trainingSessions  TrainingSession[]
+  tacticalAnalyses  TacticalAnalysis[]
+  developmentPlans  PlayerDevelopmentPlan[]
+  financialReport   FinancialReport?
+  operatingExpenses OperatingExpense[]
 }
 
 model Player {
@@ -1832,13 +1835,17 @@ model MealExpense {
 }
 
 model FinancialReport {
-  id           Int      @id @default(autoincrement())
-  seasonId     Int      @unique
-  totalRevenue Int
-  note         String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  season       Season   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  id                   Int      @id @default(autoincrement())
+  seasonId             Int      @unique
+  totalRevenue         Int
+  totalOperatingBudget Int?
+  contingencyReserve   Int?     @default(0)
+  note                 String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  season               Season   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  budgetCategoryPlans  BudgetCategoryPlan[]
+  overrideLogs         BudgetOverrideLog[]
 }
 
 model Department {
@@ -1848,4 +1855,69 @@ model Department {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   staffRecords StaffRecord[]
+}
+
+// ─────────────────────────────────────────────
+// Knapsack 운영비 예산 관리
+// ─────────────────────────────────────────────
+
+enum OperatingCategory {
+  MEDICAL
+  MEAL
+  TRAVEL
+  EQUIPMENT
+  SCOUTING
+  YOUTH
+}
+
+model BudgetCategoryPlan {
+  id                Int               @id @default(autoincrement())
+  financialReportId Int
+  category          OperatingCategory
+  mandatoryMinimum  Int               @default(0)
+  knapsackAllocated Int?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  financialReport   FinancialReport   @relation(fields: [financialReportId], references: [id], onDelete: Cascade)
+  tiers             BudgetTier[]
+
+  @@unique([financialReportId, category])
+}
+
+model BudgetTier {
+  id             Int                @id @default(autoincrement())
+  categoryPlanId Int
+  name           String
+  cost           Int
+  value          Int
+  isSelected     Boolean            @default(false)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  categoryPlan   BudgetCategoryPlan @relation(fields: [categoryPlanId], references: [id], onDelete: Cascade)
+}
+
+model BudgetOverrideLog {
+  id                Int               @id @default(autoincrement())
+  financialReportId Int
+  category          OperatingCategory
+  amount            Int
+  reason            String
+  createdById       Int
+  createdAt         DateTime          @default(now())
+  financialReport   FinancialReport   @relation(fields: [financialReportId], references: [id], onDelete: Cascade)
+  createdBy         User              @relation("BudgetOverrideLogCreator", fields: [createdById], references: [id])
+}
+
+model OperatingExpense {
+  id          Int               @id @default(autoincrement())
+  seasonId    Int
+  category    OperatingCategory
+  amount      Int
+  date        DateTime
+  note        String?
+  createdById Int
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  season      Season            @relation(fields: [seasonId], references: [id])
+  createdBy   User              @relation("OperatingExpenseCreator", fields: [createdById], references: [id])
 }
