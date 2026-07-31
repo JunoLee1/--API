@@ -22,7 +22,7 @@ export class DepartmentService {
 
   async update(id: number, data: { name?: string; isActive?: boolean }) {
     await this.get(id);
-    if (data.name) {
+    if (data.name !== undefined) {
       const existing = await this.repo.findByName(data.name);
       if (existing && existing.id !== id) throw new AppError(409, "DEPARTMENT_NAME_CONFLICT");
     }

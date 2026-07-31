@@ -61,6 +61,20 @@ describe("DepartmentService", () => {
     await expect(service.update(99, { name: "X" })).rejects.toMatchObject({ statusCode: 404 });
   });
 
+  test("update: 다른 부서와 이름 중복이면 409", async () => {
+    mockRepo.findById.mockResolvedValue({ id: 1, name: "전략팀", isActive: true });
+    mockRepo.findByName.mockResolvedValue({ id: 2, name: "마케팅팀" }); // different dept
+    await expect(service.update(1, { name: "마케팅팀" })).rejects.toMatchObject({ statusCode: 409 });
+  });
+
+  test("update: 같은 이름 같은 id이면 정상 수정", async () => {
+    mockRepo.findById.mockResolvedValue({ id: 1, name: "전략팀", isActive: true });
+    mockRepo.findByName.mockResolvedValue({ id: 1, name: "전략팀" }); // same dept
+    mockRepo.update.mockResolvedValue({ id: 1, name: "전략팀", isActive: true });
+    const result = await service.update(1, { name: "전략팀" });
+    expect(result.name).toBe("전략팀");
+  });
+
   test("delete: 정상 삭제", async () => {
     mockRepo.findById.mockResolvedValue({ id: 1, name: "전략팀", isActive: true });
     await service.delete(1);
