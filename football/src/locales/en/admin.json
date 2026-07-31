@@ -199,7 +199,25 @@
       "name": "Name",
       "startDate": "Start Date",
       "endDate": "End Date",
-      "status": "Status"
+      "status": "Status",
+      "wageCap": "Wage Cap"
+    },
+    "setWageCap": "Set Cap",
+    "wageCapDialog": {
+      "title": "Wage Cap — {{name}}",
+      "type": "Cap Type",
+      "typeNone": "None",
+      "typeFixed": "Fixed Amount",
+      "typeRatio": "Revenue Ratio",
+      "valueFixed": "Cap Amount (₩)",
+      "valueRatio": "Ratio (0–1)",
+      "ratioHint": "e.g. 0.5 = 50% of revenue",
+      "valueRequired": "Please enter an amount or ratio.",
+      "saved": "Wage cap saved.",
+      "saveFailed": "Failed to save.",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "save": "Save"
     },
     "activate": "Activate",
     "close": "Close",
@@ -335,6 +353,33 @@
     "enableLite": "Enable Lite Mode",
     "disableLite": "Disable Lite Mode"
   },
+  "mealExpense": {
+    "title": "Meal Expenses",
+    "add": "Add Meal Expense",
+    "type": "Type",
+    "TRAINING": "Training Day",
+    "MATCH": "Match Day",
+    "date": "Date",
+    "amount": "Amount",
+    "restaurantName": "Restaurant",
+    "note": "Note",
+    "confirmDelete": "Delete this meal expense?"
+  },
+  "staffRecord": {
+    "title": "Staff Records",
+    "add": "Add Staff",
+    "edit": "Edit Staff",
+    "name": "Name",
+    "role": "Role",
+    "department": "Department",
+    "phone": "Phone",
+    "notes": "Notes",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "showInactive": "Include inactive",
+    "confirmDelete": "Delete this staff record?"
+  },
   "equipmentPage": {
     "title": "Equipment Management",
     "description": "Manage club equipment inventory and assignments.",
@@ -407,5 +452,30 @@
     },
     "loansAll": "All Loan Requests",
     "loansOwn": "My Loan Requests"
+  },
+  "financialReport": {
+    "title": "Financial Report",
+    "loadFailed": "Failed to load",
+    "noActiveSeason": "No active season.",
+    "lastUpdated": "Last updated: {{date}}",
+    "manualEntry": "Manual Entry",
+    "totalRevenue": "Total Revenue (₩)",
+    "note": "Note",
+    "notePlaceholder": "e.g. 2025/26 season revenue",
+    "save": "Save",
+    "saved": "Financial report saved.",
+    "saveFailed": "Failed to save.",
+    "invalidRevenue": "Please enter a valid revenue amount.",
+    "csvUpload": "CSV Upload",
+    "csvHint": "CSV format: category,amount. The sum of the second column becomes total revenue.",
+    "csvFile": "CSV File",
+    "csvSubmit": "Upload CSV",
+    "csvSaved": "Financial report updated from CSV.",
+    "kpi": {
+      "totalPayroll": "Total Payroll",
+      "cap": "Wage Cap",
+      "percentUsed": "Utilization",
+      "remaining": "Remaining"
+    }
   }
 }

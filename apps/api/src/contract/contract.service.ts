@@ -1,4 +1,5 @@
 import { ContractRepository } from "./contract.repo";
+import { WageCapService } from "./wage-cap.service";
 import { AppError } from "../lib/appError";
 import {
   CreateContractDto,
@@ -9,7 +10,10 @@ import {
 } from "./dto/contract.dto";
 
 export class ContractService {
-  constructor(private repo: ContractRepository) {}
+  constructor(
+    private repo: ContractRepository,
+    private wageCapService: WageCapService,
+  ) {}
 
   getContractsByPlayer(playerId: string) {
     return this.repo.findByPlayerId(playerId);
@@ -21,8 +25,22 @@ export class ContractService {
     return contract;
   }
 
-  createContract(dto: CreateContractDto) {
-    return this.repo.create(dto);
+  async createContract(dto: CreateContractDto) {
+    if (dto.salary <= 0) throw new AppError(400, "INVALID_SALARY");
+
+    const capResult = await this.wageCapService.check(dto.salary);
+
+    if (capResult.status === "BLOCKED") {
+      throw new AppError(400, "WAGE_CAP_EXCEEDED");
+    }
+
+    const contract = await this.repo.create(dto);
+
+    if (capResult.status === "WARNING") {
+      return { ...contract, wageCapWarning: { percentOver: capResult.percentOver } };
+    }
+
+    return contract;
   }
 
   async updateStatus(id: number, dto: UpdateContractStatusDto) {

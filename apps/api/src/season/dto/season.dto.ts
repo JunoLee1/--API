@@ -3,3 +3,8 @@ export interface CreateSeasonDto {
   startDate: string;
   endDate: string;
 }
+
+export interface SetWageCapDto {
+  wageCapType: "FIXED" | "RATIO" | null;
+  wageCapValue: number | null;
+}

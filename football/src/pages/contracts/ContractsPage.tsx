@@ -74,8 +74,12 @@ function CreateContractDialog({ open, onOpenChange, playerId, onSaved }: CreateC
     }
     setSaving(true)
     try {
-      await contractApi.create({ playerId, startDate, endDate, salary: Number(salary) })
-      toast.success(t('contracts.createDialog.saved'))
+      const result = await contractApi.create({ playerId, startDate, endDate, salary: Number(salary) })
+      if (result.wageCapWarning) {
+        toast.warning(t('contracts.createDialog.wageCapWarning', { percent: result.wageCapWarning.percentOver.toFixed(1) }))
+      } else {
+        toast.success(t('contracts.createDialog.saved'))
+      }
       onSaved()
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : t('contracts.createDialog.saveFailed'))

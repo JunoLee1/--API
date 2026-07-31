@@ -1,4 +1,6 @@
 {
+  "allergySection": "알레르기 / 식이 정보",
+  "noAllergies": "알레르기 정보 없음",
   "title": "선수",
   "list": "선수 목록",
   "detail": "선수 상세",

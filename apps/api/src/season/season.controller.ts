@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { SeasonService } from "./season.service";
+import { SetWageCapDto } from "./dto/season.dto";
 
 export class SeasonController {
   constructor(private service: SeasonService) {}
@@ -61,6 +62,26 @@ export class SeasonController {
       const id = Number(req.params["id"]);
       const season = await this.service.closeSeason(id);
       res.status(200).json(season);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  setWageCap = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (req.user!.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
+      const id = Number(req.params["id"]);
+      const season = await this.service.setWageCap(id, req.body as SetWageCapDto);
+      res.status(200).json(season);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getWageCapKPI = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const kpi = await this.service.getWageCapKPI();
+      res.status(200).json(kpi);
     } catch (err) {
       next(err);
     }

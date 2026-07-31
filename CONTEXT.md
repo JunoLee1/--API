@@ -74,8 +74,16 @@ ADMIN이 생성·관리하는 클럽 내 팀 단위. 팀 구성은 구단마다 
 | SCOUT (스카우트) | ❌ | ❌ |
 | EQUIPMENT_MANAGER (장비 담당) | ❌ | ❌ |
 | TACTICAL_ANALYST (전술 분석관) | ❌ | ❌ |
+| FINANCE_MANAGER (재무 담당) | ❌ | ❌ |
 
 Recall 승인 권한: GM 전용.
+StaffRecord 쓰기 권한: GM 전용. 구단 운영 인사 데이터는 GM 소관.
+
+**FINANCE_MANAGER (재무 담당):**
+재무 운영 데이터 입력 전담. 선택적 역할 — 미생성 시 GM + ADMIN이 동일 권한을 대신 행사한다 (EQUIPMENT_MANAGER 패턴과 동일).
+- `FinancialReport` CSV 업로드·열람
+- `MealExpense` 쓰기·읽기
+- 연봉·이적료·코치 채용 예산·선수 시장 가치 열람 불가
 
 **TACTICAL_ANALYST (전술 분석관):**
 경기 데이터 기반 전술 분석 전담. POST_MATCH 분석이 주 업무이며 PRE_MATCH 분석도 작성 가능. CONFIRMED는 HEAD_COACH만 처리한다.
@@ -274,6 +282,11 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 - 인적사항(playerName·dateOfBirth·nationality·preferredFoot)·agentId·externalId → FRONT_OFFICE
 - position·level → HEAD_COACH
 - height·weight → PHYSICAL_COACH
+- allergies·foodPreferences → FRONT_OFFICE
+
+**알레르기 및 식이 정보:**
+- `allergies: String[]` — 알레르기 항목 목록 (예: 견과류, 유제품)
+- `foodPreferences: String?` — 식이 선호 자유 텍스트
 
 **에이전트 배정:** FRONT_OFFICE가 담당. 선수 1명 ↔ 에이전트 1명.
 
@@ -293,10 +306,27 @@ ADMIN이 생성하는 일회용 초대 레코드. 이메일당 최신 토큰 하
 
 **삭제 정책:** 연결된 데이터(계약·부상·훈련 기록)가 없는 경우만 hard delete. 그 외 status 변경으로 처리.
 
+### ClubSettings (구단 설정)
+
+ADMIN이 관리하는 시스템 전역 설정. 단일 레코드.
+
+**필드:**
+- `currency: String` — ISO 4217 통화 코드 (예: `"KRW"`, `"GBP"`). 시스템 내 모든 금액 필드의 기준 통화. 다중 통화 계약은 이 ERP 범위 밖.
+
 ### Season (시즌)
 시작일·종료일로 정의되는 시즌 단위. 스탯·훈련 기록이 시즌에 귀속된다. 계약은 독립적인 날짜 범위(`startDate`/`endDate`)를 가지며 시즌에 귀속되지 않는다.
 
 **생성·관리:** ADMIN 전용.
+
+**임금 상한 (Wage Cap):**
+- `wageCapType: FIXED | RATIO | null` — 미설정 시 시뮬레이션 비활성화
+  - `FIXED`: 절대 금액 상한 (K리그 샐러리캡, EFL League Two 방식)
+  - `RATIO`: 매출 대비 인건비 비율 상한 % (K리그 비율형, EFL League One↑ 방식)
+- `wageCapValue: Float | null` — FIXED 시 금액, RATIO 시 비율(%)
+
+**임금 상한 시뮬레이션:** Contract 생성 시 현재 시즌 ACTIVE 계약 연봉 합산 + 신규 계약 연봉을 상한과 비교.
+- 초과율 **0~10%**: GM에게 경고 표시, 저장 허용 (협상 진행 중 버퍼)
+- 초과율 **10% 초과**: 하드 블록 — 계약 생성 차단. 초과 금액·비율 표시.
 **동시 활성 시즌:** 1개만 허용 (`status = ACTIVE`인 시즌이 현재 시즌).
 **전환:** 수동. ADMIN이 새 시즌 생성 후 이전 시즌을 명시적으로 CLOSED 처리.
 
@@ -1011,3 +1041,73 @@ CALLUP_DOCS_READY
 CALLUP_APPROVED
 CALLUP_REJECTED
 ```
+
+---
+
+## 재무 KPI (FinancialReport)
+
+분기별 재무 수치를 GM/ADMIN이 CSV 임포트 또는 수동 입력으로 저장하고, ERP 내부 집계와 결합하여 구단 운영 안정성 지표를 산출하는 단위.
+
+**저장 단위:** `seasonId × quarter(Q1|Q2|Q3|Q4)` 유니크 조합.
+
+**임포트 필드 (CSV 업로드):**
+- `currentAssets` (유동자산), `currentLiabilities` (유동부채)
+- `totalLiabilities` (부채총액), `equity` (자기자본)
+- `revenue` (매출액), `operatingProfit` (영업이익), `netProfit` (순이익), `interestExpense` (이자비용)
+- `totalAssets` (총자산), `parentCompanySubsidy` (모기업 지원금)
+- `quarterlyAttendance` (분기 홈경기 총 관중), `averageTicketPrice` (평균 객단가), `seasonPassCount` (시즌권 보유 수)
+
+**ERP 자동 집계 (별도 입력 불필요):**
+- `totalWageBill` — 해당 분기 ACTIVE `Contract.salary` 합산
+- `homeMatchCount` — 해당 분기 홈 `Match` 수
+
+**온디맨드 KPI 계산 (저장하지 않고 역산):**
+- 유동비율: `currentAssets / currentLiabilities × 100`
+- 부채비율: `totalLiabilities / equity × 100`
+- 이자보상배율: `operatingProfit / interestExpense`
+- 영업이익률·순이익률: 각 이익 `/ revenue × 100`
+- 인건비비율: `totalWageBill / revenue × 100` (ERP 집계 + 임포트 revenue 결합)
+- 관중회전율: `quarterlyAttendance / homeMatchCount`
+- 모기업 의존도: `parentCompanySubsidy / revenue × 100`
+
+**업로드 권한:** GM, ADMIN
+**열람 권한:** GM, ADMIN, TD
+
+---
+
+## 직원 기록 (StaffRecord)
+
+ERP 로그인 계정이 없는 구단 직원의 인적사항 기록. 현재는 조회·관리 전용이며 급여 관리는 미포함 (향후 별도 설계 예정).
+
+**대상:** 시설 인프라 관리팀(환경미화·잔디관리사·시설관리사 등) 및 기타 비로그인 직원.
+
+**필드:**
+- `name: String` — 직원명
+- `department: String?` — 소속 팀·부서 (예: "시설 인프라 관리팀")
+- `role: String` — 담당 역할 자유 텍스트 (예: "잔디관리사")
+- `phone: String?` — 연락처
+- `isActive: Boolean` — 재직 여부
+- `notes: String?` — 비고 (메모용, 월급 등 임시 기록 가능)
+- `createdById → User`
+
+**쓰기 권한:** GM
+**읽기 권한:** GM, ADMIN
+
+---
+
+## 식대 관리 (MealExpense)
+
+훈련일·경기일 선수단 및 스태프 식대를 세션 단위로 기록하는 단순 지출 로그. 결재 워크플로우 없음.
+
+**필드:**
+- `type: TRAINING | MATCH` — 훈련일 또는 경기일 식대
+- `sessionId? → TrainingSession` — TRAINING 시 연결
+- `matchId? → Match` — MATCH 시 연결
+- `date` — 지출일
+- `amount` — 총 금액
+- `restaurantName?` — 지정 식당명 (자유 텍스트)
+- `note?` — 비고 (간식·보충제 등 추가 설명)
+- `createdById → User` — 입력자
+
+**쓰기 권한:** GM, ADMIN, EQUIPMENT_MANAGER
+**읽기 권한:** GM, ADMIN

@@ -12,6 +12,7 @@ import {
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -474,6 +475,24 @@ export function PlayerDetailPage() {
                     <PositionDiversityChart data={pdiData} />
                   </div>
                 </LiteModeGate>
+              )}
+
+              {/* 알레르기 / 식이 정보 */}
+              {(user?.role === 'FRONT_OFFICE' || user?.role === 'ADMIN') && (
+                <div className="rounded-lg border bg-card p-5 space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground">{t('allergySection')}</h3>
+                  <div className="flex flex-wrap gap-1.5">
+                    {player.allergies.map((a) => (
+                      <Badge key={a} variant="outline">{a}</Badge>
+                    ))}
+                    {player.allergies.length === 0 && (
+                      <span className="text-sm text-muted-foreground">{t('noAllergies')}</span>
+                    )}
+                  </div>
+                  {player.foodPreferences && (
+                    <p className="text-sm text-muted-foreground">{player.foodPreferences}</p>
+                  )}
+                </div>
               )}
 
               {/* 부 포지션 */}

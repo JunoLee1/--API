@@ -1,4 +1,5 @@
 export type SeasonStatus = 'UPCOMING' | 'ACTIVE' | 'CLOSED'
+export type WageCapType = 'FIXED' | 'RATIO'
 
 export interface Season {
   id: number
@@ -6,6 +7,18 @@ export interface Season {
   startDate: string
   endDate: string
   status: SeasonStatus
+  wageCapType: WageCapType | null
+  wageCapValue: number | null
+}
+
+export interface WageCapKPI {
+  wageCapType: WageCapType | null
+  wageCapValue: number | null
+  totalRevenue: number | null
+  cap: number | null
+  totalPayroll: number
+  percentUsed: number | null
+  remaining: number | null
 }
 
 export const SEASON_STATUS_LABEL: Record<SeasonStatus, string> = {

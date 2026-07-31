@@ -27,7 +27,8 @@
       "submit": "Register",
       "saved": "Contract registered.",
       "saveFailed": "Failed to save.",
-      "required": "Please fill in all required fields."
+      "required": "Please fill in all required fields.",
+      "wageCapWarning": "Contract registered but exceeds the wage cap by {{percent}}%."
     },
     "status": {
       "ACTIVE": "Active",

@@ -54,6 +54,9 @@ import YouthRegistrationPage from '@/pages/youth/YouthRegistrationPage'
 import { GrowthReportsListPage } from '@/pages/players/GrowthReportsListPage'
 import IncidentReportPage from '@/pages/youth/IncidentReportPage'
 import AcademyFeePage from '@/pages/youth/AcademyFeePage'
+import { StaffRecordPage } from '@/pages/admin/StaffRecordPage'
+import { MealExpensePage } from '@/pages/admin/MealExpensePage'
+import { FinancialReportPage } from '@/pages/admin/FinancialReportPage'
 
 function GrowthReportRedirect() {
   const { playerId } = useParams<{ playerId: string }>()
@@ -132,6 +135,9 @@ function App() {
             <Route path="/admin/login-history" element={<LoginHistoryPage />} />
             <Route path="/safeguard-reports" element={<SafeguardReportPage />} />
             <Route path="/admin/team-settings" element={<TeamSettingsPage />} />
+            <Route path="/admin/staff-records" element={<StaffRecordPage />} />
+            <Route path="/admin/meal-expenses" element={<MealExpensePage />} />
+            <Route path="/admin/financial-report" element={<FinancialReportPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/login" replace />} />

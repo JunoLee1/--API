@@ -22,6 +22,9 @@ router.get("/", auth, controller.getSeasons);
 // 현재 활성 시즌 조회 — /:id 보다 먼저 등록
 router.get("/active", auth, controller.getActiveSeason);
 
+// 활성 시즌 임금 KPI — /active/wage-cap-kpi 는 /:id 보다 먼저 등록
+router.get("/active/wage-cap-kpi", auth, controller.getWageCapKPI);
+
 // 시즌 단건 조회
 router.get("/:id", auth, controller.getSeasonById);
 
@@ -30,5 +33,8 @@ router.patch("/:id/activate", auth, controller.activateSeason);
 
 // 시즌 종료 ACTIVE → CLOSED (ADMIN)
 router.patch("/:id/close", auth, controller.closeSeason);
+
+// 시즌 임금상한 설정 (ADMIN)
+router.patch("/:id/wage-cap", auth, controller.setWageCap);
 
 export default router;

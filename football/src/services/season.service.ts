@@ -1,5 +1,5 @@
 import { api } from './api'
-import type { Season } from '@/types/season'
+import type { Season, WageCapKPI } from '@/types/season'
 
 export const seasonApi = {
   list: (status?: string) =>
@@ -13,4 +13,9 @@ export const seasonApi = {
   activate: (id: number) => api.patch<Season>(`/seasons/${id}/activate`, {}),
 
   close: (id: number) => api.patch<Season>(`/seasons/${id}/close`, {}),
+
+  setWageCap: (id: number, payload: { wageCapType: string | null; wageCapValue: number | null }) =>
+    api.patch<Season>(`/seasons/${id}/wage-cap`, payload),
+
+  getWageCapKPI: () => api.get<WageCapKPI>('/seasons/active/wage-cap-kpi'),
 }

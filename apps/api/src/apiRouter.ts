@@ -32,6 +32,10 @@ import growthReportRouter from "./growth-report/growth-report.routes";
 import safeguardRouter from "./safeguard/safeguard.routes";
 import academyFeeRouter from "./academy-fee/academy-fee.routes";
 import coachingStaffRouter from "./coaching-staff/coaching-staff.routes";
+import clubSettingsRouter from "./club-settings/club-settings.routes";
+import staffRecordRouter from "./staff-record/staff-record.routes";
+import mealExpenseRouter from "./meal-expense/meal-expense.routes";
+import financialReportRouter from "./financial-report/financial-report.routes";
 
 const apiRouter = Router();
 
@@ -68,5 +72,9 @@ apiRouter.use("/growth-reports", growthReportRouter);
 apiRouter.use("/safeguard-reports", safeguardRouter);
 apiRouter.use("/academy-fees", academyFeeRouter);
 apiRouter.use("/coaching-staff", coachingStaffRouter);
+apiRouter.use("/club-settings", clubSettingsRouter);
+apiRouter.use("/staff-records", staffRecordRouter);
+apiRouter.use("/meal-expenses", mealExpenseRouter);
+apiRouter.use("/financial-reports", financialReportRouter);
 
 export default apiRouter;
