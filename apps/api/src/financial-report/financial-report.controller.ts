@@ -2,12 +2,21 @@ import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { FinancialReportService } from "./financial-report.service";
 
+const canWrite = (role: string, foRole: string | null | undefined) =>
+  role === "ADMIN" ||
+  (role === "FRONT_OFFICE" && (foRole === "GM" || foRole === "FINANCE_MANAGER"))
+
+const canRead = (role: string, foRole: string | null | undefined) =>
+  role === "ADMIN" ||
+  (role === "FRONT_OFFICE" && (foRole === "GM" || foRole === "TD" || foRole === "FINANCE_MANAGER"))
+
 export class FinancialReportController {
   constructor(private service: FinancialReportService) {}
 
   set = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (req.user!.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole } = req.user!;
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
       const { totalRevenue, note } = req.body as { totalRevenue: number; note?: string };
       if (!Number.isInteger(totalRevenue)) throw new AppError(400, "INVALID_REVENUE");
@@ -20,7 +29,8 @@ export class FinancialReportController {
 
   setFromCSV = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (req.user!.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole } = req.user!;
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
       if (!req.file) throw new AppError(400, "FILE_REQUIRED");
       const csvContent = req.file.buffer.toString("utf-8");
@@ -34,6 +44,8 @@ export class FinancialReportController {
 
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const { role, frontOfficeRole } = req.user!;
+      if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
       const report = await this.service.get(seasonId);
       res.status(200).json(report);
