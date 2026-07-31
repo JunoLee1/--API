@@ -452,5 +452,30 @@
     },
     "loansAll": "All Loan Requests",
     "loansOwn": "My Loan Requests"
+  },
+  "financialReport": {
+    "title": "Financial Report",
+    "loadFailed": "Failed to load",
+    "noActiveSeason": "No active season.",
+    "lastUpdated": "Last updated: {{date}}",
+    "manualEntry": "Manual Entry",
+    "totalRevenue": "Total Revenue (₩)",
+    "note": "Note",
+    "notePlaceholder": "e.g. 2025/26 season revenue",
+    "save": "Save",
+    "saved": "Financial report saved.",
+    "saveFailed": "Failed to save.",
+    "invalidRevenue": "Please enter a valid revenue amount.",
+    "csvUpload": "CSV Upload",
+    "csvHint": "CSV format: category,amount. The sum of the second column becomes total revenue.",
+    "csvFile": "CSV File",
+    "csvSubmit": "Upload CSV",
+    "csvSaved": "Financial report updated from CSV.",
+    "kpi": {
+      "totalPayroll": "Total Payroll",
+      "cap": "Wage Cap",
+      "percentUsed": "Utilization",
+      "remaining": "Remaining"
+    }
   }
 }

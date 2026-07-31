@@ -452,5 +452,30 @@
     },
     "loansAll": "전체 대여 신청 목록",
     "loansOwn": "내 대여 신청"
+  },
+  "financialReport": {
+    "title": "재무 보고서",
+    "loadFailed": "불러오기 실패",
+    "noActiveSeason": "활성 시즌이 없습니다.",
+    "lastUpdated": "마지막 업데이트: {{date}}",
+    "manualEntry": "수동 입력",
+    "totalRevenue": "총 수익 (원)",
+    "note": "메모",
+    "notePlaceholder": "예: 2025/26 시즌 수익",
+    "save": "저장",
+    "saved": "재무 보고서가 저장됐습니다.",
+    "saveFailed": "저장에 실패했습니다.",
+    "invalidRevenue": "올바른 수익 금액을 입력하세요.",
+    "csvUpload": "CSV 업로드",
+    "csvHint": "category,amount 형식의 CSV. 두 번째 컬럼 합계가 총 수익이 됩니다.",
+    "csvFile": "CSV 파일",
+    "csvSubmit": "CSV로 저장",
+    "csvSaved": "CSV에서 재무 보고서가 업데이트됐습니다.",
+    "kpi": {
+      "totalPayroll": "총 페이롤",
+      "cap": "임금 상한",
+      "percentUsed": "사용률",
+      "remaining": "잔여 한도"
+    }
   }
 }

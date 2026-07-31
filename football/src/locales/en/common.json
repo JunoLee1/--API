@@ -60,7 +60,8 @@
       "safeguardReports": "Safeguard Reports",
       "teamSettings": "Club Settings",
       "staffRecords": "Staff Records",
-      "mealExpenses": "Meal Expenses"
+      "mealExpenses": "Meal Expenses",
+      "financialReport": "Financial Report"
     }
   },
   "action": {
