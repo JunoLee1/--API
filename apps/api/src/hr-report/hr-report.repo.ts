@@ -172,6 +172,10 @@ export class HrReportRepository {
     };
   }
 
+  async getOpenHiringRoundsCount(): Promise<number> {
+    return this.prisma.coachHiringRound.count({ where: { status: "OPEN" } });
+  }
+
   async getWageAnalysis(): Promise<WageAnalysis> {
     const RANGES = [
       { label: "300만 미만", min: 0, max: 3_000_000 },
