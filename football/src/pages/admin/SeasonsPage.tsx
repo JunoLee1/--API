@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { seasonApi } from '@/services/season.service'
-import type { Season, SeasonStatus } from '@/types/season'
+import type { Season, SeasonStatus, WageCapType } from '@/types/season'
 import { SEASON_STATUS_LABEL, SEASON_STATUS_STYLE } from '@/types/season'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,9 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
 import { Pagination } from '@/components/ui/pagination'
 import { Plus } from 'lucide-react'
 
@@ -21,6 +24,12 @@ const PAGE_SIZE = 10
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('ko-KR')
+}
+
+function formatWageCap(s: Season): string {
+  if (!s.wageCapType || s.wageCapValue == null) return '-'
+  if (s.wageCapType === 'FIXED') return `고정 ${s.wageCapValue.toLocaleString()}원`
+  return `수익 ${(s.wageCapValue * 100).toFixed(0)}%`
 }
 
 interface CreateSeasonDialogProps {
@@ -87,12 +96,97 @@ function CreateSeasonDialog({ open, onOpenChange, onSaved }: CreateSeasonDialogP
   )
 }
 
+interface WageCapConfigDialogProps {
+  open: boolean
+  onOpenChange: (v: boolean) => void
+  season: Season
+  onSaved: () => void
+}
+
+function WageCapConfigDialog({ open, onOpenChange, season, onSaved }: WageCapConfigDialogProps) {
+  const { t } = useTranslation('admin')
+  const [capType, setCapType] = useState<WageCapType | 'NONE'>(season.wageCapType ?? 'NONE')
+  const [capValue, setCapValue] = useState(season.wageCapValue?.toString() ?? '')
+  const [saving, setSaving] = useState(false)
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const wageCapType = capType === 'NONE' ? null : capType
+      const wageCapValue = capType === 'NONE' ? null : Number(capValue)
+      if (wageCapType !== null && (!capValue || isNaN(wageCapValue!))) {
+        toast.error(t('seasonsPage.wageCapDialog.valueRequired'))
+        setSaving(false)
+        return
+      }
+      await seasonApi.setWageCap(season.id, { wageCapType, wageCapValue })
+      toast.success(t('seasonsPage.wageCapDialog.saved'))
+      onSaved()
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : t('seasonsPage.wageCapDialog.saveFailed'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>{t('seasonsPage.wageCapDialog.title', { name: season.name })}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div className="space-y-1.5">
+            <Label>{t('seasonsPage.wageCapDialog.type')}</Label>
+            <Select value={capType} onValueChange={(v) => setCapType(v as WageCapType | 'NONE')}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="NONE">{t('seasonsPage.wageCapDialog.typeNone')}</SelectItem>
+                <SelectItem value="FIXED">{t('seasonsPage.wageCapDialog.typeFixed')}</SelectItem>
+                <SelectItem value="RATIO">{t('seasonsPage.wageCapDialog.typeRatio')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {capType !== 'NONE' && (
+            <div className="space-y-1.5">
+              <Label>
+                {capType === 'FIXED'
+                  ? t('seasonsPage.wageCapDialog.valueFixed')
+                  : t('seasonsPage.wageCapDialog.valueRatio')}
+              </Label>
+              <Input
+                type="number"
+                step={capType === 'RATIO' ? '0.01' : '1000000'}
+                min={0}
+                max={capType === 'RATIO' ? 1 : undefined}
+                value={capValue}
+                onChange={e => setCapValue(e.target.value)}
+                placeholder={capType === 'RATIO' ? '0.5' : '1000000000'}
+              />
+              {capType === 'RATIO' && (
+                <p className="text-xs text-muted-foreground">{t('seasonsPage.wageCapDialog.ratioHint')}</p>
+              )}
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t('seasonsPage.wageCapDialog.cancel')}</Button>
+          <Button onClick={() => void handleSave()} disabled={saving}>
+            {saving ? t('seasonsPage.wageCapDialog.saving') : t('seasonsPage.wageCapDialog.save')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export function SeasonsPage() {
   const { t } = useTranslation('admin')
   const { user } = useCurrentUser()
   const [seasons, setSeasons] = useState<Season[]>([])
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
+  const [wageCapTarget, setWageCapTarget] = useState<Season | null>(null)
   const [page, setPage] = useState(1)
 
   const isAdmin = user?.role === 'ADMIN'
@@ -163,7 +257,8 @@ export function SeasonsPage() {
                 <TableHead className="w-28">{t('seasonsPage.table.startDate')}</TableHead>
                 <TableHead className="w-28">{t('seasonsPage.table.endDate')}</TableHead>
                 <TableHead className="w-24">{t('seasonsPage.table.status')}</TableHead>
-                {isAdmin && <TableHead className="w-32" />}
+                <TableHead className="w-36">{t('seasonsPage.table.wageCap')}</TableHead>
+                {isAdmin && <TableHead className="w-48" />}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -177,8 +272,15 @@ export function SeasonsPage() {
                       {SEASON_STATUS_LABEL[s.status as SeasonStatus]}
                     </span>
                   </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{formatWageCap(s)}</TableCell>
                   {isAdmin && (
                     <TableCell className="text-right space-x-1">
+                      <Button
+                        size="sm" variant="ghost" className="h-7 text-xs"
+                        onClick={() => setWageCapTarget(s)}
+                      >
+                        {t('seasonsPage.setWageCap')}
+                      </Button>
                       {s.status === 'UPCOMING' && (
                         <Button
                           size="sm" variant="outline" className="h-7 text-xs"
@@ -217,6 +319,15 @@ export function SeasonsPage() {
         onOpenChange={setCreateOpen}
         onSaved={() => { setCreateOpen(false); fetchSeasons() }}
       />
+
+      {wageCapTarget && (
+        <WageCapConfigDialog
+          open={!!wageCapTarget}
+          onOpenChange={(v) => { if (!v) setWageCapTarget(null) }}
+          season={wageCapTarget}
+          onSaved={() => { setWageCapTarget(null); fetchSeasons() }}
+        />
+      )}
     </div>
   )
 }

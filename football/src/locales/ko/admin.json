@@ -199,7 +199,25 @@
       "name": "시즌명",
       "startDate": "시작일",
       "endDate": "종료일",
-      "status": "상태"
+      "status": "상태",
+      "wageCap": "임금상한"
+    },
+    "setWageCap": "상한 설정",
+    "wageCapDialog": {
+      "title": "{{name}} 임금상한 설정",
+      "type": "상한 유형",
+      "typeNone": "없음",
+      "typeFixed": "고정금액 (FIXED)",
+      "typeRatio": "수익비율 (RATIO)",
+      "valueFixed": "상한금액 (원)",
+      "valueRatio": "비율 (0~1)",
+      "ratioHint": "예: 0.5 = 수익의 50%",
+      "valueRequired": "금액 또는 비율을 입력하세요.",
+      "saved": "임금상한이 설정됐습니다.",
+      "saveFailed": "저장에 실패했습니다.",
+      "cancel": "취소",
+      "saving": "저장 중...",
+      "save": "저장"
     },
     "activate": "활성화",
     "close": "종료",

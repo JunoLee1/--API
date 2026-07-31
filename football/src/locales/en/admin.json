@@ -199,7 +199,25 @@
       "name": "Name",
       "startDate": "Start Date",
       "endDate": "End Date",
-      "status": "Status"
+      "status": "Status",
+      "wageCap": "Wage Cap"
+    },
+    "setWageCap": "Set Cap",
+    "wageCapDialog": {
+      "title": "Wage Cap — {{name}}",
+      "type": "Cap Type",
+      "typeNone": "None",
+      "typeFixed": "Fixed Amount",
+      "typeRatio": "Revenue Ratio",
+      "valueFixed": "Cap Amount (₩)",
+      "valueRatio": "Ratio (0–1)",
+      "ratioHint": "e.g. 0.5 = 50% of revenue",
+      "valueRequired": "Please enter an amount or ratio.",
+      "saved": "Wage cap saved.",
+      "saveFailed": "Failed to save.",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "save": "Save"
     },
     "activate": "Activate",
     "close": "Close",
