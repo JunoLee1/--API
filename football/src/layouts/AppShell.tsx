@@ -345,6 +345,14 @@ const NAV_ITEMS: NavItem[] = [
     frontOfficeRoles: ['GM', 'FINANCE_MANAGER', 'TD'],
   },
   {
+    to: '/admin/operating-expenses',
+    label: 'nav.item.operatingExpenses',
+    icon: Receipt,
+    section: 'nav.section.management',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['GM', 'FINANCE_MANAGER', 'TD'],
+  },
+  {
     to: '/equipment',
     label: 'nav.item.equipment',
     icon: Package,
