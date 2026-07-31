@@ -6,23 +6,30 @@ export class StaffRecordRepository {
   async findAll(includeInactive = false) {
     return this.prisma.staffRecord.findMany({
       where: includeInactive ? {} : { isActive: true },
+      include: { department: true },
       orderBy: { name: "asc" },
     });
   }
 
   async findById(id: number) {
-    return this.prisma.staffRecord.findUnique({ where: { id } });
+    return this.prisma.staffRecord.findUnique({
+      where: { id },
+      include: { department: true },
+    });
   }
 
   async create(data: {
     name: string;
     role: string;
-    department?: string;
+    departmentId?: number;
     phone?: string;
     notes?: string;
     createdById: number;
   }) {
-    return this.prisma.staffRecord.create({ data });
+    return this.prisma.staffRecord.create({
+      data,
+      include: { department: true },
+    });
   }
 
   async update(
@@ -30,13 +37,17 @@ export class StaffRecordRepository {
     data: {
       name?: string;
       role?: string;
-      department?: string;
+      departmentId?: number | null;
       phone?: string;
       isActive?: boolean;
       notes?: string;
     }
   ) {
-    return this.prisma.staffRecord.update({ where: { id }, data });
+    return this.prisma.staffRecord.update({
+      where: { id },
+      data,
+      include: { department: true },
+    });
   }
 
   async delete(id: number) {
