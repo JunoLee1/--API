@@ -1,4 +1,5 @@
 import { StaffRecordRepository } from "./staff-record.repo";
+import { AppError } from "../lib/appError";
 
 export class StaffRecordService {
   constructor(private repo: StaffRecordRepository) {}
@@ -9,12 +10,12 @@ export class StaffRecordService {
 
   async get(id: number) {
     const record = await this.repo.findById(id);
-    if (!record) throw new Error("NOT_FOUND");
+    if (!record) throw new AppError(404, "STAFF_RECORD_NOT_FOUND");
     return record;
   }
 
   async create(
-    data: { name: string; role: string; department?: string; phone?: string; notes?: string },
+    data: { name: string; role: string; departmentId?: number; phone?: string; notes?: string },
     createdById: number
   ) {
     return this.repo.create({ ...data, createdById });
@@ -22,7 +23,7 @@ export class StaffRecordService {
 
   async update(
     id: number,
-    data: { name?: string; role?: string; department?: string; phone?: string; isActive?: boolean; notes?: string }
+    data: { name?: string; role?: string; departmentId?: number | null; phone?: string; isActive?: boolean; notes?: string }
   ) {
     await this.get(id);
     return this.repo.update(id, data);

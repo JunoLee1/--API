@@ -2,21 +2,31 @@ import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import { staffRecordApi } from "@/services/staff-record.service"
+import { departmentApi } from "@/services/department.service"
 import type { StaffRecord } from "@/services/staff-record.service"
+import type { Department } from "@/services/department.service"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Switch } from "@/components/ui/switch"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export function StaffRecordPage() {
   const { t } = useTranslation("admin")
   const [records, setRecords] = useState<StaffRecord[]>([])
+  const [departments, setDepartments] = useState<Department[]>([])
   const [includeInactive, setIncludeInactive] = useState(false)
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<StaffRecord | null>(null)
-  const [form, setForm] = useState({ name: "", role: "", department: "", phone: "", notes: "" })
+  const [form, setForm] = useState({ name: "", role: "", departmentId: "", phone: "", notes: "" })
   const [saving, setSaving] = useState(false)
 
   const fetchRecords = async () => {
@@ -27,17 +37,28 @@ export function StaffRecordPage() {
     }
   }
 
-  useEffect(() => { void fetchRecords() }, [includeInactive])
+  useEffect(() => {
+    void fetchRecords()
+    departmentApi.list()
+      .then((data) => setDepartments(data.filter((d) => d.isActive)))
+      .catch(() => {})
+  }, [includeInactive])
 
   const openCreate = () => {
     setEditing(null)
-    setForm({ name: "", role: "", department: "", phone: "", notes: "" })
+    setForm({ name: "", role: "", departmentId: "", phone: "", notes: "" })
     setOpen(true)
   }
 
   const openEdit = (r: StaffRecord) => {
     setEditing(r)
-    setForm({ name: r.name, role: r.role, department: r.department ?? "", phone: r.phone ?? "", notes: r.notes ?? "" })
+    setForm({
+      name: r.name,
+      role: r.role,
+      departmentId: r.departmentId ? String(r.departmentId) : "",
+      phone: r.phone ?? "",
+      notes: r.notes ?? "",
+    })
     setOpen(true)
   }
 
@@ -45,10 +66,17 @@ export function StaffRecordPage() {
     if (!form.name.trim() || !form.role.trim()) { toast.error("이름과 역할을 입력하세요"); return }
     setSaving(true)
     try {
+      const payload = {
+        name: form.name,
+        role: form.role,
+        departmentId: form.departmentId ? Number(form.departmentId) : undefined,
+        phone: form.phone || undefined,
+        notes: form.notes || undefined,
+      }
       if (editing) {
-        await staffRecordApi.update(editing.id, form)
+        await staffRecordApi.update(editing.id, payload)
       } else {
-        await staffRecordApi.create(form)
+        await staffRecordApi.create(payload)
       }
       setOpen(false)
       void fetchRecords()
@@ -107,7 +135,7 @@ export function StaffRecordPage() {
             <tr key={r.id} className="border-b hover:bg-muted/30">
               <td className="py-2 pr-4 font-medium">{r.name}</td>
               <td className="py-2 pr-4">{r.role}</td>
-              <td className="py-2 pr-4 text-muted-foreground">{r.department ?? "-"}</td>
+              <td className="py-2 pr-4 text-muted-foreground">{r.department?.name ?? "-"}</td>
               <td className="py-2 pr-4 text-muted-foreground">{r.phone ?? "-"}</td>
               <td className="py-2 pr-4">
                 <Badge variant={r.isActive ? "default" : "secondary"}>
@@ -133,7 +161,7 @@ export function StaffRecordPage() {
             <DialogTitle>{editing ? t("staffRecord.edit") : t("staffRecord.add")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            {(["name", "role", "department", "phone", "notes"] as const).map((field) => (
+            {(["name", "role", "phone", "notes"] as const).map((field) => (
               <div key={field} className="space-y-1">
                 <Label>{t(`staffRecord.${field}`)}</Label>
                 <Input
@@ -142,6 +170,23 @@ export function StaffRecordPage() {
                 />
               </div>
             ))}
+            <div className="space-y-1">
+              <Label>{t("staffRecord.department")}</Label>
+              <Select
+                value={form.departmentId || "none"}
+                onValueChange={(v) => setForm((f) => ({ ...f, departmentId: v === "none" ? "" : v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t("staffRecord.departmentPlaceholder")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{t("staffRecord.noDepartment")}</SelectItem>
+                  {departments.map((d) => (
+                    <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             {editing && (
               <div className="flex items-center gap-2">
                 <Switch

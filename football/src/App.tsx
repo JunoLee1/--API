@@ -55,6 +55,7 @@ import { GrowthReportsListPage } from '@/pages/players/GrowthReportsListPage'
 import IncidentReportPage from '@/pages/youth/IncidentReportPage'
 import AcademyFeePage from '@/pages/youth/AcademyFeePage'
 import { StaffRecordPage } from '@/pages/admin/StaffRecordPage'
+import { DepartmentPage } from '@/pages/admin/DepartmentPage'
 import { MealExpensePage } from '@/pages/admin/MealExpensePage'
 import { FinancialReportPage } from '@/pages/admin/FinancialReportPage'
 
@@ -135,6 +136,7 @@ function App() {
             <Route path="/admin/login-history" element={<LoginHistoryPage />} />
             <Route path="/safeguard-reports" element={<SafeguardReportPage />} />
             <Route path="/admin/team-settings" element={<TeamSettingsPage />} />
+            <Route path="/admin/departments" element={<DepartmentPage />} />
             <Route path="/admin/staff-records" element={<StaffRecordPage />} />
             <Route path="/admin/meal-expenses" element={<MealExpensePage />} />
             <Route path="/admin/financial-report" element={<FinancialReportPage />} />

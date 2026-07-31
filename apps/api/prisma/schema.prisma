@@ -1798,16 +1798,17 @@ model ClubSettings {
 }
 
 model StaffRecord {
-  id          Int      @id @default(autoincrement())
-  name        String
-  role        String
-  department  String?
-  phone       String?
-  isActive    Boolean  @default(true)
-  notes       String?
-  createdById Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  name         String
+  role         String
+  departmentId Int?
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  phone        String?
+  isActive     Boolean  @default(true)
+  notes        String?
+  createdById  Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   createdBy User @relation("StaffRecordCreator", fields: [createdById], references: [id])
 }
@@ -1838,4 +1839,13 @@ model FinancialReport {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   season       Season   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+}
+
+model Department {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  staffRecords StaffRecord[]
 }

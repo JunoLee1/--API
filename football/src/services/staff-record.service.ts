@@ -1,10 +1,12 @@
 import { api } from "./api";
+import type { Department } from "./department.service";
 
 export interface StaffRecord {
   id: number;
   name: string;
   role: string;
-  department: string | null;
+  departmentId: number | null;
+  department: Department | null;
   phone: string | null;
   isActive: boolean;
   notes: string | null;
@@ -18,11 +20,11 @@ export const staffRecordApi = {
     api.get(`/staff-records?includeInactive=${includeInactive}`),
   get: (id: number): Promise<StaffRecord> => api.get(`/staff-records/${id}`),
   create: (
-    data: Pick<StaffRecord, "name" | "role"> & Partial<Pick<StaffRecord, "department" | "phone" | "notes">>
+    data: Pick<StaffRecord, "name" | "role"> & Partial<Pick<StaffRecord, "departmentId" | "phone" | "notes">>
   ): Promise<StaffRecord> => api.post("/staff-records", data),
   update: (
     id: number,
-    data: Partial<Pick<StaffRecord, "name" | "role" | "department" | "phone" | "isActive" | "notes">>
+    data: Partial<Pick<StaffRecord, "name" | "role" | "departmentId" | "phone" | "isActive" | "notes">>
   ): Promise<StaffRecord> => api.patch(`/staff-records/${id}`, data),
   delete: (id: number): Promise<void> => api.delete(`/staff-records/${id}`),
 };

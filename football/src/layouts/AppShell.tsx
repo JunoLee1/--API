@@ -304,6 +304,14 @@ const NAV_ITEMS: NavItem[] = [
     frontOfficeRoles: ['GM'],
   },
   {
+    to: '/admin/departments',
+    label: 'nav.item.departments',
+    icon: Building2,
+    section: 'nav.section.management',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['GM'],
+  },
+  {
     to: '/admin/staff-records',
     label: 'nav.item.staffRecords',
     icon: Users2,

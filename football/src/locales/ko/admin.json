@@ -378,7 +378,9 @@
     "active": "재직 중",
     "inactive": "퇴직",
     "showInactive": "퇴직자 포함",
-    "confirmDelete": "이 직원 기록을 삭제하시겠습니까?"
+    "confirmDelete": "이 직원 기록을 삭제하시겠습니까?",
+    "departmentPlaceholder": "부서 선택",
+    "noDepartment": "부서 없음"
   },
   "equipmentPage": {
     "title": "장비 관리",
@@ -452,6 +454,22 @@
     },
     "loansAll": "전체 대여 신청 목록",
     "loansOwn": "내 대여 신청"
+  },
+  "department": {
+    "title": "부서 관리",
+    "add": "부서 추가",
+    "edit": "부서 수정",
+    "name": "부서명",
+    "namePlaceholder": "예: 전략팀",
+    "status": "상태",
+    "active": "운영 중",
+    "inactive": "비활성",
+    "empty": "등록된 부서가 없습니다.",
+    "loadFailed": "부서 목록을 불러오지 못했습니다.",
+    "saveFailed": "저장에 실패했습니다.",
+    "deleteFailed": "삭제에 실패했습니다.",
+    "nameRequired": "부서명을 입력하세요.",
+    "confirmDelete": "이 부서를 삭제하시겠습니까? 소속 직원의 부서 정보가 초기화됩니다."
   },
   "financialReport": {
     "title": "재무 보고서",
