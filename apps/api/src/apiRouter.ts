@@ -36,6 +36,7 @@ import clubSettingsRouter from "./club-settings/club-settings.routes";
 import staffRecordRouter from "./staff-record/staff-record.routes";
 import mealExpenseRouter from "./meal-expense/meal-expense.routes";
 import financialReportRouter from "./financial-report/financial-report.routes";
+import departmentRouter from "./department/department.routes";
 
 const apiRouter = Router();
 
@@ -73,6 +74,7 @@ apiRouter.use("/safeguard-reports", safeguardRouter);
 apiRouter.use("/academy-fees", academyFeeRouter);
 apiRouter.use("/coaching-staff", coachingStaffRouter);
 apiRouter.use("/club-settings", clubSettingsRouter);
+apiRouter.use("/departments", departmentRouter);
 apiRouter.use("/staff-records", staffRecordRouter);
 apiRouter.use("/meal-expenses", mealExpenseRouter);
 apiRouter.use("/financial-reports", financialReportRouter);
