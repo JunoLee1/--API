@@ -53,7 +53,7 @@ export class KnapsackService {
       search(idx + 1, remaining, value);
 
       // try each tier
-      for (const tier of groups[idx].tiers) {
+      for (const tier of groups[idx]!.tiers) {
         if (tier.cost <= remaining) {
           selection[idx] = tier;
           search(idx + 1, remaining - tier.cost, value + tier.value);
@@ -67,10 +67,10 @@ export class KnapsackService {
     const selectedTiers: SelectedTier[] = [];
     for (let i = 0; i < groups.length; i++) {
       const tier = bestSelection[i];
-      if (tier !== null) {
+      if (tier != null) {
         selectedTiers.push({
           tierId: tier.tierId,
-          categoryPlanId: groups[i].categoryPlanId,
+          categoryPlanId: groups[i]!.categoryPlanId,
           allocated: tier.cost,
         });
       }
