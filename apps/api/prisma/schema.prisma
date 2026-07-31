@@ -550,6 +550,7 @@ model Season {
   trainingSessions TrainingSession[]
   tacticalAnalyses TacticalAnalysis[]
   developmentPlans PlayerDevelopmentPlan[]
+  financialReport  FinancialReport?
 }
 
 model Player {
@@ -1827,4 +1828,14 @@ model MealExpense {
   session   TrainingSession? @relation(fields: [sessionId], references: [id])
   match     Match?           @relation(fields: [matchId], references: [id])
   createdBy User             @relation("MealExpenseCreator", fields: [createdById], references: [id])
+}
+
+model FinancialReport {
+  id           Int      @id @default(autoincrement())
+  seasonId     Int      @unique
+  totalRevenue Int
+  note         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  season       Season   @relation(fields: [seasonId], references: [id])
 }
