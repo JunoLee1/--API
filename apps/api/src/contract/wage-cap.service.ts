@@ -11,15 +11,25 @@ export class WageCapService {
   async check(newSalary: number): Promise<WageCapCheckResult> {
     const season = await this.prisma.season.findFirst({
       where: { status: "ACTIVE" },
-      select: { wageCapType: true, wageCapValue: true, startDate: true, endDate: true },
+      select: { id: true, wageCapType: true, wageCapValue: true, startDate: true, endDate: true },
     });
 
     if (!season || !season.wageCapType || season.wageCapValue == null) {
       return { status: "OK" };
     }
 
-    if (season.wageCapType === "RATIO") {
-      return { status: "OK" };
+    let cap: number;
+
+    if (season.wageCapType === "FIXED") {
+      cap = season.wageCapValue;
+    } else {
+      // RATIO: cap = totalRevenue * wageCapValue
+      const report = await this.prisma.financialReport.findUnique({
+        where: { seasonId: season.id },
+        select: { totalRevenue: true },
+      });
+      if (!report) return { status: "OK" };
+      cap = Math.round(report.totalRevenue * season.wageCapValue);
     }
 
     const activeContracts = await this.prisma.contract.findMany({
@@ -33,7 +43,6 @@ export class WageCapService {
 
     const totalSalary = activeContracts.reduce((sum, c) => sum + c.salary, 0);
     const projected = totalSalary + newSalary;
-    const cap = season.wageCapValue;
 
     if (projected <= cap) return { status: "OK" };
 
