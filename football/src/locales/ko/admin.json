@@ -495,5 +495,63 @@
       "percentUsed": "사용률",
       "remaining": "잔여 한도"
     }
+  },
+  "budget": {
+    "title": "운영비 예산 계획",
+    "subtitle": "Knapsack 최적화로 시즌 운영비를 카테고리별로 배분합니다",
+    "loadFailed": "예산 플랜 로드 실패",
+    "saveFailed": "저장 실패",
+    "saved": "예산 플랜 저장 완료",
+    "optimized": "Knapsack 최적화 완료",
+    "optimizeFailed": "최적화 실패",
+    "saving": "저장 중...",
+    "optimize": "Knapsack 최적화",
+    "optimizing": "최적화 중...",
+    "save": "저장",
+    "noActiveSeason": "활성 시즌이 없습니다",
+    "totalSection": "총 예산 설정",
+    "totalOperatingBudget": "총 운영예산",
+    "contingencyReserve": "예비비",
+    "discretionaryPool": "재량 예산",
+    "categoriesSection": "카테고리별 설정",
+    "mandatoryMinimum": "의무 최소치",
+    "tiers": "티어 (이름 / 비용 / 가치점수)",
+    "overrideSection": "긴급지출 Override 로그",
+    "overrideAmount": "금액",
+    "overrideReason": "사유",
+    "logOverride": "Override 기록",
+    "overrideLogged": "Override 기록 완료",
+    "overrideFailed": "Override 기록 실패",
+    "col": {
+      "category": "카테고리",
+      "amount": "금액",
+      "reason": "사유",
+      "date": "일자"
+    }
+  },
+  "operatingExpense": {
+    "title": "운영비 지출 기록",
+    "subtitle": "이동·장비·스카우팅·유소년 지출을 기록합니다",
+    "add": "지출 추가",
+    "createTitle": "운영비 지출 등록",
+    "empty": "등록된 지출이 없습니다",
+    "loadFailed": "지출 목록 로드 실패",
+    "createFailed": "등록 실패",
+    "deleteFailed": "삭제 실패",
+    "created": "지출 등록 완료",
+    "deleted": "삭제 완료",
+    "required": "카테고리·금액·날짜는 필수입니다",
+    "noActiveSeason": "활성 시즌이 없습니다",
+    "saving": "저장 중...",
+    "submit": "등록",
+    "cancel": "취소",
+    "notePlaceholder": "메모 (선택)",
+    "col": {
+      "date": "일자",
+      "category": "카테고리",
+      "amount": "금액",
+      "note": "메모",
+      "by": "등록자"
+    }
   }
 }

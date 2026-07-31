@@ -47,6 +47,7 @@ import {
   CalendarDays,
   History,
   GraduationCap,
+  PieChart,
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -334,6 +335,14 @@ const NAV_ITEMS: NavItem[] = [
     section: 'nav.section.management',
     roles: ['ADMIN', 'FRONT_OFFICE'],
     frontOfficeRoles: ['FINANCE_MANAGER'],
+  },
+  {
+    to: '/admin/budget-plan',
+    label: 'nav.item.budgetPlan',
+    icon: PieChart,
+    section: 'nav.section.management',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['GM', 'FINANCE_MANAGER', 'TD'],
   },
   {
     to: '/equipment',
