@@ -6,11 +6,16 @@ import { IncidentReportStatus, IncidentType } from "../generated/enums";
 
 const ALLOWED_ROLES = ["ADMIN", "COACHING_STAFF", "FRONT_OFFICE"] as const;
 
+function canAccess(req: Request) {
+  return ALLOWED_ROLES.includes(req.user!.role as any);
+}
+
 export class IncidentReportController {
   constructor(private service: IncidentReportService) {}
 
   getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      if (!canAccess(req)) throw new AppError(403, "FORBIDDEN");
       const q = req.query;
       const query: IncidentReportListQuery = {};
       if (q["teamId"]) query.teamId = Number(q["teamId"]);
@@ -22,6 +27,7 @@ export class IncidentReportController {
 
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      if (!canAccess(req)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.getById(Number(req.params["id"])));
     } catch (e) { next(e); }
   };
@@ -48,9 +54,18 @@ export class IncidentReportController {
 
   sign = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!ALLOWED_ROLES.includes(req.user!.role as any)) throw new AppError(403, "FORBIDDEN");
       const { role } = req.body as SignIncidentReportDto;
       if (role !== "SUPERVISOR" && role !== "MEDICAL") throw new AppError(400, "INVALID_ROLE");
+      const u = req.user!;
+      const canSign =
+        u.role === "ADMIN" ||
+        (role === "MEDICAL" &&
+          u.role === "COACHING_STAFF" &&
+          (u.coachingRole === "MEDICAL" || u.coachingRole === "MEDICAL_DIRECTOR")) ||
+        (role === "SUPERVISOR" &&
+          u.role === "COACHING_STAFF" &&
+          u.coachingRole === "HEAD_COACH");
+      if (!canSign) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.sign(Number(req.params["id"]), role));
     } catch (e) { next(e); }
   };

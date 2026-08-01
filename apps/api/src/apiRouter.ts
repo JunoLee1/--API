@@ -39,6 +39,7 @@ import financialReportRouter from "./financial-report/financial-report.routes";
 import departmentRouter from "./department/department.routes";
 import operatingExpenseRouter from "./operating-expense/operating-expense.routes";
 import hrReportRouter from "./hr-report/hr-report.routes";
+import recruitmentRouter from "./recruitment/recruitment.routes";
 
 const apiRouter = Router();
 
@@ -82,5 +83,6 @@ apiRouter.use("/meal-expenses", mealExpenseRouter);
 apiRouter.use("/financial-reports", financialReportRouter);
 apiRouter.use("/operating-expenses", operatingExpenseRouter);
 apiRouter.use("/hr-reports", hrReportRouter);
+apiRouter.use("/recruitment", recruitmentRouter);
 
 export default apiRouter;

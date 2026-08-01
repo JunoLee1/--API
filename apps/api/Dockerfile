@@ -1,8 +1,11 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 COPY . .
+ARG DATABASE_URL=postgresql://x:x@localhost:5432/x
+ENV DATABASE_URL=$DATABASE_URL
+RUN npx prisma generate
 RUN npm run build
 
 FROM node:20-alpine
