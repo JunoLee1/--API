@@ -21,6 +21,7 @@ export function DepartmentPage() {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Department | null>(null)
   const [name, setName] = useState('')
+  const [parentId, setParentId] = useState<number | undefined>(undefined)
   const [saving, setSaving] = useState(false)
 
   const fetchDepartments = async () => {
@@ -36,12 +37,21 @@ export function DepartmentPage() {
   const openCreate = () => {
     setEditing(null)
     setName('')
+    setParentId(undefined)
+    setOpen(true)
+  }
+
+  const openCreateTeam = (deptId: number) => {
+    setEditing(null)
+    setName('')
+    setParentId(deptId)
     setOpen(true)
   }
 
   const openEdit = (d: Department) => {
     setEditing(d)
     setName(d.name)
+    setParentId(d.parentId ?? undefined)
     setOpen(true)
   }
 
@@ -52,7 +62,10 @@ export function DepartmentPage() {
       if (editing) {
         await departmentApi.update(editing.id, { name: name.trim() })
       } else {
-        await departmentApi.create({ name: name.trim() })
+        await departmentApi.create({
+          name: name.trim(),
+          ...(parentId !== undefined && { parentId }),
+        })
       }
       setOpen(false)
       void fetchDepartments()
@@ -82,6 +95,11 @@ export function DepartmentPage() {
     }
   }
 
+  const isTeamDialog = parentId !== undefined && !editing
+  const dialogTitle = editing
+    ? (editing.parentId !== null ? t('department.editTeam') : t('department.edit'))
+    : (isTeamDialog ? t('department.addTeam') : t('department.add'))
+
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -99,33 +117,70 @@ export function DepartmentPage() {
         </thead>
         <tbody>
           {departments.map((d) => (
-            <tr key={d.id} className="border-b hover:bg-muted/30">
-              <td className="py-2 pr-4 font-medium">{d.name}</td>
-              <td className="py-2 pr-4">
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={d.isActive}
-                    onCheckedChange={(v) => void handleToggleActive(d, v)}
-                  />
-                  <Badge variant={d.isActive ? 'default' : 'secondary'}>
-                    {d.isActive ? t('department.active') : t('department.inactive')}
-                  </Badge>
-                </div>
-              </td>
-              <td className="py-2 flex gap-2 justify-end">
-                <Button size="sm" variant="ghost" onClick={() => openEdit(d)}>
-                  {t('action.edit', { ns: 'common' })}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-destructive"
-                  onClick={() => void handleDelete(d.id)}
-                >
-                  {t('action.delete', { ns: 'common' })}
-                </Button>
-              </td>
-            </tr>
+            <>
+              <tr key={d.id} className="border-b hover:bg-muted/30">
+                <td className="py-2 pr-4 font-medium">{d.name}</td>
+                <td className="py-2 pr-4">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={d.isActive}
+                      onCheckedChange={(v) => void handleToggleActive(d, v)}
+                    />
+                    <Badge variant={d.isActive ? 'default' : 'secondary'}>
+                      {d.isActive ? t('department.active') : t('department.inactive')}
+                    </Badge>
+                  </div>
+                </td>
+                <td className="py-2 flex gap-2 justify-end">
+                  <Button size="sm" variant="ghost" onClick={() => openCreateTeam(d.id)}>
+                    {t('department.addTeam')}
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => openEdit(d)}>
+                    {t('action.edit', { ns: 'common' })}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-destructive"
+                    onClick={() => void handleDelete(d.id)}
+                  >
+                    {t('action.delete', { ns: 'common' })}
+                  </Button>
+                </td>
+              </tr>
+              {d.children.map((team) => (
+                <tr key={team.id} className="border-b bg-muted/10 hover:bg-muted/20">
+                  <td className="py-2 pr-4 pl-8 text-muted-foreground">
+                    <span className="mr-2 text-muted-foreground/50">└</span>
+                    {team.name}
+                  </td>
+                  <td className="py-2 pr-4">
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={team.isActive}
+                        onCheckedChange={(v) => void handleToggleActive(team as Department, v)}
+                      />
+                      <Badge variant={team.isActive ? 'default' : 'secondary'}>
+                        {team.isActive ? t('department.active') : t('department.inactive')}
+                      </Badge>
+                    </div>
+                  </td>
+                  <td className="py-2 flex gap-2 justify-end">
+                    <Button size="sm" variant="ghost" onClick={() => openEdit(team as Department)}>
+                      {t('action.edit', { ns: 'common' })}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive"
+                      onClick={() => void handleDelete(team.id)}
+                    >
+                      {t('action.delete', { ns: 'common' })}
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </>
           ))}
           {departments.length === 0 && (
             <tr>
@@ -140,7 +195,7 @@ export function DepartmentPage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>{editing ? t('department.edit') : t('department.add')}</DialogTitle>
+            <DialogTitle>{dialogTitle}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
@@ -148,7 +203,7 @@ export function DepartmentPage() {
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder={t('department.namePlaceholder')}
+                placeholder={isTeamDialog ? t('department.teamNamePlaceholder') : t('department.namePlaceholder')}
                 onKeyDown={(e) => { if (e.key === 'Enter') void handleSubmit() }}
               />
             </div>
