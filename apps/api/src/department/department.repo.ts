@@ -24,7 +24,7 @@ export class DepartmentRepository {
   create(data: { name: string; parentId?: number }) {
     return this.prisma.department.create({
       data,
-      include: { children: true, parent: true },
+      include: { children: { orderBy: { name: "asc" } }, parent: true },
     });
   }
 
@@ -32,7 +32,7 @@ export class DepartmentRepository {
     return this.prisma.department.update({
       where: { id },
       data,
-      include: { children: true, parent: true },
+      include: { children: { orderBy: { name: "asc" } }, parent: true },
     });
   }
 
