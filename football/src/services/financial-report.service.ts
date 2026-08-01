@@ -1,4 +1,5 @@
 import { api } from './api'
+import type { BudgetPlan, UpsertBudgetPlanPayload, OptimizeResult } from '@/types/budget'
 
 export interface FinancialReport {
   id: number
@@ -22,4 +23,18 @@ export const financialReportApi = {
     if (note) form.append('note', note)
     return api.postForm<FinancialReport>(`/financial-reports/${seasonId}/csv`, form)
   },
+}
+
+export const budgetPlanApi = {
+  get: (seasonId: number) =>
+    api.get<BudgetPlan>(`/financial-reports/${seasonId}/budget`),
+
+  save: (seasonId: number, payload: UpsertBudgetPlanPayload) =>
+    api.put<BudgetPlan>(`/financial-reports/${seasonId}/budget`, payload),
+
+  optimize: (seasonId: number) =>
+    api.post<OptimizeResult>(`/financial-reports/${seasonId}/budget/optimize`, {}),
+
+  addOverride: (seasonId: number, payload: { category: string; amount: number; reason: string }) =>
+    api.post(`/financial-reports/${seasonId}/budget/override`, payload),
 }
