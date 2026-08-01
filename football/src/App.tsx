@@ -58,6 +58,9 @@ import { StaffRecordPage } from '@/pages/admin/StaffRecordPage'
 import { DepartmentPage } from '@/pages/admin/DepartmentPage'
 import { MealExpensePage } from '@/pages/admin/MealExpensePage'
 import { FinancialReportPage } from '@/pages/admin/FinancialReportPage'
+import { BudgetPlanPage } from '@/pages/admin/BudgetPlanPage'
+import { OperatingExpensePage } from '@/pages/admin/OperatingExpensePage'
+import HrReportPage from '@/pages/admin/HrReportPage'
 
 function GrowthReportRedirect() {
   const { playerId } = useParams<{ playerId: string }>()
@@ -140,6 +143,9 @@ function App() {
             <Route path="/admin/staff-records" element={<StaffRecordPage />} />
             <Route path="/admin/meal-expenses" element={<MealExpensePage />} />
             <Route path="/admin/financial-report" element={<FinancialReportPage />} />
+            <Route path="/admin/budget-plan" element={<BudgetPlanPage />} />
+            <Route path="/admin/operating-expenses" element={<OperatingExpensePage />} />
+            <Route path="/admin/hr-report" element={<HrReportPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/login" replace />} />
