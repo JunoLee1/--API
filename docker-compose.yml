@@ -31,6 +31,8 @@ services:
 
   web:
     image: ghcr.io/junolee1/football-web:latest
+    ports:
+      - "80:80"
     depends_on:
       - api
     restart: unless-stopped
