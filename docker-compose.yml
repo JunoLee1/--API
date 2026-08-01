@@ -15,8 +15,7 @@ services:
       retries: 5
 
   api:
-    build:
-      context: ./apps/api
+    image: ghcr.io/junolee1/football-api:latest
     environment:
       DATABASE_URL: postgresql://football:${DB_PASSWORD}@db:5432/football
       PORT: 3001
@@ -31,8 +30,7 @@ services:
     restart: unless-stopped
 
   web:
-    build:
-      context: ./football
+    image: ghcr.io/junolee1/football-web:latest
     depends_on:
       - api
     restart: unless-stopped
