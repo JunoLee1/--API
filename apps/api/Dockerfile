@@ -17,4 +17,4 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/src/generated ./src/generated
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 EXPOSE 3001
-CMD ["sh", "-c", "output=$(npx prisma migrate deploy 2>&1); if echo \"$output\" | grep -q P3005; then ls prisma/migrations | xargs -I{} npx prisma migrate resolve --applied {} 2>/dev/null; npx prisma migrate deploy; else echo \"$output\"; fi && node dist/server.js"]
+CMD ["sh", "-c", "output=$(npx prisma migrate deploy 2>&1); if echo \"$output\" | grep -qE 'P3005|P3008'; then for m in $(ls prisma/migrations); do npx prisma migrate resolve --applied \"$m\" > /dev/null 2>&1 || true; done && npx prisma migrate deploy; else echo \"$output\"; fi && node dist/server.js"]
