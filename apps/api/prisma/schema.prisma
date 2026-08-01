@@ -58,6 +58,7 @@ enum FrontOfficeRole {
   EQUIPMENT_MANAGER
   TACTICAL_ANALYST
   FINANCE_MANAGER
+  ASSET_MANAGER
 }
 
 enum PlayerLevel {
@@ -1854,6 +1855,9 @@ model Department {
   isActive     Boolean       @default(true)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+  parentId     Int?
+  parent       Department?   @relation("DepartmentHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children     Department[]  @relation("DepartmentHierarchy")
   staffRecords StaffRecord[]
 }
 
