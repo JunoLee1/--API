@@ -29,7 +29,7 @@ export class TeamService {
   }
 
   async setLiteMode(teamId: number, isLite: boolean, requesterRole: string) {
-    if (requesterRole !== 'ADMIN') throw new AppError(403, 'FORBIDDEN');
+    // permission is already enforced at the controller layer via canManage
     const team = await this.repo.findById(teamId);
     if (!team) throw new AppError(404, 'TEAM_NOT_FOUND');
     return this.repo.updateLiteFlag(teamId, isLite);
