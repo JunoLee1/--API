@@ -16,4 +16,4 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/src/generated ./src/generated
 EXPOSE 3001
-CMD ["sh", "-c", "node -e \"const {execSync}=require('child_process');execSync('npx prisma migrate deploy',{stdio:'inherit'})\" && node dist/server.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]
