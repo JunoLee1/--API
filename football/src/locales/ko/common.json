@@ -65,7 +65,8 @@
       "departments": "부서 관리",
       "budgetPlan": "운영비 예산",
       "operatingExpenses": "운영비 지출",
-      "hrReport": "HR 보고서"
+      "hrReport": "HR 보고서",
+      "recruitment": "채용 관리"
     }
   },
   "action": {

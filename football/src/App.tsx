@@ -61,6 +61,9 @@ import { FinancialReportPage } from '@/pages/admin/FinancialReportPage'
 import { BudgetPlanPage } from '@/pages/admin/BudgetPlanPage'
 import { OperatingExpensePage } from '@/pages/admin/OperatingExpensePage'
 import HrReportPage from '@/pages/admin/HrReportPage'
+import { JobPostingListPage } from '@/pages/admin/recruitment/JobPostingListPage'
+import { JobPostingDetailPage } from '@/pages/admin/recruitment/JobPostingDetailPage'
+import { ApplicationDetailPage } from '@/pages/admin/recruitment/ApplicationDetailPage'
 
 function GrowthReportRedirect() {
   const { playerId } = useParams<{ playerId: string }>()
@@ -146,6 +149,9 @@ function App() {
             <Route path="/admin/budget-plan" element={<BudgetPlanPage />} />
             <Route path="/admin/operating-expenses" element={<OperatingExpensePage />} />
             <Route path="/admin/hr-report" element={<HrReportPage />} />
+            <Route path="/admin/recruitment" element={<JobPostingListPage />} />
+            <Route path="/admin/recruitment/postings/:id" element={<JobPostingDetailPage />} />
+            <Route path="/admin/recruitment/applications/:id" element={<ApplicationDetailPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/login" replace />} />
