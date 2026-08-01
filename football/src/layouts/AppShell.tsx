@@ -353,6 +353,13 @@ const NAV_ITEMS: NavItem[] = [
     frontOfficeRoles: ['GM', 'FINANCE_MANAGER', 'TD'],
   },
   {
+    to: '/admin/hr-report',
+    label: 'nav.item.hrReport',
+    icon: ClipboardList,
+    section: 'nav.section.management',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+  },
+  {
     to: '/equipment',
     label: 'nav.item.equipment',
     icon: Package,

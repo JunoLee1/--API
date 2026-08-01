@@ -38,6 +38,7 @@ import mealExpenseRouter from "./meal-expense/meal-expense.routes";
 import financialReportRouter from "./financial-report/financial-report.routes";
 import departmentRouter from "./department/department.routes";
 import operatingExpenseRouter from "./operating-expense/operating-expense.routes";
+import hrReportRouter from "./hr-report/hr-report.routes";
 
 const apiRouter = Router();
 
@@ -80,5 +81,6 @@ apiRouter.use("/staff-records", staffRecordRouter);
 apiRouter.use("/meal-expenses", mealExpenseRouter);
 apiRouter.use("/financial-reports", financialReportRouter);
 apiRouter.use("/operating-expenses", operatingExpenseRouter);
+apiRouter.use("/hr-reports", hrReportRouter);
 
 export default apiRouter;
