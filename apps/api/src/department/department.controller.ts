@@ -3,10 +3,13 @@ import { AppError } from "../lib/appError";
 import { DepartmentService } from "./department.service";
 
 const canWrite = (role: string, foRole: string | null | undefined) =>
-  role === "ADMIN" || (role === "FRONT_OFFICE" && foRole === "GM");
+  role === "ADMIN" ||
+  (role === "FRONT_OFFICE" && (foRole === "GM" || foRole === "ASSET_MANAGER"));
 
 const canRead = (role: string, foRole: string | null | undefined) =>
-  role === "ADMIN" || (role === "FRONT_OFFICE" && foRole === "GM");
+  role === "ADMIN" ||
+  (role === "FRONT_OFFICE" &&
+    (foRole === "GM" || foRole === "ASSET_MANAGER" || foRole === "FINANCE_MANAGER"));
 
 export class DepartmentController {
   constructor(private service: DepartmentService) {}
@@ -35,9 +38,14 @@ export class DepartmentController {
     try {
       const { role, frontOfficeRole } = req.user!;
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
-      const { name } = req.body as { name: string };
+      const { name, parentId } = req.body as { name: string; parentId?: number };
       if (!name?.trim()) throw new AppError(400, "NAME_REQUIRED");
-      res.status(201).json(await this.service.create({ name: name.trim() }));
+      res.status(201).json(
+        await this.service.create({
+          name: name.trim(),
+          ...(parentId !== undefined && { parentId }),
+        })
+      );
     } catch (err) {
       next(err);
     }
@@ -47,7 +55,7 @@ export class DepartmentController {
     try {
       const { role, frontOfficeRole } = req.user!;
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
-      const data = req.body as { name?: string; isActive?: boolean };
+      const data = req.body as { name?: string; isActive?: boolean; parentId?: number | null };
       res.json(await this.service.update(Number(req.params["id"]), data));
     } catch (err) {
       next(err);
