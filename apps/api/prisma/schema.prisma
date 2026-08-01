@@ -59,6 +59,7 @@ enum FrontOfficeRole {
   TACTICAL_ANALYST
   FINANCE_MANAGER
   ASSET_MANAGER
+  HR_MANAGER
 }
 
 enum PlayerLevel {
@@ -538,6 +539,10 @@ model User {
   mealExpensesCreated      MealExpense[]             @relation("MealExpenseCreator")
   budgetOverrideLogs       BudgetOverrideLog[]       @relation("BudgetOverrideLogCreator")
   operatingExpenses        OperatingExpense[]        @relation("OperatingExpenseCreator")
+  createdPostings          JobPosting[]              @relation("JobPostingCreator")
+  approvedPostings         JobPosting[]              @relation("JobPostingApprover")
+  applicationOffers        JobApplication[]          @relation("ApplicationOffer")
+  onboarding               Onboarding?               @relation("OnboardingUser")
 }
 
 model Season {
@@ -1859,6 +1864,7 @@ model Department {
   parent       Department?   @relation("DepartmentHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
   children     Department[]  @relation("DepartmentHierarchy")
   staffRecords StaffRecord[]
+  postings     JobPosting[]
 }
 
 // ─────────────────────────────────────────────
@@ -1924,4 +1930,130 @@ model OperatingExpense {
   updatedAt   DateTime          @updatedAt
   season      Season            @relation(fields: [seasonId], references: [id])
   createdBy   User              @relation("OperatingExpenseCreator", fields: [createdById], references: [id])
+}
+
+// ─────────────────────────────────────────────
+// 채용 파이프라인
+// ─────────────────────────────────────────────
+
+enum JobPostingStatus {
+  DRAFT
+  OPEN
+  CLOSED
+}
+
+enum JobApplicationStatus {
+  APPLIED
+  SCREENING
+  INTERVIEW_1
+  INTERVIEW_2
+  REFERENCE_CHECK
+  OFFERED
+  ONBOARDED
+  REJECTED
+}
+
+enum InterviewRound {
+  ROUND_1
+  ROUND_2
+}
+
+enum InterviewResult {
+  PENDING
+  PASS
+  FAIL
+}
+
+enum ReferenceCheckResult {
+  PENDING
+  CLEAR
+  FLAGGED
+}
+
+model JobPosting {
+  id           Int              @id @default(autoincrement())
+  title        String
+  departmentId Int?
+  headcount    Int              @default(1)
+  description  String
+  status       JobPostingStatus @default(DRAFT)
+  createdById  Int
+  approvedById Int?
+  approvedAt   DateTime?
+  closedAt     DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  department   Department?      @relation(fields: [departmentId], references: [id])
+  createdBy    User             @relation("JobPostingCreator", fields: [createdById], references: [id])
+  approvedBy   User?            @relation("JobPostingApprover", fields: [approvedById], references: [id])
+  applications JobApplication[]
+}
+
+model JobApplication {
+  id            Int                  @id @default(autoincrement())
+  postingId     Int
+  applicantName String
+  email         String
+  phone         String?
+  resumeUrl     String?
+  status        JobApplicationStatus @default(APPLIED)
+  rejectedAt    DateTime?
+  offeredAt     DateTime?
+  offeredById   Int?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  posting        JobPosting      @relation(fields: [postingId], references: [id])
+  offeredBy      User?           @relation("ApplicationOffer", fields: [offeredById], references: [id])
+  interviews     Interview[]
+  referenceCheck ReferenceCheck?
+  onboarding     Onboarding?
+}
+
+model Interview {
+  id             Int             @id @default(autoincrement())
+  applicationId  Int
+  round          InterviewRound
+  scheduledAt    DateTime?
+  interviewerIds Int[]
+  scoreSkill     Int?
+  scoreComm      Int?
+  scoreCulture   Int?
+  comment        String?
+  result         InterviewResult @default(PENDING)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  application JobApplication @relation(fields: [applicationId], references: [id])
+
+  @@unique([applicationId, round])
+}
+
+model ReferenceCheck {
+  id            Int                  @id @default(autoincrement())
+  applicationId Int                  @unique
+  contactName   String
+  relationship  String
+  result        ReferenceCheckResult @default(PENDING)
+  notes         String?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  application JobApplication @relation(fields: [applicationId], references: [id])
+}
+
+model Onboarding {
+  id              Int       @id @default(autoincrement())
+  applicationId   Int       @unique
+  userId          Int?      @unique
+  otpCode         String
+  otpExpiresAt    DateTime
+  emailVerifiedAt DateTime?
+  mfaRegisteredAt DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+
+  application JobApplication @relation(fields: [applicationId], references: [id])
+  user        User?          @relation("OnboardingUser", fields: [userId], references: [id])
 }

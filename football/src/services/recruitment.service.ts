@@ -1,0 +1,95 @@
+import { api } from './api'
+import type {
+  JobPosting,
+  JobApplication,
+  JobPostingStatus,
+  InterviewRound,
+  InterviewResult,
+  ReferenceCheckResult,
+} from '@/types/recruitment'
+
+export const recruitmentApi = {
+  // JobPostings
+  listPostings: (status?: JobPostingStatus): Promise<JobPosting[]> =>
+    api.get('/recruitment/job-postings' + (status ? `?status=${status}` : '')),
+
+  getPosting: (id: number): Promise<JobPosting> =>
+    api.get(`/recruitment/job-postings/${id}`),
+
+  createPosting: (data: {
+    title: string
+    description: string
+    headcount?: number
+    departmentId?: number
+  }): Promise<JobPosting> =>
+    api.post('/recruitment/job-postings', data),
+
+  updatePosting: (id: number, data: {
+    title?: string
+    description?: string
+    headcount?: number
+    departmentId?: number | null
+  }): Promise<JobPosting> =>
+    api.patch(`/recruitment/job-postings/${id}`, data),
+
+  approvePosting: (id: number): Promise<JobPosting> =>
+    api.post(`/recruitment/job-postings/${id}/approve`, {}),
+
+  closePosting: (id: number): Promise<JobPosting> =>
+    api.post(`/recruitment/job-postings/${id}/close`, {}),
+
+  // Applications
+  listApplications: (postingId: number): Promise<JobApplication[]> =>
+    api.get(`/recruitment/job-postings/${postingId}/applications`),
+
+  getApplication: (id: number): Promise<JobApplication> =>
+    api.get(`/recruitment/applications/${id}`),
+
+  rejectApplication: (id: number): Promise<JobApplication> =>
+    api.post(`/recruitment/applications/${id}/reject`, {}),
+
+  offerApplication: (id: number): Promise<JobApplication> =>
+    api.post(`/recruitment/applications/${id}/offer`, {}),
+
+  // Interviews
+  scheduleInterview: (appId: number, data: {
+    round: InterviewRound
+    scheduledAt?: string
+    interviewerIds?: number[]
+  }): Promise<JobApplication> =>
+    api.post(`/recruitment/applications/${appId}/interviews`, data),
+
+  updateInterview: (appId: number, round: InterviewRound, data: {
+    scheduledAt?: string
+    scoreSkill?: number
+    scoreComm?: number
+    scoreCulture?: number
+    comment?: string
+    result?: InterviewResult
+  }): Promise<JobApplication> =>
+    api.patch(`/recruitment/applications/${appId}/interviews/${round}`, data),
+
+  // Reference check
+  createReferenceCheck: (appId: number, data: {
+    contactName: string
+    relationship: string
+    notes?: string
+  }): Promise<JobApplication> =>
+    api.post(`/recruitment/applications/${appId}/reference-check`, data),
+
+  updateReferenceCheck: (appId: number, data: {
+    result: ReferenceCheckResult
+    notes?: string
+  }): Promise<JobApplication> =>
+    api.patch(`/recruitment/applications/${appId}/reference-check`, data),
+
+  // Onboarding
+  startOnboarding: (appId: number, userId: number): Promise<JobApplication> =>
+    api.post(`/recruitment/applications/${appId}/onboarding`, { userId }),
+
+  verifyEmail: (appId: number, otp: string): Promise<JobApplication> =>
+    api.post(`/recruitment/applications/${appId}/onboarding/verify-email`, { otp }),
+
+  completeMfa: (appId: number): Promise<JobApplication> =>
+    api.post(`/recruitment/applications/${appId}/onboarding/complete-mfa`, {}),
+}

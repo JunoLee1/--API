@@ -360,6 +360,14 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'FRONT_OFFICE'],
   },
   {
+    to: '/admin/recruitment',
+    label: 'nav.item.recruitment',
+    icon: ClipboardList,
+    section: 'nav.section.management',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['GM', 'HR_MANAGER'],
+  },
+  {
     to: '/equipment',
     label: 'nav.item.equipment',
     icon: Package,
