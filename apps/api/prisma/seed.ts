@@ -18,6 +18,33 @@ function encryptPhone(text: string) {
   return { encrypted, iv: iv.toString("hex") };
 }
 
+async function seedDepartments() {
+  // 상위 부서
+  const finance = await prisma.department.upsert({
+    where: { name: '재무관리' },
+    update: {},
+    create: { name: '재무관리' },
+  });
+
+  const asset = await prisma.department.upsert({
+    where: { name: '자산관리' },
+    update: {},
+    create: { name: '자산관리' },
+  });
+
+  // 자산관리 하위 부서
+  const subDepts = ['HR', '시설관리', '선수 장비관리', '의료기기 관리', 'IT 자산관리'];
+  for (const name of subDepts) {
+    await prisma.department.upsert({
+      where: { name },
+      update: { parentId: asset.id },
+      create: { name, parentId: asset.id },
+    });
+  }
+
+  console.log(`Departments seeded: 재무관리, 자산관리 + ${subDepts.length} sub-departments`);
+}
+
 async function main() {
   console.log("🌱 Seeding...");
 
@@ -47,6 +74,9 @@ async function main() {
     update: {},
     create: { name: "브라질", code: "BR" },
   });
+
+  // ── Departments ───────────────────────────────────────
+  await seedDepartments();
 
   // ── Users ─────────────────────────────────────────────
   const adminPhone    = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0001") });
