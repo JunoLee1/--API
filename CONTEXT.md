@@ -20,6 +20,8 @@ ADMIN이 생성·관리하는 클럽 내 팀 단위. 팀 구성은 구단마다 
 
 **COACHING_STAFF ↔ Team:** 단일 소속. `User.teamId → Team`. Player와 동일 원칙.
 
+**B_TEAM (K4리그 B팀):** `Team.type = B_TEAM`. 유소년팀과 구분되는 실전 경쟁 팀. 준프로 계약(`Contract.contractType = SEMI_PROFESSIONAL`) 대상. 콜업·Match·TrainingSession 흐름은 FIRST_TEAM·YOUTH와 동일하게 재사용. `Team.requiresContract = true` 필수.
+
 **Master Policy 전파 (Club Identity Continuity):** 별도 전파 엔티티 없음. 대시보드에서 팀별 TrainingSession SessionType 비율을 집계하여 1군 비율과 비교한다. 추가 입력 없이 기존 훈련 데이터로 자동 계산.
 
 **팀 간 데이터 접근:**
@@ -75,6 +77,7 @@ ADMIN이 생성·관리하는 클럽 내 팀 단위. 팀 구성은 구단마다 
 | EQUIPMENT_MANAGER (장비 담당) | ❌ | ❌ |
 | TACTICAL_ANALYST (전술 분석관) | ❌ | ❌ |
 | FINANCE_MANAGER (재무 담당) | ❌ | ❌ |
+| FACILITY_MANAGER (시설관리팀장) | ❌ | ❌ |
 
 Recall 승인 권한: GM 전용.
 StaffRecord 쓰기 권한: GM 전용. 구단 운영 인사 데이터는 GM 소관.
@@ -90,6 +93,9 @@ StaffRecord 쓰기 권한: GM 전용. 구단 운영 인사 데이터는 GM 소�
 
 **FINANCE_MANAGER (재무 담당):**
 재무 운영 데이터 입력 전담. 선택적 역할 — 미생성 시 GM + ADMIN이 동일 권한을 대신 행사한다 (EQUIPMENT_MANAGER 패턴과 동일).
+
+**FACILITY_MANAGER (시설관리팀장):**
+경기장·부대시설 통합 관리 전담. 시설 점검 일지·수리 요청·비상 경위서를 ERP에 직접 등록·처리한다. 팀 내 비로그인 직원(잔디·기계전기·건축토목·안전방재·미화 담당)의 작업 내역을 대리 입력하는 단일 창구. 연봉·계약·이적 데이터 열람 불가.
 - `FinancialReport` CSV 업로드·열람
 - `MealExpense` 쓰기·읽기
 - 연봉·이적료·코치 채용 예산·선수 시장 가치 열람 불가
@@ -335,6 +341,8 @@ ADMIN이 관리하는 시스템 전역 설정. 단일 레코드.
 
 ### Season (시즌)
 시작일·종료일로 정의되는 시즌 단위. 스탯·훈련 기록이 시즌에 귀속된다. 계약은 독립적인 날짜 범위(`startDate`/`endDate`)를 가지며 시즌에 귀속되지 않는다.
+
+**leagueLevel:** `K3 | K_LEAGUE_2 | K_LEAGUE_1 | EPL | OTHER` — 해당 시즌 구단이 속한 리그. K3 규정 검증 및 채용 우선순위 가중치 벡터의 기준값. 강등·승격 이력이 시즌 단위로 자동 보존된다. 현재 시즌(`status = ACTIVE`)의 값이 채용 자동화 로직에 사용된다.
 
 **생성·관리:** ADMIN 전용.
 
@@ -1014,6 +1022,9 @@ REJECTED 상태에서 원 신청자가 재상신 가능. 재상신 시 `rejectio
 | 의료비 반려 | 신청자 본인 | MEDICAL_DIRECTOR 또는 ADMIN이 반려 시 |
 | 의료비 최종 승인 | 신청자 본인 | ADMIN이 최종 승인 시 |
 | 훈련 부하 초과 | PHYSICAL_COACH, HEAD_COACH | 선수 주간 누적 load ≥ 임계값 시 |
+| 채용 공고 자동 초안 생성 | HR_MANAGER, GM | 분기 cron이 JobPosting(DRAFT) 자동 생성 시 |
+| 시설 비상 수리 요청 | GM, ADMIN, HEAD_COACH | MaintenanceRequest(priority=EMERGENCY) 생성 시 |
+| 시설 수리 완료 | GM, ADMIN | MaintenanceRequest → RESOLVED 전환 시 |
 | PDP 활성화 | 해당 선수 본인 | PDP status → ACTIVE 전환 시 |
 | 라인업 확정 | 라인업 내 선수 전원 (userId 보유자) | HEAD_COACH가 라인업 확정 시 |
 | 경기 D-1 알림 | GUARDIAN (자녀 소속 팀 경기) | 경기 전날 cron (`MATCH_DAY_REMINDER` 수신자 확장) |
@@ -1060,6 +1071,9 @@ CALLUP_REQUESTED
 CALLUP_DOCS_READY
 CALLUP_APPROVED
 CALLUP_REJECTED
+FACILITY_EMERGENCY
+FACILITY_MAINTENANCE_RESOLVED
+PAYROLL_CONFIRMED
 ```
 
 ---
@@ -1125,12 +1139,96 @@ CALLUP_REJECTED
 - `openJobPostings` — `JobPosting.status = OPEN` 건수 (일반 직원 채용)
 두 채용 대상이 다르므로 합산하지 않고 분리 표시.
 
+**외부 채용사이트 연동 (인바운드 전용):**
+사람인·글래스도어·인디드에서 지원자 데이터가 유입되면 `JobApplication`을 자동 생성한다. 아웃바운드(공고 발행) 미지원.
+- `source: ApplicationSource?` — `SARAMIN | GLASSDOOR | INDEED | DIRECT`
+- `externalApplicantId: String?` — 외부 사이트 지원자 고유 ID
+- `@@unique([postingId, externalApplicantId])` — 동일 지원자 중복 유입 차단
+
+**연동 방식: Webhook (인바운드 전용)**
+각 채용사이트가 신규 지원 이벤트 발생 시 ERP 엔드포인트(`POST /webhooks/applications/{source}`)를 호출. ERP는 수신 즉시 `JobApplication` 생성. 폴링 없음.
+
 **이적 방향 (TransferType):**
 - 입단: `LOAN_IN`, `FREE`, `PERMANENT_IN`
 - 방출: `LOAN_OUT`, `RELEASE`, `PERMANENT_OUT`
 `PERMANENT`는 방향이 모호하여 `PERMANENT_IN` / `PERMANENT_OUT`으로 분리. `fromClub/toClub` null 규칙에 의존하지 않음.
 
 **열람 권한:** ADMIN, GM, TD (SCOUT 포함 일반 FRONT_OFFICE 제외 — 임금 분석 포함)
+
+---
+
+## 채용 자동화 (Recruitment Automation)
+
+### LeagueLevelWeightConfig (리그 레벨별 카테고리 가중치)
+
+ADMIN이 관리하는 리그 레벨 × 부서 카테고리 가중치 테이블. K리그 규정 개정 시 배포 없이 DB에서 직접 수정 가능.
+
+**필드:** `leagueLevel: LeagueLevel`, `category: DepartmentCategory`, `weight: Float(0.0~1.0)` / `@@unique([leagueLevel, category])`
+
+**DepartmentCategory enum:** `COMPLIANCE(규정·인사)` | `PERFORMANCE(성적기여·코칭)` | `FINANCE(재정·상업)` | `OPERATIONS(운영·시설)`
+
+**Department 연결:** `Department.category: DepartmentCategory` — 부서를 네 카테고리 중 하나로 분류. 채용 우선순위 계산 시 해당 카테고리의 현재 시즌 리그 레벨 가중치를 자동 적용.
+
+**초기 시드값 (스펙 기준):**
+
+| category | K3 | K_LEAGUE_1 | EPL |
+|----------|-----|-----------|-----|
+| COMPLIANCE | 0.28 | 0.25 | 0.25 |
+| PERFORMANCE | 0.38 | 0.38 | 0.40 |
+| FINANCE | 0.23 | 0.23 | 0.25 |
+| OPERATIONS | 0.23 | 0.13 | 0.10 |
+
+**쓰기 권한:** ADMIN
+**읽기 권한:** HR_MANAGER, GM, ADMIN
+
+### DepartmentIbiConfig (부서별 IBI 설정)
+
+HR_MANAGER가 분기 단위로 관리하는 부서·직무별 IBI(인적 병목 지수) 파라미터. IBI는 이 설정값으로 온디맨드 산출한다.
+
+$$\text{IBI} = \frac{\text{coreTaskRatio} \times \text{replacementDays}}{\text{backupHeadcount} + 1}$$
+
+**필드:** `departmentId → Department`, `jobTitle: String`(직무명), `coreTaskRatio: Float`(핵심 업무 처리 비중 0–1), `replacementDays: Int`(대체 소요 기간, 일), `backupHeadcount: Int`(내부 백업 인력 수), `updatedAt`, `updatedById → User(HR_MANAGER)`
+
+**쓰기 권한:** HR_MANAGER
+**읽기 권한:** HR_MANAGER, GM, ADMIN
+
+### SeasonComplianceCheck (리그 규정 준수 체크)
+
+현재 시즌 K3/리그 필수 요건 중 ERP 자동 도출이 불가한 항목을 HR_MANAGER가 수동으로 확인·입력하는 레코드. 자동 도출 가능한 4개 항목(선수 수·코칭 수·의무팀·유소년팀)은 온디맨드 쿼리로 실시간 계산한다.
+
+**필드:** `seasonId → Season` (@unique), `afcQualificationMet: Boolean`(AFC A·B 등급 자격 보유 여부), `officeStaffCountMet: Boolean`(사무국 6명 이상 충족 여부), `updatedById → User(HR_MANAGER)`, `updatedAt`
+
+**규정 위반 플래그:** 자동 4개 + 수동 2개 중 하나라도 미달이면 `HIGH_PRIORITY` 플래그 → 채용 우선순위 큐 최상단 배치.
+
+**쓰기 권한:** HR_MANAGER
+**읽기 권한:** HR_MANAGER, GM, ADMIN
+
+### ComplianceDeadline (규정 준수 마감일)
+
+β Tipping Point를 자동 발동시키는 마감 이벤트 등록 단위. ADMIN이 연초에 등록하면 cron이 매일 잔여 일수를 확인하여 β를 자동 조정한다.
+
+**필드:** `name: String`(예: "클럽 라이선싱 제출", "PSR 감사"), `deadlineDate: Date`, `triggerDaysBefore: Int`(마감 N일 전부터 spike 발동), `betaMultiplier: Float`(β에 곱할 배수, 예: 3.0), `isActive: Boolean`
+
+**Tipping Point 작동:** cron 매일 실행 → `deadlineDate - today ≤ triggerDaysBefore`이면 해당 기간 β × betaMultiplier 적용 → 재무·컴플라이언스 부서 IBI 점수 폭증 → 채용 큐 자동 역전.
+
+**쓰기 권한:** ADMIN
+**읽기 권한:** HR_MANAGER, GM, ADMIN
+
+### HiringPriorityQueue (채용 우선순위 큐)
+
+온디맨드 계산. 저장하지 않으며 조회 시점에 역산한다. `HrReport`·`FinancialReport`와 동일 패턴.
+
+$$\text{Priority} = (\text{규정 위반 여부}) + (\text{부서별 목표 기여도}) + (\beta_{\text{eff}} \times \text{IBI})$$
+
+β_eff = `ClubSettings.ibiBeta` × (활성 `ComplianceDeadline` betaMultiplier, 없으면 1.0)
+
+입력: `DepartmentIbiConfig` + `SeasonComplianceCheck` + `ComplianceDeadline` + `LeagueLevelWeightConfig` → 부서별 점수 계산 → 내림차순 정렬 반환.
+
+**채용 공고 자동 초안 생성:** 분기 cron이 큐 상위 부서를 자동 선정 → `JobPosting(status=DRAFT)` 자동 생성 → HR_MANAGER·GM에게 알림 발송. HR_MANAGER 검토·수정 후 GM 승인(`OPEN`) — 기존 결재 흐름 재사용. 별도 워크플로우 없음.
+
+**자동 초안 pre-fill:** `title({부서명} {직무명} 채용)`, `departmentId`, `headcount(backupHeadcount=0이면 1)`, `description(현재 시즌 leagueLevel 기준 K3/리그 필수 자격 조건 텍스트)`.
+
+**열람 권한:** HR_MANAGER, GM, ADMIN
 
 ---
 
@@ -1158,7 +1256,7 @@ ERP 내 부서 마스터 데이터. StaffRecord(비로그인 직원)의 소속 �
 
 ## 직원 기록 (StaffRecord)
 
-ERP 로그인 계정이 없는 구단 직원의 인적사항 기록. 현재는 조회·관리 전용이며 급여 관리는 미포함 (향후 별도 설계 예정).
+ERP 로그인 계정이 없는 구단 직원의 인적사항 기록. 급여 관리 모듈과 연동된다.
 
 **대상:** 시설 인프라 관리팀(환경미화·잔디관리사·시설관리사 등) 및 기타 비로그인 직원.
 
@@ -1173,6 +1271,35 @@ ERP 로그인 계정이 없는 구단 직원의 인적사항 기록. 현재는 �
 
 **쓰기 권한:** GM
 **읽기 권한:** GM, ADMIN
+
+---
+
+## 시설 관리 (Facility Management)
+
+### FacilityInspection (시설 점검 일지)
+
+FACILITY_MANAGER가 일상·정기 점검 결과를 기록하는 단위. "이상 없음" 결과도 반드시 기록하여 시설 가동률 KPI 산출의 근거로 활용한다.
+
+**facilityZone enum:** `GROUND(잔디·조경)` | `MECHANICAL(기계·전기)` | `STRUCTURAL(건축·토목)` | `SAFETY(안전·방재)` | `SANITATION(미화)` | `OPERATIONS(시설운영)` — 인수인계서 §4 역할 기준. 장소 세부 정보는 `issueDescription` 자유 텍스트에 기록.
+
+**필드:** `type(DAILY|MONTHLY|QUARTERLY|ANNUAL)`, `facilityZone`, `result(OK|ISSUE_FOUND)`, `issueDescription?`, `isStatutory: Boolean`(법정 점검 여부), `certificateUrl: String?`(법정 점검 결과서 첨부), `statutoryDeadline: Date?`(법적 제출 기한), `inspectedById → User(FACILITY_MANAGER)`, `createdAt`
+
+**파생:** `result = ISSUE_FOUND`인 경우 연결된 `MaintenanceRequest`가 생성된다. `sourceInspectionId? → FacilityInspection`으로 역참조.
+
+### MaintenanceRequest (수리 요청)
+
+시설 이상을 처리하기 위한 작업 지시 단위. FACILITY_MANAGER만 등록·처리할 수 있다. TAT(시설 대응 속도) KPI의 측정 기준 엔티티.
+
+**필드:** `title`, `description`, `priority(EMERGENCY|HIGH|NORMAL)`, `status(OPEN|IN_PROGRESS|RESOLVED)`, `sourceInspectionId? → FacilityInspection`, `postIncidentReport: String?`(priority=EMERGENCY 시 RESOLVED 전환 전 필수 입력), `estimatedCost: Float?`, `actualCost: Float?`(RESOLVED 시 입력), `resolvedAt?`, `createdById → User(FACILITY_MANAGER)`, `createdAt`
+
+**예산 준수율 산출:** `actualCost` 합산 온디맨드 집계. FINANCE_MANAGER 연동 없이 FACILITY_MANAGER가 직접 입력.
+
+**TAT 산출:** `resolvedAt - createdAt` 온디맨드 집계.
+
+**비상 대응(§6) 처리:** `priority = EMERGENCY`인 `MaintenanceRequest`로 흡수. 사후 경위서는 `postIncidentReport` 필드로 기록. 보고 라인·긴급 연락망 가동은 ERP 외부 조직 절차이므로 시스템 범위 밖.
+
+**쓰기 권한:** FACILITY_MANAGER
+**읽기 권한:** FACILITY_MANAGER, GM, ADMIN
 
 ---
 
@@ -1230,9 +1357,142 @@ ERP 로그인 계정이 없는 구단 직원의 인적사항 기록. 현재는 �
 
 ## 후원금/협찬금 (Sponsorship)
 
-대외담당 → 재무팀 → GM 승인 3단계 워크플로우를 가지는 독립 엔티티. 현재 `Contract.sponsorshipFee` 필드로만 존재하며 별도 모델은 미구현 상태.
+대외담당 → 재무팀 → GM 승인 3단계 워크플로우를 가지는 독립 엔티티.
 
-구현 예정. 우선순위 낮음.
+### Sponsorship
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `id` | Int | PK |
+| `sponsorName` | String | 스폰서 법인명 |
+| `type` | Enum | `TITLE \| KIT \| STADIUM_NAMING \| DIGITAL \| OTHER` |
+| `totalFee` | Decimal | 계약 총액 |
+| `contractStart` | DateTime | 계약 시작일 |
+| `contractEnd` | DateTime | 계약 종료일 |
+| `paymentSchedule` | Enum | `MONTHLY \| QUARTERLY \| ANNUAL` |
+| `attachedContractId` | Int? | → Contract (선택적 연결) |
+| `createdById` | Int | → User (GM \| FINANCE_MANAGER) |
+
+**type 값:**
+- `TITLE` — 타이틀 스폰서 (팀명 포함)
+- `KIT` — 유니폼 스폰서
+- `STADIUM_NAMING` — 경기장 네이밍라이츠
+- `DIGITAL` — SNS·디지털 채널 스폰서
+- `OTHER` — 기타
+
+### SponsorshipPayment
+
+납입 일정 추적 및 연체 감지. `Sponsorship` 생성 시 `paymentSchedule`에 따라 자동 생성.
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `id` | Int | PK |
+| `sponsorshipId` | Int | → Sponsorship |
+| `dueDate` | DateTime | 납입 예정일 |
+| `amount` | Decimal | 납입 금액 |
+| `paidAt` | DateTime? | 실제 납입일 |
+| `status` | Enum | `PENDING \| PAID \| OVERDUE` |
+
+**분기별 보고:** cron이 매 분기 `SponsorshipPayment` 집계(총 계약 수 / 납입 완료 금액 / 연체 건수) → FINANCE_MANAGER·GM 알림 발송.
+
+**연체 감지:** cron이 매일 `dueDate < today AND status = PENDING` → `OVERDUE` 자동 전환 + GM 알림.
+
+---
+
+## 기기 대여 (Equipment Loan)
+
+GM 인수인계서에 항목만 존재하고 내용이 공란. 담당자 확인 후 설계 예정. 모델 미정.
+
+---
+
+## 급여 관리 (Payroll Management)
+
+**대상:** `User` 계정 보유 프론트오피스 직원 + `StaffRecord` 비로그인 직원. 선수·코치는 `Contract.salary`로 별도 관리.
+
+**지원 국가:** 한국(KR), 영국(UK). 국가별 공제 요율은 `PayrollConfig`로 DB 관리.
+
+### PayrollConfig (국가별 공제 요율)
+
+국가별 세금·보험 요율 테이블. 요율 개정 시 배포 없이 DB 수정으로 대응.
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `id` | Int | PK |
+| `country` | Enum | `KR \| UK` |
+| `insuranceType` | String | 예: `NATIONAL_PENSION`, `HEALTH`, `EMPLOYMENT`, `NIC`, `PAYE` |
+| `employeeRate` | Decimal | 직원 부담 요율 |
+| `employerRate` | Decimal | 사업주 부담 요율 |
+| `effectiveFrom` | DateTime | 적용 시작일 |
+
+**한국 초기값:**
+- `NATIONAL_PENSION`: employee 4.5% / employer 4.5%
+- `HEALTH`: employee 3.545% / employer 3.545%
+- `EMPLOYMENT`: employee 0.9% / employer 1.15%
+- `INDUSTRIAL_ACCIDENT`: employee 0% / employer 업종별 (별도 설정)
+
+**영국 초기값:**
+- `NIC`: employee 8% (£12,570 초과분) / employer 13.8%
+- `PAYE`: 소득세 구간별 → `PayrollConfig`에 구간(bracketMin, bracketMax, rate) 추가 컬럼으로 관리
+
+### StaffSalary (직원 급여 내역)
+
+`User` 또는 `StaffRecord` 단위 월별 급여 구성.
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `id` | Int | PK |
+| `userId` | Int? | → User (로그인 직원) |
+| `staffRecordId` | Int? | → StaffRecord (비로그인 직원) |
+| `baseSalary` | Decimal | 기본급 |
+| `country` | Enum | `KR \| UK` — 공제 요율 조회 기준 |
+| `effectiveFrom` | DateTime | 해당 급여 구성 적용 시작일 |
+
+`@@check: (userId IS NOT NULL) OR (staffRecordId IS NOT NULL)` — 둘 중 하나는 필수.
+
+**이력 정책:** 급여 변경 시 기존 행을 수정하지 않고 새 `StaffSalary` 행을 `effectiveFrom`으로 구분하여 추가. 특정 시점 급여 조회는 `effectiveFrom ≤ targetDate` 중 가장 최근 행을 사용.
+
+### StaffAllowance (수당 항목)
+
+`StaffSalary`에 연결되는 수당 내역.
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `id` | Int | PK |
+| `staffSalaryId` | Int | → StaffSalary |
+| `name` | String | 예: `식대`, `교통비`, `직책수당` |
+| `amount` | Decimal | 수당 금액 |
+| `taxable` | Boolean | 과세 여부 (비과세 수당은 4대보험 산정 제외) |
+
+### PayrollRun (월별 지급 실행)
+
+월별 급여 확정 및 지급 승인 기록. 실제 이체는 외부(은행) 처리.
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `id` | Int | PK |
+| `staffSalaryId` | Int | → StaffSalary |
+| `month` | DateTime | 지급 대상 월 (월 첫째 날 기준) |
+| `grossPay` | Decimal | 지급 총액 (기본급 + 수당 합산) |
+| `totalDeductions` | Decimal | 공제 총액 (직원 부담 4대보험/NIC/PAYE) |
+| `netPay` | Decimal | 실수령액 (`grossPay - totalDeductions`) |
+| `status` | Enum | `DRAFT \| CONFIRMED` |
+| `confirmedById` | Int? | → User (GM \| FINANCE_MANAGER) |
+| `confirmedAt` | DateTime? | 확정 시각 |
+
+**워크플로우:** HR_MANAGER가 `StaffSalary`(기본급·수당) 입력 → FINANCE_MANAGER가 월별 `DRAFT` 생성 → FINANCE_MANAGER `CONFIRMED` 처리. 확정 후 수정 불가.
+
+**쓰기 권한:**
+- `StaffSalary` 생성·수정: HR_MANAGER
+- `PayrollRun` 생성·확정: FINANCE_MANAGER
+- `PayrollRun` 읽기: GM, FINANCE_MANAGER, HR_MANAGER
+
+**공제 계산:** `StaffSalary.country` → 해당 국가 `PayrollConfig` 조회 → 과세 수당(`taxable=true`) 포함 기준소득에 요율 적용.
+
+**지급명세서 발송:**
+- `country = UK`: `CONFIRMED` 시 직원 이메일로 지급명세서 자동 발송 (Employment Rights Act 1996 의무)
+- `country = KR`: 이메일 발송 없음, ERP 내 조회로 처리
+
+**연간 집계:** 별도 엔티티 없음. `PayrollRun` 데이터를 연도별 집계 쿼리로 제공 (`annualGross`, `annualDeductions`, `annualNet`). 연말정산(KR) · P60(UK) 신고는 외부 세무 시스템 담당.
 
 ---
 
@@ -1245,5 +1505,7 @@ ERP 로그인 계정이 없는 구단 직원의 인적사항 기록. 현재는 �
 | HR_MANAGER | 전체 직원 수 / 이번 달 채용 공고 오픈 수 / 진행 중 지원자 수 |
 | FINANCE_MANAGER | 이번 달 운영비 지출액 / 예산 소진율(%) / 미결 운영비 건수 |
 | ASSET_MANAGER | 재고 부족 장비 수 / 전체 장비 수 / 미반납 대출 수 |
+| FACILITY_MANAGER | 이번 달 미처리 수리 요청 수(OPEN+IN_PROGRESS) / 이번 달 평균 TAT(시간) / 법정 점검 기한 임박 건수(30일 이내) |
+| FINANCE_MANAGER (급여) | 이번 달 미확정 PayrollRun 수 / 이번 달 총 인건비(netPay 합산) / 연체 스폰서십 납입 건수 |
 
 상세 조회는 각 전용 페이지(HrReportPage, FinancialReportPage 등)로 이동. 메인 대시보드는 요약만 표시.
