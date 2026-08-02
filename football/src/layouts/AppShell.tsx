@@ -15,6 +15,7 @@ import { connectSocket, disconnectSocket } from '@/lib/socket'
 import { usePlayerNotification } from '@/hooks/usePlayerNotification'
 import { usePartnerNotification } from '@/hooks/usePartnerNotification'
 import { useReportNotification } from '@/hooks/useReportNotification'
+import { Switch } from '@/components/ui/switch'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import {
@@ -663,13 +664,15 @@ export function AppShell() {
         <div className="px-4 h-14 border-b flex items-center justify-between shrink-0">
           <h1 className="text-base font-semibold tracking-tight">Football ERP</h1>
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => void changeLanguage(language === 'ko' ? 'en' : 'ko')}
-              className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded"
-              title={language === 'ko' ? 'Switch to English' : '한국어로 전환'}
-            >
-              {language === 'ko' ? 'KO' : 'EN'}
-            </button>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground select-none">
+              <span className={language === 'ko' ? 'text-foreground font-medium' : ''}>KO</span>
+              <Switch
+                checked={language === 'en'}
+                onCheckedChange={() => void changeLanguage(language === 'ko' ? 'en' : 'ko')}
+                aria-label={language === 'ko' ? 'Switch to English' : '한국어로 전환'}
+              />
+              <span className={language === 'en' ? 'text-foreground font-medium' : ''}>EN</span>
+            </div>
             <NotificationPopover
               unreadCount={unreadCount}
               onUnreadCountChange={setUnreadCount}
@@ -743,13 +746,15 @@ export function AppShell() {
             <Menu className="h-5 w-5" />
           </Button>
           <span className="flex-1 text-base font-semibold tracking-tight">Football ERP</span>
-          <button
-            onClick={() => void changeLanguage(language === 'ko' ? 'en' : 'ko')}
-            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded"
-            title={language === 'ko' ? 'Switch to English' : '한국어로 전환'}
-          >
-            {language === 'ko' ? 'KO' : 'EN'}
-          </button>
+          <div className="flex items-center gap-1 text-xs text-muted-foreground select-none">
+            <span className={language === 'ko' ? 'text-foreground font-medium' : ''}>KO</span>
+            <Switch
+              checked={language === 'en'}
+              onCheckedChange={() => void changeLanguage(language === 'ko' ? 'en' : 'ko')}
+              aria-label={language === 'ko' ? 'Switch to English' : '한국어로 전환'}
+            />
+            <span className={language === 'en' ? 'text-foreground font-medium' : ''}>EN</span>
+          </div>
           <NotificationPopover
             unreadCount={unreadCount}
             onUnreadCountChange={setUnreadCount}
