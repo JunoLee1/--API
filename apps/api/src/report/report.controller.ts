@@ -17,7 +17,8 @@ export class ReportController {
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      res.json(await this.service.list(req.user!.id, isGM(req), isHeadCoach(req)));
+      const { type, status } = req.query as { type?: string; status?: string };
+      res.json(await this.service.list(req.user!.id, isGM(req), isHeadCoach(req), { type, status }));
     } catch (err) {
       next(err);
     }

@@ -1,5 +1,10 @@
 export interface HeadcountSnapshot {
-  players: { active: number; onLoan: number; total: number };
+  players: {
+    own: number;
+    loanIn: number;
+    onLoanOut: number;
+    total: number;
+  };
   users: { admin: number; frontOffice: number; coachingStaff: number; total: number };
   staffRecords: { active: number };
 }
@@ -38,7 +43,8 @@ export interface HrMonthlyReport {
     inBreakdown: TransferBreakdown[];
     outBreakdown: TransferBreakdown[];
     newContractsStarted: number;
-    openHiringRounds: number;
+    openCoachingRounds: number;
+    openJobPostings: number;
   };
   turnover: {
     arrivals: number;

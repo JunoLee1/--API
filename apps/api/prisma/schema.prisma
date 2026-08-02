@@ -128,7 +128,8 @@ enum BonusPeriod {
 }
 
 enum TransferType {
-  PERMANENT
+  PERMANENT_IN
+  PERMANENT_OUT
   LOAN_OUT
   LOAN_IN
   FREE
@@ -1165,10 +1166,11 @@ model AuditLog {
 }
 
 enum ReportType {
-  FINANCIAL
   PERFORMANCE
   MEDICAL
   TRAINING
+  HR
+  FINANCIAL
 }
 
 enum ReportStatus {

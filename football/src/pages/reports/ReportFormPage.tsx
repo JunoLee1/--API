@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/select'
 import { ArrowLeft, Paperclip, X } from 'lucide-react'
 
-const TYPES: ReportType[] = ['FINANCIAL', 'PERFORMANCE', 'MEDICAL', 'TRAINING']
+const TYPES: ReportType[] = ['PERFORMANCE', 'MEDICAL', 'TRAINING', 'HR', 'FINANCIAL']
 
 export function ReportFormPage() {
   const { t } = useTranslation('report')

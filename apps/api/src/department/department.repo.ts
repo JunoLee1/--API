@@ -5,6 +5,7 @@ export class DepartmentRepository {
 
   findAll() {
     return this.prisma.department.findMany({
+      where: { parentId: null },
       orderBy: { name: "asc" },
       include: { children: { orderBy: { name: "asc" } } },
     });

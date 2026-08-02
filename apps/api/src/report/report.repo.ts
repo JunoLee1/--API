@@ -16,14 +16,25 @@ const reportInclude = {
 export class ReportRepository {
   constructor(private prisma: PrismaClient) {}
 
-  findAll(userId: number, isGM: boolean, isHeadCoach: boolean = false) {
-    const where = isGM
+  findAll(
+    userId: number,
+    isGM: boolean,
+    isHeadCoach: boolean = false,
+    filters: { type?: string; status?: string } = {},
+  ) {
+    const roleWhere = isGM
       ? {}
       : isHeadCoach
       ? { OR: [{ authorId: userId }, { type: "TRAINING" as const }] }
-      : { authorId: userId }
+      : { authorId: userId };
+
+    const filterWhere = {
+      ...(filters.type && { type: filters.type as any }),
+      ...(filters.status && { status: filters.status as any }),
+    };
+
     return this.prisma.report.findMany({
-      where,
+      where: { ...roleWhere, ...filterWhere },
       include: reportInclude,
       orderBy: { createdAt: "desc" },
     });
