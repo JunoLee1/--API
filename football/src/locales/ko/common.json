@@ -11,6 +11,11 @@
     "reports": "보고서",
     "admin": "관리자",
     "logout": "로그아웃",
+    "logoutConfirm": {
+      "title": "로그아웃",
+      "description": "정말 로그아웃 하시겠습니까?",
+      "confirmText": "로그아웃"
+    },
     "section": {
       "playerMgmt": "선수 관리",
       "contractTransfer": "계약·영입",
@@ -211,8 +216,15 @@
         "item": "종",
         "match": "경기",
         "session": "회",
-        "rate": "%"
-      }
+        "rate": "%",
+        "won": "원"
+      },
+      "totalStaffCount": "전체 직원",
+      "openJobPostingCount": "채용 공고",
+      "activeApplicationCount": "진행 중 지원자",
+      "thisMonthExpense": "이번 달 지출",
+      "pendingOperatingExpenseCount": "미결 운영비",
+      "activeEquipmentLoanCount": "미반납 대출"
     },
     "recentFeed": {
       "recentTransfers": "최근 이적 내역",
@@ -223,7 +235,9 @@
       "recentMatches": "최근 경기 결과",
       "recentInjuries": "최근 부상 업데이트",
       "recentSessions": "최근 훈련 세션",
-      "recentPlayerMatches": "담당 선수 최근 경기"
+      "recentPlayerMatches": "담당 선수 최근 경기",
+      "recentApplications": "최근 지원자",
+      "recentOperatingExpenses": "최근 운영비"
     },
     "actionQueue": {
       "title": "처리 대기 항목",

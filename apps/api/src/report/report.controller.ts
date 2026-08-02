@@ -18,7 +18,10 @@ export class ReportController {
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { type, status } = req.query as { type?: string; status?: string };
-      res.json(await this.service.list(req.user!.id, isGM(req), isHeadCoach(req), { type, status }));
+      const filters: { type?: string; status?: string } = {};
+      if (type !== undefined) filters.type = type;
+      if (status !== undefined) filters.status = status;
+      res.json(await this.service.list(req.user!.id, isGM(req), isHeadCoach(req), filters));
     } catch (err) {
       next(err);
     }
@@ -40,6 +43,13 @@ export class ReportController {
       const role = req.user!.role;
       if (!AUTHOR_ROLES.includes(role as any)) throw new AppError(403, "FORBIDDEN");
       const { type, title, content } = req.body;
+      // 타입별 작성 권한 제한
+      if (type === "HR" && !(role === "ADMIN" || req.user!.frontOfficeRole === "HR_MANAGER")) {
+        throw new AppError(403, "FORBIDDEN");
+      }
+      if (type === "FINANCIAL" && !(role === "ADMIN" || req.user!.frontOfficeRole === "FINANCE_MANAGER" || req.user!.frontOfficeRole === "GM")) {
+        throw new AppError(403, "FORBIDDEN");
+      }
       const file = req.file;
       res.status(201).json(
         await this.service.create({

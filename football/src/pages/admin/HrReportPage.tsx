@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import { hrReportApi } from "@/services/hr-report.service"
@@ -265,6 +265,8 @@ export default function HrReportPage() {
     }
   }
 
+  useEffect(() => { void load() }, [tab, year, month])
+
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-4">
       <h1 className="text-2xl font-bold">{t("hrReport.title")}</h1>
@@ -296,15 +298,13 @@ export default function HrReportPage() {
               </Select>
             </div>
           )}
-          <Button onClick={load} disabled={loading}>
-            {loading ? "조회 중..." : t("hrReport.generate")}
-          </Button>
+          {loading && <span className="text-sm text-muted-foreground">조회 중...</span>}
         </div>
 
         <TabsContent value="monthly" className="mt-4">
           {monthly
             ? <MonthlyReport data={monthly} />
-            : <p className="text-sm text-muted-foreground text-center py-8">연도·월을 선택하고 조회 버튼을 누르세요.</p>
+            : <p className="text-sm text-muted-foreground text-center py-8">{t("hrReport.noData")}</p>
           }
         </TabsContent>
         <TabsContent value="annual" className="mt-4">

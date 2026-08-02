@@ -1192,3 +1192,58 @@ ERP 로그인 계정이 없는 구단 직원의 인적사항 기록. 현재는 �
 
 **쓰기 권한:** GM, ADMIN, EQUIPMENT_MANAGER
 **읽기 권한:** GM, ADMIN
+
+---
+
+## 정산 뷰 (Settlement View)
+
+운영 흐름(등록→자격→훈련→대회→**정산**→평가) 중 정산 단계의 조회 집계 개념.
+
+`MedicalExpense`, `MealExpense`, `OperatingExpense` 세 모델은 각각 독립 입력 페이지를 유지한다 — 입력 주체가 다르기 때문(의료비: 의무팀, 식대: 운영팀, 운영비: 재무팀).
+
+조회는 별도 집계 대시보드에서 통합 제공한다. 입력 UI 통합은 하지 않는다.
+
+---
+
+## 운영 트랙 (Operation Track)
+
+인수인계서의 트랙 A(유소년/아마추어)·트랙 B(프로/선수단) 구분은 `Team.type` 으로 매핑한다.
+
+- 트랙 A → `Team.type = YOUTH`
+- 트랙 B → `Team.type = FIRST_TEAM`
+
+별도 Track 엔티티는 만들지 않는다. `teamId` 기반 필터링으로 모든 트랙별 분리가 가능하다.
+
+---
+
+## 회비 미수납 단계별 정책 (Academy Fee Escalation)
+
+유소년 회비 미수납 처리는 3단계로 자동 에스컬레이션한다.
+
+- **D+1**: 1차 납부 안내 알림 (FEE_REMINDER)
+- **D+7**: 2차 미납 경고 알림 + 상태 → OVERDUE (FEE_OVERDUE_WARNING)
+- **D+30**: 훈련/경기 참가 정지 + 상태 → LOCKED (FEE_ACCOUNT_LOCKED)
+
+실행 주체: `processOverdue()` 배치 잡. 알림 수신자: 보호자(Guardian).
+
+---
+
+## 후원금/협찬금 (Sponsorship)
+
+대외담당 → 재무팀 → GM 승인 3단계 워크플로우를 가지는 독립 엔티티. 현재 `Contract.sponsorshipFee` 필드로만 존재하며 별도 모델은 미구현 상태.
+
+구현 예정. 우선순위 낮음.
+
+---
+
+## KPI 대시보드 (KPI Dashboard)
+
+운영·재무팀 인수인계서에 명시된 KPI 모니터링 화면. 역할별 메인 대시보드(`DashboardPage`)에 stat 카드로 통합한다.
+
+| 역할 | stat 카드 |
+|------|-----------|
+| HR_MANAGER | 전체 직원 수 / 이번 달 채용 공고 오픈 수 / 진행 중 지원자 수 |
+| FINANCE_MANAGER | 이번 달 운영비 지출액 / 예산 소진율(%) / 미결 운영비 건수 |
+| ASSET_MANAGER | 재고 부족 장비 수 / 전체 장비 수 / 미반납 대출 수 |
+
+상세 조회는 각 전용 페이지(HrReportPage, FinancialReportPage 등)로 이동. 메인 대시보드는 요약만 표시.
