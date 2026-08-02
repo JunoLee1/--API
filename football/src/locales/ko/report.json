@@ -41,15 +41,19 @@
     "descHeadCoach": "훈련 보고서 결재 대기 포함 목록",
     "descDefault": "내가 작성한 보고서 목록",
     "addReport": "보고서 작성",
+    "addButton": "새 보고서",
     "filterAll": "전체",
     "loadFailed": "보고서 목록을 불러오지 못했습니다.",
     "noReports": "등록된 보고서가 없습니다.",
+    "noData": "등록된 보고서가 없습니다.",
     "col": {
       "title": "제목",
       "type": "유형",
       "status": "상태",
       "author": "작성자",
-      "createdAt": "작성일"
+      "createdAt": "작성일",
+      "created": "작성일",
+      "approvedAt": "결재일"
     }
   },
   "form": {

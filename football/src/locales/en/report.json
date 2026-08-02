@@ -41,15 +41,19 @@
     "descHeadCoach": "Reports including training approvals",
     "descDefault": "Reports submitted by me",
     "addReport": "New Report",
+    "addButton": "New Report",
     "filterAll": "All",
     "loadFailed": "Failed to load reports.",
     "noReports": "No reports registered.",
+    "noData": "No reports registered.",
     "col": {
       "title": "Title",
       "type": "Type",
       "status": "Status",
       "author": "Author",
-      "createdAt": "Date"
+      "createdAt": "Date",
+      "created": "Date",
+      "approvedAt": "Reviewed At"
     }
   },
   "form": {
