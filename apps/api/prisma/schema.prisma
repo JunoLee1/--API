@@ -545,6 +545,7 @@ model User {
   applicationOffers        JobApplication[]          @relation("ApplicationOffer")
   onboarding               Onboarding?               @relation("OnboardingUser")
   headedDepartments        Department[]              @relation("DepartmentHead")
+  departmentMemberships    UserDepartment[]
 }
 
 model Season {
@@ -1858,18 +1859,35 @@ model FinancialReport {
 }
 
 model Department {
-  id           Int           @id @default(autoincrement())
-  name         String        @unique
-  isActive     Boolean       @default(true)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id           Int                @id @default(autoincrement())
+  name         String             @unique
+  isActive     Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
   parentId     Int?
   headId       Int?
-  parent       Department?   @relation("DepartmentHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
-  children     Department[]  @relation("DepartmentHierarchy")
-  head         User?         @relation("DepartmentHead", fields: [headId], references: [id], onDelete: SetNull)
+  parent       Department?        @relation("DepartmentHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children     Department[]       @relation("DepartmentHierarchy")
+  head         User?              @relation("DepartmentHead", fields: [headId], references: [id], onDelete: SetNull)
   staffRecords StaffRecord[]
   postings     JobPosting[]
+  members      UserDepartment[]
+}
+
+enum DeptRole {
+  MANAGER
+  MEMBER
+}
+
+model UserDepartment {
+  userId       Int
+  departmentId Int
+  role         DeptRole   @default(MEMBER)
+  joinedAt     DateTime   @default(now())
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@id([userId, departmentId])
 }
 
 // ─────────────────────────────────────────────
