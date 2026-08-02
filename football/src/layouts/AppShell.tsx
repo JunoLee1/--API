@@ -661,24 +661,8 @@ export function AppShell() {
     <div className="min-h-screen flex bg-background">
       {/* 데스크탑 사이드바 */}
       <aside className="w-60 border-r bg-card hidden md:flex flex-col">
-        <div className="px-4 h-14 border-b flex items-center justify-between shrink-0">
+        <div className="px-4 h-14 border-b flex items-center shrink-0">
           <h1 className="text-base font-semibold tracking-tight">Football ERP</h1>
-          <div className="flex items-center gap-1">
-            <div className="flex items-center gap-1 text-xs text-muted-foreground select-none">
-              <span className={language === 'ko' ? 'text-foreground font-medium' : ''}>KO</span>
-              <Switch
-                checked={language === 'en'}
-                onCheckedChange={() => void changeLanguage(language === 'ko' ? 'en' : 'ko')}
-                aria-label={language === 'ko' ? 'Switch to English' : '한국어로 전환'}
-              />
-              <span className={language === 'en' ? 'text-foreground font-medium' : ''}>EN</span>
-            </div>
-            <NotificationPopover
-              unreadCount={unreadCount}
-              onUnreadCountChange={setUnreadCount}
-              iconSize="sm"
-            />
-          </div>
         </div>
 
         <nav
@@ -735,6 +719,24 @@ export function AppShell() {
 
       {/* 메인 컨텐츠 */}
       <div className="flex-1 flex flex-col overflow-hidden">
+        {/* 데스크탑 상단 헤더 */}
+        <header className="hidden md:flex items-center justify-end gap-3 px-4 h-14 border-b bg-card shrink-0">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground select-none">
+            <span className={language === 'ko' ? 'text-foreground font-medium' : ''}>KO</span>
+            <Switch
+              checked={language === 'en'}
+              onCheckedChange={() => void changeLanguage(language === 'ko' ? 'en' : 'ko')}
+              aria-label={language === 'ko' ? 'Switch to English' : '한국어로 전환'}
+            />
+            <span className={language === 'en' ? 'text-foreground font-medium' : ''}>EN</span>
+          </div>
+          <NotificationPopover
+            unreadCount={unreadCount}
+            onUnreadCountChange={setUnreadCount}
+            iconSize="sm"
+          />
+        </header>
+
         {/* 모바일 상단 헤더 */}
         <header className="md:hidden flex items-center gap-3 px-4 h-14 border-b bg-card shrink-0">
           <Button
