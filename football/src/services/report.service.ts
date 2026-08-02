@@ -10,7 +10,13 @@ function buildForm(data: Record<string, string | File | undefined>): FormData {
 }
 
 export const reportApi = {
-  list: () => api.get<Report[]>('/reports'),
+  list: (filters: { type?: string; status?: string } = {}) => {
+    const params = new URLSearchParams()
+    if (filters.type) params.set('type', filters.type)
+    if (filters.status) params.set('status', filters.status)
+    const qs = params.toString()
+    return api.get<Report[]>(qs ? `/reports?${qs}` : '/reports')
+  },
 
   get: (id: number) => api.get<Report>(`/reports/${id}`),
 

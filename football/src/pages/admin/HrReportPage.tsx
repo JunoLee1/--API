@@ -52,8 +52,9 @@ function MonthlyReport({ data }: { data: HrMonthlyReport }) {
         <CardContent className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-xs text-muted-foreground mb-2">{t("hrReport.players")}</p>
-            <StatRow label={t("hrReport.active")} value={data.headcount.players.active} />
-            <StatRow label={t("hrReport.onLoan")} value={data.headcount.players.onLoan} />
+            <StatRow label={t("hrReport.ownPlayers")} value={data.headcount.players.own} />
+            <StatRow label={t("hrReport.loanIn")} value={data.headcount.players.loanIn} />
+            <StatRow label={t("hrReport.onLoanOut")} value={data.headcount.players.onLoanOut} />
             <StatRow label={t("hrReport.total")} value={data.headcount.players.total} />
           </div>
           <div>
@@ -72,7 +73,8 @@ function MonthlyReport({ data }: { data: HrMonthlyReport }) {
           <StatRow label={t("hrReport.transfersIn")} value={data.recruitment.transfersIn} />
           <StatRow label={t("hrReport.transfersOut")} value={data.recruitment.transfersOut} />
           <StatRow label={t("hrReport.newContracts")} value={data.recruitment.newContractsStarted} />
-          <StatRow label={t("hrReport.openHiringRounds")} value={data.recruitment.openHiringRounds} />
+          <StatRow label={t("hrReport.openCoachingRounds")} value={data.recruitment.openCoachingRounds} />
+          <StatRow label={t("hrReport.openJobPostings")} value={data.recruitment.openJobPostings} />
           {data.recruitment.inBreakdown.length > 0 && (
             <div className="mt-2 flex gap-1 flex-wrap">
               {data.recruitment.inBreakdown.map((r) => (

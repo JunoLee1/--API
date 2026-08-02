@@ -48,7 +48,7 @@ export interface Player {
   nationality: PlayerNationality
 }
 
-export type TransferType = 'PERMANENT' | 'LOAN_OUT' | 'LOAN_IN' | 'FREE' | 'RELEASE'
+export type TransferType = 'PERMANENT_IN' | 'PERMANENT_OUT' | 'LOAN_OUT' | 'LOAN_IN' | 'FREE' | 'RELEASE'
 
 export interface PlayerTransfer {
   id: number

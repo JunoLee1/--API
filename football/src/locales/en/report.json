@@ -17,8 +17,9 @@
     "TRAINING": "Training",
     "INJURY": "Injury",
     "SCOUTING": "Scouting",
-    "FINANCIAL": "Financial",
     "PERFORMANCE": "Performance",
+    "HR": "HR",
+    "FINANCIAL": "Financial",
     "MEDICAL": "Medical"
   },
   "status": {
@@ -40,6 +41,7 @@
     "descHeadCoach": "Reports including training approvals",
     "descDefault": "Reports submitted by me",
     "addReport": "New Report",
+    "filterAll": "All",
     "loadFailed": "Failed to load reports.",
     "noReports": "No reports registered.",
     "col": {

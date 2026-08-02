@@ -1,4 +1,4 @@
-export type TransferType = 'PERMANENT' | 'LOAN_OUT' | 'LOAN_IN' | 'FREE' | 'RELEASE'
+export type TransferType = 'PERMANENT_IN' | 'PERMANENT_OUT' | 'LOAN_OUT' | 'LOAN_IN' | 'FREE' | 'RELEASE'
 export type RecallStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
 
 export interface TransferRecall {
@@ -25,7 +25,8 @@ export interface Recall {
 }
 
 export const TRANSFER_TYPE_LABEL: Record<TransferType, string> = {
-  PERMANENT: 'Permanent',
+  PERMANENT_IN: 'Permanent (In)',
+  PERMANENT_OUT: 'Permanent (Out)',
   LOAN_OUT: 'Loan Out',
   LOAN_IN: 'Loan In',
   FREE: 'Free Transfer',
@@ -33,7 +34,8 @@ export const TRANSFER_TYPE_LABEL: Record<TransferType, string> = {
 }
 
 export const TRANSFER_TYPE_STYLE: Record<TransferType, string> = {
-  PERMANENT: 'bg-blue-100 text-blue-800 border-blue-200',
+  PERMANENT_IN: 'bg-blue-100 text-blue-800 border-blue-200',
+  PERMANENT_OUT: 'bg-indigo-100 text-indigo-800 border-indigo-200',
   LOAN_OUT: 'bg-purple-100 text-purple-800 border-purple-200',
   LOAN_IN: 'bg-emerald-100 text-emerald-800 border-emerald-200',
   FREE: 'bg-amber-100 text-amber-800 border-amber-200',

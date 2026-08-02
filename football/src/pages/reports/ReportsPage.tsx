@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { reportApi } from '@/services/report.service'
-import type { Report } from '@/types/report'
+import type { Report, ReportType, ReportStatus } from '@/types/report'
 import {
   REPORT_TYPE_STYLE,
   REPORT_STATUS_STYLE,
@@ -11,6 +11,13 @@ import {
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -20,6 +27,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Plus } from 'lucide-react'
+
+const ALL_TYPES: ReportType[] = ['PERFORMANCE', 'MEDICAL', 'TRAINING', 'HR', 'FINANCIAL']
+const ALL_STATUSES: ReportStatus[] = ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED']
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
@@ -34,6 +44,9 @@ export function ReportsPage() {
   const [reports, setReports] = useState<Report[]>([])
   const [loading, setLoading] = useState(true)
 
+  const [typeFilter, setTypeFilter] = useState<ReportType | ''>('')
+  const [statusFilter, setStatusFilter] = useState<ReportStatus | ''>('')
+
   const isGM = user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'GM'
   const isHeadCoach = user?.role === 'COACHING_STAFF' && user?.coachingRole === 'HEAD_COACH'
   const canCreate = user?.role && AUTHOR_ROLES.includes(user.role)
@@ -41,11 +54,11 @@ export function ReportsPage() {
   const fetchReports = useCallback(() => {
     setLoading(true)
     reportApi
-      .list()
+      .list({ type: typeFilter || undefined, status: statusFilter || undefined })
       .then(setReports)
       .catch(() => toast.error(t('page.loadFailed')))
       .finally(() => setLoading(false))
-  }, [t])
+  }, [t, typeFilter, statusFilter])
 
   useEffect(() => { fetchReports() }, [fetchReports])
 
@@ -58,16 +71,42 @@ export function ReportsPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="border-b px-6 py-4 flex items-center justify-between gap-4 shrink-0">
-        <div>
-          <h1 className="text-lg font-semibold tracking-tight">{t('page.title')}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{descText}</p>
+      <div className="border-b px-6 py-4 shrink-0 space-y-3">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-lg font-semibold tracking-tight">{t('page.title')}</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">{descText}</p>
+          </div>
+          {canCreate && (
+            <Button size="sm" onClick={() => navigate('/reports/new')}>
+              <Plus className="h-4 w-4 mr-1" />{t('page.addButton')}
+            </Button>
+          )}
         </div>
-        {canCreate && (
-          <Button size="sm" onClick={() => navigate('/reports/new')}>
-            <Plus className="h-4 w-4 mr-1" />{t('page.addButton')}
-          </Button>
-        )}
+        <div className="flex gap-2">
+          <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as ReportType | '')}>
+            <SelectTrigger className="w-36 h-8 text-sm">
+              <SelectValue placeholder={t('page.col.type')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">{t('page.filterAll')}</SelectItem>
+              {ALL_TYPES.map((tp) => (
+                <SelectItem key={tp} value={tp}>{t(`type.${tp}`)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as ReportStatus | '')}>
+            <SelectTrigger className="w-36 h-8 text-sm">
+              <SelectValue placeholder={t('page.col.status')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">{t('page.filterAll')}</SelectItem>
+              {ALL_STATUSES.map((s) => (
+                <SelectItem key={s} value={s}>{t(`status.${s}`)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="flex-1 overflow-auto">

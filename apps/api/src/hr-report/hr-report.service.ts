@@ -23,16 +23,16 @@ export class HrReportService {
   async getMonthly(year: number, month: number) {
     const period = buildPeriod(year, month);
 
-    const [headcount, transfers, attendance, issues, openHiringRounds] = await Promise.all([
+    const [headcount, transfers, attendance, issues, openHiring] = await Promise.all([
       this.repo.getHeadcount(),
       this.repo.getTransferMovements(period),
       this.repo.getAttendance(period),
       this.repo.getIssues(period),
-      this.repo.getOpenHiringRoundsCount(),
+      this.repo.getOpenHiringCounts(),
     ]);
 
-    const startPlayerCount = Math.max(0, headcount.players.total + transfers.totalOut - transfers.totalIn);
-    const turnoverRate = computeTurnoverRate(transfers.totalOut, startPlayerCount, headcount.players.total);
+    const startOwnCount = Math.max(0, headcount.players.own + transfers.totalOut - transfers.totalIn);
+    const turnoverRate = computeTurnoverRate(transfers.totalOut, startOwnCount, headcount.players.own);
     const attendanceRate = computeAttendanceRate(attendance.present, attendance.total);
 
     const changes: string[] = [];
@@ -46,7 +46,7 @@ export class HrReportService {
       period: { year, month },
       executiveSummary: {
         keyChanges: changes.slice(0, 3),
-        playerHeadline: `재직 선수 ${headcount.players.total}명 (전월 대비 ${netChange >= 0 ? "+" : ""}${netChange})`,
+        playerHeadline: `자체 선수 ${headcount.players.own}명 · 임대 영입 ${headcount.players.loanIn}명 (전월 대비 ${netChange >= 0 ? "+" : ""}${netChange})`,
       },
       headcount,
       recruitment: {
@@ -55,7 +55,8 @@ export class HrReportService {
         inBreakdown: transfers.in,
         outBreakdown: transfers.out,
         newContractsStarted: transfers.newContractsStarted,
-        openHiringRounds,
+        openCoachingRounds: openHiring.coachingRounds,
+        openJobPostings: openHiring.jobPostings,
       },
       turnover: {
         arrivals: transfers.totalIn,

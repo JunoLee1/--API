@@ -38,7 +38,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Download, Plus } from 'lucide-react'
 
-const TYPES: TransferType[] = ['PERMANENT', 'LOAN_OUT', 'LOAN_IN', 'FREE', 'RELEASE']
+const TYPES: TransferType[] = ['PERMANENT_IN', 'PERMANENT_OUT', 'LOAN_OUT', 'LOAN_IN', 'FREE', 'RELEASE']
 
 function formatDate(d: string | null) {
   if (!d) return '—'
@@ -61,7 +61,7 @@ interface CreateTransferDialogProps {
 
 function CreateTransferDialog({ open, onOpenChange, playerId, onSaved }: CreateTransferDialogProps) {
   const { t } = useTranslation('contract')
-  const [type, setType] = useState<TransferType>('PERMANENT')
+  const [type, setType] = useState<TransferType>('PERMANENT_IN')
   const [date, setDate] = useState('')
   const [fromClub, setFromClub] = useState('')
   const [toClub, setToClub] = useState('')

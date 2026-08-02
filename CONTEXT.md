@@ -1102,6 +1102,38 @@ CALLUP_REJECTED
 
 ---
 
+## HR 보고서 (HrReport)
+
+구단 인사 현황을 월별·연간으로 집계하는 온디맨드 보고서. 저장하지 않고 조회 시점에 역산한다.
+
+**헤드카운트 구분:**
+- `own` — 정식 계약 선수 + 임대 방출 중인 우리 선수(`ON_LOAN`). 구단이 계약·급여 책임을 지는 선수.
+- `loanIn` — 유효한 `LOAN_IN` Transfer를 가진 ACTIVE 선수. 우리 팀에서 활동하나 급여 책임은 원소속 구단.
+- `onLoanOut` — `ON_LOAN` 상태인 우리 선수. `own`에 포함되며 별도 표시.
+- `total` — `own + loanIn`. 현재 우리 팀에서 실제 활동 중인 전체 인원.
+
+**이직률 (Turnover Rate):**
+분모는 `own` 기준. 임대 영입 선수의 임대 종료는 이직으로 보지 않는다.
+`(departures / ((startOwn + endOwn) / 2)) × 100`
+
+**출석률 (Attendance Rate):**
+`PRESENT / (PRESENT + ABSENT_UNAUTHORIZED + LATE_UNAUTHORIZED + ABSENT_AUTHORIZED) × 100`
+무단 지각(`LATE_UNAUTHORIZED`)은 출석률 감산 대상. 지각 횟수는 별도 필드로 노출.
+
+**채용 현황 (분리 표시):**
+- `openCoachingRounds` — `CoachHiringRound.status = OPEN` 건수 (코칭스태프 채용)
+- `openJobPostings` — `JobPosting.status = OPEN` 건수 (일반 직원 채용)
+두 채용 대상이 다르므로 합산하지 않고 분리 표시.
+
+**이적 방향 (TransferType):**
+- 입단: `LOAN_IN`, `FREE`, `PERMANENT_IN`
+- 방출: `LOAN_OUT`, `RELEASE`, `PERMANENT_OUT`
+`PERMANENT`는 방향이 모호하여 `PERMANENT_IN` / `PERMANENT_OUT`으로 분리. `fromClub/toClub` null 규칙에 의존하지 않음.
+
+**열람 권한:** ADMIN, GM, TD (SCOUT 포함 일반 FRONT_OFFICE 제외 — 임금 분석 포함)
+
+---
+
 ## 부서 (Department)
 
 ERP 내 부서 마스터 데이터. StaffRecord(비로그인 직원)의 소속 부서를 FK로 참조한다.

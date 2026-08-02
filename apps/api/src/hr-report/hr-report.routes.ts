@@ -13,8 +13,9 @@ const controller = new HrReportController(service);
 const auth = passport.authenticate("accessToken", { session: false });
 
 const requireHR = (req: any, res: any, next: any) => {
-  const { role } = req.user as any;
-  if (role === "ADMIN" || role === "FRONT_OFFICE") return next();
+  const { role, frontOfficeRole } = req.user as any;
+  if (role === "ADMIN") return next();
+  if (role === "FRONT_OFFICE" && (frontOfficeRole === "GM" || frontOfficeRole === "TD")) return next();
   res.status(403).json({ message: "Forbidden" });
 };
 

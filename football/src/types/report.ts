@@ -1,4 +1,4 @@
-export type ReportType = 'FINANCIAL' | 'PERFORMANCE' | 'MEDICAL' | 'TRAINING'
+export type ReportType = 'PERFORMANCE' | 'MEDICAL' | 'TRAINING' | 'HR' | 'FINANCIAL'
 export type ReportStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED'
 
 export interface ReportUser {
@@ -42,10 +42,11 @@ export interface UpdateReportDto {
 }
 
 export const REPORT_TYPE_LABEL: Record<ReportType, string> = {
-  FINANCIAL: 'Financial',
   PERFORMANCE: 'Performance',
   MEDICAL: 'Medical',
   TRAINING: 'Training',
+  HR: 'HR',
+  FINANCIAL: 'Financial',
 }
 
 export const REPORT_STATUS_LABEL: Record<ReportStatus, string> = {
@@ -63,8 +64,9 @@ export const REPORT_STATUS_STYLE: Record<ReportStatus, string> = {
 }
 
 export const REPORT_TYPE_STYLE: Record<ReportType, string> = {
-  FINANCIAL: 'border-purple-300 text-purple-700 bg-purple-50',
   PERFORMANCE: 'border-orange-300 text-orange-700 bg-orange-50',
   MEDICAL: 'border-teal-300 text-teal-700 bg-teal-50',
   TRAINING: 'border-blue-300 text-blue-700 bg-blue-50',
+  HR: 'border-purple-300 text-purple-700 bg-purple-50',
+  FINANCIAL: 'border-green-300 text-green-700 bg-green-50',
 }
