@@ -39,16 +39,16 @@ export function ReportFormPage() {
   const [saving, setSaving] = useState(false)
 
   const handleSave = async (asDraft: boolean) => {
-    if (!title.trim()) { toast.error(t('form.titleLabel') + ' ' + '필수'); return }
-    if (!content.trim()) { toast.error(t('form.contentLabel') + ' ' + '필수'); return }
+    if (!title.trim()) { toast.error(t('form.titleRequired')); return }
+    if (!content.trim()) { toast.error(t('form.contentRequired')); return }
     setSaving(true)
     try {
       const report = await reportApi.create({ type, title: title.trim(), content: content.trim(), file: file ?? undefined })
       if (!asDraft) {
         await reportApi.submit(report.id)
-        toast.success(t('form.createSuccess'))
+        toast.success(t('form.submitted'))
       } else {
-        toast.success(t('form.updateSuccess'))
+        toast.success(t('form.draftSaved'))
       }
       navigate('/reports')
     } catch (err: unknown) {
@@ -105,7 +105,7 @@ export function ReportFormPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label>{t('form.attachmentLabel')}</Label>
+            <Label>{t('form.attachLabel')}</Label>
             {file ? (
               <div className="flex items-center gap-2 rounded border px-3 py-2 text-sm">
                 <Paperclip className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -116,7 +116,7 @@ export function ReportFormPage() {
               </div>
             ) : (
               <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
-                <Paperclip className="h-4 w-4 mr-1.5" />{t('form.attachmentLabel')}
+                <Paperclip className="h-4 w-4 mr-1.5" />{t('form.attachButton')}
               </Button>
             )}
             <input
@@ -128,10 +128,10 @@ export function ReportFormPage() {
           </div>
 
           <div className="flex gap-2 pt-2">
-            <Button variant="outline" onClick={() => navigate('/reports')} disabled={saving}>{t('form.back')}</Button>
-            <Button variant="outline" onClick={() => handleSave(true)} disabled={saving}>{t('form.saving')}</Button>
+            <Button variant="outline" onClick={() => navigate('/reports')} disabled={saving}>{t('form.cancel')}</Button>
+            <Button variant="outline" onClick={() => handleSave(true)} disabled={saving}>{t('form.saveDraft')}</Button>
             <Button onClick={() => handleSave(false)} disabled={saving}>
-              {saving ? t('form.saving') : t('form.submit')}
+              {saving ? t('form.processing') : t('form.submit')}
             </Button>
           </div>
         </div>

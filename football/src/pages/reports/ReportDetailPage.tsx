@@ -35,7 +35,7 @@ function RejectDialog({ open, onOpenChange, onConfirm }: { open: boolean; onOpen
   const [loading, setLoading] = useState(false)
 
   const handleConfirm = async () => {
-    if (!reason.trim()) { toast.error(t('detail.rejectDialog.reasonLabel') + ' 필수'); return }
+    if (!reason.trim()) { toast.error(t('detail.rejectDialog.reasonRequired')); return }
     setLoading(true)
     try { await onConfirm(reason.trim()) } finally { setLoading(false) }
   }
@@ -56,7 +56,7 @@ function RejectDialog({ open, onOpenChange, onConfirm }: { open: boolean; onOpen
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>{t('detail.rejectDialog.cancel')}</Button>
           <Button variant="destructive" onClick={handleConfirm} disabled={loading}>
-            {loading ? t('detail.rejecting') : t('detail.rejectDialog.submit')}
+            {loading ? t('detail.rejectDialog.processing') : t('detail.rejectDialog.confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -172,16 +172,16 @@ export function ReportDetailPage() {
         <div className="max-w-2xl space-y-6">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-muted-foreground text-xs mb-0.5">작성자</p>
+              <p className="text-muted-foreground text-xs mb-0.5">{t('detail.authorLabel')}</p>
               <p className="font-medium">{report.author.nickname}</p>
             </div>
             <div>
-              <p className="text-muted-foreground text-xs mb-0.5">작성일</p>
+              <p className="text-muted-foreground text-xs mb-0.5">{t('detail.createdAtLabel')}</p>
               <p>{formatDateTime(report.createdAt)}</p>
             </div>
             {report.submittedAt && (
               <div>
-                <p className="text-muted-foreground text-xs mb-0.5">제출일</p>
+                <p className="text-muted-foreground text-xs mb-0.5">{t('detail.submittedAtLabel')}</p>
                 <p>{formatDateTime(report.submittedAt)}</p>
               </div>
             )}
@@ -195,13 +195,13 @@ export function ReportDetailPage() {
 
           {report.rejectionReason && (
             <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              <p className="font-medium mb-0.5">{t('detail.rejectDialog.reasonLabel')}</p>
+              <p className="font-medium mb-0.5">{t('detail.rejectionReasonLabel')}</p>
               <p className="whitespace-pre-wrap">{report.rejectionReason}</p>
             </div>
           )}
 
           <div>
-            <p className="text-muted-foreground text-xs mb-1.5">내용</p>
+            <p className="text-muted-foreground text-xs mb-1.5">{t('detail.contentLabel')}</p>
             <div className="rounded border p-4 text-sm whitespace-pre-wrap leading-relaxed min-h-32">
               {report.content}
             </div>
@@ -209,14 +209,14 @@ export function ReportDetailPage() {
 
           {report.fileUrl && (
             <div>
-              <p className="text-muted-foreground text-xs mb-1.5">첨부 파일</p>
+              <p className="text-muted-foreground text-xs mb-1.5">{t('detail.attachLabel')}</p>
               <a
                 href={report.fileUrl}
                 download={report.fileName ?? true}
                 className="inline-flex items-center gap-2 rounded border px-3 py-2 text-sm hover:bg-muted transition-colors"
               >
                 <Download className="h-4 w-4" />
-                {report.fileName ?? '첨부 파일'}
+                {report.fileName ?? t('detail.defaultAttachName')}
               </a>
             </div>
           )}
