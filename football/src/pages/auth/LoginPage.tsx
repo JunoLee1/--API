@@ -16,6 +16,8 @@ const DEV_ACCOUNTS: { group: string; accounts: { label: string; email: string }[
       { label: '기술이사 (TD)', email: 'td@club.com' },
       { label: '프런트 (SCOUT)', email: 'fo@club.com' },
       { label: 'HR매니저', email: 'hr@club.com' },
+      { label: '자산관리', email: 'asset@club.com' },
+      { label: '재무관리', email: 'finance@club.com' },
       { label: '선수', email: 'player@club.com' },
     ],
   },

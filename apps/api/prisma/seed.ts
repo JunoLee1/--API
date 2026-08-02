@@ -45,6 +45,22 @@ async function seedDepartments() {
   console.log(`Departments seeded: 재무관리, 자산관리 + ${subDepts.length} sub-departments`);
 }
 
+async function seedDepartmentHeads() {
+  const asset   = await prisma.department.findUniqueOrThrow({ where: { name: '자산관리' } });
+  const finance  = await prisma.department.findUniqueOrThrow({ where: { name: '재무관리' } });
+  const hrDept   = await prisma.department.findUniqueOrThrow({ where: { name: 'HR' } });
+
+  const assetUser   = await prisma.user.findUnique({ where: { email: 'asset@club.com' } });
+  const financeUser = await prisma.user.findUnique({ where: { email: 'finance@club.com' } });
+  const hrUser      = await prisma.user.findUnique({ where: { email: 'hr@club.com' } });
+
+  await prisma.department.update({ where: { id: asset.id },   data: { headId: assetUser?.id ?? null } });
+  await prisma.department.update({ where: { id: finance.id }, data: { headId: financeUser?.id ?? null } });
+  await prisma.department.update({ where: { id: hrDept.id },  data: { headId: hrUser?.id ?? null } });
+
+  console.log('Department heads assigned: 자산관리→asset, 재무관리→finance, HR→hr');
+}
+
 async function seedRecruitment() {
   const hashed = await bcrypt.hash('Password1!', 10);
 
@@ -374,6 +390,8 @@ async function main() {
   const meddirPhone   = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0012") });
   const gmPhone       = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0013") });
   const tdPhone       = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0014") });
+  const assetPhone    = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0016") });
+  const financePhone  = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0017") });
 
   const hashed = await bcrypt.hash("Password1!", 10);
 
@@ -581,6 +599,38 @@ async function main() {
       dateOfBirth: new Date("1972-09-25"),
       nationalityId: korea.id,
       phoneNumberId: tdPhone.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'asset@club.com' },
+    update: {},
+    create: {
+      email: 'asset@club.com',
+      password: hashed,
+      username: '자산관리팀장',
+      nickname: 'asset',
+      role: 'FRONT_OFFICE',
+      frontOfficeRole: 'ASSET_MANAGER',
+      dateOfBirth: new Date('1980-06-10'),
+      nationalityId: korea.id,
+      phoneNumberId: assetPhone.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'finance@club.com' },
+    update: {},
+    create: {
+      email: 'finance@club.com',
+      password: hashed,
+      username: '재무관리팀장',
+      nickname: 'finance',
+      role: 'FRONT_OFFICE',
+      frontOfficeRole: 'FINANCE_MANAGER',
+      dateOfBirth: new Date('1978-11-25'),
+      nationalityId: korea.id,
+      phoneNumberId: financePhone.id,
     },
   });
 
@@ -2000,17 +2050,22 @@ async function main() {
   }
   if (playedStats.length) console.log(`   - Activity mock: ${playedStats.length}개 레코드 패치 완료`);
 
+  // ── Department Heads ─────────────────────────────────
+  await seedDepartmentHeads();
+
   // ── Recruitment ───────────────────────────────────────
   await seedRecruitment();
 
   console.log("✅ Seed complete");
   console.log(`   - Countries: 2`);
-  console.log(`   - Users: 15 + 10 유소년 / pw: Password1!`);
+  console.log(`   - Users: 17 + 10 유소년 / pw: Password1!`);
   console.log(`     ADMIN       : admin@club.com`);
   console.log(`     FRONT_OFFICE: gm@club.com (GM)`);
   console.log(`     FRONT_OFFICE: td@club.com (TD)`);
   console.log(`     FRONT_OFFICE: fo@club.com (SCOUT)`);
   console.log(`     FRONT_OFFICE: hr@club.com (HR_MANAGER)`);
+  console.log(`     FRONT_OFFICE: asset@club.com (ASSET_MANAGER)`);
+  console.log(`     FRONT_OFFICE: finance@club.com (FINANCE_MANAGER)`);
   console.log(`     PLAYER      : player@club.com`);
   console.log(`     HEAD_COACH  : coach@club.com`);
   console.log(`     YOUTH COACH : youth.coach1@club.com (감독)`);

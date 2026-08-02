@@ -544,6 +544,7 @@ model User {
   approvedPostings         JobPosting[]              @relation("JobPostingApprover")
   applicationOffers        JobApplication[]          @relation("ApplicationOffer")
   onboarding               Onboarding?               @relation("OnboardingUser")
+  headedDepartments        Department[]              @relation("DepartmentHead")
 }
 
 model Season {
@@ -1863,8 +1864,10 @@ model Department {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   parentId     Int?
+  headId       Int?
   parent       Department?   @relation("DepartmentHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
   children     Department[]  @relation("DepartmentHierarchy")
+  head         User?         @relation("DepartmentHead", fields: [headId], references: [id], onDelete: SetNull)
   staffRecords StaffRecord[]
   postings     JobPosting[]
 }
