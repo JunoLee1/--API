@@ -45,6 +45,303 @@ async function seedDepartments() {
   console.log(`Departments seeded: 재무관리, 자산관리 + ${subDepts.length} sub-departments`);
 }
 
+async function seedDepartmentHeads() {
+  const asset   = await prisma.department.findUniqueOrThrow({ where: { name: '자산관리' } });
+  const finance  = await prisma.department.findUniqueOrThrow({ where: { name: '재무관리' } });
+  const hrDept   = await prisma.department.findUniqueOrThrow({ where: { name: 'HR' } });
+
+  const assetUser   = await prisma.user.findUnique({ where: { email: 'asset@club.com' } });
+  const financeUser = await prisma.user.findUnique({ where: { email: 'finance@club.com' } });
+  const hrUser      = await prisma.user.findUnique({ where: { email: 'hr@club.com' } });
+
+  await prisma.department.update({ where: { id: asset.id },   data: { headId: assetUser?.id ?? null } });
+  await prisma.department.update({ where: { id: finance.id }, data: { headId: financeUser?.id ?? null } });
+  await prisma.department.update({ where: { id: hrDept.id },  data: { headId: hrUser?.id ?? null } });
+
+  console.log('Department heads assigned: 자산관리→asset, 재무관리→finance, HR→hr');
+}
+
+async function seedRecruitment() {
+  const hashed = await bcrypt.hash('Password1!', 10);
+
+  const korea = await prisma.country.findUniqueOrThrow({ where: { id: 1 } });
+
+  // ── HR Manager user ──────────────────────────────────
+  const existingHr = await prisma.user.findUnique({ where: { email: 'hr@club.com' } });
+  let hr: { id: number };
+  if (!existingHr) {
+    const hrPhone = await prisma.phoneNumber.create({ data: encryptPhone('010-0000-0015') });
+    hr = await prisma.user.create({
+      data: {
+        email: 'hr@club.com',
+        password: hashed,
+        username: 'HR매니저',
+        nickname: 'hr',
+        role: 'FRONT_OFFICE',
+        frontOfficeRole: 'HR_MANAGER',
+        dateOfBirth: new Date('1985-03-20'),
+        nationalityId: korea.id,
+        phoneNumberId: hrPhone.id,
+      },
+    });
+  } else {
+    hr = existingHr;
+  }
+
+  const admin = await prisma.user.findUniqueOrThrow({ where: { email: 'admin@club.com' }, select: { id: true } });
+  const gm = await prisma.user.findUniqueOrThrow({ where: { email: 'gm@club.com' }, select: { id: true } });
+  const hrDept = await prisma.department.findFirst({ where: { name: 'HR' } });
+
+  // ── Cleanup & recreate ───────────────────────────────
+  await prisma.onboarding.deleteMany();
+  await prisma.referenceCheck.deleteMany();
+  await prisma.interview.deleteMany();
+  await prisma.jobApplication.deleteMany();
+  await prisma.jobPosting.deleteMany();
+
+  const now = new Date();
+
+  // ── Job Postings ─────────────────────────────────────
+  const posting1 = await prisma.jobPosting.create({
+    data: {
+      title: '피트니스 코치 채용',
+      departmentId: hrDept?.id ?? null,
+      headcount: 1,
+      description: '1군 선수단 피지컬 트레이닝을 담당할 피트니스 코치를 채용합니다. 관련 자격증 보유자 우대.',
+      status: 'OPEN',
+      createdById: hr.id,
+      approvedById: gm.id,
+      approvedAt: new Date('2026-07-01'),
+    },
+  });
+
+  const posting2 = await prisma.jobPosting.create({
+    data: {
+      title: '스포츠 데이터 분석가 채용',
+      headcount: 1,
+      description: '경기 데이터 분석 및 보고서 작성을 담당할 스포츠 데이터 분석가를 모집합니다. Python/SQL 능숙자 우대.',
+      status: 'DRAFT',
+      createdById: hr.id,
+    },
+  });
+
+  const posting3 = await prisma.jobPosting.create({
+    data: {
+      title: '팀 닥터 채용',
+      headcount: 1,
+      description: '선수단 의료 서비스를 담당할 팀 닥터를 채용합니다. 스포츠의학 전문의 우대.',
+      status: 'CLOSED',
+      createdById: admin.id,
+      approvedById: gm.id,
+      approvedAt: new Date('2026-04-01'),
+      closedAt: new Date('2026-06-30'),
+    },
+  });
+
+  // ── Applications: OPEN posting (피트니스 코치) ─────────
+  const app1 = await prisma.jobApplication.create({
+    data: {
+      postingId: posting1.id,
+      applicantName: '김지원',
+      email: 'jiwon.kim@email.com',
+      phone: '010-1111-0001',
+      status: 'OFFERED',
+      offeredById: gm.id,
+      offeredAt: new Date('2026-07-25'),
+    },
+  });
+  await prisma.interview.createMany({
+    data: [
+      {
+        applicationId: app1.id,
+        round: 'ROUND_1',
+        scheduledAt: new Date('2026-07-10'),
+        interviewerIds: [admin.id, gm.id],
+        scoreSkill: 85,
+        scoreComm: 90,
+        scoreCulture: 88,
+        comment: '전문성 탁월, 팀 핏 좋음',
+        result: 'PASS',
+      },
+      {
+        applicationId: app1.id,
+        round: 'ROUND_2',
+        scheduledAt: new Date('2026-07-18'),
+        interviewerIds: [gm.id],
+        scoreSkill: 88,
+        scoreComm: 92,
+        scoreCulture: 90,
+        comment: '최종 합격 추천',
+        result: 'PASS',
+      },
+    ],
+  });
+  await prisma.referenceCheck.create({
+    data: {
+      applicationId: app1.id,
+      contactName: '전 소속팀 단장',
+      relationship: '전 직장 상사',
+      result: 'CLEAR',
+      notes: '책임감 강하고 성실한 인재로 추천함',
+    },
+  });
+
+  const app2 = await prisma.jobApplication.create({
+    data: {
+      postingId: posting1.id,
+      applicantName: '이성민',
+      email: 'seongmin.lee@email.com',
+      phone: '010-1111-0002',
+      status: 'REFERENCE_CHECK',
+    },
+  });
+  await prisma.interview.createMany({
+    data: [
+      {
+        applicationId: app2.id,
+        round: 'ROUND_1',
+        scheduledAt: new Date('2026-07-11'),
+        interviewerIds: [admin.id, gm.id],
+        scoreSkill: 78,
+        scoreComm: 82,
+        scoreCulture: 80,
+        result: 'PASS',
+      },
+      {
+        applicationId: app2.id,
+        round: 'ROUND_2',
+        scheduledAt: new Date('2026-07-19'),
+        interviewerIds: [gm.id],
+        scoreSkill: 80,
+        scoreComm: 84,
+        scoreCulture: 79,
+        result: 'PASS',
+      },
+    ],
+  });
+
+  const app3 = await prisma.jobApplication.create({
+    data: {
+      postingId: posting1.id,
+      applicantName: '박준혁',
+      email: 'junhyuk.park@email.com',
+      status: 'INTERVIEW_2',
+    },
+  });
+  await prisma.interview.create({
+    data: {
+      applicationId: app3.id,
+      round: 'ROUND_1',
+      scheduledAt: new Date('2026-07-12'),
+      interviewerIds: [admin.id],
+      scoreSkill: 72,
+      scoreComm: 75,
+      scoreCulture: 70,
+      result: 'PASS',
+    },
+  });
+
+  const app4 = await prisma.jobApplication.create({
+    data: {
+      postingId: posting1.id,
+      applicantName: '최유나',
+      email: 'yuna.choi@email.com',
+      phone: '010-1111-0004',
+      status: 'INTERVIEW_1',
+    },
+  });
+  await prisma.interview.create({
+    data: {
+      applicationId: app4.id,
+      round: 'ROUND_1',
+      scheduledAt: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000), // 2일 후
+      interviewerIds: [admin.id, gm.id],
+      result: 'PENDING',
+    },
+  });
+
+  await prisma.jobApplication.create({
+    data: {
+      postingId: posting1.id,
+      applicantName: '정민수',
+      email: 'minsu.jung@email.com',
+      status: 'REJECTED',
+      rejectedAt: new Date('2026-07-13'),
+    },
+  });
+
+  // ── Applications: CLOSED posting (팀 닥터) ────────────
+  const app6 = await prisma.jobApplication.create({
+    data: {
+      postingId: posting3.id,
+      applicantName: '한소희',
+      email: 'sohee.han@email.com',
+      phone: '010-2222-0001',
+      status: 'ONBOARDED',
+      offeredById: gm.id,
+      offeredAt: new Date('2026-06-10'),
+    },
+  });
+  await prisma.interview.createMany({
+    data: [
+      {
+        applicationId: app6.id,
+        round: 'ROUND_1',
+        scheduledAt: new Date('2026-05-15'),
+        interviewerIds: [admin.id, gm.id],
+        scoreSkill: 92,
+        scoreComm: 88,
+        scoreCulture: 91,
+        result: 'PASS',
+      },
+      {
+        applicationId: app6.id,
+        round: 'ROUND_2',
+        scheduledAt: new Date('2026-05-28'),
+        interviewerIds: [gm.id],
+        scoreSkill: 94,
+        scoreComm: 90,
+        scoreCulture: 93,
+        result: 'PASS',
+      },
+    ],
+  });
+  await prisma.referenceCheck.create({
+    data: {
+      applicationId: app6.id,
+      contactName: '전 병원 원장',
+      relationship: '전 직장 상사',
+      result: 'CLEAR',
+      notes: '스포츠 의학 전문가로 강력 추천',
+    },
+  });
+  await prisma.onboarding.create({
+    data: {
+      applicationId: app6.id,
+      otpCode: '123456',
+      otpExpiresAt: new Date('2099-12-31'),
+      emailVerifiedAt: new Date('2026-06-15'),
+      mfaRegisteredAt: new Date('2026-06-15'),
+      completedAt: new Date('2026-06-15'),
+    },
+  });
+
+  await prisma.jobApplication.create({
+    data: {
+      postingId: posting3.id,
+      applicantName: '오태준',
+      email: 'taejun.oh@email.com',
+      status: 'REJECTED',
+      rejectedAt: new Date('2026-05-20'),
+    },
+  });
+
+  console.log(`✅ Recruitment seeded`);
+  console.log(`   - Job Postings: 3 (OPEN×1, DRAFT×1, CLOSED×1)`);
+  console.log(`   - Applications: 7 (OFFERED×1, REFERENCE_CHECK×1, INTERVIEW_2×1, INTERVIEW_1×1, REJECTED×2, ONBOARDED×1)`);
+  console.log(`   - HR Manager: hr@club.com / Password1!`);
+}
+
 async function main() {
   console.log("🌱 Seeding...");
 
@@ -93,6 +390,8 @@ async function main() {
   const meddirPhone   = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0012") });
   const gmPhone       = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0013") });
   const tdPhone       = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0014") });
+  const assetPhone    = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0016") });
+  const financePhone  = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0017") });
 
   const hashed = await bcrypt.hash("Password1!", 10);
 
@@ -300,6 +599,38 @@ async function main() {
       dateOfBirth: new Date("1972-09-25"),
       nationalityId: korea.id,
       phoneNumberId: tdPhone.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'asset@club.com' },
+    update: {},
+    create: {
+      email: 'asset@club.com',
+      password: hashed,
+      username: '자산관리팀장',
+      nickname: 'asset',
+      role: 'FRONT_OFFICE',
+      frontOfficeRole: 'ASSET_MANAGER',
+      dateOfBirth: new Date('1980-06-10'),
+      nationalityId: korea.id,
+      phoneNumberId: assetPhone.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'finance@club.com' },
+    update: {},
+    create: {
+      email: 'finance@club.com',
+      password: hashed,
+      username: '재무관리팀장',
+      nickname: 'finance',
+      role: 'FRONT_OFFICE',
+      frontOfficeRole: 'FINANCE_MANAGER',
+      dateOfBirth: new Date('1978-11-25'),
+      nationalityId: korea.id,
+      phoneNumberId: financePhone.id,
     },
   });
 
@@ -1719,13 +2050,22 @@ async function main() {
   }
   if (playedStats.length) console.log(`   - Activity mock: ${playedStats.length}개 레코드 패치 완료`);
 
+  // ── Department Heads ─────────────────────────────────
+  await seedDepartmentHeads();
+
+  // ── Recruitment ───────────────────────────────────────
+  await seedRecruitment();
+
   console.log("✅ Seed complete");
   console.log(`   - Countries: 2`);
-  console.log(`   - Users: 14 + 10 유소년 / pw: Password1!`);
+  console.log(`   - Users: 17 + 10 유소년 / pw: Password1!`);
   console.log(`     ADMIN       : admin@club.com`);
   console.log(`     FRONT_OFFICE: gm@club.com (GM)`);
   console.log(`     FRONT_OFFICE: td@club.com (TD)`);
   console.log(`     FRONT_OFFICE: fo@club.com (SCOUT)`);
+  console.log(`     FRONT_OFFICE: hr@club.com (HR_MANAGER)`);
+  console.log(`     FRONT_OFFICE: asset@club.com (ASSET_MANAGER)`);
+  console.log(`     FRONT_OFFICE: finance@club.com (FINANCE_MANAGER)`);
   console.log(`     PLAYER      : player@club.com`);
   console.log(`     HEAD_COACH  : coach@club.com`);
   console.log(`     YOUTH COACH : youth.coach1@club.com (감독)`);

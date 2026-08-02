@@ -11,6 +11,11 @@
     "reports": "Reports",
     "admin": "Admin",
     "logout": "Log Out",
+    "logoutConfirm": {
+      "title": "Log Out",
+      "description": "Are you sure you want to log out?",
+      "confirmText": "Log Out"
+    },
     "section": {
       "playerMgmt": "Player Management",
       "contractTransfer": "Contracts & Transfers",
@@ -206,8 +211,15 @@
         "item": "",
         "match": "",
         "session": "",
-        "rate": "%"
-      }
+        "rate": "%",
+        "won": "KRW"
+      },
+      "totalStaffCount": "Total Staff",
+      "openJobPostingCount": "Open Postings",
+      "activeApplicationCount": "Active Applicants",
+      "thisMonthExpense": "This Month Expenses",
+      "pendingOperatingExpenseCount": "Pending Expenses",
+      "activeEquipmentLoanCount": "Active Loans"
     },
     "recentFeed": {
       "recentTransfers": "Recent Transfers",
@@ -218,7 +230,9 @@
       "recentMatches": "Recent Results",
       "recentInjuries": "Recent Injuries",
       "recentSessions": "Recent Sessions",
-      "recentPlayerMatches": "Recent Matches"
+      "recentPlayerMatches": "Recent Matches",
+      "recentApplications": "Recent Applications",
+      "recentOperatingExpenses": "Recent Expenses"
     },
     "actionQueue": {
       "title": "Action Queue",

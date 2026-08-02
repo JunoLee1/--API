@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { reportApi } from '@/services/report.service'
 import type { ReportType } from '@/types/report'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,13 +18,21 @@ import {
 } from '@/components/ui/select'
 import { ArrowLeft, Paperclip, X } from 'lucide-react'
 
-const TYPES: ReportType[] = ['PERFORMANCE', 'MEDICAL', 'TRAINING', 'HR', 'FINANCIAL']
+const ALL_TYPES: ReportType[] = ['PERFORMANCE', 'MEDICAL', 'TRAINING', 'HR', 'FINANCIAL']
 
 export function ReportFormPage() {
   const { t } = useTranslation('report')
   const navigate = useNavigate()
+  const { user } = useCurrentUser()
+  const isAdmin = user?.role === 'ADMIN'
+  const foRole = user?.frontOfficeRole
+  const TYPES = ALL_TYPES.filter((tp) => {
+    if (tp === 'HR') return isAdmin || foRole === 'HR_MANAGER'
+    if (tp === 'FINANCIAL') return isAdmin || foRole === 'FINANCE_MANAGER' || foRole === 'GM'
+    return true
+  })
   const fileRef = useRef<HTMLInputElement>(null)
-  const [type, setType] = useState<ReportType>('PERFORMANCE')
+  const [type, setType] = useState<ReportType>(() => TYPES[0] ?? 'PERFORMANCE')
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [file, setFile] = useState<File | null>(null)

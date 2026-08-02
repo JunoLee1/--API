@@ -4,6 +4,7 @@ import type {
   EquipmentManagerStats, TacticalAnalystStats, HeadCoachStats,
   SpecialistCoachStats, MedicalStats, MedicalDirectorStats,
   PlayerStats, AgentStats, DashboardStats,
+  HrManagerStats, FinanceManagerStats, AssetManagerStats,
 } from '@/types/dashboard'
 
 export interface StatCardConfig {
@@ -124,6 +125,50 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         showActionQueue: true,
         showSchedule: true,
         recentFeedTitle: 'dashboard.recentFeed.recentMatches',
+        showRanking: false,
+        showMedicalSection: false,
+        showYouthDevelopment: false,
+      }
+    }
+    if (frontOfficeRole === 'HR_MANAGER') {
+      return {
+        statCards: [
+          { label: 'dashboard.stat.totalStaffCount', getValue: (s) => (s as HrManagerStats).totalStaffCount, unit: 'dashboard.stat.unit.person' },
+          { label: 'dashboard.stat.openJobPostingCount', getValue: (s) => (s as HrManagerStats).openJobPostingCount, unit: 'dashboard.stat.unit.case', highlight: true },
+          { label: 'dashboard.stat.activeApplicationCount', getValue: (s) => (s as HrManagerStats).activeApplicationCount, unit: 'dashboard.stat.unit.person' },
+        ],
+        showActionQueue: false,
+        showSchedule: false,
+        recentFeedTitle: 'dashboard.recentFeed.recentApplications',
+        showRanking: false,
+        showMedicalSection: false,
+        showYouthDevelopment: false,
+      }
+    }
+    if (frontOfficeRole === 'FINANCE_MANAGER') {
+      return {
+        statCards: [
+          { label: 'dashboard.stat.thisMonthExpense', getValue: (s) => (s as FinanceManagerStats).thisMonthExpense.toLocaleString(), unit: 'dashboard.stat.unit.won' },
+          { label: 'dashboard.stat.pendingOperatingExpenseCount', getValue: (s) => (s as FinanceManagerStats).pendingOperatingExpenseCount, unit: 'dashboard.stat.unit.case', highlight: true },
+        ],
+        showActionQueue: false,
+        showSchedule: false,
+        recentFeedTitle: 'dashboard.recentFeed.recentOperatingExpenses',
+        showRanking: false,
+        showMedicalSection: false,
+        showYouthDevelopment: false,
+      }
+    }
+    if (frontOfficeRole === 'ASSET_MANAGER') {
+      return {
+        statCards: [
+          { label: 'dashboard.stat.lowStockEquipmentCount', getValue: (s) => (s as AssetManagerStats).lowStockEquipmentCount, unit: 'dashboard.stat.unit.item', highlight: true },
+          { label: 'dashboard.stat.totalEquipmentItemCount', getValue: (s) => (s as AssetManagerStats).totalEquipmentItemCount, unit: 'dashboard.stat.unit.item' },
+          { label: 'dashboard.stat.activeEquipmentLoanCount', getValue: (s) => (s as AssetManagerStats).activeEquipmentLoanCount, unit: 'dashboard.stat.unit.case' },
+        ],
+        showActionQueue: false,
+        showSchedule: false,
+        recentFeedTitle: 'dashboard.recentFeed.recentAssignments',
         showRanking: false,
         showMedicalSection: false,
         showYouthDevelopment: false,

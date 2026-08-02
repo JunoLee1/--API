@@ -495,9 +495,9 @@ export function AppShell() {
 
   const handleLogout = async () => {
     const ok = await confirm({
-      title: '로그아웃',
-      description: '정말 로그아웃 하시겠습니까?',
-      confirmText: '로그아웃',
+      title: t('nav.logoutConfirm.title'),
+      description: t('nav.logoutConfirm.description'),
+      confirmText: t('nav.logoutConfirm.confirmText'),
     })
     if (!ok) return
     clearLocalSession()
@@ -713,7 +713,7 @@ export function AppShell() {
             className="w-full mt-2 text-muted-foreground"
             onClick={() => void handleLogout()}
           >
-            로그아웃
+            {t('nav.logout')}
           </Button>
         </div>
       </aside>

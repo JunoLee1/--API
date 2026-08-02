@@ -453,4 +453,42 @@ export class DashboardRepository {
       lockedPlayerCount: locked,
     };
   }
+
+  async getHrManagerStats() {
+    const [totalStaffCount, openJobPostingCount, activeApplicationCount] = await Promise.all([
+      this.prisma.user.count({ where: { isDeleted: false, role: { not: "GUARDIAN" } } }),
+      this.prisma.jobPosting.count({ where: { status: "OPEN" } }),
+      this.prisma.jobApplication.count({
+        where: { status: { notIn: ["REJECTED", "ONBOARDED"] } },
+      }),
+    ]);
+    return { totalStaffCount, openJobPostingCount, activeApplicationCount };
+  }
+
+  async getFinanceManagerStats() {
+    const [thisMonthExpense, pendingOperatingExpenseCount] = await Promise.all([
+      this.prisma.operatingExpense.aggregate({
+        _sum: { amount: true },
+        where: { date: { gte: START_OF_MONTH() } },
+      }).then((r) => r._sum.amount ?? 0),
+      this.prisma.operatingExpense.count({ where: { date: { gte: START_OF_MONTH() } } }),
+    ]);
+    return { thisMonthExpense, pendingOperatingExpenseCount };
+  }
+
+  async getAssetManagerStats() {
+    const [lowStockEquipmentCount, totalEquipmentItemCount, activeEquipmentLoanCount] =
+      await Promise.all([
+        this.prisma.$queryRaw<{ count: bigint }[]>`
+          SELECT COUNT(*) as count FROM "EquipmentItem"
+          WHERE "trackedIndividually" = false
+            AND "lowStockThreshold" IS NOT NULL
+            AND "quantity" IS NOT NULL
+            AND "quantity" <= "lowStockThreshold"
+        `.then((r) => Number(r[0]?.count ?? 0)),
+        this.prisma.equipmentItem.count(),
+        this.prisma.equipmentLoan.count({ where: { returnedAt: null } }),
+      ]);
+    return { lowStockEquipmentCount, totalEquipmentItemCount, activeEquipmentLoanCount };
+  }
 }

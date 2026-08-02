@@ -37,6 +37,23 @@ export interface TacticalAnalystStats {
   thisMonthMatchCount: number
 }
 
+export interface HrManagerStats {
+  totalStaffCount: number
+  openJobPostingCount: number
+  activeApplicationCount: number
+}
+
+export interface FinanceManagerStats {
+  thisMonthExpense: number
+  pendingOperatingExpenseCount: number
+}
+
+export interface AssetManagerStats {
+  lowStockEquipmentCount: number
+  totalEquipmentItemCount: number
+  activeEquipmentLoanCount: number
+}
+
 export interface MedicalDashboardStats {
   currentInjuredCount: number
   weekNewInjuryCount: number

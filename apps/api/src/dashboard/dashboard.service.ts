@@ -50,6 +50,12 @@ export class DashboardService {
         return this.repo.getEquipmentManagerStats();
       case "TACTICAL_ANALYST":
         return this.repo.getTacticalAnalystStats(user.id);
+      case "HR_MANAGER":
+        return this.repo.getHrManagerStats();
+      case "FINANCE_MANAGER":
+        return this.repo.getFinanceManagerStats();
+      case "ASSET_MANAGER":
+        return this.repo.getAssetManagerStats();
       default:
         throw new Error(`Unknown frontOfficeRole: ${user.frontOfficeRole}`);
     }
