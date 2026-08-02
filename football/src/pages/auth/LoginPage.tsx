@@ -60,6 +60,7 @@ export function LoginPage() {
   const toggleLanguage = () => {
     const next = lang === 'ko' ? 'en' : 'ko'
     setLang(next)
+    localStorage.setItem('app_lang', next)
     void i18n.changeLanguage(next)
   }
 

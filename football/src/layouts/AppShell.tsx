@@ -436,7 +436,9 @@ const NAV_ITEMS: NavItem[] = [
 export function AppShell() {
   const { t } = useTranslation('common')
   const { user, loading } = useCurrentUser()
-  const { language, changeLanguage } = useLanguage(user?.language ?? 'ko')
+  const { language, changeLanguage } = useLanguage(
+    (localStorage.getItem('app_lang') as 'ko' | 'en') ?? user?.language ?? 'ko'
+  )
   const isLite = useLiteMode()
   const navigate = useNavigate()
   const location = useLocation()
