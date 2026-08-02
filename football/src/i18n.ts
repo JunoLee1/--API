@@ -23,6 +23,9 @@ import enYouth from './locales/en/youth.json';
 import enReport from './locales/en/report.json';
 import enAdmin from './locales/en/admin.json';
 
+const storedLang = localStorage.getItem('app_lang')
+const initLang: 'ko' | 'en' = storedLang === 'en' ? 'en' : 'ko'
+
 i18n.use(initReactI18next).init({
   resources: {
     ko: {
@@ -50,7 +53,7 @@ i18n.use(initReactI18next).init({
       admin: enAdmin,
     },
   },
-  lng: 'ko',
+  lng: initLang,
   fallbackLng: 'ko',
   defaultNS: 'common',
   interpolation: { escapeValue: false },

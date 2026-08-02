@@ -8,11 +8,13 @@ export function useLanguage(initialLanguage: 'ko' | 'en') {
   const changeLanguage = async (lang: 'ko' | 'en') => {
     const prev = language
     setLanguage(lang)
+    localStorage.setItem('app_lang', lang)
     await i18n.changeLanguage(lang)
     try {
       await authApi.updateLanguage(lang)
     } catch {
       setLanguage(prev)
+      localStorage.setItem('app_lang', prev)
       await i18n.changeLanguage(prev)
     }
   }
