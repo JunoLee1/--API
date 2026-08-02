@@ -21,11 +21,17 @@ export class ReportRepository {
     isGM: boolean,
     isHeadCoach: boolean = false,
     filters: { type?: string; status?: string } = {},
+    isHrManager: boolean = false,
+    isFinanceManager: boolean = false,
   ) {
     const roleWhere = isGM
       ? {}
       : isHeadCoach
       ? { OR: [{ authorId: userId }, { type: "TRAINING" as const }] }
+      : isHrManager
+      ? { OR: [{ authorId: userId }, { type: "HR" as const }] }
+      : isFinanceManager
+      ? { OR: [{ authorId: userId }, { type: "FINANCIAL" as const }] }
       : { authorId: userId };
 
     const filterWhere = {
