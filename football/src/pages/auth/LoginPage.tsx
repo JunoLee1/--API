@@ -5,6 +5,7 @@ import { authApi } from '@/services/auth.service'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import i18n from '@/i18n'
 
 const DEV_ACCOUNTS: { group: string; accounts: { label: string; email: string }[] }[] = [
@@ -84,10 +85,14 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="absolute top-4 right-4">
-        <Button variant="ghost" size="sm" onClick={toggleLanguage} className="text-xs font-medium">
-          {lang === 'ko' ? 'EN' : '한국어'}
-        </Button>
+      <div className="absolute top-4 right-4 flex items-center gap-1.5 text-xs text-muted-foreground select-none">
+        <span className={lang === 'ko' ? 'text-foreground font-medium' : ''}>KO</span>
+        <Switch
+          checked={lang === 'en'}
+          onCheckedChange={toggleLanguage}
+          aria-label="Switch language"
+        />
+        <span className={lang === 'en' ? 'text-foreground font-medium' : ''}>EN</span>
       </div>
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
