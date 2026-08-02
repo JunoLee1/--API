@@ -61,6 +61,31 @@ async function seedDepartmentHeads() {
   console.log('Department heads assigned: 자산관리→asset, 재무관리→finance, HR→hr');
 }
 
+async function seedHrSubDepartments() {
+  const hrDept = await prisma.department.findUniqueOrThrow({ where: { name: 'HR' } });
+  const hrUser = await prisma.user.findUnique({ where: { email: 'hr@club.com' } });
+
+  const subNames = ['HRM (인사관리)', 'HRD (인재개발)', '노무·총무'];
+  for (const name of subNames) {
+    await prisma.department.upsert({
+      where: { name },
+      create: { name, parentId: hrDept.id },
+      update: {},
+    });
+  }
+
+  // hr@club.com → HR 부서 MANAGER
+  if (hrUser) {
+    await prisma.userDepartment.upsert({
+      where: { userId_departmentId: { userId: hrUser.id, departmentId: hrDept.id } },
+      create: { userId: hrUser.id, departmentId: hrDept.id, role: 'MANAGER' },
+      update: { role: 'MANAGER' },
+    });
+  }
+
+  console.log('HR sub-departments seeded: HRM, HRD, 노무·총무');
+}
+
 async function seedRecruitment() {
   const hashed = await bcrypt.hash('Password1!', 10);
 
@@ -2052,6 +2077,9 @@ async function main() {
 
   // ── Department Heads ─────────────────────────────────
   await seedDepartmentHeads();
+
+  // ── HR Sub-Departments & Memberships ─────────────────
+  await seedHrSubDepartments();
 
   // ── Recruitment ───────────────────────────────────────
   await seedRecruitment();
