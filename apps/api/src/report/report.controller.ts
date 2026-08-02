@@ -10,6 +10,14 @@ function isHeadCoach(req: Request): boolean {
   return req.user?.role === "COACHING_STAFF" && req.user?.coachingRole === "HEAD_COACH";
 }
 
+function isHrManager(req: Request): boolean {
+  return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "HR_MANAGER";
+}
+
+function isFinanceManager(req: Request): boolean {
+  return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "FINANCE_MANAGER";
+}
+
 const AUTHOR_ROLES = ["ADMIN", "COACHING_STAFF", "FRONT_OFFICE"] as const;
 
 export class ReportController {
@@ -21,7 +29,7 @@ export class ReportController {
       const filters: { type?: string; status?: string } = {};
       if (type !== undefined) filters.type = type;
       if (status !== undefined) filters.status = status;
-      res.json(await this.service.list(req.user!.id, isGM(req), isHeadCoach(req), filters));
+      res.json(await this.service.list(req.user!.id, isGM(req), isHeadCoach(req), filters, isHrManager(req), isFinanceManager(req)));
     } catch (err) {
       next(err);
     }
@@ -30,7 +38,12 @@ export class ReportController {
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const report = await this.service.get(Number(req.params["id"]));
-      const canView = isGM(req) || isHeadCoach(req) || report.authorId === req.user!.id;
+      const canView =
+        isGM(req) ||
+        isHeadCoach(req) ||
+        report.authorId === req.user!.id ||
+        (isHrManager(req) && report.type === "HR") ||
+        (isFinanceManager(req) && report.type === "FINANCIAL");
       if (!canView) throw new AppError(403, "FORBIDDEN");
       res.json(report);
     } catch (err) {
