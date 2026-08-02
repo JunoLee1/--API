@@ -26,10 +26,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Plus } from 'lucide-react'
+import { Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const ALL_TYPES: ReportType[] = ['PERFORMANCE', 'MEDICAL', 'TRAINING', 'HR', 'FINANCIAL']
 const ALL_STATUSES: ReportStatus[] = ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED']
+const PAGE_SIZE = 10
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
@@ -46,6 +47,7 @@ export function ReportsPage() {
 
   const [typeFilter, setTypeFilter] = useState<ReportType | ''>('')
   const [statusFilter, setStatusFilter] = useState<ReportStatus | ''>('')
+  const [page, setPage] = useState(1)
 
   const isGM = user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'GM'
   const isHeadCoach = user?.role === 'COACHING_STAFF' && user?.coachingRole === 'HEAD_COACH'
@@ -53,6 +55,7 @@ export function ReportsPage() {
 
   const fetchReports = useCallback(() => {
     setLoading(true)
+    setPage(1)
     reportApi
       .list({ type: typeFilter || undefined, status: statusFilter || undefined })
       .then(setReports)
@@ -61,6 +64,10 @@ export function ReportsPage() {
   }, [t, typeFilter, statusFilter])
 
   useEffect(() => { fetchReports() }, [fetchReports])
+
+  const totalPages = Math.max(1, Math.ceil(reports.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages)
+  const paginated = reports.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
   // 역할에 따른 설명 문구
   const descText = isGM
@@ -130,7 +137,7 @@ export function ReportsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {reports.map((r) => (
+              {paginated.map((r) => (
                 <TableRow
                   key={r.id}
                   className="cursor-pointer"
@@ -155,6 +162,35 @@ export function ReportsPage() {
           </Table>
         )}
       </div>
+
+      {!loading && reports.length > PAGE_SIZE && (
+        <div className="border-t px-6 py-3 flex items-center justify-between shrink-0">
+          <span className="text-xs text-muted-foreground">
+            {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, reports.length)} / {reports.length}
+          </span>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              disabled={safePage <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-xs tabular-nums px-1">{safePage} / {totalPages}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              disabled={safePage >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
