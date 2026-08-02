@@ -36,7 +36,7 @@ function formatDate(d: string) {
   return new Date(d).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
 }
 
-const AUTHOR_ROLES = ['ADMIN', 'COACHING_STAFF', 'FRONT_OFFICE']
+const FO_CREATE_ROLES = ['GM', 'HR_MANAGER', 'FINANCE_MANAGER']
 
 export function ReportsPage() {
   const { t } = useTranslation('report')
@@ -51,7 +51,10 @@ export function ReportsPage() {
 
   const isGM = user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'GM'
   const isHeadCoach = user?.role === 'COACHING_STAFF' && user?.coachingRole === 'HEAD_COACH'
-  const canCreate = user?.role && AUTHOR_ROLES.includes(user.role)
+  const canCreate =
+    user?.role === 'ADMIN' ||
+    user?.role === 'COACHING_STAFF' ||
+    (user?.role === 'FRONT_OFFICE' && FO_CREATE_ROLES.includes(user.frontOfficeRole ?? ''))
 
   const fetchReports = useCallback(() => {
     setLoading(true)
