@@ -60,6 +60,7 @@ enum FrontOfficeRole {
   FINANCE_MANAGER
   ASSET_MANAGER
   HR_MANAGER
+  FACILITY_MANAGER
 }
 
 enum PlayerLevel {
@@ -293,6 +294,9 @@ enum NotificationType {
   FEE_REMINDER
   FEE_OVERDUE_WARNING
   FEE_ACCOUNT_LOCKED
+  FACILITY_EMERGENCY
+  FACILITY_MAINTENANCE_RESOLVED
+  PAYROLL_CONFIRMED
 }
 
 enum BadgeType {
@@ -361,6 +365,7 @@ enum WorkPermitStatus {
 enum TeamType {
   FIRST_TEAM
   YOUTH
+  B_TEAM
 }
 
 enum CoachStatus {
@@ -418,6 +423,96 @@ enum JerseyNumberStatus {
 enum MarketValueSource {
   MANUAL
   EXTERNAL_API
+}
+
+enum ApplicationSource {
+  SARAMIN
+  GLASSDOOR
+  INDEED
+  DIRECT
+}
+
+enum LeagueLevel {
+  K3
+  K_LEAGUE_2
+  K_LEAGUE_1
+  EPL
+  OTHER
+}
+
+enum DepartmentCategory {
+  COMPLIANCE
+  PERFORMANCE
+  FINANCE
+  OPERATIONS
+}
+
+enum ContractType {
+  PROFESSIONAL
+  SEMI_PROFESSIONAL
+}
+
+enum FacilityZone {
+  GROUND
+  MECHANICAL
+  STRUCTURAL
+  SAFETY
+  SANITATION
+  OPERATIONS
+}
+
+enum InspectionType {
+  DAILY
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+}
+
+enum InspectionResult {
+  OK
+  ISSUE_FOUND
+}
+
+enum MaintenancePriority {
+  EMERGENCY
+  HIGH
+  NORMAL
+}
+
+enum MaintenanceStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum SponsorType {
+  TITLE
+  KIT
+  STADIUM_NAMING
+  DIGITAL
+  OTHER
+}
+
+enum PaymentSchedule {
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+}
+
+enum SponsorshipPaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
+enum PayrollCountry {
+  KR
+  UK
+}
+
+enum PayrollRunStatus {
+  DRAFT
+  CONFIRMED
 }
 
 // ─────────────────────────────────────────────
@@ -538,6 +633,11 @@ model User {
   receivedEvaluations      CoachingStaffEvaluation[] @relation("EvaluationReceiver")
   staffRecordsCreated      StaffRecord[]             @relation("StaffRecordCreator")
   mealExpensesCreated      MealExpense[]             @relation("MealExpenseCreator")
+  inspectedFacilities      FacilityInspection[]      @relation("FacilityInspector")
+  maintenanceRequests      MaintenanceRequest[]      @relation("MaintenanceRequestCreator")
+  createdSponsorships      Sponsorship[]             @relation("SponsorshipCreator")
+  staffSalary              StaffSalary[]             @relation("UserSalary")
+  confirmedPayrolls        PayrollRun[]              @relation("PayrollRunConfirmer")
   budgetOverrideLogs       BudgetOverrideLog[]       @relation("BudgetOverrideLogCreator")
   operatingExpenses        OperatingExpense[]        @relation("OperatingExpenseCreator")
   createdPostings          JobPosting[]              @relation("JobPostingCreator")
@@ -556,6 +656,7 @@ model Season {
   status       SeasonStatus @default(UPCOMING)
   wageCapType  WageCapType?
   wageCapValue Float?
+  leagueLevel  LeagueLevel?
 
   matches           Match[]
   trainingSessions  TrainingSession[]
@@ -563,6 +664,7 @@ model Season {
   developmentPlans  PlayerDevelopmentPlan[]
   financialReport   FinancialReport?
   operatingExpenses OperatingExpense[]
+  complianceCheck   SeasonComplianceCheck?
 }
 
 model Player {
@@ -628,8 +730,9 @@ model Contract {
   startDate   DateTime
   endDate     DateTime
   salary      Int
-  status      ContractStatus @default(ACTIVE)
-  playerId    String
+  status       ContractStatus @default(ACTIVE)
+  contractType ContractType   @default(PROFESSIONAL)
+  playerId     String
   managedById Int?
 
   player             Player             @relation(fields: [playerId], references: [id])
@@ -733,7 +836,8 @@ model PartnerContract {
   notes          String?
   createdAt      DateTime              @default(now())
 
-  partner Partner @relation(fields: [partnerId], references: [id])
+  partner      Partner       @relation(fields: [partnerId], references: [id])
+  sponsorships Sponsorship[]
 }
 
 model EquipmentLoan {
@@ -1823,7 +1927,8 @@ model StaffRecord {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  createdBy User @relation("StaffRecordCreator", fields: [createdById], references: [id])
+  createdBy     User          @relation("StaffRecordCreator", fields: [createdById], references: [id])
+  staffSalaries StaffSalary[]
 }
 
 model MealExpense {
@@ -1864,6 +1969,7 @@ model Department {
   isActive     Boolean            @default(true)
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
+  category     DepartmentCategory?
   parentId     Int?
   headId       Int?
   parent       Department?        @relation("DepartmentHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
@@ -1872,6 +1978,7 @@ model Department {
   staffRecords StaffRecord[]
   postings     JobPosting[]
   members      UserDepartment[]
+  ibiConfigs   DepartmentIbiConfig[]
 }
 
 enum DeptRole {
@@ -2025,13 +2132,17 @@ model JobApplication {
   offeredAt     DateTime?
   offeredById   Int?
   createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @updatedAt
+  updatedAt            DateTime             @updatedAt
+  source               ApplicationSource?
+  externalApplicantId  String?
 
   posting        JobPosting      @relation(fields: [postingId], references: [id])
   offeredBy      User?           @relation("ApplicationOffer", fields: [offeredById], references: [id])
   interviews     Interview[]
   referenceCheck ReferenceCheck?
   onboarding     Onboarding?
+
+  @@unique([postingId, externalApplicantId])
 }
 
 model Interview {
@@ -2079,4 +2190,195 @@ model Onboarding {
 
   application JobApplication @relation(fields: [applicationId], references: [id])
   user        User?          @relation("OnboardingUser", fields: [userId], references: [id])
+}
+
+// ─────────────────────────────────────────────
+// 채용 자동화
+// ─────────────────────────────────────────────
+
+model LeagueLevelWeightConfig {
+  id               Int                @id @default(autoincrement())
+  leagueLevel      LeagueLevel
+  category         DepartmentCategory
+  weight           Decimal            @db.Decimal(5, 4)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@unique([leagueLevel, category])
+}
+
+model DepartmentIbiConfig {
+  id                Int        @id @default(autoincrement())
+  departmentId      Int
+  jobTitle          String
+  coreTaskRatio     Decimal    @db.Decimal(4, 3)
+  replacementDays   Int
+  backupHeadcount   Int
+  effectiveFrom     DateTime
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  department Department @relation(fields: [departmentId], references: [id])
+
+  @@unique([departmentId, jobTitle, effectiveFrom])
+}
+
+model SeasonComplianceCheck {
+  id                    Int       @id @default(autoincrement())
+  seasonId              Int       @unique
+  afcQualificationMet   Boolean   @default(false)
+  officeStaffCountMet   Boolean   @default(false)
+  checkedAt             DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  season Season @relation(fields: [seasonId], references: [id])
+}
+
+model ComplianceDeadline {
+  id                Int      @id @default(autoincrement())
+  name              String
+  deadlineDate      DateTime
+  triggerDaysBefore Int
+  betaMultiplier    Decimal  @db.Decimal(4, 2)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────
+// 시설 관리
+// ─────────────────────────────────────────────
+
+model FacilityInspection {
+  id                  Int              @id @default(autoincrement())
+  type                InspectionType
+  facilityZone        FacilityZone
+  result              InspectionResult
+  isStatutory         Boolean          @default(false)
+  certificateUrl      String?
+  statutoryDeadline   DateTime?
+  inspectedById       Int
+  inspectedAt         DateTime         @default(now())
+  notes               String?
+  createdAt           DateTime         @default(now())
+
+  inspectedBy         User               @relation("FacilityInspector", fields: [inspectedById], references: [id])
+  maintenanceRequests MaintenanceRequest[]
+}
+
+model MaintenanceRequest {
+  id                  Int                 @id @default(autoincrement())
+  title               String
+  description         String              @db.Text
+  priority            MaintenancePriority
+  status              MaintenanceStatus   @default(OPEN)
+  sourceInspectionId  Int?
+  postIncidentReport  String?             @db.Text
+  estimatedCost       Decimal?            @db.Decimal(12, 2)
+  actualCost          Decimal?            @db.Decimal(12, 2)
+  resolvedAt          DateTime?
+  createdById         Int
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  sourceInspection FacilityInspection? @relation(fields: [sourceInspectionId], references: [id])
+  createdBy        User                @relation("MaintenanceRequestCreator", fields: [createdById], references: [id])
+}
+
+// ─────────────────────────────────────────────
+// 스폰서십
+// ─────────────────────────────────────────────
+
+model Sponsorship {
+  id                 Int             @id @default(autoincrement())
+  sponsorName        String
+  type               SponsorType
+  totalFee           Decimal         @db.Decimal(14, 2)
+  contractStart      DateTime
+  contractEnd        DateTime
+  paymentSchedule    PaymentSchedule
+  attachedContractId Int?
+  createdById        Int
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  attachedContract PartnerContract?     @relation(fields: [attachedContractId], references: [id])
+  createdBy        User                 @relation("SponsorshipCreator", fields: [createdById], references: [id])
+  payments         SponsorshipPayment[]
+}
+
+model SponsorshipPayment {
+  id            Int                      @id @default(autoincrement())
+  sponsorshipId Int
+  dueDate       DateTime
+  amount        Decimal                  @db.Decimal(14, 2)
+  paidAt        DateTime?
+  status        SponsorshipPaymentStatus @default(PENDING)
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+
+  sponsorship Sponsorship @relation(fields: [sponsorshipId], references: [id])
+}
+
+// ─────────────────────────────────────────────
+// 급여 관리
+// ─────────────────────────────────────────────
+
+model PayrollConfig {
+  id            Int            @id @default(autoincrement())
+  country       PayrollCountry
+  insuranceType String
+  employeeRate  Decimal        @db.Decimal(6, 5)
+  employerRate  Decimal        @db.Decimal(6, 5)
+  effectiveFrom DateTime
+  createdAt     DateTime       @default(now())
+
+  @@unique([country, insuranceType, effectiveFrom])
+}
+
+model StaffSalary {
+  id            Int            @id @default(autoincrement())
+  userId        Int?
+  staffRecordId Int?
+  baseSalary    Decimal        @db.Decimal(12, 2)
+  country       PayrollCountry
+  effectiveFrom DateTime
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  user        User?            @relation("UserSalary", fields: [userId], references: [id])
+  staffRecord StaffRecord?     @relation(fields: [staffRecordId], references: [id])
+  allowances  StaffAllowance[]
+  payrollRuns PayrollRun[]
+}
+
+model StaffAllowance {
+  id            Int         @id @default(autoincrement())
+  staffSalaryId Int
+  name          String
+  amount        Decimal     @db.Decimal(12, 2)
+  taxable       Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+
+  staffSalary StaffSalary @relation(fields: [staffSalaryId], references: [id])
+}
+
+model PayrollRun {
+  id              Int              @id @default(autoincrement())
+  staffSalaryId   Int
+  month           DateTime
+  grossPay        Decimal          @db.Decimal(12, 2)
+  totalDeductions Decimal          @db.Decimal(12, 2)
+  netPay          Decimal          @db.Decimal(12, 2)
+  status          PayrollRunStatus @default(DRAFT)
+  confirmedById   Int?
+  confirmedAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  staffSalary StaffSalary @relation(fields: [staffSalaryId], references: [id])
+  confirmedBy User?       @relation("PayrollRunConfirmer", fields: [confirmedById], references: [id])
+
+  @@unique([staffSalaryId, month])
 }
