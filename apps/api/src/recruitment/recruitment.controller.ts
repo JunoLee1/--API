@@ -22,10 +22,10 @@ const canRead = (role: string, foRole: string | null | undefined, coachRole: str
 
 const canWrite = (role: string, foRole: string | null | undefined) =>
   role === "ADMIN" ||
-  (role === "FRONT_OFFICE" && (foRole === "GM" || foRole === "HR_MANAGER"));
+  (role === "FRONT_OFFICE" && foRole === "HR_MANAGER");
 
 const canApprove = (role: string, foRole: string | null | undefined) =>
-  role === "ADMIN" || (role === "FRONT_OFFICE" && foRole === "GM");
+  role === "ADMIN" || (role === "FRONT_OFFICE" && foRole === "HR_MANAGER");
 
 export class RecruitmentController {
   constructor(private service: RecruitmentService) {}
