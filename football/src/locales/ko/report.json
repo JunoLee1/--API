@@ -26,6 +26,8 @@
   "status": {
     "DRAFT": "초안",
     "SUBMITTED": "제출됨",
+    "FIRST_APPROVED": "1차 승인",
+    "SECOND_APPROVED": "2차 승인",
     "APPROVED": "승인",
     "REJECTED": "반려"
   },
@@ -81,6 +83,8 @@
     "createdAtLabel": "작성일",
     "submittedAtLabel": "제출일",
     "reviewedAtLabel": "결재일",
+    "firstApprovedAtLabel": "1차 승인일",
+    "secondApprovedAtLabel": "2차 승인일",
     "rejectionReasonLabel": "반려 사유",
     "contentLabel": "내용",
     "attachLabel": "첨부 파일",
