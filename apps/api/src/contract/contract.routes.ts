@@ -1,5 +1,5 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import passport from "passport";
 import { ContractController } from "./contract.controller";
 import { ContractService } from "./contract.service";
 import { ContractRepository } from "./contract.repo";
@@ -12,7 +12,6 @@ const wageCapService = new WageCapService(getPrisma());
 const service = new ContractService(repo, wageCapService);
 const controller = new ContractController(service);
 
-const auth = passport.authenticate("accessToken", { session: false });
 
 // 선수별 계약 목록
 router.get("/player/:playerId", auth, controller.getByPlayer);

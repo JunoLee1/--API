@@ -1,12 +1,11 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import passport from "passport";
 import { DepartmentRepository } from "./department.repo";
 import { DepartmentService } from "./department.service";
 import { DepartmentController } from "./department.controller";
 import { getPrisma } from "../lib/prisma";
 
 const router = Router();
-const auth = passport.authenticate("accessToken", { session: false });
 const repo = new DepartmentRepository(getPrisma());
 const service = new DepartmentService(repo);
 const controller = new DepartmentController(service);

@@ -35,11 +35,16 @@ export function forceLogout() {
   }
 }
 
+function getSuperAdminHeaders(): Record<string, string> {
+  const teamId = localStorage.getItem('superAdminTeamId')
+  return teamId ? { 'X-Team-Id': teamId } : {}
+}
+
 async function doFetch(method: HttpMethod, path: string, body?: unknown): Promise<Response> {
   return fetch(`${BASE_URL}${path}`, {
     method,
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getSuperAdminHeaders() },
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
   })
 }
@@ -91,7 +96,7 @@ async function requestForm<T>(method: 'POST' | 'PATCH', path: string, form: Form
   notifyPending()
   try {
     const doForm = () =>
-      fetch(`${BASE_URL}${path}`, { method, credentials: 'include', body: form })
+      fetch(`${BASE_URL}${path}`, { method, credentials: 'include', body: form, headers: getSuperAdminHeaders() })
     let res = await doForm()
     if (res.status === 401) {
       try {

@@ -1,12 +1,11 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import passport from "passport";
 import { StaffRecordRepository } from "./staff-record.repo";
 import { StaffRecordService } from "./staff-record.service";
 import { StaffRecordController } from "./staff-record.controller";
 import { getPrisma } from "../lib/prisma";
 
 const router = Router();
-const auth = passport.authenticate("accessToken", { session: false });
 const repo = new StaffRecordRepository(getPrisma());
 const service = new StaffRecordService(repo);
 const controller = new StaffRecordController(service);

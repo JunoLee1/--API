@@ -1,5 +1,5 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import passport from "passport";
 import { EquipmentController } from "./equipment.controller";
 import { EquipmentService } from "./equipment.service";
 import { EquipmentRepository } from "./equipment.repo";
@@ -12,7 +12,6 @@ const notificationRepo = new NotificationRepository(getPrisma());
 const service = new EquipmentService(equipmentRepo, notificationRepo);
 const controller = new EquipmentController(service);
 
-const auth = passport.authenticate("accessToken", { session: false });
 
 // Loan routes (static paths first)
 router.get("/loans", auth, controller.listLoans);

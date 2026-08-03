@@ -1,5 +1,5 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import passport from "passport";
 import { getPrisma } from "../lib/prisma";
 import { NotificationRepository } from "../notification/notification.repo";
 import { NotificationService } from "../notification/notification.service";
@@ -11,7 +11,6 @@ import { MaintenanceService } from "./maintenance/maintenance.service";
 import { MaintenanceController } from "./maintenance/maintenance.controller";
 
 const router = Router();
-const auth = passport.authenticate("accessToken", { session: false });
 
 const notificationService = new NotificationService(new NotificationRepository(getPrisma()));
 const maintenanceRepo = new MaintenanceRepository(getPrisma());

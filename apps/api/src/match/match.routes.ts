@@ -1,5 +1,5 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import passport from "passport";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -16,7 +16,6 @@ const repo = new MatchRepository(getPrisma());
 const service = new MatchService(repo);
 const controller = new MatchController(service);
 
-const auth = passport.authenticate("accessToken", { session: false });
 
 const statSheetUploadDir = path.join(process.cwd(), "uploads", "stat-sheets");
 if (!fs.existsSync(statSheetUploadDir)) fs.mkdirSync(statSheetUploadDir, { recursive: true });

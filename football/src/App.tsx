@@ -65,6 +65,7 @@ import HrReportPage from '@/pages/admin/HrReportPage'
 import { JobPostingListPage } from '@/pages/admin/recruitment/JobPostingListPage'
 import { JobPostingDetailPage } from '@/pages/admin/recruitment/JobPostingDetailPage'
 import { ApplicationDetailPage } from '@/pages/admin/recruitment/ApplicationDetailPage'
+import { TeamSelectPage } from '@/pages/team-select/TeamSelectPage'
 
 function GrowthReportRedirect() {
   const { playerId } = useParams<{ playerId: string }>()
@@ -76,6 +77,13 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   return loggedIn ? <>{children}</> : <Navigate to="/login" replace />
 }
 
+function SuperAdminGuard({ children }: { children: React.ReactNode }) {
+  const isSuperAdmin = localStorage.getItem('userRole') === 'SUPER_ADMIN'
+  const hasTeam = !!localStorage.getItem('superAdminTeamId')
+  if (isSuperAdmin && !hasTeam) return <Navigate to="/team-select" replace />
+  return <>{children}</>
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -84,9 +92,20 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
 
           <Route
+            path="/team-select"
             element={
               <PrivateRoute>
-                <AppShell />
+                <TeamSelectPage />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            element={
+              <PrivateRoute>
+                <SuperAdminGuard>
+                  <AppShell />
+                </SuperAdminGuard>
               </PrivateRoute>
             }
           >

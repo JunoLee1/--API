@@ -1,12 +1,11 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import passport from "passport";
 import { getPrisma } from "../lib/prisma";
 import { SponsorshipRepository } from "./sponsorship.repo";
 import { SponsorshipService } from "./sponsorship.service";
 import { SponsorshipController } from "./sponsorship.controller";
 
 const router = Router();
-const auth = passport.authenticate("accessToken", { session: false });
 
 const repo = new SponsorshipRepository(getPrisma());
 const service = new SponsorshipService(repo);

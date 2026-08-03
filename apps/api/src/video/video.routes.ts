@@ -1,5 +1,5 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import passport from "passport";
 import { VideoController } from "./video.controller";
 import { VideoService } from "./video.service";
 import { VideoRepository } from "./video.repo";
@@ -12,7 +12,6 @@ const notifRepo = new NotificationRepository(getPrisma());
 const service = new VideoService(repo, notifRepo);
 const controller = new VideoController(service);
 
-const auth = passport.authenticate("accessToken", { session: false });
 
 router.get("/", auth, controller.getVideos);
 router.get("/my-assignments", auth, controller.getMyAssignments);
