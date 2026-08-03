@@ -1,5 +1,5 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import passport from "passport";
 import { getPrisma } from "../lib/prisma";
 import { HiringAutomationRepository } from "./hiring-automation.repo";
 import { HiringAutomationService } from "./hiring-automation.service";
@@ -7,7 +7,6 @@ import { HiringAutomationController } from "./hiring-automation.controller";
 import { AppError } from "../lib/appError";
 
 const router = Router();
-const auth = passport.authenticate("accessToken", { session: false });
 const repo = new HiringAutomationRepository(getPrisma());
 const service = new HiringAutomationService(repo);
 const controller = new HiringAutomationController(service);

@@ -1,5 +1,5 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import passport from "passport";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -15,7 +15,6 @@ const notifRepo = new NotificationRepository(getPrisma());
 const service = new TacticalService(repo, notifRepo);
 const controller = new TacticalController(service);
 
-const auth = passport.authenticate("accessToken", { session: false });
 
 const uploadDir = path.join(process.cwd(), "uploads", "tactical-media");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });

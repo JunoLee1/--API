@@ -1,5 +1,5 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import passport from "passport";
 import { CoachRepository } from "./coach.repo";
 import { CoachService } from "./coach.service";
 import { CoachController } from "./coach.controller";
@@ -8,7 +8,6 @@ import { getPrisma } from "../lib/prisma";
 const repo = new CoachRepository(getPrisma());
 const service = new CoachService(repo);
 const controller = new CoachController(service);
-const auth = passport.authenticate("accessToken", { session: false });
 
 const router = Router();
 

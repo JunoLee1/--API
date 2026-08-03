@@ -1,5 +1,5 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import passport = require("passport");
 import { SeasonController } from "./season.controller";
 import { SeasonService } from "./season.service";
 import { SeasonRepository } from "./season.repo";
@@ -11,7 +11,6 @@ const repo = new SeasonRepository(prisma);
 const service = new SeasonService(repo);
 const controller = new SeasonController(service);
 
-const auth = passport.authenticate("accessToken", { session: false });
 
 // 시즌 생성 (ADMIN)
 router.post("/", auth, controller.createSeason);

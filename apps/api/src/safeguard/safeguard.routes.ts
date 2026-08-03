@@ -1,5 +1,5 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from 'express'
-import passport from 'passport'
 import { SafeguardController } from './safeguard.controller'
 import { SafeguardService } from './safeguard.service'
 import { SafeguardRepository } from './safeguard.repo'
@@ -13,7 +13,6 @@ const notifRepo = new NotificationRepository(prisma)
 const service = new SafeguardService(repo, notifRepo)
 const controller = new SafeguardController(service)
 
-const auth = passport.authenticate('accessToken', { session: false })
 
 function adminOnly(req: any, res: any, next: any) {
   if (req.user?.role !== 'ADMIN') return res.status(403).json({ message: 'Forbidden' })

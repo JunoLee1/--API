@@ -1,5 +1,5 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import passport from "passport";
 import { TeamController } from "./team.controller";
 import { TeamService } from "./team.service";
 import { TeamRepository } from "./team.repo";
@@ -9,7 +9,6 @@ const router = Router();
 const repo = new TeamRepository(getPrisma());
 const service = new TeamService(repo);
 const controller = new TeamController(service);
-const auth = passport.authenticate("accessToken", { session: false });
 
 router.get("/", auth, controller.getAll);
 router.get("/:id", auth, controller.getById);

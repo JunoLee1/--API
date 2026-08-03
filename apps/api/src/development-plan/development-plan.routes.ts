@@ -1,5 +1,5 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import passport from "passport";
 import { DevelopmentPlanController } from "./development-plan.controller";
 import { DevelopmentPlanService } from "./development-plan.service";
 import { DevelopmentPlanRepository } from "./development-plan.repo";
@@ -13,7 +13,6 @@ const notifRepo = new NotificationRepository(prisma);
 const service = new DevelopmentPlanService(repo, notifRepo);
 const controller = new DevelopmentPlanController(service);
 
-const auth = passport.authenticate("accessToken", { session: false });
 
 router.get("/", auth, controller.getAll);
 router.get("/:id", auth, controller.getById);

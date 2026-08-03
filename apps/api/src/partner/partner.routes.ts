@@ -1,5 +1,5 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import passport from "passport";
 import { PartnerController } from "./partner.controller";
 import { PartnerService } from "./partner.service";
 import { PartnerRepository } from "./partner.repo";
@@ -10,7 +10,6 @@ const repo = new PartnerRepository(getPrisma());
 const service = new PartnerService(repo);
 const controller = new PartnerController(service);
 
-const auth = passport.authenticate("accessToken", { session: false });
 
 router.get("/", auth, controller.list);
 router.post("/", auth, controller.create);
