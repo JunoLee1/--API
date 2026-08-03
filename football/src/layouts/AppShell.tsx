@@ -71,6 +71,11 @@ import {
   Wallet,
   Warehouse,
   Wrench,
+  CalendarDays,
+  History,
+  GraduationCap,
+  PieChart,
+  Handshake,
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -361,6 +366,14 @@ const NAV_ITEMS: NavItem[] = [
     section: 'nav.section.management',
     subSection: 'nav.subsection.hr',
     roles: ['ADMIN'],
+  },
+  {
+    to: '/sponsorship',
+    label: 'nav.item.sponsorship',
+    icon: Handshake,
+    section: 'nav.section.management',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['GM', 'FINANCE_MANAGER', 'FINANCE_STAFF'],
   },
   {
     to: '/admin/hr-report',
