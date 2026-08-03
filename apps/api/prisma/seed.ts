@@ -2247,7 +2247,8 @@ async function main() {
 
   console.log("✅ Seed complete");
   console.log(`   - Countries: 2`);
-  console.log(`   - Users: 20 + 10 유소년 / pw: Password1!`);
+  console.log(`   - Users: 21 + 10 유소년 / pw: Password1!`);
+  console.log(`     SUPER_ADMIN : superadmin@platform.com`);
   console.log(`     ADMIN       : admin@club.com`);
   console.log(`     FRONT_OFFICE: gm@club.com (GM)`);
   console.log(`     FRONT_OFFICE: td@club.com (TD)`);
