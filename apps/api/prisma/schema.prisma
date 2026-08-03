@@ -64,6 +64,7 @@ enum FrontOfficeRole {
   HR_STAFF
   ASSET_STAFF
   FINANCE_STAFF
+  FACILITY_STAFF
 }
 
 enum PlayerLevel {
