@@ -17,7 +17,7 @@ import type {
 
 const canRead = (role: string, foRole: string | null | undefined, coachRole: string | null | undefined) =>
   role === "ADMIN" ||
-  (role === "FRONT_OFFICE" && (foRole === "GM" || foRole === "HR_MANAGER")) ||
+  (role === "FRONT_OFFICE" && (foRole === "GM" || foRole === "TD" || foRole === "HR_MANAGER")) ||
   (role === "COACHING_STAFF" && coachRole === "HEAD_COACH");
 
 const canWrite = (role: string, foRole: string | null | undefined) =>

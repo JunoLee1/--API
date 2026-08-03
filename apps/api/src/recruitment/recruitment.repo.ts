@@ -16,6 +16,7 @@ const POSTING_INCLUDE = {
   department: { select: { id: true, name: true } },
   createdBy: { select: { id: true, username: true } },
   approvedBy: { select: { id: true, username: true } },
+  applications: { select: { id: true } },
 } as const;
 
 const APPLICATION_INCLUDE = {
