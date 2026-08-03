@@ -1,5 +1,6 @@
 import { DepartmentRepository } from "./department.repo";
 import { AppError } from "../lib/appError";
+import type { DepartmentCategory } from "../generated/enums";
 
 export class DepartmentService {
   constructor(private repo: DepartmentRepository) {}
@@ -14,7 +15,7 @@ export class DepartmentService {
     return dept;
   }
 
-  async create(data: { name: string; parentId?: number }) {
+  async create(data: { name: string; parentId?: number; category?: DepartmentCategory | null }) {
     const existing = await this.repo.findByName(data.name);
     if (existing) throw new AppError(409, "DEPARTMENT_NAME_CONFLICT");
     if (data.parentId !== undefined) {
@@ -24,7 +25,7 @@ export class DepartmentService {
     return this.repo.create(data);
   }
 
-  async update(id: number, data: { name?: string; isActive?: boolean; parentId?: number | null }) {
+  async update(id: number, data: { name?: string; isActive?: boolean; parentId?: number | null; category?: DepartmentCategory | null }) {
     await this.get(id);
     if (data.name !== undefined) {
       const existing = await this.repo.findByName(data.name);

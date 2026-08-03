@@ -1,4 +1,5 @@
 import { PrismaClient } from "../generated/client";
+import type { DepartmentCategory } from "../generated/enums";
 
 export class DepartmentRepository {
   constructor(private prisma: PrismaClient) {}
@@ -22,14 +23,14 @@ export class DepartmentRepository {
     return this.prisma.department.findUnique({ where: { name } });
   }
 
-  create(data: { name: string; parentId?: number }) {
+  create(data: { name: string; parentId?: number; category?: DepartmentCategory | null }) {
     return this.prisma.department.create({
       data,
       include: { children: { orderBy: { name: "asc" } }, parent: true },
     });
   }
 
-  update(id: number, data: { name?: string; isActive?: boolean; parentId?: number | null }) {
+  update(id: number, data: { name?: string; isActive?: boolean; parentId?: number | null; category?: DepartmentCategory | null }) {
     return this.prisma.department.update({
       where: { id },
       data,
