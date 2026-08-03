@@ -87,4 +87,18 @@ describe('PlayerCallupRepository', () => {
     const list = await repo().findAll({ status: 'APPROVED' });
     expect(list.some((c) => c.id === callupId)).toBe(true);
   });
+
+  it('TRAINING 콜업 생성 시 callupType=TRAINING 반환', async () => {
+    const r = await repo().create({
+      playerId: testPlayerId,
+      fromTeamId: teamId,
+      toTeamId: teamId,
+      requestedById: headCoachUserId,
+      reason: '훈련 참가',
+      startDate: '2026-08-01',
+      callupType: 'TRAINING',
+    });
+    expect(r.callupType).toBe('TRAINING');
+    await prisma.playerCallup.delete({ where: { id: r.id } });
+  });
 });

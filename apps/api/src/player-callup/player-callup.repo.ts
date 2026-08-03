@@ -4,6 +4,7 @@ import { CreateCallupDto, CallupListQuery } from "./dto/player-callup.dto";
 const SELECT = {
   id: true,
   status: true,
+  callupType: true,
   reason: true,
   rejectionReason: true,
   startDate: true,
@@ -41,6 +42,19 @@ export class PlayerCallupRepository {
     });
   }
 
+  findActiveContract(playerId: string) {
+    const now = new Date();
+    return this.prisma.contract.findFirst({
+      where: {
+        playerId,
+        status: "ACTIVE",
+        startDate: { lte: now },
+        endDate: { gte: now },
+      },
+      select: { id: true },
+    });
+  }
+
   create(dto: CreateCallupDto & { requestedById: number }) {
     return this.prisma.playerCallup.create({
       data: {
@@ -51,6 +65,7 @@ export class PlayerCallupRepository {
         reason: dto.reason,
         startDate: new Date(dto.startDate),
         endDate: dto.endDate ? new Date(dto.endDate) : null,
+        callupType: dto.callupType ?? "OFFICIAL",
       },
       select: SELECT,
     });

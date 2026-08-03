@@ -5,6 +5,7 @@ export interface CreateCallupDto {
   reason: string;
   startDate: string;
   endDate?: string;
+  callupType?: "TRAINING" | "OFFICIAL";
 }
 
 export interface RejectCallupDto {
