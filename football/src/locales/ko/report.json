@@ -20,7 +20,8 @@
     "PERFORMANCE": "성과",
     "HR": "HR",
     "FINANCIAL": "재무",
-    "MEDICAL": "의무보고서"
+    "MEDICAL": "의무보고서",
+    "ASSET": "자산관리"
   },
   "status": {
     "DRAFT": "초안",

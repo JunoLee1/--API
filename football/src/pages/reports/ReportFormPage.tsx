@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select'
 import { ArrowLeft, Paperclip, X } from 'lucide-react'
 
-const ALL_TYPES: ReportType[] = ['PERFORMANCE', 'MEDICAL', 'TRAINING', 'HR', 'FINANCIAL']
+const ALL_TYPES: ReportType[] = ['PERFORMANCE', 'MEDICAL', 'TRAINING', 'HR', 'FINANCIAL', 'ASSET']
 
 export function ReportFormPage() {
   const { t } = useTranslation('report')
@@ -29,6 +29,7 @@ export function ReportFormPage() {
   const TYPES = ALL_TYPES.filter((tp) => {
     if (tp === 'HR') return isAdmin || foRole === 'HR_MANAGER'
     if (tp === 'FINANCIAL') return isAdmin || foRole === 'FINANCE_MANAGER' || foRole === 'GM'
+    if (tp === 'ASSET') return isAdmin || foRole === 'ASSET_MANAGER'
     return true
   })
   const fileRef = useRef<HTMLInputElement>(null)

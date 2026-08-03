@@ -20,7 +20,8 @@
     "PERFORMANCE": "Performance",
     "HR": "HR",
     "FINANCIAL": "Financial",
-    "MEDICAL": "Medical"
+    "MEDICAL": "Medical",
+    "ASSET": "Asset"
   },
   "status": {
     "DRAFT": "Draft",

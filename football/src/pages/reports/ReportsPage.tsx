@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/table'
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 
-const ALL_TYPES: ReportType[] = ['PERFORMANCE', 'MEDICAL', 'TRAINING', 'HR', 'FINANCIAL']
+const ALL_TYPES: ReportType[] = ['PERFORMANCE', 'MEDICAL', 'TRAINING', 'HR', 'FINANCIAL', 'ASSET']
 const ALL_STATUSES: ReportStatus[] = ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED']
 const PAGE_SIZE = 10
 
@@ -36,7 +36,7 @@ function formatDate(d: string) {
   return new Date(d).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
 }
 
-const FO_CREATE_ROLES = ['GM', 'HR_MANAGER', 'FINANCE_MANAGER']
+const FO_CREATE_ROLES = ['GM', 'HR_MANAGER', 'FINANCE_MANAGER', 'ASSET_MANAGER']
 
 export function ReportsPage() {
   const { t } = useTranslation('report')
