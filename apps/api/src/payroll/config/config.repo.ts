@@ -29,7 +29,13 @@ export class ConfigRepository {
   }
 
   update(id: number, data: UpdatePayrollConfigDto) {
-    return this.prisma.payrollConfig.update({ where: { id }, data });
+    return this.prisma.payrollConfig.update({
+      where: { id },
+      data: {
+        ...(data.employeeRate !== undefined && { employeeRate: data.employeeRate }),
+        ...(data.employerRate !== undefined && { employerRate: data.employerRate }),
+      },
+    });
   }
 
   findActiveForCountry(country: PayrollCountry, month: Date) {
