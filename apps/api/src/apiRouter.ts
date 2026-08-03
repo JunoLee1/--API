@@ -41,6 +41,7 @@ import operatingExpenseRouter from "./operating-expense/operating-expense.routes
 import hrReportRouter from "./hr-report/hr-report.routes";
 import recruitmentRouter from "./recruitment/recruitment.routes";
 import facilityRouter from "./facility/facility.routes";
+import sponsorshipRouter from "./sponsorship/sponsorship.routes";
 
 const apiRouter = Router();
 
@@ -85,6 +86,7 @@ apiRouter.use("/financial-reports", financialReportRouter);
 apiRouter.use("/operating-expenses", operatingExpenseRouter);
 apiRouter.use("/hr-reports", hrReportRouter);
 apiRouter.use("/recruitment", recruitmentRouter);
+apiRouter.use("/sponsorships", sponsorshipRouter);
 apiRouter.use("/facility", facilityRouter);
 
 export default apiRouter;
