@@ -204,6 +204,22 @@ export class NotificationRepository {
     });
   }
 
+  createForAllStaff(type: string, getMsg: MsgFactory, entityId?: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const users = await tx.user.findMany({
+        where: { role: { notIn: ["PLAYER", "AGENT"] } },
+        select: { id: true, language: true },
+      });
+      if (users.length === 0) return;
+      await tx.notification.createMany({
+        data: users.map((u) => {
+          const { title, body } = getMsg(u.language);
+          return { userId: u.id, type, title, body, entityId };
+        }) as any,
+      });
+    });
+  }
+
   findExpiringContracts(withinDays: number) {
     const now = new Date();
     const threshold = new Date(now);
