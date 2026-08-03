@@ -303,7 +303,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: FileText,
     section: 'nav.section.management',
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
-    frontOfficeRoles: ['GM', 'TD', 'HR_MANAGER', 'FINANCE_MANAGER', 'ASSET_MANAGER', 'SCOUT'],
+    frontOfficeRoles: ['GM', 'TD', 'HR_MANAGER', 'HR_STAFF', 'FINANCE_MANAGER', 'FINANCE_STAFF', 'ASSET_MANAGER', 'ASSET_STAFF', 'SCOUT'],
   },
   {
     to: '/admin/departments',

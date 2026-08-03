@@ -27,9 +27,9 @@ export function ReportFormPage() {
   const isAdmin = user?.role === 'ADMIN'
   const foRole = user?.frontOfficeRole
   const TYPES = ALL_TYPES.filter((tp) => {
-    if (tp === 'HR') return isAdmin || foRole === 'HR_MANAGER'
-    if (tp === 'FINANCIAL') return isAdmin || foRole === 'FINANCE_MANAGER' || foRole === 'GM'
-    if (tp === 'ASSET') return isAdmin || foRole === 'ASSET_MANAGER'
+    if (tp === 'HR') return isAdmin || foRole === 'HR_MANAGER' || foRole === 'HR_STAFF'
+    if (tp === 'FINANCIAL') return isAdmin || foRole === 'FINANCE_MANAGER' || foRole === 'FINANCE_STAFF' || foRole === 'GM'
+    if (tp === 'ASSET') return isAdmin || foRole === 'ASSET_MANAGER' || foRole === 'ASSET_STAFF'
     return true
   })
   const fileRef = useRef<HTMLInputElement>(null)
