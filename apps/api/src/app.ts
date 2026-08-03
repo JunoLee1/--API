@@ -4,11 +4,11 @@ import APIRouter from "./apiRouter"
 import cors  = require("cors")
 import * as dotenv from "dotenv";
 import { errorHandler } from "./middleWare/ErrorHandler";
+import webhookRouter from "./webhook/webhook.routes";
 
 dotenv.config()
 const PORT = process.env.PORT || '5000';
 const app = express()
-app.use(express.json())
 app.use(cookieParser())
 app.use(
     cors({
@@ -17,7 +17,8 @@ app.use(
         credentials: true
     })
 )
-app.use("/api", APIRouter)
-app.use(errorHandler); 
+app.use("/webhooks", express.raw({ type: "application/json" }), webhookRouter)
+app.use("/api", express.json(), APIRouter)
+app.use(errorHandler);
 
 export default app

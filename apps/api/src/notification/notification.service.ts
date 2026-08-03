@@ -128,6 +128,32 @@ export class NotificationService {
     await this.repo.createForUser(playerUserId, "LINEUP_CONFIRMED", () => ({ title, body }), matchId);
   }
 
+  async notifyFacilityEmergency(requestTitle: string, requestId: number) {
+    const title = "시설 긴급 유지보수 요청";
+    const body = `'${requestTitle}' — 긴급 유지보수 요청이 등록됐습니다. 즉시 확인 바랍니다.`;
+    await this.repo.createForAllStaff("FACILITY_EMERGENCY", () => ({ title, body }), requestId);
+    getIO().to("staff-room").emit("notification:facility", {
+      type: "FACILITY_EMERGENCY",
+      title,
+      body,
+      requestId,
+      createdAt: new Date().toISOString(),
+    });
+  }
+
+  async notifyFacilityResolved(requestTitle: string, requestId: number) {
+    const title = "시설 유지보수 완료";
+    const body = `'${requestTitle}' 유지보수 요청이 해결됐습니다.`;
+    await this.repo.createForAllStaff("FACILITY_MAINTENANCE_RESOLVED", () => ({ title, body }), requestId);
+    getIO().to("staff-room").emit("notification:facility", {
+      type: "FACILITY_MAINTENANCE_RESOLVED",
+      title,
+      body,
+      requestId,
+      createdAt: new Date().toISOString(),
+    });
+  }
+
   async getPartnerAlerts() {
     const contracts = await this.repo.findExpiringContracts(30);
     return contracts.map((c) => {

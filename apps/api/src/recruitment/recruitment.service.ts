@@ -70,6 +70,9 @@ export class RecruitmentService {
 
   async updateApplication(id: number, dto: UpdateJobApplicationDto) {
     await this.getApplication(id);
+    if (dto.status !== undefined && dto.status !== "SCREENING") {
+      throw new AppError(400, "INVALID_STATUS_TRANSITION");
+    }
     return this.repo.updateApplication(id, dto);
   }
 
@@ -91,6 +94,9 @@ export class RecruitmentService {
     await this.getApplication(applicationId);
     const existing = await this.repo.findInterview(applicationId, dto.round);
     if (existing) throw new AppError(409, "INTERVIEW_ALREADY_EXISTS");
+    const targetStatus: "INTERVIEW_1" | "INTERVIEW_2" =
+      dto.round === "ROUND_1" ? "INTERVIEW_1" : "INTERVIEW_2";
+    await this.repo.setApplicationStatus(applicationId, targetStatus);
     return this.repo.createInterview(applicationId, dto);
   }
 
@@ -104,6 +110,7 @@ export class RecruitmentService {
 
   async createReferenceCheck(applicationId: number, dto: CreateReferenceCheckDto) {
     await this.getApplication(applicationId);
+    await this.repo.setApplicationStatus(applicationId, "REFERENCE_CHECK");
     return this.repo.createReferenceCheck(applicationId, dto);
   }
 

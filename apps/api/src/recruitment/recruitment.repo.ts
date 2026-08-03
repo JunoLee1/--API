@@ -10,12 +10,13 @@ import type {
   CreateReferenceCheckDto,
   UpdateReferenceCheckDto,
 } from "./dto/recruitment.dto";
-import type { InterviewRound } from "../generated/enums";
+import type { InterviewRound, JobApplicationStatus } from "../generated/enums";
 
 const POSTING_INCLUDE = {
   department: { select: { id: true, name: true } },
   createdBy: { select: { id: true, username: true } },
   approvedBy: { select: { id: true, username: true } },
+  applications: { select: { id: true } },
 } as const;
 
 const APPLICATION_INCLUDE = {
@@ -118,6 +119,14 @@ export class RecruitmentRepository {
     return this.prisma.jobApplication.update({
       where: { id },
       data: { status: "ONBOARDED" },
+      include: APPLICATION_INCLUDE,
+    });
+  }
+
+  setApplicationStatus(id: number, status: JobApplicationStatus) {
+    return this.prisma.jobApplication.update({
+      where: { id },
+      data: { status },
       include: APPLICATION_INCLUDE,
     });
   }

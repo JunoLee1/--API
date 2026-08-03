@@ -67,10 +67,36 @@ export class PlayerCallupService {
     return callup;
   }
 
-  async approve(id: number, approvedById: number) {
+  async approve(id: number, approvedById: number, isGM: boolean) {
     const callup = await this.repo.findById(id);
     if (!callup) throw new AppError(404, "CALLUP_NOT_FOUND");
+
+    if (callup.callupType === "TRAINING") {
+      if (callup.status !== "REQUESTED") throw new AppError(409, "INVALID_STATUS");
+
+      const updated = await this.repo.approve(id, approvedById);
+
+      void this.notifRepo
+        .createForUser(
+          callup.requestedBy.id,
+          "CALLUP_APPROVED",
+          () => ({
+            title: "훈련 콜업 승인",
+            body: `${callup.player.playerName} 선수의 훈련 참가 콜업이 승인됐습니다.`,
+          }),
+          id,
+        )
+        .catch(console.error);
+
+      return updated;
+    }
+
+    // OFFICIAL — GM만 승인 가능
+    if (!isGM) throw new AppError(403, "FORBIDDEN");
     if (callup.status !== "DOCS_SUBMITTED") throw new AppError(409, "INVALID_STATUS");
+
+    const contract = await this.repo.findActiveContract(callup.player.id);
+    if (!contract) throw new AppError(409, "NO_ACTIVE_CONTRACT");
 
     const updated = await this.repo.approve(id, approvedById);
     await this.repo.updatePlayerTeam(callup.player.id, callup.toTeam.id);
@@ -112,13 +138,13 @@ export class PlayerCallupService {
       )
       .catch(console.error);
 
-
     return updated;
   }
 
   async confirmYouth(id: number, actorTeamId: number | null) {
     const callup = await this.repo.findById(id);
     if (!callup) throw new AppError(404, "CALLUP_NOT_FOUND");
+    if (callup.callupType === "TRAINING") throw new AppError(409, "INVALID_CALLUP_TYPE");
     if (callup.status !== "REQUESTED") throw new AppError(409, "INVALID_STATUS");
     if (actorTeamId !== callup.fromTeam.id) throw new AppError(403, "FORBIDDEN");
 
@@ -137,6 +163,7 @@ export class PlayerCallupService {
   async confirmMedical(id: number) {
     const callup = await this.repo.findById(id);
     if (!callup) throw new AppError(404, "CALLUP_NOT_FOUND");
+    if (callup.callupType === "TRAINING") throw new AppError(409, "INVALID_CALLUP_TYPE");
     if (callup.status !== "REQUESTED") throw new AppError(409, "INVALID_STATUS");
 
     const updated = await this.repo.confirmMedical(id);
@@ -155,9 +182,14 @@ export class PlayerCallupService {
     const callup = await this.repo.findById(id);
     if (!callup) throw new AppError(404, "CALLUP_NOT_FOUND");
     if (callup.status !== "APPROVED") throw new AppError(409, "INVALID_STATUS");
+
     const completed = await this.repo.complete(id);
-    await this.repo.updatePlayerTeam(callup.player.id, callup.fromTeam.id);
-    await writeAuditLog({ actorId, action: "CALLUP_COMPLETED", targetId: id });
+
+    if (callup.callupType === "OFFICIAL") {
+      await this.repo.updatePlayerTeam(callup.player.id, callup.fromTeam.id);
+      await writeAuditLog({ actorId, action: "CALLUP_COMPLETED", targetId: id });
+    }
+
     return completed;
   }
 }

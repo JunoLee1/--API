@@ -1,0 +1,81 @@
+import { AppError } from "../lib/appError";
+import type { SponsorshipRepository } from "./sponsorship.repo";
+import type { CreateSponsorshipDto, UpdateSponsorshipDto, SponsorshipListQuery } from "./dto/sponsorship.dto";
+import type { PaymentSchedule } from "../generated/enums";
+
+export function generatePaymentDates(start: Date, end: Date, schedule: PaymentSchedule): Date[] {
+  const dates: Date[] = [];
+  const current = new Date(start);
+  while (current <= end) {
+    dates.push(new Date(current));
+    if (schedule === "MONTHLY") current.setMonth(current.getMonth() + 1);
+    else if (schedule === "QUARTERLY") current.setMonth(current.getMonth() + 3);
+    else current.setFullYear(current.getFullYear() + 1);
+  }
+  return dates;
+}
+
+export class SponsorshipService {
+  constructor(private repo: SponsorshipRepository) {}
+
+  list(query: SponsorshipListQuery) {
+    return this.repo.findAll(query);
+  }
+
+  async get(id: number) {
+    const record = await this.repo.findById(id);
+    if (!record) throw new AppError(404, "SPONSORSHIP_NOT_FOUND");
+    return { ...record, payments: this.applyOverdue(record.payments) };
+  }
+
+  async create(dto: CreateSponsorshipDto, createdById: number) {
+    const sponsorship = await this.repo.create({ ...dto, createdById });
+    const dates = generatePaymentDates(
+      new Date(dto.contractStart),
+      new Date(dto.contractEnd),
+      dto.paymentSchedule,
+    );
+    if (dates.length > 0) {
+      const count = dates.length;
+      const baseAmount = Math.floor((dto.totalFee * 100) / count) / 100;
+      const lastAmount = parseFloat((dto.totalFee - baseAmount * (count - 1)).toFixed(2));
+      await this.repo.createPayments(
+        dates.map((dueDate, i) => ({
+          sponsorshipId: sponsorship.id,
+          dueDate,
+          amount: i === count - 1 ? lastAmount : baseAmount,
+        })),
+      );
+    }
+    return this.get(sponsorship.id);
+  }
+
+  async update(id: number, dto: UpdateSponsorshipDto) {
+    await this.get(id);
+    return this.repo.update(id, dto);
+  }
+
+  async getPayments(id: number) {
+    await this.get(id);
+    const payments = await this.repo.findPayments(id);
+    return this.applyOverdue(payments);
+  }
+
+  async markPaid(sponsorshipId: number, paymentId: number) {
+    await this.get(sponsorshipId);
+    const payment = await this.repo.findPaymentById(paymentId);
+    if (!payment || payment.sponsorshipId !== sponsorshipId) {
+      throw new AppError(404, "SPONSORSHIP_PAYMENT_NOT_FOUND");
+    }
+    if (payment.status === "PAID") throw new AppError(409, "ALREADY_PAID");
+    return this.repo.updatePayment(paymentId, { status: "PAID", paidAt: new Date() });
+  }
+
+  private applyOverdue(payments: any[]) {
+    const now = new Date();
+    return payments.map((p) => ({
+      ...p,
+      status: p.status === "PENDING" && p.dueDate < now ? "OVERDUE" : p.status,
+    }));
+  }
+}

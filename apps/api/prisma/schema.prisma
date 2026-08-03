@@ -297,6 +297,7 @@ enum NotificationType {
   FACILITY_EMERGENCY
   FACILITY_MAINTENANCE_RESOLVED
   PAYROLL_CONFIRMED
+  JOB_POSTING_DRAFT_CREATED
 }
 
 enum BadgeType {
@@ -429,6 +430,7 @@ enum ApplicationSource {
   SARAMIN
   GLASSDOOR
   INDEED
+  FACEBOOK
   DIRECT
 }
 
@@ -1674,6 +1676,11 @@ enum PlayerCallupStatus {
   COMPLETED
 }
 
+enum CallupType {
+  TRAINING
+  OFFICIAL
+}
+
 model YouthRegistration {
   id                    Int                     @id @default(autoincrement())
   playerName            String
@@ -1779,6 +1786,7 @@ model PlayerCallup {
   reason          String
   rejectionReason String?
   status          PlayerCallupStatus @default(REQUESTED)
+  callupType      CallupType         @default(OFFICIAL)
   youthCoachConfirmed Boolean            @default(false)
   medicalConfirmed    Boolean            @default(false)
   startDate     DateTime
@@ -1912,6 +1920,7 @@ model AcademyFee {
 model ClubSettings {
   id       Int    @id @default(1)
   currency String @default("KRW")
+  ibiBeta  Float  @default(1.0)
 }
 
 model StaffRecord {
@@ -2101,18 +2110,19 @@ enum ReferenceCheckResult {
 }
 
 model JobPosting {
-  id           Int              @id @default(autoincrement())
-  title        String
-  departmentId Int?
-  headcount    Int              @default(1)
-  description  String
-  status       JobPostingStatus @default(DRAFT)
-  createdById  Int
-  approvedById Int?
-  approvedAt   DateTime?
-  closedAt     DateTime?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  id            Int              @id @default(autoincrement())
+  title         String
+  departmentId  Int?
+  headcount     Int              @default(1)
+  description   String
+  status        JobPostingStatus @default(DRAFT)
+  externalJobId String?
+  createdById   Int
+  approvedById  Int?
+  approvedAt    DateTime?
+  closedAt      DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
   department   Department?      @relation(fields: [departmentId], references: [id])
   createdBy    User             @relation("JobPostingCreator", fields: [createdById], references: [id])

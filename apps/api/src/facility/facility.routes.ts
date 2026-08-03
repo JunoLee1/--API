@@ -1,0 +1,35 @@
+import { Router } from "express";
+import passport from "passport";
+import { getPrisma } from "../lib/prisma";
+import { NotificationRepository } from "../notification/notification.repo";
+import { NotificationService } from "../notification/notification.service";
+import { InspectionRepository } from "./inspection/inspection.repo";
+import { InspectionService } from "./inspection/inspection.service";
+import { InspectionController } from "./inspection/inspection.controller";
+import { MaintenanceRepository } from "./maintenance/maintenance.repo";
+import { MaintenanceService } from "./maintenance/maintenance.service";
+import { MaintenanceController } from "./maintenance/maintenance.controller";
+
+const router = Router();
+const auth = passport.authenticate("accessToken", { session: false });
+
+const notificationService = new NotificationService(new NotificationRepository(getPrisma()));
+const maintenanceRepo = new MaintenanceRepository(getPrisma());
+const maintenanceService = new MaintenanceService(maintenanceRepo, notificationService);
+const maintenanceController = new MaintenanceController(maintenanceService);
+
+const inspectionRepo = new InspectionRepository(getPrisma());
+const inspectionService = new InspectionService(inspectionRepo, maintenanceService);
+const inspectionController = new InspectionController(inspectionService);
+
+router.get("/inspections", auth, inspectionController.list);
+router.post("/inspections", auth, inspectionController.create);
+router.get("/inspections/:id", auth, inspectionController.get);
+router.patch("/inspections/:id", auth, inspectionController.update);
+
+router.get("/maintenance", auth, maintenanceController.list);
+router.post("/maintenance", auth, maintenanceController.create);
+router.get("/maintenance/:id", auth, maintenanceController.get);
+router.patch("/maintenance/:id", auth, maintenanceController.update);
+
+export default router;

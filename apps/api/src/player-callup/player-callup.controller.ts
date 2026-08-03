@@ -30,11 +30,12 @@ export class PlayerCallupController {
 
   approve = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
-      if (role !== "FRONT_OFFICE" || frontOfficeRole !== "GM") {
-        throw new AppError(403, "FORBIDDEN");
-      }
-      res.json(await this.service.approve(Number(req.params["id"]), req.user!.id));
+      const { role, frontOfficeRole, coachingRole } = req.user!;
+      const isGM = role === "FRONT_OFFICE" && frontOfficeRole === "GM";
+      const isTD = role === "FRONT_OFFICE" && frontOfficeRole === "TD";
+      const isHeadCoach = role === "COACHING_STAFF" && coachingRole === "HEAD_COACH";
+      if (!isGM && !isTD && !isHeadCoach) throw new AppError(403, "FORBIDDEN");
+      res.json(await this.service.approve(Number(req.params["id"]), req.user!.id, isGM));
     } catch (err) { next(err); }
   };
 

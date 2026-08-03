@@ -16,9 +16,11 @@ export class ClubSettingsController {
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (req.user!.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
-      const { currency } = req.body;
-      if (!currency) throw new AppError(400, "currency is required");
-      res.json(await this.service.update(currency));
+      const body = req.body as { currency?: string; ibiBeta?: number };
+      const data: { currency?: string; ibiBeta?: number } = {};
+      if (body.currency !== undefined) data.currency = body.currency;
+      if (body.ibiBeta !== undefined) data.ibiBeta = body.ibiBeta;
+      res.json(await this.service.update(data));
     } catch (err) {
       next(err);
     }
