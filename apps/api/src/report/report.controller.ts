@@ -18,6 +18,10 @@ function isFinanceManager(req: Request): boolean {
   return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "FINANCE_MANAGER";
 }
 
+function isAssetManager(req: Request): boolean {
+  return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "ASSET_MANAGER";
+}
+
 const AUTHOR_ROLES = ["ADMIN", "COACHING_STAFF", "FRONT_OFFICE"] as const;
 
 export class ReportController {
@@ -29,7 +33,7 @@ export class ReportController {
       const filters: { type?: string; status?: string } = {};
       if (type !== undefined) filters.type = type;
       if (status !== undefined) filters.status = status;
-      res.json(await this.service.list(req.user!.id, isGM(req), isHeadCoach(req), filters, isHrManager(req), isFinanceManager(req)));
+      res.json(await this.service.list(req.user!.id, isGM(req), isHeadCoach(req), filters, isHrManager(req), isFinanceManager(req), isAssetManager(req)));
     } catch (err) {
       next(err);
     }
@@ -43,7 +47,8 @@ export class ReportController {
         isHeadCoach(req) ||
         report.authorId === req.user!.id ||
         (isHrManager(req) && report.type === "HR") ||
-        (isFinanceManager(req) && report.type === "FINANCIAL");
+        (isFinanceManager(req) && report.type === "FINANCIAL") ||
+        (isAssetManager(req) && report.type === "ASSET");
       if (!canView) throw new AppError(403, "FORBIDDEN");
       res.json(report);
     } catch (err) {
@@ -61,6 +66,9 @@ export class ReportController {
         throw new AppError(403, "FORBIDDEN");
       }
       if (type === "FINANCIAL" && !(role === "ADMIN" || req.user!.frontOfficeRole === "FINANCE_MANAGER" || req.user!.frontOfficeRole === "GM")) {
+        throw new AppError(403, "FORBIDDEN");
+      }
+      if (type === "ASSET" && !(role === "ADMIN" || req.user!.frontOfficeRole === "ASSET_MANAGER")) {
         throw new AppError(403, "FORBIDDEN");
       }
       const file = req.file;

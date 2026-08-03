@@ -23,6 +23,7 @@ export class ReportRepository {
     filters: { type?: string; status?: string } = {},
     isHrManager: boolean = false,
     isFinanceManager: boolean = false,
+    isAssetManager: boolean = false,
   ) {
     const roleWhere = isGM
       ? {}
@@ -32,6 +33,8 @@ export class ReportRepository {
       ? { OR: [{ authorId: userId }, { type: "HR" as const }] }
       : isFinanceManager
       ? { OR: [{ authorId: userId }, { type: "FINANCIAL" as const }] }
+      : isAssetManager
+      ? { OR: [{ authorId: userId }, { type: "ASSET" as const }] }
       : { authorId: userId };
 
     const filterWhere = {

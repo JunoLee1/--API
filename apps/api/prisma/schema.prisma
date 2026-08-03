@@ -1279,6 +1279,7 @@ enum ReportType {
   TRAINING
   HR
   FINANCIAL
+  ASSET
 }
 
 enum ReportStatus {
