@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { validatePhone } from '@/lib/phone'
 import { partnerApi } from '@/services/partner.service'
 import type { Partner, PartnerType, CreatePartnerDto, CreatePartnerContractDto } from '@/types/partner'
 import { PARTNER_TYPE_LABEL, CONTRACT_STATUS_LABEL, CONTRACT_STATUS_STYLE } from '@/types/partner'
@@ -42,6 +43,8 @@ function CreatePartnerDialog({ open, type, onOpenChange, onSaved }: CreatePartne
 
   const handleSave = async () => {
     if (!name.trim()) { toast.error(t('partnersPage.nameRequired')); return }
+    const phoneError = validatePhone(phone || null)
+    if (phoneError) { toast.error(phoneError); return }
     setSaving(true)
     try {
       const dto: CreatePartnerDto = {
