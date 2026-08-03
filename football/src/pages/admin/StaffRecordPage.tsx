@@ -26,7 +26,7 @@ export function StaffRecordPage() {
   const [includeInactive, setIncludeInactive] = useState(false)
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<StaffRecord | null>(null)
-  const [form, setForm] = useState({ name: "", role: "", departmentId: "", phone: "", notes: "" })
+  const [form, setForm] = useState({ name: "", role: "", departmentId: "", teamId: "", phone: "", notes: "" })
   const [saving, setSaving] = useState(false)
 
   const fetchRecords = async () => {
@@ -46,16 +46,19 @@ export function StaffRecordPage() {
 
   const openCreate = () => {
     setEditing(null)
-    setForm({ name: "", role: "", departmentId: "", phone: "", notes: "" })
+    setForm({ name: "", role: "", departmentId: "", teamId: "", phone: "", notes: "" })
     setOpen(true)
   }
 
   const openEdit = (r: StaffRecord) => {
     setEditing(r)
+    const dept = r.department
+    const isChild = dept !== null && dept.parentId !== null
     setForm({
       name: r.name,
       role: r.role,
-      departmentId: r.departmentId ? String(r.departmentId) : "",
+      departmentId: isChild ? String(dept.parentId) : (r.departmentId ? String(r.departmentId) : ""),
+      teamId: isChild ? String(r.departmentId) : "",
       phone: r.phone ?? "",
       notes: r.notes ?? "",
     })
@@ -66,10 +69,11 @@ export function StaffRecordPage() {
     if (!form.name.trim() || !form.role.trim()) { toast.error("이름과 역할을 입력하세요"); return }
     setSaving(true)
     try {
+      const finalDeptId = form.teamId ? Number(form.teamId) : (form.departmentId ? Number(form.departmentId) : undefined)
       const payload = {
         name: form.name,
         role: form.role,
-        departmentId: form.departmentId ? Number(form.departmentId) : undefined,
+        departmentId: finalDeptId,
         phone: form.phone || undefined,
         notes: form.notes || undefined,
       }
@@ -135,7 +139,13 @@ export function StaffRecordPage() {
             <tr key={r.id} className="border-b hover:bg-muted/30">
               <td className="py-2 pr-4 font-medium">{r.name}</td>
               <td className="py-2 pr-4">{r.role}</td>
-              <td className="py-2 pr-4 text-muted-foreground">{r.department?.name ?? "-"}</td>
+              <td className="py-2 pr-4 text-muted-foreground">
+                {r.department
+                  ? r.department.parentId !== null
+                    ? `${r.department.parent?.name ?? ''} > ${r.department.name}`
+                    : r.department.name
+                  : "-"}
+              </td>
               <td className="py-2 pr-4 text-muted-foreground">{r.phone ?? "-"}</td>
               <td className="py-2 pr-4">
                 <Badge variant={r.isActive ? "default" : "secondary"}>
@@ -174,19 +184,43 @@ export function StaffRecordPage() {
               <Label>{t("staffRecord.department")}</Label>
               <Select
                 value={form.departmentId || "none"}
-                onValueChange={(v) => setForm((f) => ({ ...f, departmentId: v === "none" ? "" : v }))}
+                onValueChange={(v) => setForm((f) => ({ ...f, departmentId: v === "none" ? "" : v, teamId: "" }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder={t("staffRecord.departmentPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">{t("staffRecord.noDepartment")}</SelectItem>
-                  {departments.map((d) => (
+                  {departments.filter((d) => d.parentId === null).map((d) => (
                     <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+            {(() => {
+              const selectedDept = departments.find((d) => String(d.id) === form.departmentId)
+              const teams = selectedDept?.children.filter((c) => c.isActive) ?? []
+              if (!selectedDept || teams.length === 0) return null
+              return (
+                <div className="space-y-1">
+                  <Label>팀</Label>
+                  <Select
+                    value={form.teamId || "none"}
+                    onValueChange={(v) => setForm((f) => ({ ...f, teamId: v === "none" ? "" : v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="팀 선택 (선택)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">팀 선택 안 함</SelectItem>
+                      {teams.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )
+            })()}
             {editing && (
               <div className="flex items-center gap-2">
                 <Switch
