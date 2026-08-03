@@ -1,4 +1,4 @@
-export type Role = 'ADMIN' | 'FRONT_OFFICE' | 'COACHING_STAFF' | 'PLAYER' | 'AGENT' | 'GUARDIAN'
+export type Role = 'ADMIN' | 'SUPER_ADMIN' | 'FRONT_OFFICE' | 'COACHING_STAFF' | 'PLAYER' | 'AGENT' | 'GUARDIAN'
 
 export type CoachingRole =
   | 'HEAD_COACH'
@@ -29,6 +29,7 @@ export type FrontOfficeRole =
 
 export const ROLE_LABEL: Record<Role, string> = {
   ADMIN: 'Admin',
+  SUPER_ADMIN: 'Super Admin',
   FRONT_OFFICE: 'Front Office',
   COACHING_STAFF: 'Coaching Staff',
   PLAYER: 'Player',
