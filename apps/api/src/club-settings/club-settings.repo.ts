@@ -6,16 +6,16 @@ export class ClubSettingsRepository {
   async get() {
     return this.prisma.clubSettings.upsert({
       where: { id: 1 },
-      create: { id: 1, currency: "KRW" },
+      create: { id: 1, currency: "KRW", ibiBeta: 1.0 },
       update: {},
     });
   }
 
-  async update(currency: string) {
+  async update(data: { currency?: string; ibiBeta?: number }) {
     return this.prisma.clubSettings.upsert({
       where: { id: 1 },
-      create: { id: 1, currency },
-      update: { currency },
+      create: { id: 1, currency: "KRW", ibiBeta: 1.0, ...data },
+      update: data,
     });
   }
 }

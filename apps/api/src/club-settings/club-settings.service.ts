@@ -1,16 +1,20 @@
 import { ClubSettingsRepository } from "./club-settings.repo";
+import { AppError } from "../lib/appError";
 
 export class ClubSettingsService {
   constructor(private repo: ClubSettingsRepository) {}
 
-  async get() {
+  get() {
     return this.repo.get();
   }
 
-  async update(currency: string) {
-    if (!/^[A-Z]{3}$/.test(currency)) {
-      throw new Error("INVALID_CURRENCY");
+  async update(data: { currency?: string; ibiBeta?: number }) {
+    if (data.currency !== undefined && !/^[A-Z]{3}$/.test(data.currency)) {
+      throw new AppError(400, "INVALID_CURRENCY");
     }
-    return this.repo.update(currency);
+    if (data.ibiBeta !== undefined && (data.ibiBeta <= 0 || data.ibiBeta > 100)) {
+      throw new AppError(400, "INVALID_IBI_BETA");
+    }
+    return this.repo.update(data);
   }
 }
