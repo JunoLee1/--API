@@ -19,7 +19,8 @@ export class SponsorshipService {
   constructor(private repo: SponsorshipRepository) {}
 
   list(query: SponsorshipListQuery) {
-    return this.repo.findAll(query);
+    const page = Math.max(1, Number(query.page) || 1);
+    return this.repo.findAll(query, page);
   }
 
   async get(id: number) {
@@ -29,6 +30,7 @@ export class SponsorshipService {
   }
 
   async create(dto: CreateSponsorshipDto, createdById: number) {
+    if (await this.repo.findBySponsorName(dto.sponsorName)) throw new AppError(409, "SPONSORSHIP_NAME_DUPLICATE");
     const sponsorship = await this.repo.create({ ...dto, createdById });
     const dates = generatePaymentDates(
       new Date(dto.contractStart),
@@ -52,6 +54,9 @@ export class SponsorshipService {
 
   async update(id: number, dto: UpdateSponsorshipDto) {
     await this.get(id);
+    if (dto.sponsorName && await this.repo.findBySponsorName(dto.sponsorName, id)) {
+      throw new AppError(409, "SPONSORSHIP_NAME_DUPLICATE");
+    }
     return this.repo.update(id, dto);
   }
 

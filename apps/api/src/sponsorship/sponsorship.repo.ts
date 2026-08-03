@@ -8,11 +8,25 @@ const INCLUDE = {
 export class SponsorshipRepository {
   constructor(private prisma: PrismaClient) {}
 
-  findAll(query: SponsorshipListQuery) {
-    return this.prisma.sponsorship.findMany({
-      where: { ...(query.type && { type: query.type }) },
-      include: INCLUDE,
-      orderBy: { createdAt: "desc" },
+  async findAll(query: SponsorshipListQuery, page = 1, pageSize = 10) {
+    const where = query.type ? { type: query.type } : {};
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.sponsorship.findMany({
+        where,
+        include: INCLUDE,
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.prisma.sponsorship.count({ where }),
+    ]);
+    return { data, total, page, totalPages: Math.ceil(total / pageSize) };
+  }
+
+  findBySponsorName(sponsorName: string, excludeId?: number) {
+    return this.prisma.sponsorship.findFirst({
+      where: { sponsorName, ...(excludeId !== undefined && { id: { not: excludeId } }) },
+      select: { id: true },
     });
   }
 

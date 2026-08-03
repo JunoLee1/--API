@@ -22,4 +22,5 @@ export interface UpdateSponsorshipDto {
 
 export interface SponsorshipListQuery {
   type?: SponsorType;
+  page?: string;
 }
