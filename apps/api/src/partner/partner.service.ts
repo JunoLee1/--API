@@ -6,8 +6,8 @@ import { CreatePartnerDto, UpdatePartnerDto, CreatePartnerContractDto, UpdatePar
 export class PartnerService {
   constructor(private repo: PartnerRepository) {}
 
-  list(type?: PartnerType) {
-    return this.repo.findAll(type);
+  list(type?: PartnerType, page = 1) {
+    return this.repo.findAll(type, page);
   }
 
   async getById(id: number) {
@@ -18,13 +18,17 @@ export class PartnerService {
 
   async create(dto: CreatePartnerDto) {
     if (!dto.name?.trim()) throw new AppError(400, "PARTNER_NAME_REQUIRED");
-    return this.repo.create({ ...dto, name: dto.name.trim() });
+    const trimmed = dto.name.trim();
+    if (await this.repo.findByName(trimmed)) throw new AppError(409, "PARTNER_NAME_DUPLICATE");
+    return this.repo.create({ ...dto, name: trimmed });
   }
 
   async update(id: number, dto: UpdatePartnerDto) {
     await this.getById(id);
     if (dto.name !== undefined && !dto.name.trim()) throw new AppError(400, "PARTNER_NAME_REQUIRED");
-    return this.repo.update(id, { ...dto, ...(dto.name !== undefined && { name: dto.name.trim() }) });
+    const trimmed = dto.name !== undefined ? dto.name.trim() : undefined;
+    if (trimmed && await this.repo.findByName(trimmed, id)) throw new AppError(409, "PARTNER_NAME_DUPLICATE");
+    return this.repo.update(id, { ...dto, ...(trimmed !== undefined && { name: trimmed }) });
   }
 
   async createContract(partnerId: number, dto: CreatePartnerContractDto) {
