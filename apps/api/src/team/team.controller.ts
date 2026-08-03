@@ -3,7 +3,9 @@ import { AppError } from "../lib/appError";
 import { TeamService } from "./team.service";
 
 const canManage = (role: string, foRole: string | null | undefined) =>
-  role === "ADMIN" || (role === "FRONT_OFFICE" && foRole === "GM");
+  role === "ADMIN" ||
+  role === "SUPER_ADMIN" ||
+  (role === "FRONT_OFFICE" && foRole === "GM");
 
 export class TeamController {
   constructor(private service: TeamService) {}
