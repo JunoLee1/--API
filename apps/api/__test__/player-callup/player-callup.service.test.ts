@@ -2,6 +2,8 @@ import 'dotenv/config';
 import { PrismaClient } from '../../src/generated/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PlayerCallupRepository } from '../../src/player-callup/player-callup.repo';
+import { PlayerCallupService } from '../../src/player-callup/player-callup.service';
+import { NotificationRepository } from '../../src/notification/notification.repo';
 
 const adapter = new PrismaPg({ connectionString: process.env['DATABASE_URL'] });
 const prisma = new PrismaClient({ adapter } as ConstructorParameters<typeof PrismaClient>[0]);
@@ -100,5 +102,99 @@ describe('PlayerCallupRepository', () => {
     });
     expect(r.callupType).toBe('TRAINING');
     await prisma.playerCallup.delete({ where: { id: r.id } });
+  });
+});
+
+describe('PlayerCallupService — contract guard', () => {
+  const notifRepo = new NotificationRepository(prisma);
+  const service = () => new PlayerCallupService(new PlayerCallupRepository(prisma), notifRepo);
+
+  it('OFFICIAL 콜업 — 활성 계약 없으면 approve 거부 (NO_ACTIVE_CONTRACT)', async () => {
+    const player = await prisma.player.findFirst({
+      where: { contracts: { none: { status: 'ACTIVE' } } },
+      select: { id: true },
+    });
+    if (!player) {
+      console.warn('SKIP: 계약 없는 선수 없음');
+      return;
+    }
+
+    const callup = await prisma.playerCallup.create({
+      data: {
+        playerId: player.id,
+        fromTeamId: teamId,
+        toTeamId: teamId,
+        requestedById: headCoachUserId,
+        reason: '계약 없음 테스트',
+        startDate: new Date('2026-08-01'),
+        callupType: 'OFFICIAL',
+        status: 'DOCS_SUBMITTED',
+      },
+    });
+
+    await expect(service().approve(callup.id, gmUserId, true)).rejects.toMatchObject({ message: 'NO_ACTIVE_CONTRACT' });
+    await prisma.playerCallup.delete({ where: { id: callup.id } });
+  });
+
+  it('TRAINING 콜업 — REQUESTED 상태에서 approve 가능, teamId 변경 없음', async () => {
+    const before = await prisma.player.findUnique({
+      where: { id: testPlayerId },
+      select: { teamId: true },
+    });
+
+    const callup = await prisma.playerCallup.create({
+      data: {
+        playerId: testPlayerId,
+        fromTeamId: teamId,
+        toTeamId: teamId,
+        requestedById: headCoachUserId,
+        reason: '훈련 참가',
+        startDate: new Date('2026-08-01'),
+        callupType: 'TRAINING',
+        status: 'REQUESTED',
+      },
+    });
+
+    const approved = await service().approve(callup.id, gmUserId, true);
+    expect(approved.status).toBe('APPROVED');
+
+    const after = await prisma.player.findUnique({
+      where: { id: testPlayerId },
+      select: { teamId: true },
+    });
+    expect(after?.teamId).toBe(before?.teamId);
+
+    await prisma.playerCallup.delete({ where: { id: callup.id } });
+  });
+
+  it('TRAINING 콜업 — complete() 시 teamId 변경 없음', async () => {
+    const before = await prisma.player.findUnique({
+      where: { id: testPlayerId },
+      select: { teamId: true },
+    });
+
+    const callup = await prisma.playerCallup.create({
+      data: {
+        playerId: testPlayerId,
+        fromTeamId: teamId,
+        toTeamId: teamId,
+        requestedById: headCoachUserId,
+        reason: '훈련 참가 완료',
+        startDate: new Date('2026-08-01'),
+        callupType: 'TRAINING',
+        status: 'APPROVED',
+      },
+    });
+
+    const completed = await service().complete(callup.id, gmUserId);
+    expect(completed.status).toBe('COMPLETED');
+
+    const after = await prisma.player.findUnique({
+      where: { id: testPlayerId },
+      select: { teamId: true },
+    });
+    expect(after?.teamId).toBe(before?.teamId);
+
+    await prisma.playerCallup.delete({ where: { id: callup.id } });
   });
 });
