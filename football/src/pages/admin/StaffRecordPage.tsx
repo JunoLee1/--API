@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
+import { validatePhone } from "@/lib/phone"
 import { staffRecordApi } from "@/services/staff-record.service"
 import { departmentApi } from "@/services/department.service"
 import type { StaffRecord } from "@/services/staff-record.service"
@@ -67,6 +68,8 @@ export function StaffRecordPage() {
 
   const handleSubmit = async () => {
     if (!form.name.trim() || !form.role.trim()) { toast.error("이름과 역할을 입력하세요"); return }
+    const phoneError = validatePhone(form.phone || null)
+    if (phoneError) { toast.error(phoneError); return }
     setSaving(true)
     try {
       const finalDeptId = form.teamId ? Number(form.teamId) : (form.departmentId ? Number(form.departmentId) : undefined)
