@@ -5,6 +5,12 @@ export const authApi = {
   login: async (email: string, password: string): Promise<void> => {
     await api.post('/auth/login', { email, password })
     localStorage.setItem('loggedIn', '1')
+    try {
+      const me = await api.get<UserDto>('/auth/me')
+      localStorage.setItem('userRole', me.role)
+    } catch {
+      // non-fatal
+    }
   },
 
   me: (): Promise<UserDto> => api.get<UserDto>('/auth/me'),
@@ -19,6 +25,8 @@ export const authApi = {
       // ignore
     } finally {
       localStorage.removeItem('loggedIn')
+      localStorage.removeItem('userRole')
+      localStorage.removeItem('superAdminTeamId')
     }
   },
 
