@@ -19,6 +19,7 @@ import { startMatchDayNotificationJob } from "./jobs/matchDayNotification";
 import { startYouthWeeklyScheduleJob } from "./jobs/youthWeeklySchedule";
 import { startAcademyFeeBillingJob } from "./jobs/academyFeeBilling";
 import { startAcademyFeeDelinquencyJob } from "./jobs/academyFeeDelinquency";
+import { startQuarterlyJobPostingDraftJob } from "./jobs/quarterlyJobPostingDraft";
 
 const app = express();
 
@@ -55,3 +56,4 @@ startMatchDayNotificationJob();
 startYouthWeeklyScheduleJob();
 startAcademyFeeBillingJob();
 startAcademyFeeDelinquencyJob();
+startQuarterlyJobPostingDraftJob();

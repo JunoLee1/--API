@@ -32,12 +32,13 @@ export class DepartmentController {
     try {
       const { role, frontOfficeRole } = req.user!;
       if (!canManage(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
-      const { name, parentId } = req.body as { name: string; parentId?: number };
+      const { name, parentId, category } = req.body as { name: string; parentId?: number; category?: string };
       if (!name?.trim()) throw new AppError(400, "NAME_REQUIRED");
       res.status(201).json(
         await this.service.create({
           name: name.trim(),
           ...(parentId !== undefined && { parentId }),
+          ...(category !== undefined && { category: category as any }),
         })
       );
     } catch (err) {
@@ -49,7 +50,7 @@ export class DepartmentController {
     try {
       const { role, frontOfficeRole } = req.user!;
       if (!canManage(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
-      const data = req.body as { name?: string; isActive?: boolean; parentId?: number | null };
+      const data = req.body as { name?: string; isActive?: boolean; parentId?: number | null; category?: import("../generated/enums").DepartmentCategory | null };
       res.json(await this.service.update(Number(req.params["id"]), data));
     } catch (err) {
       next(err);

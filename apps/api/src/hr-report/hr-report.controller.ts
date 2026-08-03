@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { HrReportService } from "./hr-report.service";
 import { AppError } from "../lib/appError";
+import { getPrisma } from "../lib/prisma";
 
 export class HrReportController {
   constructor(private service: HrReportService) {}
@@ -26,6 +27,14 @@ export class HrReportController {
         throw new AppError(400, "INVALID_YEAR");
       }
       res.json(await this.service.getAnnual(year));
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getHiringPriorityQueue = async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.json(await this.service.getHiringPriorityQueue(getPrisma()));
     } catch (err) {
       next(err);
     }
