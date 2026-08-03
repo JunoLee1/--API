@@ -429,6 +429,7 @@ enum ApplicationSource {
   SARAMIN
   GLASSDOOR
   INDEED
+  FACEBOOK
   DIRECT
 }
 
@@ -2101,18 +2102,19 @@ enum ReferenceCheckResult {
 }
 
 model JobPosting {
-  id           Int              @id @default(autoincrement())
-  title        String
-  departmentId Int?
-  headcount    Int              @default(1)
-  description  String
-  status       JobPostingStatus @default(DRAFT)
-  createdById  Int
-  approvedById Int?
-  approvedAt   DateTime?
-  closedAt     DateTime?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  id            Int              @id @default(autoincrement())
+  title         String
+  departmentId  Int?
+  headcount     Int              @default(1)
+  description   String
+  status        JobPostingStatus @default(DRAFT)
+  externalJobId String?
+  createdById   Int
+  approvedById  Int?
+  approvedAt    DateTime?
+  closedAt      DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
   department   Department?      @relation(fields: [departmentId], references: [id])
   createdBy    User             @relation("JobPostingCreator", fields: [createdById], references: [id])
