@@ -11,6 +11,8 @@ const authorSelect = {
 const reportInclude = {
   author: { select: authorSelect },
   reviewer: { select: authorSelect },
+  firstReviewer: { select: authorSelect },
+  secondReviewer: { select: authorSelect },
 } as const;
 
 export class ReportRepository {
@@ -23,6 +25,10 @@ export class ReportRepository {
     filters: { type?: string; status?: string } = {},
     isHrManager: boolean = false,
     isFinanceManager: boolean = false,
+    isAssetManager: boolean = false,
+    isHrStaff: boolean = false,
+    isAssetStaff: boolean = false,
+    isFinanceStaff: boolean = false,
   ) {
     const roleWhere = isGM
       ? {}
@@ -31,6 +37,14 @@ export class ReportRepository {
       : isHrManager
       ? { OR: [{ authorId: userId }, { type: "HR" as const }] }
       : isFinanceManager
+      ? { OR: [{ authorId: userId }, { type: "FINANCIAL" as const }] }
+      : isAssetManager
+      ? { OR: [{ authorId: userId }, { type: "ASSET" as const }] }
+      : isHrStaff
+      ? { OR: [{ authorId: userId }, { type: "HR" as const }] }
+      : isAssetStaff
+      ? { OR: [{ authorId: userId }, { type: "ASSET" as const }] }
+      : isFinanceStaff
       ? { OR: [{ authorId: userId }, { type: "FINANCIAL" as const }] }
       : { authorId: userId };
 
@@ -76,10 +90,18 @@ export class ReportRepository {
     });
   }
 
-  approve(id: number, reviewerId: number) {
+  approve(id: number, reviewerId: number, nextStatus: "FIRST_APPROVED" | "SECOND_APPROVED" | "APPROVED") {
+    const now = new Date();
+    const data =
+      nextStatus === "FIRST_APPROVED"
+        ? { status: nextStatus, firstReviewerId: reviewerId, firstReviewedAt: now }
+        : nextStatus === "SECOND_APPROVED"
+        ? { status: nextStatus, secondReviewerId: reviewerId, secondReviewedAt: now }
+        : { status: nextStatus, reviewerId, reviewedAt: now };
+
     return this.prisma.report.update({
       where: { id },
-      data: { status: "APPROVED", reviewerId, reviewedAt: new Date() },
+      data,
       include: reportInclude,
     });
   }

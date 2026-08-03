@@ -20,11 +20,14 @@
     "PERFORMANCE": "Performance",
     "HR": "HR",
     "FINANCIAL": "Financial",
-    "MEDICAL": "Medical"
+    "MEDICAL": "Medical",
+    "ASSET": "Asset"
   },
   "status": {
     "DRAFT": "Draft",
     "SUBMITTED": "Submitted",
+    "FIRST_APPROVED": "1st Approved",
+    "SECOND_APPROVED": "2nd Approved",
     "APPROVED": "Approved",
     "REJECTED": "Rejected"
   },
@@ -80,6 +83,8 @@
     "createdAtLabel": "Created",
     "submittedAtLabel": "Submitted",
     "reviewedAtLabel": "Reviewed",
+    "firstApprovedAtLabel": "1st Approved",
+    "secondApprovedAtLabel": "2nd Approved",
     "rejectionReasonLabel": "Rejection Reason",
     "contentLabel": "Content",
     "attachLabel": "Attachment",

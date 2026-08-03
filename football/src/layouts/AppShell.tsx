@@ -303,7 +303,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: FileText,
     section: 'nav.section.management',
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
-    frontOfficeRoles: ['GM'],
+    frontOfficeRoles: ['GM', 'TD', 'HR_MANAGER', 'HR_STAFF', 'FINANCE_MANAGER', 'FINANCE_STAFF', 'ASSET_MANAGER', 'ASSET_STAFF', 'SCOUT'],
   },
   {
     to: '/admin/departments',
@@ -381,7 +381,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: Building2,
     section: 'nav.section.management',
     roles: ['ADMIN', 'FRONT_OFFICE'],
-    frontOfficeRoles: ['EQUIPMENT_MANAGER'],
+    frontOfficeRoles: ['ASSET_MANAGER', 'ASSET_STAFF', 'EQUIPMENT_MANAGER'],
   },
   {
     to: '/admin/users',

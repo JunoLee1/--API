@@ -61,6 +61,9 @@ enum FrontOfficeRole {
   ASSET_MANAGER
   HR_MANAGER
   FACILITY_MANAGER
+  HR_STAFF
+  ASSET_STAFF
+  FINANCE_STAFF
 }
 
 enum PlayerLevel {
@@ -596,6 +599,8 @@ model User {
   auditLogs                AuditLog[]
   authoredReports          Report[]                @relation("ReportAuthor")
   reviewedReports          Report[]                @relation("ReportReviewer")
+  firstReviewedReports     Report[]                @relation("ReportFirstReviewer")
+  secondReviewedReports    Report[]                @relation("ReportSecondReviewer")
   submittedMedicalExpenses MedicalExpense[]        @relation("MedicalExpenseSubmitter")
   leaderReviewedExpenses   MedicalExpense[]        @relation("MedicalExpenseLeaderReviewer")
   adminReviewedExpenses    MedicalExpense[]        @relation("MedicalExpenseAdminReviewer")
@@ -1279,11 +1284,14 @@ enum ReportType {
   TRAINING
   HR
   FINANCIAL
+  ASSET
 }
 
 enum ReportStatus {
   DRAFT
   SUBMITTED
+  FIRST_APPROVED
+  SECOND_APPROVED
   APPROVED
   REJECTED
 }
@@ -1302,6 +1310,13 @@ model Report {
   author     User  @relation("ReportAuthor", fields: [authorId], references: [id])
   reviewerId Int?
   reviewer   User? @relation("ReportReviewer", fields: [reviewerId], references: [id])
+
+  firstReviewerId  Int?
+  firstReviewer    User?     @relation("ReportFirstReviewer", fields: [firstReviewerId], references: [id])
+  firstReviewedAt  DateTime?
+  secondReviewerId Int?
+  secondReviewer   User?     @relation("ReportSecondReviewer", fields: [secondReviewerId], references: [id])
+  secondReviewedAt DateTime?
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

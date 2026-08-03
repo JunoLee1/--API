@@ -10,8 +10,19 @@ export class ReportService {
     private notifRepo: NotificationRepository,
   ) {}
 
-  list(userId: number, isGM: boolean, isHeadCoach: boolean = false, filters: { type?: string; status?: string } = {}, isHrManager: boolean = false, isFinanceManager: boolean = false) {
-    return this.repo.findAll(userId, isGM, isHeadCoach, filters, isHrManager, isFinanceManager);
+  list(
+    userId: number,
+    isGM: boolean,
+    isHeadCoach: boolean = false,
+    filters: { type?: string; status?: string } = {},
+    isHrManager: boolean = false,
+    isFinanceManager: boolean = false,
+    isAssetManager: boolean = false,
+    isHrStaff: boolean = false,
+    isAssetStaff: boolean = false,
+    isFinanceStaff: boolean = false,
+  ) {
+    return this.repo.findAll(userId, isGM, isHeadCoach, filters, isHrManager, isFinanceManager, isAssetManager, isHrStaff, isAssetStaff, isFinanceStaff);
   }
 
   async get(id: number) {
@@ -65,15 +76,29 @@ export class ReportService {
   async approve(id: number, reviewerId: number) {
     const report = await this.repo.findById(id);
     if (!report) throw new AppError(404, "REPORT_NOT_FOUND");
-    if (report.status !== "SUBMITTED") throw new AppError(409, "NOT_SUBMITTED");
 
-    const approved = await this.repo.approve(id, reviewerId);
+    const nextStatus = ((): "FIRST_APPROVED" | "SECOND_APPROVED" | "APPROVED" => {
+      switch (report.type) {
+        case "HR":
+          if (report.status === "SUBMITTED") return "FIRST_APPROVED";
+          if (report.status === "FIRST_APPROVED") return "SECOND_APPROVED";
+          return "APPROVED";
+        case "ASSET":
+        case "FINANCIAL":
+          if (report.status === "SUBMITTED") return "FIRST_APPROVED";
+          return "APPROVED";
+        default:
+          return "APPROVED";
+      }
+    })();
+
+    const approved = await this.repo.approve(id, reviewerId, nextStatus);
 
     await writeAuditLog({
       actorId: reviewerId,
       action: "REPORT_APPROVED",
       targetId: id,
-      detail: { title: report.title },
+      detail: { title: report.title, nextStatus },
     });
 
     return approved;
@@ -83,7 +108,8 @@ export class ReportService {
     if (!reason?.trim()) throw new AppError(400, "REJECTION_REASON_REQUIRED");
     const report = await this.repo.findById(id);
     if (!report) throw new AppError(404, "REPORT_NOT_FOUND");
-    if (report.status !== "SUBMITTED") throw new AppError(409, "NOT_SUBMITTED");
+    const approvableStatuses = ["SUBMITTED", "FIRST_APPROVED", "SECOND_APPROVED"];
+    if (!approvableStatuses.includes(report.status)) throw new AppError(409, "INVALID_STATUS");
 
     const rejected = await this.repo.reject(id, reviewerId, reason.trim());
 

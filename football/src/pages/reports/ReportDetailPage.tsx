@@ -75,9 +75,35 @@ export function ReportDetailPage() {
   const [acting, setActing] = useState(false)
 
   const isGM = user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'GM'
+  const isHrManager = user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'HR_MANAGER'
+  const isAssetManager = user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'ASSET_MANAGER'
+  const isFinanceManager = user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'FINANCE_MANAGER'
   const isHeadCoach = user?.role === 'COACHING_STAFF' && user?.coachingRole === 'HEAD_COACH'
-  const canApprove = (isGM || (isHeadCoach && report?.type === 'TRAINING')) && report?.status === 'SUBMITTED'
+
+  const canApprove = (() => {
+    if (!report) return false
+    switch (report.type) {
+      case 'HR':
+        if (report.status === 'SUBMITTED') return isHrManager
+        if (report.status === 'FIRST_APPROVED') return isAssetManager
+        if (report.status === 'SECOND_APPROVED') return isGM
+        return false
+      case 'ASSET':
+        if (report.status === 'SUBMITTED') return isAssetManager
+        if (report.status === 'FIRST_APPROVED') return isGM
+        return false
+      case 'FINANCIAL':
+        if (report.status === 'SUBMITTED') return isFinanceManager
+        if (report.status === 'FIRST_APPROVED') return isGM
+        return false
+      case 'TRAINING':
+        return isHeadCoach && report.status === 'SUBMITTED'
+      default:
+        return isGM && report.status === 'SUBMITTED'
+    }
+  })()
   const isAuthor = report?.authorId === user?.id
+  const canSubmit = isAuthor && (report?.status === 'DRAFT' || report?.status === 'REJECTED')
 
   useEffect(() => {
     if (!id) return
@@ -152,7 +178,7 @@ export function ReportDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          {isAuthor && report.status === 'DRAFT' && (
+          {canSubmit && (
             <Button size="sm" onClick={handleSubmit} disabled={acting}>{t('detail.submitButton')}</Button>
           )}
           {canApprove && (
@@ -183,6 +209,18 @@ export function ReportDetailPage() {
               <div>
                 <p className="text-muted-foreground text-xs mb-0.5">{t('detail.submittedAtLabel')}</p>
                 <p>{formatDateTime(report.submittedAt)}</p>
+              </div>
+            )}
+            {report.firstReviewedAt && report.firstReviewer && (
+              <div>
+                <p className="text-muted-foreground text-xs mb-0.5">{t('detail.firstApprovedAtLabel')}</p>
+                <p>{formatDateTime(report.firstReviewedAt)} ({report.firstReviewer.nickname})</p>
+              </div>
+            )}
+            {report.secondReviewedAt && report.secondReviewer && (
+              <div>
+                <p className="text-muted-foreground text-xs mb-0.5">{t('detail.secondApprovedAtLabel')}</p>
+                <p>{formatDateTime(report.secondReviewedAt)} ({report.secondReviewer.nickname})</p>
               </div>
             )}
             {report.reviewedAt && report.reviewer && (

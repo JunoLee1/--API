@@ -86,6 +86,111 @@ async function seedHrSubDepartments() {
   console.log('HR sub-departments seeded: HRM, HRD, 노무·총무');
 }
 
+async function seedStaffAccounts() {
+  const hashed = await bcrypt.hash('Password1!', 10);
+  const korea = await prisma.country.findUniqueOrThrow({ where: { id: 1 } });
+
+  const hrStaffPhone      = await prisma.phoneNumber.create({ data: encryptPhone('010-0000-0018') });
+  const assetStaffPhone   = await prisma.phoneNumber.create({ data: encryptPhone('010-0000-0019') });
+  const financeStaffPhone = await prisma.phoneNumber.create({ data: encryptPhone('010-0000-0020') });
+
+  await prisma.user.upsert({
+    where: { email: 'hr.staff@club.com' },
+    update: {},
+    create: {
+      email: 'hr.staff@club.com',
+      password: hashed,
+      username: 'HR직원',
+      nickname: 'hr-staff',
+      role: 'FRONT_OFFICE',
+      frontOfficeRole: 'HR_STAFF',
+      dateOfBirth: new Date('1992-07-15'),
+      nationalityId: korea.id,
+      phoneNumberId: hrStaffPhone.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'asset.staff@club.com' },
+    update: {},
+    create: {
+      email: 'asset.staff@club.com',
+      password: hashed,
+      username: '자산관리직원',
+      nickname: 'asset-staff',
+      role: 'FRONT_OFFICE',
+      frontOfficeRole: 'ASSET_STAFF',
+      dateOfBirth: new Date('1993-04-22'),
+      nationalityId: korea.id,
+      phoneNumberId: assetStaffPhone.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'finance.staff@club.com' },
+    update: {},
+    create: {
+      email: 'finance.staff@club.com',
+      password: hashed,
+      username: '재무직원',
+      nickname: 'finance-staff',
+      role: 'FRONT_OFFICE',
+      frontOfficeRole: 'FINANCE_STAFF',
+      dateOfBirth: new Date('1991-09-30'),
+      nationalityId: korea.id,
+      phoneNumberId: financeStaffPhone.id,
+    },
+  });
+
+  console.log('✅ Staff accounts seeded: hr.staff, asset.staff, finance.staff / Password1!');
+}
+
+async function seedReports() {
+  const [gm, hr, asset, finance, coach, hrStaff, assetStaff, financeStaff] = await Promise.all([
+    prisma.user.findUniqueOrThrow({ where: { email: 'gm@club.com' } }),
+    prisma.user.findUniqueOrThrow({ where: { email: 'hr@club.com' } }),
+    prisma.user.findUniqueOrThrow({ where: { email: 'asset@club.com' } }),
+    prisma.user.findUniqueOrThrow({ where: { email: 'finance@club.com' } }),
+    prisma.user.findUniqueOrThrow({ where: { email: 'coach@club.com' } }),
+    prisma.user.findUniqueOrThrow({ where: { email: 'hr.staff@club.com' } }),
+    prisma.user.findUniqueOrThrow({ where: { email: 'asset.staff@club.com' } }),
+    prisma.user.findUniqueOrThrow({ where: { email: 'finance.staff@club.com' } }),
+  ]);
+
+  await prisma.report.deleteMany();
+
+  const d = (days: number) => new Date(Date.now() - days * 24 * 3600_000);
+
+  const reports = [
+    // ── HR (hr.staff → HR_MANAGER 1차 → ASSET_MANAGER 2차 → GM 최종) ──
+    { type: 'HR' as const, title: '2026년 8월 인력 채용 계획', content: '8월 신규 채용 포지션 및 일정 계획 보고서입니다.', authorId: hrStaff.id, status: 'DRAFT' as const },
+    { type: 'HR' as const, title: '2026년 7월 인력 현황 보고', content: '7월 기준 전체 인력 현황 및 채용 진행 상황 보고서입니다.', authorId: hrStaff.id, status: 'SUBMITTED' as const, submittedAt: d(2) },
+    { type: 'HR' as const, title: '상반기 인사 평가 결과', content: '상반기 성과 평가 및 역량 평가 결과 종합 보고서입니다.', authorId: hrStaff.id, status: 'FIRST_APPROVED' as const, submittedAt: d(6), firstReviewerId: hr.id, firstReviewedAt: d(5) },
+    { type: 'HR' as const, title: '2026년 하반기 교육 계획', content: '하반기 직원 역량 강화 교육 계획 보고서입니다.', authorId: hrStaff.id, status: 'SECOND_APPROVED' as const, submittedAt: d(9), firstReviewerId: hr.id, firstReviewedAt: d(8), secondReviewerId: asset.id, secondReviewedAt: d(6) },
+    { type: 'HR' as const, title: '신규 채용 절차 개선 방안', content: '채용 프로세스 효율화를 위한 개선 방안 및 실행 계획입니다.', authorId: hrStaff.id, status: 'APPROVED' as const, submittedAt: d(14), firstReviewerId: hr.id, firstReviewedAt: d(13), secondReviewerId: asset.id, secondReviewedAt: d(11), reviewerId: gm.id, reviewedAt: d(9) },
+    { type: 'HR' as const, title: '외주인력 활용 방안 검토', content: '외주인력 도입 필요성 및 비용 절감 효과 분석 보고서입니다.', authorId: hrStaff.id, status: 'REJECTED' as const, submittedAt: d(5), reviewerId: hr.id, reviewedAt: d(4), rejectionReason: '예산 재검토 후 재제출 바랍니다' },
+    // ── ASSET (asset.staff → ASSET_MANAGER 1차 → GM 최종) ──
+    { type: 'ASSET' as const, title: '구장 시설물 점검 현황 (8월)', content: '훈련 구장 및 경기장 시설물 정기 점검 결과 보고서입니다.', authorId: assetStaff.id, status: 'DRAFT' as const },
+    { type: 'ASSET' as const, title: '장비 교체 및 구매 요청 보고', content: '노후 장비 현황 분석 및 신규 구매 필요 품목 정리 보고서입니다.', authorId: assetStaff.id, status: 'SUBMITTED' as const, submittedAt: d(3) },
+    { type: 'ASSET' as const, title: 'IT 장비 현황 및 교체 계획', content: 'IT 인프라 노후화 현황 및 단계별 교체 계획 보고서입니다.', authorId: assetStaff.id, status: 'FIRST_APPROVED' as const, submittedAt: d(6), firstReviewerId: asset.id, firstReviewedAt: d(5) },
+    { type: 'ASSET' as const, title: '2026년 자산 관리 연간 계획', content: '시설 유지보수 일정 및 자산 취득·처분 계획 보고서입니다.', authorId: assetStaff.id, status: 'APPROVED' as const, submittedAt: d(11), firstReviewerId: asset.id, firstReviewedAt: d(10), reviewerId: gm.id, reviewedAt: d(8) },
+    // ── FINANCIAL (finance.staff → FINANCE_MANAGER 1차 → GM 최종) ──
+    { type: 'FINANCIAL' as const, title: '2026년 8월 예산 집행 계획', content: '8월 부서별 예산 배분 및 집행 계획 보고서입니다.', authorId: financeStaff.id, status: 'DRAFT' as const },
+    { type: 'FINANCIAL' as const, title: '선수단 급여 비용 분석 보고', content: '선수단 급여 지출 현황 및 리그 대비 벤치마크 분석입니다.', authorId: financeStaff.id, status: 'SUBMITTED' as const, submittedAt: d(1) },
+    { type: 'FINANCIAL' as const, title: '7월 예산 집행 현황', content: '월별 예산 집행 내역 및 잔액 현황 보고서입니다.', authorId: financeStaff.id, status: 'FIRST_APPROVED' as const, submittedAt: d(6), firstReviewerId: finance.id, firstReviewedAt: d(5) },
+    { type: 'FINANCIAL' as const, title: '스폰서십 수익 결산 보고 (상반기)', content: '파트너사별 스폰서십 계약 이행 및 수익 결산 내역입니다.', authorId: financeStaff.id, status: 'APPROVED' as const, submittedAt: d(15), firstReviewerId: finance.id, firstReviewedAt: d(14), reviewerId: gm.id, reviewedAt: d(12) },
+    // ── TRAINING (HEAD_COACH 작성 및 승인) ──
+    { type: 'TRAINING' as const, title: '주간 훈련 계획 보고 (8/4~8/10)', content: '이번 주 훈련 목표, 세션 구성, 부상자 현황 포함 보고서입니다.', authorId: coach.id, status: 'DRAFT' as const },
+    { type: 'TRAINING' as const, title: '전술 훈련 성과 분석 보고', content: '4-3-3 전술 훈련 적응도 및 개인 수행 지표 분석입니다.', authorId: coach.id, status: 'SUBMITTED' as const, submittedAt: d(2) },
+    { type: 'TRAINING' as const, title: '프리시즌 훈련 결산 보고', content: '프리시즌 전 기간 훈련 부하, 체력 지표, 전술 완성도 종합 분석입니다.', authorId: coach.id, status: 'APPROVED' as const, submittedAt: d(20), reviewerId: coach.id, reviewedAt: d(18) },
+    // ── PERFORMANCE (GM 작성) ──
+    { type: 'PERFORMANCE' as const, title: '선수단 성과 평가 보고 (2분기)', content: '2분기 경기 성과 지표 및 선수 개인 평가 종합 보고서입니다.', authorId: gm.id, status: 'APPROVED' as const, submittedAt: d(30), reviewerId: gm.id, reviewedAt: d(28) },
+  ];
+
+  await prisma.report.createMany({ data: reports as any });
+  console.log(`✅ Reports seeded: ${reports.length}개 (HR×6, ASSET×4, FINANCIAL×4, TRAINING×3, PERFORMANCE×1)`);
+}
+
 async function seedRecruitment() {
   const hashed = await bcrypt.hash('Password1!', 10);
 
@@ -2081,19 +2186,28 @@ async function main() {
   // ── HR Sub-Departments & Memberships ─────────────────
   await seedHrSubDepartments();
 
+  // ── Staff Accounts ────────────────────────────────────
+  await seedStaffAccounts();
+
   // ── Recruitment ───────────────────────────────────────
   await seedRecruitment();
 
+  // ── Reports ───────────────────────────────────────────
+  await seedReports();
+
   console.log("✅ Seed complete");
   console.log(`   - Countries: 2`);
-  console.log(`   - Users: 17 + 10 유소년 / pw: Password1!`);
+  console.log(`   - Users: 20 + 10 유소년 / pw: Password1!`);
   console.log(`     ADMIN       : admin@club.com`);
   console.log(`     FRONT_OFFICE: gm@club.com (GM)`);
   console.log(`     FRONT_OFFICE: td@club.com (TD)`);
   console.log(`     FRONT_OFFICE: fo@club.com (SCOUT)`);
   console.log(`     FRONT_OFFICE: hr@club.com (HR_MANAGER)`);
+  console.log(`     FRONT_OFFICE: hr.staff@club.com (HR_STAFF)`);
   console.log(`     FRONT_OFFICE: asset@club.com (ASSET_MANAGER)`);
+  console.log(`     FRONT_OFFICE: asset.staff@club.com (ASSET_STAFF)`);
   console.log(`     FRONT_OFFICE: finance@club.com (FINANCE_MANAGER)`);
+  console.log(`     FRONT_OFFICE: finance.staff@club.com (FINANCE_STAFF)`);
   console.log(`     PLAYER      : player@club.com`);
   console.log(`     HEAD_COACH  : coach@club.com`);
   console.log(`     YOUTH COACH : youth.coach1@club.com (감독)`);

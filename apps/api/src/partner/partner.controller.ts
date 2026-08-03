@@ -3,8 +3,11 @@ import { AppError } from "../lib/appError";
 import { PartnerService } from "./partner.service";
 import { PartnerType } from "../generated/enums";
 
+const isAssetManager = (role: string, frontOfficeRole: string | null | undefined) =>
+  role === "ADMIN" || (role === "FRONT_OFFICE" && frontOfficeRole === "ASSET_MANAGER");
+
 const canManage = (role: string, frontOfficeRole: string | null | undefined) =>
-  role === "ADMIN" || (role === "FRONT_OFFICE" && frontOfficeRole === "EQUIPMENT_MANAGER");
+  isAssetManager(role, frontOfficeRole) || (role === "FRONT_OFFICE" && frontOfficeRole === "EQUIPMENT_MANAGER");
 
 const canRead = (role: string) =>
   role === "ADMIN" || role === "FRONT_OFFICE" || role === "COACHING_STAFF";
@@ -48,14 +51,16 @@ export class PartnerController {
 
   createContract = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (req.user!.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole } = req.user!;
+      if (!isAssetManager(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.createContract(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
   };
 
   updateContract = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (req.user!.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole } = req.user!;
+      if (!isAssetManager(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.updateContract(
         Number(req.params["id"]),
         Number(req.params["contractId"]),
