@@ -1,0 +1,91 @@
+{
+  "inspections": {
+    "title": "Facility Inspections",
+    "addButton": "Add Inspection",
+    "noData": "No inspections recorded.",
+    "loadFailed": "Failed to load inspections.",
+    "createFailed": "Failed to create inspection.",
+    "created": "Inspection created.",
+    "autoMaintenance": "Issue found — a maintenance request was automatically created.",
+    "col": {
+      "date": "Date",
+      "zone": "Zone",
+      "type": "Type",
+      "result": "Result",
+      "statutory": "Statutory",
+      "notes": "Notes"
+    },
+    "form": {
+      "title": "Add Inspection",
+      "zone": "Zone *",
+      "type": "Type *",
+      "result": "Result *",
+      "statutory": "Statutory inspection",
+      "date": "Inspection date",
+      "notes": "Notes",
+      "notesPlaceholder": "Enter any notes"
+    },
+    "filterAll": "All"
+  },
+  "maintenance": {
+    "title": "Maintenance",
+    "addButton": "New Request",
+    "noData": "No maintenance requests.",
+    "loadFailed": "Failed to load maintenance requests.",
+    "createFailed": "Failed to create maintenance request.",
+    "updateFailed": "Failed to update status.",
+    "created": "Maintenance request created.",
+    "updated": "Status updated.",
+    "col": {
+      "title": "Title",
+      "priority": "Priority",
+      "status": "Status",
+      "source": "Source",
+      "createdBy": "Created by",
+      "date": "Date"
+    },
+    "form": {
+      "createTitle": "New Maintenance Request",
+      "updateTitle": "Update Status",
+      "title": "Title *",
+      "titlePlaceholder": "Enter request title",
+      "description": "Description *",
+      "descriptionPlaceholder": "Enter details",
+      "priority": "Priority *",
+      "estimatedCost": "Estimated cost (KRW)",
+      "status": "Status *",
+      "postIncidentReport": "Resolution notes",
+      "postIncidentReportPlaceholder": "Describe how the issue was resolved",
+      "actualCost": "Actual cost (KRW)"
+    },
+    "filterAll": "All"
+  },
+  "zone": {
+    "GROUND": "Ground",
+    "MECHANICAL": "Mechanical",
+    "STRUCTURAL": "Structural",
+    "SAFETY": "Safety",
+    "SANITATION": "Sanitation",
+    "OPERATIONS": "Operations"
+  },
+  "inspectionType": {
+    "DAILY": "Daily",
+    "MONTHLY": "Monthly",
+    "QUARTERLY": "Quarterly",
+    "ANNUAL": "Annual"
+  },
+  "result": {
+    "OK": "OK",
+    "ISSUE_FOUND": "Issue Found"
+  },
+  "priority": {
+    "EMERGENCY": "Emergency",
+    "HIGH": "High",
+    "NORMAL": "Normal"
+  },
+  "status": {
+    "OPEN": "Open",
+    "IN_PROGRESS": "In Progress",
+    "RESOLVED": "Resolved"
+  }
+}

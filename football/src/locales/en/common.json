@@ -71,7 +71,8 @@
       "budgetPlan": "Operating Budget",
       "operatingExpenses": "Operating Expenses",
       "hrReport": "HR Report",
-      "recruitment": "Recruitment"
+      "recruitment": "Recruitment",
+      "facilityMgmt": "Facility"
     }
   },
   "action": {
