@@ -1676,6 +1676,11 @@ enum PlayerCallupStatus {
   COMPLETED
 }
 
+enum CallupType {
+  TRAINING
+  OFFICIAL
+}
+
 model YouthRegistration {
   id                    Int                     @id @default(autoincrement())
   playerName            String
@@ -1781,6 +1786,7 @@ model PlayerCallup {
   reason          String
   rejectionReason String?
   status          PlayerCallupStatus @default(REQUESTED)
+  callupType      CallupType         @default(OFFICIAL)
   youthCoachConfirmed Boolean            @default(false)
   medicalConfirmed    Boolean            @default(false)
   startDate     DateTime
