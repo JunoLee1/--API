@@ -23,11 +23,20 @@ export class SponsorshipRepository {
     return { data, total, page, totalPages: Math.ceil(total / pageSize) };
   }
 
-  findBySponsorName(sponsorName: string, excludeId?: number) {
-    return this.prisma.sponsorship.findFirst({
-      where: { sponsorName, ...(excludeId !== undefined && { id: { not: excludeId } }) },
-      select: { id: true },
-    });
+  async findBySponsorName(sponsorName: string, excludeId?: number): Promise<{ id: number } | null> {
+    const normalized = sponsorName.replace(/\s+/g, '').toLowerCase()
+    type Row = { id: number }
+    const rows = excludeId !== undefined
+      ? await this.prisma.$queryRaw<Row[]>`
+          SELECT id FROM "Sponsorship"
+          WHERE LOWER(REGEXP_REPLACE("sponsorName", '\\s+', '', 'g')) = ${normalized}
+            AND id != ${excludeId}
+          LIMIT 1`
+      : await this.prisma.$queryRaw<Row[]>`
+          SELECT id FROM "Sponsorship"
+          WHERE LOWER(REGEXP_REPLACE("sponsorName", '\\s+', '', 'g')) = ${normalized}
+          LIMIT 1`
+    return rows[0] ?? null
   }
 
   findById(id: number) {
