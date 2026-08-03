@@ -22,6 +22,18 @@ function isAssetManager(req: Request): boolean {
   return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "ASSET_MANAGER";
 }
 
+function isHrStaff(req: Request): boolean {
+  return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "HR_STAFF";
+}
+
+function isAssetStaff(req: Request): boolean {
+  return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "ASSET_STAFF";
+}
+
+function isFinanceStaff(req: Request): boolean {
+  return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "FINANCE_STAFF";
+}
+
 const AUTHOR_ROLES = ["ADMIN", "COACHING_STAFF", "FRONT_OFFICE"] as const;
 
 export class ReportController {
@@ -33,7 +45,20 @@ export class ReportController {
       const filters: { type?: string; status?: string } = {};
       if (type !== undefined) filters.type = type;
       if (status !== undefined) filters.status = status;
-      res.json(await this.service.list(req.user!.id, isGM(req), isHeadCoach(req), filters, isHrManager(req), isFinanceManager(req), isAssetManager(req)));
+      res.json(
+        await this.service.list(
+          req.user!.id,
+          isGM(req),
+          isHeadCoach(req),
+          filters,
+          isHrManager(req),
+          isFinanceManager(req),
+          isAssetManager(req),
+          isHrStaff(req),
+          isAssetStaff(req),
+          isFinanceStaff(req),
+        ),
+      );
     } catch (err) {
       next(err);
     }
@@ -47,8 +72,11 @@ export class ReportController {
         isHeadCoach(req) ||
         report.authorId === req.user!.id ||
         (isHrManager(req) && report.type === "HR") ||
+        (isHrStaff(req) && report.type === "HR") ||
         (isFinanceManager(req) && report.type === "FINANCIAL") ||
-        (isAssetManager(req) && report.type === "ASSET");
+        (isFinanceStaff(req) && report.type === "FINANCIAL") ||
+        (isAssetManager(req) && report.type === "ASSET") ||
+        (isAssetStaff(req) && report.type === "ASSET");
       if (!canView) throw new AppError(403, "FORBIDDEN");
       res.json(report);
     } catch (err) {
@@ -61,14 +89,14 @@ export class ReportController {
       const role = req.user!.role;
       if (!AUTHOR_ROLES.includes(role as any)) throw new AppError(403, "FORBIDDEN");
       const { type, title, content } = req.body;
-      // 타입별 작성 권한 제한
-      if (type === "HR" && !(role === "ADMIN" || req.user!.frontOfficeRole === "HR_MANAGER")) {
+      const foRole = req.user!.frontOfficeRole;
+      if (type === "HR" && !(role === "ADMIN" || foRole === "HR_MANAGER" || foRole === "HR_STAFF")) {
         throw new AppError(403, "FORBIDDEN");
       }
-      if (type === "FINANCIAL" && !(role === "ADMIN" || req.user!.frontOfficeRole === "FINANCE_MANAGER" || req.user!.frontOfficeRole === "GM")) {
+      if (type === "FINANCIAL" && !(role === "ADMIN" || foRole === "FINANCE_MANAGER" || foRole === "FINANCE_STAFF" || foRole === "GM")) {
         throw new AppError(403, "FORBIDDEN");
       }
-      if (type === "ASSET" && !(role === "ADMIN" || req.user!.frontOfficeRole === "ASSET_MANAGER")) {
+      if (type === "ASSET" && !(role === "ADMIN" || foRole === "ASSET_MANAGER" || foRole === "ASSET_STAFF")) {
         throw new AppError(403, "FORBIDDEN");
       }
       const file = req.file;
@@ -112,8 +140,30 @@ export class ReportController {
 
   approve = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const reportToApprove = await this.service.get(Number(req.params["id"]));
-      const canApprove = reportToApprove.type === "TRAINING" ? isHeadCoach(req) : isGM(req);
+      const report = await this.service.get(Number(req.params["id"]));
+
+      const canApprove = (() => {
+        switch (report.type) {
+          case "HR":
+            if (report.status === "SUBMITTED") return isHrManager(req);
+            if (report.status === "FIRST_APPROVED") return isAssetManager(req);
+            if (report.status === "SECOND_APPROVED") return isGM(req);
+            return false;
+          case "ASSET":
+            if (report.status === "SUBMITTED") return isAssetManager(req);
+            if (report.status === "FIRST_APPROVED") return isGM(req);
+            return false;
+          case "FINANCIAL":
+            if (report.status === "SUBMITTED") return isFinanceManager(req);
+            if (report.status === "FIRST_APPROVED") return isGM(req);
+            return false;
+          case "TRAINING":
+            return isHeadCoach(req) && report.status === "SUBMITTED";
+          default:
+            return isGM(req) && report.status === "SUBMITTED";
+        }
+      })();
+
       if (!canApprove) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.approve(Number(req.params["id"]), req.user!.id));
     } catch (err) {
@@ -123,8 +173,30 @@ export class ReportController {
 
   reject = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const reportToReject = await this.service.get(Number(req.params["id"]));
-      const canReject = reportToReject.type === "TRAINING" ? isHeadCoach(req) : isGM(req);
+      const report = await this.service.get(Number(req.params["id"]));
+
+      const canReject = (() => {
+        switch (report.type) {
+          case "HR":
+            if (report.status === "SUBMITTED") return isHrManager(req);
+            if (report.status === "FIRST_APPROVED") return isAssetManager(req);
+            if (report.status === "SECOND_APPROVED") return isGM(req);
+            return false;
+          case "ASSET":
+            if (report.status === "SUBMITTED") return isAssetManager(req);
+            if (report.status === "FIRST_APPROVED") return isGM(req);
+            return false;
+          case "FINANCIAL":
+            if (report.status === "SUBMITTED") return isFinanceManager(req);
+            if (report.status === "FIRST_APPROVED") return isGM(req);
+            return false;
+          case "TRAINING":
+            return isHeadCoach(req) && report.status === "SUBMITTED";
+          default:
+            return isGM(req) && report.status === "SUBMITTED";
+        }
+      })();
+
       if (!canReject) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.reject(Number(req.params["id"]), req.user!.id, req.body.reason));
     } catch (err) {
