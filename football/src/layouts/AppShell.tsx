@@ -376,6 +376,14 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
   },
   {
+    to: '/facility',
+    label: 'nav.item.facilityMgmt',
+    icon: Building2,
+    section: 'nav.section.management',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['FACILITY_MANAGER', 'FACILITY_STAFF'],
+  },
+  {
     to: '/admin/partners',
     label: 'nav.item.partnerMgmt',
     icon: Building2,
