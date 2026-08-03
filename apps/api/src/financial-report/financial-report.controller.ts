@@ -1,14 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { isAdminLike } from "../lib/permissions";
 import { FinancialReportService } from "./financial-report.service";
 import { OperatingCategory } from "../generated/client";
 
 const canWrite = (role: string, foRole: string | null | undefined) =>
-  role === "ADMIN" ||
+  isAdminLike(role) ||
   (role === "FRONT_OFFICE" && (foRole === "GM" || foRole === "FINANCE_MANAGER"));
 
 const canRead = (role: string, foRole: string | null | undefined) =>
-  role === "ADMIN" ||
+  isAdminLike(role) ||
   (role === "FRONT_OFFICE" && (foRole === "GM" || foRole === "TD" || foRole === "FINANCE_MANAGER"));
 
 export class FinancialReportController {

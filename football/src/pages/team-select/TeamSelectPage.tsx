@@ -19,7 +19,7 @@ export function TeamSelectPage() {
 
   const handleSelect = (team: Team) => {
     localStorage.setItem('superAdminTeamId', String(team.id))
-    window.location.href = '/'
+    window.location.href = '/dashboard'
   }
 
   return (

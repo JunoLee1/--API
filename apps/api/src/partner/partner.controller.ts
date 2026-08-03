@@ -1,16 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { isAdminLike } from "../lib/permissions";
 import { PartnerService } from "./partner.service";
 import { PartnerType } from "../generated/enums";
 
 const isAssetManager = (role: string, frontOfficeRole: string | null | undefined) =>
-  role === "ADMIN" || (role === "FRONT_OFFICE" && frontOfficeRole === "ASSET_MANAGER");
+  isAdminLike(role) || (role === "FRONT_OFFICE" && frontOfficeRole === "ASSET_MANAGER");
 
 const canManage = (role: string, frontOfficeRole: string | null | undefined) =>
   isAssetManager(role, frontOfficeRole) || (role === "FRONT_OFFICE" && frontOfficeRole === "EQUIPMENT_MANAGER");
 
 const canRead = (role: string) =>
-  role === "ADMIN" || role === "FRONT_OFFICE" || role === "COACHING_STAFF";
+  isAdminLike(role) || role === "FRONT_OFFICE" || role === "COACHING_STAFF";
 
 export class PartnerController {
   constructor(private service: PartnerService) {}

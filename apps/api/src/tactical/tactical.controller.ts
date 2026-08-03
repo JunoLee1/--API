@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { isAdminLike } from "../lib/permissions";
 import { TacticalService } from "./tactical.service";
 
-const STAFF_ROLES = ["ADMIN", "COACHING_STAFF"] as const;
+const STAFF_ROLES = ["ADMIN", "SUPER_ADMIN", "COACHING_STAFF"] as const;
 type StaffRole = (typeof STAFF_ROLES)[number];
 
 export class TacticalController {
@@ -34,7 +35,7 @@ export class TacticalController {
     try {
       const { role, frontOfficeRole } = req.user!;
       const canCreate =
-        role === "ADMIN" ||
+        isAdminLike(role) ||
         role === "COACHING_STAFF" ||
         (role === "FRONT_OFFICE" && frontOfficeRole === "TACTICAL_ANALYST");
       if (!canCreate) throw new AppError(403, "FORBIDDEN");
@@ -71,7 +72,7 @@ export class TacticalController {
     try {
       const { role, frontOfficeRole } = req.user!;
       const canUpdate =
-        role === "ADMIN" ||
+        isAdminLike(role) ||
         role === "COACHING_STAFF" ||
         (role === "FRONT_OFFICE" && frontOfficeRole === "TACTICAL_ANALYST");
       if (!canUpdate) throw new AppError(403, "FORBIDDEN");
@@ -85,7 +86,7 @@ export class TacticalController {
     try {
       const { role, coachingRole } = req.user!;
       const canConfirm =
-        role === "ADMIN" || (role === "COACHING_STAFF" && coachingRole === "HEAD_COACH");
+        isAdminLike(role) || (role === "COACHING_STAFF" && coachingRole === "HEAD_COACH");
       if (!canConfirm) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.confirmAnalysis(Number(req.params["id"])));
     } catch (err) { next(err); }

@@ -1,15 +1,16 @@
 import { Request, Response, NextFunction } from "express";
 import { MealExpenseType } from "../generated/client";
 import { AppError } from "../lib/appError";
+import { isAdminLike } from "../lib/permissions";
 import { MealExpenseService } from "./meal-expense.service";
 
 const canRead = (role: string, frontOfficeRole: string | null | undefined) =>
-  role === "ADMIN" ||
+  isAdminLike(role) ||
   (role === "FRONT_OFFICE" &&
     (frontOfficeRole === "GM" || frontOfficeRole === "FINANCE_MANAGER" || frontOfficeRole === "FINANCE_STAFF"));
 
 const canWrite = (role: string, frontOfficeRole: string | null | undefined) =>
-  role === "ADMIN" ||
+  isAdminLike(role) ||
   (role === "FRONT_OFFICE" &&
     (frontOfficeRole === "GM" ||
       frontOfficeRole === "FINANCE_MANAGER" ||
@@ -17,7 +18,7 @@ const canWrite = (role: string, frontOfficeRole: string | null | undefined) =>
       frontOfficeRole === "EQUIPMENT_MANAGER"));
 
 const canDelete = (role: string, frontOfficeRole: string | null | undefined) =>
-  role === "ADMIN" ||
+  isAdminLike(role) ||
   (role === "FRONT_OFFICE" &&
     (frontOfficeRole === "GM" || frontOfficeRole === "FINANCE_MANAGER" || frontOfficeRole === "EQUIPMENT_MANAGER"));
 

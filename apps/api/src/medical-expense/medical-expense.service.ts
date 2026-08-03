@@ -1,4 +1,5 @@
 import { MedicalExpenseRepository } from "./medical-expense.repo";
+import { isAdminLike } from "../lib/permissions";
 import { NotificationRepository } from "../notification/notification.repo";
 import { AppError } from "../lib/appError";
 import { writeAuditLog } from "../lib/auditLog";
@@ -10,7 +11,7 @@ export class MedicalExpenseService {
   ) {}
 
   list(userId: number, role: string, coachingRole: string | null) {
-    if (role === "ADMIN") return this.repo.findAll(null);
+    if (isAdminLike(role)) return this.repo.findAll(null);
     if (coachingRole === "MEDICAL_DIRECTOR") return this.repo.findAll(null);
     return this.repo.findAll(userId);
   }

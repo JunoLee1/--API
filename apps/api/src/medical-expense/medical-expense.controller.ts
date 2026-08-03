@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { isAdminLike } from "../lib/permissions";
 import { MedicalExpenseService } from "./medical-expense.service";
 
 function isMedical(req: Request) {
@@ -11,7 +12,7 @@ function isMedicalDirector(req: Request) {
 }
 
 function isAdmin(req: Request) {
-  return req.user?.role === "ADMIN";
+  return isAdminLike(req.user?.role ?? '');
 }
 
 export class MedicalExpenseController {

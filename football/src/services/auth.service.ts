@@ -4,13 +4,9 @@ import type { UserDto } from '@/types/auth'
 export const authApi = {
   login: async (email: string, password: string): Promise<void> => {
     await api.post('/auth/login', { email, password })
+    const me = await api.get<UserDto>('/auth/me')
+    localStorage.setItem('userRole', me.role)
     localStorage.setItem('loggedIn', '1')
-    try {
-      const me = await api.get<UserDto>('/auth/me')
-      localStorage.setItem('userRole', me.role)
-    } catch {
-      // non-fatal
-    }
   },
 
   me: (): Promise<UserDto> => api.get<UserDto>('/auth/me'),

@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { isAdminLike } from "../lib/permissions";
 import { CoachService } from "./coach.service";
 import { CoachStatus } from "../generated/enums";
 
 const canRead = (role: string, frontOfficeRole: string | null | undefined) =>
-  role === "ADMIN" || (role === "FRONT_OFFICE" && (frontOfficeRole === "GM" || frontOfficeRole === "TD"));
+  isAdminLike(role) || (role === "FRONT_OFFICE" && (frontOfficeRole === "GM" || frontOfficeRole === "TD"));
 
 const canWrite = (role: string, frontOfficeRole: string | null | undefined) =>
   role === "FRONT_OFFICE" && (frontOfficeRole === "GM" || frontOfficeRole === "TD");

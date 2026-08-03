@@ -1,20 +1,21 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { isAdminLike } from "../lib/permissions";
 import { ProspectService } from "./prospect.service";
 import { ProspectStatus } from "../generated/enums";
 import { TransitionProspectStatusDto, SignProspectDto } from "./dto/prospect.dto";
 
 const canWrite = (role: string, frontOfficeRole: string | null | undefined): boolean =>
-  role === "ADMIN" ||
+  isAdminLike(role) ||
   (role === "FRONT_OFFICE" && (frontOfficeRole === "SCOUT" || frontOfficeRole === "GM" || frontOfficeRole === "TD"));
 
 const canRead = (role: string, coachingRole: string | null | undefined): boolean =>
-  role === "ADMIN" ||
+  isAdminLike(role) ||
   role === "FRONT_OFFICE" ||
   (role === "COACHING_STAFF" && coachingRole === "HEAD_COACH");
 
 const canSign = (role: string, frontOfficeRole: string | null | undefined): boolean =>
-  role === "ADMIN" ||
+  isAdminLike(role) ||
   (role === "FRONT_OFFICE" && (frontOfficeRole === "GM" || frontOfficeRole === "CONTRACT_MANAGER"));
 
 export class ProspectController {

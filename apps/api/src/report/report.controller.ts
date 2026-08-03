@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { isAdminLike } from "../lib/permissions";
 import { ReportService } from "./report.service";
 
 function isGM(req: Request): boolean {
@@ -90,13 +91,13 @@ export class ReportController {
       if (!AUTHOR_ROLES.includes(role as any)) throw new AppError(403, "FORBIDDEN");
       const { type, title, content } = req.body;
       const foRole = req.user!.frontOfficeRole;
-      if (type === "HR" && !(role === "ADMIN" || foRole === "HR_MANAGER" || foRole === "HR_STAFF")) {
+      if (type === "HR" && !(isAdminLike(role) || foRole === "HR_MANAGER" || foRole === "HR_STAFF")) {
         throw new AppError(403, "FORBIDDEN");
       }
-      if (type === "FINANCIAL" && !(role === "ADMIN" || foRole === "FINANCE_MANAGER" || foRole === "FINANCE_STAFF" || foRole === "GM")) {
+      if (type === "FINANCIAL" && !(isAdminLike(role) || foRole === "FINANCE_MANAGER" || foRole === "FINANCE_STAFF" || foRole === "GM")) {
         throw new AppError(403, "FORBIDDEN");
       }
-      if (type === "ASSET" && !(role === "ADMIN" || foRole === "ASSET_MANAGER" || foRole === "ASSET_STAFF")) {
+      if (type === "ASSET" && !(isAdminLike(role) || foRole === "ASSET_MANAGER" || foRole === "ASSET_STAFF")) {
         throw new AppError(403, "FORBIDDEN");
       }
       const file = req.file;

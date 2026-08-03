@@ -1,10 +1,11 @@
 import type { Request, Response, NextFunction } from "express";
 import { AppError } from "../../lib/appError";
+import { isAdminLike } from "../../lib/permissions";
 import type { ConfigService } from "./config.service";
 import type { CreatePayrollConfigDto, UpdatePayrollConfigDto, PayrollConfigListQuery } from "./dto/config.dto";
 
 const canWrite = (role: string, foRole: string | null | undefined) =>
-  role === "ADMIN" || (role === "FRONT_OFFICE" && foRole === "FINANCE_MANAGER");
+  isAdminLike(role) || (role === "FRONT_OFFICE" && foRole === "FINANCE_MANAGER");
 
 export class ConfigController {
   constructor(private service: ConfigService) {}

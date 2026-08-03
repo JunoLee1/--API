@@ -1,10 +1,11 @@
 import type { Request, Response, NextFunction } from "express";
 import { AppError } from "../../lib/appError";
+import { isAdminLike } from "../../lib/permissions";
 import type { SalaryService } from "./salary.service";
 import type { CreateSalaryDto, UpdateSalaryDto, SalaryListQuery } from "./dto/salary.dto";
 
 const canWrite = (role: string, foRole: string | null | undefined) =>
-  role === "ADMIN" || (role === "FRONT_OFFICE" && foRole === "FINANCE_MANAGER");
+  isAdminLike(role) || (role === "FRONT_OFFICE" && foRole === "FINANCE_MANAGER");
 
 export class SalaryController {
   constructor(private service: SalaryService) {}

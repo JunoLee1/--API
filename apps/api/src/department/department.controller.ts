@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { isAdminLike } from "../lib/permissions";
 import { DepartmentService } from "./department.service";
 
 const canManage = (role: string, foRole: string | null | undefined) =>
-  role === "ADMIN" || (role === "FRONT_OFFICE" && foRole === "GM");
+  isAdminLike(role) || (role === "FRONT_OFFICE" && foRole === "GM");
 
 export class DepartmentController {
   constructor(private service: DepartmentService) {}

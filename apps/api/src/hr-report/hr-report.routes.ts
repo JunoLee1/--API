@@ -14,7 +14,7 @@ const controller = new HrReportController(service);
 
 const requireHR = (req: any, res: any, next: any) => {
   const { role, frontOfficeRole } = req.user as any;
-  if (role === "ADMIN") return next();
+  if (role === "ADMIN" || role === "SUPER_ADMIN") return next();
   if (
     role === "FRONT_OFFICE" &&
     (frontOfficeRole === "GM" || frontOfficeRole === "TD" || frontOfficeRole === "HR_MANAGER")
