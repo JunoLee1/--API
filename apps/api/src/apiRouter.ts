@@ -42,6 +42,7 @@ import hrReportRouter from "./hr-report/hr-report.routes";
 import recruitmentRouter from "./recruitment/recruitment.routes";
 import facilityRouter from "./facility/facility.routes";
 import sponsorshipRouter from "./sponsorship/sponsorship.routes";
+import payrollRouter from "./payroll/payroll.routes";
 
 const apiRouter = Router();
 
@@ -88,5 +89,6 @@ apiRouter.use("/hr-reports", hrReportRouter);
 apiRouter.use("/recruitment", recruitmentRouter);
 apiRouter.use("/sponsorships", sponsorshipRouter);
 apiRouter.use("/facility", facilityRouter);
+apiRouter.use("/payroll", payrollRouter);
 
 export default apiRouter;
