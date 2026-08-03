@@ -52,6 +52,16 @@ const service = new RunService(mockRunRepo, mockSalaryRepo, mockConfigRepo);
 
 beforeEach(() => jest.clearAllMocks());
 
+describe("RunService.list", () => {
+  test("salary 없으면 404를 던진다", async () => {
+    mockSalaryRepo.findById.mockResolvedValue(null);
+    await expect(service.list(99)).rejects.toMatchObject({
+      statusCode: 404,
+      code: "SALARY_NOT_FOUND",
+    });
+  });
+});
+
 describe("RunService.createRun", () => {
   test("salary 없으면 404를 던진다", async () => {
     mockSalaryRepo.findById.mockResolvedValue(null);

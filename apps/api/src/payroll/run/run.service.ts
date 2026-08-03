@@ -25,6 +25,8 @@ export class RunService {
   ) {}
 
   async list(salaryId: number) {
+    const salary = await this.salaryRepo.findById(salaryId);
+    if (!salary) throw new AppError(404, "SALARY_NOT_FOUND");
     return this.runRepo.findAll(salaryId);
   }
 
@@ -32,7 +34,8 @@ export class RunService {
     const salary = await this.salaryRepo.findById(salaryId);
     if (!salary) throw new AppError(404, "SALARY_NOT_FOUND");
 
-    const month = new Date(dto.month);
+    const raw = new Date(dto.month);
+    const month = new Date(Date.UTC(raw.getUTCFullYear(), raw.getUTCMonth(), 1));
 
     const existing = await this.runRepo.findByMonth(salaryId, month);
     if (existing) throw new AppError(409, "PAYROLL_RUN_ALREADY_EXISTS");
