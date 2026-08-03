@@ -3,17 +3,23 @@ import { MealExpenseType } from "../generated/client";
 import { AppError } from "../lib/appError";
 import { MealExpenseService } from "./meal-expense.service";
 
+const canRead = (role: string, frontOfficeRole: string | null | undefined) =>
+  role === "ADMIN" ||
+  (role === "FRONT_OFFICE" &&
+    (frontOfficeRole === "GM" || frontOfficeRole === "FINANCE_MANAGER" || frontOfficeRole === "FINANCE_STAFF"));
+
 const canWrite = (role: string, frontOfficeRole: string | null | undefined) =>
   role === "ADMIN" ||
   (role === "FRONT_OFFICE" &&
     (frontOfficeRole === "GM" ||
       frontOfficeRole === "FINANCE_MANAGER" ||
+      frontOfficeRole === "FINANCE_STAFF" ||
       frontOfficeRole === "EQUIPMENT_MANAGER"));
 
-const canRead = (role: string, frontOfficeRole: string | null | undefined) =>
+const canDelete = (role: string, frontOfficeRole: string | null | undefined) =>
   role === "ADMIN" ||
   (role === "FRONT_OFFICE" &&
-    (frontOfficeRole === "GM" || frontOfficeRole === "FINANCE_MANAGER"));
+    (frontOfficeRole === "GM" || frontOfficeRole === "FINANCE_MANAGER" || frontOfficeRole === "EQUIPMENT_MANAGER"));
 
 export class MealExpenseController {
   constructor(private service: MealExpenseService) {}
@@ -58,7 +64,7 @@ export class MealExpenseController {
   delete = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, frontOfficeRole } = req.user!;
-      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      if (!canDelete(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       await this.service.delete(Number(req.params["id"]));
       res.status(204).send();
     } catch (err) { next(err); }

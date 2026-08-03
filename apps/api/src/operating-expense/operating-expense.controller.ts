@@ -3,13 +3,17 @@ import { AppError } from "../lib/appError";
 import { OperatingExpenseService } from "./operating-expense.service";
 import { OperatingCategory } from "../generated/client";
 
-const canWrite = (role: string, foRole: string | null | undefined) =>
-  role === "ADMIN" ||
-  (role === "FRONT_OFFICE" && (foRole === "GM" || foRole === "FINANCE_MANAGER"));
-
 const canRead = (role: string, foRole: string | null | undefined) =>
   role === "ADMIN" ||
-  (role === "FRONT_OFFICE" && (foRole === "GM" || foRole === "TD" || foRole === "FINANCE_MANAGER"));
+  (role === "FRONT_OFFICE" && (foRole === "GM" || foRole === "TD" || foRole === "FINANCE_MANAGER" || foRole === "FINANCE_STAFF"));
+
+const canCreate = (role: string, foRole: string | null | undefined) =>
+  role === "ADMIN" ||
+  (role === "FRONT_OFFICE" && (foRole === "GM" || foRole === "FINANCE_MANAGER" || foRole === "FINANCE_STAFF"));
+
+const canDelete = (role: string, foRole: string | null | undefined) =>
+  role === "ADMIN" ||
+  (role === "FRONT_OFFICE" && (foRole === "GM" || foRole === "FINANCE_MANAGER"));
 
 export class OperatingExpenseController {
   constructor(private service: OperatingExpenseService) {}
@@ -28,7 +32,7 @@ export class OperatingExpenseController {
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, frontOfficeRole, id: userId } = req.user!;
-      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      if (!canCreate(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const { seasonId, category, amount, date, note } = req.body as {
         seasonId: number;
         category: OperatingCategory;
@@ -44,7 +48,7 @@ export class OperatingExpenseController {
   delete = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, frontOfficeRole, id: userId } = req.user!;
-      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      if (!canDelete(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const id = Number(req.params["id"]);
       await this.service.delete(id, userId, role);
       res.status(204).end();
