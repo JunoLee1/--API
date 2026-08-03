@@ -2,6 +2,7 @@ import { HrReportRepository, PeriodRange } from "./hr-report.repo";
 import type { PrismaClient } from "../generated/client";
 import { HiringAutomationRepository } from "../hiring-automation/hiring-automation.repo";
 import { HiringAutomationService } from "../hiring-automation/hiring-automation.service";
+import { AppError } from "../lib/appError";
 
 export function buildPeriod(year: number, month: number): PeriodRange {
   const start = new Date(Date.UTC(year, month - 1, 1));
@@ -148,7 +149,7 @@ export class HrReportService {
 
   async getHiringPriorityQueue(prisma: PrismaClient) {
     const season = await prisma.season.findFirst({ where: { status: "ACTIVE" } });
-    if (!season?.leagueLevel) throw new Error("NO_ACTIVE_SEASON");
+    if (!season?.leagueLevel) throw new AppError(400, "NO_ACTIVE_SEASON");
 
     const settings = await prisma.clubSettings.findFirst();
     const ibiBeta = settings?.ibiBeta ?? 1.0;

@@ -4,6 +4,7 @@ import { getPrisma } from "../lib/prisma";
 import { HrReportRepository } from "./hr-report.repo";
 import { HrReportService } from "./hr-report.service";
 import { HrReportController } from "./hr-report.controller";
+import { AppError } from "../lib/appError";
 
 const router = Router();
 const repo = new HrReportRepository(getPrisma());
@@ -20,7 +21,7 @@ const requireHR = (req: any, res: any, next: any) => {
     (frontOfficeRole === "GM" || frontOfficeRole === "TD" || frontOfficeRole === "HR_MANAGER")
   )
     return next();
-  res.status(403).json({ message: "Forbidden" });
+  next(new AppError(403, "FORBIDDEN"));
 };
 
 router.get("/monthly", auth, requireHR, controller.getMonthly);
