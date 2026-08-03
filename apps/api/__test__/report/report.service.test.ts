@@ -61,26 +61,30 @@ describe('HR 보고서 3단계 결재', () => {
     const svc = makeService();
     const r = await svc.approve(reportId, hrManagerId);
     expect(r.status).toBe('FIRST_APPROVED');
-    expect((r as any).firstReviewerId).toBe(hrManagerId);
+    expect(r.firstReviewerId).toBe(hrManagerId);
   });
 
   it('ASSET_MANAGER 2차 승인 → SECOND_APPROVED', async () => {
     const svc = makeService();
     const r = await svc.approve(reportId, assetManagerId);
     expect(r.status).toBe('SECOND_APPROVED');
-    expect((r as any).secondReviewerId).toBe(assetManagerId);
+    expect(r.secondReviewerId).toBe(assetManagerId);
   });
 
   it('GM 최종 승인 → APPROVED', async () => {
     const svc = makeService();
     const r = await svc.approve(reportId, gmId);
     expect(r.status).toBe('APPROVED');
-    expect((r as any).reviewerId).toBe(gmId);
+    expect(r.reviewerId).toBe(gmId);
   });
 });
 
 describe('HR 보고서 반려 후 재제출', () => {
   let rejectedReportId: number;
+
+  afterAll(async () => {
+    if (rejectedReportId) await prisma.report.deleteMany({ where: { id: rejectedReportId } });
+  });
 
   it('HR_STAFF 생성 → 제출', async () => {
     const svc = makeService();
@@ -101,6 +105,5 @@ describe('HR 보고서 반려 후 재제출', () => {
     await svc.update(rejectedReportId, hrStaffId, { content: '보완된 내용' });
     const r = await svc.submit(rejectedReportId, hrStaffId);
     expect(r.status).toBe('SUBMITTED');
-    await prisma.report.deleteMany({ where: { id: rejectedReportId } });
   });
 });
