@@ -11,6 +11,7 @@ import koContract from './locales/ko/contract.json';
 import koYouth from './locales/ko/youth.json';
 import koReport from './locales/ko/report.json';
 import koAdmin from './locales/ko/admin.json';
+import koFacility from './locales/ko/facility.json';
 
 import enCommon from './locales/en/common.json';
 import enMatch from './locales/en/match.json';
@@ -22,6 +23,7 @@ import enContract from './locales/en/contract.json';
 import enYouth from './locales/en/youth.json';
 import enReport from './locales/en/report.json';
 import enAdmin from './locales/en/admin.json';
+import enFacility from './locales/en/facility.json';
 
 const storedLang = localStorage.getItem('app_lang')
 const initLang: 'ko' | 'en' = storedLang === 'en' ? 'en' : 'ko'
@@ -39,6 +41,7 @@ i18n.use(initReactI18next).init({
       youth: koYouth,
       report: koReport,
       admin: koAdmin,
+      facility: koFacility,
     },
     en: {
       common: enCommon,
@@ -51,6 +54,7 @@ i18n.use(initReactI18next).init({
       youth: enYouth,
       report: enReport,
       admin: enAdmin,
+      facility: enFacility,
     },
   },
   lng: initLang,
