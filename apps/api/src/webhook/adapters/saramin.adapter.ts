@@ -7,13 +7,14 @@ export class SaraminAdapter implements WebhookAdapter {
     if (!p.job_id || !p.applicant_id || !p.name || !p.email) {
       throw new AppError(400, "INVALID_PAYLOAD");
     }
-    return {
+    const result: NormalizedApplication = {
       externalJobId: String(p.job_id),
       externalApplicantId: String(p.applicant_id),
       applicantName: String(p.name),
       email: String(p.email),
-      ...(p.phone && { phone: String(p.phone) }),
-      ...(p.resume_url && { resumeUrl: String(p.resume_url) }),
     };
+    if (p.phone) result.phone = String(p.phone);
+    if (p.resume_url) result.resumeUrl = String(p.resume_url);
+    return result;
   }
 }

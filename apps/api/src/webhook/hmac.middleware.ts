@@ -10,7 +10,7 @@ const SOURCE_CONFIG: Record<string, { envVar: string; header: string; prefix?: s
 };
 
 export function verifyWebhookSignature(req: Request, _res: Response, next: NextFunction) {
-  const source = (req.params.source ?? "").toLowerCase();
+  const source = String(req.params.source ?? "").toLowerCase();
   const config = SOURCE_CONFIG[source];
 
   if (!config) return next(new AppError(400, "INVALID_SOURCE"));

@@ -8,13 +8,14 @@ export class IndeedAdapter implements WebhookAdapter {
     if (!p.jobKey || !p.candidateId || !candidate?.fullName || !candidate?.emailAddress) {
       throw new AppError(400, "INVALID_PAYLOAD");
     }
-    return {
+    const result: NormalizedApplication = {
       externalJobId: String(p.jobKey),
       externalApplicantId: String(p.candidateId),
       applicantName: String(candidate.fullName),
       email: String(candidate.emailAddress),
-      ...(candidate.phoneNumber && { phone: String(candidate.phoneNumber) }),
-      ...(p.resumeUrl && { resumeUrl: String(p.resumeUrl) }),
     };
+    if (candidate.phoneNumber) result.phone = String(candidate.phoneNumber);
+    if (p.resumeUrl) result.resumeUrl = String(p.resumeUrl);
+    return result;
   }
 }

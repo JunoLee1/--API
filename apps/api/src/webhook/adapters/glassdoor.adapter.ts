@@ -7,13 +7,14 @@ export class GlassdoorAdapter implements WebhookAdapter {
     if (!p.jobId || !p.applicantId || !p.fullName || !p.email) {
       throw new AppError(400, "INVALID_PAYLOAD");
     }
-    return {
+    const result: NormalizedApplication = {
       externalJobId: String(p.jobId),
       externalApplicantId: String(p.applicantId),
       applicantName: String(p.fullName),
       email: String(p.email),
-      ...(p.phoneNumber && { phone: String(p.phoneNumber) }),
-      ...(p.resumeLink && { resumeUrl: String(p.resumeLink) }),
     };
+    if (p.phoneNumber) result.phone = String(p.phoneNumber);
+    if (p.resumeLink) result.resumeUrl = String(p.resumeLink);
+    return result;
   }
 }

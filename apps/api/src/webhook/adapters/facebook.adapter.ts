@@ -7,13 +7,14 @@ export class FacebookAdapter implements WebhookAdapter {
     if (!p.job_opening_id || !p.applicant_id || !p.full_name || !p.email) {
       throw new AppError(400, "INVALID_PAYLOAD");
     }
-    return {
+    const result: NormalizedApplication = {
       externalJobId: String(p.job_opening_id),
       externalApplicantId: String(p.applicant_id),
       applicantName: String(p.full_name),
       email: String(p.email),
-      ...(p.phone_number && { phone: String(p.phone_number) }),
-      ...(p.resume_url && { resumeUrl: String(p.resume_url) }),
     };
+    if (p.phone_number) result.phone = String(p.phone_number);
+    if (p.resume_url) result.resumeUrl = String(p.resume_url);
+    return result;
   }
 }

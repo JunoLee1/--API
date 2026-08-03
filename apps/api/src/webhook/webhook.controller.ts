@@ -20,7 +20,7 @@ export class WebhookController {
 
   handleApplication = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const key = (req.params.source ?? "").toLowerCase();
+      const key = String(req.params.source ?? "").toLowerCase();
       const entry = ADAPTERS[key];
       if (!entry) throw new AppError(400, "INVALID_SOURCE");
 
