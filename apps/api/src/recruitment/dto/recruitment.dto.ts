@@ -36,6 +36,7 @@ export interface UpdateJobApplicationDto {
   email?: string;
   phone?: string;
   resumeUrl?: string;
+  status?: "SCREENING";
 }
 
 export interface CreateInterviewDto {
