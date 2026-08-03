@@ -96,7 +96,7 @@ export function ReportsPage() {
         <div className="flex gap-2">
           <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as ReportType | '')}>
             <SelectTrigger className="w-36 h-8 text-sm">
-              <SelectValue placeholder={t('page.col.type')} />
+              <SelectValue>{typeFilter ? t(`type.${typeFilter}`) : t('page.filterAll')}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">{t('page.filterAll')}</SelectItem>
@@ -107,7 +107,7 @@ export function ReportsPage() {
           </Select>
           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as ReportStatus | '')}>
             <SelectTrigger className="w-36 h-8 text-sm">
-              <SelectValue placeholder={t('page.col.status')} />
+              <SelectValue>{statusFilter ? t(`status.${statusFilter}`) : t('page.filterAll')}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">{t('page.filterAll')}</SelectItem>

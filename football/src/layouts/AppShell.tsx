@@ -335,7 +335,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: TrendingUp,
     section: 'nav.section.management',
     roles: ['ADMIN', 'FRONT_OFFICE'],
-    frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF'],
+    frontOfficeRoles: ['GM', 'FINANCE_MANAGER', 'FINANCE_STAFF'],
   },
   {
     to: '/admin/budget-plan',
@@ -381,7 +381,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: Building2,
     section: 'nav.section.management',
     roles: ['ADMIN', 'FRONT_OFFICE'],
-    frontOfficeRoles: ['ASSET_MANAGER', 'ASSET_STAFF', 'EQUIPMENT_MANAGER'],
+    frontOfficeRoles: ['GM', 'ASSET_MANAGER', 'ASSET_STAFF', 'EQUIPMENT_MANAGER'],
   },
   {
     to: '/admin/users',

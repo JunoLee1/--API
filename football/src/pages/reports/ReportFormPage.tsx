@@ -76,7 +76,7 @@ export function ReportFormPage() {
             <Label>{t('form.typeLabel')} *</Label>
             <Select value={type} onValueChange={(v) => setType(v as ReportType)}>
               <SelectTrigger className="w-48">
-                <SelectValue />
+                <SelectValue>{t(`type.${type}`)}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {TYPES.map((tp) => (

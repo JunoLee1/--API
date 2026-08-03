@@ -22,6 +22,8 @@ const DEV_ACCOUNTS: { group: string; accounts: { label: string; email: string }[
       { label: '자산관리직원', email: 'asset.staff@club.com' },
       { label: '재무관리', email: 'finance@club.com' },
       { label: '재무직원', email: 'finance.staff@club.com' },
+      { label: '시설관리팀장', email: 'facility.manager@club.com' },
+      { label: '시설관리직원', email: 'facility.staff@club.com' },
       { label: '선수', email: 'player@club.com' },
     ],
   },

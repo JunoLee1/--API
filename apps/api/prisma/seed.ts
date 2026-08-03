@@ -90,9 +90,11 @@ async function seedStaffAccounts() {
   const hashed = await bcrypt.hash('Password1!', 10);
   const korea = await prisma.country.findUniqueOrThrow({ where: { id: 1 } });
 
-  const hrStaffPhone      = await prisma.phoneNumber.create({ data: encryptPhone('010-0000-0018') });
-  const assetStaffPhone   = await prisma.phoneNumber.create({ data: encryptPhone('010-0000-0019') });
-  const financeStaffPhone = await prisma.phoneNumber.create({ data: encryptPhone('010-0000-0020') });
+  const hrStaffPhone        = await prisma.phoneNumber.create({ data: encryptPhone('010-0000-0018') });
+  const assetStaffPhone     = await prisma.phoneNumber.create({ data: encryptPhone('010-0000-0019') });
+  const financeStaffPhone   = await prisma.phoneNumber.create({ data: encryptPhone('010-0000-0020') });
+  const facilityMgrPhone    = await prisma.phoneNumber.create({ data: encryptPhone('010-0000-0021') });
+  const facilityStaffPhone  = await prisma.phoneNumber.create({ data: encryptPhone('010-0000-0022') });
 
   await prisma.user.upsert({
     where: { email: 'hr.staff@club.com' },
@@ -142,7 +144,39 @@ async function seedStaffAccounts() {
     },
   });
 
-  console.log('✅ Staff accounts seeded: hr.staff, asset.staff, finance.staff / Password1!');
+  await prisma.user.upsert({
+    where: { email: 'facility.manager@club.com' },
+    update: {},
+    create: {
+      email: 'facility.manager@club.com',
+      password: hashed,
+      username: '시설관리팀장',
+      nickname: 'facility-manager',
+      role: 'FRONT_OFFICE',
+      frontOfficeRole: 'FACILITY_MANAGER',
+      dateOfBirth: new Date('1985-03-10'),
+      nationalityId: korea.id,
+      phoneNumberId: facilityMgrPhone.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'facility.staff@club.com' },
+    update: {},
+    create: {
+      email: 'facility.staff@club.com',
+      password: hashed,
+      username: '시설관리직원',
+      nickname: 'facility-staff',
+      role: 'FRONT_OFFICE',
+      frontOfficeRole: 'FACILITY_STAFF',
+      dateOfBirth: new Date('1996-11-05'),
+      nationalityId: korea.id,
+      phoneNumberId: facilityStaffPhone.id,
+    },
+  });
+
+  console.log('✅ Staff accounts seeded: hr.staff, asset.staff, finance.staff, facility.manager, facility.staff / Password1!');
 }
 
 async function seedReports() {
