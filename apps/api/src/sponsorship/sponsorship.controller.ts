@@ -3,6 +3,9 @@ import { AppError } from "../lib/appError";
 import type { SponsorshipService } from "./sponsorship.service";
 import type { CreateSponsorshipDto, UpdateSponsorshipDto, SponsorshipListQuery } from "./dto/sponsorship.dto";
 
+const canRead = (role: string) =>
+  role === "ADMIN" || role === "FRONT_OFFICE";
+
 const canWrite = (role: string, foRole: string | null | undefined) =>
   role === "ADMIN" || (role === "FRONT_OFFICE" && foRole === "FINANCE_MANAGER");
 
@@ -11,12 +14,14 @@ export class SponsorshipController {
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      if (!canRead(req.user!.role)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.list(req.query as SponsorshipListQuery));
     } catch (err) { next(err); }
   };
 
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      if (!canRead(req.user!.role)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.get(Number(req.params["id"])));
     } catch (err) { next(err); }
   };
