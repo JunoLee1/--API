@@ -10,6 +10,12 @@ import i18n from '@/i18n'
 
 const DEV_ACCOUNTS: { group: string; accounts: { label: string; email: string }[] }[] = [
   {
+    group: '플랫폼',
+    accounts: [
+      { label: '전사관리자', email: 'superadmin@platform.com' },
+    ],
+  },
+  {
     group: '기본',
     accounts: [
       { label: '관리자', email: 'admin@club.com' },
