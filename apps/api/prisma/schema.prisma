@@ -297,6 +297,7 @@ enum NotificationType {
   FACILITY_EMERGENCY
   FACILITY_MAINTENANCE_RESOLVED
   PAYROLL_CONFIRMED
+  JOB_POSTING_DRAFT_CREATED
 }
 
 enum BadgeType {
@@ -1913,6 +1914,7 @@ model AcademyFee {
 model ClubSettings {
   id       Int    @id @default(1)
   currency String @default("KRW")
+  ibiBeta  Float  @default(1.0)
 }
 
 model StaffRecord {
