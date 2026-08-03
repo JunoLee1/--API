@@ -86,6 +86,47 @@ async function seedHrSubDepartments() {
   console.log('HR sub-departments seeded: HRM, HRD, 노무·총무');
 }
 
+async function seedReports() {
+  const [gm, hr, asset, finance, coach] = await Promise.all([
+    prisma.user.findUniqueOrThrow({ where: { email: 'gm@club.com' } }),
+    prisma.user.findUniqueOrThrow({ where: { email: 'hr@club.com' } }),
+    prisma.user.findUniqueOrThrow({ where: { email: 'asset@club.com' } }),
+    prisma.user.findUniqueOrThrow({ where: { email: 'finance@club.com' } }),
+    prisma.user.findUniqueOrThrow({ where: { email: 'coach@club.com' } }),
+  ]);
+
+  const existing = await prisma.report.count();
+  if (existing > 0) {
+    console.log('   - Reports: already seeded, skipping');
+    return;
+  }
+
+  const now = new Date();
+  const reports = [
+    // HR 보고서
+    { type: 'HR' as const, title: '2026년 7월 인력 현황 보고', content: '7월 기준 전체 인력 현황 및 채용 진행 상황 보고서입니다.', authorId: hr.id, status: 'DRAFT' as const },
+    { type: 'HR' as const, title: '2026년 상반기 인사 평가 결과', content: '상반기 성과 평가 및 역량 평가 결과 종합 보고서입니다.', authorId: hr.id, status: 'SUBMITTED' as const, submittedAt: new Date(now.getTime() - 2 * 24 * 3600_000) },
+    { type: 'HR' as const, title: '신규 채용 절차 개선 방안', content: '채용 프로세스 효율화를 위한 개선 방안 및 실행 계획입니다.', authorId: hr.id, status: 'APPROVED' as const, submittedAt: new Date(now.getTime() - 7 * 24 * 3600_000), reviewerId: gm.id, reviewedAt: new Date(now.getTime() - 5 * 24 * 3600_000) },
+    // ASSET 보고서
+    { type: 'ASSET' as const, title: '구장 시설물 점검 현황 (7월)', content: '훈련 구장 및 경기장 시설물 정기 점검 결과 보고서입니다.', authorId: asset.id, status: 'DRAFT' as const },
+    { type: 'ASSET' as const, title: '장비 교체 및 구매 요청 보고', content: '노후 장비 현황 분석 및 신규 구매 필요 품목 정리 보고서입니다.', authorId: asset.id, status: 'SUBMITTED' as const, submittedAt: new Date(now.getTime() - 3 * 24 * 3600_000) },
+    { type: 'ASSET' as const, title: '2026년 자산 관리 연간 계획', content: '시설 유지보수 일정 및 자산 취득·처분 계획 보고서입니다.', authorId: asset.id, status: 'APPROVED' as const, submittedAt: new Date(now.getTime() - 10 * 24 * 3600_000), reviewerId: gm.id, reviewedAt: new Date(now.getTime() - 8 * 24 * 3600_000) },
+    // FINANCIAL 보고서
+    { type: 'FINANCIAL' as const, title: '2026년 7월 예산 집행 현황', content: '월별 예산 집행 내역 및 잔액 현황 보고서입니다.', authorId: finance.id, status: 'DRAFT' as const },
+    { type: 'FINANCIAL' as const, title: '선수단 급여 비용 분석 보고', content: '선수단 급여 지출 현황 및 리그 대비 벤치마크 분석입니다.', authorId: finance.id, status: 'SUBMITTED' as const, submittedAt: new Date(now.getTime() - 1 * 24 * 3600_000) },
+    { type: 'FINANCIAL' as const, title: '스폰서십 수익 결산 보고 (상반기)', content: '파트너사별 스폰서십 계약 이행 및 수익 결산 내역입니다.', authorId: finance.id, status: 'APPROVED' as const, submittedAt: new Date(now.getTime() - 14 * 24 * 3600_000), reviewerId: gm.id, reviewedAt: new Date(now.getTime() - 12 * 24 * 3600_000) },
+    // TRAINING 보고서
+    { type: 'TRAINING' as const, title: '주간 훈련 계획 보고 (7/28~8/3)', content: '이번 주 훈련 목표, 세션 구성, 부상자 현황 포함 보고서입니다.', authorId: coach.id, status: 'DRAFT' as const },
+    { type: 'TRAINING' as const, title: '전술 훈련 성과 분석 보고', content: '4-3-3 전술 훈련 적응도 및 개인 수행 지표 분석입니다.', authorId: coach.id, status: 'SUBMITTED' as const, submittedAt: new Date(now.getTime() - 2 * 24 * 3600_000) },
+    { type: 'TRAINING' as const, title: '프리시즌 훈련 결산 보고', content: '프리시즌 전 기간 훈련 부하, 체력 지표, 전술 완성도 종합 분석입니다.', authorId: coach.id, status: 'APPROVED' as const, submittedAt: new Date(now.getTime() - 20 * 24 * 3600_000), reviewerId: coach.id, reviewedAt: new Date(now.getTime() - 18 * 24 * 3600_000) },
+    // PERFORMANCE 보고서 (GM 작성)
+    { type: 'PERFORMANCE' as const, title: '선수단 성과 평가 보고 (2분기)', content: '2분기 경기 성과 지표 및 선수 개인 평가 종합 보고서입니다.', authorId: gm.id, status: 'APPROVED' as const, submittedAt: new Date(now.getTime() - 30 * 24 * 3600_000), reviewerId: gm.id, reviewedAt: new Date(now.getTime() - 28 * 24 * 3600_000) },
+  ];
+
+  await prisma.report.createMany({ data: reports });
+  console.log(`   - Reports: ${reports.length}개 (HR×3, ASSET×3, FINANCIAL×3, TRAINING×3, PERFORMANCE×1)`);
+}
+
 async function seedRecruitment() {
   const hashed = await bcrypt.hash('Password1!', 10);
 
@@ -2083,6 +2124,9 @@ async function main() {
 
   // ── Recruitment ───────────────────────────────────────
   await seedRecruitment();
+
+  // ── Reports ───────────────────────────────────────────
+  await seedReports();
 
   console.log("✅ Seed complete");
   console.log(`   - Countries: 2`);
