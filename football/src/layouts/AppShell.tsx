@@ -381,7 +381,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: Building2,
     section: 'nav.section.management',
     roles: ['ADMIN', 'FRONT_OFFICE'],
-    frontOfficeRoles: ['EQUIPMENT_MANAGER'],
+    frontOfficeRoles: ['ASSET_MANAGER', 'ASSET_STAFF', 'EQUIPMENT_MANAGER'],
   },
   {
     to: '/admin/users',
