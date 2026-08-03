@@ -1,3 +1,4 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
 import passport from "passport";
 import { AuthController } from "./auth.controller";
@@ -10,7 +11,6 @@ const repo = new AuthRepository(getPrisma());
 const service = new AuthService(repo);
 const controller = new AuthController(service, repo);
 
-const auth = passport.authenticate("accessToken", { session: false });
 const refreshAuth = passport.authenticate("refreshToken", { session: false });
 
 // 공개

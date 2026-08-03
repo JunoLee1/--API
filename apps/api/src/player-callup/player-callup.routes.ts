@@ -1,5 +1,5 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import passport from "passport";
 import { PlayerCallupController } from "./player-callup.controller";
 import { PlayerCallupService } from "./player-callup.service";
 import { PlayerCallupRepository } from "./player-callup.repo";
@@ -13,7 +13,6 @@ const notifRepo = new NotificationRepository(prisma);
 const service = new PlayerCallupService(repo, notifRepo);
 const controller = new PlayerCallupController(service);
 
-const auth = passport.authenticate("accessToken", { session: false });
 
 router.get("/", auth, controller.getAll);
 router.get("/:id", auth, controller.getById);

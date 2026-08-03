@@ -1,5 +1,5 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import passport from "passport";
 import { PlayerController } from "./player.controller";
 import { PlayerService } from "./player.service";
 import { PlayerRepository } from "./player.repo";
@@ -22,7 +22,6 @@ const notifRepo = new NotificationRepository(getPrisma());
 const jerseyService = new JerseyService(jerseyRepo, notifRepo);
 const jerseyController = new JerseyController(jerseyService);
 
-const auth = passport.authenticate("accessToken", { session: false });
 
 // 선수 목록 조회 (?status=&position=&level=&nationalityId=)
 router.get("/", auth, controller.getPlayers);

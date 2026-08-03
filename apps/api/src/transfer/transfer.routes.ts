@@ -1,5 +1,5 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import passport from "passport";
 import { TransferController } from "./transfer.controller";
 import { TransferService } from "./transfer.service";
 import { TransferRepository } from "./transfer.repo";
@@ -10,7 +10,6 @@ const repo = new TransferRepository(getPrisma());
 const service = new TransferService(repo);
 const controller = new TransferController(service);
 
-const auth = passport.authenticate("accessToken", { session: false });
 
 // 선수별 이적 목록
 router.get("/player/:playerId", auth, controller.getByPlayer);

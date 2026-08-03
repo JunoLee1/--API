@@ -1,5 +1,5 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import passport from "passport";
 import { TrainingController } from "./training.controller";
 import { TrainingService } from "./training.service";
 import { TrainingRepository } from "./training.repo";
@@ -12,7 +12,6 @@ const notifRepo = new NotificationRepository(getPrisma());
 const service = new TrainingService(repo, notifRepo);
 const controller = new TrainingController(service);
 
-const auth = passport.authenticate("accessToken", { session: false });
 
 router.get("/", auth, controller.getSessions);
 router.get("/results", auth, controller.getResults);

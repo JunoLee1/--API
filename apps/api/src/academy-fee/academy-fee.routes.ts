@@ -1,5 +1,5 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import passport from "passport";
 import { AcademyFeeController } from "./academy-fee.controller";
 import { AcademyFeeService } from "./academy-fee.service";
 import { AcademyFeeRepository } from "./academy-fee.repo";
@@ -10,7 +10,6 @@ const router = Router();
 const prisma = getPrisma();
 const service = new AcademyFeeService(new AcademyFeeRepository(prisma), new NotificationRepository(prisma));
 const controller = new AcademyFeeController(service);
-const auth = passport.authenticate("accessToken", { session: false });
 
 router.get("/stats", auth, controller.getStats);
 router.get("/", auth, controller.getAll);

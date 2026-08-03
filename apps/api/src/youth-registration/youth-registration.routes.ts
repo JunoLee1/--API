@@ -1,6 +1,6 @@
+import { auth } from "../lib/authMiddleware";
 import crypto from "crypto";
 import { Router } from "express";
-import passport from "passport";
 import { YouthRegistrationController } from "./youth-registration.controller";
 import { YouthRegistrationService } from "./youth-registration.service";
 import { YouthRegistrationRepository } from "./youth-registration.repo";
@@ -42,7 +42,6 @@ const inviteAdapter = {
 const service = new YouthRegistrationService(repo, notifRepo, inviteAdapter);
 const controller = new YouthRegistrationController(service);
 
-const auth = passport.authenticate("accessToken", { session: false });
 
 router.get("/", auth, controller.getAll);
 router.get("/:id", auth, controller.getById);

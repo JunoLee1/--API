@@ -3,6 +3,15 @@ import { useTranslation } from 'react-i18next'
 import { SafeguardButton } from '@/components/layout/SafeguardButton'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { teamApi } from '@/services/team.service'
+import type { Team } from '@/types/team'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useLiteMode } from '@/hooks/useLiteMode'
 import { useConfirm } from '@/lib/confirm-dialog'
@@ -455,6 +464,8 @@ export function AppShell() {
   const apiPending = useApiPending()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [superAdminTeams, setSuperAdminTeams] = useState<Team[]>([])
+  const currentSuperAdminTeamId = localStorage.getItem('superAdminTeamId')
   const [openSection, setOpenSection] = useState<string | null>(() => {
     const found = NAV_ITEMS.find((item) => {
       if (!item.section) return false
@@ -494,6 +505,17 @@ export function AppShell() {
     return () => disconnectSocket()
   }, [user])
 
+  useEffect(() => {
+    if (!loading && user?.role === 'SUPER_ADMIN' && !localStorage.getItem('superAdminTeamId')) {
+      navigate('/team-select', { replace: true })
+    }
+  }, [loading, user, navigate])
+
+  useEffect(() => {
+    if (user?.role !== 'SUPER_ADMIN') return
+    teamApi.list().then((ts) => setSuperAdminTeams(ts.filter((t) => t.isActive))).catch(() => null)
+  }, [user])
+
   usePlayerNotification(refreshUnread)
   usePartnerNotification(user?.role)
   useReportNotification(refreshUnread)
@@ -502,6 +524,11 @@ export function AppShell() {
     authApi.logout()
     void i18n.changeLanguage('ko')
     navigate('/login')
+  }
+
+  const handleTeamSwitch = (teamId: string) => {
+    localStorage.setItem('superAdminTeamId', teamId)
+    window.location.reload()
   }
 
   const handleLogout = async () => {
@@ -518,6 +545,7 @@ export function AppShell() {
     if (item.liteBlocked && isLite) return false
     if (!item.roles) return true
     if (!user) return false
+    if (user.role === 'SUPER_ADMIN') return true
     if (!item.roles.includes(user.role)) return false
     if (item.coachingRoles && user.role === 'COACHING_STAFF') {
       return user.coachingRole !== null && item.coachingRoles.includes(user.coachingRole)
@@ -672,6 +700,23 @@ export function AppShell() {
         <div className="px-4 h-14 border-b flex items-center shrink-0">
           <h1 className="text-base font-semibold tracking-tight">Football ERP</h1>
         </div>
+
+        {user?.role === 'SUPER_ADMIN' && (
+          <div className="px-3 py-2 border-b">
+            <Select value={currentSuperAdminTeamId ?? ''} onValueChange={handleTeamSwitch}>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder="구단 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                {superAdminTeams.map((t) => (
+                  <SelectItem key={t.id} value={String(t.id)}>
+                    {t.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <nav
           className={`flex-1 px-3 py-4 transition-opacity ${

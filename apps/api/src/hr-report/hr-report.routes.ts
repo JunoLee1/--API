@@ -1,5 +1,5 @@
+import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import passport from "passport";
 import { getPrisma } from "../lib/prisma";
 import { HrReportRepository } from "./hr-report.repo";
 import { HrReportService } from "./hr-report.service";
@@ -11,7 +11,6 @@ const repo = new HrReportRepository(getPrisma());
 const service = new HrReportService(repo);
 const controller = new HrReportController(service);
 
-const auth = passport.authenticate("accessToken", { session: false });
 
 const requireHR = (req: any, res: any, next: any) => {
   const { role, frontOfficeRole } = req.user as any;

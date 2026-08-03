@@ -1,6 +1,6 @@
+import { auth } from "../lib/authMiddleware";
 // apps/api/src/payroll/payroll.routes.ts
 import { Router } from "express";
-import passport from "passport";
 import { getPrisma } from "../lib/prisma";
 import { ConfigRepository } from "./config/config.repo";
 import { ConfigService } from "./config/config.service";
@@ -16,7 +16,6 @@ import { RunService } from "./run/run.service";
 import { RunController } from "./run/run.controller";
 
 const router = Router();
-const auth = passport.authenticate("accessToken", { session: false });
 
 const prisma = getPrisma();
 
