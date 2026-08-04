@@ -21,7 +21,7 @@ export class AuthRepository {
   findByEmail(email: string) {
     return this.prisma.user.findUnique({
       where: { email },
-      select: { id: true, email: true, username: true, nickname: true, role: true, coachingRole: true, frontOfficeRole: true, teamId: true, clubId: true, password: true, language: true },
+      select: { id: true, email: true, username: true, nickname: true, role: true, coachingRole: true, frontOfficeRole: true, teamId: true, clubId: true, password: true },
     });
   }
 
