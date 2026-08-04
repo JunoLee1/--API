@@ -10,6 +10,8 @@ export const USER_SELECT = {
   role: true,
   coachingRole: true,
   frontOfficeRole: true,
+  teamId: true,
+  clubId: true,
   isDeleted: true,
   isOutOfOffice: true,
   player: { select: { id: true, playerName: true } },
@@ -59,10 +61,11 @@ export class AdminRepository {
     role: Role,
     coachingRole: CoachingRole | null,
     frontOfficeRole: FrontOfficeRole | null,
+    clubId?: number | null,
   ) {
     return this.prisma.user.update({
       where: { id },
-      data: { role, coachingRole, frontOfficeRole },
+      data: { role, coachingRole, frontOfficeRole, ...(clubId !== undefined && { clubId }) },
       select: USER_SELECT,
     });
   }

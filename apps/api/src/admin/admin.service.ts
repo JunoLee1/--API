@@ -28,7 +28,7 @@ export class AdminService {
     const coachingRole = dto.role === "COACHING_STAFF" ? (dto.coachingRole ?? null) : null;
     const frontOfficeRole = dto.role === "FRONT_OFFICE" ? (dto.frontOfficeRole ?? null) : null;
 
-    return this.repo.updateRole(id, dto.role, coachingRole, frontOfficeRole);
+    return this.repo.updateRole(id, dto.role, coachingRole, frontOfficeRole, dto.clubId);
   }
 
   async deactivateUser(id: number, requesterId: number) {
