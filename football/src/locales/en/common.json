@@ -26,6 +26,12 @@
       "coachingStaff": "Coaching Staff",
       "management": "Management"
     },
+    "subsection": {
+      "hr": "HR",
+      "finance": "Finance",
+      "facilityAssets": "Facility & Assets",
+      "system": "System"
+    },
     "item": {
       "dashboard": "Dashboard",
       "playerList": "Player List",

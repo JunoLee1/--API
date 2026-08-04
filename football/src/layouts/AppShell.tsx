@@ -71,12 +71,15 @@ import {
   type Role,
 } from '@/types/auth'
 
+type NavSubSection = 'nav.subsection.hr' | 'nav.subsection.finance' | 'nav.subsection.facilityAssets' | 'nav.subsection.system'
+
 interface NavItem {
   to: string
   label: string
   icon: LucideIcon
   end?: boolean
   section?: 'nav.section.playerMgmt' | 'nav.section.contractTransfer' | 'nav.section.injuryMedical' | 'nav.section.training' | 'nav.section.matchAnalysis' | 'nav.section.youth' | 'nav.section.coachingStaff' | 'nav.section.management'
+  subSection?: NavSubSection
   roles?: Role[]
   coachingRoles?: CoachingRole[]
   frontOfficeRoles?: FrontOfficeRole[]
@@ -94,6 +97,13 @@ const SECTION_ORDER: Array<NavItem['section'] & string> = [
   'nav.section.youth',
   'nav.section.coachingStaff',
   'nav.section.management',
+]
+
+const MANAGEMENT_SUBSECTION_ORDER: NavSubSection[] = [
+  'nav.subsection.hr',
+  'nav.subsection.finance',
+  'nav.subsection.facilityAssets',
+  'nav.subsection.system',
 ]
 
 const NAV_ITEMS: NavItem[] = [
@@ -305,7 +315,7 @@ const NAV_ITEMS: NavItem[] = [
     coachingRoles: ['HEAD_COACH'],
   },
 
-  // 관리
+  // 관리 — 소분류 없음 (단독 아이템)
   {
     to: '/reports',
     label: 'nav.item.reportApproval',
@@ -314,11 +324,14 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
     frontOfficeRoles: ['GM', 'TD', 'HR_MANAGER', 'HR_STAFF', 'FINANCE_MANAGER', 'FINANCE_STAFF', 'ASSET_MANAGER', 'ASSET_STAFF', 'SCOUT'],
   },
+
+  // 관리 > 인사
   {
     to: '/admin/departments',
     label: 'nav.item.departments',
     icon: Building2,
     section: 'nav.section.management',
+    subSection: 'nav.subsection.hr',
     roles: ['ADMIN', 'FRONT_OFFICE'],
     frontOfficeRoles: ['GM'],
   },
@@ -327,14 +340,35 @@ const NAV_ITEMS: NavItem[] = [
     label: 'nav.item.staffRecords',
     icon: Users2,
     section: 'nav.section.management',
+    subSection: 'nav.subsection.hr',
     roles: ['ADMIN', 'FRONT_OFFICE'],
     frontOfficeRoles: ['GM'],
   },
+  {
+    to: '/admin/hr-report',
+    label: 'nav.item.hrReport',
+    icon: ClipboardList,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.hr',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+  },
+  {
+    to: '/admin/recruitment',
+    label: 'nav.item.recruitment',
+    icon: ClipboardList,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.hr',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['GM', 'HR_MANAGER'],
+  },
+
+  // 관리 > 재무
   {
     to: '/admin/meal-expenses',
     label: 'nav.item.mealExpenses',
     icon: Receipt,
     section: 'nav.section.management',
+    subSection: 'nav.subsection.finance',
     roles: ['ADMIN', 'FRONT_OFFICE'],
     frontOfficeRoles: ['GM', 'FINANCE_MANAGER', 'FINANCE_STAFF'],
   },
@@ -343,6 +377,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'nav.item.financialReport',
     icon: TrendingUp,
     section: 'nav.section.management',
+    subSection: 'nav.subsection.finance',
     roles: ['ADMIN', 'FRONT_OFFICE'],
     frontOfficeRoles: ['GM', 'FINANCE_MANAGER', 'FINANCE_STAFF'],
   },
@@ -351,6 +386,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'nav.item.budgetPlan',
     icon: PieChart,
     section: 'nav.section.management',
+    subSection: 'nav.subsection.finance',
     roles: ['ADMIN', 'FRONT_OFFICE'],
     frontOfficeRoles: ['GM', 'FINANCE_MANAGER', 'TD'],
   },
@@ -359,29 +395,18 @@ const NAV_ITEMS: NavItem[] = [
     label: 'nav.item.operatingExpenses',
     icon: Receipt,
     section: 'nav.section.management',
+    subSection: 'nav.subsection.finance',
     roles: ['ADMIN', 'FRONT_OFFICE'],
     frontOfficeRoles: ['GM', 'FINANCE_MANAGER', 'FINANCE_STAFF', 'TD'],
   },
-  {
-    to: '/admin/hr-report',
-    label: 'nav.item.hrReport',
-    icon: ClipboardList,
-    section: 'nav.section.management',
-    roles: ['ADMIN', 'FRONT_OFFICE'],
-  },
-  {
-    to: '/admin/recruitment',
-    label: 'nav.item.recruitment',
-    icon: ClipboardList,
-    section: 'nav.section.management',
-    roles: ['ADMIN', 'FRONT_OFFICE'],
-    frontOfficeRoles: ['GM', 'HR_MANAGER'],
-  },
+
+  // 관리 > 시설·자산
   {
     to: '/equipment',
     label: 'nav.item.equipment',
     icon: Package,
     section: 'nav.section.management',
+    subSection: 'nav.subsection.facilityAssets',
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
   },
   {
@@ -389,6 +414,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'nav.item.facilityMgmt',
     icon: Building2,
     section: 'nav.section.management',
+    subSection: 'nav.subsection.facilityAssets',
     roles: ['ADMIN', 'FRONT_OFFICE'],
     frontOfficeRoles: ['FACILITY_MANAGER', 'FACILITY_STAFF'],
   },
@@ -397,14 +423,18 @@ const NAV_ITEMS: NavItem[] = [
     label: 'nav.item.partnerMgmt',
     icon: Building2,
     section: 'nav.section.management',
+    subSection: 'nav.subsection.facilityAssets',
     roles: ['ADMIN', 'FRONT_OFFICE'],
     frontOfficeRoles: ['GM', 'ASSET_MANAGER', 'ASSET_STAFF', 'EQUIPMENT_MANAGER'],
   },
+
+  // 관리 > 시스템
   {
     to: '/admin/users',
     label: 'nav.item.userMgmt',
     icon: Settings,
     section: 'nav.section.management',
+    subSection: 'nav.subsection.system',
     roles: ['ADMIN'],
   },
   {
@@ -412,6 +442,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'nav.item.teamMgmt',
     icon: Users2,
     section: 'nav.section.management',
+    subSection: 'nav.subsection.system',
     roles: ['ADMIN'],
   },
   {
@@ -419,6 +450,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'nav.item.seasonMgmt',
     icon: CalendarDays,
     section: 'nav.section.management',
+    subSection: 'nav.subsection.system',
     roles: ['ADMIN'],
   },
   {
@@ -426,6 +458,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'nav.item.auditLogs',
     icon: ClipboardList,
     section: 'nav.section.management',
+    subSection: 'nav.subsection.system',
     roles: ['ADMIN'],
   },
   {
@@ -433,6 +466,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'nav.item.loginHistory',
     icon: History,
     section: 'nav.section.management',
+    subSection: 'nav.subsection.system',
     roles: ['ADMIN'],
   },
   {
@@ -440,6 +474,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'nav.item.safeguardReports',
     icon: Shield,
     section: 'nav.section.management',
+    subSection: 'nav.subsection.system',
     roles: ['ADMIN'],
   },
   {
@@ -447,6 +482,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'nav.item.teamSettings',
     icon: Settings,
     section: 'nav.section.management',
+    subSection: 'nav.subsection.system',
     roles: ['ADMIN'],
   },
 ]
@@ -475,6 +511,15 @@ export function AppShell() {
     return found?.section ?? null
   })
 
+  const [openSubSections, setOpenSubSections] = useState<Set<string>>(() => {
+    const found = NAV_ITEMS.find((item) => {
+      if (!item.subSection) return false
+      if (item.end) return location.pathname === item.to
+      return location.pathname === item.to || location.pathname.startsWith(item.to + '/')
+    })
+    return found?.subSection ? new Set([found.subSection]) : new Set()
+  })
+
   useEffect(() => {
     const activeItem = NAV_ITEMS.find((item) => {
       if (item.end) return location.pathname === item.to
@@ -482,6 +527,9 @@ export function AppShell() {
     })
     if (activeItem?.section) {
       setOpenSection(activeItem.section)
+    }
+    if (activeItem?.subSection) {
+      setOpenSubSections((prev) => new Set([...prev, activeItem.subSection!]))
     }
   }, [location.pathname])
 
@@ -584,6 +632,60 @@ export function AppShell() {
     </NavLink>
   )
 
+  const toggleSubSection = (sub: string) => {
+    setOpenSubSections((prev) => {
+      const next = new Set(prev)
+      if (next.has(sub)) next.delete(sub)
+      else next.add(sub)
+      return next
+    })
+  }
+
+  const renderManagementSubSections = (items: NavItem[], onClick?: () => void) => {
+    const rootItems = items.filter((i) => !i.subSection)
+    return (
+      <div className="space-y-1 mt-1 ml-3 pl-2 border-l border-border/60">
+        {rootItems.map((item) => renderNavLink(item, onClick))}
+        {MANAGEMENT_SUBSECTION_ORDER.map((sub) => {
+          const subItems = items.filter((i) => i.subSection === sub)
+          if (subItems.length === 0) return null
+          const isSubOpen = openSubSections.has(sub)
+          const hasSubActive = subItems.some(isItemActive)
+          return (
+            <div key={sub}>
+              <button
+                type="button"
+                aria-expanded={isSubOpen}
+                onClick={(e) => {
+                  toggleSubSection(sub)
+                  e.currentTarget.blur()
+                }}
+                className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold text-muted-foreground hover:bg-accent/50 hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset transition-colors"
+              >
+                <ChevronRight
+                  className={cn('h-3 w-3 transition-transform shrink-0', isSubOpen && 'rotate-90')}
+                  aria-hidden
+                />
+                <span className="flex-1 text-left">{t(sub)}</span>
+                {hasSubActive && !isSubOpen && (
+                  <span
+                    className="h-1.5 w-1.5 rounded-full bg-foreground"
+                    aria-label="이 소분류에 현재 페이지 있음"
+                  />
+                )}
+              </button>
+              {isSubOpen && (
+                <div className="space-y-1 mt-0.5 ml-3 pl-2 border-l border-border/40">
+                  {subItems.map((item) => renderNavLink(item, onClick))}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
   const renderNavGroups = (onClick?: () => void) =>
     navGroups.map((g, idx) => {
       if (g.section === null) {
@@ -619,9 +721,13 @@ export function AppShell() {
             )}
           </button>
           {isOpen && (
-            <div className="space-y-1 mt-1 ml-3 pl-2 border-l border-border/60">
-              {g.items.map((item) => renderNavLink(item, onClick))}
-            </div>
+            g.section === 'nav.section.management'
+              ? renderManagementSubSections(g.items, onClick)
+              : (
+                <div className="space-y-1 mt-1 ml-3 pl-2 border-l border-border/60">
+                  {g.items.map((item) => renderNavLink(item, onClick))}
+                </div>
+              )
           )}
         </div>
       )
