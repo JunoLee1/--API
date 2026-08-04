@@ -34,7 +34,7 @@ export class DepartmentController {
       const { role } = req.user!;
       if (!canManage(role)) throw new AppError(403, "FORBIDDEN");
       const { name, parentId, category } = req.body as { name: string; parentId?: number; category?: string };
-      if (!name?.trim()) throw new AppError(400, "NAME_REQUIRED");
+      if (typeof name !== "string" || !name.trim()) throw new AppError(400, "NAME_REQUIRED");
       res.status(201).json(
         await this.service.create({
           name: name.trim(),

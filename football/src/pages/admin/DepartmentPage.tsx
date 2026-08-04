@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { ChevronRight, ChevronDown } from 'lucide-react'
 import { departmentApi } from '@/services/department.service'
 import type { Department } from '@/services/department.service'
 import { Button } from '@/components/ui/button'
@@ -18,6 +19,7 @@ import {
 export function DepartmentPage() {
   const { t } = useTranslation('admin')
   const [departments, setDepartments] = useState<Department[]>([])
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set())
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Department | null>(null)
   const [name, setName] = useState('')
@@ -119,7 +121,28 @@ export function DepartmentPage() {
           {departments.map((d) => (
             <>
               <tr key={d.id} className="border-b hover:bg-muted/30">
-                <td className="py-2 pr-4 font-medium">{d.name}</td>
+                <td className="py-2 pr-4 font-medium">
+                  {d.children.length > 0 ? (
+                    <button
+                      type="button"
+                      className="flex items-center gap-1 hover:text-primary"
+                      onClick={() =>
+                        setExpandedIds((prev) => {
+                          const next = new Set(prev)
+                          next.has(d.id) ? next.delete(d.id) : next.add(d.id)
+                          return next
+                        })
+                      }
+                    >
+                      {expandedIds.has(d.id)
+                        ? <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+                        : <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
+                      {d.name}
+                    </button>
+                  ) : (
+                    d.name
+                  )}
+                </td>
                 <td className="py-2 pr-4">
                   <div className="flex items-center gap-2">
                     <Switch
@@ -148,7 +171,7 @@ export function DepartmentPage() {
                   </Button>
                 </td>
               </tr>
-              {d.children.map((team) => (
+              {expandedIds.has(d.id) && d.children.map((team) => (
                 <tr key={team.id} className="border-b bg-muted/10 hover:bg-muted/20">
                   <td className="py-2 pr-4 pl-8 text-muted-foreground">
                     <span className="mr-2 text-muted-foreground/50">└</span>
