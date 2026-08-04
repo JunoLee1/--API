@@ -10,9 +10,8 @@ export function useLiteMode(): boolean {
     if (!user) return
     teamApi.list()
       .then(teams => {
-        // Match user to their team via coachingStaff or player association
-        // Default: not Lite (most users aren't on a Lite team)
-        setIsLite(false)
+        const userTeam = teams.find(t => t.id === user.teamId)
+        setIsLite(userTeam?.club?.isLite ?? false)
       })
       .catch(() => null)
   }, [user])

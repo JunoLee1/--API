@@ -607,7 +607,7 @@ export function AppShell() {
     if (item.liteBlocked && isLite) return false
     if (!item.roles) return true
     if (!user) return false
-    if (user.role === 'SUPER_ADMIN') return true
+    if (user.role === 'SUPER_ADMIN' || user.role === 'GM') return true
     if (!item.roles.includes(user.role)) return false
     if (item.coachingRoles && user.role === 'COACHING_STAFF') {
       return user.coachingRole !== null && item.coachingRoles.includes(user.coachingRole)
