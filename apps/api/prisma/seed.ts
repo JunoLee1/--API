@@ -544,6 +544,31 @@ async function main() {
     create: { name: "브라질", code: "BR" },
   });
 
+  // ── Additional Countries ──────────────────────────────
+  const extraCountries = [
+    { id: 3,  name: "일본",          code: "JP" },
+    { id: 4,  name: "미국",          code: "US" },
+    { id: 5,  name: "영국",          code: "GB" },
+    { id: 6,  name: "독일",          code: "DE" },
+    { id: 7,  name: "프랑스",        code: "FR" },
+    { id: 8,  name: "스페인",        code: "ES" },
+    { id: 9,  name: "이탈리아",      code: "IT" },
+    { id: 10, name: "포르투갈",      code: "PT" },
+    { id: 11, name: "네덜란드",      code: "NL" },
+    { id: 12, name: "벨기에",        code: "BE" },
+    { id: 13, name: "오스트리아",    code: "AT" },
+    { id: 14, name: "호주",          code: "AU" },
+    { id: 15, name: "중국",          code: "CN" },
+    { id: 16, name: "아르헨티나",    code: "AR" },
+    { id: 17, name: "콜롬비아",      code: "CO" },
+    { id: 18, name: "나이지리아",    code: "NG" },
+    { id: 19, name: "가나",          code: "GH" },
+    { id: 20, name: "세네갈",        code: "SN" },
+  ];
+  for (const c of extraCountries) {
+    await prisma.country.upsert({ where: { id: c.id }, update: {}, create: c });
+  }
+
   // ── Departments ───────────────────────────────────────
   await seedDepartments();
 

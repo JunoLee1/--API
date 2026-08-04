@@ -10,6 +10,9 @@ export class AuthService {
   constructor(private repo: AuthRepository) {}
 
   async login({ email, password }: LoginDto) {
+    if (!email || typeof email !== "string" || !password || typeof password !== "string") {
+      throw new AppError(401, "INVALID_CREDENTIALS");
+    }
     const user = await this.repo.findByEmail(email);
     if (!user) throw new AppError(401, "INVALID_CREDENTIALS");
 

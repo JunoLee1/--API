@@ -215,7 +215,7 @@ function LeagueDetailPanel({ league, allClubs, onUpdated }: LeagueDetailPanelPro
 
       {availableClubs.length > 0 && (
         <div className="flex gap-2">
-          <Select value={selectedClubId} onValueChange={setSelectedClubId}>
+          <Select value={selectedClubId} onValueChange={(v) => setSelectedClubId(v ?? '')}>
             <SelectTrigger className="flex-1">
               <SelectValue placeholder="구단 선택" />
             </SelectTrigger>
