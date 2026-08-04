@@ -24,6 +24,7 @@ export class CoachingStaffController {
       const { role, coachingRole } = req.user!;
       const canAccess =
         isAdminLike(role) ||
+        role === "GM" ||
         (role === "COACHING_STAFF" && coachingRole === "HEAD_COACH");
       if (!canAccess) throw new AppError(403, "FORBIDDEN");
 
