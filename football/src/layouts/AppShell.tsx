@@ -71,11 +71,6 @@ import {
   Wallet,
   Warehouse,
   Wrench,
-  CalendarDays,
-  History,
-  GraduationCap,
-  PieChart,
-  Handshake,
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'

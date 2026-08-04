@@ -14,7 +14,6 @@ import { Badge } from '@/components/ui/badge'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Plus, ChevronDown, Search } from 'lucide-react'
 
 // ─── 국가 선택 컴포넌트 ───────────────────────────────────────────────────────
@@ -73,7 +72,7 @@ function CountrySelect({ countries, value, onChange, disabled }: CountrySelectPr
               onChange={(e) => setQuery(e.target.value)}
             />
           </div>
-          <ScrollArea className="h-48">
+          <div className="h-48 overflow-y-auto">
             {filtered.length === 0 ? (
               <p className="py-4 text-center text-sm text-muted-foreground">검색 결과 없음</p>
             ) : (
@@ -88,7 +87,7 @@ function CountrySelect({ countries, value, onChange, disabled }: CountrySelectPr
                 </button>
               ))
             )}
-          </ScrollArea>
+          </div>
         </div>
       )}
     </div>
