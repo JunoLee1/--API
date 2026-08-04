@@ -25,6 +25,13 @@ export class ClubRepository {
     return this.prisma.club.findMany({ where: { id: { in: ids } }, select: CLUB_SELECT });
   }
 
+  findByName(name: string) {
+    return this.prisma.club.findFirst({
+      where: { name: { equals: name, mode: "insensitive" } },
+      select: { id: true },
+    });
+  }
+
   create(dto: CreateClubDto) {
     return this.prisma.club.create({ data: { name: dto.name }, select: CLUB_SELECT });
   }

@@ -516,6 +516,14 @@ const NAV_ITEMS: NavItem[] = [
     subSection: 'nav.subsection.system',
     roles: ['ADMIN'],
   },
+  {
+    to: '/admin/leagues',
+    label: 'nav.item.leagueMgmt',
+    icon: Trophy,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.system',
+    roles: ['SUPER_ADMIN'],
+  },
 ]
 
 export function AppShell() {

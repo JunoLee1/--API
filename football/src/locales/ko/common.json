@@ -79,7 +79,8 @@
       "operatingExpenses": "운영비 지출",
       "hrReport": "HR 보고서",
       "recruitment": "채용 관리",
-      "facilityMgmt": "시설 관리"
+      "facilityMgmt": "시설 관리",
+      "leagueMgmt": "리그 관리"
     }
   },
   "action": {

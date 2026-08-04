@@ -20,7 +20,11 @@ export class ClubController {
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (req.user!.role !== "SUPER_ADMIN") throw new AppError(403, "FORBIDDEN");
-      res.status(201).json(await this.service.create(req.body));
+      const { name } = req.body as { name?: unknown };
+      if (typeof name !== "string" || !name.trim()) {
+        throw new AppError(400, "INVALID_CLUB_NAME");
+      }
+      res.status(201).json(await this.service.create({ name }));
     } catch (err) { next(err); }
   };
 

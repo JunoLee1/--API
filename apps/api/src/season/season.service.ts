@@ -11,6 +11,7 @@ export class SeasonService {
       name: data.name,
       startDate: new Date(data.startDate),
       endDate: new Date(data.endDate),
+      ...(data.leagueId !== undefined && { leagueId: data.leagueId }),
     });
   }
 

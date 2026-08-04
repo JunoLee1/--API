@@ -3,14 +3,14 @@ import { PrismaClient, SeasonStatus } from "../generated/client";
 export class SeasonRepository {
   constructor(private prisma: PrismaClient) {}
 
-  async create(data: { name: string; startDate: Date; endDate: Date }) {
-    return await this.prisma.season.create({ data });
+  async create(data: { name: string; startDate: Date; endDate: Date; leagueId?: number }) {
+    return await this.prisma.season.create({ data, include: { league: true } });
   }
 
   async findById(id: number) {
     return await this.prisma.season.findUnique({
       where: { id },
-      include: { _count: { select: { matches: true, trainingSessions: true } } },
+      include: { _count: { select: { matches: true, trainingSessions: true } }, league: true },
     });
   }
 
@@ -18,6 +18,7 @@ export class SeasonRepository {
     return await this.prisma.season.findMany({
       ...(status !== undefined && { where: { status } }),
       orderBy: { startDate: "desc" },
+      include: { league: true },
     });
   }
 
