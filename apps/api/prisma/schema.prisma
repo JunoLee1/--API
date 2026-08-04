@@ -530,12 +530,18 @@ enum PayrollRunStatus {
 // ─────────────────────────────────────────────
 
 model Club {
-  id       Int     @id @default(autoincrement())
-  name     String
-  isActive Boolean @default(true)
-  isLite   Boolean @default(false)
-  createdAt DateTime @default(now())
+  id                  Int      @id @default(autoincrement())
+  name                String
+  isActive            Boolean  @default(true)
+  isLite              Boolean  @default(false)
+  countryId           Int?
+  ownerEmail          String?  @unique
+  businessRegNumber   String?
+  companyNumber       String?
+  vatNumber           String?
+  createdAt           DateTime @default(now())
 
+  country Country?   @relation(fields: [countryId], references: [id])
   teams   Team[]
   users   User[]
   leagues ClubLeague[]
@@ -572,6 +578,7 @@ model Country {
 
   users   User[]
   players Player[]
+  clubs   Club[]
 }
 
 model PhoneNumber {

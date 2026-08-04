@@ -6,12 +6,15 @@ import { LeagueService } from "./league.service";
 import { LeagueController } from "./league.controller";
 import { ClubRepository } from "../club/club.repo";
 import { ClubService } from "../club/club.service";
+import CountryRepository from "../country/country.repo";
 
 const router = Router();
 
-const clubRepo = new ClubRepository(getPrisma());
-const clubService = new ClubService(clubRepo);
-const repo = new LeagueRepository(getPrisma());
+const prisma = getPrisma();
+const clubRepo = new ClubRepository(prisma);
+const countryRepo = new CountryRepository(prisma);
+const clubService = new ClubService(clubRepo, countryRepo);
+const repo = new LeagueRepository(prisma);
 const service = new LeagueService(repo, clubService);
 const controller = new LeagueController(service);
 
