@@ -44,7 +44,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Card } from '@/components/ui/card'
-import { MoreHorizontal, UserPlus, ChevronDown } from 'lucide-react'
+import { MoreHorizontal, UserPlus, ChevronDown, Mail } from 'lucide-react'
 import { useConfirm } from '@/lib/confirm-dialog'
 
 const ALL_ROLES: Role[] = ['FRONT_OFFICE', 'COACHING_STAFF', 'PLAYER', 'AGENT']
@@ -80,6 +80,13 @@ export function UsersPage() {
   const [editCoachingRole, setEditCoachingRole] = useState<CoachingRole | ''>('')
   const [editFrontOfficeRole, setEditFrontOfficeRole] = useState<FrontOfficeRole | ''>('')
   const [editSaving, setEditSaving] = useState(false)
+
+  const [showInvite, setShowInvite] = useState(false)
+  const [iEmail, setIEmail] = useState('')
+  const [iRole, setIRole] = useState<Role>('FRONT_OFFICE')
+  const [iCoachingRole, setICoachingRole] = useState<CoachingRole | ''>('')
+  const [iFrontOfficeRole, setIFrontOfficeRole] = useState<FrontOfficeRole | ''>('')
+  const [iSending, setISending] = useState(false)
 
   const [showCreate, setShowCreate] = useState(false)
   const [cEmail, setCEmail] = useState('')
@@ -173,6 +180,28 @@ export function UsersPage() {
       setEditingUser(null)
       void fetchUsers()
     } catch { toast.error(t('usersPage.roleSaveFailed')) } finally { setEditSaving(false) }
+  }
+
+  const handleSendInvite = async () => {
+    if (!iEmail.trim()) { toast.error('이메일을 입력하세요.'); return }
+    if (iRole === 'COACHING_STAFF' && !iCoachingRole) { toast.error('코칭 세부 역할을 선택하세요.'); return }
+    if (iRole === 'FRONT_OFFICE' && !iFrontOfficeRole) { toast.error('프런트 세부 역할을 선택하세요.'); return }
+    setISending(true)
+    try {
+      await api.post('/auth/invites', {
+        email: iEmail.trim(),
+        role: iRole,
+        ...(iRole === 'COACHING_STAFF' && iCoachingRole && { coachingRole: iCoachingRole }),
+        ...(iRole === 'FRONT_OFFICE' && iFrontOfficeRole && { frontOfficeRole: iFrontOfficeRole }),
+      })
+      toast.success(`${iEmail}로 초대 이메일을 발송했습니다.`)
+      setIEmail(''); setIRole('FRONT_OFFICE'); setICoachingRole(''); setIFrontOfficeRole('')
+      setShowInvite(false)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : ''
+      if (msg.includes('EMAIL_TAKEN')) toast.error('이미 가입된 이메일입니다.')
+      else toast.error('초대 발송에 실패했습니다.')
+    } finally { setISending(false) }
   }
 
   const handleCreate = async () => {
@@ -348,12 +377,74 @@ export function UsersPage() {
           </div>
         )}
 
+        <div className="space-y-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => { setShowInvite((v) => !v); setShowCreate(false) }}
+          >
+            <Mail className="h-4 w-4" />
+            초대 링크 발송
+            <ChevronDown className={`h-3 w-3 transition-transform ${showInvite ? 'rotate-180' : ''}`} />
+          </Button>
+
+          {showInvite && (
+            <Card className="max-w-lg p-6">
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label>이메일 *</Label>
+                  <Input type="email" placeholder="user@example.com" value={iEmail} onChange={(e) => setIEmail(e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>{t('usersPage.createCard.roleLabel')} *</Label>
+                    <Select value={iRole} onValueChange={(v) => { setIRole(v as Role); setICoachingRole(''); setIFrontOfficeRole('') }}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {ALL_ROLES.map((r) => <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {iRole === 'COACHING_STAFF' && (
+                    <div className="space-y-1.5">
+                      <Label>{t('usersPage.createCard.coachingRoleLabel')} *</Label>
+                      <Select value={iCoachingRole} onValueChange={(v) => setICoachingRole(v as CoachingRole)}>
+                        <SelectTrigger><SelectValue placeholder={t('usersPage.roleSelectPlaceholder')} /></SelectTrigger>
+                        <SelectContent>
+                          {COACHING_ROLES.map((r) => <SelectItem key={r} value={r}>{COACHING_ROLE_LABEL[r]}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  {iRole === 'FRONT_OFFICE' && (
+                    <div className="space-y-1.5">
+                      <Label>{t('usersPage.createCard.frontOfficeRoleLabel')} *</Label>
+                      <Select value={iFrontOfficeRole} onValueChange={(v) => setIFrontOfficeRole(v as FrontOfficeRole)}>
+                        <SelectTrigger><SelectValue placeholder={t('usersPage.roleSelectPlaceholder')} /></SelectTrigger>
+                        <SelectContent>
+                          {FRONT_OFFICE_ROLES.map((r) => <SelectItem key={r} value={r}>{FRONT_OFFICE_ROLE_LABEL[r]}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">초대 링크는 24시간 동안 유효합니다.</p>
+                <Button className="w-full gap-2" onClick={() => void handleSendInvite()} disabled={iSending}>
+                  <Mail className="h-4 w-4" />
+                  {iSending ? '발송 중...' : '초대 이메일 발송'}
+                </Button>
+              </div>
+            </Card>
+          )}
+        </div>
+
         <div>
           <Button
             variant="outline"
             size="sm"
             className="gap-2"
-            onClick={() => setShowCreate((v) => !v)}
+            onClick={() => { setShowCreate((v) => !v); setShowInvite(false) }}
           >
             <UserPlus className="h-4 w-4" />
             {t('usersPage.createAccountButton')}
