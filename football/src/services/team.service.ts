@@ -5,7 +5,7 @@ export type { Team }
 
 export interface CreateTeamPayload {
   name: string
-  type: 'FIRST_TEAM' | 'YOUTH'
+  type: 'FIRST_TEAM' | 'B_TEAM' | 'YOUTH'
   ageGroup?: string
   trackStats: boolean
   requiresContract: boolean
