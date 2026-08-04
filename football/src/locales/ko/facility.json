@@ -36,6 +36,9 @@
     "updateFailed": "상태 변경에 실패했습니다.",
     "created": "유지보수 요청이 등록되었습니다.",
     "updated": "상태가 변경되었습니다.",
+    "approved": "1차 승인 처리되었습니다.",
+    "gmApproved": "최종 승인 처리되었습니다.",
+    "rejected": "반려 처리되었습니다.",
     "col": {
       "title": "제목",
       "priority": "우선순위",
@@ -86,6 +89,9 @@
   "status": {
     "OPEN": "접수",
     "IN_PROGRESS": "처리중",
-    "RESOLVED": "완료"
+    "PENDING_APPROVAL": "FM 결재 대기",
+    "APPROVED": "GM 결재 대기",
+    "RESOLVED": "완료",
+    "REJECTED": "반려"
   }
 }
