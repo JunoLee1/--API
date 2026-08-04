@@ -40,6 +40,10 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
     res.status(err.statusCode).json({ code: err.code });
     return;
   }
+  if (typeof err === "object" && err !== null && "type" in err && (err as { type: string }).type === "entity.parse.failed") {
+    res.status(400).json({ code: "INVALID_REQUEST" });
+    return;
+  }
   console.error(err);
   res.status(500).json({ code: "INTERNAL_SERVER_ERROR" });
 });
