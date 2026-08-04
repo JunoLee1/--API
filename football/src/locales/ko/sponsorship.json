@@ -1,0 +1,39 @@
+{
+  "title": "스폰서십 관리",
+  "addButton": "스폰서십 등록",
+  "noData": "스폰서십이 없습니다.",
+  "loadFailed": "스폰서십 목록을 불러오지 못했습니다.",
+  "createFailed": "스폰서십 등록에 실패했습니다.",
+  "created": "스폰서십이 등록되었습니다.",
+  "markPaidFailed": "납부 처리에 실패했습니다.",
+  "markedPaid": "납부 처리되었습니다.",
+  "col": {
+    "sponsorName": "스폰서명",
+    "type": "종류",
+    "totalFee": "계약금액",
+    "schedule": "납부 방식",
+    "contractStart": "계약 시작",
+    "contractEnd": "계약 종료",
+    "createdBy": "등록자"
+  },
+  "payment": {
+    "title": "납부 내역",
+    "dueDate": "납부 예정일",
+    "amount": "금액",
+    "status": "상태",
+    "paidAt": "납부일",
+    "markPaid": "납부 처리",
+    "noData": "납부 내역이 없습니다."
+  },
+  "form": {
+    "title": "스폰서십 등록",
+    "sponsorName": "스폰서명 *",
+    "sponsorNamePlaceholder": "스폰서 이름을 입력하세요",
+    "type": "종류 *",
+    "totalFee": "계약금액 (원) *",
+    "contractStart": "계약 시작일 *",
+    "contractEnd": "계약 종료일 *",
+    "paymentSchedule": "납부 방식 *"
+  },
+  "filterAll": "전체"
+}

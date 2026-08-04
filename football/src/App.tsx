@@ -28,6 +28,7 @@ import { RankingsPage } from '@/pages/matches/RankingsPage'
 import { TacticalAnalysisPage } from '@/pages/tactical/TacticalAnalysisPage'
 import { EquipmentPage } from '@/pages/equipment/EquipmentPage'
 import { FacilityPage } from '@/pages/facility/FacilityPage'
+import { SponsorshipPage } from '@/pages/sponsorship/SponsorshipPage'
 import { ProspectsPage } from '@/pages/prospects/ProspectsPage'
 import { NotificationsPage } from '@/pages/notifications/NotificationsPage'
 import { MePage } from '@/pages/me/MePage'
@@ -141,6 +142,7 @@ function App() {
             <Route path="/matches/:id" element={<MatchDetailPage />} />
             <Route path="/equipment" element={<EquipmentPage />} />
             <Route path="/facility" element={<FacilityPage />} />
+            <Route path="/sponsorship" element={<SponsorshipPage />} />
             <Route path="/prospects" element={<ProspectsPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/me" element={<MePage />} />

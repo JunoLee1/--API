@@ -1,0 +1,39 @@
+{
+  "title": "Sponsorship",
+  "addButton": "Add Sponsorship",
+  "noData": "No sponsorships found.",
+  "loadFailed": "Failed to load sponsorships.",
+  "createFailed": "Failed to create sponsorship.",
+  "created": "Sponsorship created.",
+  "markPaidFailed": "Failed to mark payment as paid.",
+  "markedPaid": "Payment marked as paid.",
+  "col": {
+    "sponsorName": "Sponsor",
+    "type": "Type",
+    "totalFee": "Total Fee",
+    "schedule": "Schedule",
+    "contractStart": "Start",
+    "contractEnd": "End",
+    "createdBy": "Created By"
+  },
+  "payment": {
+    "title": "Payment Schedule",
+    "dueDate": "Due Date",
+    "amount": "Amount",
+    "status": "Status",
+    "paidAt": "Paid At",
+    "markPaid": "Mark Paid",
+    "noData": "No payments found."
+  },
+  "form": {
+    "title": "Add Sponsorship",
+    "sponsorName": "Sponsor Name *",
+    "sponsorNamePlaceholder": "Enter sponsor name",
+    "type": "Type *",
+    "totalFee": "Total Fee (KRW) *",
+    "contractStart": "Contract Start *",
+    "contractEnd": "Contract End *",
+    "paymentSchedule": "Payment Schedule *"
+  },
+  "filterAll": "All"
+}
