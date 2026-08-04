@@ -43,22 +43,23 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
     }
   }
 
-  if (role === 'FRONT_OFFICE') {
-    if (frontOfficeRole === 'GM') {
-      return {
-        statCards: [
-          { label: 'dashboard.stat.expiringContractCount', getValue: (s) => (s as GmStats).expiringContractCount, unit: 'dashboard.stat.unit.case', highlight: true },
-          { label: 'dashboard.stat.injuredPlayerCount', getValue: (s) => (s as GmStats).injuredPlayerCount, unit: 'dashboard.stat.unit.person' },
-          { label: 'dashboard.stat.activeTransferCount', getValue: (s) => (s as GmStats).activeTransferCount, unit: 'dashboard.stat.unit.case' },
-        ],
-        showActionQueue: true,
-        showSchedule: true,
-        recentFeedTitle: 'dashboard.recentFeed.recentTransfers',
-        showRanking: false,
-        showMedicalSection: false,
-        showYouthDevelopment: false,
-      }
+  if (role === 'GM') {
+    return {
+      statCards: [
+        { label: 'dashboard.stat.expiringContractCount', getValue: (s) => (s as GmStats).expiringContractCount, unit: 'dashboard.stat.unit.case', highlight: true },
+        { label: 'dashboard.stat.injuredPlayerCount', getValue: (s) => (s as GmStats).injuredPlayerCount, unit: 'dashboard.stat.unit.person' },
+        { label: 'dashboard.stat.activeTransferCount', getValue: (s) => (s as GmStats).activeTransferCount, unit: 'dashboard.stat.unit.case' },
+      ],
+      showActionQueue: true,
+      showSchedule: true,
+      recentFeedTitle: 'dashboard.recentFeed.recentTransfers',
+      showRanking: false,
+      showMedicalSection: false,
+      showYouthDevelopment: false,
     }
+  }
+
+  if (role === 'FRONT_OFFICE') {
     if (frontOfficeRole === 'TD') {
       return {
         statCards: [

@@ -141,7 +141,7 @@ export function PlayerCallupPage() {
   const [rejectReason, setRejectReason] = useState('')
 
   const isHeadCoach = user?.coachingRole === 'HEAD_COACH'
-  const isGM = user?.frontOfficeRole === 'GM'
+  const isGM = user?.role === 'GM'
   const isMedical = user?.coachingRole === 'MEDICAL'
 
   const fetchCallups = () => {

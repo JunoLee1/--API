@@ -34,11 +34,11 @@ export function JobPostingDetailPage() {
 
   const canWrite =
     user?.role === 'ADMIN' ||
-    (user?.role === 'FRONT_OFFICE' &&
-      (user.frontOfficeRole === 'GM' || user.frontOfficeRole === 'HR_MANAGER'))
+    user?.role === 'GM' ||
+    (user?.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'HR_MANAGER')
   const canApprove =
     user?.role === 'ADMIN' ||
-    (user?.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'GM')
+    user?.role === 'GM'
 
   const load = async () => {
     try {

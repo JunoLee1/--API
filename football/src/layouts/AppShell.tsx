@@ -183,7 +183,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: Briefcase,
     section: 'nav.section.contractTransfer',
     roles: ['ADMIN', 'FRONT_OFFICE'],
-    frontOfficeRoles: ['GM', 'TD'],
+    frontOfficeRoles: ['TD'],
   },
 
   // 부상·의료
@@ -342,7 +342,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: FileText,
     section: 'nav.section.management',
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
-    frontOfficeRoles: ['GM', 'TD', 'HR_MANAGER', 'HR_STAFF', 'FINANCE_MANAGER', 'FINANCE_STAFF', 'ASSET_MANAGER', 'ASSET_STAFF', 'SCOUT'],
+    frontOfficeRoles: ['TD', 'HR_MANAGER', 'HR_STAFF', 'FINANCE_MANAGER', 'FINANCE_STAFF', 'ASSET_MANAGER', 'ASSET_STAFF', 'SCOUT'],
   },
 
   // 관리 > 인사
@@ -352,8 +352,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: Building2,
     section: 'nav.section.management',
     subSection: 'nav.subsection.hr',
-    roles: ['ADMIN', 'FRONT_OFFICE'],
-    frontOfficeRoles: ['GM'],
+    roles: ['ADMIN'],
   },
   {
     to: '/admin/staff-records',
@@ -361,8 +360,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: Users2,
     section: 'nav.section.management',
     subSection: 'nav.subsection.hr',
-    roles: ['ADMIN', 'FRONT_OFFICE'],
-    frontOfficeRoles: ['GM'],
+    roles: ['ADMIN'],
   },
   {
     to: '/admin/hr-report',
@@ -379,7 +377,7 @@ const NAV_ITEMS: NavItem[] = [
     section: 'nav.section.management',
     subSection: 'nav.subsection.hr',
     roles: ['ADMIN', 'FRONT_OFFICE'],
-    frontOfficeRoles: ['GM', 'HR_MANAGER'],
+    frontOfficeRoles: ['HR_MANAGER'],
   },
 
   // 관리 > 재무
@@ -390,7 +388,7 @@ const NAV_ITEMS: NavItem[] = [
     section: 'nav.section.management',
     subSection: 'nav.subsection.finance',
     roles: ['ADMIN', 'FRONT_OFFICE'],
-    frontOfficeRoles: ['GM', 'FINANCE_MANAGER', 'FINANCE_STAFF'],
+    frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF'],
   },
   {
     to: '/admin/financial-report',
@@ -399,7 +397,7 @@ const NAV_ITEMS: NavItem[] = [
     section: 'nav.section.management',
     subSection: 'nav.subsection.finance',
     roles: ['ADMIN', 'FRONT_OFFICE'],
-    frontOfficeRoles: ['GM', 'FINANCE_MANAGER', 'FINANCE_STAFF'],
+    frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF'],
   },
   {
     to: '/admin/budget-plan',
@@ -408,7 +406,7 @@ const NAV_ITEMS: NavItem[] = [
     section: 'nav.section.management',
     subSection: 'nav.subsection.finance',
     roles: ['ADMIN', 'FRONT_OFFICE'],
-    frontOfficeRoles: ['GM', 'FINANCE_MANAGER', 'TD'],
+    frontOfficeRoles: ['FINANCE_MANAGER', 'TD'],
   },
   {
     to: '/admin/operating-expenses',
@@ -417,7 +415,7 @@ const NAV_ITEMS: NavItem[] = [
     section: 'nav.section.management',
     subSection: 'nav.subsection.finance',
     roles: ['ADMIN', 'FRONT_OFFICE'],
-    frontOfficeRoles: ['GM', 'FINANCE_MANAGER', 'FINANCE_STAFF', 'TD'],
+    frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF', 'TD'],
   },
 
   // 관리 > 시설·자산
@@ -445,7 +443,7 @@ const NAV_ITEMS: NavItem[] = [
     section: 'nav.section.management',
     subSection: 'nav.subsection.facilityAssets',
     roles: ['ADMIN', 'FRONT_OFFICE'],
-    frontOfficeRoles: ['GM', 'ASSET_MANAGER', 'ASSET_STAFF', 'EQUIPMENT_MANAGER'],
+    frontOfficeRoles: ['ASSET_MANAGER', 'ASSET_STAFF', 'EQUIPMENT_MANAGER'],
   },
 
   // 관리 > 시스템

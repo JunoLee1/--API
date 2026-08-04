@@ -49,7 +49,7 @@ export function ReportsPage() {
   const [statusFilter, setStatusFilter] = useState<ReportStatus | ''>('')
   const [page, setPage] = useState(1)
 
-  const isGM = user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'GM'
+  const isGM = user?.role === 'GM'
   const isHeadCoach = user?.role === 'COACHING_STAFF' && user?.coachingRole === 'HEAD_COACH'
   const canCreate =
     user?.role === 'ADMIN' ||

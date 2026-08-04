@@ -118,7 +118,8 @@ export function PlayerDetailPage() {
   const isOwnProfile = user?.role === 'PLAYER' && player?.userId === user?.id
   const canSeeMarketValue =
     user?.role === 'ADMIN' ||
-    (user?.role === 'FRONT_OFFICE' && (user.frontOfficeRole === 'GM' || user.frontOfficeRole === 'TD'))
+    user?.role === 'GM' ||
+    (user?.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'TD')
   const canUpdateMarketValue = canSeeMarketValue
   const isYouthPlayer = player?.team?.type === 'YOUTH'
   const canCoachGrowth =
@@ -127,7 +128,8 @@ export function PlayerDetailPage() {
   const canAssignJersey = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
   const canRetireJersey =
     user?.role === 'ADMIN' ||
-    (user?.role === 'FRONT_OFFICE' && (user.frontOfficeRole === 'GM' || user.frontOfficeRole === 'TD'))
+    user?.role === 'GM' ||
+    (user?.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'TD')
   const canReactivateJersey = user?.role === 'ADMIN'
 
   const handleDelete = async () => {

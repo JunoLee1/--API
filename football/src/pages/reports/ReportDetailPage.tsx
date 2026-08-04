@@ -74,7 +74,7 @@ export function ReportDetailPage() {
   const [rejectOpen, setRejectOpen] = useState(false)
   const [acting, setActing] = useState(false)
 
-  const isGM = user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'GM'
+  const isGM = user?.role === 'GM'
   const isHrManager = user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'HR_MANAGER'
   const isAssetManager = user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'ASSET_MANAGER'
   const isFinanceManager = user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'FINANCE_MANAGER'
