@@ -31,6 +31,7 @@ import {
   Activity,
   AlertTriangle,
   ArrowUpCircle,
+  Banknote,
   BarChart2,
   BarChart3,
   BookOpen,
@@ -40,6 +41,7 @@ import {
   CalendarX2,
   ChevronRight,
   ClipboardList,
+  Cpu,
   CreditCard,
   FileClock,
   FileText,
@@ -67,6 +69,7 @@ import {
   Users2,
   Video,
   Wallet,
+  Warehouse,
   Wrench,
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -115,6 +118,13 @@ const MANAGEMENT_SUBSECTION_ORDER: NavSubSection[] = [
   'nav.subsection.facilityAssets',
   'nav.subsection.system',
 ]
+
+const SUBSECTION_ICON: Record<NavSubSection, LucideIcon> = {
+  'nav.subsection.hr': Users,
+  'nav.subsection.finance': Banknote,
+  'nav.subsection.facilityAssets': Warehouse,
+  'nav.subsection.system': Cpu,
+}
 
 const NAV_ITEMS: NavItem[] = [
   { to: '/dashboard', label: 'nav.item.dashboard', icon: BarChart3, end: true },
@@ -654,15 +664,16 @@ export function AppShell() {
   const renderManagementSubSections = (items: NavItem[], onClick?: () => void) => {
     const rootItems = items.filter((i) => !i.subSection)
     return (
-      <div className="space-y-1 mt-1 ml-3 pl-2 border-l border-border/60">
+      <div className="space-y-0.5 mt-1 ml-3 pl-2 border-l border-border/60">
         {rootItems.map((item) => renderNavLink(item, onClick))}
         {MANAGEMENT_SUBSECTION_ORDER.map((sub) => {
           const subItems = items.filter((i) => i.subSection === sub)
           if (subItems.length === 0) return null
           const isSubOpen = openSubSections.has(sub)
           const hasSubActive = subItems.some(isItemActive)
+          const SubIcon = SUBSECTION_ICON[sub]
           return (
-            <div key={sub}>
+            <div key={sub} className="pt-2">
               <button
                 type="button"
                 aria-expanded={isSubOpen}
@@ -670,22 +681,22 @@ export function AppShell() {
                   toggleSubSection(sub)
                   e.currentTarget.blur()
                 }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold text-muted-foreground hover:bg-accent/50 hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset transition-colors"
+                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left hover:bg-accent/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset transition-colors group"
               >
+                <SubIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground group-hover:text-foreground transition-colors" aria-hidden />
+                <span className="flex-1 text-xs font-semibold text-foreground/75 group-hover:text-foreground tracking-wide transition-colors">
+                  {t(sub)}
+                </span>
+                {hasSubActive && !isSubOpen && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-foreground/50 shrink-0" aria-label="이 소분류에 현재 페이지 있음" />
+                )}
                 <ChevronRight
-                  className={cn('h-3 w-3 transition-transform shrink-0', isSubOpen && 'rotate-90')}
+                  className={cn('h-3 w-3 shrink-0 text-muted-foreground/50 transition-transform group-hover:text-muted-foreground', isSubOpen && 'rotate-90')}
                   aria-hidden
                 />
-                <span className="flex-1 text-left">{t(sub)}</span>
-                {hasSubActive && !isSubOpen && (
-                  <span
-                    className="h-1.5 w-1.5 rounded-full bg-foreground"
-                    aria-label="이 소분류에 현재 페이지 있음"
-                  />
-                )}
               </button>
               {isSubOpen && (
-                <div className="space-y-1 mt-0.5 ml-3 pl-2 border-l border-border/40">
+                <div className="space-y-0.5 mt-0.5 ml-4 border-l border-border/40 pl-2">
                   {subItems.map((item) => renderNavLink(item, onClick))}
                 </div>
               )}
