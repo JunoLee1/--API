@@ -146,7 +146,8 @@ export function TransfersPage() {
   const canApproveRecall = user?.role === 'ADMIN'
   const canExport =
     user?.role === 'ADMIN' ||
-    (user?.role === 'FRONT_OFFICE' && ['GM', 'TD'].includes(user?.frontOfficeRole ?? ''))
+    user?.role === 'GM' ||
+    (user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'TD')
 
   useEffect(() => {
     transferApi

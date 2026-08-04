@@ -2262,7 +2262,7 @@ async function main() {
   console.log(`   - Users: 21 + 10 유소년 / pw: Password1!`);
   console.log(`     SUPER_ADMIN : superadmin@platform.com`);
   console.log(`     ADMIN       : admin@club.com`);
-  console.log(`     FRONT_OFFICE: gm@club.com (GM)`);
+  console.log(`     GM          : gm@club.com`);
   console.log(`     FRONT_OFFICE: td@club.com (TD)`);
   console.log(`     FRONT_OFFICE: fo@club.com (SCOUT)`);
   console.log(`     FRONT_OFFICE: hr@club.com (HR_MANAGER)`);
