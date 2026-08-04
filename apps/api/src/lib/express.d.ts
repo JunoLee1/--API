@@ -8,6 +8,7 @@ declare global {
       coachingRole: CoachingRole | null | undefined;
       frontOfficeRole: FrontOfficeRole | null | undefined;
       teamId?: number | null;
+      clubId?: number | null;
     }
   }
 }
