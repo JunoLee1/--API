@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { formatNumber } from '@/lib/utils'
 
 interface Props {
   label: string
@@ -15,7 +16,7 @@ export function StatCard({ label, value, unit, highlight }: Props) {
       </CardHeader>
       <CardContent>
         <p className={`text-3xl font-bold ${highlight ? 'text-destructive' : ''}`}>
-          {value}
+          {formatNumber(value)}
           {unit && <span className="text-base font-normal text-muted-foreground ml-1">{unit}</span>}
         </p>
       </CardContent>
