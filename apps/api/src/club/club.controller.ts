@@ -20,7 +20,26 @@ export class ClubController {
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (req.user!.role !== "SUPER_ADMIN") throw new AppError(403, "FORBIDDEN");
-      res.status(201).json(await this.service.create(req.body));
+      const { name, countryId, ownerEmail, businessRegNumber, companyNumber, vatNumber } = req.body as {
+        name?: unknown;
+        countryId?: unknown;
+        ownerEmail?: unknown;
+        businessRegNumber?: unknown;
+        companyNumber?: unknown;
+        vatNumber?: unknown;
+      };
+      if (typeof name !== "string" || !name.trim()) {
+        throw new AppError(400, "INVALID_CLUB_NAME");
+      }
+      if (!countryId || typeof countryId !== "number") {
+        throw new AppError(400, "COUNTRY_REQUIRED");
+      }
+      const createDto: import("./club.dto").CreateClubDto = { name, countryId };
+      if (typeof ownerEmail === "string") createDto.ownerEmail = ownerEmail;
+      if (typeof businessRegNumber === "string") createDto.businessRegNumber = businessRegNumber;
+      if (typeof companyNumber === "string") createDto.companyNumber = companyNumber;
+      if (typeof vatNumber === "string") createDto.vatNumber = vatNumber;
+      res.status(201).json(await this.service.create(createDto));
     } catch (err) { next(err); }
   };
 

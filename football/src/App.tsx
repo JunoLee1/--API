@@ -4,6 +4,7 @@ import { AppShell } from '@/layouts/AppShell'
 import { ConfirmProvider } from '@/lib/confirm-dialog'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
+import InviteAcceptPage from '@/pages/auth/InviteAcceptPage'
 import { PlayersPage } from '@/pages/players/PlayersPage'
 import { YouthPlayersPage } from '@/pages/players/YouthPlayersPage'
 import { PlayerDetailPage } from '@/pages/players/PlayerDetailPage'
@@ -67,6 +68,7 @@ import { JobPostingListPage } from '@/pages/admin/recruitment/JobPostingListPage
 import { JobPostingDetailPage } from '@/pages/admin/recruitment/JobPostingDetailPage'
 import { ApplicationDetailPage } from '@/pages/admin/recruitment/ApplicationDetailPage'
 import { TeamSelectPage } from '@/pages/team-select/TeamSelectPage'
+import { LeaguePage } from '@/pages/admin/LeaguePage'
 
 function GrowthReportRedirect() {
   const { playerId } = useParams<{ playerId: string }>()
@@ -91,6 +93,7 @@ function App() {
       <ConfirmProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/invite/:token" element={<InviteAcceptPage />} />
 
           <Route
             path="/team-select"
@@ -175,6 +178,7 @@ function App() {
             <Route path="/admin/recruitment" element={<JobPostingListPage />} />
             <Route path="/admin/recruitment/postings/:id" element={<JobPostingDetailPage />} />
             <Route path="/admin/recruitment/applications/:id" element={<ApplicationDetailPage />} />
+            <Route path="/admin/leagues" element={<LeaguePage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/login" replace />} />

@@ -4,6 +4,10 @@ export default class Repository {
     private prisma: PrismaClient
   ) {}
 
+  async findById(id: number) {
+    return this.prisma.country.findUnique({ where: { id }, select: { id: true, code: true, name: true } });
+  }
+
   async getCountryByCode(code: string) {
     const result = this.prisma.country.findFirst({
         where:{code}

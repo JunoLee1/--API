@@ -45,6 +45,7 @@ import sponsorshipRouter from "./sponsorship/sponsorship.routes";
 import payrollRouter from "./payroll/payroll.routes";
 import hiringAutomationRouter from "./hiring-automation/hiring-automation.routes";
 import clubRouter from "./club/club.routes";
+import leagueRouter from "./league/league.routes";
 
 const apiRouter = Router();
 
@@ -94,5 +95,6 @@ apiRouter.use("/sponsorships", sponsorshipRouter);
 apiRouter.use("/facility", facilityRouter);
 apiRouter.use("/payroll", payrollRouter);
 apiRouter.use("/hiring-automation", hiringAutomationRouter);
+apiRouter.use("/leagues", leagueRouter);
 
 export default apiRouter;

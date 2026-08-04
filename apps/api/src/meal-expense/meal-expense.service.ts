@@ -1,5 +1,6 @@
 import { MealExpenseType } from "../generated/client";
 import { MealExpenseRepository } from "./meal-expense.repo";
+import { AppError } from "../lib/appError";
 
 export class MealExpenseService {
   constructor(private repo: MealExpenseRepository) {}
@@ -14,7 +15,7 @@ export class MealExpenseService {
 
   async get(id: number) {
     const record = await this.repo.findById(id);
-    if (!record) throw new Error("NOT_FOUND");
+    if (!record) throw new AppError(404, "MEAL_EXPENSE_NOT_FOUND");
     return record;
   }
 

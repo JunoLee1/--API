@@ -2,6 +2,7 @@ export interface CreateSeasonDto {
   name: string;
   startDate: string;
   endDate: string;
+  leagueId?: number;
 }
 
 export interface SetWageCapDto {

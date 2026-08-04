@@ -22,6 +22,7 @@ export interface DashboardConfig {
   recentFeedTitle?: string
   showMedicalSection: boolean
   showYouthDevelopment: boolean
+  showAcademyFinance?: boolean
 }
 
 export function getDashboardConfig(user: UserDto): DashboardConfig {
@@ -40,6 +41,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
       showRanking: false,
       showMedicalSection: false,
       showYouthDevelopment: true,
+      showAcademyFinance: true,
     }
   }
 

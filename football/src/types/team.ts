@@ -23,7 +23,13 @@ export interface Club {
   name: string
   isActive: boolean
   isLite: boolean
+  countryId: number | null
+  ownerEmail: string | null
+  businessRegNumber: string | null
+  companyNumber: string | null
+  vatNumber: string | null
   createdAt: string
+  country: { id: number; code: string; name: string } | null
   teams: Array<{ id: number; name: string; type: TeamType; isActive: boolean }>
 }
 

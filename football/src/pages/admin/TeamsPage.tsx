@@ -29,13 +29,14 @@ interface TeamFormProps {
   onOpenChange: (v: boolean) => void
   initial?: Team
   onSaved: () => void
+  youthOnly?: boolean
 }
 
-function TeamFormDialog({ open, onOpenChange, initial, onSaved }: TeamFormProps) {
+function TeamFormDialog({ open, onOpenChange, initial, onSaved, youthOnly }: TeamFormProps) {
   const { t } = useTranslation('admin')
   const isEdit = !!initial
   const [name, setName] = useState(initial?.name ?? '')
-  const [type, setType] = useState<TeamType>(initial?.type ?? 'FIRST_TEAM')
+  const [type, setType] = useState<TeamType>(youthOnly ? 'YOUTH' : (initial?.type ?? 'FIRST_TEAM'))
   const [ageGroup, setAgeGroup] = useState(initial?.ageGroup ?? '')
   const [trackStats, setTrackStats] = useState(initial?.trackStats ?? true)
   const [requiresContract, setRequiresContract] = useState(initial?.requiresContract ?? true)
@@ -44,12 +45,12 @@ function TeamFormDialog({ open, onOpenChange, initial, onSaved }: TeamFormProps)
   useEffect(() => {
     if (initial) {
       setName(initial.name)
-      setType(initial.type)
+      setType(youthOnly ? 'YOUTH' : initial.type)
       setAgeGroup(initial.ageGroup ?? '')
       setTrackStats(initial.trackStats)
       setRequiresContract(initial.requiresContract)
     }
-  }, [initial])
+  }, [initial, youthOnly])
 
   const handleSave = async () => {
     if (!name.trim()) { toast.error(t('teamsPage.formDialog.nameRequired')); return }
@@ -92,18 +93,24 @@ function TeamFormDialog({ open, onOpenChange, initial, onSaved }: TeamFormProps)
           </div>
           <div className="space-y-1.5">
             <Label>{t('teamsPage.formDialog.typeLabel')}</Label>
-            <Select
-              value={type}
-              onValueChange={v => setType(v as TeamType)}
-              items={TEAM_TYPE_LABEL}
-            >
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {TEAM_TYPES.map(tp => (
-                  <SelectItem key={tp} value={tp}>{TEAM_TYPE_LABEL[tp]}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {youthOnly ? (
+              <div className="flex h-9 w-full items-center rounded-md border border-input bg-muted px-3 text-sm text-muted-foreground">
+                {TEAM_TYPE_LABEL['YOUTH']}
+              </div>
+            ) : (
+              <Select
+                value={type}
+                onValueChange={v => setType(v as TeamType)}
+                items={TEAM_TYPE_LABEL}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {TEAM_TYPES.map(tp => (
+                    <SelectItem key={tp} value={tp}>{TEAM_TYPE_LABEL[tp]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
           {type === 'YOUTH' && (
             <div className="space-y-1.5">
@@ -144,7 +151,9 @@ export function TeamsPage() {
   const [editTarget, setEditTarget] = useState<Team | null>(null)
   const [page, setPage] = useState(1)
 
-  const isAdmin = user?.role === 'ADMIN'
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN'
+  const isAdminOrGM = user?.role === 'ADMIN' || user?.role === 'GM'
+  const canWrite = isSuperAdmin || isAdminOrGM
 
   const fetchTeams = () => {
     setLoading(true)
@@ -178,7 +187,7 @@ export function TeamsPage() {
           <h1 className="text-lg font-semibold tracking-tight">{t('teamsPage.title')}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{t('teamsPage.description', { count: teams.length })}</p>
         </div>
-        {isAdmin && (
+        {canWrite && (
           <Button size="sm" onClick={() => setCreateOpen(true)}>
             <Plus className="h-4 w-4 mr-1" />{t('teamsPage.addTeam')}
           </Button>
@@ -204,7 +213,7 @@ export function TeamsPage() {
                 <TableHead className="w-20 text-center">{t('teamsPage.table.trackStats')}</TableHead>
                 <TableHead className="w-20 text-center">{t('teamsPage.table.requiresContract')}</TableHead>
                 <TableHead className="w-20 text-center">{t('teamsPage.table.status')}</TableHead>
-                {isAdmin && <TableHead className="w-32" />}
+                {canWrite && <TableHead className="w-32" />}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -220,7 +229,7 @@ export function TeamsPage() {
                       {tp.isActive ? t('teamsPage.statusActive') : t('teamsPage.statusInactive')}
                     </span>
                   </TableCell>
-                  {isAdmin && (
+                  {canWrite && (isSuperAdmin || tp.type === 'YOUTH') && (
                     <TableCell className="text-right space-x-1">
                       <Button
                         size="sm" variant="outline" className="h-7 text-xs"
@@ -257,12 +266,14 @@ export function TeamsPage() {
         open={createOpen}
         onOpenChange={setCreateOpen}
         onSaved={() => { setCreateOpen(false); fetchTeams() }}
+        youthOnly={isAdminOrGM}
       />
       <TeamFormDialog
         open={!!editTarget}
         onOpenChange={open => { if (!open) setEditTarget(null) }}
         initial={editTarget ?? undefined}
         onSaved={() => { setEditTarget(null); fetchTeams() }}
+        youthOnly={isAdminOrGM}
       />
     </div>
   )

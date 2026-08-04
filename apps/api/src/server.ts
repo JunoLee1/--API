@@ -31,6 +31,10 @@ app.use(passport.initialize());
 app.use("/api", apiRouter);
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
+app.use((_req: Request, _res: Response, next: NextFunction) => {
+  next(new AppError(404, "NOT_FOUND"));
+});
+
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof AppError) {
     res.status(err.statusCode).json({ code: err.code });
