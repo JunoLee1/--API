@@ -4,6 +4,8 @@ import { hashPassword, comparePassword } from "../lib/hash";
 import { encrypt } from "../lib/crypto";
 import { generateTokens } from "../lib/token";
 import { LoginDto, CreateUserDto } from "../lib/dto";
+import { sendInviteEmail } from "../lib/email";
+import { Role, CoachingRole, FrontOfficeRole } from "../generated/enums";
 
 export class AuthService {
   constructor(private repo: AuthRepository) {}
@@ -43,6 +45,53 @@ export class AuthService {
       nationalityId: dto.nationalityId,
       phoneNumber,
     });
+  }
+
+  async createInvite(dto: { email: string; role: Role; coachingRole?: CoachingRole | null; frontOfficeRole?: FrontOfficeRole | null; createdById: number }) {
+    if (await this.repo.isEmailTaken(dto.email)) throw new AppError(409, "EMAIL_TAKEN");
+    const invite = await this.repo.createInvite(dto);
+    const appUrl = process.env["APP_URL"] ?? "http://localhost:5173";
+    const inviteUrl = `${appUrl}/invite/${invite.token}`;
+    await sendInviteEmail(dto.email, inviteUrl, dto.role);
+    return invite;
+  }
+
+  async getInvite(token: string) {
+    const invite = await this.repo.findInviteByToken(token);
+    if (!invite) throw new AppError(404, "INVITE_NOT_FOUND");
+    if (invite.usedAt) throw new AppError(410, "INVITE_ALREADY_USED");
+    if (invite.expiresAt < new Date()) throw new AppError(410, "INVITE_EXPIRED");
+    return invite;
+  }
+
+  async acceptInvite(token: string, dto: Omit<CreateUserDto, "email" | "role" | "coachingRole" | "frontOfficeRole">) {
+    const invite = await this.getInvite(token);
+
+    if (dto.password !== dto.confirmedPassword) throw new AppError(400, "PASSWORD_MISMATCH");
+    if (!/^\d{2,3}-\d{3,4}-\d{4}$/.test(dto.phoneNumber)) throw new AppError(400, "INVALID_PHONE_NUMBER");
+    if (await this.repo.isNicknameTaken(dto.nickname)) throw new AppError(409, "NICKNAME_TAKEN");
+
+    const password = await hashPassword(dto.password);
+    const phoneNumber = encrypt(dto.phoneNumber);
+
+    const user = await this.repo.createUser({
+      email: invite.email,
+      password,
+      username: dto.username,
+      nickname: dto.nickname,
+      role: invite.role,
+      coachingRole: invite.coachingRole ?? null,
+      frontOfficeRole: invite.frontOfficeRole ?? null,
+      dateOfBirth: new Date(dto.dateOfBirth),
+      nationalityId: dto.nationalityId,
+      phoneNumber,
+    });
+    await this.repo.markInviteUsed(invite.id);
+    return user;
+  }
+
+  listInvites() {
+    return this.repo.listInvites();
   }
 
   async me(id: number) {

@@ -1,5 +1,6 @@
 import { PrismaClient } from "../generated/client";
 import { Role, CoachingRole, FrontOfficeRole } from "../generated/enums";
+import crypto from "crypto";
 
 interface CreateUserData {
   email: string;
@@ -75,6 +76,45 @@ export class AuthRepository {
       select: {
         id: true, email: true, ip: true, userAgent: true, success: true, createdAt: true,
         user: { select: { id: true, nickname: true } },
+      },
+    });
+  }
+
+  createInvite(data: { email: string; role: Role; coachingRole?: CoachingRole | null; frontOfficeRole?: FrontOfficeRole | null; createdById: number }) {
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    return this.prisma.userInvite.create({
+      data: {
+        token,
+        email: data.email,
+        role: data.role,
+        coachingRole: data.coachingRole ?? null,
+        frontOfficeRole: data.frontOfficeRole ?? null,
+        expiresAt,
+        createdById: data.createdById,
+      },
+    });
+  }
+
+  findInviteByToken(token: string) {
+    return this.prisma.userInvite.findUnique({ where: { token } });
+  }
+
+  markInviteUsed(id: number) {
+    return this.prisma.userInvite.update({
+      where: { id },
+      data: { usedAt: new Date() },
+    });
+  }
+
+  listInvites(limit = 50) {
+    return this.prisma.userInvite.findMany({
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      select: {
+        id: true, email: true, role: true, coachingRole: true, frontOfficeRole: true,
+        expiresAt: true, usedAt: true, createdAt: true,
+        createdBy: { select: { id: true, nickname: true } },
       },
     });
   }

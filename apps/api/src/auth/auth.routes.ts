@@ -31,6 +31,12 @@ router.patch("/me/language", auth, controller.updateLanguage);
 // 유저 생성 (ADMIN 전용)
 router.post("/users", auth, controller.createUser);
 
+// 초대 (ADMIN 전용 - 생성/목록, 공개 - 조회/수락)
+router.post("/invites", auth, controller.createInvite);
+router.get("/invites", auth, controller.listInvites);
+router.get("/invites/:token", controller.getInvite);
+router.post("/invites/:token/accept", controller.acceptInvite);
+
 // 로그인 이력 (ADMIN 전용)
 router.get("/login-history", auth, controller.loginHistory);
 router.get("/login-history/:userId", auth, controller.loginHistory);
