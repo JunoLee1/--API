@@ -17,4 +17,4 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/src/generated ./src/generated
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 EXPOSE 3001
-CMD ["sh", "-c", "output=$(npx prisma migrate deploy 2>&1); if echo \"$output\" | grep -qE 'P3005|P3008'; then for m in prisma/migrations/*/; do npx prisma migrate resolve --applied \"$(basename $m)\" > /dev/null 2>&1 || true; done && npx prisma migrate deploy; else echo \"$output\"; fi && node dist/server.js"]
+CMD ["sh", "-c", "output=$(npx prisma migrate deploy 2>&1); echo \"$output\"; if echo \"$output\" | grep -q 'P3008'; then FAILED=$(echo \"$output\" | grep 'The migration' | sed 's/.*`\\([^`]*\\)`.*/\\1/' | head -1); [ -n \"$FAILED\" ] && npx prisma migrate resolve --applied \"$FAILED\" > /dev/null 2>&1 && npx prisma migrate deploy 2>&1; elif echo \"$output\" | grep -q 'P3005'; then FIRST=$(ls prisma/migrations | sort | grep -v migration_lock | head -1); [ -n \"$FIRST\" ] && npx prisma migrate resolve --applied \"$FIRST\" > /dev/null 2>&1 && npx prisma migrate deploy 2>&1; fi && node dist/server.js"]
