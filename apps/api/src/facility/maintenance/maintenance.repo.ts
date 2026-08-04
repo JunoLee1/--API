@@ -4,6 +4,8 @@ import type { CreateMaintenanceDto, UpdateMaintenanceDto, MaintenanceListQuery }
 const INCLUDE = {
   createdBy: { select: { id: true, username: true } },
   sourceInspection: { select: { id: true, type: true, facilityZone: true } },
+  approvedBy: { select: { id: true, username: true } },
+  gmApprovedBy: { select: { id: true, username: true } },
 } as const;
 
 export class MaintenanceRepository {
@@ -38,14 +40,49 @@ export class MaintenanceRepository {
     });
   }
 
-  update(id: number, data: UpdateMaintenanceDto & { resolvedAt?: Date }) {
+  update(id: number, data: UpdateMaintenanceDto) {
     return this.prisma.maintenanceRequest.update({
       where: { id },
       data: {
-        ...data,
+        ...(data.title !== undefined && { title: data.title }),
+        ...(data.description !== undefined && { description: data.description }),
+        ...(data.priority !== undefined && { priority: data.priority }),
+        ...(data.postIncidentReport !== undefined && { postIncidentReport: data.postIncidentReport }),
         ...(data.estimatedCost !== undefined && { estimatedCost: data.estimatedCost }),
         ...(data.actualCost !== undefined && { actualCost: data.actualCost }),
       },
+      include: INCLUDE,
+    });
+  }
+
+  updateStatus(id: number, status: string) {
+    return this.prisma.maintenanceRequest.update({
+      where: { id },
+      data: { status: status as any },
+      include: INCLUDE,
+    });
+  }
+
+  approve(id: number, approverId: number) {
+    return this.prisma.maintenanceRequest.update({
+      where: { id },
+      data: { status: "APPROVED", approvedById: approverId, approvedAt: new Date() },
+      include: INCLUDE,
+    });
+  }
+
+  gmApprove(id: number, gmId: number) {
+    return this.prisma.maintenanceRequest.update({
+      where: { id },
+      data: { status: "RESOLVED", gmApprovedById: gmId, gmApprovedAt: new Date(), resolvedAt: new Date() },
+      include: INCLUDE,
+    });
+  }
+
+  reject(id: number, reason?: string) {
+    return this.prisma.maintenanceRequest.update({
+      where: { id },
+      data: { status: "REJECTED", ...(reason && { rejectionReason: reason }) },
       include: INCLUDE,
     });
   }

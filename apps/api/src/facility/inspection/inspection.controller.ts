@@ -4,7 +4,10 @@ import { isAdminLike } from "../../lib/permissions";
 import type { InspectionService } from "./inspection.service";
 import type { CreateInspectionDto, UpdateInspectionDto, InspectionListQuery } from "./dto/inspection.dto";
 
-const canWrite = (role: string) => isAdminLike(role) || role === "FRONT_OFFICE";
+const canWrite = (req: Request) =>
+  isAdminLike(req.user!.role) ||
+  req.user!.role === "GM" ||
+  (req.user!.role === "FRONT_OFFICE" && req.user!.frontOfficeRole === "FACILITY_MANAGER");
 
 export class InspectionController {
   constructor(private service: InspectionService) {}
@@ -27,8 +30,8 @@ export class InspectionController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, id: userId } = req.user!;
-      if (!canWrite(role)) throw new AppError(403, "FORBIDDEN");
+      const { id: userId } = req.user!;
+      if (!canWrite(req)) throw new AppError(403, "FORBIDDEN");
       const result = await this.service.create(req.body as CreateInspectionDto, userId);
       res.status(201).json(result);
     } catch (err) {
@@ -38,8 +41,7 @@ export class InspectionController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role } = req.user!;
-      if (!canWrite(role)) throw new AppError(403, "FORBIDDEN");
+      if (!canWrite(req)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.update(Number(req.params.id), req.body as UpdateInspectionDto));
     } catch (err) {
       next(err);

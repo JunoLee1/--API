@@ -30,5 +30,9 @@ router.get("/maintenance", auth, maintenanceController.list);
 router.post("/maintenance", auth, maintenanceController.create);
 router.get("/maintenance/:id", auth, maintenanceController.get);
 router.patch("/maintenance/:id", auth, maintenanceController.update);
+router.patch("/maintenance/:id/status", auth, maintenanceController.updateStatus);
+router.post("/maintenance/:id/approve", auth, maintenanceController.approve);
+router.post("/maintenance/:id/gm-approve", auth, maintenanceController.gmApprove);
+router.post("/maintenance/:id/reject", auth, maintenanceController.reject);
 
 export default router;

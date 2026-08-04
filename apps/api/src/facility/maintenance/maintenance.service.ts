@@ -3,6 +3,8 @@ import { NotificationService } from "../../notification/notification.service";
 import type { MaintenanceRepository } from "./maintenance.repo";
 import type { CreateMaintenanceDto, UpdateMaintenanceDto, MaintenanceListQuery } from "./dto/maintenance.dto";
 
+const TERMINAL_STATUSES = ["RESOLVED", "REJECTED"] as const;
+
 export class MaintenanceService {
   constructor(
     private repo: MaintenanceRepository,
@@ -29,14 +31,40 @@ export class MaintenanceService {
 
   async update(id: number, dto: UpdateMaintenanceDto) {
     const existing = await this.get(id);
-    if (existing.status === "RESOLVED") throw new AppError(409, "ALREADY_RESOLVED");
-
-    const resolvedAt = dto.status === "RESOLVED" ? new Date() : undefined;
-    const record = await this.repo.update(id, { ...dto, ...(resolvedAt && { resolvedAt }) });
-
-    if (dto.status === "RESOLVED") {
-      void this.notifications.notifyFacilityResolved(existing.title, id).catch(console.error);
+    if ((TERMINAL_STATUSES as readonly string[]).includes(existing.status)) {
+      throw new AppError(409, "ALREADY_RESOLVED");
     }
+    return this.repo.update(id, dto);
+  }
+
+  async updateStatus(id: number, status: string) {
+    const existing = await this.get(id);
+    if ((TERMINAL_STATUSES as readonly string[]).includes(existing.status)) {
+      throw new AppError(409, "ALREADY_RESOLVED");
+    }
+    const ALLOWED = ["IN_PROGRESS", "PENDING_APPROVAL"];
+    if (!ALLOWED.includes(status)) throw new AppError(400, "INVALID_STATUS_TRANSITION");
+    return this.repo.updateStatus(id, status);
+  }
+
+  async approve(id: number, approverId: number) {
+    const existing = await this.get(id);
+    if (existing.status !== "PENDING_APPROVAL") throw new AppError(400, "INVALID_STATUS_TRANSITION");
+    return this.repo.approve(id, approverId);
+  }
+
+  async gmApprove(id: number, gmId: number) {
+    const existing = await this.get(id);
+    if (existing.status !== "APPROVED") throw new AppError(400, "INVALID_STATUS_TRANSITION");
+    const record = await this.repo.gmApprove(id, gmId);
+    void this.notifications.notifyFacilityResolved(existing.title, id).catch(console.error);
     return record;
+  }
+
+  async reject(id: number, reason?: string) {
+    const existing = await this.get(id);
+    const REJECTABLE = ["PENDING_APPROVAL", "APPROVED"];
+    if (!REJECTABLE.includes(existing.status)) throw new AppError(400, "INVALID_STATUS_TRANSITION");
+    return this.repo.reject(id, reason);
   }
 }
