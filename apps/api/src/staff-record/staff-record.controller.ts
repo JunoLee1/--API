@@ -9,6 +9,19 @@ const canWrite = (role: string) =>
 const canRead = (role: string) =>
   isAdminLike(role) || role === "GM";
 
+const canSeeFullPhone = (role: string) =>
+  isAdminLike(role) || role === "GM";
+
+function maskPhone(phone: string | null | undefined): string | null | undefined {
+  if (!phone) return phone;
+  return phone.slice(0, -4) + "****";
+}
+
+function withMaskedPhone<T extends { phone?: string | null }>(record: T, role: string): T {
+  if (canSeeFullPhone(role)) return record;
+  return { ...record, phone: maskPhone(record.phone) };
+}
+
 export class StaffRecordController {
   constructor(private service: StaffRecordService) {}
 
@@ -17,7 +30,8 @@ export class StaffRecordController {
       const { role } = req.user!;
       if (!canRead(role)) throw new AppError(403, "FORBIDDEN");
       const includeInactive = req.query["includeInactive"] === "true";
-      res.json(await this.service.list(includeInactive));
+      const records = await this.service.list(includeInactive);
+      res.json(records.map((r) => withMaskedPhone(r, role)));
     } catch (err) {
       next(err);
     }
@@ -27,7 +41,7 @@ export class StaffRecordController {
     try {
       const { role } = req.user!;
       if (!canRead(role)) throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.get(Number(req.params["id"])));
+      res.json(withMaskedPhone(await this.service.get(Number(req.params["id"])), role));
     } catch (err) {
       next(err);
     }

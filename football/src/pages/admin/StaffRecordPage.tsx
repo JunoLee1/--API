@@ -190,7 +190,12 @@ export function StaffRecordPage() {
                 onValueChange={(v) => setForm((f) => ({ ...f, departmentId: v === "none" ? "" : v, teamId: "" }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={t("staffRecord.departmentPlaceholder")} />
+                  <SelectValue>
+                    {(value: string) =>
+                      !value || value === "none"
+                        ? t("staffRecord.noDepartment")
+                        : (departments.find((d) => String(d.id) === value)?.name ?? value)}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">{t("staffRecord.noDepartment")}</SelectItem>
@@ -212,7 +217,12 @@ export function StaffRecordPage() {
                     onValueChange={(v) => setForm((f) => ({ ...f, teamId: v === "none" ? "" : v }))}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="팀 선택 (선택)" />
+                      <SelectValue>
+                        {(value: string) =>
+                          !value || value === "none"
+                            ? "팀 선택 안 함"
+                            : (teams.find((c) => String(c.id) === value)?.name ?? value)}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">팀 선택 안 함</SelectItem>
