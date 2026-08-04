@@ -1,4 +1,4 @@
-export type Role = 'ADMIN' | 'SUPER_ADMIN' | 'FRONT_OFFICE' | 'COACHING_STAFF' | 'PLAYER' | 'AGENT' | 'GUARDIAN'
+export type Role = 'ADMIN' | 'SUPER_ADMIN' | 'GM' | 'FRONT_OFFICE' | 'COACHING_STAFF' | 'PLAYER' | 'AGENT' | 'GUARDIAN'
 
 export type CoachingRole =
   | 'HEAD_COACH'
@@ -12,7 +12,6 @@ export type CoachingRole =
   | 'MEDICAL_DIRECTOR'
 
 export type FrontOfficeRole =
-  | 'GM'
   | 'TD'
   | 'CONTRACT_MANAGER'
   | 'SCOUT'
@@ -30,6 +29,7 @@ export type FrontOfficeRole =
 export const ROLE_LABEL: Record<Role, string> = {
   ADMIN: 'Admin',
   SUPER_ADMIN: 'Super Admin',
+  GM: '단장 (GM)',
   FRONT_OFFICE: 'Front Office',
   COACHING_STAFF: 'Coaching Staff',
   PLAYER: 'Player',
@@ -50,7 +50,6 @@ export const COACHING_ROLE_LABEL: Record<CoachingRole, string> = {
 }
 
 export const FRONT_OFFICE_ROLE_LABEL: Record<FrontOfficeRole, string> = {
-  GM: 'GM',
   TD: 'Technical Director',
   CONTRACT_MANAGER: 'Contract Manager',
   SCOUT: 'Scout',
@@ -75,6 +74,7 @@ export interface UserDto {
   coachingRole: CoachingRole | null
   frontOfficeRole: FrontOfficeRole | null
   teamId: number | null
+  clubId: number | null
   isOutOfOffice: boolean
   language: 'ko' | 'en'
 }
