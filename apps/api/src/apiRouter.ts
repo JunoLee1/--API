@@ -44,6 +44,7 @@ import facilityRouter from "./facility/facility.routes";
 import sponsorshipRouter from "./sponsorship/sponsorship.routes";
 import payrollRouter from "./payroll/payroll.routes";
 import hiringAutomationRouter from "./hiring-automation/hiring-automation.routes";
+import clubRouter from "./club/club.routes";
 
 const apiRouter = Router();
 
@@ -73,6 +74,7 @@ apiRouter.use("/development-plans", developmentPlanRouter);
 apiRouter.use("/coach-availabilities", coachAvailabilityRouter);
 apiRouter.use("/training-loads", trainingLoadRouter);
 apiRouter.use("/teams", teamRouter);
+apiRouter.use("/clubs", clubRouter);
 apiRouter.use("/player-callups", playerCallupRouter);
 apiRouter.use("/youth-registrations", youthRegistrationRouter);
 apiRouter.use("/incident-reports", incidentReportRouter);
