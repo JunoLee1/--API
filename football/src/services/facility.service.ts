@@ -37,5 +37,13 @@ export const facilityApi = {
       api.post<MaintenanceRequest>('/facility/maintenance', dto),
     update: (id: number, dto: UpdateMaintenanceDto) =>
       api.patch<MaintenanceRequest>(`/facility/maintenance/${id}`, dto),
+    updateStatus: (id: number, status: string) =>
+      api.patch<MaintenanceRequest>(`/facility/maintenance/${id}/status`, { status }),
+    approve: (id: number) =>
+      api.post<MaintenanceRequest>(`/facility/maintenance/${id}/approve`, {}),
+    gmApprove: (id: number) =>
+      api.post<MaintenanceRequest>(`/facility/maintenance/${id}/gm-approve`, {}),
+    reject: (id: number, reason?: string) =>
+      api.post<MaintenanceRequest>(`/facility/maintenance/${id}/reject`, { reason }),
   },
 }

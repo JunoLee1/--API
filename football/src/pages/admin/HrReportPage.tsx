@@ -14,6 +14,34 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
+import { FileBarChart2 } from "lucide-react"
+
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
+      <FileBarChart2 className="size-12 opacity-30" />
+      <p className="text-sm">{message}</p>
+    </div>
+  )
+}
+
+function ReportSkeleton() {
+  return (
+    <div className="space-y-4">
+      {[1, 2, 3].map((i) => (
+        <Card key={i}>
+          <CardHeader><Skeleton className="h-4 w-32" /></CardHeader>
+          <CardContent className="space-y-2">
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-4/5" />
+            <Skeleton className="h-3 w-2/3" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )
+}
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
 const YEARS = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)
@@ -298,19 +326,19 @@ export default function HrReportPage() {
               </Select>
             </div>
           )}
-          {loading && <span className="text-sm text-muted-foreground">조회 중...</span>}
+          {loading && <span className="text-sm text-muted-foreground animate-pulse">조회 중...</span>}
         </div>
 
         <TabsContent value="monthly" className="mt-4">
-          {monthly
+          {loading ? <ReportSkeleton /> : monthly
             ? <MonthlyReport data={monthly} />
-            : <p className="text-sm text-muted-foreground text-center py-8">{t("hrReport.noData")}</p>
+            : <EmptyState message={t("hrReport.noData")} />
           }
         </TabsContent>
         <TabsContent value="annual" className="mt-4">
-          {annual
+          {loading ? <ReportSkeleton /> : annual
             ? <AnnualReport data={annual} />
-            : <p className="text-sm text-muted-foreground text-center py-8">연도를 선택하고 조회 버튼을 누르세요.</p>
+            : <EmptyState message={t("hrReport.noData")} />
           }
         </TabsContent>
       </Tabs>

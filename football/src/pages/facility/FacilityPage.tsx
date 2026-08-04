@@ -14,6 +14,7 @@ import type {
   CreateMaintenanceDto,
   UpdateMaintenanceDto,
 } from '@/types/facility'
+import { useConfirm } from '@/lib/confirm-dialog'
 import {
   ZONE_LABEL,
   INSPECTION_TYPE_LABEL,
@@ -60,7 +61,8 @@ const ZONES: FacilityZone[] = ['GROUND', 'MECHANICAL', 'STRUCTURAL', 'SAFETY', '
 const INSPECTION_TYPES: InspectionType[] = ['DAILY', 'MONTHLY', 'QUARTERLY', 'ANNUAL']
 const RESULTS: InspectionResult[] = ['OK', 'ISSUE_FOUND']
 const PRIORITIES: MaintenancePriority[] = ['EMERGENCY', 'HIGH', 'NORMAL']
-const STATUSES: MaintenanceStatus[] = ['OPEN', 'IN_PROGRESS', 'RESOLVED']
+const STATUSES: MaintenanceStatus[] = ['OPEN', 'IN_PROGRESS', 'PENDING_APPROVAL', 'APPROVED', 'RESOLVED', 'REJECTED']
+const TERMINAL_STATUSES: MaintenanceStatus[] = ['RESOLVED', 'REJECTED']
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
@@ -248,71 +250,164 @@ interface UpdateMaintenanceDialogProps {
   request: MaintenanceRequest | null
   onOpenChange: (v: boolean) => void
   onSaved: () => void
+  isFacilityManager: boolean
+  isGM: boolean
 }
 
-function UpdateMaintenanceDialog({ request, onOpenChange, onSaved }: UpdateMaintenanceDialogProps) {
+function UpdateMaintenanceDialog({ request, onOpenChange, onSaved, isFacilityManager, isGM }: UpdateMaintenanceDialogProps) {
   const { t } = useTranslation('facility')
-  const [status, setStatus] = useState<MaintenanceStatus>('OPEN')
+  const confirm = useConfirm()
+  const [nextStatus, setNextStatus] = useState<MaintenanceStatus>('IN_PROGRESS')
   const [postIncidentReport, setPostIncidentReport] = useState('')
   const [actualCost, setActualCost] = useState('')
+  const [rejectReason, setRejectReason] = useState('')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (request) {
-      setStatus(request.status)
+      setNextStatus(request.status === 'OPEN' ? 'IN_PROGRESS' : 'PENDING_APPROVAL')
       setPostIncidentReport(request.postIncidentReport ?? '')
       setActualCost(request.actualCost != null ? String(request.actualCost) : '')
+      setRejectReason('')
     }
   }, [request])
 
-  const handleSave = async () => {
+  const handleUpdateStatus = async () => {
     if (!request) return
     setSaving(true)
     try {
-      const dto: UpdateMaintenanceDto = {
-        status,
-        ...(postIncidentReport.trim() && { postIncidentReport: postIncidentReport.trim() }),
-        ...(actualCost && { actualCost: Number(actualCost) }),
+      if (postIncidentReport.trim() || actualCost) {
+        const dto: UpdateMaintenanceDto = {
+          ...(postIncidentReport.trim() && { postIncidentReport: postIncidentReport.trim() }),
+          ...(actualCost && { actualCost: Number(actualCost) }),
+        }
+        await facilityApi.maintenance.update(request.id, dto)
       }
-      await facilityApi.maintenance.update(request.id, dto)
+      await facilityApi.maintenance.updateStatus(request.id, nextStatus)
       toast.success(t('maintenance.updated'))
-      onSaved()
-      onOpenChange(false)
+      onSaved(); onOpenChange(false)
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : t('maintenance.updateFailed'))
-    } finally {
-      setSaving(false)
-    }
+    } finally { setSaving(false) }
   }
+
+  const handleApprove = async () => {
+    if (!request) return
+    setSaving(true)
+    try {
+      await facilityApi.maintenance.approve(request.id)
+      toast.success(t('maintenance.approved'))
+      onSaved(); onOpenChange(false)
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : t('maintenance.updateFailed'))
+    } finally { setSaving(false) }
+  }
+
+  const handleGmApprove = async () => {
+    if (!request) return
+    setSaving(true)
+    try {
+      await facilityApi.maintenance.gmApprove(request.id)
+      toast.success(t('maintenance.gmApproved'))
+      onSaved(); onOpenChange(false)
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : t('maintenance.updateFailed'))
+    } finally { setSaving(false) }
+  }
+
+  const handleReject = async () => {
+    if (!request) return
+    const ok = await confirm({ title: '반려 확인', description: '이 유지보수 요청을 반려하시겠습니까?', confirmText: '반려', variant: 'destructive' })
+    if (!ok) return
+    setSaving(true)
+    try {
+      await facilityApi.maintenance.reject(request.id, rejectReason.trim() || undefined)
+      toast.success(t('maintenance.rejected'))
+      onSaved(); onOpenChange(false)
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : t('maintenance.updateFailed'))
+    } finally { setSaving(false) }
+  }
+
+  if (!request) return null
+  const status = request.status
 
   return (
     <Dialog open={!!request} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t('maintenance.form.updateTitle')}</DialogTitle>
+          <DialogTitle>{t('maintenance.form.updateTitle')} — {request.title}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label>{t('maintenance.form.status')}</Label>
-            <Select value={status} onValueChange={(v) => setStatus(v as MaintenanceStatus)}>
-              <SelectTrigger><SelectValue>{t(`status.${status}`)}</SelectValue></SelectTrigger>
-              <SelectContent>
-                {STATUSES.map((s) => <SelectItem key={s} value={s}>{t(`status.${s}`)}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>{t('maintenance.form.postIncidentReport')}</Label>
-            <Textarea placeholder={t('maintenance.form.postIncidentReportPlaceholder')} value={postIncidentReport} onChange={(e) => setPostIncidentReport(e.target.value)} rows={3} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>{t('maintenance.form.actualCost')}</Label>
-            <Input type="number" placeholder="0" value={actualCost} onChange={(e) => setActualCost(e.target.value)} />
-          </div>
+          {/* 처리 내역 / 비용 (FM 또는 상태 진행 시) */}
+          {isFacilityManager && (status === 'OPEN' || status === 'IN_PROGRESS') && (
+            <>
+              <div className="space-y-1.5">
+                <Label>{t('maintenance.form.status')}</Label>
+                <Select value={nextStatus} onValueChange={(v) => setNextStatus(v as MaintenanceStatus)}>
+                  <SelectTrigger><SelectValue>{t(`status.${nextStatus}`)}</SelectValue></SelectTrigger>
+                  <SelectContent>
+                    {status === 'OPEN' && <SelectItem value="IN_PROGRESS">{t('status.IN_PROGRESS')}</SelectItem>}
+                    <SelectItem value="PENDING_APPROVAL">{t('status.PENDING_APPROVAL')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>{t('maintenance.form.postIncidentReport')}</Label>
+                <Textarea placeholder={t('maintenance.form.postIncidentReportPlaceholder')} value={postIncidentReport} onChange={(e) => setPostIncidentReport(e.target.value)} rows={3} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>{t('maintenance.form.actualCost')}</Label>
+                <Input type="number" placeholder="0" value={actualCost} onChange={(e) => setActualCost(e.target.value)} />
+              </div>
+            </>
+          )}
+
+          {/* 반려 사유 (반려 가능한 단계) */}
+          {((isFacilityManager && status === 'PENDING_APPROVAL') || (isGM && status === 'APPROVED')) && (
+            <div className="space-y-1.5">
+              <Label>반려 사유 (선택)</Label>
+              <Textarea placeholder="반려 사유를 입력하세요" value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} rows={2} />
+            </div>
+          )}
+
+          {/* 결재 정보 표시 */}
+          {request.approvedBy && (
+            <p className="text-xs text-muted-foreground">1차 승인: {request.approvedBy.username}</p>
+          )}
+          {request.rejectionReason && (
+            <p className="text-xs text-destructive">반려 사유: {request.rejectionReason}</p>
+          )}
         </div>
-        <DialogFooter>
+        <DialogFooter className="flex-wrap gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>
-          <Button onClick={() => void handleSave()} disabled={saving}>{saving ? '저장 중...' : '저장'}</Button>
+
+          {/* 상태 진행 버튼 */}
+          {isFacilityManager && (status === 'OPEN' || status === 'IN_PROGRESS') && (
+            <Button onClick={() => void handleUpdateStatus()} disabled={saving}>
+              {saving ? '처리 중...' : '상태 변경'}
+            </Button>
+          )}
+
+          {/* FM 1차 승인 */}
+          {isFacilityManager && status === 'PENDING_APPROVAL' && (
+            <>
+              <Button variant="destructive" onClick={() => void handleReject()} disabled={saving}>반려</Button>
+              <Button onClick={() => void handleApprove()} disabled={saving}>
+                {saving ? '처리 중...' : '1차 승인'}
+              </Button>
+            </>
+          )}
+
+          {/* GM 최종 승인 */}
+          {isGM && status === 'APPROVED' && (
+            <>
+              <Button variant="destructive" onClick={() => void handleReject()} disabled={saving}>반려</Button>
+              <Button onClick={() => void handleGmApprove()} disabled={saving}>
+                {saving ? '처리 중...' : '최종 승인'}
+              </Button>
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -323,7 +418,11 @@ function UpdateMaintenanceDialog({ request, onOpenChange, onSaved }: UpdateMaint
 export function FacilityPage() {
   const { t } = useTranslation('facility')
   const { user } = useCurrentUser()
-  const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
+  const isFacilityManager =
+    user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'GM' ||
+    (user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'FACILITY_MANAGER')
+  const isGMRole = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'GM'
+  const canWrite = isFacilityManager
 
   const [inspections, setInspections] = useState<FacilityInspection[]>([])
   const [inspLoading, setInspLoading] = useState(true)
@@ -517,8 +616,18 @@ export function FacilityPage() {
                   {maintenance.map((req) => (
                     <TableRow
                       key={req.id}
-                      className={canWrite && req.status !== 'RESOLVED' ? 'cursor-pointer' : ''}
-                      onClick={() => { if (canWrite && req.status !== 'RESOLVED') setSelectedRequest(req) }}
+                      className={
+                        !TERMINAL_STATUSES.includes(req.status) &&
+                        (req.status === 'APPROVED' ? isGMRole : isFacilityManager)
+                          ? 'cursor-pointer'
+                          : ''
+                      }
+                      onClick={() => {
+                        const clickable =
+                          !TERMINAL_STATUSES.includes(req.status) &&
+                          (req.status === 'APPROVED' ? isGMRole : isFacilityManager)
+                        if (clickable) setSelectedRequest(req)
+                      }}
                     >
                       <TableCell className="font-medium">{req.title}</TableCell>
                       <TableCell>
@@ -559,6 +668,8 @@ export function FacilityPage() {
         request={selectedRequest}
         onOpenChange={(v) => { if (!v) setSelectedRequest(null) }}
         onSaved={fetchMaintenance}
+        isFacilityManager={isFacilityManager}
+        isGM={isGMRole}
       />
     </div>
   )

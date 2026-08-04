@@ -100,6 +100,48 @@ export class AuthController {
     }
   };
 
+  createInvite = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userInfo = this.getAuthenticatedUser(req);
+      if (!isAdminLike(userInfo.role)) throw new AppError(403, "FORBIDDEN");
+      const { email, role, coachingRole, frontOfficeRole } = req.body as {
+        email: string; role: string; coachingRole?: string; frontOfficeRole?: string;
+      };
+      if (!email || !role) throw new AppError(400, "EMAIL_AND_ROLE_REQUIRED");
+      const invite = await this.service.createInvite({
+        email, role: role as any,
+        coachingRole: coachingRole as any ?? null,
+        frontOfficeRole: frontOfficeRole as any ?? null,
+        createdById: userInfo.id,
+      });
+      res.status(201).json(invite);
+    } catch (err) { next(err); }
+  };
+
+  getInvite = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { token } = req.params as { token: string };
+      const invite = await this.service.getInvite(token);
+      res.json({ email: invite.email, role: invite.role, coachingRole: invite.coachingRole, frontOfficeRole: invite.frontOfficeRole });
+    } catch (err) { next(err); }
+  };
+
+  acceptInvite = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { token } = req.params as { token: string };
+      const user = await this.service.acceptInvite(token, req.body);
+      res.status(201).json(user);
+    } catch (err) { next(err); }
+  };
+
+  listInvites = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userInfo = this.getAuthenticatedUser(req);
+      if (!isAdminLike(userInfo.role)) throw new AppError(403, "FORBIDDEN");
+      res.json(await this.service.listInvites());
+    } catch (err) { next(err); }
+  };
+
   loginHistory = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userInfo = this.getAuthenticatedUser(req);

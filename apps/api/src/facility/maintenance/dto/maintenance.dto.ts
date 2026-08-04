@@ -12,10 +12,17 @@ export interface UpdateMaintenanceDto {
   title?: string;
   description?: string;
   priority?: MaintenancePriority;
-  status?: MaintenanceStatus;
   postIncidentReport?: string;
   estimatedCost?: number;
   actualCost?: number;
+}
+
+export interface UpdateMaintenanceStatusDto {
+  status: MaintenanceStatus;
+}
+
+export interface RejectMaintenanceDto {
+  reason?: string;
 }
 
 export interface MaintenanceListQuery {

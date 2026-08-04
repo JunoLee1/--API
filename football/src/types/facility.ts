@@ -2,7 +2,7 @@ export type FacilityZone = 'GROUND' | 'MECHANICAL' | 'STRUCTURAL' | 'SAFETY' | '
 export type InspectionType = 'DAILY' | 'MONTHLY' | 'QUARTERLY' | 'ANNUAL'
 export type InspectionResult = 'OK' | 'ISSUE_FOUND'
 export type MaintenancePriority = 'EMERGENCY' | 'HIGH' | 'NORMAL'
-export type MaintenanceStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED'
+export type MaintenanceStatus = 'OPEN' | 'IN_PROGRESS' | 'PENDING_APPROVAL' | 'APPROVED' | 'RESOLVED' | 'REJECTED'
 
 export interface FacilityInspection {
   id: number
@@ -29,6 +29,11 @@ export interface MaintenanceRequest {
   postIncidentReport: string | null
   sourceInspection: { id: number; type: InspectionType; facilityZone: FacilityZone } | null
   createdBy: { id: number; username: string }
+  approvedBy: { id: number; username: string } | null
+  approvedAt: string | null
+  gmApprovedBy: { id: number; username: string } | null
+  gmApprovedAt: string | null
+  rejectionReason: string | null
   createdAt: string
   resolvedAt: string | null
 }
@@ -96,11 +101,17 @@ export const PRIORITY_STYLE: Record<MaintenancePriority, string> = {
 export const STATUS_LABEL: Record<MaintenanceStatus, string> = {
   OPEN: '접수',
   IN_PROGRESS: '처리중',
+  PENDING_APPROVAL: 'FM 결재 대기',
+  APPROVED: 'GM 결재 대기',
   RESOLVED: '완료',
+  REJECTED: '반려',
 }
 
 export const STATUS_STYLE: Record<MaintenanceStatus, string> = {
   OPEN: 'bg-yellow-100 text-yellow-800 border-yellow-200',
   IN_PROGRESS: 'bg-blue-100 text-blue-800 border-blue-200',
+  PENDING_APPROVAL: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+  APPROVED: 'bg-violet-100 text-violet-800 border-violet-200',
   RESOLVED: 'bg-green-100 text-green-800 border-green-200',
+  REJECTED: 'bg-red-100 text-red-800 border-red-200',
 }
