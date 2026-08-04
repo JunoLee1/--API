@@ -4,7 +4,6 @@ import { hashPassword, comparePassword } from "../lib/hash";
 import { encrypt } from "../lib/crypto";
 import { generateTokens } from "../lib/token";
 import { LoginDto, CreateUserDto } from "../lib/dto";
-import { sendInviteEmail } from "../lib/email";
 import { Role, CoachingRole, FrontOfficeRole } from "../generated/enums";
 
 export class AuthService {
@@ -52,6 +51,7 @@ export class AuthService {
     const invite = await this.repo.createInvite(dto);
     const appUrl = process.env["APP_URL"] ?? "http://localhost:5173";
     const inviteUrl = `${appUrl}/invite/${invite.token}`;
+    const { sendInviteEmail } = await import("../lib/email");
     await sendInviteEmail(dto.email, inviteUrl, dto.role);
     return invite;
   }
