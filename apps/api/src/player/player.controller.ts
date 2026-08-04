@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { isAdminLike } from "../lib/permissions";
 import { PlayerService } from "./player.service";
 import { PlayerListQuery } from "./dto/player.dto";
 import { PlayerStatus, Position, PlayerLevel } from "../generated/enums";
@@ -67,7 +68,7 @@ export class PlayerController {
 
   updatePlayerStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (req.user!.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
+      if (!isAdminLike(req.user!.role)) throw new AppError(403, "FORBIDDEN");
       const result = await this.service.updatePlayerStatus(String(req.params["id"]), req.body);
       res.status(200).json(result);
     } catch (err) {
@@ -77,7 +78,7 @@ export class PlayerController {
 
   deletePlayer = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (req.user!.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
+      if (!isAdminLike(req.user!.role)) throw new AppError(403, "FORBIDDEN");
       await this.service.deletePlayer(String(req.params["id"]));
       res.status(204).send();
     } catch (err) {

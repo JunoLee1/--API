@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { isAdminLike } from "../lib/permissions";
 import { CoachAvailabilityService } from "./coach-availability.service";
 
 export class CoachAvailabilityController {
@@ -20,7 +21,7 @@ export class CoachAvailabilityController {
     try {
       const { role, coachingRole, id: requesterId } = req.user!;
       const canCreate =
-        role === "ADMIN" ||
+        isAdminLike(role) ||
         (role === "COACHING_STAFF" && coachingRole === "HEAD_COACH") ||
         (role === "COACHING_STAFF" && req.body.userId === requesterId);
       if (!canCreate) throw new AppError(403, "FORBIDDEN");
@@ -31,7 +32,7 @@ export class CoachAvailabilityController {
   delete = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id: requesterId, role } = req.user!;
-      await this.service.delete(Number(req.params["id"]), requesterId, role === "ADMIN");
+      await this.service.delete(Number(req.params["id"]), requesterId, isAdminLike(role));
       res.status(204).send();
     } catch (err) { next(err); }
   };

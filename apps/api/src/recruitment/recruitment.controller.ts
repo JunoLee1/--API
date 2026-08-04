@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { isAdminLike } from "../lib/permissions";
 import { RecruitmentService } from "./recruitment.service";
 import type { InterviewRound } from "../generated/enums";
 import type {
@@ -16,16 +17,16 @@ import type {
 } from "./dto/recruitment.dto";
 
 const canRead = (role: string, foRole: string | null | undefined, coachRole: string | null | undefined) =>
-  role === "ADMIN" ||
+  isAdminLike(role) ||
   (role === "FRONT_OFFICE" && (foRole === "GM" || foRole === "TD" || foRole === "HR_MANAGER")) ||
   (role === "COACHING_STAFF" && coachRole === "HEAD_COACH");
 
 const canWrite = (role: string, foRole: string | null | undefined) =>
-  role === "ADMIN" ||
+  isAdminLike(role) ||
   (role === "FRONT_OFFICE" && foRole === "HR_MANAGER");
 
 const canApprove = (role: string, foRole: string | null | undefined) =>
-  role === "ADMIN" || (role === "FRONT_OFFICE" && foRole === "HR_MANAGER");
+  isAdminLike(role) || (role === "FRONT_OFFICE" && foRole === "HR_MANAGER");
 
 export class RecruitmentController {
   constructor(private service: RecruitmentService) {}

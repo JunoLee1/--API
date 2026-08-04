@@ -1,12 +1,13 @@
 import type { Request, Response, NextFunction } from "express";
 import { AppError } from "../../lib/appError";
+import { isAdminLike } from "../../lib/permissions";
 import type { RunService } from "./run.service";
 import type { CreateRunDto } from "./dto/run.dto";
 
 const canWrite = (role: string, foRole: string | null | undefined) =>
-  role === "ADMIN" || (role === "FRONT_OFFICE" && foRole === "FINANCE_MANAGER");
+  isAdminLike(role) || (role === "FRONT_OFFICE" && foRole === "FINANCE_MANAGER");
 
-const canConfirm = (role: string) => role === "ADMIN";
+const canConfirm = (role: string) => isAdminLike(role);
 
 export class RunController {
   constructor(private service: RunService) {}

@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { isAdminLike } from "../lib/permissions";
 import { VideoService } from "./video.service";
 
-const CAN_WRITE = ["ADMIN", "COACHING_STAFF"];
+const CAN_WRITE = ["ADMIN", "SUPER_ADMIN", "COACHING_STAFF"];
 
 export class VideoController {
   constructor(private service: VideoService) {}
@@ -35,7 +36,7 @@ export class VideoController {
       await this.service.deleteVideo(
         Number(req.params["id"]),
         req.user!.id,
-        req.user!.role === "ADMIN",
+        isAdminLike(req.user!.role),
       );
       res.status(204).send();
     } catch (err) { next(err); }

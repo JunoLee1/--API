@@ -11,14 +11,16 @@ const repo = new HiringAutomationRepository(getPrisma());
 const service = new HiringAutomationService(repo);
 const controller = new HiringAutomationController(service);
 
+const isAdmin = (role: string) => role === "ADMIN" || role === "SUPER_ADMIN";
+
 const requireAdmin = (req: any, _res: any, next: any) => {
-  if (req.user?.role === "ADMIN") return next();
+  if (isAdmin(req.user?.role)) return next();
   next(new AppError(403, "FORBIDDEN"));
 };
 
 const requireHRorGMorAdmin = (req: any, _res: any, next: any) => {
   const { role, frontOfficeRole } = req.user ?? {};
-  if (role === "ADMIN") return next();
+  if (isAdmin(role)) return next();
   if (role === "FRONT_OFFICE" && (frontOfficeRole === "GM" || frontOfficeRole === "HR_MANAGER"))
     return next();
   next(new AppError(403, "FORBIDDEN"));
@@ -26,7 +28,7 @@ const requireHRorGMorAdmin = (req: any, _res: any, next: any) => {
 
 const requireHRManager = (req: any, _res: any, next: any) => {
   const { role, frontOfficeRole } = req.user ?? {};
-  if (role === "ADMIN") return next();
+  if (isAdmin(role)) return next();
   if (role === "FRONT_OFFICE" && frontOfficeRole === "HR_MANAGER") return next();
   next(new AppError(403, "FORBIDDEN"));
 };

@@ -552,10 +552,11 @@ async function main() {
   const gkPhone       = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0010") });
   const medPhone      = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0011") });
   const meddirPhone   = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0012") });
-  const gmPhone       = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0013") });
-  const tdPhone       = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0014") });
-  const assetPhone    = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0016") });
-  const financePhone  = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0017") });
+  const gmPhone         = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0013") });
+  const tdPhone         = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0014") });
+  const assetPhone      = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0016") });
+  const financePhone    = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0017") });
+  const superAdminPhone = await prisma.phoneNumber.create({ data: encryptPhone("010-0000-0099") });
 
   const hashed = await bcrypt.hash("Password1!", 10);
 
@@ -571,6 +572,21 @@ async function main() {
       dateOfBirth: new Date("1980-01-01"),
       nationalityId: korea.id,
       phoneNumberId: adminPhone.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: "superadmin@platform.com" },
+    update: {},
+    create: {
+      email: "superadmin@platform.com",
+      password: hashed,
+      username: "플랫폼관리자",
+      nickname: "superadmin",
+      role: "SUPER_ADMIN",
+      dateOfBirth: new Date("1980-01-01"),
+      nationalityId: korea.id,
+      phoneNumberId: superAdminPhone.id,
     },
   });
 
@@ -2231,7 +2247,8 @@ async function main() {
 
   console.log("✅ Seed complete");
   console.log(`   - Countries: 2`);
-  console.log(`   - Users: 20 + 10 유소년 / pw: Password1!`);
+  console.log(`   - Users: 21 + 10 유소년 / pw: Password1!`);
+  console.log(`     SUPER_ADMIN : superadmin@platform.com`);
   console.log(`     ADMIN       : admin@club.com`);
   console.log(`     FRONT_OFFICE: gm@club.com (GM)`);
   console.log(`     FRONT_OFFICE: td@club.com (TD)`);

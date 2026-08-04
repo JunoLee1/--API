@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { isAdminLike } from "../lib/permissions";
 import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME, COOKIE_OPTIONS } from "../lib/constants";
 import { AuthService } from "./auth.service";
 import { AuthRepository } from "./auth.repo";
@@ -89,7 +90,7 @@ export class AuthController {
   createUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userInfo = this.getAuthenticatedUser(req);
-      if (userInfo.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
+      if (!isAdminLike(userInfo.role)) throw new AppError(403, "FORBIDDEN");
       const user = await this.service.createUser(req.body);
       res.status(201).json(user);
     } catch (err) {
@@ -100,7 +101,7 @@ export class AuthController {
   loginHistory = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userInfo = this.getAuthenticatedUser(req);
-      if (userInfo.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
+      if (!isAdminLike(userInfo.role)) throw new AppError(403, "FORBIDDEN");
       const userId = req.params["userId"] ? Number(req.params["userId"]) : undefined;
       const history = userId
         ? await this.repo.listLoginHistory(userId)

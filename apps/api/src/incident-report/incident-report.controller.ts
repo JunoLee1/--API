@@ -1,10 +1,11 @@
 import type { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { isAdminLike } from "../lib/permissions";
 import type { IncidentReportService } from "./incident-report.service";
 import type { CreateIncidentReportDto, SignIncidentReportDto, IncidentReportListQuery } from "./dto/incident-report.dto";
 import { IncidentReportStatus, IncidentType } from "../generated/enums";
 
-const ALLOWED_ROLES = ["ADMIN", "COACHING_STAFF", "FRONT_OFFICE"] as const;
+const ALLOWED_ROLES = ["ADMIN", "SUPER_ADMIN", "COACHING_STAFF", "FRONT_OFFICE"] as const;
 
 function canAccess(req: Request) {
   return ALLOWED_ROLES.includes(req.user!.role as any);
@@ -58,7 +59,7 @@ export class IncidentReportController {
       if (role !== "SUPERVISOR" && role !== "MEDICAL") throw new AppError(400, "INVALID_ROLE");
       const u = req.user!;
       const canSign =
-        u.role === "ADMIN" ||
+        isAdminLike(u.role) ||
         (role === "MEDICAL" &&
           u.role === "COACHING_STAFF" &&
           (u.coachingRole === "MEDICAL" || u.coachingRole === "MEDICAL_DIRECTOR")) ||

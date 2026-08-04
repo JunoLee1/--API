@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { isAdminLike } from "../lib/permissions";
 import { InjuryService } from "./injury.service";
 
 const MEDICAL_ROLES = ["ADMIN", "COACHING_STAFF"] as const;
@@ -13,7 +14,7 @@ export class InjuryController {
       const { role, coachingRole } = req.user!;
       const isMedicalDirector =
         role === "COACHING_STAFF" && coachingRole === "MEDICAL_DIRECTOR";
-      if (role !== "ADMIN" && !isMedicalDirector) throw new AppError(403, "FORBIDDEN");
+      if (!isAdminLike(role) && !isMedicalDirector) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.getStats());
     } catch (err) { next(err); }
   };

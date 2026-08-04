@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../../lib/appError";
+import { isAdminLike } from "../../lib/permissions";
 import type { MaintenanceService } from "./maintenance.service";
 import type { CreateMaintenanceDto, UpdateMaintenanceDto, MaintenanceListQuery } from "./dto/maintenance.dto";
 
-const canWrite = (role: string) => role === "ADMIN" || role === "FRONT_OFFICE";
+const canWrite = (role: string) => isAdminLike(role) || role === "FRONT_OFFICE";
 
 export class MaintenanceController {
   constructor(private service: MaintenanceService) {}

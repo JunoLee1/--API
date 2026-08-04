@@ -1,12 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { isAdminLike } from "../lib/permissions";
 import { StaffRecordService } from "./staff-record.service";
 
 const canWrite = (role: string, frontOfficeRole: string | null | undefined) =>
   role === "FRONT_OFFICE" && frontOfficeRole === "GM";
 
 const canRead = (role: string, frontOfficeRole: string | null | undefined) =>
-  role === "ADMIN" || (role === "FRONT_OFFICE" && frontOfficeRole === "GM");
+  isAdminLike(role) || (role === "FRONT_OFFICE" && frontOfficeRole === "GM");
 
 export class StaffRecordController {
   constructor(private service: StaffRecordService) {}

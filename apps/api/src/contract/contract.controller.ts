@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { isAdminLike } from "../lib/permissions";
 import { ContractService } from "./contract.service";
 
 const WRITE_ROLES = ["ADMIN", "FRONT_OFFICE"] as const;
@@ -35,7 +36,7 @@ export class ContractController {
 
   updateStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (req.user!.role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
+      if (!isAdminLike(req.user!.role)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.updateStatus(Number(req.params["id"]), req.body));
     } catch (err) {
       next(err);

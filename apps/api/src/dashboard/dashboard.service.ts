@@ -22,6 +22,7 @@ export class DashboardService {
   getStats(user: UserCtx) {
     switch (user.role) {
       case "ADMIN":
+      case "SUPER_ADMIN":
         return this.repo.getAdminStats();
       case "FRONT_OFFICE":
         return this.getFrontOfficeStats(user);

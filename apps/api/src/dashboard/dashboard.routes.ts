@@ -1,4 +1,5 @@
 import { auth } from "../lib/authMiddleware";
+import { isAdminLike } from "../lib/permissions";
 import { Router } from "express";
 import { getPrisma } from "../lib/prisma";
 import { DashboardRepository } from "./dashboard.repo";
@@ -16,7 +17,7 @@ router.get("/stats", auth, controller.getStats);
 router.get("/youth-development", auth, async (req, res, next) => {
   try {
     const user = req.user as any;
-    if (user.role !== "ADMIN" && !(user.role === "FRONT_OFFICE" && user.frontOfficeRole === "TD")) {
+    if (!isAdminLike(user.role) && !(user.role === "FRONT_OFFICE" && user.frontOfficeRole === "TD")) {
       return res.status(403).json({ message: "Forbidden" });
     }
     res.json(await service.getYouthDevelopmentStats());
@@ -26,7 +27,7 @@ router.get("/youth-development", auth, async (req, res, next) => {
 router.get("/academy-finance", auth, async (req, res, next) => {
   try {
     const user = req.user as any;
-    if (user.role !== "ADMIN" && user.role !== "FRONT_OFFICE") {
+    if (!isAdminLike(user.role) && user.role !== "FRONT_OFFICE") {
       return res.status(403).json({ message: "Forbidden" });
     }
     const now = new Date();

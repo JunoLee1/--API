@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { isAdminLike } from "../lib/permissions";
 import { TrainingReferenceService } from "./training-reference.service";
 import { SessionType } from "../generated/enums";
 
-const READ_ROLES = ["ADMIN", "COACHING_STAFF", "FRONT_OFFICE"] as const;
-const WRITE_ROLES = ["ADMIN", "COACHING_STAFF"] as const;
+const READ_ROLES = ["ADMIN", "SUPER_ADMIN", "COACHING_STAFF", "FRONT_OFFICE"] as const;
+const WRITE_ROLES = ["ADMIN", "SUPER_ADMIN", "COACHING_STAFF"] as const;
 
 export class TrainingReferenceController {
   constructor(private service: TrainingReferenceService) {}
@@ -36,7 +37,7 @@ export class TrainingReferenceController {
       await this.service.delete(
         Number(req.params["id"]),
         req.user!.id,
-        req.user!.role === "ADMIN",
+        isAdminLike(req.user!.role),
       );
       res.status(204).send();
     } catch (err) { next(err); }

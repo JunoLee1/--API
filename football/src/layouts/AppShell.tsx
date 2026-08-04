@@ -506,12 +506,6 @@ export function AppShell() {
   }, [user])
 
   useEffect(() => {
-    if (!loading && user?.role === 'SUPER_ADMIN' && !localStorage.getItem('superAdminTeamId')) {
-      navigate('/team-select', { replace: true })
-    }
-  }, [loading, user, navigate])
-
-  useEffect(() => {
     if (user?.role !== 'SUPER_ADMIN') return
     teamApi.list().then((ts) => setSuperAdminTeams(ts.filter((t) => t.isActive))).catch(() => null)
   }, [user])

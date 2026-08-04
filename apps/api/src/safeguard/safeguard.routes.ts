@@ -1,4 +1,5 @@
 import { auth } from "../lib/authMiddleware";
+import { isAdminLike } from "../lib/permissions";
 import { Router } from 'express'
 import { SafeguardController } from './safeguard.controller'
 import { SafeguardService } from './safeguard.service'
@@ -15,7 +16,7 @@ const controller = new SafeguardController(service)
 
 
 function adminOnly(req: any, res: any, next: any) {
-  if (req.user?.role !== 'ADMIN') return res.status(403).json({ message: 'Forbidden' })
+  if (!isAdminLike(req.user?.role)) return res.status(403).json({ message: 'Forbidden' })
   next()
 }
 

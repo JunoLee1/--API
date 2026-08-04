@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { teamApi, Team } from '@/services/team.service'
+import { teamApi } from '@/services/team.service'
+import type { Team } from '@/types/team'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -18,7 +19,7 @@ export function TeamSelectPage() {
 
   const handleSelect = (team: Team) => {
     localStorage.setItem('superAdminTeamId', String(team.id))
-    window.location.href = '/'
+    window.location.href = '/dashboard'
   }
 
   return (

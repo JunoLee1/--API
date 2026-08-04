@@ -1,14 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { isAdminLike } from "../lib/permissions";
 import { EquipmentService } from "./equipment.service";
 
 const canWrite = (role: string, frontOfficeRole: string | null | undefined): boolean =>
-  role === "ADMIN" ||
+  isAdminLike(role) ||
   (role === "FRONT_OFFICE" &&
     (frontOfficeRole === "EQUIPMENT_MANAGER" || frontOfficeRole === "GM"));
 
 const canRead = (role: string): boolean =>
-  role === "ADMIN" || role === "FRONT_OFFICE" || role === "COACHING_STAFF";
+  isAdminLike(role) || role === "FRONT_OFFICE" || role === "COACHING_STAFF";
 
 export class EquipmentController {
   constructor(private service: EquipmentService) {}

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { isAdminLike } from "../lib/permissions";
 import { CoachingStaffService } from "./coaching-staff.service";
 import { CoachingStaffEvalRepository } from "./coaching-staff-eval.repo";
 
@@ -22,7 +23,7 @@ export class CoachingStaffController {
     try {
       const { role, coachingRole } = req.user!;
       const canAccess =
-        role === "ADMIN" ||
+        isAdminLike(role) ||
         (role === "COACHING_STAFF" && coachingRole === "HEAD_COACH");
       if (!canAccess) throw new AppError(403, "FORBIDDEN");
 
@@ -40,7 +41,7 @@ export class CoachingStaffController {
   listEvaluations = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, coachingRole } = req.user!;
-      if (role !== "ADMIN" && role !== "COACHING_STAFF") throw new AppError(403, "FORBIDDEN");
+      if (!isAdminLike(role) && role !== "COACHING_STAFF") throw new AppError(403, "FORBIDDEN");
       const staffUserId = parseInt(String(req.params["staffUserId"]));
       res.json(await this.evalRepo!.listForStaff(staffUserId));
     } catch (err) { next(err); }
@@ -49,7 +50,7 @@ export class CoachingStaffController {
   createEvaluation = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, coachingRole } = req.user!;
-      if (role !== "ADMIN" && !(role === "COACHING_STAFF" && coachingRole === "HEAD_COACH"))
+      if (!isAdminLike(role) && !(role === "COACHING_STAFF" && coachingRole === "HEAD_COACH"))
         throw new AppError(403, "FORBIDDEN");
       const staffUserId = parseInt(String(req.params["staffUserId"]));
       const { score, comment } = req.body as { score: number; comment?: string };

@@ -21,6 +21,9 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
 export const isSuperAdmin = (user: Express.User): boolean =>
   user.role === 'SUPER_ADMIN'
 
+export const isAdminLike = (role: string): boolean =>
+  role === 'ADMIN' || role === 'SUPER_ADMIN'
+
 export function hasPermission(role: Role, permission: Permission): boolean {
   return ROLE_PERMISSIONS[role]?.includes(permission) ?? false
 }
