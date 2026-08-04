@@ -26,6 +26,12 @@
       "coachingStaff": "코칭스태프",
       "management": "관리"
     },
+    "subsection": {
+      "hr": "인사",
+      "finance": "재무",
+      "facilityAssets": "시설·자산",
+      "system": "시스템"
+    },
     "item": {
       "dashboard": "대시보드",
       "playerList": "선수 목록",
