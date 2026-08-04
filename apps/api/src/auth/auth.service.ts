@@ -15,7 +15,7 @@ export class AuthService {
     const valid = await comparePassword(password, user.password);
     if (!valid) throw new AppError(401, "INVALID_CREDENTIALS");
 
-    const tokens = generateTokens({ id: user.id, role: user.role, coachingRole: user.coachingRole, frontOfficeRole: user.frontOfficeRole, teamId: user.teamId });
+    const tokens = generateTokens({ id: user.id, role: user.role, coachingRole: user.coachingRole, frontOfficeRole: user.frontOfficeRole, teamId: user.teamId, clubId: user.clubId });
     return { ...tokens, userId: user.id };
   }
 
