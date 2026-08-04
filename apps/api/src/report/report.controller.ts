@@ -4,7 +4,7 @@ import { isAdminLike } from "../lib/permissions";
 import { ReportService } from "./report.service";
 
 function isGM(req: Request): boolean {
-  return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "GM";
+  return req.user?.role === "GM";
 }
 
 function isHeadCoach(req: Request): boolean {
@@ -94,7 +94,7 @@ export class ReportController {
       if (type === "HR" && !(isAdminLike(role) || foRole === "HR_MANAGER" || foRole === "HR_STAFF")) {
         throw new AppError(403, "FORBIDDEN");
       }
-      if (type === "FINANCIAL" && !(isAdminLike(role) || foRole === "FINANCE_MANAGER" || foRole === "FINANCE_STAFF" || foRole === "GM")) {
+      if (type === "FINANCIAL" && !(isAdminLike(role) || role === "GM" || foRole === "FINANCE_MANAGER" || foRole === "FINANCE_STAFF")) {
         throw new AppError(403, "FORBIDDEN");
       }
       if (type === "ASSET" && !(isAdminLike(role) || foRole === "ASSET_MANAGER" || foRole === "ASSET_STAFF")) {

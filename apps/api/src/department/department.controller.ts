@@ -3,16 +3,16 @@ import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
 import { DepartmentService } from "./department.service";
 
-const canManage = (role: string, foRole: string | null | undefined) =>
-  isAdminLike(role) || (role === "FRONT_OFFICE" && foRole === "GM");
+const canManage = (role: string) =>
+  isAdminLike(role) || role === "GM";
 
 export class DepartmentController {
   constructor(private service: DepartmentService) {}
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
-      if (!canManage(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role } = req.user!;
+      if (!canManage(role)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.list());
     } catch (err) {
       next(err);
@@ -21,8 +21,8 @@ export class DepartmentController {
 
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
-      if (!canManage(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role } = req.user!;
+      if (!canManage(role)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.get(Number(req.params["id"])));
     } catch (err) {
       next(err);
@@ -31,8 +31,8 @@ export class DepartmentController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
-      if (!canManage(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role } = req.user!;
+      if (!canManage(role)) throw new AppError(403, "FORBIDDEN");
       const { name, parentId, category } = req.body as { name: string; parentId?: number; category?: string };
       if (!name?.trim()) throw new AppError(400, "NAME_REQUIRED");
       res.status(201).json(
@@ -49,8 +49,8 @@ export class DepartmentController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
-      if (!canManage(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role } = req.user!;
+      if (!canManage(role)) throw new AppError(403, "FORBIDDEN");
       const data = req.body as { name?: string; isActive?: boolean; parentId?: number | null; category?: import("../generated/enums").DepartmentCategory | null };
       res.json(await this.service.update(Number(req.params["id"]), data));
     } catch (err) {
@@ -60,8 +60,8 @@ export class DepartmentController {
 
   delete = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
-      if (!canManage(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role } = req.user!;
+      if (!canManage(role)) throw new AppError(403, "FORBIDDEN");
       await this.service.delete(Number(req.params["id"]));
       res.status(204).send();
     } catch (err) {

@@ -18,7 +18,8 @@ import type {
 
 const canRead = (role: string, foRole: string | null | undefined, coachRole: string | null | undefined) =>
   isAdminLike(role) ||
-  (role === "FRONT_OFFICE" && (foRole === "GM" || foRole === "TD" || foRole === "HR_MANAGER")) ||
+  role === "GM" ||
+  (role === "FRONT_OFFICE" && (foRole === "TD" || foRole === "HR_MANAGER")) ||
   (role === "COACHING_STAFF" && coachRole === "HEAD_COACH");
 
 const canWrite = (role: string, foRole: string | null | undefined) =>

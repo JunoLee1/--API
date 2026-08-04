@@ -7,7 +7,8 @@ import { TransitionProspectStatusDto, SignProspectDto } from "./dto/prospect.dto
 
 const canWrite = (role: string, frontOfficeRole: string | null | undefined): boolean =>
   isAdminLike(role) ||
-  (role === "FRONT_OFFICE" && (frontOfficeRole === "SCOUT" || frontOfficeRole === "GM" || frontOfficeRole === "TD"));
+  role === "GM" ||
+  (role === "FRONT_OFFICE" && (frontOfficeRole === "SCOUT" || frontOfficeRole === "TD"));
 
 const canRead = (role: string, coachingRole: string | null | undefined): boolean =>
   isAdminLike(role) ||
@@ -16,7 +17,8 @@ const canRead = (role: string, coachingRole: string | null | undefined): boolean
 
 const canSign = (role: string, frontOfficeRole: string | null | undefined): boolean =>
   isAdminLike(role) ||
-  (role === "FRONT_OFFICE" && (frontOfficeRole === "GM" || frontOfficeRole === "CONTRACT_MANAGER"));
+  role === "GM" ||
+  (role === "FRONT_OFFICE" && frontOfficeRole === "CONTRACT_MANAGER");
 
 export class ProspectController {
   constructor(private service: ProspectService) {}

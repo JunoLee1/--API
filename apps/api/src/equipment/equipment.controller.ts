@@ -5,8 +5,8 @@ import { EquipmentService } from "./equipment.service";
 
 const canWrite = (role: string, frontOfficeRole: string | null | undefined): boolean =>
   isAdminLike(role) ||
-  (role === "FRONT_OFFICE" &&
-    (frontOfficeRole === "EQUIPMENT_MANAGER" || frontOfficeRole === "GM"));
+  role === "GM" ||
+  (role === "FRONT_OFFICE" && frontOfficeRole === "EQUIPMENT_MANAGER");
 
 const canRead = (role: string): boolean =>
   isAdminLike(role) || role === "FRONT_OFFICE" || role === "COACHING_STAFF";

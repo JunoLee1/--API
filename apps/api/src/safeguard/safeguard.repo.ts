@@ -51,7 +51,7 @@ export class SafeguardRepository {
       where: {
         OR: [
           { role: 'ADMIN' },
-          { role: 'FRONT_OFFICE', frontOfficeRole: 'GM' },
+          { role: 'GM' },
           { role: 'FRONT_OFFICE', frontOfficeRole: 'TD' },
           { role: 'COACHING_STAFF', coachingRole: 'MEDICAL_DIRECTOR' },
         ],

@@ -14,7 +14,6 @@ router.get("/", auth, controller.getAll);
 router.get("/:id", auth, controller.getById);
 router.post("/", auth, controller.create);
 router.patch("/:id/deactivate", auth, controller.deactivate);
-router.patch("/:id/lite", auth, controller.setLiteMode);
 router.patch("/:id", auth, controller.update);
 
 export default router;

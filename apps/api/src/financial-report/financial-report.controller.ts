@@ -6,11 +6,13 @@ import { OperatingCategory } from "../generated/client";
 
 const canWrite = (role: string, foRole: string | null | undefined) =>
   isAdminLike(role) ||
-  (role === "FRONT_OFFICE" && (foRole === "GM" || foRole === "FINANCE_MANAGER"));
+  role === "GM" ||
+  (role === "FRONT_OFFICE" && foRole === "FINANCE_MANAGER");
 
 const canRead = (role: string, foRole: string | null | undefined) =>
   isAdminLike(role) ||
-  (role === "FRONT_OFFICE" && (foRole === "GM" || foRole === "TD" || foRole === "FINANCE_MANAGER"));
+  role === "GM" ||
+  (role === "FRONT_OFFICE" && (foRole === "TD" || foRole === "FINANCE_MANAGER"));
 
 export class FinancialReportController {
   constructor(private service: FinancialReportService) {}

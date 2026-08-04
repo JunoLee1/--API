@@ -47,8 +47,10 @@ export function startQuarterlyJobPostingDraftJob() {
 
       const recipients = await prisma.user.findMany({
         where: {
-          role: "FRONT_OFFICE",
-          frontOfficeRole: { in: ["HR_MANAGER", "GM"] },
+          OR: [
+            { role: "GM" },
+            { role: "FRONT_OFFICE", frontOfficeRole: "HR_MANAGER" },
+          ],
           isDeleted: false,
         },
         select: { id: true },

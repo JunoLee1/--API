@@ -14,11 +14,8 @@ const controller = new HrReportController(service);
 
 const requireHR = (req: any, res: any, next: any) => {
   const { role, frontOfficeRole } = req.user as any;
-  if (role === "ADMIN" || role === "SUPER_ADMIN") return next();
-  if (
-    role === "FRONT_OFFICE" &&
-    (frontOfficeRole === "GM" || frontOfficeRole === "TD" || frontOfficeRole === "HR_MANAGER")
-  )
+  if (role === "ADMIN" || role === "SUPER_ADMIN" || role === "GM") return next();
+  if (role === "FRONT_OFFICE" && (frontOfficeRole === "TD" || frontOfficeRole === "HR_MANAGER"))
     return next();
   next(new AppError(403, "FORBIDDEN"));
 };

@@ -6,15 +6,18 @@ import { OperatingCategory } from "../generated/client";
 
 const canRead = (role: string, foRole: string | null | undefined) =>
   isAdminLike(role) ||
-  (role === "FRONT_OFFICE" && (foRole === "GM" || foRole === "TD" || foRole === "FINANCE_MANAGER" || foRole === "FINANCE_STAFF"));
+  role === "GM" ||
+  (role === "FRONT_OFFICE" && (foRole === "TD" || foRole === "FINANCE_MANAGER" || foRole === "FINANCE_STAFF"));
 
 const canCreate = (role: string, foRole: string | null | undefined) =>
   isAdminLike(role) ||
-  (role === "FRONT_OFFICE" && (foRole === "GM" || foRole === "FINANCE_MANAGER" || foRole === "FINANCE_STAFF"));
+  role === "GM" ||
+  (role === "FRONT_OFFICE" && (foRole === "FINANCE_MANAGER" || foRole === "FINANCE_STAFF"));
 
 const canDelete = (role: string, foRole: string | null | undefined) =>
   isAdminLike(role) ||
-  (role === "FRONT_OFFICE" && (foRole === "GM" || foRole === "FINANCE_MANAGER"));
+  role === "GM" ||
+  (role === "FRONT_OFFICE" && foRole === "FINANCE_MANAGER");
 
 export class OperatingExpenseController {
   constructor(private service: OperatingExpenseService) {}

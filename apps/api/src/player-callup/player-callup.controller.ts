@@ -31,7 +31,7 @@ export class PlayerCallupController {
   approve = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, frontOfficeRole, coachingRole } = req.user!;
-      const isGM = role === "FRONT_OFFICE" && frontOfficeRole === "GM";
+      const isGM = role === "GM";
       const isTD = role === "FRONT_OFFICE" && frontOfficeRole === "TD";
       const isHeadCoach = role === "COACHING_STAFF" && coachingRole === "HEAD_COACH";
       if (!isGM && !isTD && !isHeadCoach) throw new AppError(403, "FORBIDDEN");
@@ -41,8 +41,8 @@ export class PlayerCallupController {
 
   reject = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
-      if (role !== "FRONT_OFFICE" || frontOfficeRole !== "GM") {
+      const { role } = req.user!;
+      if (role !== "GM") {
         throw new AppError(403, "FORBIDDEN");
       }
       res.json(await this.service.reject(Number(req.params["id"]), req.user!.id, req.body));
@@ -51,9 +51,9 @@ export class PlayerCallupController {
 
   complete = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole, frontOfficeRole } = req.user!;
+      const { role, coachingRole } = req.user!;
       const isHeadCoach = role === "COACHING_STAFF" && coachingRole === "HEAD_COACH";
-      const isGM = role === "FRONT_OFFICE" && frontOfficeRole === "GM";
+      const isGM = role === "GM";
       if (!isHeadCoach && !isGM) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.complete(Number(req.params["id"]), req.user!.id));
     } catch (err) { next(err); }
