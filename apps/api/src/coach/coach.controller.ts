@@ -67,7 +67,10 @@ export class CoachController {
     try {
       const { role, frontOfficeRole } = req.user!;
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
-      res.status(201).json(await this.service.create(req.body));
+      const { name, coachingRole } = req.body as { name: unknown; coachingRole: unknown };
+      if (typeof name !== "string" || !name.trim()) throw new AppError(400, "NAME_REQUIRED");
+      if (!coachingRole) throw new AppError(400, "COACHING_ROLE_REQUIRED");
+      res.status(201).json(await this.service.create({ ...req.body, name: name.trim() }));
     } catch (err) { next(err); }
   };
 
