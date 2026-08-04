@@ -22,9 +22,9 @@ export class TransferController {
   createTransfer = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, frontOfficeRole } = req.user!;
-      if (!isAdminLike(role) && role !== "FRONT_OFFICE") throw new AppError(403, "FORBIDDEN");
+      if (!isAdminLike(role) && role !== "GM" && role !== "FRONT_OFFICE") throw new AppError(403, "FORBIDDEN");
       if (role === "FRONT_OFFICE") {
-        const allowed = ["GM", "TD", "CONTRACT_MANAGER"];
+        const allowed = ["TD", "CONTRACT_MANAGER"];
         if (!frontOfficeRole || !allowed.includes(frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       }
       res.status(201).json(await this.service.createTransfer(req.body));
@@ -46,8 +46,8 @@ export class TransferController {
 
   updateRecallStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
-      const isGM = role === "FRONT_OFFICE" && frontOfficeRole === "GM";
+      const { role } = req.user!;
+      const isGM = role === "GM";
       if (!isGM) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(
         await this.service.updateRecallStatus(Number(req.params["id"]), req.body, req.user!.id),
@@ -59,8 +59,9 @@ export class TransferController {
     try {
       const { role, frontOfficeRole } = req.user!;
       const isAdmin = isAdminLike(role);
-      const isFrontOffice = role === "FRONT_OFFICE" && ["GM", "TD"].includes(frontOfficeRole ?? "");
-      if (!isAdmin && !isFrontOffice) throw new AppError(403, "FORBIDDEN");
+      const isGMRole = role === "GM";
+      const isFrontOffice = role === "FRONT_OFFICE" && ["TD"].includes(frontOfficeRole ?? "");
+      if (!isAdmin && !isGMRole && !isFrontOffice) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.exportLoanIn(Number(req.params["id"])));
     } catch (err) { next(err); }
   };

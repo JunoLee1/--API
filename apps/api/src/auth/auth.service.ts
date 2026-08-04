@@ -15,12 +15,15 @@ export class AuthService {
     const valid = await comparePassword(password, user.password);
     if (!valid) throw new AppError(401, "INVALID_CREDENTIALS");
 
-    const tokens = generateTokens({ id: user.id, role: user.role, coachingRole: user.coachingRole, frontOfficeRole: user.frontOfficeRole, teamId: user.teamId });
+    const tokens = generateTokens({ id: user.id, role: user.role, coachingRole: user.coachingRole, frontOfficeRole: user.frontOfficeRole, teamId: user.teamId, clubId: user.clubId });
     return { ...tokens, userId: user.id };
   }
 
   async createUser(dto: CreateUserDto) {
     if (dto.password !== dto.confirmedPassword) throw new AppError(400, "PASSWORD_MISMATCH");
+
+    // 010-1234-5678 형식
+    if (!/^\d{2,3}-\d{3,4}-\d{4}$/.test(dto.phoneNumber)) throw new AppError(400, "INVALID_PHONE_NUMBER");
 
     if (await this.repo.isEmailTaken(dto.email)) throw new AppError(409, "EMAIL_TAKEN");
     if (await this.repo.isNicknameTaken(dto.nickname)) throw new AppError(409, "NICKNAME_TAKEN");

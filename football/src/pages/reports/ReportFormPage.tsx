@@ -28,7 +28,7 @@ export function ReportFormPage() {
   const foRole = user?.frontOfficeRole
   const TYPES = ALL_TYPES.filter((tp) => {
     if (tp === 'HR') return isAdmin || foRole === 'HR_MANAGER' || foRole === 'HR_STAFF'
-    if (tp === 'FINANCIAL') return isAdmin || foRole === 'FINANCE_MANAGER' || foRole === 'FINANCE_STAFF' || foRole === 'GM'
+    if (tp === 'FINANCIAL') return isAdmin || user?.role === 'GM' || foRole === 'FINANCE_MANAGER' || foRole === 'FINANCE_STAFF'
     if (tp === 'ASSET') return isAdmin || foRole === 'ASSET_MANAGER' || foRole === 'ASSET_STAFF'
     return true
   })

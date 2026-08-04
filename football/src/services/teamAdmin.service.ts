@@ -1,7 +1,2 @@
-import { api } from './api'
-import type { Team } from '@/types/team'
-
-export const teamAdminApi = {
-  setLite: (teamId: number, isLite: boolean) =>
-    api.patch<Team>(`/teams/${teamId}/lite`, { isLite }),
-}
+// setLite는 club API로 이동됨 — clubApi.update(clubId, { isLite }) 사용
+export {}

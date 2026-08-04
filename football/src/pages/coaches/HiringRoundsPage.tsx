@@ -120,10 +120,11 @@ export function HiringRoundsPage() {
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
 
-  const isGM = user?.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'GM'
+  const isGM = user?.role === 'GM'
   const canRead =
     user?.role === 'ADMIN' ||
-    (user?.role === 'FRONT_OFFICE' && (user.frontOfficeRole === 'GM' || user.frontOfficeRole === 'TD'))
+    user?.role === 'GM' ||
+    (user?.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'TD')
 
   const fetchRounds = () => {
     setLoading(true)

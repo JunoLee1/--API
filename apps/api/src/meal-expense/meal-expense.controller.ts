@@ -6,21 +6,23 @@ import { MealExpenseService } from "./meal-expense.service";
 
 const canRead = (role: string, frontOfficeRole: string | null | undefined) =>
   isAdminLike(role) ||
+  role === "GM" ||
   (role === "FRONT_OFFICE" &&
-    (frontOfficeRole === "GM" || frontOfficeRole === "FINANCE_MANAGER" || frontOfficeRole === "FINANCE_STAFF"));
+    (frontOfficeRole === "FINANCE_MANAGER" || frontOfficeRole === "FINANCE_STAFF"));
 
 const canWrite = (role: string, frontOfficeRole: string | null | undefined) =>
   isAdminLike(role) ||
+  role === "GM" ||
   (role === "FRONT_OFFICE" &&
-    (frontOfficeRole === "GM" ||
-      frontOfficeRole === "FINANCE_MANAGER" ||
+    (frontOfficeRole === "FINANCE_MANAGER" ||
       frontOfficeRole === "FINANCE_STAFF" ||
       frontOfficeRole === "EQUIPMENT_MANAGER"));
 
 const canDelete = (role: string, frontOfficeRole: string | null | undefined) =>
   isAdminLike(role) ||
+  role === "GM" ||
   (role === "FRONT_OFFICE" &&
-    (frontOfficeRole === "GM" || frontOfficeRole === "FINANCE_MANAGER" || frontOfficeRole === "EQUIPMENT_MANAGER"));
+    (frontOfficeRole === "FINANCE_MANAGER" || frontOfficeRole === "EQUIPMENT_MANAGER"));
 
 export class MealExpenseController {
   constructor(private service: MealExpenseService) {}

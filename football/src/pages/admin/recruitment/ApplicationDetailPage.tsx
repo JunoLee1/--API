@@ -72,8 +72,8 @@ export function ApplicationDetailPage() {
 
   useEffect(() => { void load() }, [appId])
 
-  const canWrite = user?.role === 'ADMIN' || (user?.role === 'FRONT_OFFICE' && (user.frontOfficeRole === 'GM' || user.frontOfficeRole === 'HR_MANAGER'))
-  const canApprove = user?.role === 'ADMIN' || (user?.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'GM')
+  const canWrite = user?.role === 'ADMIN' || user?.role === 'GM' || (user?.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'HR_MANAGER')
+  const canApprove = user?.role === 'ADMIN' || user?.role === 'GM'
 
   const handleReject = async () => {
     if (!confirm(t('recruitment.confirmReject'))) return

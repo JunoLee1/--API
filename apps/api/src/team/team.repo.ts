@@ -2,10 +2,11 @@ import { PrismaClient } from "../generated/client";
 
 export interface CreateTeamDto {
   name: string;
-  type: "FIRST_TEAM" | "YOUTH";
+  type: "FIRST_TEAM" | "B_TEAM" | "YOUTH";
   ageGroup?: string;
   trackStats?: boolean;
   requiresContract?: boolean;
+  clubId?: number;
 }
 
 export interface UpdateTeamDto {
@@ -14,6 +15,7 @@ export interface UpdateTeamDto {
   trackStats?: boolean;
   requiresContract?: boolean;
   isActive?: boolean;
+  clubId?: number | null;
 }
 
 export class TeamRepository {
@@ -21,12 +23,16 @@ export class TeamRepository {
 
   findAll() {
     return this.prisma.team.findMany({
+      include: { club: { select: { id: true, name: true, isLite: true } } },
       orderBy: [{ type: "asc" }, { name: "asc" }],
     });
   }
 
   findById(id: number) {
-    return this.prisma.team.findUnique({ where: { id } });
+    return this.prisma.team.findUnique({
+      where: { id },
+      include: { club: { select: { id: true, name: true, isLite: true } } },
+    });
   }
 
   create(dto: CreateTeamDto) {
@@ -37,15 +43,17 @@ export class TeamRepository {
         ageGroup: dto.ageGroup ?? null,
         trackStats: dto.trackStats ?? true,
         requiresContract: dto.requiresContract ?? true,
+        clubId: dto.clubId ?? null,
       },
+      include: { club: { select: { id: true, name: true, isLite: true } } },
     });
   }
 
   update(id: number, dto: UpdateTeamDto) {
-    return this.prisma.team.update({ where: { id }, data: dto });
-  }
-
-  updateLiteFlag(teamId: number, isLite: boolean) {
-    return this.prisma.team.update({ where: { id: teamId }, data: { isLite } });
+    return this.prisma.team.update({
+      where: { id },
+      data: dto,
+      include: { club: { select: { id: true, name: true, isLite: true } } },
+    });
   }
 }

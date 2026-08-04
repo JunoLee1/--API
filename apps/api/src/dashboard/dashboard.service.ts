@@ -24,6 +24,8 @@ export class DashboardService {
       case "ADMIN":
       case "SUPER_ADMIN":
         return this.repo.getAdminStats();
+      case "GM":
+        return this.repo.getGmStats();
       case "FRONT_OFFICE":
         return this.getFrontOfficeStats(user);
       case "COACHING_STAFF":
@@ -39,8 +41,6 @@ export class DashboardService {
 
   private getFrontOfficeStats(user: UserCtx) {
     switch (user.frontOfficeRole) {
-      case "GM":
-        return this.repo.getGmStats();
       case "TD":
         return this.repo.getTdStats();
       case "CONTRACT_MANAGER":

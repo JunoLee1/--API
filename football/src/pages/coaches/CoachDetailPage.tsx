@@ -396,10 +396,11 @@ export function CoachDetailPage() {
   const [loading, setLoading] = useState(true)
 
   const canWrite =
-    user?.role === 'FRONT_OFFICE' && (user.frontOfficeRole === 'GM' || user.frontOfficeRole === 'TD')
+    user?.role === 'GM' || (user?.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'TD')
   const canRead =
     user?.role === 'ADMIN' ||
-    (user?.role === 'FRONT_OFFICE' && (user.frontOfficeRole === 'GM' || user.frontOfficeRole === 'TD'))
+    user?.role === 'GM' ||
+    (user?.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'TD')
 
   const fetchCoach = () => {
     if (!id) return

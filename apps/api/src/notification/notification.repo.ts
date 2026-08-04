@@ -41,7 +41,7 @@ export class NotificationRepository {
   createForGM(type: string, getMsg: MsgFactory, entityId?: number) {
     return this.prisma.$transaction(async (tx) => {
       const gmUsers = await tx.user.findMany({
-        where: { role: "FRONT_OFFICE", frontOfficeRole: "GM" },
+        where: { role: "GM" },
         select: { id: true, language: true },
       });
       if (gmUsers.length === 0) return;

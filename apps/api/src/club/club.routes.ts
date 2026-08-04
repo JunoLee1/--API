@@ -1,19 +1,18 @@
 import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
-import { TeamController } from "./team.controller";
-import { TeamService } from "./team.service";
-import { TeamRepository } from "./team.repo";
+import { ClubController } from "./club.controller";
+import { ClubService } from "./club.service";
+import { ClubRepository } from "./club.repo";
 import { getPrisma } from "../lib/prisma";
 
 const router = Router();
-const repo = new TeamRepository(getPrisma());
-const service = new TeamService(repo);
-const controller = new TeamController(service);
+const repo = new ClubRepository(getPrisma());
+const service = new ClubService(repo);
+const controller = new ClubController(service);
 
 router.get("/", auth, controller.getAll);
 router.get("/:id", auth, controller.getById);
 router.post("/", auth, controller.create);
-router.patch("/:id/deactivate", auth, controller.deactivate);
 router.patch("/:id", auth, controller.update);
 
 export default router;

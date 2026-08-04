@@ -5,13 +5,13 @@ import { CoachService } from "./coach.service";
 import { CoachStatus } from "../generated/enums";
 
 const canRead = (role: string, frontOfficeRole: string | null | undefined) =>
-  isAdminLike(role) || (role === "FRONT_OFFICE" && (frontOfficeRole === "GM" || frontOfficeRole === "TD"));
+  isAdminLike(role) || role === "GM" || (role === "FRONT_OFFICE" && frontOfficeRole === "TD");
 
 const canWrite = (role: string, frontOfficeRole: string | null | undefined) =>
-  role === "FRONT_OFFICE" && (frontOfficeRole === "GM" || frontOfficeRole === "TD");
+  role === "GM" || (role === "FRONT_OFFICE" && frontOfficeRole === "TD");
 
-const canApprove = (role: string, frontOfficeRole: string | null | undefined) =>
-  role === "FRONT_OFFICE" && frontOfficeRole === "GM";
+const canApprove = (role: string) =>
+  role === "GM";
 
 export class CoachController {
   constructor(private service: CoachService) {}
@@ -29,7 +29,7 @@ export class CoachController {
   createRound = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, frontOfficeRole, id } = req.user!;
-      if (!canApprove(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      if (!canApprove(role)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.createRound({ ...req.body, createdById: id }));
     } catch (err) { next(err); }
   };
@@ -37,7 +37,7 @@ export class CoachController {
   updateRoundStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, frontOfficeRole } = req.user!;
-      if (!canApprove(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      if (!canApprove(role)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.updateRoundStatus(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
   };
@@ -83,7 +83,7 @@ export class CoachController {
     try {
       const { role, frontOfficeRole } = req.user!;
       if (req.body.status === "CONTRACTED") {
-        if (!canApprove(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+        if (!canApprove(role)) throw new AppError(403, "FORBIDDEN");
       } else {
         if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       }

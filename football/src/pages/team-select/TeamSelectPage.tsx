@@ -56,7 +56,7 @@ export function TeamSelectPage() {
                     <span className="text-xs text-muted-foreground">{team.ageGroup}</span>
                   )}
                 </div>
-                {team.isLite && (
+                {team.club?.isLite && (
                   <span className="ml-auto text-xs text-muted-foreground border rounded px-1.5 py-0.5">
                     Lite
                   </span>

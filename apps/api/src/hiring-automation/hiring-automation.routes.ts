@@ -21,8 +21,8 @@ const requireAdmin = (req: any, _res: any, next: any) => {
 const requireHRorGMorAdmin = (req: any, _res: any, next: any) => {
   const { role, frontOfficeRole } = req.user ?? {};
   if (isAdmin(role)) return next();
-  if (role === "FRONT_OFFICE" && (frontOfficeRole === "GM" || frontOfficeRole === "HR_MANAGER"))
-    return next();
+  if (role === "GM") return next();
+  if (role === "FRONT_OFFICE" && frontOfficeRole === "HR_MANAGER") return next();
   next(new AppError(403, "FORBIDDEN"));
 };
 

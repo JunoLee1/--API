@@ -81,7 +81,8 @@ export function PlayersPage() {
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
   const canSeeMarketValue =
     user?.role === 'ADMIN' ||
-    (user?.role === 'FRONT_OFFICE' && (user.frontOfficeRole === 'GM' || user.frontOfficeRole === 'TD'))
+    user?.role === 'GM' ||
+    (user?.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'TD')
 
   const fetchPlayers = () => {
     setLoading(true)

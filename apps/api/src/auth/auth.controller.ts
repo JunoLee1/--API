@@ -50,6 +50,8 @@ export class AuthController {
         role: user.role,
         coachingRole: user.coachingRole ?? null,
         frontOfficeRole: user.frontOfficeRole ?? null,
+        teamId: user.teamId ?? null,
+        clubId: user.clubId ?? null,
       });
       res.cookie(ACCESS_TOKEN_COOKIE_NAME, tokens.accessToken, COOKIE_OPTIONS);
       res.cookie(REFRESH_TOKEN_COOKIE_NAME, tokens.refreshToken, COOKIE_OPTIONS);

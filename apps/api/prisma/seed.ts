@@ -509,6 +509,13 @@ async function seedRecruitment() {
 async function main() {
   console.log("🌱 Seeding...");
 
+  // ── Club ──────────────────────────────────────────────
+  const fcSeoulClub = await prisma.club.upsert({
+    where: { id: 1 },
+    update: {},
+    create: { name: "FC Seoul", isActive: true, isLite: false },
+  });
+
   // ── Team ─────────────────────────────────────────────
   const firstTeam = await prisma.team.upsert({
     where: { id: 1 },
@@ -520,6 +527,7 @@ async function main() {
       isActive: true,
       trackStats: true,
       requiresContract: true,
+      clubId: fcSeoulClub.id,
     },
   });
   console.log('Seeded FIRST_TEAM:', firstTeam.id);
@@ -572,6 +580,7 @@ async function main() {
       dateOfBirth: new Date("1980-01-01"),
       nationalityId: korea.id,
       phoneNumberId: adminPhone.id,
+      clubId: fcSeoulClub.id,
     },
   });
 
@@ -752,17 +761,18 @@ async function main() {
 
   await prisma.user.upsert({
     where: { email: "gm@club.com" },
-    update: { frontOfficeRole: "GM" },
+    update: {},
     create: {
       email: "gm@club.com",
       password: hashed,
       username: "단장",
       nickname: "gm",
-      role: "FRONT_OFFICE",
-      frontOfficeRole: "GM",
-      dateOfBirth: new Date("1970-05-10"),
+      role: "GM",
+      frontOfficeRole: null,
+      dateOfBirth: new Date("1970-01-01"),
       nationalityId: korea.id,
       phoneNumberId: gmPhone.id,
+      clubId: fcSeoulClub.id,
     },
   });
 
@@ -1863,6 +1873,7 @@ async function main() {
       isActive: true,
       trackStats: false,
       requiresContract: false,
+      clubId: fcSeoulClub.id,
     },
   });
 
@@ -1876,6 +1887,7 @@ async function main() {
       isActive: true,
       trackStats: false,
       requiresContract: false,
+      clubId: fcSeoulClub.id,
     },
   });
 
@@ -2250,7 +2262,7 @@ async function main() {
   console.log(`   - Users: 21 + 10 유소년 / pw: Password1!`);
   console.log(`     SUPER_ADMIN : superadmin@platform.com`);
   console.log(`     ADMIN       : admin@club.com`);
-  console.log(`     FRONT_OFFICE: gm@club.com (GM)`);
+  console.log(`     GM          : gm@club.com`);
   console.log(`     FRONT_OFFICE: td@club.com (TD)`);
   console.log(`     FRONT_OFFICE: fo@club.com (SCOUT)`);
   console.log(`     FRONT_OFFICE: hr@club.com (HR_MANAGER)`);
