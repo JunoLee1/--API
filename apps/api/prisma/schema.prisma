@@ -14,6 +14,7 @@ datasource db {
 enum Role {
   ADMIN
   SUPER_ADMIN
+  GM
   FRONT_OFFICE
   COACHING_STAFF
   PLAYER
@@ -52,7 +53,6 @@ enum CoachingRole {
 }
 
 enum FrontOfficeRole {
-  GM
   TD
   CONTRACT_MANAGER
   SCOUT
@@ -526,17 +526,29 @@ enum PayrollRunStatus {
 // Models
 // ─────────────────────────────────────────────
 
+model Club {
+  id       Int     @id @default(autoincrement())
+  name     String
+  isActive Boolean @default(true)
+  isLite   Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  teams    Team[]
+  users    User[]
+}
+
 model Team {
   id               Int      @id @default(autoincrement())
   name             String
   type             TeamType
   ageGroup         String?
   isActive         Boolean  @default(true)
-  isLite           Boolean  @default(false)
   trackStats       Boolean  @default(true)
   requiresContract Boolean  @default(true)
+  clubId           Int?
   createdAt        DateTime @default(now())
 
+  club             Club?                @relation(fields: [clubId], references: [id])
   players          Player[]
   coachingStaff    User[]
   trainingSessions TrainingSession[]
@@ -582,6 +594,7 @@ model User {
   phoneNumberId   Int              @unique
   nationalityId   Int
   teamId          Int?
+  clubId          Int?
 
   phoneNumber              PhoneNumber             @relation(fields: [phoneNumberId], references: [id])
   nationality              Country                 @relation(fields: [nationalityId], references: [id])
@@ -615,6 +628,7 @@ model User {
   squadConfirmations       MatchSquad[]       @relation("SquadConfirmations")
   lineupConfirmations      MatchLineup[]      @relation("LineupConfirmations")
   team                     Team?                   @relation(fields: [teamId], references: [id])
+  club                     Club?                   @relation(fields: [clubId], references: [id])
   createdHiringRounds      CoachHiringRound[]      @relation("HiringRoundCreatedBy")
   coachProfile             Coach?                  @relation("CoachUser")
   tutorAssignments         CoachTutorAssignment[]  @relation("TutorAssignments")
