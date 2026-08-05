@@ -97,3 +97,66 @@ describe("GuardianService.issueInviteCode", () => {
     expect(repo.createInviteCode).toHaveBeenCalled();
   });
 });
+
+describe("GuardianService.getChild", () => {
+  it("자녀가 없으면 404", async () => {
+    const svc = new GuardianService(makeRepo());
+    await expect(svc.getChild(1)).rejects.toMatchObject({ statusCode: 404, message: "CHILD_NOT_FOUND" });
+  });
+
+  it("자녀가 있으면 반환", async () => {
+    const child = { id: "player-1", playerName: "김유소", position: "STRIKER", level: "YOUTH", teamId: 1, team: { name: "FC Seoul Youth" } };
+    const repo = makeRepo({ findChildByGuardian: jest.fn().mockResolvedValue(child) });
+    const svc = new GuardianService(repo);
+    const result = await svc.getChild(1);
+    expect(result).toBe(child);
+  });
+});
+
+describe("GuardianService.getDashboard", () => {
+  it("자녀가 없으면 404", async () => {
+    const svc = new GuardianService(makeRepo());
+    await expect(svc.getDashboard(1)).rejects.toMatchObject({ statusCode: 404, message: "CHILD_NOT_FOUND" });
+  });
+
+  it("부상 분류 — active vs history", async () => {
+    const injuries = [
+      { id: 1, status: "OCCURRED" },
+      { id: 2, status: "REHABILITATING" },
+      { id: 3, status: "RECOVERED" },
+    ];
+    const attendanceGroups = [{ attendance: "ATTENDED", _count: { attendance: 5 } }];
+    const child = { id: "player-1", teamId: 1 };
+    const repo = makeRepo({
+      findChildByGuardian: jest.fn().mockResolvedValue(child),
+      findDashboard: jest.fn().mockResolvedValue([
+        child, [], [], attendanceGroups, null, null, injuries, null, [],
+      ]),
+    });
+    const svc = new GuardianService(repo);
+    const result = await svc.getDashboard(1);
+    expect(result.injuries.active).toHaveLength(2);
+    expect(result.injuries.history).toHaveLength(1);
+    expect(result.attendance.total).toBe(5);
+    expect(result.attendance.attended).toBe(5);
+  });
+
+  it("fees 분류 — pending vs overdue", async () => {
+    const fees = [
+      { id: 1, status: "PENDING" },
+      { id: 2, status: "OVERDUE" },
+      { id: 3, status: "PENDING" },
+    ];
+    const child = { id: "player-1", teamId: null };
+    const repo = makeRepo({
+      findChildByGuardian: jest.fn().mockResolvedValue(child),
+      findDashboard: jest.fn().mockResolvedValue([
+        child, [], [], [], null, null, [], null, fees,
+      ]),
+    });
+    const svc = new GuardianService(repo);
+    const result = await svc.getDashboard(1);
+    expect(result.fees.pending).toHaveLength(2);
+    expect(result.fees.overdue).toHaveLength(1);
+  });
+});
