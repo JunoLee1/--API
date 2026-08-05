@@ -10,5 +10,8 @@ declare global {
       teamId?: number | null;
       clubId?: number | null;
     }
+    interface Request {
+      childPlayerId?: string;
+    }
   }
 }

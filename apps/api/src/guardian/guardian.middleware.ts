@@ -20,7 +20,7 @@ export async function requireGuardianChild(req: Request, res: Response, next: Ne
 
     if (!player) return res.status(403).json({ code: "FORBIDDEN" });
 
-    (req as any).childPlayerId = player.id;
+    req.childPlayerId = player.id;
     next();
   } catch {
     res.status(500).json({ code: "INTERNAL_ERROR" });
