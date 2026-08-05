@@ -30,6 +30,22 @@ ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "isOutOfOffice"   BOOLEAN NOT NULL D
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "phoneNumberId"   INTEGER;
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "nationalityId"   INTEGER;
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "dateOfBirth"     TIMESTAMP(3);
+
+ALTER TABLE "Club" ADD COLUMN IF NOT EXISTS "countryId"         INTEGER;
+ALTER TABLE "Club" ADD COLUMN IF NOT EXISTS "ownerEmail"         TEXT;
+ALTER TABLE "Club" ADD COLUMN IF NOT EXISTS "businessRegNumber"  TEXT;
+ALTER TABLE "Club" ADD COLUMN IF NOT EXISTS "companyNumber"      TEXT;
+ALTER TABLE "Club" ADD COLUMN IF NOT EXISTS "vatNumber"          TEXT;
+
+DO $repair3$ BEGIN
+  CREATE TYPE "WageCapType" AS ENUM ('FIXED', 'RATIO');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $repair3$;
+
+ALTER TABLE "Season" ADD COLUMN IF NOT EXISTS "wageCapType"  "WageCapType";
+ALTER TABLE "Season" ADD COLUMN IF NOT EXISTS "wageCapValue" FLOAT;
+ALTER TABLE "Season" ADD COLUMN IF NOT EXISTS "leagueLevel"  TEXT;
+ALTER TABLE "Season" ADD COLUMN IF NOT EXISTS "leagueId"     INTEGER;
 `;
 
 const client = new Client({ connectionString: process.env.DATABASE_URL });
