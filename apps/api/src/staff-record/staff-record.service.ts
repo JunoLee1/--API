@@ -15,9 +15,17 @@ export class StaffRecordService {
   }
 
   async create(
-    data: { name: string; role: string; departmentId?: number; phone?: string; notes?: string },
+    data: { name: string; role: string; departmentId?: number; phone?: string; notes?: string; email?: string; employeeId?: string },
     createdById: number
   ) {
+    if (data.email) {
+      const existing = await this.repo.findByEmail(data.email);
+      if (existing) throw new AppError(409, "STAFF_ALREADY_EXISTS");
+    }
+    if (data.employeeId) {
+      const existing = await this.repo.findByEmployeeId(data.employeeId);
+      if (existing) throw new AppError(409, "STAFF_ALREADY_EXISTS");
+    }
     return this.repo.create({ ...data, createdById });
   }
 
@@ -32,5 +40,11 @@ export class StaffRecordService {
   async delete(id: number) {
     await this.get(id);
     return this.repo.delete(id);
+  }
+
+  async terminate(id: number) {
+    const existing = await this.repo.findById(id);
+    if (!existing) throw new AppError(404, "STAFF_RECORD_NOT_FOUND");
+    return this.repo.terminate(id, new Date());
   }
 }

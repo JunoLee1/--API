@@ -13,6 +13,7 @@ const controller = new StaffRecordController(service);
 router.get("/", auth, controller.list);
 router.post("/", auth, controller.create);
 router.get("/:id", auth, controller.get);
+router.patch("/:id/terminate", auth, controller.terminate);
 router.patch("/:id", auth, controller.update);
 router.delete("/:id", auth, controller.delete);
 

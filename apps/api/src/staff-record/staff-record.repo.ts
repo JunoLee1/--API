@@ -53,4 +53,19 @@ export class StaffRecordRepository {
   async delete(id: number) {
     return this.prisma.staffRecord.delete({ where: { id } });
   }
+
+  findByEmail(email: string) {
+    return this.prisma.staffRecord.findFirst({ where: { email } });
+  }
+
+  findByEmployeeId(employeeId: string) {
+    return this.prisma.staffRecord.findFirst({ where: { employeeId } });
+  }
+
+  terminate(id: number, terminatedAt: Date) {
+    return this.prisma.staffRecord.update({
+      where: { id },
+      data: { terminatedAt, isActive: false },
+    });
+  }
 }
