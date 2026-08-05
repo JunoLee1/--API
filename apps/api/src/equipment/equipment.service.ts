@@ -1,7 +1,7 @@
 import { EquipmentRepository } from "./equipment.repo";
 import { NotificationRepository } from "../notification/notification.repo";
 import { AppError } from "../lib/appError";
-import { CreateEquipmentItemDto, UpdateQuantityDto, UpdateUnitStatusDto, CreateAssignmentDto, CreateEquipmentLoanDto } from "./dto/equipment.dto";
+import { CreateEquipmentItemDto, UpdateQuantityDto, UpdateUnitStatusDto, CreateAssignmentDto, CreateEquipmentLoanDto, CreateEquipmentUnitDto } from "./dto/equipment.dto";
 import { EquipmentUnitStatus, EquipmentLoanStatus } from "../generated/enums";
 
 const VALID_UNIT_TRANSITIONS: Record<EquipmentUnitStatus, EquipmentUnitStatus[]> = {
@@ -44,11 +44,43 @@ export class EquipmentService {
     return updated;
   }
 
-  async addUnit(itemId: number) {
+  async addUnit(itemId: number, dto: CreateEquipmentUnitDto = {}) {
     const item = await this.repo.findItemById(itemId);
     if (!item) throw new AppError(404, "EQUIPMENT_ITEM_NOT_FOUND");
     if (!item.trackedIndividually) throw new AppError(400, "ITEM_NOT_TRACKED_INDIVIDUALLY");
-    return this.repo.createUnit(itemId);
+    const isHighValue = dto.isHighValue ?? (dto.purchaseValue !== undefined && dto.purchaseValue >= 500000);
+    const unitDto: CreateEquipmentUnitDto = {
+      ...dto,
+      isHighValue,
+      ...(dto.purchasedAt ? { purchasedAt: new Date(dto.purchasedAt) } : {}),
+    };
+    return this.repo.createUnit(itemId, unitDto);
+  }
+
+  async calculateAndSaveDepreciation(unitId: number) {
+    const unit = await this.repo.findUnitWithDepreciation(unitId);
+    if (!unit) throw new AppError(404, "EQUIPMENT_UNIT_NOT_FOUND");
+    if (!unit.depreciationMethod || unit.depreciationRate === null || unit.bookValue === null || unit.purchaseValue === null) {
+      throw new AppError(400, "DEPRECIATION_FIELDS_MISSING");
+    }
+
+    const currentBook = Number(unit.bookValue);
+    const purchase = Number(unit.purchaseValue);
+    const rate = Number(unit.depreciationRate);
+    let newBookValue: number;
+
+    if (unit.depreciationMethod === "DECLINING_BALANCE") {
+      newBookValue = currentBook * (1 - rate);
+    } else {
+      // STRAIGHT_LINE
+      const purchasedAt = unit.purchasedAt ?? new Date();
+      const elapsedMs = Date.now() - new Date(purchasedAt).getTime();
+      const elapsedMonths = Math.max(1, Math.floor(elapsedMs / (1000 * 60 * 60 * 24 * 30)));
+      newBookValue = purchase - (purchase * rate) * elapsedMonths;
+    }
+
+    if (newBookValue < 0) throw new AppError(400, "NEGATIVE_BOOK_VALUE");
+    return this.repo.updateUnitDepreciation(unitId, newBookValue);
   }
 
   async transitionUnitStatus(unitId: number, dto: UpdateUnitStatusDto) {

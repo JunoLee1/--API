@@ -1,4 +1,4 @@
-import { EquipmentCategory, EquipmentUnitStatus } from "../../generated/enums";
+import { EquipmentCategory, EquipmentUnitStatus, DepreciationMethod } from "../../generated/enums";
 
 export interface CreateEquipmentItemDto {
   name: string;
@@ -10,6 +10,15 @@ export interface CreateEquipmentItemDto {
 
 export interface UpdateQuantityDto {
   delta: number;
+}
+
+export interface CreateEquipmentUnitDto {
+  serialNumber?: string;
+  purchasedAt?: Date;
+  purchaseValue?: number;
+  depreciationRate?: number;
+  depreciationMethod?: DepreciationMethod;
+  isHighValue?: boolean;
 }
 
 export interface UpdateUnitStatusDto {
