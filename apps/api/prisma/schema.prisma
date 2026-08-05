@@ -305,6 +305,49 @@ enum NotificationType {
   FACILITY_MAINTENANCE_RESOLVED
   PAYROLL_CONFIRMED
   JOB_POSTING_DRAFT_CREATED
+  PAYROLL_SECOND_APPROVED
+  IT_ASSET_EXPIRY_SOON
+  IT_ASSET_RETIREMENT_SYNC
+  INVENTORY_LOW_STOCK
+  FINANCE_SUBMIT_REQUIRED
+  SALES_NEGATIVE_VALUE
+  LICENSE_SEAT_EXCEEDED
+}
+
+enum DepreciationMethod {
+  STRAIGHT_LINE
+  DECLINING_BALANCE
+}
+
+enum CurrencyCode {
+  KRW
+  USD
+  EUR
+  GBP
+}
+
+enum LedgerEntryType {
+  INCOME
+  EXPENSE
+}
+
+enum LedgerEntryCategory {
+  SALARY
+  EQUIPMENT_PURCHASE
+  FACILITY_REPAIR
+  TRANSFER_FEE
+  TICKET_SALES
+  UNIFORM_SALES
+  SPONSORSHIP
+  ACADEMY_FEE
+  REFUND
+  OTHER
+}
+
+enum SalesType {
+  TICKET
+  UNIFORM
+  OTHER
 }
 
 enum BadgeType {
@@ -676,6 +719,7 @@ model User {
   gmApprovedMaintenances   MaintenanceRequest[]      @relation("MaintenanceGMApprover")
   staffSalary              StaffSalary[]             @relation("UserSalary")
   confirmedPayrolls        PayrollRun[]              @relation("PayrollRunConfirmer")
+  secondApprovedPayrolls   PayrollRun[]              @relation("PayrollRunSecondApprover")
   budgetOverrideLogs       BudgetOverrideLog[]       @relation("BudgetOverrideLogCreator")
   operatingExpenses        OperatingExpense[]        @relation("OperatingExpenseCreator")
   createdPostings          JobPosting[]              @relation("JobPostingCreator")
@@ -687,6 +731,9 @@ model User {
   sentInvites              UserInvite[]              @relation("InviteSender")
   issuedGuardianCodes      GuardianInviteCode[]      @relation("GuardianCodeIssuer")
   usedGuardianCodes        GuardianInviteCode[]      @relation("GuardianCodeUser")
+  createdSoftwareLicenses  SoftwareLicense[]         @relation("SoftwareLicenseCreator")
+  ledgerEntries            LedgerEntry[]             @relation("LedgerEntryCreator")
+  salesRecords             SalesRecord[]             @relation("SalesRecordCreator")
 }
 
 model Season {
@@ -1290,9 +1337,17 @@ model EquipmentItem {
 }
 
 model EquipmentUnit {
-  id              Int                 @id @default(autoincrement())
-  status          EquipmentUnitStatus @default(AVAILABLE)
-  equipmentItemId Int
+  id                 Int                  @id @default(autoincrement())
+  status             EquipmentUnitStatus  @default(AVAILABLE)
+  equipmentItemId    Int
+  serialNumber       String?
+  purchasedAt        DateTime?
+  purchaseValue      Decimal?             @db.Decimal(12, 2)
+  bookValue          Decimal?             @db.Decimal(12, 2)
+  depreciationRate   Decimal?             @db.Decimal(5, 4)
+  depreciationMethod DepreciationMethod?
+  isHighValue        Boolean              @default(false)
+  expiresAt          DateTime?
 
   item        EquipmentItem         @relation(fields: [equipmentItemId], references: [id])
   assignments EquipmentAssignment[]
@@ -2018,17 +2073,20 @@ model ClubSettings {
 }
 
 model StaffRecord {
-  id           Int      @id @default(autoincrement())
+  id           Int         @id @default(autoincrement())
   name         String
   role         String
   departmentId Int?
   department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   phone        String?
-  isActive     Boolean  @default(true)
+  email        String?     @unique
+  employeeId   String?     @unique
+  isActive     Boolean     @default(true)
+  terminatedAt DateTime?
   notes        String?
   createdById  Int
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
   createdBy     User          @relation("StaffRecordCreator", fields: [createdById], references: [id])
   staffSalaries StaffSalary[]
@@ -2387,6 +2445,8 @@ model MaintenanceRequest {
   gmApprovedById      Int?
   gmApprovedAt        DateTime?
   rejectionReason     String?
+  isLocked            Boolean             @default(false)
+  financeSubmittedAt  DateTime?
   createdById         Int
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
@@ -2482,14 +2542,18 @@ model PayrollRun {
   grossPay        Decimal          @db.Decimal(12, 2)
   totalDeductions Decimal          @db.Decimal(12, 2)
   netPay          Decimal          @db.Decimal(12, 2)
-  status          PayrollRunStatus @default(DRAFT)
-  confirmedById   Int?
-  confirmedAt     DateTime?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  status              PayrollRunStatus @default(DRAFT)
+  confirmedById       Int?
+  confirmedAt         DateTime?
+  secondApprovedById  Int?
+  secondApprovedAt    DateTime?
+  isLocked            Boolean          @default(false)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
 
-  staffSalary StaffSalary @relation(fields: [staffSalaryId], references: [id])
-  confirmedBy User?       @relation("PayrollRunConfirmer", fields: [confirmedById], references: [id])
+  staffSalary        StaffSalary @relation(fields: [staffSalaryId], references: [id])
+  confirmedBy        User?       @relation("PayrollRunConfirmer", fields: [confirmedById], references: [id])
+  secondApprovedBy   User?       @relation("PayrollRunSecondApprover", fields: [secondApprovedById], references: [id])
 
   @@unique([staffSalaryId, month])
 }
@@ -2507,4 +2571,66 @@ model UserInvite {
   createdAt       DateTime         @default(now())
 
   createdBy User @relation("InviteSender", fields: [createdById], references: [id])
+}
+
+// ─────────────────────────────────────────────
+// Feature 16 — 자산관리부서
+// ─────────────────────────────────────────────
+
+model SoftwareLicense {
+  id          Int       @id @default(autoincrement())
+  name        String
+  vendor      String
+  totalSeats  Int
+  usedSeats   Int       @default(0)
+  expiresAt   DateTime?
+  renewalCost Decimal?  @db.Decimal(12, 2)
+  createdById Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  createdBy User @relation("SoftwareLicenseCreator", fields: [createdById], references: [id])
+}
+
+model LedgerEntry {
+  id            Int                 @id @default(autoincrement())
+  type          LedgerEntryType
+  category      LedgerEntryCategory
+  amount        Decimal             @db.Decimal(14, 2)
+  currency      CurrencyCode        @default(KRW)
+  exchangeRate  Decimal             @default(1) @db.Decimal(10, 4)
+  amountKrw     Decimal             @db.Decimal(14, 2)
+  description   String?
+  relatedModule String?
+  relatedId     Int?
+  isRefund      Boolean             @default(false)
+  createdById   Int
+  createdAt     DateTime            @default(now())
+
+  createdBy User @relation("LedgerEntryCreator", fields: [createdById], references: [id])
+}
+
+model SalesRecord {
+  id          Int          @id @default(autoincrement())
+  type        SalesType
+  quantity    Int
+  unitPrice   Decimal      @db.Decimal(12, 2)
+  totalAmount Decimal      @db.Decimal(12, 2)
+  currency    CurrencyCode @default(KRW)
+  saleDate    DateTime
+  description String?
+  createdById Int
+  createdAt   DateTime     @default(now())
+
+  createdBy User @relation("SalesRecordCreator", fields: [createdById], references: [id])
+}
+
+model FacilityInventoryItem {
+  id           Int      @id @default(autoincrement())
+  name         String
+  unit         String
+  quantity     Int      @default(0)
+  minThreshold Int      @default(10)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

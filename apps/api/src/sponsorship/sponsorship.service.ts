@@ -2,6 +2,7 @@ import { AppError } from "../lib/appError";
 import type { SponsorshipRepository } from "./sponsorship.repo";
 import type { CreateSponsorshipDto, UpdateSponsorshipDto, SponsorshipListQuery } from "./dto/sponsorship.dto";
 import type { PaymentSchedule } from "../generated/enums";
+import type { LedgerService } from "../ledger/ledger.service";
 
 export function generatePaymentDates(start: Date, end: Date, schedule: PaymentSchedule): Date[] {
   const dates: Date[] = [];
@@ -16,7 +17,10 @@ export function generatePaymentDates(start: Date, end: Date, schedule: PaymentSc
 }
 
 export class SponsorshipService {
-  constructor(private repo: SponsorshipRepository) {}
+  constructor(
+    private repo: SponsorshipRepository,
+    private ledgerService: LedgerService,
+  ) {}
 
   list(query: SponsorshipListQuery) {
     const page = Math.max(1, Number(query.page) || 1);
@@ -66,14 +70,26 @@ export class SponsorshipService {
     return this.applyOverdue(payments);
   }
 
-  async markPaid(sponsorshipId: number, paymentId: number) {
-    await this.get(sponsorshipId);
+  async markPaid(sponsorshipId: number, paymentId: number, userId: number) {
+    const sponsorship = await this.get(sponsorshipId);
     const payment = await this.repo.findPaymentById(paymentId);
     if (!payment || payment.sponsorshipId !== sponsorshipId) {
       throw new AppError(404, "SPONSORSHIP_PAYMENT_NOT_FOUND");
     }
     if (payment.status === "PAID") throw new AppError(409, "ALREADY_PAID");
-    return this.repo.updatePayment(paymentId, { status: "PAID", paidAt: new Date() });
+    const updated = await this.repo.updatePayment(paymentId, { status: "PAID", paidAt: new Date() });
+    void this.ledgerService.createAutoEntry({
+      type: "INCOME",
+      category: "SPONSORSHIP",
+      amount: Number(payment.amount),
+      currency: "KRW",
+      exchangeRate: 1,
+      amountKrw: Number(payment.amount),
+      description: `스폰서십 수입 - ${sponsorship.sponsorName} payment #${paymentId}`,
+      relatedModule: "sponsorship",
+      relatedId: sponsorshipId,
+    }, userId).catch(err => console.error("[LedgerAutoEntry:sponsorship]", err));
+    return updated;
   }
 
   private applyOverdue(payments: any[]) {

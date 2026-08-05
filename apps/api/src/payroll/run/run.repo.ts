@@ -48,4 +48,15 @@ export class RunRepository {
       },
     });
   }
+
+  secondApprove(runId: number, userId: number) {
+    return this.prisma.payrollRun.update({
+      where: { id: runId },
+      data: {
+        secondApprovedById: userId,
+        secondApprovedAt: new Date(),
+        isLocked: true,
+      },
+    });
+  }
 }

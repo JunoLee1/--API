@@ -141,6 +141,19 @@ export class NotificationService {
     });
   }
 
+  async notifyFacilityFinanceSubmit(requestTitle: string, requestId: number, estimatedCost: number) {
+    const title = "시설 유지보수 재무 상신";
+    const body = `'${requestTitle}' 유지보수 요청(예상비용 ${estimatedCost.toLocaleString()}원)이 재무 검토를 위해 상신됐습니다.`;
+    await this.repo.createForFinanceManager("FACILITY_FINANCE_SUBMIT", () => ({ title, body }), requestId);
+    getIO().to("staff-room").emit("notification:facility", {
+      type: "FACILITY_FINANCE_SUBMIT",
+      title,
+      body,
+      requestId,
+      createdAt: new Date().toISOString(),
+    });
+  }
+
   async notifyFacilityResolved(requestTitle: string, requestId: number) {
     const title = "시설 유지보수 완료";
     const body = `'${requestTitle}' 유지보수 요청이 해결됐습니다.`;

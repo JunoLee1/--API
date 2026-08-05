@@ -47,6 +47,11 @@ import hiringAutomationRouter from "./hiring-automation/hiring-automation.routes
 import clubRouter from "./club/club.routes";
 import leagueRouter from "./league/league.routes";
 import guardianRouter from "./guardian/guardian.routes";
+import hrRouter from "./hr/hr.routes";
+import softwareLicenseRouter from "./software-license/software-license.routes";
+import ledgerRouter from "./ledger/ledger.routes";
+import salesRouter from "./sales/sales.routes";
+import inventoryRouter from "./inventory/inventory.routes";
 
 const apiRouter = Router();
 
@@ -98,5 +103,10 @@ apiRouter.use("/payroll", payrollRouter);
 apiRouter.use("/hiring-automation", hiringAutomationRouter);
 apiRouter.use("/leagues", leagueRouter);
 apiRouter.use("/guardian", guardianRouter);
+apiRouter.use("/hr", hrRouter);
+apiRouter.use("/software-licenses", softwareLicenseRouter);
+apiRouter.use("/ledger", ledgerRouter);
+apiRouter.use("/sales", salesRouter);
+apiRouter.use("/inventory", inventoryRouter);
 
 export default apiRouter;

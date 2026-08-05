@@ -20,6 +20,9 @@ import { startYouthWeeklyScheduleJob } from "./jobs/youthWeeklySchedule";
 import { startAcademyFeeBillingJob } from "./jobs/academyFeeBilling";
 import { startAcademyFeeDelinquencyJob } from "./jobs/academyFeeDelinquency";
 import { startQuarterlyJobPostingDraftJob } from "./jobs/quarterlyJobPostingDraft";
+import { startEquipmentExpiryAlertJob } from "./jobs/equipmentExpiryAlert";
+import { startInventoryThresholdJob } from "./jobs/inventoryThreshold";
+import { startMonthlyDepreciationJob } from "./jobs/monthlyDepreciation";
 
 const app = express();
 
@@ -65,3 +68,6 @@ startYouthWeeklyScheduleJob();
 startAcademyFeeBillingJob();
 startAcademyFeeDelinquencyJob();
 startQuarterlyJobPostingDraftJob();
+startEquipmentExpiryAlertJob();
+startInventoryThresholdJob();
+startMonthlyDepreciationJob();

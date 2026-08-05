@@ -56,7 +56,7 @@ export class EquipmentController {
     try {
       const { role, frontOfficeRole } = req.user!;
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
-      res.status(200).json(await this.service.transitionUnitStatus(Number(req.params["unitId"]), req.body));
+      res.status(200).json(await this.service.transitionUnitStatus(Number(req.params["unitId"]), req.body, req.user!.id));
     } catch (err) { next(err); }
   };
 

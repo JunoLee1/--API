@@ -9,6 +9,7 @@ const mockEquipmentRepo = {
   createUnit: jest.fn(),
   findUnitById: jest.fn(),
   updateUnitStatus: jest.fn(),
+  findUnitWithDepreciation: jest.fn().mockResolvedValue(null),
   createAssignment: jest.fn(),
   findUnreturnedByPlayer: jest.fn(),
   findAssignmentById: jest.fn(),
@@ -20,7 +21,9 @@ const mockNotificationRepo = {
   create: jest.fn(),
 } as any;
 
-const service = new EquipmentService(mockEquipmentRepo, mockNotificationRepo);
+const mockLedgerService = { createAutoEntry: jest.fn().mockResolvedValue({}) } as any;
+
+const service = new EquipmentService(mockEquipmentRepo, mockNotificationRepo, mockLedgerService);
 
 describe("EquipmentService - adjustQuantity", () => {
   beforeEach(() => jest.clearAllMocks());

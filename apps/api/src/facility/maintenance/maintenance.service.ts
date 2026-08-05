@@ -2,6 +2,7 @@ import { AppError } from "../../lib/appError";
 import { NotificationService } from "../../notification/notification.service";
 import type { MaintenanceRepository } from "./maintenance.repo";
 import type { CreateMaintenanceDto, UpdateMaintenanceDto, MaintenanceListQuery } from "./dto/maintenance.dto";
+import type { LedgerService } from "../../ledger/ledger.service";
 
 const TERMINAL_STATUSES = ["RESOLVED", "REJECTED"] as const;
 
@@ -9,6 +10,7 @@ export class MaintenanceService {
   constructor(
     private repo: MaintenanceRepository,
     private notifications: NotificationService,
+    private ledgerService: LedgerService,
   ) {}
 
   list(query: MaintenanceListQuery) {
@@ -30,7 +32,9 @@ export class MaintenanceService {
   }
 
   async update(id: number, dto: UpdateMaintenanceDto) {
-    const existing = await this.get(id);
+    const existing = await this.repo.findById(id);
+    if (!existing) throw new AppError(404, "MAINTENANCE_NOT_FOUND");
+    if (existing.isLocked) throw new AppError(400, "MAINTENANCE_LOCKED");
     if ((TERMINAL_STATUSES as readonly string[]).includes(existing.status)) {
       throw new AppError(409, "ALREADY_RESOLVED");
     }
@@ -58,6 +62,19 @@ export class MaintenanceService {
     if (existing.status !== "APPROVED") throw new AppError(400, "INVALID_STATUS_TRANSITION");
     const record = await this.repo.gmApprove(id, gmId);
     void this.notifications.notifyFacilityResolved(existing.title, id).catch(console.error);
+    if (existing.actualCost) {
+      void this.ledgerService.createAutoEntry({
+        type: "EXPENSE",
+        category: "FACILITY_REPAIR",
+        amount: Number(existing.actualCost),
+        currency: "KRW",
+        exchangeRate: 1,
+        amountKrw: Number(existing.actualCost),
+        description: `시설 수리 완료 - ${existing.title}`,
+        relatedModule: "facility",
+        relatedId: id,
+      }, gmId).catch(err => console.error("[LedgerAutoEntry:facility]", err));
+    }
     return record;
   }
 
@@ -66,5 +83,27 @@ export class MaintenanceService {
     const REJECTABLE = ["PENDING_APPROVAL", "APPROVED"];
     if (!REJECTABLE.includes(existing.status)) throw new AppError(400, "INVALID_STATUS_TRANSITION");
     return this.repo.reject(id, reason);
+  }
+
+  async lock(id: number) {
+    const existing = await this.repo.findById(id);
+    if (!existing) throw new AppError(404, "MAINTENANCE_NOT_FOUND");
+    if (existing.status !== "RESOLVED") throw new AppError(400, "CANNOT_LOCK_UNRESOLVED");
+    if (existing.isLocked) throw new AppError(400, "MAINTENANCE_ALREADY_LOCKED");
+    return this.repo.lock(id);
+  }
+
+  async submitToFinance(id: number, userId: number) {
+    const existing = await this.repo.findById(id);
+    if (!existing) throw new AppError(404, "MAINTENANCE_NOT_FOUND");
+    const cost = existing.estimatedCost ? Number(existing.estimatedCost) : 0;
+    if (cost < 1000000) throw new AppError(400, "COST_BELOW_THRESHOLD");
+    if (existing.financeSubmittedAt) throw new AppError(400, "ALREADY_SUBMITTED_TO_FINANCE");
+
+    const result = await this.repo.submitToFinance(id);
+
+    void this.notifications.notifyFacilityFinanceSubmit(existing.title, id, cost).catch(console.error);
+
+    return result;
   }
 }

@@ -51,10 +51,10 @@ export class SponsorshipController {
 
   markPaid = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole, id: userId } = req.user!;
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.json(
-        await this.service.markPaid(Number(req.params["id"]), Number(req.params["paymentId"])),
+        await this.service.markPaid(Number(req.params["id"]), Number(req.params["paymentId"]), userId),
       );
     } catch (err) { next(err); }
   };

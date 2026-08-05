@@ -1,6 +1,6 @@
 import { PrismaClient } from "../generated/client";
 import { EquipmentUnitStatus, EquipmentLoanStatus } from "../generated/enums";
-import { CreateEquipmentItemDto, CreateAssignmentDto, CreateEquipmentLoanDto } from "./dto/equipment.dto";
+import { CreateEquipmentItemDto, CreateAssignmentDto, CreateEquipmentLoanDto, CreateEquipmentUnitDto } from "./dto/equipment.dto";
 
 const ITEM_SELECT = {
   id: true,
@@ -74,10 +74,39 @@ export class EquipmentRepository {
     });
   }
 
-  createUnit(equipmentItemId: number) {
+  createUnit(equipmentItemId: number, dto?: CreateEquipmentUnitDto) {
     return this.prisma.equipmentUnit.create({
-      data: { equipmentItemId },
+      data: {
+        equipmentItemId,
+        ...(dto?.serialNumber && { serialNumber: dto.serialNumber }),
+        ...(dto?.purchasedAt && { purchasedAt: dto.purchasedAt }),
+        ...(dto?.purchaseValue !== undefined && { purchaseValue: dto.purchaseValue, bookValue: dto.purchaseValue }),
+        ...(dto?.depreciationRate !== undefined && { depreciationRate: dto.depreciationRate }),
+        ...(dto?.depreciationMethod && { depreciationMethod: dto.depreciationMethod }),
+        ...(dto?.isHighValue !== undefined && { isHighValue: dto.isHighValue }),
+      },
       select: UNIT_SELECT,
+    });
+  }
+
+  updateUnitDepreciation(unitId: number, bookValue: number) {
+    return this.prisma.equipmentUnit.update({
+      where: { id: unitId },
+      data: { bookValue },
+    });
+  }
+
+  findUnitWithDepreciation(unitId: number) {
+    return this.prisma.equipmentUnit.findUnique({
+      where: { id: unitId },
+      select: {
+        id: true,
+        purchaseValue: true,
+        bookValue: true,
+        depreciationRate: true,
+        depreciationMethod: true,
+        purchasedAt: true,
+      },
     });
   }
 

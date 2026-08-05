@@ -14,6 +14,7 @@ import { AllowanceController } from "./allowance/allowance.controller";
 import { RunRepository } from "./run/run.repo";
 import { RunService } from "./run/run.service";
 import { RunController } from "./run/run.controller";
+import { ledgerService } from "../ledger/ledger.routes";
 
 const router = Router();
 
@@ -27,7 +28,7 @@ const runRepo = new RunRepository(prisma);
 const configService = new ConfigService(configRepo);
 const salaryService = new SalaryService(salaryRepo);
 const allowanceService = new AllowanceService(allowanceRepo, salaryRepo);
-const runService = new RunService(runRepo, salaryRepo, configRepo);
+const runService = new RunService(runRepo, salaryRepo, configRepo, ledgerService);
 
 const configController = new ConfigController(configService);
 const salaryController = new SalaryController(salaryService);
@@ -55,5 +56,6 @@ router.delete("/salaries/:id/allowances/:aid", auth, allowanceController.remove)
 router.get("/salaries/:id/runs", auth, runController.list);
 router.post("/salaries/:id/runs", auth, runController.create);
 router.patch("/salaries/:id/runs/:runId", auth, runController.confirm);
+router.post("/salaries/:id/runs/:runId/second-approve", auth, runController.secondApprove);
 
 export default router;

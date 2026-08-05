@@ -41,4 +41,18 @@ export class RunController {
       );
     } catch (err) { next(err); }
   };
+
+  secondApprove = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, id: userId } = req.user!;
+      if (!canConfirm(role)) throw new AppError(403, "FORBIDDEN");
+      res.json(
+        await this.service.secondApproveRun(
+          Number(req.params["id"]),
+          Number(req.params["runId"]),
+          userId,
+        ),
+      );
+    } catch (err) { next(err); }
+  };
 }
