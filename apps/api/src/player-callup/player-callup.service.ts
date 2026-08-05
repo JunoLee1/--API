@@ -114,6 +114,31 @@ export class PlayerCallupService {
       )
       .catch(console.error);
 
+    const guardianId = callup.player.guardianId;
+    if (guardianId) {
+      void this.notifRepo
+        .createForGuardian(
+          guardianId,
+          "GUARDIAN_CHILD_CALLUP",
+          () => ({
+            title: "1군 콜업 승인",
+            body: `${callup.player.playerName} 선수의 1군 콜업이 승인됐습니다. 필요 서류를 확인해주세요.`,
+          }),
+          id,
+        )
+        .catch(console.error);
+
+      const guardianUser = await this.repo.findGuardianEmail(guardianId).catch(() => null);
+      if (guardianUser?.email) {
+        const { sendGuardianCallupEmail } = await import("../lib/email");
+        void sendGuardianCallupEmail(
+          guardianUser.email,
+          callup.player.playerName,
+          updated.requiredDocuments ?? [],
+        ).catch(console.error);
+      }
+    }
+
     return updated;
   }
 
