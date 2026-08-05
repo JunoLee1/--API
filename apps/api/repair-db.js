@@ -46,12 +46,40 @@ ALTER TABLE "Season" ADD COLUMN IF NOT EXISTS "wageCapType"  "WageCapType";
 ALTER TABLE "Season" ADD COLUMN IF NOT EXISTS "wageCapValue" FLOAT;
 ALTER TABLE "Season" ADD COLUMN IF NOT EXISTS "leagueLevel"  TEXT;
 ALTER TABLE "Season" ADD COLUMN IF NOT EXISTS "leagueId"     INTEGER;
+
+ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'SUPER_ADMIN';
+ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'GM';
+`;
+
+const SUPER_ADMIN_HASH = '$2b$10$hzKOhKCCOJnkFxePPysHkur/nNunSDm8yoKMKVhAxpevMG9KkyhXi';
+
+const superAdminSql = `
+DO $sa$ DECLARE
+  v_country_id INTEGER;
+  v_phone_id   INTEGER;
+BEGIN
+  SELECT id INTO v_country_id FROM "Country" ORDER BY id LIMIT 1;
+  IF v_country_id IS NULL THEN
+    BEGIN
+      INSERT INTO "Country" (name, code) VALUES ('대한민국', 'KR') RETURNING id INTO v_country_id;
+    EXCEPTION WHEN others THEN
+      SELECT id INTO v_country_id FROM "Country" ORDER BY id LIMIT 1;
+    END;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM "User" WHERE email = 'superadmin@platform.com') THEN
+    INSERT INTO "PhoneNumber" (encrypted, iv) VALUES ('dummy', 'dummy') RETURNING id INTO v_phone_id;
+    INSERT INTO "User" (email, password, username, nickname, role, "dateOfBirth", "nationalityId", "phoneNumberId")
+    VALUES ('superadmin@platform.com', '` + SUPER_ADMIN_HASH + `', 'superadmin', 'superadmin', 'SUPER_ADMIN', '1990-01-01', v_country_id, v_phone_id);
+  END IF;
+END $sa$;
 `;
 
 const client = new Client({ connectionString: process.env.DATABASE_URL });
 
 client.connect()
   .then(() => client.query(sql))
+  .then(() => client.query(superAdminSql))
   .then(() => { console.log('[repair-db] User table columns ensured'); })
   .catch(err => { console.error('[repair-db] Error:', err.message); })
   .finally(() => client.end());
