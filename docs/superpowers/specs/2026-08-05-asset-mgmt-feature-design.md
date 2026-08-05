@@ -114,7 +114,7 @@ src/
 2. **2차 승인 잠금**: `PATCH /runs/:runId/second-approve` 호출 시 `isLocked = true`, 이후 수정 시 400 `PAYROLL_LOCKED`.
 3. **중복 등록 방지**: `email` 또는 `employeeId` 중복 시 409 `STAFF_ALREADY_EXISTS`.
 4. **퇴사 처리 시 권한 회수**: `terminatedAt` 설정과 동시에 해당 User의 `isActive = false` 처리 (로그인 차단).
-5. **문서 업로드 파일 검증**: `.pdf`, `.docx`, `.xlsx` 만 허용. 초과(10MB) 시 413. 기타 형식 시 400 `INVALID_FILE_TYPE`.
+5. **문서 업로드 파일 검증**: `.pdf`, `.docx`, `.xlsx`, `.hwp` 만 허용. 초과(10MB) 시 413. 기타 형식 시 400 `INVALID_FILE_TYPE`.
 6. **PII 마스킹**: `staffSalary.bankAccount`, `staffRecord.residentNumber` 응답 시 뒷자리 `*` 처리. 서비스 레이어에서 응답 객체 변환.
 
 ---
