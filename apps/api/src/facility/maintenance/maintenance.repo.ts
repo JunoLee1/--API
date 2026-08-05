@@ -86,4 +86,20 @@ export class MaintenanceRepository {
       include: INCLUDE,
     });
   }
+
+  lock(id: number) {
+    return this.prisma.maintenanceRequest.update({
+      where: { id },
+      data: { isLocked: true },
+      include: INCLUDE,
+    });
+  }
+
+  submitToFinance(id: number) {
+    return this.prisma.maintenanceRequest.update({
+      where: { id },
+      data: { financeSubmittedAt: new Date() },
+      include: INCLUDE,
+    });
+  }
 }
