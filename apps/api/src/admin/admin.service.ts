@@ -19,8 +19,11 @@ export class AdminService {
     return user;
   }
 
-  async updateUserRole(id: number, dto: UpdateUserRoleDto, requesterId: number) {
+  async updateUserRole(id: number, dto: UpdateUserRoleDto, requesterId: number, requesterRole: string) {
     if (id === requesterId) throw new AppError(403, "CANNOT_MODIFY_SELF");
+    if (dto.role === "SUPER_ADMIN" && requesterRole !== "SUPER_ADMIN") {
+      throw new AppError(403, "ONLY_SUPER_ADMIN_CAN_GRANT_SUPER_ADMIN");
+    }
 
     const user = await this.repo.findById(id);
     if (!user) throw new AppError(404, "USER_NOT_FOUND");

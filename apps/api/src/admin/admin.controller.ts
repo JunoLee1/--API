@@ -44,7 +44,7 @@ export class AdminController {
     try {
       requireAdmin(req);
       const targetId = Number(req.params["id"]);
-      const result = await this.service.updateUserRole(targetId, req.body, req.user!.id);
+      const result = await this.service.updateUserRole(targetId, req.body, req.user!.id, req.user!.role as Role);
       await writeAuditLog({
         actorId: req.user!.id,
         action: "ROLE_UPDATE",

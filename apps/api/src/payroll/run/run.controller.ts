@@ -14,6 +14,8 @@ export class RunController {
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const { role, frontOfficeRole } = req.user!;
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.list(Number(req.params["id"])));
     } catch (err) { next(err); }
   };
