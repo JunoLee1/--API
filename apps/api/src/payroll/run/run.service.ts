@@ -3,6 +3,7 @@ import type { RunRepository } from "./run.repo";
 import type { SalaryRepository } from "../salary/salary.repo";
 import type { ConfigRepository } from "../config/config.repo";
 import type { CreateRunDto } from "./dto/run.dto";
+import type { LedgerService } from "../../ledger/ledger.service";
 
 export function computePayroll(
   baseSalary: number,
@@ -26,6 +27,7 @@ export class RunService {
     private runRepo: RunRepository,
     private salaryRepo: SalaryRepository,
     private configRepo: ConfigRepository,
+    private ledgerService: LedgerService,
   ) {}
 
   async list(salaryId: number) {
@@ -72,7 +74,19 @@ export class RunService {
     if (run.status !== "CONFIRMED") {
       throw new AppError(400, "PAYROLL_RUN_NOT_CONFIRMED");
     }
-    return this.runRepo.secondApprove(runId, userId);
+    const updated = await this.runRepo.secondApprove(runId, userId);
+    void this.ledgerService.createAutoEntry({
+      type: "EXPENSE",
+      category: "SALARY",
+      amount: Number(updated.netPay),
+      currency: "KRW",
+      exchangeRate: 1,
+      amountKrw: Number(updated.netPay),
+      description: `급여 지급 - salaryId ${salaryId} runId ${runId}`,
+      relatedModule: "payroll",
+      relatedId: runId,
+    }, userId).catch(err => console.error("[LedgerAutoEntry:payroll]", err));
+    return updated;
   }
 
   async confirmRun(salaryId: number, runId: number, userId: number) {

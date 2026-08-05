@@ -4,11 +4,12 @@ import { getPrisma } from "../lib/prisma";
 import { SponsorshipRepository } from "./sponsorship.repo";
 import { SponsorshipService } from "./sponsorship.service";
 import { SponsorshipController } from "./sponsorship.controller";
+import { ledgerService } from "../ledger/ledger.routes";
 
 const router = Router();
 
 const repo = new SponsorshipRepository(getPrisma());
-const service = new SponsorshipService(repo);
+const service = new SponsorshipService(repo, ledgerService);
 const controller = new SponsorshipController(service);
 
 router.get("/",    auth, controller.list);

@@ -14,7 +14,7 @@ const mockNotificationService = {
   notifyFacilityResolved: jest.fn().mockResolvedValue(undefined),
 } as any;
 
-const service = new MaintenanceService(mockRepo, mockNotificationService);
+const service = new MaintenanceService(mockRepo, mockNotificationService, undefined as any);
 const userId = 1;
 
 beforeEach(() => jest.clearAllMocks());

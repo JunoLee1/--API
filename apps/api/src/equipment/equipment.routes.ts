@@ -5,11 +5,12 @@ import { EquipmentService } from "./equipment.service";
 import { EquipmentRepository } from "./equipment.repo";
 import { NotificationRepository } from "../notification/notification.repo";
 import { getPrisma } from "../lib/prisma";
+import { ledgerService } from "../ledger/ledger.routes";
 
 const router = Router();
 const equipmentRepo = new EquipmentRepository(getPrisma());
 const notificationRepo = new NotificationRepository(getPrisma());
-const service = new EquipmentService(equipmentRepo, notificationRepo);
+const service = new EquipmentService(equipmentRepo, notificationRepo, ledgerService);
 const controller = new EquipmentController(service);
 
 

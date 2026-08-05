@@ -18,7 +18,7 @@ describe("EquipmentService.calculateAndSaveDepreciation", () => {
       }),
       updateUnitDepreciation,
     });
-    const service = new EquipmentService(repo, undefined as any);
+    const service = new EquipmentService(repo, undefined as any, undefined as any);
     await service.calculateAndSaveDepreciation(1);
     // 1000 * (1 - 0.2) = 800
     expect(updateUnitDepreciation).toHaveBeenCalledWith(1, 800);
@@ -34,7 +34,7 @@ describe("EquipmentService.calculateAndSaveDepreciation", () => {
       }),
       updateUnitDepreciation,
     });
-    const service = new EquipmentService(repo, undefined as any);
+    const service = new EquipmentService(repo, undefined as any, undefined as any);
     await service.calculateAndSaveDepreciation(1);
     // 1000 - (1000 * 0.1) * 1 month = 900
     expect(updateUnitDepreciation).toHaveBeenCalledWith(1, 900);
@@ -48,7 +48,7 @@ describe("EquipmentService.calculateAndSaveDepreciation", () => {
         purchasedAt: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000), // 12 months
       }),
     });
-    const service = new EquipmentService(repo, undefined as any);
+    const service = new EquipmentService(repo, undefined as any, undefined as any);
     await expect(service.calculateAndSaveDepreciation(1))
       .rejects.toThrow(new AppError(400, "NEGATIVE_BOOK_VALUE"));
   });

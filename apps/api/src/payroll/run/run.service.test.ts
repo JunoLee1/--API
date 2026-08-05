@@ -11,7 +11,8 @@ const makeRepo = (overrides: Partial<RunRepository> = {}): RunRepository => ({
 describe("RunService.secondApproveRun", () => {
   it("throws 404 when run is not found", async () => {
     const repo = makeRepo({ findById: jest.fn().mockResolvedValue(null) });
-    const service = new RunService(repo, undefined as any, undefined as any);
+    const mockLedger = { createAutoEntry: jest.fn().mockResolvedValue({}) } as any;
+    const service = new RunService(repo, undefined as any, undefined as any, mockLedger);
     await expect(service.secondApproveRun(10, 1, 99))
       .rejects.toThrow(new AppError(404, "PAYROLL_RUN_NOT_FOUND"));
   });
@@ -20,7 +21,8 @@ describe("RunService.secondApproveRun", () => {
     const repo = makeRepo({
       findById: jest.fn().mockResolvedValue({ id: 1, staffSalaryId: 10, status: "CONFIRMED", isLocked: true }),
     });
-    const service = new RunService(repo, undefined as any, undefined as any);
+    const mockLedger = { createAutoEntry: jest.fn().mockResolvedValue({}) } as any;
+    const service = new RunService(repo, undefined as any, undefined as any, mockLedger);
     await expect(service.secondApproveRun(10, 1, 99))
       .rejects.toThrow(new AppError(400, "PAYROLL_RUN_ALREADY_LOCKED"));
   });
@@ -29,7 +31,8 @@ describe("RunService.secondApproveRun", () => {
     const repo = makeRepo({
       findById: jest.fn().mockResolvedValue({ id: 1, staffSalaryId: 10, status: "DRAFT", isLocked: false }),
     });
-    const service = new RunService(repo, undefined as any, undefined as any);
+    const mockLedger = { createAutoEntry: jest.fn().mockResolvedValue({}) } as any;
+    const service = new RunService(repo, undefined as any, undefined as any, mockLedger);
     await expect(service.secondApproveRun(10, 1, 99))
       .rejects.toThrow(new AppError(400, "PAYROLL_RUN_NOT_CONFIRMED"));
   });
@@ -40,7 +43,8 @@ describe("RunService.secondApproveRun", () => {
       findById: jest.fn().mockResolvedValue({ id: 1, staffSalaryId: 10, status: "CONFIRMED", isLocked: false }),
       secondApprove,
     });
-    const service = new RunService(repo, undefined as any, undefined as any);
+    const mockLedger = { createAutoEntry: jest.fn().mockResolvedValue({}) } as any;
+    const service = new RunService(repo, undefined as any, undefined as any, mockLedger);
     const result = await service.secondApproveRun(10, 1, 99);
     expect(secondApprove).toHaveBeenCalledWith(1, 99);
     expect(result.isLocked).toBe(true);

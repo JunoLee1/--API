@@ -2,6 +2,7 @@ import { AppError } from "../../lib/appError";
 import { NotificationService } from "../../notification/notification.service";
 import type { MaintenanceRepository } from "./maintenance.repo";
 import type { CreateMaintenanceDto, UpdateMaintenanceDto, MaintenanceListQuery } from "./dto/maintenance.dto";
+import type { LedgerService } from "../../ledger/ledger.service";
 
 const TERMINAL_STATUSES = ["RESOLVED", "REJECTED"] as const;
 
@@ -9,6 +10,7 @@ export class MaintenanceService {
   constructor(
     private repo: MaintenanceRepository,
     private notifications: NotificationService,
+    private ledgerService: LedgerService,
   ) {}
 
   list(query: MaintenanceListQuery) {
@@ -60,6 +62,19 @@ export class MaintenanceService {
     if (existing.status !== "APPROVED") throw new AppError(400, "INVALID_STATUS_TRANSITION");
     const record = await this.repo.gmApprove(id, gmId);
     void this.notifications.notifyFacilityResolved(existing.title, id).catch(console.error);
+    if (existing.actualCost) {
+      void this.ledgerService.createAutoEntry({
+        type: "EXPENSE",
+        category: "FACILITY_REPAIR",
+        amount: Number(existing.actualCost),
+        currency: "KRW",
+        exchangeRate: 1,
+        amountKrw: Number(existing.actualCost),
+        description: `시설 수리 완료 - ${existing.title}`,
+        relatedModule: "facility",
+        relatedId: id,
+      }, gmId).catch(err => console.error("[LedgerAutoEntry:facility]", err));
+    }
     return record;
   }
 

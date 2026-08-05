@@ -3,6 +3,7 @@ import { Router } from "express";
 import { getPrisma } from "../lib/prisma";
 import { NotificationRepository } from "../notification/notification.repo";
 import { NotificationService } from "../notification/notification.service";
+import { ledgerService } from "../ledger/ledger.routes";
 import { InspectionRepository } from "./inspection/inspection.repo";
 import { InspectionService } from "./inspection/inspection.service";
 import { InspectionController } from "./inspection/inspection.controller";
@@ -14,7 +15,7 @@ const router = Router();
 
 const notificationService = new NotificationService(new NotificationRepository(getPrisma()));
 const maintenanceRepo = new MaintenanceRepository(getPrisma());
-const maintenanceService = new MaintenanceService(maintenanceRepo, notificationService);
+const maintenanceService = new MaintenanceService(maintenanceRepo, notificationService, ledgerService);
 const maintenanceController = new MaintenanceController(maintenanceService);
 
 const inspectionRepo = new InspectionRepository(getPrisma());

@@ -3,6 +3,7 @@ import { NotificationRepository } from "../notification/notification.repo";
 import { AppError } from "../lib/appError";
 import { CreateEquipmentItemDto, UpdateQuantityDto, UpdateUnitStatusDto, CreateAssignmentDto, CreateEquipmentLoanDto, CreateEquipmentUnitDto } from "./dto/equipment.dto";
 import { EquipmentUnitStatus, EquipmentLoanStatus } from "../generated/enums";
+import type { LedgerService } from "../ledger/ledger.service";
 
 const VALID_UNIT_TRANSITIONS: Record<EquipmentUnitStatus, EquipmentUnitStatus[]> = {
   AVAILABLE: ["IN_USE", "MAINTENANCE"],
@@ -15,6 +16,7 @@ export class EquipmentService {
   constructor(
     private repo: EquipmentRepository,
     private notificationRepo: NotificationRepository,
+    private ledgerService: LedgerService,
   ) {}
 
   async getAllItems() {
@@ -83,12 +85,30 @@ export class EquipmentService {
     return this.repo.updateUnitDepreciation(unitId, newBookValue);
   }
 
-  async transitionUnitStatus(unitId: number, dto: UpdateUnitStatusDto) {
+  async transitionUnitStatus(unitId: number, dto: UpdateUnitStatusDto, userId?: number) {
     const unit = await this.repo.findUnitById(unitId);
     if (!unit) throw new AppError(404, "EQUIPMENT_UNIT_NOT_FOUND");
     const allowed = VALID_UNIT_TRANSITIONS[unit.status];
     if (!allowed.includes(dto.status)) throw new AppError(409, "INVALID_STATUS_TRANSITION");
-    return this.repo.updateUnitStatus(unitId, dto.status);
+    const updated = await this.repo.updateUnitStatus(unitId, dto.status);
+    if (dto.status === "RETIRED") {
+      const unitWithBook = await this.repo.findUnitWithDepreciation(unitId);
+      if (unitWithBook?.bookValue) {
+        void this.ledgerService.createAutoEntry({
+          type: "EXPENSE",
+          category: "EQUIPMENT_PURCHASE",
+          amount: Number(unitWithBook.bookValue),
+          currency: "KRW",
+          exchangeRate: 1,
+          amountKrw: Number(unitWithBook.bookValue),
+          isRefund: true,
+          description: `장비 폐기 - Unit #${unitId}`,
+          relatedModule: "equipment",
+          relatedId: unitId,
+        }, userId ?? 0).catch(err => console.error("[LedgerAutoEntry:equipment]", err));
+      }
+    }
+    return updated;
   }
 
   async createAssignment(dto: CreateAssignmentDto) {
