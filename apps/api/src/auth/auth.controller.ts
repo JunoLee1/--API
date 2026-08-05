@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
-import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME, COOKIE_OPTIONS } from "../lib/constants";
+import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME, ACCESS_TOKEN_COOKIE_OPTIONS, REFRESH_TOKEN_COOKIE_OPTIONS } from "../lib/constants";
 import { AuthService } from "./auth.service";
 import { AuthRepository } from "./auth.repo";
 
@@ -33,8 +33,8 @@ export class AuthController {
     try {
       const { accessToken, refreshToken, userId } = await this.service.login(req.body);
       void this.repo.createLoginHistory({ userId, email, ip, userAgent, success: true }).catch(console.error);
-      res.cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, COOKIE_OPTIONS);
-      res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, COOKIE_OPTIONS);
+      res.cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
+      res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
       res.status(200).json({ message: "OK" });
     } catch (err) {
       void this.repo.createLoginHistory({ email, ip, userAgent, success: false }).catch(console.error);
@@ -53,8 +53,8 @@ export class AuthController {
         teamId: user.teamId ?? null,
         clubId: user.clubId ?? null,
       });
-      res.cookie(ACCESS_TOKEN_COOKIE_NAME, tokens.accessToken, COOKIE_OPTIONS);
-      res.cookie(REFRESH_TOKEN_COOKIE_NAME, tokens.refreshToken, COOKIE_OPTIONS);
+      res.cookie(ACCESS_TOKEN_COOKIE_NAME, tokens.accessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
+      res.cookie(REFRESH_TOKEN_COOKIE_NAME, tokens.refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
       res.status(200).json({ message: "OK" });
     } catch (err) {
       next(err);
