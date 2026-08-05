@@ -903,6 +903,27 @@ export function AppShell() {
           </div>
         )}
 
+        {user && !['PLAYER', 'GUARDIAN'].includes(user.role) && (
+          <div className="px-3 py-2 border-b">
+            <div className="flex rounded-md bg-muted p-0.5 gap-0.5">
+              <button
+                type="button"
+                onClick={() => switchTeamCtx('FIRST_TEAM')}
+                className={cn('flex-1 text-xs px-2 py-1 rounded transition-colors', teamCtx === 'FIRST_TEAM' ? 'bg-background shadow-sm text-foreground font-medium' : 'text-muted-foreground hover:text-foreground')}
+              >
+                1군
+              </button>
+              <button
+                type="button"
+                onClick={() => switchTeamCtx('YOUTH')}
+                className={cn('flex-1 text-xs px-2 py-1 rounded transition-colors', teamCtx === 'YOUTH' ? 'bg-background shadow-sm text-foreground font-medium' : 'text-muted-foreground hover:text-foreground')}
+              >
+                유소년
+              </button>
+            </div>
+          </div>
+        )}
+
         <nav
           className={`flex-1 px-2 py-3 transition-opacity ${
             apiPending ? 'opacity-50' : ''
