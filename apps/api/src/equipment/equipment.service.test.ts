@@ -2,7 +2,7 @@ import { EquipmentService } from "./equipment.service";
 import { AppError } from "../lib/appError";
 import type { EquipmentRepository } from "./equipment.repo";
 
-const makeRepo = (overrides: Partial<EquipmentRepository> = {}): EquipmentRepository => ({
+const makeRepo = (overrides: any = {}): any => ({
   findUnitWithDepreciation: jest.fn().mockResolvedValue(null),
   updateUnitDepreciation: jest.fn().mockResolvedValue({}),
   ...overrides,
