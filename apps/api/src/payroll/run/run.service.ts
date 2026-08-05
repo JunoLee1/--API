@@ -17,7 +17,7 @@ export function computePayroll(
   if (rawNetPay < 0) {
     throw new AppError(400, "NEGATIVE_NET_PAY");
   }
-  const netPay = Math.max(0, rawNetPay);
+  const netPay = rawNetPay;
   return { grossPay, totalDeductions, netPay };
 }
 
@@ -66,11 +66,11 @@ export class RunService {
     if (!run || run.staffSalaryId !== salaryId) {
       throw new AppError(404, "PAYROLL_RUN_NOT_FOUND");
     }
-    if (run.status !== "CONFIRMED") {
-      throw new AppError(400, "PAYROLL_RUN_NOT_CONFIRMED");
-    }
     if (run.isLocked) {
       throw new AppError(400, "PAYROLL_RUN_ALREADY_LOCKED");
+    }
+    if (run.status !== "CONFIRMED") {
+      throw new AppError(400, "PAYROLL_RUN_NOT_CONFIRMED");
     }
     return this.runRepo.secondApprove(runId, userId);
   }

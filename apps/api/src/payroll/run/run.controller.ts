@@ -44,7 +44,8 @@ export class RunController {
 
   secondApprove = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id: userId } = req.user!;
+      const { role, id: userId } = req.user!;
+      if (!canConfirm(role)) throw new AppError(403, "FORBIDDEN");
       res.json(
         await this.service.secondApproveRun(
           Number(req.params["id"]),
