@@ -55,5 +55,6 @@ router.delete("/salaries/:id/allowances/:aid", auth, allowanceController.remove)
 router.get("/salaries/:id/runs", auth, runController.list);
 router.post("/salaries/:id/runs", auth, runController.create);
 router.patch("/salaries/:id/runs/:runId", auth, runController.confirm);
+router.post("/salaries/:id/runs/:runId/second-approve", auth, runController.secondApprove);
 
 export default router;

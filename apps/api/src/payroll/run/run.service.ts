@@ -13,7 +13,11 @@ export function computePayroll(
   const totalDeductions = parseFloat(
     configs.reduce((sum, c) => sum + grossPay * c.employeeRate, 0).toFixed(2),
   );
-  const netPay = parseFloat((grossPay - totalDeductions).toFixed(2));
+  const rawNetPay = parseFloat((grossPay - totalDeductions).toFixed(2));
+  if (rawNetPay < 0) {
+    throw new AppError(400, "NEGATIVE_NET_PAY");
+  }
+  const netPay = Math.max(0, rawNetPay);
   return { grossPay, totalDeductions, netPay };
 }
 
@@ -55,6 +59,20 @@ export class RunService {
     );
 
     return this.runRepo.create({ staffSalaryId: salaryId, month, grossPay, totalDeductions, netPay });
+  }
+
+  async secondApproveRun(salaryId: number, runId: number, userId: number) {
+    const run = await this.runRepo.findById(runId);
+    if (!run || run.staffSalaryId !== salaryId) {
+      throw new AppError(404, "PAYROLL_RUN_NOT_FOUND");
+    }
+    if (run.status !== "CONFIRMED") {
+      throw new AppError(400, "PAYROLL_RUN_NOT_CONFIRMED");
+    }
+    if (run.isLocked) {
+      throw new AppError(400, "PAYROLL_RUN_ALREADY_LOCKED");
+    }
+    return this.runRepo.secondApprove(runId, userId);
   }
 
   async confirmRun(salaryId: number, runId: number, userId: number) {

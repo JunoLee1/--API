@@ -41,4 +41,17 @@ export class RunController {
       );
     } catch (err) { next(err); }
   };
+
+  secondApprove = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id: userId } = req.user!;
+      res.json(
+        await this.service.secondApproveRun(
+          Number(req.params["id"]),
+          Number(req.params["runId"]),
+          userId,
+        ),
+      );
+    } catch (err) { next(err); }
+  };
 }
