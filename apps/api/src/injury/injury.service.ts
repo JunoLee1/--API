@@ -36,7 +36,7 @@ export class InjuryService {
   async createInjury(dto: CreateInjuryDto) {
     const result = await this.repo.create(dto);
     try {
-      const player = await this.repo.getPlayerName(dto.playerId);
+      const player = await this.repo.getPlayerWithGuardian(dto.playerId);
       const playerName = player?.playerName ?? "선수";
       const title = "부상 발생";
       const body = `${playerName} 선수에게 부상이 발생했습니다. 부상 기록을 확인하세요.`;
@@ -44,6 +44,27 @@ export class InjuryService {
       getIO().to("staff-room").emit("notification:injury", {
         type: "INJURY_OCCURRED", title, body, createdAt: new Date().toISOString(),
       });
+
+      if (player?.guardianId) {
+        void this.notifRepo
+          .createForGuardian(
+            player.guardianId,
+            "GUARDIAN_CHILD_INJURY",
+            () => ({ title: "자녀 부상 알림", body: `${playerName} 선수에게 부상이 발생했습니다.` }),
+            result.id,
+          )
+          .catch(console.error);
+
+        if (player.guardian?.email) {
+          const { sendGuardianInjuryEmail } = await import("../lib/email");
+          void sendGuardianInjuryEmail(
+            player.guardian.email,
+            playerName,
+            dto.cause,
+          ).catch(console.error);
+        }
+      }
+
       await this.checkAndNotifySquadDepth(result.id);
     } catch {
       // 알림 실패는 치명적이지 않음
@@ -56,7 +77,7 @@ export class InjuryService {
     if (!injury) throw new AppError(404, "INJURY_NOT_FOUND");
     const result = await this.repo.updateStatus(id, dto);
     try {
-      const player = await this.repo.getPlayerName(injury.playerId);
+      const player = await this.repo.getPlayerWithGuardian(injury.playerId);
       const playerName = player?.playerName ?? "선수";
       if (dto.status === "READY_TO_RETURN") {
         const title = "선수 복귀 준비 완료";
