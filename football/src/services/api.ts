@@ -32,6 +32,9 @@ export function forceLogout() {
   localStorage.removeItem('loggedIn')
   localStorage.removeItem('userRole')
   localStorage.removeItem('superAdminTeamId')
+  localStorage.removeItem('superAdminClubName')
+  localStorage.removeItem('superAdminTeamName')
+  localStorage.removeItem('superAdminTeamType')
   if (!window.location.pathname.startsWith('/login')) {
     window.location.href = '/login'
   }

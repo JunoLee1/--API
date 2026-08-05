@@ -3,15 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { SafeguardButton } from '@/components/layout/SafeguardButton'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
-import { teamApi } from '@/services/team.service'
-import type { Team } from '@/types/team'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useLiteMode } from '@/hooks/useLiteMode'
 import { useConfirm } from '@/lib/confirm-dialog'
@@ -545,8 +536,6 @@ export function AppShell() {
   const apiPending = useApiPending()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
-  const [superAdminTeams, setSuperAdminTeams] = useState<Team[]>([])
-  const currentSuperAdminTeamId = localStorage.getItem('superAdminTeamId')
   const [openSection, setOpenSection] = useState<string | null>(() => {
     const found = NAV_ITEMS.find((item) => {
       if (!item.section) return false
@@ -565,9 +554,12 @@ export function AppShell() {
     return found?.subSection ? new Set([found.subSection]) : new Set()
   })
 
-  const [teamCtx, setTeamCtx] = useState<TeamCtx>(() =>
-    (localStorage.getItem('teamCtx') as TeamCtx) ?? 'FIRST_TEAM'
-  )
+  const [teamCtx, setTeamCtx] = useState<TeamCtx>(() => {
+    const superAdminTeamType = localStorage.getItem('superAdminTeamType')
+    if (superAdminTeamType === 'YOUTH') return 'YOUTH'
+    if (superAdminTeamType) return 'FIRST_TEAM'
+    return (localStorage.getItem('teamCtx') as TeamCtx) ?? 'FIRST_TEAM'
+  })
 
   const switchTeamCtx = (v: TeamCtx) => {
     setTeamCtx(v)
@@ -607,10 +599,6 @@ export function AppShell() {
     return () => disconnectSocket()
   }, [user])
 
-  useEffect(() => {
-    if (user?.role !== 'SUPER_ADMIN') return
-    teamApi.list().then((ts) => setSuperAdminTeams(ts.filter((t) => t.isActive))).catch(() => null)
-  }, [user])
 
   usePlayerNotification(refreshUnread)
   usePartnerNotification(user?.role)
@@ -620,11 +608,6 @@ export function AppShell() {
     authApi.logout()
     void i18n.changeLanguage('ko')
     navigate('/login')
-  }
-
-  const handleTeamSwitch = (teamId: string) => {
-    localStorage.setItem('superAdminTeamId', teamId)
-    window.location.reload()
   }
 
   const handleLogout = async () => {
@@ -802,7 +785,7 @@ export function AppShell() {
 
   const SidebarNav = ({ onNavClick }: { onNavClick?: () => void }) => (
     <>
-      {user && !['PLAYER', 'GUARDIAN'].includes(user.role) && (
+      {user && !['PLAYER', 'GUARDIAN', 'SUPER_ADMIN'].includes(user.role) && (
         <div className="px-3 py-2 border-b">
           <div className="flex rounded-md bg-muted p-0.5 gap-0.5">
             <button
@@ -878,23 +861,28 @@ export function AppShell() {
         </div>
 
         {user?.role === 'SUPER_ADMIN' && (
-          <div className="px-3 py-2 border-b">
-            <Select value={currentSuperAdminTeamId ?? ''} onValueChange={handleTeamSwitch}>
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue placeholder="구단 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                {superAdminTeams.map((t) => (
-                  <SelectItem key={t.id} value={String(t.id)}>
-                    {t.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="px-3 py-2.5 border-b">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[11px] text-muted-foreground truncate">
+                  {localStorage.getItem('superAdminClubName') ?? '구단 미선택'}
+                </p>
+                <p className="text-xs font-medium truncate">
+                  {localStorage.getItem('superAdminTeamName') ?? '-'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate('/team-select')}
+                className="text-xs text-muted-foreground hover:text-foreground shrink-0 transition-colors"
+              >
+                변경
+              </button>
+            </div>
           </div>
         )}
 
-        {user && !['PLAYER', 'GUARDIAN'].includes(user.role) && (
+        {user && !['PLAYER', 'GUARDIAN', 'SUPER_ADMIN'].includes(user.role) && (
           <div className="px-3 py-2 border-b">
             <div className="flex rounded-md bg-muted p-0.5 gap-0.5">
               <button
