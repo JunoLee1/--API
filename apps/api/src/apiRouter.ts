@@ -50,6 +50,7 @@ import guardianRouter from "./guardian/guardian.routes";
 import hrRouter from "./hr/hr.routes";
 import softwareLicenseRouter from "./software-license/software-license.routes";
 import ledgerRouter from "./ledger/ledger.routes";
+import salesRouter from "./sales/sales.routes";
 
 const apiRouter = Router();
 
@@ -104,5 +105,6 @@ apiRouter.use("/guardian", guardianRouter);
 apiRouter.use("/hr", hrRouter);
 apiRouter.use("/software-licenses", softwareLicenseRouter);
 apiRouter.use("/ledger", ledgerRouter);
+apiRouter.use("/sales", salesRouter);
 
 export default apiRouter;
