@@ -30,6 +30,7 @@ export class PlayerRepository {
         ...(query.level && { level: query.level }),
         ...(query.nationalityId && { nationalityId: query.nationalityId }),
         ...(query.excludeYouth && { NOT: { team: { type: 'YOUTH' } } }),
+        ...(query.teamType && { team: { type: query.teamType } }),
       },
       select: PLAYER_SELECT,
       orderBy: { playerName: "asc" },
