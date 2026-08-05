@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SafeguardButton } from '@/components/layout/SafeguardButton'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
@@ -84,6 +84,10 @@ import {
   type Role,
 } from '@/types/auth'
 
+type TeamCtx = 'FIRST_TEAM' | 'YOUTH'
+const TeamContext = createContext<TeamCtx>('FIRST_TEAM')
+export const useTeamContext = () => useContext(TeamContext)
+
 type NavSubSection = 'nav.subsection.hr' | 'nav.subsection.finance' | 'nav.subsection.facilityAssets' | 'nav.subsection.system'
 
 interface NavItem {
@@ -98,6 +102,7 @@ interface NavItem {
   frontOfficeRoles?: FrontOfficeRole[]
   description?: string
   liteBlocked?: boolean
+  teamCtx?: TeamCtx
 }
 
 
@@ -137,6 +142,7 @@ const NAV_ITEMS: NavItem[] = [
     section: 'nav.section.playerMgmt',
     end: true,
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
+    teamCtx: 'FIRST_TEAM',
   },
   {
     to: '/youth-players',
@@ -145,6 +151,7 @@ const NAV_ITEMS: NavItem[] = [
     section: 'nav.section.playerMgmt',
     end: true,
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
+    teamCtx: 'YOUTH',
   },
   {
     to: '/prospects',
@@ -301,6 +308,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: ClipboardList,
     section: 'nav.section.youth',
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF', 'GUARDIAN'],
+    teamCtx: 'YOUTH',
   },
   {
     to: '/incident-reports',
@@ -308,6 +316,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: AlertTriangle,
     section: 'nav.section.youth',
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
+    teamCtx: 'YOUTH',
   },
   {
     to: '/growth-reports',
@@ -315,6 +324,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: TrendingUp,
     section: 'nav.section.youth',
     roles: ['ADMIN', 'COACHING_STAFF', 'GUARDIAN'],
+    teamCtx: 'YOUTH',
   },
   {
     to: '/academy-fees',
@@ -323,6 +333,7 @@ const NAV_ITEMS: NavItem[] = [
     section: 'nav.section.youth',
     roles: ['ADMIN', 'FRONT_OFFICE'],
     liteBlocked: true,
+    teamCtx: 'YOUTH',
   },
 
   // 코칭스태프
@@ -554,6 +565,15 @@ export function AppShell() {
     return found?.subSection ? new Set([found.subSection]) : new Set()
   })
 
+  const [teamCtx, setTeamCtx] = useState<TeamCtx>(() =>
+    (localStorage.getItem('teamCtx') as TeamCtx) ?? 'FIRST_TEAM'
+  )
+
+  const switchTeamCtx = (v: TeamCtx) => {
+    setTeamCtx(v)
+    localStorage.setItem('teamCtx', v)
+  }
+
   useEffect(() => {
     const activeItem = NAV_ITEMS.find((item) => {
       if (item.end) return location.pathname === item.to
@@ -619,6 +639,7 @@ export function AppShell() {
 
   const visibleNavItems = NAV_ITEMS.filter((item) => {
     if (item.liteBlocked && isLite) return false
+    if (item.teamCtx && item.teamCtx !== teamCtx) return false
     if (!item.roles) return true
     if (!user) return false
     if (user.role === 'SUPER_ADMIN' || user.role === 'GM') return true
@@ -654,14 +675,14 @@ export function AppShell() {
       title={item.description}
       className={() => {
         const active = isItemActive(item)
-        return `flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
+        return `flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors ${
           active
             ? 'bg-accent text-accent-foreground font-medium'
             : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
         }`
       }}
     >
-      <item.icon className="h-4 w-4 shrink-0" aria-hidden />
+      <item.icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
       <span className="flex-1">{t(item.label)}</span>
     </NavLink>
   )
@@ -741,10 +762,10 @@ export function AppShell() {
               setOpenSection(isOpen ? null : g.section)
               e.currentTarget.blur()
             }}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-semibold text-foreground/80 hover:bg-accent/50 hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset transition-colors"
+            className="w-full flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-semibold text-foreground/80 hover:bg-accent/50 hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset transition-colors"
           >
             <ChevronRight
-              className={cn('h-3.5 w-3.5 transition-transform shrink-0', isOpen && 'rotate-90')}
+              className={cn('h-3 w-3 transition-transform shrink-0', isOpen && 'rotate-90')}
               aria-hidden
             />
             <span className="flex-1 text-left">{t(g.section!)}</span>
@@ -781,8 +802,28 @@ export function AppShell() {
 
   const SidebarNav = ({ onNavClick }: { onNavClick?: () => void }) => (
     <>
+      {user && !['PLAYER', 'GUARDIAN'].includes(user.role) && (
+        <div className="px-3 py-2 border-b">
+          <div className="flex rounded-md bg-muted p-0.5 gap-0.5">
+            <button
+              type="button"
+              onClick={() => switchTeamCtx('FIRST_TEAM')}
+              className={cn('flex-1 text-xs px-2 py-1 rounded transition-colors', teamCtx === 'FIRST_TEAM' ? 'bg-background shadow-sm text-foreground font-medium' : 'text-muted-foreground hover:text-foreground')}
+            >
+              1군
+            </button>
+            <button
+              type="button"
+              onClick={() => switchTeamCtx('YOUTH')}
+              className={cn('flex-1 text-xs px-2 py-1 rounded transition-colors', teamCtx === 'YOUTH' ? 'bg-background shadow-sm text-foreground font-medium' : 'text-muted-foreground hover:text-foreground')}
+            >
+              유소년
+            </button>
+          </div>
+        </div>
+      )}
       <nav
-        className={`flex-1 px-3 py-4 transition-opacity ${
+        className={`flex-1 px-2 py-3 transition-opacity ${
           apiPending ? 'opacity-50' : ''
         }`}
         aria-busy={apiPending}
@@ -853,8 +894,29 @@ export function AppShell() {
           </div>
         )}
 
+        {user && !['PLAYER', 'GUARDIAN'].includes(user.role) && (
+          <div className="px-3 py-2 border-b">
+            <div className="flex rounded-md bg-muted p-0.5 gap-0.5">
+              <button
+                type="button"
+                onClick={() => switchTeamCtx('FIRST_TEAM')}
+                className={cn('flex-1 text-xs px-2 py-1 rounded transition-colors', teamCtx === 'FIRST_TEAM' ? 'bg-background shadow-sm text-foreground font-medium' : 'text-muted-foreground hover:text-foreground')}
+              >
+                1군
+              </button>
+              <button
+                type="button"
+                onClick={() => switchTeamCtx('YOUTH')}
+                className={cn('flex-1 text-xs px-2 py-1 rounded transition-colors', teamCtx === 'YOUTH' ? 'bg-background shadow-sm text-foreground font-medium' : 'text-muted-foreground hover:text-foreground')}
+              >
+                유소년
+              </button>
+            </div>
+          </div>
+        )}
+
         <nav
-          className={`flex-1 px-3 py-4 transition-opacity ${
+          className={`flex-1 px-2 py-3 transition-opacity ${
             apiPending ? 'opacity-50' : ''
           }`}
           aria-busy={apiPending}
@@ -958,7 +1020,9 @@ export function AppShell() {
           }`}
           aria-busy={apiPending}
         >
-          <Outlet />
+          <TeamContext.Provider value={teamCtx}>
+            <Outlet />
+          </TeamContext.Provider>
         </main>
       </div>
       <SafeguardButton />

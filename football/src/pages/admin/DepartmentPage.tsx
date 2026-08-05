@@ -109,9 +109,9 @@ export function DepartmentPage() {
         <Button onClick={openCreate}>{t('department.add')}</Button>
       </div>
 
-      <table className="w-full text-sm border-collapse">
+      <table className="w-full text-[13px] border-collapse">
         <thead>
-          <tr className="border-b text-left text-muted-foreground">
+          <tr className="border-b text-left text-muted-foreground text-xs font-semibold uppercase tracking-wider">
             <th className="py-2 pr-4">{t('department.name')}</th>
             <th className="py-2 pr-4">{t('department.status')}</th>
             <th className="py-2" />
@@ -120,8 +120,8 @@ export function DepartmentPage() {
         <tbody>
           {departments.map((d) => (
             <>
-              <tr key={d.id} className="border-b hover:bg-muted/30">
-                <td className="py-2 pr-4 font-medium">
+              <tr key={d.id} className="border-b hover:bg-muted/40 transition-colors">
+                <td className="py-2 pr-4 font-semibold text-foreground">
                   {d.children.length > 0 ? (
                     <button
                       type="button"
@@ -172,8 +172,8 @@ export function DepartmentPage() {
                 </td>
               </tr>
               {expandedIds.has(d.id) && d.children.map((team) => (
-                <tr key={team.id} className="border-b bg-muted/10 hover:bg-muted/20">
-                  <td className="py-2 pr-4 pl-8 text-muted-foreground">
+                <tr key={team.id} className="border-b bg-muted/10 hover:bg-muted/30 transition-colors">
+                  <td className="py-2 pr-4 pl-8 text-foreground/70 font-medium">
                     <span className="mr-2 text-muted-foreground/50">└</span>
                     {team.name}
                   </td>

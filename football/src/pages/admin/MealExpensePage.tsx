@@ -91,6 +91,14 @@ export function MealExpensePage() {
 
       <div className="flex items-end gap-3 flex-wrap">
         <div className="space-y-1">
+          <Label className="text-xs">{t("mealExpense.date")} (from)</Label>
+          <Input type="date" className="h-8 text-sm w-36" value={filterFrom} onChange={(e) => setFilterFrom(e.target.value)} />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">{t("mealExpense.date")} (to)</Label>
+          <Input type="date" className="h-8 text-sm w-36" value={filterTo} onChange={(e) => setFilterTo(e.target.value)} />
+        </div>
+        <div className="space-y-1">
           <Label className="text-xs">{t("mealExpense.type")}</Label>
           <Select value={filterType} onValueChange={(v) => setFilterType(v as MealExpenseType | "")}>
             <SelectTrigger className="w-36 h-8 text-sm">
@@ -103,14 +111,6 @@ export function MealExpensePage() {
               ))}
             </SelectContent>
           </Select>
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">{t("mealExpense.date")} (from)</Label>
-          <Input type="date" className="h-8 text-sm w-36" value={filterFrom} onChange={(e) => setFilterFrom(e.target.value)} />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">{t("mealExpense.date")} (to)</Label>
-          <Input type="date" className="h-8 text-sm w-36" value={filterTo} onChange={(e) => setFilterTo(e.target.value)} />
         </div>
       </div>
 
