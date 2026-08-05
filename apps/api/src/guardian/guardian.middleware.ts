@@ -22,7 +22,7 @@ export async function requireGuardianChild(req: Request, res: Response, next: Ne
 
     req.childPlayerId = player.id;
     next();
-  } catch {
-    res.status(500).json({ code: "INTERNAL_ERROR" });
+  } catch (e) {
+    next(e);
   }
 }
