@@ -58,7 +58,7 @@ export class DashboardService {
       case "ASSET_MANAGER":
         return this.repo.getAssetManagerStats();
       default:
-        throw new Error(`Unknown frontOfficeRole: ${user.frontOfficeRole}`);
+        return this.repo.getAdminStats();
     }
   }
 
