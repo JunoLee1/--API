@@ -46,6 +46,7 @@ import payrollRouter from "./payroll/payroll.routes";
 import hiringAutomationRouter from "./hiring-automation/hiring-automation.routes";
 import clubRouter from "./club/club.routes";
 import leagueRouter from "./league/league.routes";
+import guardianRouter from "./guardian/guardian.routes";
 
 const apiRouter = Router();
 
@@ -96,5 +97,6 @@ apiRouter.use("/facility", facilityRouter);
 apiRouter.use("/payroll", payrollRouter);
 apiRouter.use("/hiring-automation", hiringAutomationRouter);
 apiRouter.use("/leagues", leagueRouter);
+apiRouter.use("/guardian", guardianRouter);
 
 export default apiRouter;
