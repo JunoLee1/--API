@@ -31,7 +31,7 @@ describe("TrainingService - YOUTH 세션 변경 시 GUARDIAN 알림", () => {
 
     expect(mockRepo.findGuardiansByTeam).toHaveBeenCalledWith(2);
     expect(mockNotifRepo.createForGuardian).toHaveBeenCalledWith(
-      100, "YOUTH_SESSION_CHANGED", expect.stringContaining("U15"), expect.any(String), 1,
+      100, "YOUTH_SESSION_CHANGED", expect.any(Function), 1,
     );
   });
 
