@@ -1,4 +1,4 @@
-import { Foot, Position, PlayerLevel, PlayerStatus } from "../../generated/enums";
+import { Foot, Position, PlayerLevel, PlayerStatus, TeamType } from "../../generated/enums";
 
 export interface CreatePlayerDto {
   playerName: string;
@@ -39,4 +39,5 @@ export interface PlayerListQuery {
   level?: PlayerLevel;
   nationalityId?: number;
   excludeYouth?: boolean;
+  teamType?: TeamType;
 }

@@ -3,7 +3,7 @@ import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
 import { PlayerService } from "./player.service";
 import { PlayerListQuery } from "./dto/player.dto";
-import { PlayerStatus, Position, PlayerLevel } from "../generated/enums";
+import { PlayerStatus, Position, PlayerLevel, TeamType } from "../generated/enums";
 import { getPlayerRadarData } from "./radar.service";
 import { SecondaryPositionRepository } from "./secondary-position.repo";
 
@@ -22,6 +22,7 @@ export class PlayerController {
       if (q["level"]) query.level = q["level"] as PlayerLevel;
       if (q["nationalityId"]) query.nationalityId = Number(q["nationalityId"]);
       if (q["excludeYouth"] === "true") query.excludeYouth = true;
+      if (q["teamType"]) query.teamType = q["teamType"] as TeamType;
       const players = await this.service.getPlayers(query);
       res.status(200).json(players);
     } catch (err) {
