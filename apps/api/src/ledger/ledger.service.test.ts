@@ -23,6 +23,12 @@ describe("LedgerService", () => {
     expect(create).toHaveBeenCalledWith(expect.objectContaining({ amountKrw: 130000 }));
   });
 
+  it("throws 404 when original entry not found in createRefund", async () => {
+    const service = new LedgerService(makeRepo({ findById: jest.fn().mockResolvedValue(null) }));
+    await expect(service.createRefund(999, 1))
+      .rejects.toThrow(new AppError(404, "LEDGER_ENTRY_NOT_FOUND"));
+  });
+
   it("refund creates a negative entry", async () => {
     const create = jest.fn().mockImplementation(async (data) => ({ id: 2, ...data }));
     const service = new LedgerService(makeRepo({

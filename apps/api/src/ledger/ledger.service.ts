@@ -19,10 +19,10 @@ export class LedgerService {
     const original = await this.repo.findById(originalId);
     if (!original) throw new AppError(404, "LEDGER_ENTRY_NOT_FOUND");
     return this.repo.create({
-      type: original.type as any,
+      type: original.type as any,       // Prisma $Enums.LedgerType → DTO "INCOME"|"EXPENSE" string literal union
       category: "REFUND",
       amount: -Number(original.amount),
-      currency: original.currency as any,
+      currency: original.currency as any, // Prisma $Enums.Currency → DTO "KRW"|"USD"|... string literal union
       exchangeRate: Number(original.exchangeRate),
       amountKrw: -Number(original.amountKrw),
       isRefund: true,
