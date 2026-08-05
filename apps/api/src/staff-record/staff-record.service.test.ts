@@ -2,6 +2,8 @@ import { StaffRecordService } from "./staff-record.service";
 import { AppError } from "../lib/appError";
 import type { StaffRecordRepository } from "./staff-record.repo";
 
+jest.mock("../lib/auditLog", () => ({ writeAuditLog: jest.fn().mockResolvedValue(undefined) }));
+
 const makeRepo = (overrides: Partial<StaffRecordRepository> = {}): StaffRecordRepository => ({
   findByEmail: jest.fn().mockResolvedValue(null),
   findByEmployeeId: jest.fn().mockResolvedValue(null),
@@ -30,7 +32,7 @@ describe("StaffRecordService", () => {
     const terminate = jest.fn().mockResolvedValue({ id: 1, isActive: false, terminatedAt: new Date() });
     const repo = makeRepo({ terminate });
     const service = new StaffRecordService(repo);
-    const result = await service.terminate(1);
+    const result = await service.terminate(1, 99);
     expect(terminate).toHaveBeenCalledWith(1, expect.any(Date));
     expect(result.isActive).toBe(false);
     expect(result.terminatedAt).toBeInstanceOf(Date);

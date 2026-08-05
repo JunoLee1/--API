@@ -66,6 +66,7 @@ export class StaffRecordRepository {
     return this.prisma.staffRecord.update({
       where: { id },
       data: { terminatedAt, isActive: false },
+      include: { department: true },
     });
   }
 }

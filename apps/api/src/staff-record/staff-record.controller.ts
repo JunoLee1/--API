@@ -80,9 +80,9 @@ export class StaffRecordController {
 
   terminate = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role } = req.user!;
+      const { role, id } = req.user!;
       if (!canWrite(role)) throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.terminate(Number(req.params["id"])));
+      res.json(await this.service.terminate(Number(req.params["id"]), id));
     } catch (err) {
       next(err);
     }

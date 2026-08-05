@@ -1,5 +1,6 @@
 import { StaffRecordRepository } from "./staff-record.repo";
 import { AppError } from "../lib/appError";
+import { writeAuditLog } from "../lib/auditLog";
 
 export class StaffRecordService {
   constructor(private repo: StaffRecordRepository) {}
@@ -42,9 +43,11 @@ export class StaffRecordService {
     return this.repo.delete(id);
   }
 
-  async terminate(id: number) {
+  async terminate(id: number, actorId: number) {
     const existing = await this.repo.findById(id);
     if (!existing) throw new AppError(404, "STAFF_RECORD_NOT_FOUND");
-    return this.repo.terminate(id, new Date());
+    const result = await this.repo.terminate(id, new Date());
+    await writeAuditLog({ actorId, action: "STAFF_TERMINATED", targetId: id });
+    return result;
   }
 }
