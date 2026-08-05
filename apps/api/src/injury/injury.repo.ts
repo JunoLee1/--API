@@ -55,10 +55,15 @@ const FWD_POSITIONS = ["STRIKER", "SHADOW_STRIKER", "WINGER"] as const;
 export class InjuryRepository {
   constructor(private prisma: PrismaClient) {}
 
-  getPlayerName(playerId: string) {
+  getPlayerWithGuardian(playerId: string) {
     return this.prisma.player.findUnique({
       where: { id: playerId },
-      select: { playerName: true, position: true },
+      select: {
+        playerName: true,
+        position: true,
+        guardianId: true,
+        guardian: { select: { email: true } },
+      },
     });
   }
 

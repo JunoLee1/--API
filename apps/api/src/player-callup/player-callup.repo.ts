@@ -7,6 +7,7 @@ const SELECT = {
   callupType: true,
   reason: true,
   rejectionReason: true,
+  requiredDocuments: true,
   startDate: true,
   endDate: true,
   createdAt: true,
@@ -123,6 +124,13 @@ export class PlayerCallupRepository {
     return this.prisma.player.update({
       where: { id: playerId },
       data: { teamId },
+    });
+  }
+
+  findGuardianEmail(guardianId: number) {
+    return this.prisma.user.findUnique({
+      where: { id: guardianId },
+      select: { email: true },
     });
   }
 }

@@ -292,6 +292,8 @@ enum NotificationType {
   YOUTH_REGISTRATION_STATUS_CHANGED
   YOUTH_WEEKLY_SCHEDULE
   YOUTH_SESSION_CHANGED
+  GUARDIAN_CHILD_INJURY
+  GUARDIAN_CHILD_CALLUP
   INCIDENT_REPORT_SUBMITTED
   GROWTH_REPORT_PUBLISHED
   SAFEGUARD_EMERGENCY
@@ -683,6 +685,8 @@ model User {
   headedDepartments        Department[]              @relation("DepartmentHead")
   departmentMemberships    UserDepartment[]
   sentInvites              UserInvite[]              @relation("InviteSender")
+  issuedGuardianCodes      GuardianInviteCode[]      @relation("GuardianCodeIssuer")
+  usedGuardianCodes        GuardianInviteCode[]      @relation("GuardianCodeUser")
 }
 
 model Season {
@@ -787,6 +791,8 @@ model Player {
   badges                 PlayerBadge[]
   academyFees            AcademyFee[]
   secondaryPositions     PlayerSecondaryPosition[]
+  studentCode            String?                   @unique
+  guardianInviteCodes    GuardianInviteCode[]
 }
 
 model Contract {
@@ -1771,6 +1777,21 @@ model YouthRegistration {
   requestedBy User  @relation("YouthRegistrationRequester", fields: [requestedById], references: [id])
 }
 
+model GuardianInviteCode {
+  id         Int       @id @default(autoincrement())
+  code       String    @unique
+  playerId   String
+  issuedById Int
+  usedById   Int?
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  player   Player @relation(fields: [playerId], references: [id])
+  issuedBy User   @relation("GuardianCodeIssuer", fields: [issuedById], references: [id])
+  usedBy   User?  @relation("GuardianCodeUser", fields: [usedById], references: [id])
+}
+
 model IncidentReport {
   id               Int                  @id @default(autoincrement())
   playerId         String
@@ -1859,8 +1880,9 @@ model PlayerCallup {
   rejectionReason String?
   status          PlayerCallupStatus @default(REQUESTED)
   callupType      CallupType         @default(OFFICIAL)
-  youthCoachConfirmed Boolean            @default(false)
-  medicalConfirmed    Boolean            @default(false)
+  youthCoachConfirmed   Boolean            @default(false)
+  medicalConfirmed      Boolean            @default(false)
+  requiredDocuments     String[]           @default([])
   startDate     DateTime
   endDate       DateTime?
   createdAt     DateTime           @default(now())
