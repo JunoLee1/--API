@@ -1,26 +1,38 @@
 import { AdminRepository } from "./admin.repo";
 import { AppError } from "../lib/appError";
-import { ListUsersQuery, UpdateUserRoleDto, PlayerWithoutAccountDto } from "./dto/admin.dto";
+import { maskEmail, maskUsername } from "../lib/maskPii";
+import { ListUsersQuery, UpdateUserRoleDto, PlayerWithoutAccountDto, SetDemoDto } from "./dto/admin.dto";
+
+type AuditLogRecord = Awaited<ReturnType<AdminRepository["listAuditLogs"]>>[number];
+
+function applyUserMask<T extends { email: string; username: string }>(user: T): T {
+  return { ...user, email: maskEmail(user.email), username: maskUsername(user.username) };
+}
 
 export class AdminService {
   constructor(private repo: AdminRepository) {}
 
-  async listUsers(filters: ListUsersQuery) {
-    return this.repo.listUsers(filters);
+  async listUsers(filters: ListUsersQuery, isDemo: boolean = false) {
+    const users = await this.repo.listUsers(filters);
+    if (!isDemo) return users;
+    return users.map(applyUserMask);
   }
 
   async getPlayersWithoutAccounts(nameFilter?: string): Promise<PlayerWithoutAccountDto[]> {
     return this.repo.findPlayersWithoutAccounts(nameFilter);
   }
 
-  async getUserById(id: number) {
+  async getUserById(id: number, isDemo: boolean = false) {
     const user = await this.repo.findById(id);
     if (!user) throw new AppError(404, "USER_NOT_FOUND");
-    return user;
+    return isDemo ? applyUserMask(user) : user;
   }
 
-  async updateUserRole(id: number, dto: UpdateUserRoleDto, requesterId: number) {
+  async updateUserRole(id: number, dto: UpdateUserRoleDto, requesterId: number, requesterRole?: string) {
     if (id === requesterId) throw new AppError(403, "CANNOT_MODIFY_SELF");
+    if (dto.role === "SUPER_ADMIN" && requesterRole !== "SUPER_ADMIN") {
+      throw new AppError(403, "ONLY_SUPER_ADMIN_CAN_GRANT_SUPER_ADMIN");
+    }
 
     const user = await this.repo.findById(id);
     if (!user) throw new AppError(404, "USER_NOT_FOUND");
@@ -72,18 +84,31 @@ export class AdminService {
     await this.repo.hardDelete(id);
   }
 
-  async getAuditLogs(filters: {
-    actorId?: number;
-    action?: string;
-    from?: string;
-    to?: string;
-    page?: number;
-    limit?: number;
-  }) {
+  async getAuditLogs(
+    filters: { actorId?: number; action?: string; from?: string; to?: string; page?: number; limit?: number },
+    isDemo: boolean = false,
+  ) {
     const [logs, total] = await Promise.all([
       this.repo.listAuditLogs(filters),
       this.repo.countAuditLogs(filters),
     ]);
-    return { logs, total };
+    if (!isDemo) return { logs, total };
+    return {
+      logs: logs.map((log: AuditLogRecord) => ({
+        ...log,
+        actor: { ...log.actor, username: maskUsername(log.actor.username) },
+      })),
+      total,
+    };
+  }
+
+  async setDemoStatus(id: number, dto: SetDemoDto, requesterId: number, requesterRole: string) {
+    if (id === requesterId) throw new AppError(403, "CANNOT_MODIFY_SELF");
+    if (requesterRole !== "SUPER_ADMIN") throw new AppError(403, "FORBIDDEN");
+
+    const user = await this.repo.findById(id);
+    if (!user) throw new AppError(404, "USER_NOT_FOUND");
+
+    return this.repo.setDemo(id, dto.isDemo);
   }
 }

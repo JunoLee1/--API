@@ -27,7 +27,9 @@ router.get("/youth-development", auth, async (req, res, next) => {
 router.get("/academy-finance", auth, async (req, res, next) => {
   try {
     const user = req.user as any;
-    if (!isAdminLike(user.role) && user.role !== "FRONT_OFFICE") {
+    const foRole = user.frontOfficeRole;
+    const allowedFoRoles = ["FINANCE_MANAGER", "TD"];
+    if (!isAdminLike(user.role) && !(user.role === "FRONT_OFFICE" && allowedFoRoles.includes(foRole))) {
       return res.status(403).json({ message: "Forbidden" });
     }
     const now = new Date();

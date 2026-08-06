@@ -74,6 +74,9 @@ export class RunService {
     if (run.status !== "CONFIRMED") {
       throw new AppError(400, "PAYROLL_RUN_NOT_CONFIRMED");
     }
+    if (run.confirmedById === userId) {
+      throw new AppError(403, "CANNOT_SECOND_APPROVE_OWN_CONFIRMATION");
+    }
     const updated = await this.runRepo.secondApprove(runId, userId);
     void this.ledgerService.createAutoEntry({
       type: "EXPENSE",

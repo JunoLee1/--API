@@ -1,5 +1,6 @@
 import { Role, CoachingRole, FrontOfficeRole } from "../generated/enums";
 import { DashboardRepository } from "./dashboard.repo";
+import { AppError } from "../lib/appError";
 
 type UserCtx = {
   id: number;
@@ -58,7 +59,7 @@ export class DashboardService {
       case "ASSET_MANAGER":
         return this.repo.getAssetManagerStats();
       default:
-        return this.repo.getAdminStats();
+        throw new AppError(403, "FRONT_OFFICE_ROLE_NOT_ASSIGNED");
     }
   }
 
