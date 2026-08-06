@@ -21,3 +21,7 @@ export interface PlayerWithoutAccountDto {
   status: string;
   position: string | null;
 }
+
+export interface SetDemoDto {
+  isDemo: boolean;
+}
