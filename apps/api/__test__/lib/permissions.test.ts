@@ -47,6 +47,7 @@ describe("canWriteFinance", () => {
   const { canWriteFinance } = require("../../src/lib/permissions");
 
   test("ADMIN → true", () => expect(canWriteFinance("ADMIN", null)).toBe(true));
+  test("SUPER_ADMIN → true", () => expect(canWriteFinance("SUPER_ADMIN", null)).toBe(true));
   test("GM → true", () => expect(canWriteFinance("GM", null)).toBe(true));
   test("FRONT_OFFICE + FINANCE_MANAGER → true", () => expect(canWriteFinance("FRONT_OFFICE", "FINANCE_MANAGER")).toBe(true));
   test("FRONT_OFFICE + FINANCE_STAFF → false", () => expect(canWriteFinance("FRONT_OFFICE", "FINANCE_STAFF")).toBe(false));
