@@ -1,1 +1,0 @@
-ALTER TYPE "ReportType" ADD VALUE 'HR';
