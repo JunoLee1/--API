@@ -53,11 +53,17 @@ export class DashboardService {
       case "TACTICAL_ANALYST":
         return this.repo.getTacticalAnalystStats(user.id);
       case "HR_MANAGER":
+      case "HR_STAFF":
         return this.repo.getHrManagerStats();
       case "FINANCE_MANAGER":
+      case "FINANCE_STAFF":
         return this.repo.getFinanceManagerStats();
       case "ASSET_MANAGER":
+      case "ASSET_STAFF":
         return this.repo.getAssetManagerStats();
+      case "FACILITY_MANAGER":
+      case "FACILITY_STAFF":
+        return this.repo.getFacilityStats();
       default:
         throw new AppError(403, "FRONT_OFFICE_ROLE_NOT_ASSIGNED");
     }

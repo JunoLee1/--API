@@ -42,9 +42,9 @@ describe("DashboardService.getStats", () => {
     expect(result).toEqual({ activePlayerCount: 30 });
   });
 
-  test("FRONT_OFFICE + GM → getGmStats 호출", async () => {
+  test("GM → getGmStats 호출", async () => {
     mockRepo.getGmStats.mockResolvedValue({ expiringContractCount: 2 });
-    const result = await service.getStats({ id: 2, role: "FRONT_OFFICE", coachingRole: null, frontOfficeRole: "GM" });
+    const result = await service.getStats({ id: 2, role: "GM", coachingRole: null, frontOfficeRole: null });
     expect(mockRepo.getGmStats).toHaveBeenCalledTimes(1);
     expect(result).toEqual({ expiringContractCount: 2 });
   });
