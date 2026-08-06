@@ -139,6 +139,18 @@ BEGIN
     INSERT INTO "User" (email, password, username, nickname, role, "frontOfficeRole", "clubId", "dateOfBirth", "nationalityId", "phoneNumberId")
     VALUES ('facility.staff@club.com', '${HASH}', '시설관리직원', 'facility_staff', 'FRONT_OFFICE', 'FACILITY_STAFF', v_club_id, '1990-01-01', v_country_id, v_phone_id);
   END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM "User" WHERE email = 'asset.manager@club.com') THEN
+    INSERT INTO "PhoneNumber" (encrypted, iv) VALUES ('dummy_asset_mgr', 'dummy') RETURNING id INTO v_phone_id;
+    INSERT INTO "User" (email, password, username, nickname, role, "frontOfficeRole", "clubId", "dateOfBirth", "nationalityId", "phoneNumberId")
+    VALUES ('asset.manager@club.com', '${HASH}', '자산관리팀장', 'asset_manager', 'FRONT_OFFICE', 'ASSET_MANAGER', v_club_id, '1990-01-01', v_country_id, v_phone_id);
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM "User" WHERE email = 'finance.manager@club.com') THEN
+    INSERT INTO "PhoneNumber" (encrypted, iv) VALUES ('dummy_finance_mgr', 'dummy') RETURNING id INTO v_phone_id;
+    INSERT INTO "User" (email, password, username, nickname, role, "frontOfficeRole", "clubId", "dateOfBirth", "nationalityId", "phoneNumberId")
+    VALUES ('finance.manager@club.com', '${HASH}', '재무관리팀장', 'finance_manager', 'FRONT_OFFICE', 'FINANCE_MANAGER', v_club_id, '1990-01-01', v_country_id, v_phone_id);
+  END IF;
 END $staff$;
 `;
 
@@ -158,18 +170,6 @@ DO $r$ BEGIN CREATE TYPE "PaymentSchedule" AS ENUM ('MONTHLY', 'QUARTERLY', 'ANN
 DO $r$ BEGIN CREATE TYPE "SponsorshipPaymentStatus" AS ENUM ('PENDING', 'PAID', 'OVERDUE'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
 DO $r$ BEGIN CREATE TYPE "PayrollCountry" AS ENUM ('KR', 'UK'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
 DO $r$ BEGIN CREATE TYPE "PayrollRunStatus" AS ENUM ('DRAFT', 'CONFIRMED'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
-
-ALTER TYPE "FrontOfficeRole" ADD VALUE IF NOT EXISTS 'FINANCE_MANAGER';
-ALTER TYPE "FrontOfficeRole" ADD VALUE IF NOT EXISTS 'ASSET_MANAGER';
-ALTER TYPE "FrontOfficeRole" ADD VALUE IF NOT EXISTS 'FACILITY_MANAGER';
-ALTER TYPE "FrontOfficeRole" ADD VALUE IF NOT EXISTS 'HR_STAFF';
-ALTER TYPE "FrontOfficeRole" ADD VALUE IF NOT EXISTS 'ASSET_STAFF';
-ALTER TYPE "FrontOfficeRole" ADD VALUE IF NOT EXISTS 'FINANCE_STAFF';
-ALTER TYPE "FrontOfficeRole" ADD VALUE IF NOT EXISTS 'FACILITY_STAFF';
-ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'FACILITY_EMERGENCY';
-ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'FACILITY_MAINTENANCE_RESOLVED';
-ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'PAYROLL_CONFIRMED';
-ALTER TYPE "TeamType" ADD VALUE IF NOT EXISTS 'B_TEAM';
 
 ALTER TABLE "Player" ADD COLUMN IF NOT EXISTS "allergies" TEXT[] DEFAULT ARRAY[]::TEXT[];
 ALTER TABLE "Player" ADD COLUMN IF NOT EXISTS "foodPreferences" TEXT;
@@ -412,6 +412,21 @@ DO $r$ BEGIN ALTER TABLE "PayrollRun" ADD CONSTRAINT "PayrollRun_staffSalaryId_f
 DO $r$ BEGIN ALTER TABLE "PayrollRun" ADD CONSTRAINT "PayrollRun_confirmedById_fkey" FOREIGN KEY ("confirmedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
 `;
 
+const enumAdditions = [
+  `ALTER TYPE "FrontOfficeRole" ADD VALUE IF NOT EXISTS 'FINANCE_MANAGER'`,
+  `ALTER TYPE "FrontOfficeRole" ADD VALUE IF NOT EXISTS 'ASSET_MANAGER'`,
+  `ALTER TYPE "FrontOfficeRole" ADD VALUE IF NOT EXISTS 'HR_MANAGER'`,
+  `ALTER TYPE "FrontOfficeRole" ADD VALUE IF NOT EXISTS 'FACILITY_MANAGER'`,
+  `ALTER TYPE "FrontOfficeRole" ADD VALUE IF NOT EXISTS 'HR_STAFF'`,
+  `ALTER TYPE "FrontOfficeRole" ADD VALUE IF NOT EXISTS 'ASSET_STAFF'`,
+  `ALTER TYPE "FrontOfficeRole" ADD VALUE IF NOT EXISTS 'FINANCE_STAFF'`,
+  `ALTER TYPE "FrontOfficeRole" ADD VALUE IF NOT EXISTS 'FACILITY_STAFF'`,
+  `ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'FACILITY_EMERGENCY'`,
+  `ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'FACILITY_MAINTENANCE_RESOLVED'`,
+  `ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'PAYROLL_CONFIRMED'`,
+  `ALTER TYPE "TeamType" ADD VALUE IF NOT EXISTS 'B_TEAM'`,
+];
+
 const client = new Client({ connectionString: process.env.DATABASE_URL });
 
 async function main() {
@@ -420,6 +435,9 @@ async function main() {
   try {
     await run(sql, 'sql');
     await run(repairSql2, 'repairSql2');
+    for (const stmt of enumAdditions) {
+      await run(stmt, `enum: ${stmt.slice(35, 70)}`);
+    }
     await run(superAdminSql, 'superAdminSql');
     await run(staffSql, 'staffSql');
     console.log('[repair-db] done');
