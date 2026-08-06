@@ -8,8 +8,9 @@ export const errorHandler = (err:Error, req:Request, res:Response, next:NextFunc
         })
     }
     console.error(err)
+    const detail = err instanceof Error ? err.message : (err != null ? String(err) : 'unknown')
     return res.status(500).json({
         code: "INTERNAL_SERVER_ERROR",
-        detail: err?.message ?? String(err),
+        detail,
     })
 }
