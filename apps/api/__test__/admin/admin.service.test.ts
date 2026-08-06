@@ -69,7 +69,7 @@ describe("AdminService - updateUserRole", () => {
 
     await service.updateUserRole(2, { role: "FRONT_OFFICE", frontOfficeRole: "GM" }, 1);
 
-    expect(mockRepo.updateRole).toHaveBeenCalledWith(2, "FRONT_OFFICE", null, "GM");
+    expect(mockRepo.updateRole).toHaveBeenCalledWith(2, "FRONT_OFFICE", null, "GM", undefined);
   });
 
   test("clears frontOfficeRole when switching to COACHING_STAFF", async () => {
@@ -78,7 +78,7 @@ describe("AdminService - updateUserRole", () => {
 
     await service.updateUserRole(3, { role: "COACHING_STAFF", coachingRole: "HEAD_COACH" }, 1);
 
-    expect(mockRepo.updateRole).toHaveBeenCalledWith(3, "COACHING_STAFF", "HEAD_COACH", null);
+    expect(mockRepo.updateRole).toHaveBeenCalledWith(3, "COACHING_STAFF", "HEAD_COACH", null, undefined);
   });
 });
 

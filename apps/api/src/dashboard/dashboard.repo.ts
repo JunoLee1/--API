@@ -491,4 +491,15 @@ export class DashboardRepository {
       ]);
     return { lowStockEquipmentCount, totalEquipmentItemCount, activeEquipmentLoanCount };
   }
+
+  async getFacilityStats() {
+    const [openMaintenanceCount, lowStockInventoryCount] = await Promise.all([
+      this.prisma.maintenanceRequest.count({ where: { status: { in: ["OPEN", "PENDING_APPROVAL"] } } }),
+      this.prisma.$queryRaw<{ count: bigint }[]>`
+        SELECT COUNT(*) as count FROM "FacilityInventoryItem"
+        WHERE "quantity" <= "minThreshold"
+      `.then((r) => Number(r[0]?.count ?? 0)),
+    ]);
+    return { openMaintenanceCount, lowStockInventoryCount };
+  }
 }

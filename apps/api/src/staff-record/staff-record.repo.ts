@@ -6,7 +6,7 @@ export class StaffRecordRepository {
   async findAll(includeInactive = false) {
     return this.prisma.staffRecord.findMany({
       where: includeInactive ? {} : { isActive: true },
-      include: { department: true },
+      include: { department: { include: { parent: { select: { id: true, name: true } } } } },
       orderBy: { name: "asc" },
     });
   }
@@ -14,7 +14,7 @@ export class StaffRecordRepository {
   async findById(id: number) {
     return this.prisma.staffRecord.findUnique({
       where: { id },
-      include: { department: true },
+      include: { department: { include: { parent: { select: { id: true, name: true } } } } },
     });
   }
 
@@ -28,7 +28,7 @@ export class StaffRecordRepository {
   }) {
     return this.prisma.staffRecord.create({
       data,
-      include: { department: true },
+      include: { department: { include: { parent: { select: { id: true, name: true } } } } },
     });
   }
 
@@ -46,7 +46,7 @@ export class StaffRecordRepository {
     return this.prisma.staffRecord.update({
       where: { id },
       data,
-      include: { department: true },
+      include: { department: { include: { parent: { select: { id: true, name: true } } } } },
     });
   }
 
@@ -66,7 +66,7 @@ export class StaffRecordRepository {
     return this.prisma.staffRecord.update({
       where: { id },
       data: { terminatedAt, isActive: false },
-      include: { department: true },
+      include: { department: { include: { parent: { select: { id: true, name: true } } } } },
     });
   }
 }
