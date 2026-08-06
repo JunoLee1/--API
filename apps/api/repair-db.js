@@ -142,10 +142,277 @@ BEGIN
 END $staff$;
 `;
 
+const repairSql2 = `
+DO $r$ BEGIN CREATE TYPE "MealExpenseType" AS ENUM ('TRAINING', 'MATCH'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN CREATE TYPE "DepartmentCategory" AS ENUM ('COMPLIANCE', 'PERFORMANCE', 'FINANCE', 'OPERATIONS'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN CREATE TYPE "ApplicationSource" AS ENUM ('SARAMIN', 'GLASSDOOR', 'INDEED', 'DIRECT'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN CREATE TYPE "ContractType" AS ENUM ('PROFESSIONAL', 'SEMI_PROFESSIONAL'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN CREATE TYPE "FacilityZone" AS ENUM ('GROUND', 'MECHANICAL', 'STRUCTURAL', 'SAFETY', 'SANITATION', 'OPERATIONS'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN CREATE TYPE "InspectionType" AS ENUM ('DAILY', 'MONTHLY', 'QUARTERLY', 'ANNUAL'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN CREATE TYPE "InspectionResult" AS ENUM ('OK', 'ISSUE_FOUND'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN CREATE TYPE "MaintenancePriority" AS ENUM ('EMERGENCY', 'HIGH', 'NORMAL'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN CREATE TYPE "MaintenanceStatus" AS ENUM ('OPEN', 'IN_PROGRESS', 'RESOLVED'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN CREATE TYPE "SponsorType" AS ENUM ('TITLE', 'KIT', 'STADIUM_NAMING', 'DIGITAL', 'OTHER'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN CREATE TYPE "PaymentSchedule" AS ENUM ('MONTHLY', 'QUARTERLY', 'ANNUAL'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN CREATE TYPE "SponsorshipPaymentStatus" AS ENUM ('PENDING', 'PAID', 'OVERDUE'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN CREATE TYPE "PayrollCountry" AS ENUM ('KR', 'UK'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN CREATE TYPE "PayrollRunStatus" AS ENUM ('DRAFT', 'CONFIRMED'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+
+ALTER TYPE "FrontOfficeRole" ADD VALUE IF NOT EXISTS 'FINANCE_MANAGER';
+ALTER TYPE "FrontOfficeRole" ADD VALUE IF NOT EXISTS 'ASSET_MANAGER';
+ALTER TYPE "FrontOfficeRole" ADD VALUE IF NOT EXISTS 'FACILITY_MANAGER';
+ALTER TYPE "FrontOfficeRole" ADD VALUE IF NOT EXISTS 'FACILITY_STAFF';
+ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'FACILITY_EMERGENCY';
+ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'FACILITY_MAINTENANCE_RESOLVED';
+ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'PAYROLL_CONFIRMED';
+ALTER TYPE "TeamType" ADD VALUE IF NOT EXISTS 'B_TEAM';
+
+ALTER TABLE "Player" ADD COLUMN IF NOT EXISTS "allergies" TEXT[] DEFAULT ARRAY[]::TEXT[];
+ALTER TABLE "Player" ADD COLUMN IF NOT EXISTS "foodPreferences" TEXT;
+
+CREATE TABLE IF NOT EXISTS "ClubSettings" (
+  "id" INTEGER NOT NULL DEFAULT 1,
+  "currency" TEXT NOT NULL DEFAULT 'KRW',
+  CONSTRAINT "ClubSettings_pkey" PRIMARY KEY ("id")
+);
+
+CREATE TABLE IF NOT EXISTS "StaffRecord" (
+  "id" SERIAL NOT NULL,
+  "name" TEXT NOT NULL,
+  "role" TEXT NOT NULL,
+  "departmentId" INTEGER,
+  "phone" TEXT,
+  "isActive" BOOLEAN NOT NULL DEFAULT true,
+  "notes" TEXT,
+  "createdById" INTEGER NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "StaffRecord_pkey" PRIMARY KEY ("id")
+);
+ALTER TABLE "StaffRecord" ADD COLUMN IF NOT EXISTS "departmentId" INTEGER;
+ALTER TABLE "StaffRecord" DROP COLUMN IF EXISTS "department";
+
+CREATE TABLE IF NOT EXISTS "MealExpense" (
+  "id" SERIAL NOT NULL,
+  "type" "MealExpenseType" NOT NULL,
+  "sessionId" INTEGER,
+  "matchId" INTEGER,
+  "date" TIMESTAMP(3) NOT NULL,
+  "amount" INTEGER NOT NULL,
+  "restaurantName" TEXT,
+  "note" TEXT,
+  "createdById" INTEGER NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "MealExpense_pkey" PRIMARY KEY ("id")
+);
+
+CREATE TABLE IF NOT EXISTS "Department" (
+  "id" SERIAL NOT NULL,
+  "name" TEXT NOT NULL,
+  "isActive" BOOLEAN NOT NULL DEFAULT true,
+  "parentId" INTEGER,
+  "headId" INTEGER,
+  "category" "DepartmentCategory",
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Department_pkey" PRIMARY KEY ("id")
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "Department_name_key" ON "Department"("name");
+ALTER TABLE "Department" ADD COLUMN IF NOT EXISTS "parentId" INTEGER;
+ALTER TABLE "Department" ADD COLUMN IF NOT EXISTS "headId" INTEGER;
+ALTER TABLE "Department" ADD COLUMN IF NOT EXISTS "category" "DepartmentCategory";
+
+DO $r$ BEGIN ALTER TABLE "Department" ADD CONSTRAINT "Department_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "Department"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN ALTER TABLE "Department" ADD CONSTRAINT "Department_headId_fkey" FOREIGN KEY ("headId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN ALTER TABLE "StaffRecord" ADD CONSTRAINT "StaffRecord_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN ALTER TABLE "StaffRecord" ADD CONSTRAINT "StaffRecord_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "Department"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN ALTER TABLE "MealExpense" ADD CONSTRAINT "MealExpense_sessionId_fkey" FOREIGN KEY ("sessionId") REFERENCES "TrainingSession"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN ALTER TABLE "MealExpense" ADD CONSTRAINT "MealExpense_matchId_fkey" FOREIGN KEY ("matchId") REFERENCES "Match"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN ALTER TABLE "MealExpense" ADD CONSTRAINT "MealExpense_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+
+ALTER TABLE "Season" ADD COLUMN IF NOT EXISTS "leagueLevel" "LeagueLevel";
+ALTER TABLE "Contract" ADD COLUMN IF NOT EXISTS "contractType" "ContractType" NOT NULL DEFAULT 'PROFESSIONAL';
+ALTER TABLE "JobApplication" ADD COLUMN IF NOT EXISTS "externalApplicantId" TEXT;
+ALTER TABLE "JobApplication" ADD COLUMN IF NOT EXISTS "source" "ApplicationSource";
+
+CREATE TABLE IF NOT EXISTS "LeagueLevelWeightConfig" (
+  "id" SERIAL NOT NULL,
+  "leagueLevel" "LeagueLevel" NOT NULL,
+  "category" "DepartmentCategory" NOT NULL,
+  "weight" DECIMAL(5,4) NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "LeagueLevelWeightConfig_pkey" PRIMARY KEY ("id")
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "LeagueLevelWeightConfig_leagueLevel_category_key" ON "LeagueLevelWeightConfig"("leagueLevel", "category");
+
+CREATE TABLE IF NOT EXISTS "DepartmentIbiConfig" (
+  "id" SERIAL NOT NULL,
+  "departmentId" INTEGER NOT NULL,
+  "jobTitle" TEXT NOT NULL,
+  "coreTaskRatio" DECIMAL(4,3) NOT NULL,
+  "replacementDays" INTEGER NOT NULL,
+  "backupHeadcount" INTEGER NOT NULL,
+  "effectiveFrom" TIMESTAMP(3) NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "DepartmentIbiConfig_pkey" PRIMARY KEY ("id")
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "DepartmentIbiConfig_departmentId_jobTitle_effectiveFrom_key" ON "DepartmentIbiConfig"("departmentId", "jobTitle", "effectiveFrom");
+DO $r$ BEGIN ALTER TABLE "DepartmentIbiConfig" ADD CONSTRAINT "DepartmentIbiConfig_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "Department"("id") ON DELETE RESTRICT ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+
+CREATE TABLE IF NOT EXISTS "SeasonComplianceCheck" (
+  "id" SERIAL NOT NULL,
+  "seasonId" INTEGER NOT NULL,
+  "afcQualificationMet" BOOLEAN NOT NULL DEFAULT false,
+  "officeStaffCountMet" BOOLEAN NOT NULL DEFAULT false,
+  "checkedAt" TIMESTAMP(3),
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "SeasonComplianceCheck_pkey" PRIMARY KEY ("id")
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "SeasonComplianceCheck_seasonId_key" ON "SeasonComplianceCheck"("seasonId");
+DO $r$ BEGIN ALTER TABLE "SeasonComplianceCheck" ADD CONSTRAINT "SeasonComplianceCheck_seasonId_fkey" FOREIGN KEY ("seasonId") REFERENCES "Season"("id") ON DELETE RESTRICT ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+
+CREATE TABLE IF NOT EXISTS "ComplianceDeadline" (
+  "id" SERIAL NOT NULL,
+  "name" TEXT NOT NULL,
+  "deadlineDate" TIMESTAMP(3) NOT NULL,
+  "triggerDaysBefore" INTEGER NOT NULL,
+  "betaMultiplier" DECIMAL(4,2) NOT NULL,
+  "isActive" BOOLEAN NOT NULL DEFAULT true,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "ComplianceDeadline_pkey" PRIMARY KEY ("id")
+);
+
+CREATE TABLE IF NOT EXISTS "FacilityInspection" (
+  "id" SERIAL NOT NULL,
+  "type" "InspectionType" NOT NULL,
+  "facilityZone" "FacilityZone" NOT NULL,
+  "result" "InspectionResult" NOT NULL,
+  "isStatutory" BOOLEAN NOT NULL DEFAULT false,
+  "certificateUrl" TEXT,
+  "statutoryDeadline" TIMESTAMP(3),
+  "inspectedById" INTEGER NOT NULL,
+  "inspectedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "notes" TEXT,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "FacilityInspection_pkey" PRIMARY KEY ("id")
+);
+DO $r$ BEGIN ALTER TABLE "FacilityInspection" ADD CONSTRAINT "FacilityInspection_inspectedById_fkey" FOREIGN KEY ("inspectedById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+
+CREATE TABLE IF NOT EXISTS "MaintenanceRequest" (
+  "id" SERIAL NOT NULL,
+  "title" TEXT NOT NULL,
+  "description" TEXT NOT NULL,
+  "priority" "MaintenancePriority" NOT NULL,
+  "status" "MaintenanceStatus" NOT NULL DEFAULT 'OPEN',
+  "sourceInspectionId" INTEGER,
+  "postIncidentReport" TEXT,
+  "estimatedCost" DECIMAL(12,2),
+  "actualCost" DECIMAL(12,2),
+  "resolvedAt" TIMESTAMP(3),
+  "createdById" INTEGER NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "MaintenanceRequest_pkey" PRIMARY KEY ("id")
+);
+DO $r$ BEGIN ALTER TABLE "MaintenanceRequest" ADD CONSTRAINT "MaintenanceRequest_sourceInspectionId_fkey" FOREIGN KEY ("sourceInspectionId") REFERENCES "FacilityInspection"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN ALTER TABLE "MaintenanceRequest" ADD CONSTRAINT "MaintenanceRequest_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+
+CREATE TABLE IF NOT EXISTS "Sponsorship" (
+  "id" SERIAL NOT NULL,
+  "sponsorName" TEXT NOT NULL,
+  "type" "SponsorType" NOT NULL,
+  "totalFee" DECIMAL(14,2) NOT NULL,
+  "contractStart" TIMESTAMP(3) NOT NULL,
+  "contractEnd" TIMESTAMP(3) NOT NULL,
+  "paymentSchedule" "PaymentSchedule" NOT NULL,
+  "attachedContractId" INTEGER,
+  "createdById" INTEGER NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Sponsorship_pkey" PRIMARY KEY ("id")
+);
+DO $r$ BEGIN ALTER TABLE "Sponsorship" ADD CONSTRAINT "Sponsorship_attachedContractId_fkey" FOREIGN KEY ("attachedContractId") REFERENCES "PartnerContract"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN ALTER TABLE "Sponsorship" ADD CONSTRAINT "Sponsorship_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+
+CREATE TABLE IF NOT EXISTS "SponsorshipPayment" (
+  "id" SERIAL NOT NULL,
+  "sponsorshipId" INTEGER NOT NULL,
+  "dueDate" TIMESTAMP(3) NOT NULL,
+  "amount" DECIMAL(14,2) NOT NULL,
+  "paidAt" TIMESTAMP(3),
+  "status" "SponsorshipPaymentStatus" NOT NULL DEFAULT 'PENDING',
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "SponsorshipPayment_pkey" PRIMARY KEY ("id")
+);
+DO $r$ BEGIN ALTER TABLE "SponsorshipPayment" ADD CONSTRAINT "SponsorshipPayment_sponsorshipId_fkey" FOREIGN KEY ("sponsorshipId") REFERENCES "Sponsorship"("id") ON DELETE RESTRICT ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+
+CREATE TABLE IF NOT EXISTS "PayrollConfig" (
+  "id" SERIAL NOT NULL,
+  "country" "PayrollCountry" NOT NULL,
+  "insuranceType" TEXT NOT NULL,
+  "employeeRate" DECIMAL(6,5) NOT NULL,
+  "employerRate" DECIMAL(6,5) NOT NULL,
+  "effectiveFrom" TIMESTAMP(3) NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "PayrollConfig_pkey" PRIMARY KEY ("id")
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "PayrollConfig_country_insuranceType_effectiveFrom_key" ON "PayrollConfig"("country", "insuranceType", "effectiveFrom");
+
+CREATE TABLE IF NOT EXISTS "StaffSalary" (
+  "id" SERIAL NOT NULL,
+  "userId" INTEGER,
+  "staffRecordId" INTEGER,
+  "baseSalary" DECIMAL(12,2) NOT NULL,
+  "country" "PayrollCountry" NOT NULL,
+  "effectiveFrom" TIMESTAMP(3) NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "StaffSalary_pkey" PRIMARY KEY ("id")
+);
+DO $r$ BEGIN ALTER TABLE "StaffSalary" ADD CONSTRAINT "StaffSalary_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN ALTER TABLE "StaffSalary" ADD CONSTRAINT "StaffSalary_staffRecordId_fkey" FOREIGN KEY ("staffRecordId") REFERENCES "StaffRecord"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+
+CREATE TABLE IF NOT EXISTS "StaffAllowance" (
+  "id" SERIAL NOT NULL,
+  "staffSalaryId" INTEGER NOT NULL,
+  "name" TEXT NOT NULL,
+  "amount" DECIMAL(12,2) NOT NULL,
+  "taxable" BOOLEAN NOT NULL DEFAULT true,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "StaffAllowance_pkey" PRIMARY KEY ("id")
+);
+DO $r$ BEGIN ALTER TABLE "StaffAllowance" ADD CONSTRAINT "StaffAllowance_staffSalaryId_fkey" FOREIGN KEY ("staffSalaryId") REFERENCES "StaffSalary"("id") ON DELETE RESTRICT ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+
+CREATE TABLE IF NOT EXISTS "PayrollRun" (
+  "id" SERIAL NOT NULL,
+  "staffSalaryId" INTEGER NOT NULL,
+  "month" TIMESTAMP(3) NOT NULL,
+  "grossPay" DECIMAL(12,2) NOT NULL,
+  "totalDeductions" DECIMAL(12,2) NOT NULL,
+  "netPay" DECIMAL(12,2) NOT NULL,
+  "status" "PayrollRunStatus" NOT NULL DEFAULT 'DRAFT',
+  "confirmedById" INTEGER,
+  "confirmedAt" TIMESTAMP(3),
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "PayrollRun_pkey" PRIMARY KEY ("id")
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "PayrollRun_staffSalaryId_month_key" ON "PayrollRun"("staffSalaryId", "month");
+DO $r$ BEGIN ALTER TABLE "PayrollRun" ADD CONSTRAINT "PayrollRun_staffSalaryId_fkey" FOREIGN KEY ("staffSalaryId") REFERENCES "StaffSalary"("id") ON DELETE RESTRICT ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN ALTER TABLE "PayrollRun" ADD CONSTRAINT "PayrollRun_confirmedById_fkey" FOREIGN KEY ("confirmedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+`;
+
 const client = new Client({ connectionString: process.env.DATABASE_URL });
 
 client.connect()
   .then(() => client.query(sql))
+  .then(() => client.query(repairSql2))
   .then(() => client.query(superAdminSql))
   .then(() => client.query(staffSql))
   .then(() => { console.log('[repair-db] User table columns ensured'); })
