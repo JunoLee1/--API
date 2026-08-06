@@ -2,7 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import { auth } from "../lib/authMiddleware";
 import type { Request, Response, NextFunction } from "express";
-import { isAdminLike } from "../lib/permissions";
+import { canReadHR } from "../lib/permissions";
 import { uploadDocument } from "./hr.controller";
 
 const ALLOWED_MIMES = [
@@ -28,11 +28,7 @@ const upload = multer({
 function requireHR(req: Request, res: Response, next: NextFunction) {
   const user = req.user;
   if (!user) return res.status(401).json({ error: "UNAUTHENTICATED" });
-  if (isAdminLike(user.role)) return next();
-  const isHRRole =
-    user.role === "FRONT_OFFICE" &&
-    (user.frontOfficeRole === "HR_MANAGER" || user.frontOfficeRole === "HR_STAFF");
-  if (!isHRRole) return res.status(403).json({ error: "FORBIDDEN" });
+  if (!canReadHR(user.role, user.frontOfficeRole)) return res.status(403).json({ error: "FORBIDDEN" });
   next();
 }
 

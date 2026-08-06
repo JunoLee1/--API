@@ -79,18 +79,19 @@ export class AdminRepository {
     });
   }
 
-  setDemo(id: number, isDemo: boolean) {
-    return this.prisma.user.update({
-      where: { id },
-      data: { isDemo },
-      select: USER_SELECT,
-    });
-  }
 
   getLinkedData(id: number) {
     return this.prisma.user.findUnique({
       where: { id },
       select: LINKED_COUNT_SELECT,
+    });
+  }
+
+  setDemo(id: number, isDemo: boolean) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { isDemo },
+      select: USER_SELECT,
     });
   }
 

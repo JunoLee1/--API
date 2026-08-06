@@ -19,5 +19,6 @@ router.patch("/users/:id/demo", auth, controller.setDemoStatus);
 router.patch("/users/:id/deactivate", auth, controller.deactivateUser);
 router.patch("/users/:id/reactivate", auth, controller.reactivateUser);
 router.delete("/users/:id", auth, controller.deleteUser);
+router.patch("/users/:id/demo", auth, controller.setDemoStatus);
 
 export default router;
