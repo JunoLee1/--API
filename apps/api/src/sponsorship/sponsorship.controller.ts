@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
-import { isAdminLike } from "../lib/permissions";
+import { isAdminLike, canWriteFinance } from "../lib/permissions";
 import type { SponsorshipService } from "./sponsorship.service";
 import type { CreateSponsorshipDto, UpdateSponsorshipDto, SponsorshipListQuery } from "./dto/sponsorship.dto";
 
@@ -8,7 +8,7 @@ const canRead = (role: string) =>
   isAdminLike(role) || role === "FRONT_OFFICE";
 
 const canWrite = (role: string, foRole: string | null | undefined) =>
-  isAdminLike(role) || (role === "FRONT_OFFICE" && foRole === "FINANCE_MANAGER");
+  canWriteFinance(role, foRole);
 
 export class SponsorshipController {
   constructor(private service: SponsorshipService) {}

@@ -1,28 +1,19 @@
 import { Request, Response, NextFunction } from "express";
 import { MealExpenseType } from "../generated/client";
 import { AppError } from "../lib/appError";
-import { isAdminLike } from "../lib/permissions";
+import { canReadFinance, canWriteFinance } from "../lib/permissions";
 import { MealExpenseService } from "./meal-expense.service";
 
 const canRead = (role: string, frontOfficeRole: string | null | undefined) =>
-  isAdminLike(role) ||
-  role === "GM" ||
-  (role === "FRONT_OFFICE" &&
-    (frontOfficeRole === "FINANCE_MANAGER" || frontOfficeRole === "FINANCE_STAFF"));
+  canReadFinance(role, frontOfficeRole);
 
 const canWrite = (role: string, frontOfficeRole: string | null | undefined) =>
-  isAdminLike(role) ||
-  role === "GM" ||
-  (role === "FRONT_OFFICE" &&
-    (frontOfficeRole === "FINANCE_MANAGER" ||
-      frontOfficeRole === "FINANCE_STAFF" ||
-      frontOfficeRole === "EQUIPMENT_MANAGER"));
+  canWriteFinance(role, frontOfficeRole) ||
+  (role === "FRONT_OFFICE" && frontOfficeRole === "EQUIPMENT_MANAGER");
 
 const canDelete = (role: string, frontOfficeRole: string | null | undefined) =>
-  isAdminLike(role) ||
-  role === "GM" ||
-  (role === "FRONT_OFFICE" &&
-    (frontOfficeRole === "FINANCE_MANAGER" || frontOfficeRole === "EQUIPMENT_MANAGER"));
+  canWriteFinance(role, frontOfficeRole) ||
+  (role === "FRONT_OFFICE" && frontOfficeRole === "EQUIPMENT_MANAGER");
 
 export class MealExpenseController {
   constructor(private service: MealExpenseService) {}

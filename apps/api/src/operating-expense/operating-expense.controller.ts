@@ -1,23 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
-import { isAdminLike } from "../lib/permissions";
+import { canReadFinance, canWriteFinance } from "../lib/permissions";
 import { OperatingExpenseService } from "./operating-expense.service";
 import { OperatingCategory } from "../generated/client";
 
 const canRead = (role: string, foRole: string | null | undefined) =>
-  isAdminLike(role) ||
-  role === "GM" ||
-  (role === "FRONT_OFFICE" && (foRole === "TD" || foRole === "FINANCE_MANAGER" || foRole === "FINANCE_STAFF"));
+  canReadFinance(role, foRole) || (role === "FRONT_OFFICE" && foRole === "TD");
 
 const canCreate = (role: string, foRole: string | null | undefined) =>
-  isAdminLike(role) ||
-  role === "GM" ||
-  (role === "FRONT_OFFICE" && (foRole === "FINANCE_MANAGER" || foRole === "FINANCE_STAFF"));
+  canReadFinance(role, foRole);
 
 const canDelete = (role: string, foRole: string | null | undefined) =>
-  isAdminLike(role) ||
-  role === "GM" ||
-  (role === "FRONT_OFFICE" && foRole === "FINANCE_MANAGER");
+  canWriteFinance(role, foRole);
 
 export class OperatingExpenseController {
   constructor(private service: OperatingExpenseService) {}
