@@ -9,6 +9,7 @@ interface TokenPayload {
   frontOfficeRole?: FrontOfficeRole | null;
   teamId?: number | null;
   clubId?: number | null;
+  isDemo?: boolean;
 }
 
 export function generateTokens(payload: TokenPayload) {

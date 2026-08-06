@@ -14,6 +14,7 @@ export const USER_SELECT = {
   clubId: true,
   isDeleted: true,
   isOutOfOffice: true,
+  isDemo: true,
   player: { select: { id: true, playerName: true } },
 } as const;
 
@@ -74,6 +75,14 @@ export class AdminRepository {
     return this.prisma.user.update({
       where: { id },
       data: { isDeleted },
+      select: USER_SELECT,
+    });
+  }
+
+  setDemo(id: number, isDemo: boolean) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { isDemo },
       select: USER_SELECT,
     });
   }
