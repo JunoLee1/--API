@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
-import { canWriteFinance, canReadFinance } from "../lib/permissions";
+import { canWriteFinance } from "../lib/permissions";
 import { FinancialReportService } from "./financial-report.service";
 import { OperatingCategory } from "../generated/client";
 
@@ -8,7 +8,7 @@ const canWrite = (role: string, foRole: string | null | undefined) =>
   canWriteFinance(role, foRole);
 
 const canRead = (role: string, foRole: string | null | undefined) =>
-  canReadFinance(role, foRole) || (role === "FRONT_OFFICE" && foRole === "TD");
+  canWriteFinance(role, foRole) || (role === "FRONT_OFFICE" && foRole === "TD");
 
 export class FinancialReportController {
   constructor(private service: FinancialReportService) {}
