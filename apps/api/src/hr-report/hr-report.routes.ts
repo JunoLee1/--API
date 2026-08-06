@@ -1,4 +1,5 @@
 import { auth } from "../lib/authMiddleware";
+import { canReadHR } from "../lib/permissions";
 import { Router } from "express";
 import { getPrisma } from "../lib/prisma";
 import { HrReportRepository } from "./hr-report.repo";
@@ -14,8 +15,7 @@ const controller = new HrReportController(service);
 
 const requireHR = (req: any, res: any, next: any) => {
   const { role, frontOfficeRole } = req.user as any;
-  if (role === "ADMIN" || role === "SUPER_ADMIN" || role === "GM") return next();
-  if (role === "FRONT_OFFICE" && (frontOfficeRole === "TD" || frontOfficeRole === "HR_MANAGER"))
+  if (canReadHR(role, frontOfficeRole) || (role === "FRONT_OFFICE" && frontOfficeRole === "TD"))
     return next();
   next(new AppError(403, "FORBIDDEN"));
 };

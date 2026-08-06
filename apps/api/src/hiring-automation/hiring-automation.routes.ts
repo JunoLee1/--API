@@ -5,31 +5,28 @@ import { HiringAutomationRepository } from "./hiring-automation.repo";
 import { HiringAutomationService } from "./hiring-automation.service";
 import { HiringAutomationController } from "./hiring-automation.controller";
 import { AppError } from "../lib/appError";
+import { canReadHR, canWriteHR, isAdminLike } from "../lib/permissions";
 
 const router = Router();
 const repo = new HiringAutomationRepository(getPrisma());
 const service = new HiringAutomationService(repo);
 const controller = new HiringAutomationController(service);
 
-const isAdmin = (role: string) => role === "ADMIN" || role === "SUPER_ADMIN";
-
 const requireAdmin = (req: any, _res: any, next: any) => {
-  if (isAdmin(req.user?.role)) return next();
+  const { role } = req.user ?? {};
+  if (isAdminLike(role)) return next();
   next(new AppError(403, "FORBIDDEN"));
 };
 
 const requireHRorGMorAdmin = (req: any, _res: any, next: any) => {
   const { role, frontOfficeRole } = req.user ?? {};
-  if (isAdmin(role)) return next();
-  if (role === "GM") return next();
-  if (role === "FRONT_OFFICE" && frontOfficeRole === "HR_MANAGER") return next();
+  if (canReadHR(role, frontOfficeRole)) return next();
   next(new AppError(403, "FORBIDDEN"));
 };
 
 const requireHRManager = (req: any, _res: any, next: any) => {
   const { role, frontOfficeRole } = req.user ?? {};
-  if (isAdmin(role)) return next();
-  if (role === "FRONT_OFFICE" && frontOfficeRole === "HR_MANAGER") return next();
+  if (canWriteHR(role, frontOfficeRole)) return next();
   next(new AppError(403, "FORBIDDEN"));
 };
 
