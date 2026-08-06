@@ -3,7 +3,7 @@ import { AppError } from "../lib/appError";
 import { AdminService } from "./admin.service";
 import { ListUsersQuery, SetDemoDto } from "./dto/admin.dto";
 import { Role, CoachingRole, FrontOfficeRole } from "../generated/enums";
-import { hasPermission, Permission } from "../lib/permissions";
+import { hasPermission, Permission, requireSuperAdmin } from "../lib/permissions";
 import { writeAuditLog } from "../lib/auditLog";
 
 const requireAdmin = (req: Request): void => {
@@ -91,9 +91,27 @@ export class AdminController {
 
   deleteUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      requireAdmin(req);
+      requireSuperAdmin(req);
       await this.service.deleteUser(Number(req.params["id"]), req.user!.id);
       res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  setDemoStatus = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      requireSuperAdmin(req);
+      const targetId = Number(req.params["id"]);
+      const dto: SetDemoDto = { isDemo: Boolean(req.body.isDemo) };
+      const result = await this.service.setDemoStatus(targetId, dto, req.user!.id);
+      await writeAuditLog({
+        actorId: req.user!.id,
+        action: "DEMO_STATUS_UPDATE",
+        targetId,
+        detail: { isDemo: dto.isDemo },
+      });
+      res.status(200).json(result);
     } catch (err) {
       next(err);
     }

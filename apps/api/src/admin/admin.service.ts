@@ -84,6 +84,15 @@ export class AdminService {
     await this.repo.hardDelete(id);
   }
 
+  async setDemoStatus(id: number, dto: SetDemoDto, requesterId: number) {
+    if (id === requesterId) throw new AppError(403, "CANNOT_MODIFY_SELF");
+
+    const user = await this.repo.findById(id);
+    if (!user) throw new AppError(404, "USER_NOT_FOUND");
+
+    return this.repo.setDemo(id, dto.isDemo);
+  }
+
   async getAuditLogs(
     filters: { actorId?: number; action?: string; from?: string; to?: string; page?: number; limit?: number },
     isDemo: boolean = false,
@@ -100,15 +109,5 @@ export class AdminService {
       })),
       total,
     };
-  }
-
-  async setDemoStatus(id: number, dto: SetDemoDto, requesterId: number, requesterRole: string) {
-    if (id === requesterId) throw new AppError(403, "CANNOT_MODIFY_SELF");
-    if (requesterRole !== "SUPER_ADMIN") throw new AppError(403, "FORBIDDEN");
-
-    const user = await this.repo.findById(id);
-    if (!user) throw new AppError(404, "USER_NOT_FOUND");
-
-    return this.repo.setDemo(id, dto.isDemo);
   }
 }

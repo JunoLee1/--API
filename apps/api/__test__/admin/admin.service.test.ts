@@ -237,31 +237,24 @@ describe("AdminService - setDemoStatus", () => {
   beforeEach(() => jest.clearAllMocks());
 
   test("자기 자신에게는 설정 불가 → 403", async () => {
-    await expect(service.setDemoStatus(1, { isDemo: true }, 1, "SUPER_ADMIN")).rejects.toMatchObject({
+    await expect(service.setDemoStatus(1, { isDemo: true }, 1)).rejects.toMatchObject({
       statusCode: 403,
       code: "CANNOT_MODIFY_SELF",
     });
   });
 
-  test("SUPER_ADMIN이 아니면 403", async () => {
-    await expect(service.setDemoStatus(2, { isDemo: true }, 1, "ADMIN")).rejects.toMatchObject({
-      statusCode: 403,
-      code: "FORBIDDEN",
-    });
-  });
-
   test("대상 유저 없으면 404", async () => {
     mockRepo.findById.mockResolvedValue(null);
-    await expect(service.setDemoStatus(2, { isDemo: true }, 1, "SUPER_ADMIN")).rejects.toMatchObject({
+    await expect(service.setDemoStatus(2, { isDemo: true }, 1)).rejects.toMatchObject({
       statusCode: 404,
       code: "USER_NOT_FOUND",
     });
   });
 
-  test("SUPER_ADMIN이면 isDemo 설정 성공", async () => {
+  test("isDemo 설정 성공", async () => {
     mockRepo.findById.mockResolvedValue({ id: 2, isDemo: false });
     mockRepo.setDemo.mockResolvedValue({ id: 2, isDemo: true });
-    const result = await service.setDemoStatus(2, { isDemo: true }, 1, "SUPER_ADMIN");
+    const result = await service.setDemoStatus(2, { isDemo: true }, 1);
     expect(mockRepo.setDemo).toHaveBeenCalledWith(2, true);
     expect(result.isDemo).toBe(true);
   });

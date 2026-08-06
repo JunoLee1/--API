@@ -94,6 +94,14 @@ export class AdminRepository {
     });
   }
 
+  setDemo(id: number, isDemo: boolean) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { isDemo },
+      select: USER_SELECT,
+    });
+  }
+
   async hardDelete(id: number): Promise<void> {
     await this.prisma.user.delete({ where: { id } });
   }
