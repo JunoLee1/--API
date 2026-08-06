@@ -79,13 +79,6 @@ export class AdminRepository {
     });
   }
 
-  setDemo(id: number, isDemo: boolean) {
-    return this.prisma.user.update({
-      where: { id },
-      data: { isDemo },
-      select: USER_SELECT,
-    });
-  }
 
   getLinkedData(id: number) {
     return this.prisma.user.findUnique({

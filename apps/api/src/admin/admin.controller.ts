@@ -142,22 +142,4 @@ export class AdminController {
       next(err);
     }
   };
-
-  setDemoStatus = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      requireAdmin(req);
-      const targetId = Number(req.params["id"]);
-      const dto: SetDemoDto = { isDemo: Boolean(req.body.isDemo) };
-      const result = await this.service.setDemoStatus(targetId, dto, req.user!.id, req.user!.role as string);
-      await writeAuditLog({
-        actorId: req.user!.id,
-        action: "DEMO_STATUS_UPDATE",
-        targetId,
-        detail: { isDemo: dto.isDemo },
-      });
-      res.status(200).json(result);
-    } catch (err) {
-      next(err);
-    }
-  };
 }
