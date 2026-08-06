@@ -45,6 +45,26 @@ async function seedDepartments() {
   console.log(`Departments seeded: 재무관리, 자산관리 + ${subDepts.length} sub-departments`);
 }
 
+async function seedLeagues() {
+  const leagues = [
+    { name: 'K리그1 2026', level: 'K_LEAGUE_1' as const, year: 2026, isActive: true },
+    { name: 'K리그2 2026', level: 'K_LEAGUE_2' as const, year: 2026, isActive: true },
+    { name: 'K3리그 2026', level: 'K3' as const, year: 2026, isActive: true },
+    { name: 'K리그1 2025', level: 'K_LEAGUE_1' as const, year: 2025, isActive: false },
+    { name: 'K리그2 2025', level: 'K_LEAGUE_2' as const, year: 2025, isActive: false },
+  ];
+
+  for (const l of leagues) {
+    await prisma.league.upsert({
+      where: { level_year: { level: l.level, year: l.year } },
+      create: l,
+      update: {},
+    });
+  }
+
+  console.log('✅ Leagues seeded: K리그1/2/3 2026 (active), K리그1/2 2025 (inactive)');
+}
+
 async function seedDepartmentHeads() {
   const asset   = await prisma.department.findUniqueOrThrow({ where: { name: '자산관리' } });
   const finance  = await prisma.department.findUniqueOrThrow({ where: { name: '재무관리' } });
@@ -2266,6 +2286,9 @@ async function main() {
     await prisma.playerMatchStats.update({ where: { id: s.id }, data: { distanceCovered, sprint } });
   }
   if (playedStats.length) console.log(`   - Activity mock: ${playedStats.length}개 레코드 패치 완료`);
+
+  // ── Leagues ───────────────────────────────────────────
+  await seedLeagues();
 
   // ── Department Heads ─────────────────────────────────
   await seedDepartmentHeads();

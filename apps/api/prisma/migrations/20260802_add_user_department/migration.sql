@@ -1,6 +1,10 @@
-CREATE TYPE "DeptRole" AS ENUM ('MANAGER', 'MEMBER');
+DO $$ BEGIN
+  CREATE TYPE "DeptRole" AS ENUM ('MANAGER', 'MEMBER');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE "UserDepartment" (
+CREATE TABLE IF NOT EXISTS "UserDepartment" (
   "userId"       INTEGER NOT NULL,
   "departmentId" INTEGER NOT NULL,
   "role"         "DeptRole" NOT NULL DEFAULT 'MEMBER',

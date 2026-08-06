@@ -49,6 +49,17 @@ export class TeamRepository {
     });
   }
 
+  findActiveByNameAndClub(name: string, clubId: number, excludeId?: number) {
+    return this.prisma.team.findFirst({
+      where: {
+        name,
+        clubId,
+        isActive: true,
+        ...(excludeId ? { id: { not: excludeId } } : {}),
+      },
+    });
+  }
+
   update(id: number, dto: UpdateTeamDto) {
     return this.prisma.team.update({
       where: { id },
