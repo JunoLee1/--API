@@ -103,7 +103,7 @@ export class AdminController {
     try {
       requireSuperAdmin(req);
       const targetId = Number(req.params["id"]);
-      const dto: SetDemoDto = { isDemo: Boolean(req.body.isDemo) };
+      const dto: SetDemoDto = { isDemo: req.body.isDemo === true };
       const result = await this.service.setDemoStatus(targetId, dto, req.user!.id);
       await writeAuditLog({
         actorId: req.user!.id,
