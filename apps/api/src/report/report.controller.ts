@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
-import { isAdminLike } from "../lib/permissions";
+import { isAdminLike, canReadHR, canReadFinance } from "../lib/permissions";
 import { ReportService } from "./report.service";
 
 function isGM(req: Request): boolean {
@@ -11,28 +11,12 @@ function isHeadCoach(req: Request): boolean {
   return req.user?.role === "COACHING_STAFF" && req.user?.coachingRole === "HEAD_COACH";
 }
 
-function isHrManager(req: Request): boolean {
-  return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "HR_MANAGER";
-}
-
-function isFinanceManager(req: Request): boolean {
-  return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "FINANCE_MANAGER";
-}
-
 function isAssetManager(req: Request): boolean {
   return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "ASSET_MANAGER";
 }
 
-function isHrStaff(req: Request): boolean {
-  return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "HR_STAFF";
-}
-
 function isAssetStaff(req: Request): boolean {
   return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "ASSET_STAFF";
-}
-
-function isFinanceStaff(req: Request): boolean {
-  return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "FINANCE_STAFF";
 }
 
 const AUTHOR_ROLES = ["ADMIN", "COACHING_STAFF", "FRONT_OFFICE"] as const;
@@ -46,18 +30,19 @@ export class ReportController {
       const filters: { type?: string; status?: string } = {};
       if (type !== undefined) filters.type = type;
       if (status !== undefined) filters.status = status;
+      const { role, frontOfficeRole } = req.user!;
       res.json(
         await this.service.list(
           req.user!.id,
           isGM(req),
           isHeadCoach(req),
           filters,
-          isHrManager(req),
-          isFinanceManager(req),
+          role === "FRONT_OFFICE" && frontOfficeRole === "HR_MANAGER",
+          role === "FRONT_OFFICE" && frontOfficeRole === "FINANCE_MANAGER",
           isAssetManager(req),
-          isHrStaff(req),
+          role === "FRONT_OFFICE" && frontOfficeRole === "HR_STAFF",
           isAssetStaff(req),
-          isFinanceStaff(req),
+          role === "FRONT_OFFICE" && frontOfficeRole === "FINANCE_STAFF",
         ),
       );
     } catch (err) {
@@ -68,14 +53,13 @@ export class ReportController {
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const report = await this.service.get(Number(req.params["id"]));
+      const { role, frontOfficeRole: foRole } = req.user!;
       const canView =
         isGM(req) ||
         isHeadCoach(req) ||
         report.authorId === req.user!.id ||
-        (isHrManager(req) && report.type === "HR") ||
-        (isHrStaff(req) && report.type === "HR") ||
-        (isFinanceManager(req) && report.type === "FINANCIAL") ||
-        (isFinanceStaff(req) && report.type === "FINANCIAL") ||
+        (canReadHR(role, foRole) && report.type === "HR") ||
+        (canReadFinance(role, foRole) && report.type === "FINANCIAL") ||
         (isAssetManager(req) && report.type === "ASSET") ||
         (isAssetStaff(req) && report.type === "ASSET");
       if (!canView) throw new AppError(403, "FORBIDDEN");
@@ -91,10 +75,10 @@ export class ReportController {
       if (!AUTHOR_ROLES.includes(role as any)) throw new AppError(403, "FORBIDDEN");
       const { type, title, content } = req.body;
       const foRole = req.user!.frontOfficeRole;
-      if (type === "HR" && !(isAdminLike(role) || foRole === "HR_MANAGER" || foRole === "HR_STAFF")) {
+      if (type === "HR" && !canReadHR(role, foRole)) {
         throw new AppError(403, "FORBIDDEN");
       }
-      if (type === "FINANCIAL" && !(isAdminLike(role) || role === "GM" || foRole === "FINANCE_MANAGER" || foRole === "FINANCE_STAFF")) {
+      if (type === "FINANCIAL" && !canReadFinance(role, foRole)) {
         throw new AppError(403, "FORBIDDEN");
       }
       if (type === "ASSET" && !(isAdminLike(role) || foRole === "ASSET_MANAGER" || foRole === "ASSET_STAFF")) {
@@ -146,7 +130,7 @@ export class ReportController {
       const canApprove = (() => {
         switch (report.type) {
           case "HR":
-            if (report.status === "SUBMITTED") return isHrManager(req);
+            if (report.status === "SUBMITTED") return req.user!.role === "FRONT_OFFICE" && req.user!.frontOfficeRole === "HR_MANAGER";
             if (report.status === "FIRST_APPROVED") return isAssetManager(req);
             if (report.status === "SECOND_APPROVED") return isGM(req);
             return false;
@@ -155,7 +139,7 @@ export class ReportController {
             if (report.status === "FIRST_APPROVED") return isGM(req);
             return false;
           case "FINANCIAL":
-            if (report.status === "SUBMITTED") return isFinanceManager(req);
+            if (report.status === "SUBMITTED") return req.user!.role === "FRONT_OFFICE" && req.user!.frontOfficeRole === "FINANCE_MANAGER";
             if (report.status === "FIRST_APPROVED") return isGM(req);
             return false;
           case "TRAINING":
@@ -179,7 +163,7 @@ export class ReportController {
       const canReject = (() => {
         switch (report.type) {
           case "HR":
-            if (report.status === "SUBMITTED") return isHrManager(req);
+            if (report.status === "SUBMITTED") return req.user!.role === "FRONT_OFFICE" && req.user!.frontOfficeRole === "HR_MANAGER";
             if (report.status === "FIRST_APPROVED") return isAssetManager(req);
             if (report.status === "SECOND_APPROVED") return isGM(req);
             return false;
@@ -188,7 +172,7 @@ export class ReportController {
             if (report.status === "FIRST_APPROVED") return isGM(req);
             return false;
           case "FINANCIAL":
-            if (report.status === "SUBMITTED") return isFinanceManager(req);
+            if (report.status === "SUBMITTED") return req.user!.role === "FRONT_OFFICE" && req.user!.frontOfficeRole === "FINANCE_MANAGER";
             if (report.status === "FIRST_APPROVED") return isGM(req);
             return false;
           case "TRAINING":
