@@ -14,12 +14,20 @@ export class TeamService {
     return team;
   }
 
-  create(dto: CreateTeamDto) {
+  async create(dto: CreateTeamDto) {
+    if (dto.type === "YOUTH" && dto.clubId) {
+      const existing = await this.repo.findActiveByNameAndClub(dto.name, dto.clubId);
+      if (existing) throw new AppError(409, "TEAM_ALREADY_EXISTS");
+    }
     return this.repo.create(dto);
   }
 
   async update(id: number, dto: UpdateTeamDto) {
-    await this.getById(id);
+    const team = await this.getById(id);
+    if (team.type === "YOUTH" && dto.name && team.clubId) {
+      const existing = await this.repo.findActiveByNameAndClub(dto.name, team.clubId, id);
+      if (existing) throw new AppError(409, "TEAM_ALREADY_EXISTS");
+    }
     return this.repo.update(id, dto);
   }
 
