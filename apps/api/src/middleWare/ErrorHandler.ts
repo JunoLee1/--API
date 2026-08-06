@@ -9,6 +9,7 @@ export const errorHandler = (err:Error, req:Request, res:Response, next:NextFunc
     }
     console.error(err)
     return res.status(500).json({
-        message:"INTERNAL SERVER ERROR"
+        code: "INTERNAL_SERVER_ERROR",
+        detail: err?.message ?? String(err),
     })
 }
