@@ -145,6 +145,7 @@ END $staff$;
 const repairSql2 = `
 DO $r$ BEGIN CREATE TYPE "MealExpenseType" AS ENUM ('TRAINING', 'MATCH'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
 DO $r$ BEGIN CREATE TYPE "DepartmentCategory" AS ENUM ('COMPLIANCE', 'PERFORMANCE', 'FINANCE', 'OPERATIONS'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
+DO $r$ BEGIN CREATE TYPE "LeagueLevel" AS ENUM ('K3', 'K_LEAGUE_2', 'K_LEAGUE_1', 'EPL', 'OTHER'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
 DO $r$ BEGIN CREATE TYPE "ApplicationSource" AS ENUM ('SARAMIN', 'GLASSDOOR', 'INDEED', 'DIRECT'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
 DO $r$ BEGIN CREATE TYPE "ContractType" AS ENUM ('PROFESSIONAL', 'SEMI_PROFESSIONAL'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
 DO $r$ BEGIN CREATE TYPE "FacilityZone" AS ENUM ('GROUND', 'MECHANICAL', 'STRUCTURAL', 'SAFETY', 'SANITATION', 'OPERATIONS'); EXCEPTION WHEN duplicate_object THEN NULL; END $r$;
@@ -410,11 +411,19 @@ DO $r$ BEGIN ALTER TABLE "PayrollRun" ADD CONSTRAINT "PayrollRun_confirmedById_f
 
 const client = new Client({ connectionString: process.env.DATABASE_URL });
 
-client.connect()
-  .then(() => client.query(sql))
-  .then(() => client.query(repairSql2))
-  .then(() => client.query(superAdminSql))
-  .then(() => client.query(staffSql))
-  .then(() => { console.log('[repair-db] User table columns ensured'); })
-  .catch(err => { console.error('[repair-db] Error:', err.message); })
-  .finally(() => client.end());
+async function main() {
+  const run = (q, label) => client.query(q).catch(e => console.error(`[repair-db] ${label}:`, e.message));
+  await client.connect();
+  try {
+    await run(sql, 'sql');
+    await run(repairSql2, 'repairSql2');
+    await run(superAdminSql, 'superAdminSql');
+    await run(staffSql, 'staffSql');
+    console.log('[repair-db] done');
+  } catch (e) {
+    console.error('[repair-db] fatal:', e.message);
+  } finally {
+    await client.end();
+  }
+}
+main();
