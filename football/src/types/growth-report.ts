@@ -23,6 +23,8 @@ export interface GrowthEvaluation {
   player: { id: string; playerName: string; guardianId: number | null }
   coachId: number
   coach: { id: number; username: string; nickname: string }
+  planId: number | null
+  plan: { id: number; goals: string; seasonId: number } | null
   year: number
   month: number
   isPublished: boolean

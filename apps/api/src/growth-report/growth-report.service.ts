@@ -1,12 +1,14 @@
 import { AppError } from "../lib/appError";
 import type { GrowthReportRepository } from "./growth-report.repo";
 import type { NotificationRepository } from "../notification/notification.repo";
+import type { DevelopmentPlanRepository } from "../development-plan/development-plan.repo";
 import type { CreateGrowthEvaluationDto, AwardBadgeDto } from "./dto/growth-report.dto";
 
 export class GrowthReportService {
   constructor(
     private repo: GrowthReportRepository,
     private notifRepo: NotificationRepository,
+    private planRepo: DevelopmentPlanRepository,
   ) {}
 
   getEvaluationsByPlayer(playerId: string) {
@@ -22,7 +24,8 @@ export class GrowthReportService {
   async createEvaluation(dto: CreateGrowthEvaluationDto, coachId: number) {
     const existing = await this.repo.findEvaluationByPeriod(dto.playerId, dto.year, dto.month);
     if (existing) throw new AppError(409, "GROWTH_EVALUATION_ALREADY_EXISTS");
-    return this.repo.createEvaluation(dto, coachId);
+    const activePlan = await this.planRepo.findActiveByPlayer(dto.playerId);
+    return this.repo.createEvaluation(dto, coachId, activePlan?.id);
   }
 
   async updateEvaluation(id: number, dto: Partial<CreateGrowthEvaluationDto>, coachId: number) {
