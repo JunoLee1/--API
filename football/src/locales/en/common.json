@@ -336,6 +336,17 @@
       "WIN": "W",
       "DRAW": "D",
       "LOSS": "L"
+    },
+    "coachView": {
+      "todayAbsent": "Today's Absences",
+      "noSession": "No session today",
+      "allPresent": "All present",
+      "absentCount": "{{count}} absent",
+      "injuryStatus": "Injury Status",
+      "noInjuries": "No injuries",
+      "injuredCount": "{{count}} injured",
+      "nextMatch": "Next Match",
+      "noUpcoming": "No upcoming matches"
     }
   }
 }
