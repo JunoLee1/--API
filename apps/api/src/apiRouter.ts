@@ -53,6 +53,7 @@ import ledgerRouter from "./ledger/ledger.routes";
 import salesRouter from "./sales/sales.routes";
 import inventoryRouter from "./inventory/inventory.routes";
 import agencyRouter from "./agency/agency.routes";
+import opsReportRouter from "./ops-report/ops-report.routes";
 
 const apiRouter = Router();
 
@@ -110,5 +111,6 @@ apiRouter.use("/ledger", ledgerRouter);
 apiRouter.use("/sales", salesRouter);
 apiRouter.use("/inventory", inventoryRouter);
 apiRouter.use("/agencies", agencyRouter);
+apiRouter.use("/ops-reports", opsReportRouter);
 
 export default apiRouter;
