@@ -408,7 +408,7 @@ async function seedQACases() {
   const vestUnit = await prisma.equipmentUnit.upsert({
     where: { id: 1 },
     update: {},
-    create: { id: 1, equipmentItemId: vest.id, status: 'ON_LOAN', serialNumber: 'VEST-001', purchasedAt: new Date('2025-01-01'), purchaseValue: 50_000 },
+    create: { id: 1, equipmentItemId: vest.id, status: 'IN_USE', serialNumber: 'VEST-001', purchasedAt: new Date('2025-01-01'), purchaseValue: 50_000 },
   });
 
   const loanCases: Parameters<typeof prisma.equipmentLoan.create>[0]['data'][] = [
