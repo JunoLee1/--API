@@ -853,7 +853,7 @@ export function AppShell() {
   )
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="h-screen flex bg-background overflow-hidden">
       {/* 데스크탑 사이드바 */}
       <aside className="w-60 border-r bg-card hidden md:flex flex-col">
         <div className="px-4 h-14 border-b flex items-center shrink-0">
