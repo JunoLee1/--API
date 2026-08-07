@@ -492,6 +492,15 @@ enum LeagueLevel {
   OTHER
 }
 
+enum Confederation {
+  UEFA
+  AFC
+  CONMEBOL
+  CONCACAF
+  CAF
+  OFC
+}
+
 enum DepartmentCategory {
   COMPLIANCE
   PERFORMANCE
@@ -624,6 +633,7 @@ model Country {
   users   User[]
   players Player[]
   clubs   Club[]
+  leagues League[]
 }
 
 model PhoneNumber {
@@ -759,13 +769,16 @@ model Season {
 }
 
 model League {
-  id        Int         @id @default(autoincrement())
-  name      String
-  level     LeagueLevel
-  year      Int
-  isActive  Boolean     @default(true)
-  createdAt DateTime    @default(now())
+  id            Int            @id @default(autoincrement())
+  name          String
+  level         LeagueLevel
+  year          Int
+  isActive      Boolean        @default(true)
+  countryId     Int?
+  confederation Confederation?
+  createdAt     DateTime       @default(now())
 
+  country Country?     @relation(fields: [countryId], references: [id])
   clubs   ClubLeague[]
   seasons Season[]
 

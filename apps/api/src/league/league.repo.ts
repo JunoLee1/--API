@@ -8,7 +8,9 @@ const LEAGUE_SELECT = {
   level: true,
   year: true,
   isActive: true,
+  confederation: true,
   createdAt: true,
+  country: { select: { id: true, name: true, code: true } },
   clubs: {
     select: {
       clubId: true,
@@ -48,7 +50,13 @@ export class LeagueRepository {
 
   create(dto: CreateLeagueDto) {
     return this.prisma.league.create({
-      data: { name: dto.name, level: dto.level, year: dto.year },
+      data: {
+        name: dto.name,
+        level: dto.level,
+        year: dto.year,
+        ...(dto.countryId !== undefined && { countryId: dto.countryId }),
+        ...(dto.confederation !== undefined && { confederation: dto.confederation }),
+      },
       select: LEAGUE_SELECT,
     });
   }
