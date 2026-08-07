@@ -50,10 +50,11 @@ function formatDate(d: string) {
 
 function isReturningImminent(inj: Injury): boolean {
   if (inj.status === 'RETURNED' || !inj.expectedReturnDate) return false
+  const returnDateStr = inj.expectedReturnDate.slice(0, 10)
   const cutoff = new Date()
   cutoff.setDate(cutoff.getDate() + 7)
-  cutoff.setHours(23, 59, 59, 999)
-  return new Date(inj.expectedReturnDate) <= cutoff
+  const cutoffStr = cutoff.toISOString().slice(0, 10)
+  return returnDateStr <= cutoffStr
 }
 
 interface CreateInjuryDialogProps {
