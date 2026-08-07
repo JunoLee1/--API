@@ -25,7 +25,7 @@ export class AdminController {
         ...(req.query["frontOfficeRole"] && { frontOfficeRole: req.query["frontOfficeRole"] as FrontOfficeRole }),
         ...(req.query["isDeleted"] !== undefined && { isDeleted: req.query["isDeleted"] === "true" }),
       };
-      res.status(200).json(await this.service.listUsers(filters, req.user!.isDemo ?? false));
+      res.status(200).json(await this.service.listUsers(filters));
     } catch (err) {
       next(err);
     }
@@ -34,7 +34,7 @@ export class AdminController {
   getUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
       requireAdmin(req);
-      res.status(200).json(await this.service.getUserById(Number(req.params["id"]), req.user!.isDemo ?? false));
+      res.status(200).json(await this.service.getUserById(Number(req.params["id"])));
     } catch (err) {
       next(err);
     }

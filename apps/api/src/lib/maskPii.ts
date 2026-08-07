@@ -10,3 +10,9 @@ export function maskEmail(email: string): string {
 export function maskUsername(username: string): string {
   return username.length >= 4 ? `${username.slice(0, 3)}***` : "***";
 }
+
+// 010-1234-5678 → 010-****-5678
+export function maskPhone(phone: string | null | undefined): string | null {
+  if (!phone) return phone ?? null;
+  return phone.replace(/(\d{3})-(\d{3,4})-(\d{4})/, (_, a, _b, c) => `${a}-****-${c}`);
+}
