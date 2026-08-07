@@ -87,6 +87,8 @@ export function DashboardPage() {
   const navigate = useNavigate()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [seasonTicketRevenue, setSeasonTicketRevenue] = useState<number | null>(null)
+  const [opsKpiYear, setOpsKpiYear] = useState<number>(new Date().getMonth() === 0 ? new Date().getFullYear() - 1 : new Date().getFullYear())
+  const [opsKpiMonth, setOpsKpiMonth] = useState<number>(new Date().getMonth() === 0 ? 12 : new Date().getMonth())
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [matches, setMatches] = useState<Match[]>([])
   const [myRanking, setMyRanking] = useState<TeamRanking | null>(null)
@@ -134,10 +136,12 @@ export function DashboardPage() {
         }
         if (config.showOpsKpi) {
           const now = new Date()
-          const year = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
-          const month = now.getMonth() === 0 ? 12 : now.getMonth()
+          const kpiYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+          const kpiMonth = now.getMonth() === 0 ? 12 : now.getMonth()
+          setOpsKpiYear(kpiYear)
+          setOpsKpiMonth(kpiMonth)
           tasks.push(
-            opsReportApi.getOpsKpi(season.id, year, month)
+            opsReportApi.getOpsKpi(season.id, kpiYear, kpiMonth)
               .then(setOpsKpi)
               .catch(() => null)
           )
@@ -215,6 +219,8 @@ export function DashboardPage() {
         <OpsKpiSection
           role={user.frontOfficeRole === 'HR_MANAGER' ? 'HR_MANAGER' : 'FINANCE_MANAGER'}
           data={opsKpi as unknown as Record<string, number>}
+          year={opsKpiYear}
+          month={opsKpiMonth}
         />
       )}
 
