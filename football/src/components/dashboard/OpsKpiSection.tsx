@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AlertTriangle, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { AlertTriangle, AlertCircle, CheckCircle2, ChevronRight } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import {
@@ -69,8 +69,10 @@ function KpiCard(item: KpiItem) {
       <button
         type="button"
         onClick={item.onClick}
-        className={`rounded-lg border p-4 text-center w-full cursor-pointer hover:opacity-90 transition-opacity ${card}`}
+        aria-label={`${item.label} 상세 보기`}
+        className={`relative rounded-lg border p-4 text-center w-full cursor-pointer hover:opacity-90 transition-opacity ${card}`}
       >
+        <ChevronRight className="absolute top-2 right-2 h-3 w-3 text-muted-foreground" aria-hidden="true" />
         <div className="flex items-center justify-center gap-1 mb-1">
           <Icon className={`h-4 w-4 ${text}`} aria-hidden="true" />
           <p className={`text-2xl font-bold ${text}`}>{item.value.toLocaleString()}{item.unit}</p>
@@ -224,7 +226,11 @@ export function OpsKpiSection({ role, data, year, month }: Props) {
             </SheetHeader>
             <div className="mt-4">
               {isLoading ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">불러오는 중...</p>
+                <div className="space-y-2">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="h-10 bg-muted animate-pulse rounded" />
+                  ))}
+                </div>
               ) : isError ? (
                 <p className="text-sm text-destructive py-4 text-center">데이터를 불러오지 못했습니다.</p>
               ) : drill === 'notice-unread' ? (
