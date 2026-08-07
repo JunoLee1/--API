@@ -624,6 +624,7 @@ model Country {
   users   User[]
   players Player[]
   clubs   Club[]
+  leagues League[]
 }
 
 model PhoneNumber {
@@ -763,11 +764,13 @@ model League {
   name      String
   level     LeagueLevel
   year      Int
+  countryId Int?
   isActive  Boolean     @default(true)
   createdAt DateTime    @default(now())
 
   clubs   ClubLeague[]
   seasons Season[]
+  country Country?     @relation(fields: [countryId], references: [id])
 
   @@unique([level, year])
 }

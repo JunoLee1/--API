@@ -4,6 +4,7 @@ export interface CreateLeagueDto {
   name: string;
   level: LeagueLevel;
   year: number;
+  countryId?: number;
 }
 
 export interface UpdateLeagueDto {
