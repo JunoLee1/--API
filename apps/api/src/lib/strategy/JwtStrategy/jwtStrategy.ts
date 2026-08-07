@@ -27,6 +27,8 @@ export const refreshJwtVerify = async (payload: Express.User & { jti?: string },
       const blacklisted = await getPrisma().refreshTokenBlacklist.findUnique({ where: { jti: payload.jti }, select: { jti: true } });
       if (blacklisted) return done(null, false);
     }
+    const user = await getPrisma().user.findUnique({ where: { id: payload.id }, select: { isDeleted: true } });
+    if (!user || user.isDeleted) return done(null, false);
     done(null, payload);
   } catch (err) {
     done(err, false);
