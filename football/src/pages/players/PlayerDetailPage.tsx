@@ -305,7 +305,7 @@ export function PlayerDetailPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className={`grid grid-cols-1 gap-4 ${canSeeContract ? 'md:grid-cols-2' : ''}`}>
                 {/* 신체 정보 */}
                 <div className="rounded-lg border bg-card p-5">
                   <h3 className="text-sm font-semibold text-foreground mb-1">{t('detailPage.physicalTitle')}</h3>
