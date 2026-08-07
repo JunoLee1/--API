@@ -797,7 +797,7 @@ export function MatchDetailPage() {
 
   const isFO = user?.role === 'FRONT_OFFICE'
   const foRole = user?.frontOfficeRole
-  const canViewSales = user?.role === 'ADMIN' || (isFO && (foRole === 'FINANCE_MANAGER' || foRole === 'FINANCE_STAFF'))
+  const canViewSales = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
   const canWriteSales = user?.role === 'ADMIN' || (isFO && (foRole === 'FINANCE_MANAGER' || foRole === 'FINANCE_STAFF'))
   const canDeleteSales = user?.role === 'ADMIN' || (isFO && foRole === 'FINANCE_MANAGER')
 
