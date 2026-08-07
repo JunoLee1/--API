@@ -25,6 +25,7 @@ import { RankingCard } from '@/components/dashboard/RankingCard'
 import { YouthDevelopmentSection } from '@/components/dashboard/YouthDevelopmentSection'
 import { AcademyFinanceSection } from '@/components/dashboard/AcademyFinanceSection'
 import { OpsKpiSection } from '@/components/dashboard/OpsKpiSection'
+import { CoachQuickView } from '@/components/dashboard/CoachQuickView'
 
 const OUR_TEAM_NAME = 'FC Seoul'
 
@@ -101,6 +102,7 @@ export function DashboardPage() {
   const [matchesLoading, setMatchesLoading] = useState(true)
   const [rankingLoading, setRankingLoading] = useState(true)
   const [expensesLoading, setExpensesLoading] = useState(false)
+  const [currentSeasonId, setCurrentSeasonId] = useState<number | undefined>(undefined)
 
   const showYouthDev = user?.role === 'ADMIN' || (user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'TD')
 
@@ -120,6 +122,7 @@ export function DashboardPage() {
     seasonApi.active()
       .then((season) => {
         if (!season) return
+        setCurrentSeasonId(season.id)
         const tasks: Promise<unknown>[] = [
           analysisApi.getRankings({ seasonId: season.id, competitionType: 'LEAGUE' })
             .then((rows) => setMyRanking(rows.find((r) => r.teamName === OUR_TEAM_NAME) ?? null))
@@ -178,6 +181,11 @@ export function DashboardPage() {
         <h2 className="text-2xl font-semibold mb-1">{t('dashboard.title')}</h2>
         <p className="text-muted-foreground text-sm">{t('dashboard.greeting', { name: user.nickname })}</p>
       </div>
+
+      {/* HEAD_COACH 전용 퀵뷰 */}
+      {user.role === 'COACHING_STAFF' && user.coachingRole === 'HEAD_COACH' && (
+        <CoachQuickView seasonId={currentSeasonId} />
+      )}
 
       {/* 숫자 카드 */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
