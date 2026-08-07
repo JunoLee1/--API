@@ -58,4 +58,26 @@ export class OpsReportController {
       res.json(data);
     } catch (err) { next(err); }
   };
+
+  getDrillNoticeUnread = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = requireUser(req);
+      if (!(role === "FRONT_OFFICE" && frontOfficeRole === "HR_MANAGER")) throw new AppError(403, "FORBIDDEN");
+      const year = Number(req.query["year"]) || new Date().getFullYear();
+      const month = Number(req.query["month"]) || new Date().getMonth() + 1;
+      const data = await this.service.drillNoticeUnread(year, month);
+      res.json(data);
+    } catch (err) { next(err); }
+  };
+
+  getDrillAttendance = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = requireUser(req);
+      if (!(role === "FRONT_OFFICE" && frontOfficeRole === "HR_MANAGER")) throw new AppError(403, "FORBIDDEN");
+      const year = Number(req.query["year"]) || new Date().getFullYear();
+      const month = Number(req.query["month"]) || new Date().getMonth() + 1;
+      const data = await this.service.drillAttendance(year, month);
+      res.json(data);
+    } catch (err) { next(err); }
+  };
 }

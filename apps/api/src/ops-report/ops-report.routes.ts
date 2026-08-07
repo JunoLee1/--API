@@ -14,5 +14,7 @@ router.get("/ops/kpi",       auth, controller.getOpsKpi);
 router.get("/ops/annual",    auth, controller.getAnnualOps);
 router.get("/budget/kpi",    auth, controller.getBudgetKpi);
 router.get("/budget/annual", auth, controller.getAnnualBudget);
+router.get("/drill/notice-unread", auth, controller.getDrillNoticeUnread);
+router.get("/drill/attendance",    auth, controller.getDrillAttendance);
 
 export default router;
