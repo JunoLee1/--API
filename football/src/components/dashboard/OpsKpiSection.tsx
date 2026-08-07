@@ -140,6 +140,7 @@ function NoticeUnreadDrillTable({ items }: { items: NoticeUnreadDrillItem[] }) {
 
 function AttendanceDrillTable({ items }: { items: AttendanceDrillItem[] }) {
   return (
+    <div className="overflow-x-auto">
     <Table>
       <TableHeader>
         <TableRow>
@@ -172,6 +173,7 @@ function AttendanceDrillTable({ items }: { items: AttendanceDrillItem[] }) {
         )}
       </TableBody>
     </Table>
+    </div>
   )
 }
 
