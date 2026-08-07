@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { ClubSettingsService } from "./club-settings.service";
 
 export class ClubSettingsController {
@@ -16,7 +17,8 @@ export class ClubSettingsController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!isAdminLike(req.user!.role)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!isAdminLike(user.role)) throw new AppError(403, "FORBIDDEN");
       const body = req.body as { currency?: string; ibiBeta?: number };
       const data: { currency?: string; ibiBeta?: number } = {};
       if (body.currency !== undefined) data.currency = body.currency;

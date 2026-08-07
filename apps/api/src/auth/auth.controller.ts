@@ -2,9 +2,11 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME, ACCESS_TOKEN_COOKIE_OPTIONS, REFRESH_TOKEN_COOKIE_OPTIONS } from "../lib/constants";
 import { AuthService } from "./auth.service";
 import { AuthRepository } from "./auth.repo";
+import { Role, CoachingRole, FrontOfficeRole } from "../generated/enums";
 
 export class AuthController {
   constructor(
@@ -45,7 +47,7 @@ export class AuthController {
 
   refresh = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = req.user!;
+      const user = requireUser(req);
       const oldJti = (user as Express.User & { jti?: string; exp?: number }).jti;
       const oldExp = (user as Express.User & { jti?: string; exp?: number }).exp;
 
@@ -127,9 +129,9 @@ export class AuthController {
       };
       if (!email || !role) throw new AppError(400, "EMAIL_AND_ROLE_REQUIRED");
       const invite = await this.service.createInvite({
-        email, role: role as any,
-        coachingRole: coachingRole as any ?? null,
-        frontOfficeRole: frontOfficeRole as any ?? null,
+        email, role: role as Role,
+        coachingRole: (coachingRole as CoachingRole) ?? null,
+        frontOfficeRole: (frontOfficeRole as FrontOfficeRole) ?? null,
         createdById: userInfo.id,
       });
       res.status(201).json(invite);

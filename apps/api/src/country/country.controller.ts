@@ -15,7 +15,8 @@ export default class Controller {
 
   getCountries = async (req: any, res: any) => {
     try {
-      const { name, region } = req.query as any;
+      const name = req.query["name"] as string | undefined;
+      const region = req.query["region"] as string | undefined;
       const code = req.query.code ? (req.query.code as string).toUpperCase() : undefined;
       const result = await this.service.getCountries({ name, code, region });
       return res.status(200).json({ message: "성공적으로 데이터를 가지고 왔습니다.", data: result });

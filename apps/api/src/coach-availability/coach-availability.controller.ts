@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { CoachAvailabilityService } from "./coach-availability.service";
 
 export class CoachAvailabilityController {
@@ -19,7 +20,7 @@ export class CoachAvailabilityController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole, id: requesterId } = req.user!;
+      const { role, coachingRole, id: requesterId } = requireUser(req);
       const canCreate =
         isAdminLike(role) ||
         (role === "COACHING_STAFF" && coachingRole === "HEAD_COACH") ||
@@ -31,7 +32,7 @@ export class CoachAvailabilityController {
 
   delete = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id: requesterId, role } = req.user!;
+      const { id: requesterId, role } = requireUser(req);
       await this.service.delete(Number(req.params["id"]), requesterId, isAdminLike(role));
       res.status(204).send();
     } catch (err) { next(err); }

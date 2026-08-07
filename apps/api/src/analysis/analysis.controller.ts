@@ -3,13 +3,15 @@ import { AppError } from "../lib/appError";
 import { AnalysisService } from "./analysis.service";
 import { CompetitionType, Role } from "../generated/enums";
 import { hasPermission, Permission } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 
 export class AnalysisController {
   constructor(private service: AnalysisService) {}
 
   getRankings = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!hasPermission(req.user!.role as Role, Permission.VIEW_TEAM_RANKING)) {
+      const user = requireUser(req);
+      if (!hasPermission(user.role as Role, Permission.VIEW_TEAM_RANKING)) {
         throw new AppError(403, "FORBIDDEN");
       }
 

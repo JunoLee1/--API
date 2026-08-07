@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { requireUser } from "../lib/authMiddleware";
 import { TrainingLoadService } from "./training-load.service";
 
 export class TrainingLoadController {
@@ -16,7 +17,7 @@ export class TrainingLoadController {
 
   upsert = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id, role, coachingRole } = req.user!;
+      const { id, role, coachingRole } = requireUser(req);
       res.status(200).json(
         await this.service.upsert(req.body, String(id), role, coachingRole ?? null),
       );
