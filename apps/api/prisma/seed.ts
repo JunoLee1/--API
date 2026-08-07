@@ -249,6 +249,32 @@ async function seedQACases() {
   const d = (days: number) => new Date(Date.now() - days * 24 * 3600_000);
   const f = (days: number) => new Date(Date.now() + days * 24 * 3600_000);
 
+  // ── 0. Agency ────────────────────────────────────────────
+  await prisma.agency.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      id: 1,
+      name: 'SEM 스포츠 매니지먼트',
+      contactName: '김대리',
+      phone: '02-1234-5678',
+      email: 'contact@sem-sports.kr',
+      commissionRate: 5.0,
+    },
+  });
+  await prisma.agency.upsert({
+    where: { id: 2 },
+    update: {},
+    create: {
+      id: 2,
+      name: '프로스포츠 에이전시',
+      contactName: '이팀장',
+      phone: '031-9876-5432',
+      email: 'info@prosports-agency.kr',
+      commissionRate: 4.5,
+    },
+  });
+
   // ── 1. Contract edge cases ────────────────────────────
   // p2 (이서준) 계약 만료: endDate 2026-06-30 이미 지났으므로 EXPIRED로 업데이트
   await prisma.contract.update({ where: { id: 2 }, data: { status: 'EXPIRED' } });
@@ -278,7 +304,7 @@ async function seedQACases() {
     create: {
       id: 2, playerId: 'player-001',
       bodyPart: 'ANKLE', cause: 'MATCH',
-      status: 'ONGOING',
+      status: 'REHABILITATING',
       expectedReturnDate: f(14),
       medicalStaffId: 1,
     },
@@ -290,7 +316,7 @@ async function seedQACases() {
     create: {
       id: 3, playerId: 'player-005',
       bodyPart: 'KNEE', cause: 'TRAINING',
-      status: 'RECOVERED',
+      status: 'RETURNED',
       medicalStaffId: 1,
     },
   });

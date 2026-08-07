@@ -6,6 +6,8 @@ export interface CreateContractDto {
   endDate: string;
   salary: number;
   managedById?: number;
+  agencyId?: number;
+  agencyCommission?: number;
 }
 
 export interface UpdateContractStatusDto {
