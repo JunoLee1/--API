@@ -178,13 +178,13 @@ function AttendanceDrillTable({ items }: { items: AttendanceDrillItem[] }) {
 export function OpsKpiSection({ role, data, year, month }: Props) {
   const [drill, setDrill] = useState<DrillType>(null)
 
-  const { data: noticeUnreadData, isLoading: noticeLoading } = useQuery({
+  const { data: noticeUnreadData, isLoading: noticeLoading, isError: noticeError } = useQuery({
     queryKey: ['drill-notice-unread', year, month],
     queryFn: () => opsReportApi.getDrillNoticeUnread(year, month),
     enabled: drill === 'notice-unread',
   })
 
-  const { data: attendanceData, isLoading: attendanceLoading } = useQuery({
+  const { data: attendanceData, isLoading: attendanceLoading, isError: attendanceError } = useQuery({
     queryKey: ['drill-attendance', year, month],
     queryFn: () => opsReportApi.getDrillAttendance(year, month),
     enabled: drill === 'attendance',
@@ -199,8 +199,11 @@ export function OpsKpiSection({ role, data, year, month }: Props) {
     ? 'grid grid-cols-2 gap-3 sm:grid-cols-3'
     : 'grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5'
 
-  const sheetTitle = drill === 'notice-unread' ? '공지 미열람자 목록' : '선수별 출석 현황'
+  const sheetTitle =
+    drill === 'notice-unread' ? '공지 미열람자 목록' :
+    drill === 'attendance' ? '선수별 출석 현황' : ''
   const isLoading = drill === 'notice-unread' ? noticeLoading : attendanceLoading
+  const isError = drill === 'notice-unread' ? noticeError : attendanceError
 
   return (
     <>
@@ -219,7 +222,9 @@ export function OpsKpiSection({ role, data, year, month }: Props) {
             </SheetHeader>
             <div className="mt-4">
               {isLoading ? (
-                <p className="text-sm text-muted-foreground">불러오는 중...</p>
+                <p className="text-sm text-muted-foreground py-4 text-center">불러오는 중...</p>
+              ) : isError ? (
+                <p className="text-sm text-destructive py-4 text-center">데이터를 불러오지 못했습니다.</p>
               ) : drill === 'notice-unread' ? (
                 <NoticeUnreadDrillTable items={noticeUnreadData ?? []} />
               ) : drill === 'attendance' ? (
