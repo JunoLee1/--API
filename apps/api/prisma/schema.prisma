@@ -739,6 +739,7 @@ model User {
   createdSoftwareLicenses  SoftwareLicense[]         @relation("SoftwareLicenseCreator")
   ledgerEntries            LedgerEntry[]             @relation("LedgerEntryCreator")
   salesRecords             SalesRecord[]             @relation("SalesRecordCreator")
+  squadPlans               SquadPlan[]
 }
 
 model Season {
@@ -762,6 +763,7 @@ model Season {
   complianceCheck          SeasonComplianceCheck?
   monthlyBudgetSnapshots   MonthlyBudgetSnapshot[]
   monthlyOperationsSnapshots MonthlyOperationsSnapshot[]
+  squadPlan                SquadPlan?
 }
 
 model League {
@@ -2702,4 +2704,16 @@ model MonthlyOperationsSnapshot {
   season       Season   @relation(fields: [seasonId], references: [id])
 
   @@unique([seasonId, year, month])
+}
+
+model SquadPlan {
+  id          Int      @id @default(autoincrement())
+  seasonId    Int      @unique
+  formation   String
+  slots       Json
+  updatedAt   DateTime @updatedAt
+  updatedById Int
+
+  season    Season @relation(fields: [seasonId], references: [id])
+  updatedBy User   @relation(fields: [updatedById], references: [id])
 }
