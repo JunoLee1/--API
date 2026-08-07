@@ -136,7 +136,7 @@ function App() {
             <Route path="/training/references" element={<TrainingReferencePage />} />
             <Route path="/training/videos" element={<TrainingVideoPage />} />
             <Route path="/training/coach-availability" element={<CoachAvailabilityPage />} />
-            <Route path="/training/dashboard" element={<CoachDashboardPage />} />
+            <Route path="/training/analysis" element={<CoachDashboardPage />} />
             <Route path="/training/:id" element={<TrainingDetailPage />} />
             <Route path="/matches" element={<MatchesPage />} />
             <Route path="/matches/analysis" element={<TacticalAnalysisPage />} />
