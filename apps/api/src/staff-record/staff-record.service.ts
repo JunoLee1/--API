@@ -1,18 +1,31 @@
 import { StaffRecordRepository } from "./staff-record.repo";
 import { AppError } from "../lib/appError";
 import { writeAuditLog } from "../lib/auditLog";
+import { maskPhone, maskEmail } from "../lib/maskPii";
+
+type StaffRecord = Awaited<ReturnType<StaffRecordRepository["findById"]>>;
+
+function maskStaff<T extends StaffRecord>(record: T): T {
+  if (!record) return record;
+  return {
+    ...record,
+    phone: maskPhone(record.phone),
+    email: record.email ? maskEmail(record.email) : record.email,
+  };
+}
 
 export class StaffRecordService {
   constructor(private repo: StaffRecordRepository) {}
 
   async list(includeInactive = false) {
-    return this.repo.findAll(includeInactive);
+    const records = await this.repo.findAll(includeInactive);
+    return records.map(maskStaff);
   }
 
   async get(id: number) {
     const record = await this.repo.findById(id);
     if (!record) throw new AppError(404, "STAFF_RECORD_NOT_FOUND");
-    return record;
+    return maskStaff(record);
   }
 
   async create(
