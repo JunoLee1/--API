@@ -31,6 +31,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(passport.initialize());
 
+app.get("/api/health", (_req, res) => res.status(200).json({ status: "ok" }));
 app.use("/api", apiRouter);
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 

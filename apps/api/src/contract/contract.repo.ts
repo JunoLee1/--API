@@ -15,6 +15,8 @@ const CONTRACT_DETAIL = {
   status: true,
   playerId: true,
   managedById: true,
+  agencyId: true,
+  agencyCommission: true,
   buyoutClause: true,
   extensionOptions: true,
   performanceBonuses: {
@@ -55,6 +57,8 @@ export class ContractRepository {
         endDate: new Date(dto.endDate),
         salary: dto.salary,
         ...(dto.managedById && { managedById: dto.managedById }),
+        ...(dto.agencyId && { agencyId: dto.agencyId }),
+        ...(dto.agencyCommission !== undefined && { agencyCommission: dto.agencyCommission }),
       },
       select: CONTRACT_DETAIL,
     });
