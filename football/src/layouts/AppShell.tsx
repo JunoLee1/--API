@@ -52,6 +52,7 @@ import {
   Shield,
   SlidersHorizontal,
   Stethoscope,
+  Ticket,
   TrendingUp,
   Trophy,
   UserPlus,
@@ -426,6 +427,15 @@ const NAV_ITEMS: NavItem[] = [
     subSection: 'nav.subsection.finance',
     roles: ['ADMIN', 'FRONT_OFFICE'],
     frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF', 'TD'],
+  },
+  {
+    to: '/finance/ticket-sales',
+    label: 'nav.item.ticketSales',
+    icon: Ticket,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.finance',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF'],
   },
 
   // 관리 > 시설·자산

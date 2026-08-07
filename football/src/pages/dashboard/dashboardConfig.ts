@@ -23,6 +23,7 @@ export interface DashboardConfig {
   showMedicalSection: boolean
   showYouthDevelopment: boolean
   showAcademyFinance?: boolean
+  showTicketRevenue?: boolean
 }
 
 export function getDashboardConfig(user: UserDto): DashboardConfig {
@@ -160,6 +161,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         showRanking: false,
         showMedicalSection: false,
         showYouthDevelopment: false,
+        showTicketRevenue: true,
       }
     }
     if (frontOfficeRole === 'ASSET_MANAGER') {
