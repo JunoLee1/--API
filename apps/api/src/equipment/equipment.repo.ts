@@ -15,6 +15,11 @@ const UNIT_SELECT = {
   id: true,
   status: true,
   equipmentItemId: true,
+  assignments: {
+    where: { returnedAt: null },
+    take: 1,
+    select: { player: { select: { name: true } } },
+  },
 } as const;
 
 const ASSIGNMENT_SELECT = {

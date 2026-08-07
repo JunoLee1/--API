@@ -26,7 +26,13 @@ export class EquipmentService {
   async getItemById(id: number) {
     const item = await this.repo.findItemById(id);
     if (!item) throw new AppError(404, "EQUIPMENT_ITEM_NOT_FOUND");
-    return item;
+    return {
+      ...item,
+      units: item.units?.map(({ assignments, ...unit }) => ({
+        ...unit,
+        assignedTo: assignments[0]?.player ? { playerName: assignments[0].player.name } : null,
+      })),
+    };
   }
 
   createItem(dto: CreateEquipmentItemDto) {
