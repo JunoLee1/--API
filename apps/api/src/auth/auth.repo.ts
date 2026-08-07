@@ -107,6 +107,18 @@ export class AuthRepository {
     });
   }
 
+  blacklistToken(jti: string, expiresAt: Date) {
+    return this.prisma.refreshTokenBlacklist.create({ data: { jti, expiresAt } });
+  }
+
+  isTokenBlacklisted(jti: string) {
+    return this.prisma.refreshTokenBlacklist.findUnique({ where: { jti }, select: { jti: true } });
+  }
+
+  deleteExpiredBlacklistEntries() {
+    return this.prisma.refreshTokenBlacklist.deleteMany({ where: { expiresAt: { lt: new Date() } } });
+  }
+
   listInvites(limit = 50) {
     return this.prisma.userInvite.findMany({
       orderBy: { createdAt: "desc" },
