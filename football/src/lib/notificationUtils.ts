@@ -20,3 +20,10 @@ export function formatNotificationDateAbsolute(d: string): string {
     minute: '2-digit',
   })
 }
+
+export function getUnreadDotClass(type: string): string {
+  if (type === 'CONTRACT_EXPIRY_30D') return 'bg-destructive'
+  if (type === 'CONTRACT_EXPIRY_60D') return 'bg-amber-500'
+  if (type === 'CONTRACT_EXPIRY_90D') return 'bg-blue-500'
+  return 'bg-destructive'
+}

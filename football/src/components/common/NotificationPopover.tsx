@@ -5,19 +5,12 @@ import { Button } from '@/components/ui/button'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { notificationApi, NOTIFICATION_ROUTES, type NotificationItem } from '@/services/notification.service'
 import { useTranslation } from 'react-i18next'
-import { formatNotificationDateRelative } from '@/lib/notificationUtils'
+import { formatNotificationDateRelative, getUnreadDotClass } from '@/lib/notificationUtils'
 
 interface Props {
   unreadCount: number
   onUnreadCountChange: (count: number) => void // 읽지 않는 개수가 바뀔때마다 호출됨
   iconSize?: 'sm' | 'md'
-}
-
-function getUnreadDotClass(type: string): string {
-  if (type === 'CONTRACT_EXPIRY_30D') return 'bg-destructive'
-  if (type === 'CONTRACT_EXPIRY_60D') return 'bg-amber-500'
-  if (type === 'CONTRACT_EXPIRY_90D') return 'bg-blue-500'
-  return 'bg-destructive'
 }
 
 export function NotificationPopover({ unreadCount, onUnreadCountChange, iconSize = 'sm' }: Props) {
