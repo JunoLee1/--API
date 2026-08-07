@@ -3,7 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { matchApi } from '@/services/match.service'
+import { salesApi } from '@/services/sales.service'
 import type { MatchDetail, ShotEvent, ShotResult, StatSheetData } from '@/types/match'
+import type { SalesRecord } from '@/types/sales'
 import { SHOT_RESULT_STYLE } from '@/types/match'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
@@ -782,15 +784,32 @@ export function MatchDetailPage() {
   const [deletingShot, setDeletingShot] = useState<number | null>(null)
   const [statUploading, setStatUploading] = useState(false)
   const statFileRef = useRef<HTMLInputElement>(null)
+  const [ticketSales, setTicketSales] = useState<SalesRecord[]>([])
+  const [saleQty, setSaleQty] = useState('')
+  const [salePrice, setSalePrice] = useState('')
+  const [saleDate, setSaleDate] = useState(new Date().toISOString().slice(0, 10))
+  const [saleNote, setSaleNote] = useState('')
+  const [savingSale, setSavingSale] = useState(false)
 
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
   const canInputStats = canWrite || user?.role === 'COACHING_STAFF'
   const canUploadOcr = user?.role === 'ADMIN' || user?.role === 'COACHING_STAFF'
 
+  const isFO = user?.role === 'FRONT_OFFICE'
+  const foRole = user?.frontOfficeRole
+  const canViewSales = user?.role === 'ADMIN' || (isFO && (foRole === 'FINANCE_MANAGER' || foRole === 'FINANCE_STAFF'))
+  const canWriteSales = user?.role === 'ADMIN' || (isFO && (foRole === 'FINANCE_MANAGER' || foRole === 'FINANCE_STAFF'))
+  const canDeleteSales = user?.role === 'ADMIN' || (isFO && foRole === 'FINANCE_MANAGER')
+
   const fetchMatch = () => {
     if (!id) return
     matchApi.get(Number(id))
-      .then(setMatch)
+      .then((data) => {
+        setMatch(data)
+        if (data.homeTeamName === 'FC Seoul') {
+          salesApi.byMatch(data.id).then(setTicketSales).catch(() => null)
+        }
+      })
       .catch(() => toast.error(t('detail.loadFailed')))
       .finally(() => setLoading(false))
   }
@@ -828,6 +847,43 @@ export function MatchDetailPage() {
     } finally {
       setStatUploading(false)
       if (statFileRef.current) statFileRef.current.value = ''
+    }
+  }
+
+  const handleAddTicketSale = async () => {
+    if (!match || !saleQty || !salePrice) return
+    setSavingSale(true)
+    try {
+      const newSale = await salesApi.create({
+        type: 'TICKET',
+        quantity: Number(saleQty),
+        unitPrice: Number(salePrice),
+        saleDate,
+        matchId: match.id,
+        ...(saleNote && { description: saleNote }),
+      })
+      setTicketSales((prev) => [newSale, ...prev])
+      setSaleQty('')
+      setSalePrice('')
+      setSaleNote('')
+      toast.success('티켓 판매 기록이 저장되었습니다.')
+    } catch (err: any) {
+      const code = err?.response?.data?.code
+      if (code === 'AWAY_MATCH_TICKET_NOT_ALLOWED') toast.error('홈경기만 티켓 판매를 기록할 수 있습니다.')
+      else toast.error('저장에 실패했습니다.')
+    } finally {
+      setSavingSale(false)
+    }
+  }
+
+  const handleDeleteTicketSale = async (id: number) => {
+    if (!confirm('티켓 판매 기록을 삭제할까요?')) return
+    try {
+      await salesApi.delete(id)
+      setTicketSales((prev) => prev.filter((s) => s.id !== id))
+      toast.success('삭제되었습니다.')
+    } catch {
+      toast.error('삭제에 실패했습니다.')
     }
   }
 
@@ -1174,6 +1230,89 @@ export function MatchDetailPage() {
                 <StatSheetDisplay sheet={match.statSheetRaw} homeTeam={match.homeTeamName} awayTeam={match.awayTeamName} />
               ) : (
                 <p className="text-xs text-muted-foreground text-center py-4">{t('statSheetOcr.uploadHint')}</p>
+              )}
+            </div>
+          )}
+
+          {/* 티켓 판매 */}
+          {match?.homeTeamName === 'FC Seoul' && canViewSales && (
+            <div className="rounded-xl border bg-white p-4 space-y-3">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                티켓 판매
+              </h3>
+
+              {canWriteSales && (
+                <div className="border rounded-lg p-3 space-y-2 bg-muted/30">
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <Label className="text-xs">수량</Label>
+                      <Input type="number" placeholder="1200" value={saleQty} onChange={(e) => setSaleQty(e.target.value)} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">단가 (원)</Label>
+                      <Input type="number" placeholder="15000" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">날짜</Label>
+                      <Input type="date" value={saleDate} onChange={(e) => setSaleDate(e.target.value)} />
+                    </div>
+                  </div>
+                  <Input placeholder="메모 (선택)" value={saleNote} onChange={(e) => setSaleNote(e.target.value)} />
+                  <Button size="sm" onClick={handleAddTicketSale} disabled={savingSale || !saleQty || !salePrice}>
+                    {savingSale ? '저장 중...' : '기록 추가'}
+                  </Button>
+                </div>
+              )}
+
+              {ticketSales.length === 0 ? (
+                <p className="text-sm text-muted-foreground">등록된 티켓 판매 기록이 없습니다.</p>
+              ) : (
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-muted/50">
+                        <th className="text-left px-3 py-2">날짜</th>
+                        <th className="text-right px-3 py-2">수량</th>
+                        <th className="text-right px-3 py-2">단가</th>
+                        <th className="text-right px-3 py-2">합계</th>
+                        <th className="px-3 py-2"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ticketSales.map((s) => (
+                        <tr key={s.id} className="border-t">
+                          <td className="px-3 py-2">{new Date(s.saleDate).toLocaleDateString('ko-KR')}</td>
+                          <td className="px-3 py-2 text-right">{s.quantity.toLocaleString()}장</td>
+                          <td className="px-3 py-2 text-right">₩{Number(s.unitPrice).toLocaleString()}</td>
+                          <td className="px-3 py-2 text-right font-medium">₩{Number(s.totalAmount).toLocaleString()}</td>
+                          <td className="px-3 py-2 text-right">
+                            {canDeleteSales && (
+                              <button
+                                className="text-destructive hover:text-destructive/80 text-xs"
+                                onClick={() => handleDeleteTicketSale(s.id)}
+                              >
+                                삭제
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="border-t bg-muted/30 font-semibold">
+                        <td className="px-3 py-2">합계</td>
+                        <td className="px-3 py-2 text-right">
+                          {ticketSales.reduce((s, r) => s + r.quantity, 0).toLocaleString()}장
+                        </td>
+                        <td></td>
+                        <td className="px-3 py-2 text-right">
+                          ₩{ticketSales.reduce((s, r) => s + Number(r.totalAmount), 0).toLocaleString()}
+                        </td>
+                        <td></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
               )}
             </div>
           )}
