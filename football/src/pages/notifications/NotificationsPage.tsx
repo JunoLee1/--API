@@ -8,15 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { Bell, CheckCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
-function formatDate(d: string) {
-  return new Date(d).toLocaleString('ko-KR', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
+import { formatNotificationDateAbsolute } from '@/lib/notificationUtils'
 
 export function NotificationsPage() {
   const { t } = useTranslation('common')
@@ -47,8 +39,10 @@ export function NotificationsPage() {
 
   const handleItemClick = async (n: NotificationItem) => {
     if (!n.readAt) await handleMarkRead(n.id)
-    const target = NOTIFICATION_ROUTES[n.type]
-    if (target) navigate(target)
+    const base = NOTIFICATION_ROUTES[n.type]
+    if (!base) return
+    const target = n.entityId ? `${base}/${n.entityId}` : base
+    navigate(target)
   }
 
   const handleMarkAllRead = async () => {
@@ -113,7 +107,7 @@ export function NotificationsPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">{n.title}</p>
                     <p className="text-sm text-muted-foreground mt-0.5">{n.body}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{formatDate(n.createdAt)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{formatNotificationDateAbsolute(n.createdAt)}</p>
                   </div>
                   {!n.readAt && (
                     <Button

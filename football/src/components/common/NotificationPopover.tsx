@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { notificationApi, NOTIFICATION_ROUTES, type NotificationItem } from '@/services/notification.service'
 import { useTranslation } from 'react-i18next'
+import { formatNotificationDateRelative } from '@/lib/notificationUtils'
 
 interface Props {
   unreadCount: number
@@ -12,18 +13,11 @@ interface Props {
   iconSize?: 'sm' | 'md'
 }
 
-function formatDate(iso: string): string {
-  const d = new Date(iso)
-  const now = new Date()
-  const diffMs = now.getTime() - d.getTime()
-  const diffMin = Math.floor(diffMs / 60_000)
-  if (diffMin < 1) return '방금 전'
-  if (diffMin < 60) return `${diffMin}분 전`
-  const diffHour = Math.floor(diffMin / 60)
-  if (diffHour < 24) return `${diffHour}시간 전`
-  const diffDay = Math.floor(diffHour / 24)
-  if (diffDay < 7) return `${diffDay}일 전`
-  return d.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
+function getUnreadDotClass(type: string): string {
+  if (type === 'CONTRACT_EXPIRY_30D') return 'bg-destructive'
+  if (type === 'CONTRACT_EXPIRY_60D') return 'bg-amber-500'
+  if (type === 'CONTRACT_EXPIRY_90D') return 'bg-blue-500'
+  return 'bg-destructive'
 }
 
 export function NotificationPopover({ unreadCount, onUnreadCountChange, iconSize = 'sm' }: Props) {
@@ -64,13 +58,13 @@ export function NotificationPopover({ unreadCount, onUnreadCountChange, iconSize
     }
   }
 
-  const handleItemClick = (item: NotificationItem) => {
-    if (item.readAt === null) {
-      void handleMarkRead(item.id)
-    }
-    const target = NOTIFICATION_ROUTES[item.type]
+  const handleItemClick = async (item: NotificationItem) => {
+    if (!item.readAt) await handleMarkRead(item.id)
+    const base = NOTIFICATION_ROUTES[item.type]
     setOpen(false)
-    if (target) navigate(target)
+    if (!base) return
+    const target = item.entityId ? `${base}/${item.entityId}` : base
+    navigate(target)
   }
 
   const bellSize = iconSize === 'md' ? 'h-5 w-5' : 'h-4 w-4'
@@ -109,14 +103,14 @@ export function NotificationPopover({ unreadCount, onUnreadCountChange, iconSize
                 <li key={item.id}>
                   <button
                     type="button"
-                    onClick={() => handleItemClick(item)}
+                    onClick={() => void handleItemClick(item)}
                     className={`w-full text-left px-4 py-3 transition-colors hover:bg-accent/50 ${
                       unread ? 'bg-accent/20' : ''
                     }`}
                   >
                     <div className="flex items-start gap-2">
                       {unread && (
-                        <span className="mt-1.5 shrink-0 h-2 w-2 rounded-full bg-destructive" />
+                        <span className={`mt-1.5 shrink-0 h-2 w-2 rounded-full ${getUnreadDotClass(item.type)}`} />
                       )}
                       <div className={`flex-1 min-w-0 ${!unread ? 'pl-4' : ''}`}>
                         <p
@@ -124,11 +118,11 @@ export function NotificationPopover({ unreadCount, onUnreadCountChange, iconSize
                         >
                           {item.title}
                         </p>
-                        <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+                        <p className="text-xs text-muted-foreground line-clamp-3 mt-0.5">
                           {item.body}
                         </p>
                         <p className="text-[11px] text-muted-foreground mt-1">
-                          {formatDate(item.createdAt)}
+                          {formatNotificationDateRelative(item.createdAt)}
                         </p>
                       </div>
                     </div>

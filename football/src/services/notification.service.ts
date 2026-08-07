@@ -7,6 +7,7 @@ export interface NotificationItem {
   body: string
   readAt: string | null
   createdAt: string
+  entityId?: number
 }
 
 export const NOTIFICATION_ROUTES: Record<string, string> = {
