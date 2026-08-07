@@ -20,6 +20,14 @@
 | 8 | **Kane** | Technical Director (영국, 15년차) | 선수 컨디셔닝·훈련 부하 | 10 |
 | 9 | **박희수** | 의무팀 (한국, 15년차) | 선수 컨디셔닝·훈련 부하 | 10 |
 | 10 | **빠뜨롱** | 자산관리사 (한국, 15년차, 완전 T형) | 스폰서십·파트너십 | 20 |
+| 11 | **김동욱** | 시설관리팀장 (한국, 18년차) | 시설 관리·장비 관리 | 10 |
+| 12 | **Trevor** | Stadium Operations Manager (영국, 14년차) | 시설 관리·장비 관리 | 10 |
+| 13 | **서지혜** | 채용팀장 (한국, 11년차) | 채용·인재 파이프라인 | 10 |
+| 14 | **Claire** | Talent Acquisition Director (영국, 9년차) | 채용·인재 파이프라인 | 10 |
+| 15 | **박성준** | 팬서비스팀장 (한국, 8년차) | 팬 운영·티켓 | 10 |
+| 16 | **Jordan** | Head of Ticketing & Fan Engagement (영국, 16년차) | 팬 운영·티켓 | 10 |
+| 17 | **이상훈** | IT보안팀장 (한국, 13년차) | IT·데이터 보안 | 10 |
+| 18 | **Rachel** | Head of Information Security (영국, 11년차) | IT·데이터 보안 | 10 |
 
 ---
 
@@ -161,27 +169,40 @@
 ## 우선순위 요약
 
 ### 즉시 처리 필요 (보안·규정 위반)
+- **IS2/RA4** JWT 시크릿 기본값·예제값 노출
+- **IS3** 전화번호 암호화 키 하드코딩
+- **IS7/RA1** 부상 정보 무인증 전체 조회
+- **IS8** safeguard 신고 인증 없음
+- **IS10** 학비 엔드포인트 무인증
+- **RA3** DB 자격증명 평문
+- **RA5/J3** 원장 전체 공개
 - **J2** 원장 환불 권한 무방비
-- **J3** 원장 전체 공개
-- **D3** 외국인 쿼터·비자 관리 없음 (K리그 규정 위반 위험)
+- **PA7/JO5** 스폰서·환불 권한 없음
+- **D3** 외국인 쿼터·비자 관리 없음 (K리그 규정 위반)
 - **D1** 계약 변경 감사 추적 없음
 
 ### 단기 처리 (데이터 정합성)
+- **IS1/RA9** SUPER_ADMIN x-team-id 헤더 위변조
+- **IS9** 감사 로그 위변조 방지 없음
+- **RA7** 외부 의료 전송 동의 로그 없음
+- **BS1/BS7/JO1** SalesRecord 삭제·트랜잭션 미처리
 - **D2** 선수 상태 ↔ 계약 상태 불일치
 - **J6** 결산 마감 잠금 없음
 - **J10** 자기 승인 이해충돌
-- **S1** 출결 정정 후 페널티 미해제
-- **BH3** 부하 초과 알림에 의료진 미포함
-- **BH9** MatchAvailable과 훈련 부하 연동 없음
+- **BH3** 부하 초과 알림 의료진 미포함
 - **KN9** 부하 초과 알림 fire-and-forget
+- **PA5** 스폰서 원장 연계 무음 실패
 
-### 중기 처리 (KPI 완결성)
+### 중기 처리 (KPI·운영 완결성)
+- **BS3/BS9/JO9** Ticket·Fan·Membership 모델 신설
+- **KD6** 시설 예약 모델 신설
 - **Y1~Y4** KPI 드릴다운 컨텍스트 부족
 - **R1~R3** 재무 집계 뷰 없음
 - **J7~J9** 보고서 감사 연결
 - **KN3** 포지션별 부하 임계값
 - **BH5** Acute:Chronic 부하 비율 계산
-- **KN7** 부하-RPE 연관 분석
+- **SJ7/CL9** 채용 KPI (목표 인원·Time-to-Hire)
+- **TR4/TR9** 예방 유지보수 정기 스케줄링
 
 ---
 
@@ -216,3 +237,139 @@
 | PB8 | 갱신 파이프라인 알림 체계 없음 | `partner.repo.ts:110` | findExpiringContracts()는 파트너 계약만, 스폰서십 만료 90/30일 전 알림 없음 |
 | PB9 | 스폰서십 수입 예산 연계 없음 | `ops-report.service.ts:66` | 스폰서 납부 실적이 예산 집행률 KPI에 미포함 — 스폰서 수입 vs 계획 비교 불가 |
 | PB10 | 분할 지급 계산 오류 감사 의심 유발 | `sponsorship.service.ts:39` | 마지막 회차에만 잔액 모이는 로직 — "왜 마지막 수금액이 다른가" 감사 조사 비용 낭비 |
+
+---
+
+## 섹션 7: 시설 관리·장비 관리
+
+### 김동욱 (시설관리팀장, 한국, 18년차) — 10 Criticals
+
+| # | 제목 | 파일 | 핵심 문제 |
+|---|------|------|-----------|
+| KD1 | 장비 반납 타임스탬프 미기록 | `equipment.repo.ts:136` | getUnreturnedByPlayer() 반납된 장비만 검색, 반납 타임스탬프 없음 — 실제 반납 여부 검증 불가, 사고 시 책임 소재 불명 |
+| KD2 | 장비 점검 주기·다음 점검일 필드 없음 | `schema.prisma:1359` | EquipmentUnit에 expiresAt만 있고 마지막 점검일·점검 주기·다음 점검 예정일 없음 — 장비 수명 관리 파탄 |
+| KD3 | 시설 점검 기록 변경 추적 불가 | `inspection.repo.ts:44` | FacilityInspection에 updatedAt 없음 — 점검 결과 변경·위변조 감시 불가 |
+| KD4 | 유지보수 비용 변경 감사 로그 없음 | `maintenance.service.ts:65` | actualCost 입력 시 감사 로그 없음 — 비용 조작·횡령 위험 |
+| KD5 | 장비 폐기 시 담당자 미기록 | `equipment.service.ts:94` | RETIRED 상태 변경 시 userId 미기록 — 누가 폐기했는지 추적 불가 |
+| KD6 | 시설 예약 모델 전무 | `schema.prisma:2435` | FacilityReservation 모델 없음 — 경기장·훈련장 사용 일정 관리 기능 전무 |
+| KD7 | 외부 업체 유지보수 계약 연계 없음 | `schema.prisma:949` | Partner·PartnerContract와 MaintenanceRequest 연결 필드 없음 — 어떤 업체가 어떤 시설 관리하는지 추적 불가 |
+| KD8 | 안전점검 인증서 만료 알림 없음 | `inspection.controller.ts:37` | certificateUrl·statutoryDeadline 저장만, 만료·갱신 알림 로직 전무 |
+| KD9 | 장비 대여 반납 감사 미기록 | `equipment.service.ts:176` | EquipmentLoan returnedAt 변경 시 반납자·감사 로그 없음 — 차용자 책임 회피 가능 |
+| KD10 | 유지보수 요청 승인 우회 가능 | `maintenance.service.ts:44` | OPEN→REJECTED 직접 전환 가능 — 승인 프로세스 회피, 내부 견제 없음 |
+
+### Trevor (Stadium Operations Manager, 영국, 14년차) — 10 Criticals
+
+| # | 제목 | 파일 | 핵심 문제 |
+|---|------|------|-----------|
+| TR1 | 상태 전이 화이트리스트 없음 | `maintenance.controller.ts:50` | updateStatus() 상태 전이 검증 불충분 — 법적 승인 절차 무시하는 잘못된 전환 가능 |
+| TR2 | 유지보수 비용 임계값 하드코딩 | `maintenance.service.ts:100` | 재무 제출 최소 비용 1,000,000 KRW 고정 — 구단 정책 변경 불가, 감사 증명 불가 |
+| TR3 | 안전 인증 만료 추적 없음 | `inspection.repo.ts:27` | statutoryDeadline 저장만, 만료 알림·재검사 강제·준수 검증 없음 — UEFA 기준 미충족 |
+| TR4 | 정기 예방 유지보수 일정 없음 | `schema.prisma:2435` | 일회성 점검만 지원, 월간·분기·연간 예방 유지보수 스케줄링 불가 |
+| TR5 | 장비 반납 지연 자동 회수 없음 | `equipment.service.ts:187` | returnedAt 기록만, 반납 지연 시 자동 알림·벌금 없음 — 장비 손실 책임 추적 불가 |
+| TR6 | 승인 이력 변경 사유 미기록 | `maintenance.repo.ts:66` | 승인자 기록만 있고 거절 이유·이전 상태 이력 없음 — 규정 위반 추적 불가 |
+| TR7 | 시설 접근 제어·보안 로깅 전무 | `facility.routes.ts:1` | 구역별 권한 관리·입출입 로그·비정상 접근 경보 없음 |
+| TR8 | 장비 폐기 물리 검증 없음 | `equipment.service.ts:94` | 폐기 시 bookValue 환입만, 물리 폐기 증명서·서명 프로세스 없음 |
+| TR9 | 예방 유지보수 자동 스케줄링 없음 | `maintenance.service.ts:1` | 검사 유형별 재검사 자동 스케줄링 없음 — 수동 누락 시 규정 위반 |
+| TR10 | 장비 구매·유지보수 벤더 연결 없음 | `equipment.repo.ts:1` | 구매·유지보수 비용이 Partner/계약과 미연결 — 벤더별 성과 평가·계약 위반 추적 불가 |
+
+---
+
+## 섹션 8: 채용·인재 파이프라인
+
+### 서지혜 (채용팀장, 한국, 11년차) — 10 Criticals
+
+| # | 제목 | 파일 | 핵심 문제 |
+|---|------|------|-----------|
+| SJ1 | 지원자 상태 변경 감사 로그 없음 | `recruitment.repo.ts:102` | 합격·거절 상태 전환 시 writeAuditLog() 없음 — 채용 분쟁 시 증빙 부재 |
+| SJ2 | 거절 사유 미기록 | `schema.prisma:2305` | JobApplication에 rejectionReason 필드 없음 — 차별·부당 거절 의혹 증명 불가 |
+| SJ3 | 면접 점수 필드 전부 선택적 | `schema.prisma:2330` | scoreSkill·scoreComm·scoreCulture nullable — 채용 결정 근거 추적 불가 |
+| SJ4 | 지원자 개인정보 열람 권한 미차등 | `recruitment.service.ts:17` | HEAD_COACH와 HR_MANAGER 동등 처리 — 불필요한 직급의 PII 접근 가능 |
+| SJ5 | 온보딩 완료 후 StaffRecord 자동 생성 없음 | `recruitment.service.ts:156` | completeMfa()에서 StaffRecord 자동 생성 없음 — 채용 완료 후 수작업 필요 |
+| SJ6 | 지원자 상태 전환 통보 없음 | `recruitment.service.ts` 전체 | 합격·불합격·면접 단계 진행 시 지원자 알림 코드 없음 |
+| SJ7 | 채용 목표 인원 진척률 미집계 | `recruitment.service.ts:33` | headcount 필드 있으나 합격자 수 집계 로직 없음 — 목표 대비 실적 대시보드 없음 |
+| SJ8 | 레퍼런스 체크 결과 FLAGGED 차단 없음 | `recruitment.repo.ts:170` | FLAGGED 결과에도 지원자 합격 수락 방지 로직 없음 |
+| SJ9 | 채용 의사결정 권한 충돌 | `recruitment.controller.ts:20` | canWriteHR()만 체크 — HEAD_COACH 읽기 전용 권장이나 실제 권한 흐름 미반영 |
+| SJ10 | 지원 채널(source) 선택적 저장 | `schema.prisma:2318` | ApplicationSource nullable — 채널별 채용 효율·비용 분석 불가 |
+
+### Claire (Talent Acquisition Director, 영국, 9년차) — 10 Criticals
+
+| # | 제목 | 파일 | 핵심 문제 |
+|---|------|------|-----------|
+| CL1 | 면접 기록 HEAD_COACH까지 열람 가능 | `recruitment.controller.ts:20` | canRead()에 HEAD_COACH 포함 — 불합격자 피드백 보안 위반, 차별금지법 대상 |
+| CL2 | 불합격 사유 기록 누락 | `schema.prisma:2312` | JobApplication에 rejectionReason 없음 — GDPR 동의권·한국 고용 분쟁 입증 불가 |
+| CL3 | 면접 점수 수정 이력 없음 | `recruitment.repo.ts:153` | 점수·코멘트 수정 이력 없음 — 면접관 점수 조작 추적 불가 |
+| CL4 | 면접 일정 통보 미구현 | `recruitment.routes.ts:32` | Interview 예약 시 지원자 일시·장소·면접관 통보 없음 — GDPR Art.13 위반 |
+| CL5 | 레퍼런스 체크 동의 추적 없음 | `recruitment.service.ts:124` | 전 직장 연락처 조회 전 지원자 동의 확인 없음 — 개인정보보호법 위반 |
+| CL6 | 불합격자 데이터 보관 기간 정책 없음 | `recruitment.repo.ts` 전체 | 채용 종료 후 자동 삭제·익명화 없음 — GDPR 필요성 원칙 위배 |
+| CL7 | 면접관별 개별 점수 기록 없음 | `schema.prisma:2335` | interviewerIds 배열만 있고 개별 점수 없음 — 공정 평가 입증 불가 |
+| CL8 | 합격 후 StaffRecord 자동 생성 없음 | `recruitment.repo.ts:118` | Onboarding 완료 후 StaffRecord 트랜잭션 자동 생성 없음 — 급여 시스템 오류 초래 |
+| CL9 | Time-to-Hire 추적 불가 | `schema.prisma:2284` | 단계별 소요 기간 자동 계산 필드 없음 — 채용 효율·차별 패턴 분석 불가 |
+| CL10 | Cost-per-Hire 미추적 | `schema.prisma:2284` | JobPosting.budget 없음 — 채용 원가·ROI 분석 불가 |
+
+---
+
+## 섹션 9: 팬 운영·티켓
+
+### 박성준 (팬서비스팀장, 한국, 8년차) — 10 Criticals
+
+| # | 제목 | 파일 | 핵심 문제 |
+|---|------|------|-----------|
+| BS1 | 티켓 삭제 시 Ledger 롤백 없음 | `sales.service.ts:78`, `sales.repo.ts:37` | SalesRecord 삭제 시 LedgerEntry 동시 삭제 없음 — 환불액 대차 불일치 |
+| BS2 | Refund 로직 SalesRecord 미연계 | `ledger.controller.ts:17` | Ledger만 음수 생성, SalesRecord는 refund 미처리 — 판매기록·원장 비정합 |
+| BS3 | Ticket·Fan·Membership 모델 전무 | `schema.prisma` 전체 | 티켓 타입·팬 구매 이력·멤버십 모델 없음 — 팬 이탈 추적·재방문율 분석 불가 |
+| BS4 | Match 모델에 관중수·점유율 필드 없음 | `schema.prisma:1087` | actualAttendance·capacity·occupancyRate 없음 — 경기별 매출 검증 불가 |
+| BS5 | SalesRecord 필터링 검색 없음 | `sales.repo.ts:7` | 팬ID·좌석구역·취소 상태 필터 없음 — 팬 이탈 원인 추적 봉쇄 |
+| BS6 | 무임 발권 통제·감사 없음 | `sales.dto.ts:1` | ticketType·issuedBy·approvalId 필드 없음 — 무임권 관리·횡령 리스크 |
+| BS7 | SalesRecord 삭제 트랜잭션 없음 | `sales.service.ts:41` | delete()는 트랜잭션 미사용 — 부분 삭제 시 감사 추적 파탄 |
+| BS8 | Ledger 환불 원본 양방향 링크 없음 | `ledger.service.ts:18` | 환불 생성 시 description에만 원본 ID 저장 — 원본·환불 연결 추적 불가 |
+| BS9 | 팬 구매 이력·멤버십 완전 부재 | `schema.prisma` 전체 | 팬 개별 구매 이력·멤버십 등급·갱신 정보 없음 — 우량팬 관리·재방문율 분석 불가 |
+| BS10 | 좌석 배치·점유율 추적 전무 | `schema.prisma` 전체 | Seat·SeatMap·Occupancy 모델 없음 — 경기별 점유율 KPI 신뢰성 0 |
+
+### Jordan (Head of Ticketing & Fan Engagement, 영국, 16년차) — 10 Criticals
+
+| # | 제목 | 파일 | 핵심 문제 |
+|---|------|------|-----------|
+| JO1 | SalesRecord 물리 삭제 허용 | `sales.repo.ts:37` | soft-delete 없음 — 재정 보고·원장 불일치, 부정 삭제 감지 불가 |
+| JO2 | 티켓 일련번호 없음 | `schema.prisma:2633` | SalesRecord 수량만 추적 — 중복 판매·불법 재판매 감지 불가 |
+| JO3 | 경기장 수용인원 초과 판매 방지 없음 | `schema.prisma:1087` | Match·Team 모델에 capacity 없음 — 초과 판매 방지 메커니즘 부재 |
+| JO4 | 환불과 원본 티켓 연결 없음 | `ledger.service.ts:18` | 환불 시 원본 SalesRecord 연결 없음 — 중복 환불 가능 |
+| JO5 | 환불 엔드포인트 권한 없음 | `ledger.routes.ts:16` | POST /:id/refund auth만 확인, canWriteFinance 없음 |
+| JO6 | 무료·VIP 티켓 분류 없음 | `sales.dto.ts:1` | COMPLIMENTARY·VIP_GUEST 카테고리 없음 — 경비 추적 불가 |
+| JO7 | 티켓 수익 원장 자동 조정 없음 | `financial-report.service.ts:79` | 재정 보고 CSV 수동 입력 — SalesRecord 합계·LedgerEntry 자동 대사 없음 |
+| JO8 | SalesRecord 수정 감사 추적 없음 | `sales.service.ts:20` | updatedAt·updatedById 없음 — 수정·삭제 이력 추적 불가 |
+| JO9 | 시즌권 갱신 파이프라인 없음 | `schema.prisma` 전체 | 시즌권·멤버십 모델 없음 — 구독 갱신·만료 자동화 불가 |
+| JO10 | 경기일 KPI에 티켓 데이터 없음 | `ops-report.service.ts:26` | computeOpsKpi에 티켓 매출·환불율·점유율 없음 |
+
+---
+
+## 섹션 10: IT·데이터 보안
+
+### 이상훈 (IT보안팀장, 한국, 13년차) — 10 Criticals
+
+| # | 제목 | 파일 | 핵심 문제 |
+|---|------|------|-----------|
+| IS1 | SUPER_ADMIN x-team-id 헤더 위변조 | `authMiddleware.ts:30` | SUPER_ADMIN이 헤더만으로 teamId 변경 가능 — 임의 팀 데이터 접근, 최소 권한 원칙 위반 |
+| IS2 | JWT 시크릿 예제값 그대로 .env 저장 | `.env:14` | "JWT_ACCESS_SECRET" 등 기본값 — 토큰 위조 가능, 개인정보보호법 시행령 제21조 위반 |
+| IS3 | 전화번호 암호화 키 하드코딩 노출 | `.env:18` | PHONE_ENCRYPTION_KEY 16진수 평문 — 전화번호 복호화 가능 |
+| IS4 | /uploads 정적 파일 전체 공개 | `server.ts:39` | express.static으로 업로드 디렉토리 공개 — 의료·계약 파일 무인증 접근 가능 |
+| IS5 | 선수 시장가치 조회 접근 로그 없음 | `player.controller.ts:96` | 조회 권한 제한은 있으나 감사 로그 없음 — 누가 언제 조회했는지 추적 불가, 개인정보보호법 위반 |
+| IS6 | 보호자 초대 코드 4바이트 브루트포스 가능 | `guardian.service.ts:36` | randomBytes(4) = 2^32 — 브루트포스 가능, 사용 후 즉시 삭제 없음 |
+| IS7 | 부상 정보 인증 없이 전체 조회 가능 | `injury.controller.ts:23` | getActive() 권한 검사 없음 — 의료 정보 최소 권한 원칙 위반 |
+| IS8 | safeguard 신고 엔드포인트 인증 없음 | `safeguard.controller.ts:8` | submit()에 requireUser 없음 — 거짓 신고·DoS 가능 |
+| IS9 | 감사 로그 삭제·위변조 방지 없음 | `auditLog.ts:3` | 감사 로그 생성 후 수정·삭제 제약 없음 — 행위자 자신의 로그 삭제 가능 |
+| IS10 | 학비 엔드포인트 무인증 | `academy-fee.controller.ts:15` | getAll()·issueMonthlyFees()·approvePayment() 권한 검증 없음 — 학생 개인정보·재정 전체 노출 |
+
+### Rachel (Head of Information Security, 영국, 11년차) — 10 Criticals
+
+| # | 제목 | 파일 | 핵심 문제 |
+|---|------|------|-----------|
+| RA1 | 활성 부상 전체 조회 역할 제한 없음 | `injury.controller.ts:23` | getActive() 모든 인증 사용자 접근 — GDPR Art.9 특수 범주 데이터 무단 노출 |
+| RA2 | 의료 보고서 조회 인증 없음 | `injury.controller.ts:57` | getReport() 접근 제어 없음 — 진단·치료·재활 전 데이터 전체 공개 |
+| RA3 | DB 자격증명 평문 저장 | `.env:12` | DATABASE_URL에 postgres:1234 — 자격증명 유출 시 전체 DB 접근 가능 |
+| RA4 | JWT 시크릿 기본값 폴백 | `constants.ts:4` | env 미설정 시 "jwt-access-secret" 폴백 — 토큰 위조 허용, 7일 갱신 토큰 탈취 창 과대 |
+| RA5 | 원장 전체 조회 역할 제한 없음 | `ledger.routes.ts:13` | GET /·GET /:id auth만 — COACHING_STAFF·PLAYER가 급여·계약금 원장 조회 가능 |
+| RA6 | 선수 API 응답에 PII 과다 포함 | `player.repo.ts:55` | 표준 쿼리에 계약 급여·보호자·긴급연락처 포함 — 역할 무관 노출 |
+| RA7 | 외부 의료 보고서 전송 동의 로그 없음 | `injury.repo.ts:251` | EDUCATION_OFFICE 등 제3자 전송 시 동의 감사 없음 — GDPR Art.5·32 위반 |
+| RA8 | 의료 기록 보관 기간 정책 없음 | `schema.prisma:997` | Injury·InjuryReport 무기한 보관 — GDPR Art.5(e) 저장 제한 원칙 위반 |
+| RA9 | SUPER_ADMIN 팀 컨텍스트 헤더 미검증 | `authMiddleware.ts:29` | x-team-id 헤더 무검증 — 타 팀 선수 데이터 수평 이동 가능 |
+| RA10 | 의료 데이터 접근 감사 로그 불충분 | `schema.prisma:1408` | AuditLog에 누가 어떤 의료 데이터를 읽었는지 미기록 — GDPR Art.5·32 책임 원칙 미충족 |

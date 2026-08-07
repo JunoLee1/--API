@@ -91,7 +91,77 @@
 
 ---
 
+## IT·데이터 보안 (이상훈 + Rachel) — 즉시 처리
+
+### [IS2/RA4] JWT 시크릿 기본값 교체
+- `.env` JWT_ACCESS_TOKEN_SECRET, JWT_REFRESH_TOKEN_SECRET 강력한 랜덤값으로 교체
+- `constants.ts:4` 폴백 기본값 제거, 미설정 시 서버 기동 실패 처리
+
+### [IS3] 전화번호 암호화 키 환경변수 분리
+- `.env:18` PHONE_ENCRYPTION_KEY 신규 생성 후 보안 저장소로 이관
+
+### [IS7/RA1/RA2] 부상 정보 접근 제어 추가
+- `injury.controller.ts:23` getActive()에 MEDICAL·ADMIN 역할 제한
+- `injury.controller.ts:57` getReport()에 requireUser + 역할 체크
+
+### [IS8] safeguard 신고 인증 추가
+- `safeguard.controller.ts:8` requireUser() 추가
+
+### [IS10] 학비 엔드포인트 권한 추가
+- `academy-fee.controller.ts` getAll()·issueMonthlyFees()·approvePayment()에 역할 가드
+
+### [RA3] DB 자격증명 보안 강화
+- `.env:12` postgres:1234 → 강력한 비밀번호로 교체
+
+### [IS9] 감사 로그 불변 보호
+- `auditLog.ts` update·delete 비허용 정책 추가 (Prisma middleware 활용)
+
+---
+
+## 시설 관리 (김동욱 + Trevor)
+
+### [KD6] 시설 예약 모델 신설
+- `schema.prisma` FacilityReservation 모델 추가 (facilityId, startTime, endTime, reservedBy, purpose)
+
+### [KD8/TR3] 안전점검 만료 알림 cron 추가
+- inspection 만료 30/7일 전 담당자 알림
+
+### [KD4/TR6] 유지보수 비용 변경 감사 로그
+- `maintenance.service.ts:65` actualCost 변경 시 감사 로그 기록
+
+---
+
+## 채용 파이프라인 (서지혜 + Claire)
+
+### [SJ1/CL3] 지원자 상태 변경 감사 로그
+- `recruitment.repo.ts:102` writeAuditLog() 추가
+
+### [SJ2/CL2] 거절 사유 필드 추가
+- `schema.prisma` JobApplication에 rejectionReason, rejectionAt 추가
+
+### [CL4/SJ6] 면접 일정 지원자 통보
+- Interview 생성 시 지원자 이메일 알림 발송
+
+### [SJ7] 채용 목표 인원 진척률 집계
+- headcount 대비 HIRED 수 집계 API 추가
+
+---
+
+## 팬 운영·티켓 (박성준 + Jordan)
+
+### [BS1/JO1/BS7] SalesRecord soft-delete + 트랜잭션
+- `sales.repo.ts` 물리 삭제 → soft-delete(deletedAt) 전환
+- `sales.service.ts` delete()에 LedgerEntry 연동 트랜잭션
+
+### [JO5/J2] 환불 권한 가드
+- `ledger.routes.ts:16` canWriteFinance 가드 추가
+
+### [BS3/JO9] Ticket·Fan·Membership 모델 설계
+- `schema.prisma` Ticket, Fan, Membership 기본 모델 추가 (장기 과제)
+
+---
+
 ## 참고
 
 - 전체 findings: `docs/superpowers/specs/2026-08-07-persona-critical-findings.md`
-- 10 페르소나 / 110 criticals 누적
+- 18 페르소나 / 190 criticals 누적
