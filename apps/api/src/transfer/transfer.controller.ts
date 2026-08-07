@@ -4,6 +4,11 @@ import { isAdminLike } from "../lib/permissions";
 import { TransferService } from "./transfer.service";
 import { RecallStatus } from "../generated/enums";
 
+function requireUser(req: Request) {
+  if (!req.user) throw new AppError(401, "UNAUTHORIZED");
+  return req.user;
+}
+
 export class TransferController {
   constructor(private service: TransferService) {}
 
@@ -21,13 +26,14 @@ export class TransferController {
 
   createTransfer = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const user = requireUser(req);
+      const { role, frontOfficeRole } = user;
       if (!isAdminLike(role) && role !== "GM" && role !== "FRONT_OFFICE") throw new AppError(403, "FORBIDDEN");
       if (role === "FRONT_OFFICE") {
         const allowed = ["TD", "CONTRACT_MANAGER"];
         if (!frontOfficeRole || !allowed.includes(frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       }
-      res.status(201).json(await this.service.createTransfer(req.body));
+      res.status(201).json(await this.service.createTransfer(req.body, user.id));
     } catch (err) { next(err); }
   };
 
@@ -40,28 +46,26 @@ export class TransferController {
 
   createRecall = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      res.status(201).json(await this.service.createRecall(req.body, req.user!.id));
+      const user = requireUser(req);
+      res.status(201).json(await this.service.createRecall(req.body, user.id));
     } catch (err) { next(err); }
   };
 
   updateRecallStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role } = req.user!;
-      const isGM = role === "GM";
-      if (!isGM) throw new AppError(403, "FORBIDDEN");
-      res.status(200).json(
-        await this.service.updateRecallStatus(Number(req.params["id"]), req.body, req.user!.id),
-      );
+      const user = requireUser(req);
+      if (user.role !== "GM") throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(await this.service.updateRecallStatus(Number(req.params["id"]), req.body, user.id));
     } catch (err) { next(err); }
   };
 
   exportLoanIn = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
-      const isAdmin = isAdminLike(role);
-      const isGMRole = role === "GM";
-      const isFrontOffice = role === "FRONT_OFFICE" && ["TD"].includes(frontOfficeRole ?? "");
-      if (!isAdmin && !isGMRole && !isFrontOffice) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      const { role, frontOfficeRole } = user;
+      if (!isAdminLike(role) && role !== "GM" && !(role === "FRONT_OFFICE" && frontOfficeRole === "TD")) {
+        throw new AppError(403, "FORBIDDEN");
+      }
       res.status(200).json(await this.service.exportLoanIn(Number(req.params["id"])));
     } catch (err) { next(err); }
   };
