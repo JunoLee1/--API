@@ -73,7 +73,7 @@ export class OpsReportService {
 
   async getOpsSnapshot(seasonId: number, year: number, month: number): Promise<OpsSnapshotData> {
     const existing = await this.repo.findOpsSnapshot(seasonId, year, month);
-    if (existing) return existing.snapshotData as unknown as OpsSnapshotData;
+    if (existing?.snapshotData) return existing.snapshotData as unknown as OpsSnapshotData;
     return this.computeOpsKpi(seasonId, year, month);
   }
 
@@ -95,16 +95,22 @@ export class OpsReportService {
       select: { category: true, mandatoryMinimum: true, knapsackAllocated: true },
     });
 
+    const actualsByCategory = await this.prisma.operatingExpense.groupBy({
+      by: ["category"],
+      where: { seasonId, date: { gte: start, lt: end } },
+      _sum: { amount: true },
+    });
+    const actualsMap = new Map(
+      actualsByCategory.map((r) => [r.category, r._sum.amount ?? 0])
+    );
+
     const snapshotData: Record<string, { budget: number; actual: number }> = {};
     let totalBudget = 0;
     let totalActual = 0;
 
     for (const plan of plans) {
       const budget = plan.mandatoryMinimum + (plan.knapsackAllocated ?? 0);
-      const actual = await this.prisma.operatingExpense.aggregate({
-        where: { seasonId, category: plan.category, date: { gte: start, lt: end } },
-        _sum: { amount: true },
-      }).then((r) => r._sum.amount ?? 0);
+      const actual = actualsMap.get(plan.category) ?? 0;
       snapshotData[plan.category] = { budget, actual };
       totalBudget += budget;
       totalActual += actual;
