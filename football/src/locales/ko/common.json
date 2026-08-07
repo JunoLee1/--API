@@ -336,6 +336,17 @@
       "WIN": "승",
       "DRAW": "무",
       "LOSS": "패"
+    },
+    "coachView": {
+      "todayAbsent": "오늘 훈련 결석",
+      "noSession": "오늘 훈련 없음",
+      "allPresent": "전원 출석",
+      "absentCount": "결석 {{count}}명",
+      "injuryStatus": "부상자 현황",
+      "noInjuries": "부상자 없음",
+      "injuredCount": "부상 {{count}}명",
+      "nextMatch": "다음 경기",
+      "noUpcoming": "예정 경기 없음"
     }
   }
 }

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { trainingApi } from '@/services/training.service'
 import { injuryApi } from '@/services/injury.service'
 import { matchApi } from '@/services/match.service'
+import { playerApi } from '@/services/player.service'
 import type { TrainingSessionDetail } from '@/types/training'
 import type { Match } from '@/types/match'
 
@@ -22,6 +24,7 @@ function daysUntil(dateStr: string) {
 // Box 1: 오늘 훈련 결석자
 // ────────────────────────────────────────────────
 function TodayTrainingBox({ seasonId }: { seasonId: number | undefined }) {
+  const { t } = useTranslation('common')
   const [loading, setLoading] = useState(true)
   const [detail, setDetail] = useState<TrainingSessionDetail | null>(null)
   const [noSession, setNoSession] = useState(false)
@@ -47,7 +50,6 @@ function TodayTrainingBox({ seasonId }: { seasonId: number | undefined }) {
 
   const absentStatuses = ['ABSENT_UNAUTHORIZED', 'ABSENT_AUTHORIZED'] as const
 
-  // Build a map from playerId → playerName using participants
   const nameMap: Record<string, string> = {}
   if (detail) {
     for (const p of detail.participants) {
@@ -61,7 +63,7 @@ function TodayTrainingBox({ seasonId }: { seasonId: number | undefined }) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">오늘 훈련 결석</CardTitle>
+        <CardTitle className="text-sm font-medium text-muted-foreground">{t('dashboard.coachView.todayAbsent')}</CardTitle>
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -70,12 +72,12 @@ function TodayTrainingBox({ seasonId }: { seasonId: number | undefined }) {
             <Skeleton className="h-4 w-32" />
           </div>
         ) : noSession ? (
-          <p className="text-sm text-muted-foreground">오늘 훈련 없음</p>
+          <p className="text-sm text-muted-foreground">{t('dashboard.coachView.noSession')}</p>
         ) : absentees.length === 0 ? (
-          <p className="text-sm font-medium text-green-600">전원 출석</p>
+          <p className="text-sm font-medium text-green-600">{t('dashboard.coachView.allPresent')}</p>
         ) : (
           <div className="space-y-1">
-            <p className="text-2xl font-bold text-red-600">결석 {absentees.length}명</p>
+            <p className="text-2xl font-bold text-red-600">{t('dashboard.coachView.absentCount', { count: absentees.length })}</p>
             <ul className="text-xs text-muted-foreground space-y-0.5">
               {absentees.map((r) => (
                 <li key={r.playerId}>{nameMap[r.playerId] ?? r.playerId}</li>
@@ -92,21 +94,27 @@ function TodayTrainingBox({ seasonId }: { seasonId: number | undefined }) {
 // Box 2: 부상자 현황
 // ────────────────────────────────────────────────
 function InjuryStatusBox() {
+  const { t } = useTranslation('common')
   const [loading, setLoading] = useState(true)
   const [injuries, setInjuries] = useState<{ playerId: string }[]>([])
+  const [nameMap, setNameMap] = useState<Record<string, string>>({})
 
   useEffect(() => {
     setLoading(true)
-    injuryApi
-      .active()
-      .then(setInjuries)
+    Promise.all([injuryApi.active(), playerApi.list()])
+      .then(([inj, players]) => {
+        setInjuries(inj)
+        const map: Record<string, string> = {}
+        for (const p of players) map[p.id] = p.playerName
+        setNameMap(map)
+      })
       .finally(() => setLoading(false))
   }, [])
 
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">부상자 현황</CardTitle>
+        <CardTitle className="text-sm font-medium text-muted-foreground">{t('dashboard.coachView.injuryStatus')}</CardTitle>
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -115,13 +123,13 @@ function InjuryStatusBox() {
             <Skeleton className="h-4 w-32" />
           </div>
         ) : injuries.length === 0 ? (
-          <p className="text-sm font-medium text-green-600">부상자 없음</p>
+          <p className="text-sm font-medium text-green-600">{t('dashboard.coachView.noInjuries')}</p>
         ) : (
           <div className="space-y-1">
-            <p className="text-2xl font-bold text-orange-600">부상 {injuries.length}명</p>
+            <p className="text-2xl font-bold text-orange-600">{t('dashboard.coachView.injuredCount', { count: injuries.length })}</p>
             <ul className="text-xs text-muted-foreground space-y-0.5">
               {injuries.map((i) => (
-                <li key={i.playerId}>{i.playerId}</li>
+                <li key={i.playerId}>{nameMap[i.playerId] ?? i.playerId}</li>
               ))}
             </ul>
           </div>
@@ -135,6 +143,7 @@ function InjuryStatusBox() {
 // Box 3: 다음 경기 D-Day
 // ────────────────────────────────────────────────
 function NextMatchBox({ seasonId }: { seasonId: number | undefined }) {
+  const { t } = useTranslation('common')
   const [loading, setLoading] = useState(true)
   const [nextMatch, setNextMatch] = useState<Match | null>(null)
   const [noMatch, setNoMatch] = useState(false)
@@ -179,7 +188,7 @@ function NextMatchBox({ seasonId }: { seasonId: number | undefined }) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">다음 경기</CardTitle>
+        <CardTitle className="text-sm font-medium text-muted-foreground">{t('dashboard.coachView.nextMatch')}</CardTitle>
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -188,7 +197,7 @@ function NextMatchBox({ seasonId }: { seasonId: number | undefined }) {
             <Skeleton className="h-4 w-32" />
           </div>
         ) : noMatch ? (
-          <p className="text-sm text-muted-foreground">예정 경기 없음</p>
+          <p className="text-sm text-muted-foreground">{t('dashboard.coachView.noUpcoming')}</p>
         ) : (
           <div className="space-y-0.5">
             <p className="text-2xl font-bold tabular-nums">
