@@ -749,14 +749,16 @@ model Season {
   leagueLevel  LeagueLevel?
   leagueId     Int?
 
-  league            League?               @relation(fields: [leagueId], references: [id])
-  matches           Match[]
-  trainingSessions  TrainingSession[]
-  tacticalAnalyses  TacticalAnalysis[]
-  developmentPlans  PlayerDevelopmentPlan[]
-  financialReport   FinancialReport?
-  operatingExpenses OperatingExpense[]
-  complianceCheck   SeasonComplianceCheck?
+  league                   League?               @relation(fields: [leagueId], references: [id])
+  matches                  Match[]
+  trainingSessions         TrainingSession[]
+  tacticalAnalyses         TacticalAnalysis[]
+  developmentPlans         PlayerDevelopmentPlan[]
+  financialReport          FinancialReport?
+  operatingExpenses        OperatingExpense[]
+  complianceCheck          SeasonComplianceCheck?
+  monthlyBudgetSnapshots   MonthlyBudgetSnapshot[]
+  monthlyOperationsSnapshots MonthlyOperationsSnapshot[]
 }
 
 model League {
@@ -2666,4 +2668,32 @@ model Agency {
 
   players   Player[]
   contracts Contract[]
+}
+
+model MonthlyBudgetSnapshot {
+  id           Int      @id @default(autoincrement())
+  seasonId     Int
+  year         Int
+  month        Int
+  snapshotData Json
+  totalBudget  Int
+  totalActual  Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  season       Season   @relation(fields: [seasonId], references: [id])
+
+  @@unique([seasonId, year, month])
+}
+
+model MonthlyOperationsSnapshot {
+  id           Int      @id @default(autoincrement())
+  seasonId     Int
+  year         Int
+  month        Int
+  snapshotData Json
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  season       Season   @relation(fields: [seasonId], references: [id])
+
+  @@unique([seasonId, year, month])
 }
