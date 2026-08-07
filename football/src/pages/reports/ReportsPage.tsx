@@ -2,8 +2,12 @@ import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { reportApi } from '@/services/report.service'
 import type { Report, ReportType, ReportStatus } from '@/types/report'
+import { opsReportApi } from '@/services/ops-report.service'
+import type { AnnualOpsEntry } from '@/types/ops-report'
+import { seasonApi } from '@/services/season.service'
 import {
   REPORT_TYPE_STYLE,
   REPORT_STATUS_STYLE,
@@ -44,6 +48,7 @@ export function ReportsPage() {
   const navigate = useNavigate()
   const [reports, setReports] = useState<Report[]>([])
   const [loading, setLoading] = useState(true)
+  const [annualOps, setAnnualOps] = useState<AnnualOpsEntry[]>([])
 
   const [typeFilter, setTypeFilter] = useState<ReportType | ''>('')
   const [statusFilter, setStatusFilter] = useState<ReportStatus | ''>('')
@@ -67,6 +72,13 @@ export function ReportsPage() {
   }, [t, typeFilter, statusFilter])
 
   useEffect(() => { fetchReports() }, [fetchReports])
+
+  useEffect(() => {
+    seasonApi.active().then((season) => {
+      if (!season) return
+      opsReportApi.getAnnualOps(season.id).then(setAnnualOps).catch(() => null)
+    })
+  }, [])
 
   const totalPages = Math.max(1, Math.ceil(reports.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages)
@@ -165,6 +177,31 @@ export function ReportsPage() {
           </Table>
         )}
       </div>
+
+      {annualOps.length > 0 && (
+        <div className="space-y-3 px-6 py-4 border-t">
+          <h3 className="text-lg font-semibold">연간 운영 KPI 추이</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={annualOps.map((e) => ({
+              label: `${e.year}-${String(e.month).padStart(2, '0')}`,
+              수납율: e.data.feeCollectionRate,
+              미납률: e.data.feeDelinquencyRate,
+              예산집행률: e.data.budgetExecutionRate,
+              출석률: e.data.attendanceRate,
+            }))}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="label" />
+              <YAxis unit="%" domain={[0, 100]} />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="수납율" stroke="#22c55e" dot={false} />
+              <Line type="monotone" dataKey="미납률" stroke="#ef4444" dot={false} />
+              <Line type="monotone" dataKey="예산집행률" stroke="#3b82f6" dot={false} />
+              <Line type="monotone" dataKey="출석률" stroke="#f59e0b" dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       {!loading && reports.length > PAGE_SIZE && (
         <div className="border-t px-6 py-3 flex items-center justify-between shrink-0">
