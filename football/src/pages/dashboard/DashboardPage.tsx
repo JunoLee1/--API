@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { dashboardApi } from '@/services/dashboard.service'
 import { notificationApi, type NotificationItem } from '@/services/notification.service'
@@ -7,6 +8,7 @@ import { matchApi } from '@/services/match.service'
 import { analysisApi, type TeamRanking } from '@/services/analysis.service'
 import { seasonApi } from '@/services/season.service'
 import { operatingExpenseApi } from '@/services/operating-expense.service'
+import { salesApi } from '@/services/sales.service'
 import type { Match } from '@/types/match'
 import { COMPETITION_LABEL } from '@/types/match'
 import type { DashboardStats, YouthDevelopmentStats } from '@/types/dashboard'
@@ -79,7 +81,9 @@ function toFeedItems(matches: Match[], tFn: (key: string) => string): FeedItem[]
 export function DashboardPage() {
   const { t } = useTranslation('common')
   const { user, loading: userLoading } = useCurrentUser()
+  const navigate = useNavigate()
   const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [seasonTicketRevenue, setSeasonTicketRevenue] = useState<number | null>(null)
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [matches, setMatches] = useState<Match[]>([])
   const [myRanking, setMyRanking] = useState<TeamRanking | null>(null)
@@ -122,6 +126,13 @@ export function DashboardPage() {
               .then(setRecentExpenses)
               .catch(() => null)
               .finally(() => setExpensesLoading(false))
+          )
+        }
+        if (config.showTicketRevenue) {
+          tasks.push(
+            salesApi.seasonTicketTotal(season.id)
+              .then((r) => setSeasonTicketRevenue(r.total))
+              .catch(() => null)
           )
         }
         return Promise.all(tasks)
@@ -172,6 +183,23 @@ export function DashboardPage() {
       {config.showAcademyFinance && academyFinance && (
         <AcademyFinanceSection data={academyFinance} />
       )}
+
+      {/* 시즌 티켓 수입 KPI 카드 */}
+      {config.showTicketRevenue && seasonTicketRevenue !== null && (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <button
+            type="button"
+            className="text-left"
+            onClick={() => navigate('/finance/ticket-sales')}
+          >
+            <StatCard
+              label="시즌 티켓 수입"
+              value={`₩${seasonTicketRevenue.toLocaleString()}`}
+            />
+          </button>
+        </div>
+      )}
+
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {config.showActionQueue && (

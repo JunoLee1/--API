@@ -69,6 +69,7 @@ import { JobPostingDetailPage } from '@/pages/admin/recruitment/JobPostingDetail
 import { ApplicationDetailPage } from '@/pages/admin/recruitment/ApplicationDetailPage'
 import { TeamSelectPage } from '@/pages/team-select/TeamSelectPage'
 import { LeaguePage } from '@/pages/admin/LeaguePage'
+import { TicketSalesPage } from '@/pages/finance/TicketSalesPage'
 
 function GrowthReportRedirect() {
   const { playerId } = useParams<{ playerId: string }>()
@@ -179,6 +180,7 @@ function App() {
             <Route path="/admin/recruitment/postings/:id" element={<JobPostingDetailPage />} />
             <Route path="/admin/recruitment/applications/:id" element={<ApplicationDetailPage />} />
             <Route path="/admin/leagues" element={<LeaguePage />} />
+            <Route path="/finance/ticket-sales" element={<TicketSalesPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/login" replace />} />

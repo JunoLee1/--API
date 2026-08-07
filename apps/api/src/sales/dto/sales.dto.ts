@@ -5,4 +5,5 @@ export interface CreateSalesRecordDto {
   currency?: "KRW" | "USD" | "EUR" | "GBP";
   saleDate: string;
   description?: string;
+  matchId?: number;
 }
