@@ -23,6 +23,8 @@ import { startQuarterlyJobPostingDraftJob } from "./jobs/quarterlyJobPostingDraf
 import { startEquipmentExpiryAlertJob } from "./jobs/equipmentExpiryAlert";
 import { startInventoryThresholdJob } from "./jobs/inventoryThreshold";
 import { startMonthlyDepreciationJob } from "./jobs/monthlyDepreciation";
+import { startMonthlyOperationsReportJob } from "./jobs/monthlyOperationsReport";
+import { startMonthlyBudgetReportJob } from "./jobs/monthlyBudgetReport";
 
 const app = express();
 
@@ -72,3 +74,5 @@ startQuarterlyJobPostingDraftJob();
 startEquipmentExpiryAlertJob();
 startInventoryThresholdJob();
 startMonthlyDepreciationJob();
+startMonthlyOperationsReportJob();
+startMonthlyBudgetReportJob();
