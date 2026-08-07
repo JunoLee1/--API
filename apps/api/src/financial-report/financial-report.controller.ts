@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { canWriteFinance } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { FinancialReportService } from "./financial-report.service";
 import { OperatingCategory } from "../generated/client";
 
@@ -15,7 +16,7 @@ export class FinancialReportController {
 
   set = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
       const { totalRevenue, note } = req.body as { totalRevenue: number; note?: string };
@@ -27,7 +28,7 @@ export class FinancialReportController {
 
   setFromCSV = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
       if (!req.file) throw new AppError(400, "FILE_REQUIRED");
@@ -40,7 +41,7 @@ export class FinancialReportController {
 
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
       const report = await this.service.get(seasonId);
@@ -50,7 +51,7 @@ export class FinancialReportController {
 
   getBudgetPlan = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
       const [plan, actuals] = await Promise.all([
@@ -63,7 +64,7 @@ export class FinancialReportController {
 
   upsertBudgetPlan = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
       const plan = await this.service.upsertBudgetPlan(seasonId, req.body);
@@ -73,7 +74,7 @@ export class FinancialReportController {
 
   optimize = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
       const result = await this.service.optimize(seasonId);
@@ -83,7 +84,7 @@ export class FinancialReportController {
 
   addOverride = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole, id: userId } = req.user!;
+      const { role, frontOfficeRole, id: userId } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
       const { category, amount, reason } = req.body as { category: OperatingCategory; amount: number; reason: string };

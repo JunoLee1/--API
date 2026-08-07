@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { InjuryService } from "./injury.service";
 
 const MEDICAL_ROLES = ["ADMIN", "COACHING_STAFF"] as const;
@@ -11,7 +12,7 @@ export class InjuryController {
 
   getStats = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = req.user!;
+      const { role, coachingRole } = requireUser(req);
       const isMedicalDirector =
         role === "COACHING_STAFF" && coachingRole === "MEDICAL_DIRECTOR";
       if (!isAdminLike(role) && !isMedicalDirector) throw new AppError(403, "FORBIDDEN");
@@ -39,14 +40,16 @@ export class InjuryController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!MEDICAL_ROLES.includes(req.user!.role as MedicalRole)) throw new AppError(403, "FORBIDDEN");
-      res.status(201).json(await this.service.createInjury({ ...req.body, medicalStaffId: req.user!.id }));
+      const user = requireUser(req);
+      if (!(MEDICAL_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
+      res.status(201).json(await this.service.createInjury({ ...req.body, medicalStaffId: user.id }));
     } catch (err) { next(err); }
   };
 
   updateStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!MEDICAL_ROLES.includes(req.user!.role as MedicalRole)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!(MEDICAL_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.updateStatus(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
   };
@@ -60,9 +63,10 @@ export class InjuryController {
 
   saveReport = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!MEDICAL_ROLES.includes(req.user!.role as MedicalRole)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!(MEDICAL_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(
-        await this.service.saveReport(Number(req.params["id"]), req.body, req.user!.id)
+        await this.service.saveReport(Number(req.params["id"]), req.body, user.id)
       );
     } catch (err) { next(err); }
   };
@@ -79,17 +83,19 @@ export class InjuryController {
 
   signReport = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const role = this.getSignRole(req.user!);
+      const user = requireUser(req);
+      const role = this.getSignRole(user);
       if (!role) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(
-        await this.service.signReport(Number(req.params["id"]), role, req.user!.id)
+        await this.service.signReport(Number(req.params["id"]), role, user.id)
       );
     } catch (err) { next(err); }
   };
 
   unsignReport = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const role = this.getSignRole(req.user!);
+      const user = requireUser(req);
+      const role = this.getSignRole(user);
       if (!role) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(
         await this.service.unsignReport(Number(req.params["id"]), role)
@@ -106,11 +112,12 @@ export class InjuryController {
 
   processAssessment = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!MEDICAL_ROLES.includes(req.user!.role as MedicalRole)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!(MEDICAL_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       const result = await this.service.processAssessment(
         Number(req.params["id"]),
         req.body,
-        req.user!.id
+        user.id
       );
       res.status(200).json(result);
     } catch (err) { next(err); }
@@ -125,7 +132,8 @@ export class InjuryController {
 
   updateExternalReportStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!MEDICAL_ROLES.includes(req.user!.role as MedicalRole)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!(MEDICAL_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       const { status, note } = req.body;
       const result = await this.service.updateExternalReportStatus(
         Number(req.params["reportId"]),

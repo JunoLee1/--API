@@ -1,16 +1,21 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../../lib/appError";
 import { isAdminLike } from "../../lib/permissions";
+import { requireUser } from "../../lib/authMiddleware";
 import type { MaintenanceService } from "./maintenance.service";
 import type { CreateMaintenanceDto, UpdateMaintenanceDto, MaintenanceListQuery } from "./dto/maintenance.dto";
 
-const isFacilityManager = (req: Request) =>
-  isAdminLike(req.user!.role) ||
-  req.user!.role === "GM" ||
-  (req.user!.role === "FRONT_OFFICE" && req.user!.frontOfficeRole === "FACILITY_MANAGER");
+const isFacilityManager = (req: Request) => {
+  const user = requireUser(req);
+  return isAdminLike(user.role) ||
+    user.role === "GM" ||
+    (user.role === "FRONT_OFFICE" && user.frontOfficeRole === "FACILITY_MANAGER");
+};
 
-const isGM = (req: Request) =>
-  isAdminLike(req.user!.role) || req.user!.role === "GM";
+const isGM = (req: Request) => {
+  const user = requireUser(req);
+  return isAdminLike(user.role) || user.role === "GM";
+};
 
 export class MaintenanceController {
   constructor(private service: MaintenanceService) {}
@@ -30,7 +35,7 @@ export class MaintenanceController {
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!isFacilityManager(req)) throw new AppError(403, "FORBIDDEN");
-      const result = await this.service.create(req.body as CreateMaintenanceDto, req.user!.id);
+      const result = await this.service.create(req.body as CreateMaintenanceDto, requireUser(req).id);
       res.status(201).json(result);
     } catch (err) { next(err); }
   };
@@ -52,14 +57,14 @@ export class MaintenanceController {
   approve = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!isFacilityManager(req)) throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.approve(Number(req.params.id), req.user!.id));
+      res.json(await this.service.approve(Number(req.params.id), requireUser(req).id));
     } catch (err) { next(err); }
   };
 
   gmApprove = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!isGM(req)) throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.gmApprove(Number(req.params.id), req.user!.id));
+      res.json(await this.service.gmApprove(Number(req.params.id), requireUser(req).id));
     } catch (err) { next(err); }
   };
 

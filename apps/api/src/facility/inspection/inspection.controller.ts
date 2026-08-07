@@ -1,13 +1,16 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../../lib/appError";
 import { isAdminLike } from "../../lib/permissions";
+import { requireUser } from "../../lib/authMiddleware";
 import type { InspectionService } from "./inspection.service";
 import type { CreateInspectionDto, UpdateInspectionDto, InspectionListQuery } from "./dto/inspection.dto";
 
-const canWrite = (req: Request) =>
-  isAdminLike(req.user!.role) ||
-  req.user!.role === "GM" ||
-  (req.user!.role === "FRONT_OFFICE" && req.user!.frontOfficeRole === "FACILITY_MANAGER");
+const canWrite = (req: Request) => {
+  const user = requireUser(req);
+  return isAdminLike(user.role) ||
+    user.role === "GM" ||
+    (user.role === "FRONT_OFFICE" && user.frontOfficeRole === "FACILITY_MANAGER");
+};
 
 export class InspectionController {
   constructor(private service: InspectionService) {}
@@ -30,7 +33,7 @@ export class InspectionController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id: userId } = req.user!;
+      const { id: userId } = requireUser(req);
       if (!canWrite(req)) throw new AppError(403, "FORBIDDEN");
       const result = await this.service.create(req.body as CreateInspectionDto, userId);
       res.status(201).json(result);

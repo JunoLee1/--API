@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { TrainingReferenceService } from "./training-reference.service";
 import { SessionType } from "../generated/enums";
 
@@ -12,7 +13,8 @@ export class TrainingReferenceController {
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!(READ_ROLES as readonly string[]).includes(req.user!.role))
+      const user = requireUser(req);
+      if (!(READ_ROLES as readonly string[]).includes(user.role))
         throw new AppError(403, "FORBIDDEN");
       const q = req.query as Record<string, string | undefined>;
       const listQuery: { sessionType?: SessionType; tag?: string } = {};
@@ -24,20 +26,22 @@ export class TrainingReferenceController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!(WRITE_ROLES as readonly string[]).includes(req.user!.role))
+      const user = requireUser(req);
+      if (!(WRITE_ROLES as readonly string[]).includes(user.role))
         throw new AppError(403, "FORBIDDEN");
-      res.status(201).json(await this.service.create(req.body, req.user!.id));
+      res.status(201).json(await this.service.create(req.body, user.id));
     } catch (err) { next(err); }
   };
 
   delete = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!(WRITE_ROLES as readonly string[]).includes(req.user!.role))
+      const user = requireUser(req);
+      if (!(WRITE_ROLES as readonly string[]).includes(user.role))
         throw new AppError(403, "FORBIDDEN");
       await this.service.delete(
         Number(req.params["id"]),
-        req.user!.id,
-        isAdminLike(req.user!.role),
+        user.id,
+        isAdminLike(user.role),
       );
       res.status(204).send();
     } catch (err) { next(err); }
@@ -45,7 +49,8 @@ export class TrainingReferenceController {
 
   getRecommendations = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!(READ_ROLES as readonly string[]).includes(req.user!.role))
+      const user = requireUser(req);
+      if (!(READ_ROLES as readonly string[]).includes(user.role))
         throw new AppError(403, "FORBIDDEN");
       const q = req.query as Record<string, string | undefined>;
       if (!q["sessionType"]) throw new AppError(400, "SESSION_TYPE_REQUIRED");

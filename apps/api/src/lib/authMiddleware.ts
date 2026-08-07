@@ -1,6 +1,12 @@
 import passport from "passport";
 import { Request, Response, NextFunction } from "express";
 import { getPrisma } from "./prisma";
+import { AppError } from "./appError";
+
+export function requireUser(req: Request) {
+  if (!req.user) throw new AppError(401, "UNAUTHORIZED");
+  return req.user;
+}
 
 export const auth = (req: Request, res: Response, next: NextFunction) => {
   passport.authenticate(

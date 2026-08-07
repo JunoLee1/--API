@@ -4,10 +4,12 @@ import { AdminService } from "./admin.service";
 import { ListUsersQuery, SetDemoDto } from "./dto/admin.dto";
 import { Role, CoachingRole, FrontOfficeRole } from "../generated/enums";
 import { hasPermission, Permission, requireSuperAdmin } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { writeAuditLog } from "../lib/auditLog";
 
 const requireAdmin = (req: Request): void => {
-  if (!hasPermission(req.user!.role as Role, Permission.SYSTEM_MANAGE)) {
+  const user = requireUser(req);
+  if (!hasPermission(user.role as Role, Permission.SYSTEM_MANAGE)) {
     throw new AppError(403, "FORBIDDEN");
   }
 };
@@ -44,9 +46,10 @@ export class AdminController {
     try {
       requireAdmin(req);
       const targetId = Number(req.params["id"]);
-      const result = await this.service.updateUserRole(targetId, req.body, req.user!.id, req.user!.role as Role);
+      const user = requireUser(req);
+      const result = await this.service.updateUserRole(targetId, req.body, user.id, user.role as Role);
       await writeAuditLog({
-        actorId: req.user!.id,
+        actorId: user.id,
         action: "ROLE_UPDATE",
         targetId,
         detail: { newRole: req.body.role },
@@ -61,9 +64,10 @@ export class AdminController {
     try {
       requireAdmin(req);
       const targetId = Number(req.params["id"]);
-      const result = await this.service.deactivateUser(targetId, req.user!.id);
+      const user = requireUser(req);
+      const result = await this.service.deactivateUser(targetId, user.id);
       await writeAuditLog({
-        actorId: req.user!.id,
+        actorId: user.id,
         action: "USER_DEACTIVATE",
         targetId,
       });
@@ -78,8 +82,9 @@ export class AdminController {
       requireAdmin(req);
       const targetId = Number(req.params["id"]);
       const result = await this.service.reactivateUser(targetId);
+      const user = requireUser(req);
       await writeAuditLog({
-        actorId: req.user!.id,
+        actorId: user.id,
         action: "USER_REACTIVATE",
         targetId,
       });
@@ -92,7 +97,8 @@ export class AdminController {
   deleteUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
       requireSuperAdmin(req);
-      await this.service.deleteUser(Number(req.params["id"]), req.user!.id);
+      const user = requireUser(req);
+      await this.service.deleteUser(Number(req.params["id"]), user.id);
       res.status(204).send();
     } catch (err) {
       next(err);
@@ -102,11 +108,12 @@ export class AdminController {
   setDemoStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
       requireSuperAdmin(req);
+      const user = requireUser(req);
       const targetId = Number(req.params["id"]);
       const dto: SetDemoDto = { isDemo: req.body.isDemo === true };
-      const result = await this.service.setDemoStatus(targetId, dto, req.user!.id);
+      const result = await this.service.setDemoStatus(targetId, dto, user.id);
       await writeAuditLog({
-        actorId: req.user!.id,
+        actorId: user.id,
         action: "DEMO_STATUS_UPDATE",
         targetId,
         detail: { isDemo: dto.isDemo },
@@ -137,7 +144,8 @@ export class AdminController {
       if (req.query["to"]) filters.to = req.query["to"] as string;
       if (req.query["page"]) filters.page = Number(req.query["page"]);
       if (req.query["limit"]) filters.limit = Number(req.query["limit"]);
-      res.status(200).json(await this.service.getAuditLogs(filters, req.user!.isDemo ?? false));
+      const user = requireUser(req);
+      res.status(200).json(await this.service.getAuditLogs(filters, user.isDemo ?? false));
     } catch (err) {
       next(err);
     }

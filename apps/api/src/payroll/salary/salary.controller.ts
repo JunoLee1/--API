@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { AppError } from "../../lib/appError";
 import { canWriteFinance } from "../../lib/permissions";
+import { requireUser } from "../../lib/authMiddleware";
 import type { SalaryService } from "./salary.service";
 import type { CreateSalaryDto, UpdateSalaryDto, SalaryListQuery } from "./dto/salary.dto";
 
@@ -21,7 +22,7 @@ export class SalaryController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canWriteFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.create(req.body as CreateSalaryDto));
     } catch (err) { next(err); }
@@ -29,7 +30,7 @@ export class SalaryController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canWriteFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.update(Number(req.params["id"]), req.body as UpdateSalaryDto));
     } catch (err) { next(err); }

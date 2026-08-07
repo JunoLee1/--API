@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { JerseyService } from "./jersey.service";
 
 const GM_ROLES = ["GM", "ADMIN"] as const;
@@ -27,7 +28,8 @@ export class JerseyController {
 
   assign = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!ASSIGN_ROLES.includes(req.user!.role as any)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!(ASSIGN_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       const teamId = Number(req.body.teamId);
       if (!teamId) throw new AppError(400, "TEAM_ID_REQUIRED");
       const result = await this.service.assignToPlayer(teamId, req.body);
@@ -37,7 +39,8 @@ export class JerseyController {
 
   release = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!ASSIGN_ROLES.includes(req.user!.role as any)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!(ASSIGN_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       const { teamId, number } = req.body;
       const result = await this.service.release(Number(teamId), Number(number));
       res.json(result);
@@ -46,7 +49,8 @@ export class JerseyController {
 
   retire = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!GM_ROLES.includes(req.user!.role as any)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!(GM_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       const { teamId, number } = req.body;
       const result = await this.service.retire(Number(teamId), Number(number));
       res.json(result);
@@ -55,7 +59,8 @@ export class JerseyController {
 
   reactivate = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!isAdminLike(req.user!.role)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!isAdminLike(user.role)) throw new AppError(403, "FORBIDDEN");
       const { teamId, number } = req.body;
       const result = await this.service.reactivate(Number(teamId), Number(number));
       res.json(result);

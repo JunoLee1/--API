@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { TacticalService } from "./tactical.service";
 
 const STAFF_ROLES = ["ADMIN", "SUPER_ADMIN", "COACHING_STAFF"] as const;
@@ -33,26 +34,28 @@ export class TacticalController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       const canCreate =
         isAdminLike(role) ||
         role === "COACHING_STAFF" ||
         (role === "FRONT_OFFICE" && frontOfficeRole === "TACTICAL_ANALYST");
       if (!canCreate) throw new AppError(403, "FORBIDDEN");
-      res.status(201).json(await this.service.createAnalysis(req.body, req.user!.id));
+      res.status(201).json(await this.service.createAnalysis(req.body, requireUser(req).id));
     } catch (err) { next(err); }
   };
 
   addLineup = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!STAFF_ROLES.includes(req.user!.role as StaffRole)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!STAFF_ROLES.includes(user.role as StaffRole)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.addLineup(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
   };
 
   addMedia = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!STAFF_ROLES.includes(req.user!.role as StaffRole)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!STAFF_ROLES.includes(user.role as StaffRole)) throw new AppError(403, "FORBIDDEN");
       const analysisId = Number(req.params["id"]);
       const files = req.files as Express.Multer.File[];
       if (!files || files.length === 0) throw new AppError(400, "NO_FILES");
@@ -70,7 +73,7 @@ export class TacticalController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       const canUpdate =
         isAdminLike(role) ||
         role === "COACHING_STAFF" ||
@@ -84,7 +87,7 @@ export class TacticalController {
 
   confirm = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = req.user!;
+      const { role, coachingRole } = requireUser(req);
       const canConfirm =
         isAdminLike(role) || (role === "COACHING_STAFF" && coachingRole === "HEAD_COACH");
       if (!canConfirm) throw new AppError(403, "FORBIDDEN");

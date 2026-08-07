@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { requireUser } from "../lib/authMiddleware";
 import type { YouthRegistrationService } from "./youth-registration.service";
 import type { CreateYouthRegistrationDto, RejectYouthRegistrationDto, YouthRegistrationListQuery } from "./dto/youth-registration.dto";
 
@@ -28,14 +29,14 @@ export class YouthRegistrationController {
       const { playerName, birthDate, preferredJerseyNumber, teamId, guardianEmail } = req.body;
       if (!playerName || !birthDate || !teamId || !guardianEmail) throw new AppError(400, "MISSING_REQUIRED_FIELDS");
       const dto: CreateYouthRegistrationDto = { playerName, birthDate, preferredJerseyNumber, teamId: Number(teamId), guardianEmail };
-      const data = await this.service.create(dto, (req.user as any).id);
+      const data = await this.service.create(dto, requireUser(req).id);
       res.status(201).json(data);
     } catch (e) { next(e); }
   };
 
   guardianApprove = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = await this.service.guardianApprove(Number(req.params["id"]), (req.user as any).id);
+      const data = await this.service.guardianApprove(Number(req.params["id"]), requireUser(req).id);
       res.json(data);
     } catch (e) { next(e); }
   };
@@ -54,7 +55,7 @@ export class YouthRegistrationController {
     try {
       const { nationalityId } = req.body;
       if (!nationalityId) throw new AppError(400, "NATIONALITY_REQUIRED");
-      const data = await this.service.contract(Number(req.params["id"]), (req.user as any).id, Number(nationalityId));
+      const data = await this.service.contract(Number(req.params["id"]), requireUser(req).id, Number(nationalityId));
       res.status(201).json(data);
     } catch (e) { next(e); }
   };

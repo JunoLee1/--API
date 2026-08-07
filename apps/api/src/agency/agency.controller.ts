@@ -3,9 +3,11 @@ import { AgencyService } from "./agency.service";
 import { hasPermission, Permission } from "../lib/permissions";
 import { Role } from "../generated/enums";
 import { AppError } from "../lib/appError";
+import { requireUser } from "../lib/authMiddleware";
 
 const requireAdmin = (req: Request) => {
-  if (!hasPermission(req.user!.role as Role, Permission.SYSTEM_MANAGE)) {
+  const user = requireUser(req);
+  if (!hasPermission(user.role as Role, Permission.SYSTEM_MANAGE)) {
     throw new AppError(403, "FORBIDDEN");
   }
 };

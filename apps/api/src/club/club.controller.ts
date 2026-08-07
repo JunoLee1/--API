@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { requireUser } from "../lib/authMiddleware";
 import { ClubService } from "./club.service";
 
 export class ClubController {
@@ -7,7 +8,8 @@ export class ClubController {
 
   getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      res.json(await this.service.getAll(req.user!.role, req.user!.clubId));
+      const user = requireUser(req);
+      res.json(await this.service.getAll(user.role, user.clubId));
     } catch (err) { next(err); }
   };
 
@@ -19,7 +21,8 @@ export class ClubController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (req.user!.role !== "SUPER_ADMIN") throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (user.role !== "SUPER_ADMIN") throw new AppError(403, "FORBIDDEN");
       const { name, countryId, ownerEmail, businessRegNumber, companyNumber, vatNumber } = req.body as {
         name?: unknown;
         countryId?: unknown;
@@ -45,7 +48,8 @@ export class ClubController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const role = req.user!.role;
+      const user = requireUser(req);
+      const role = user.role;
       if (role !== "SUPER_ADMIN" && role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.update(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
