@@ -7,11 +7,15 @@ export interface NotificationItem {
   body: string
   readAt: string | null
   createdAt: string
+  entityId?: number
 }
 
 export const NOTIFICATION_ROUTES: Record<string, string> = {
   // Contracts
   CONTRACT_EXPIRY: '/contracts',
+  CONTRACT_EXPIRY_90D: '/contracts',
+  CONTRACT_EXPIRY_60D: '/contracts',
+  CONTRACT_EXPIRY_30D: '/contracts',
   PERFORMANCE_BONUS_ACHIEVED: '/contracts',
   EXTENSION_OPTION_AVAILABLE: '/contracts',
   PLAYER_CONTRACT_SIGNED: '/contracts',

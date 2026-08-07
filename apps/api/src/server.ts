@@ -14,6 +14,7 @@ import { startMonthlyAttendanceCheckJob } from "./jobs/monthlyAttendanceCheck";
 import { startWorkPermitExpiryCheckJob } from "./jobs/workPermitExpiryCheck";
 import { startLoanOutExpiryJob } from "./jobs/loanOutExpiry";
 import { startContractExpiryJob } from "./jobs/contractExpiry";
+import { startContractExpiryAlertJob } from "./jobs/contractExpiryAlert";
 import { startMonthlyMarketValueSnapshotJob } from "./jobs/monthlyMarketValueSnapshot";
 import { startMatchDayNotificationJob } from "./jobs/matchDayNotification";
 import { startYouthWeeklyScheduleJob } from "./jobs/youthWeeklySchedule";
@@ -23,6 +24,8 @@ import { startQuarterlyJobPostingDraftJob } from "./jobs/quarterlyJobPostingDraf
 import { startEquipmentExpiryAlertJob } from "./jobs/equipmentExpiryAlert";
 import { startInventoryThresholdJob } from "./jobs/inventoryThreshold";
 import { startMonthlyDepreciationJob } from "./jobs/monthlyDepreciation";
+import { startMonthlyOperationsReportJob } from "./jobs/monthlyOperationsReport";
+import { startMonthlyBudgetReportJob } from "./jobs/monthlyBudgetReport";
 
 const app = express();
 
@@ -63,6 +66,7 @@ startMonthlyAttendanceCheckJob();
 startWorkPermitExpiryCheckJob();
 startLoanOutExpiryJob();
 startContractExpiryJob();
+startContractExpiryAlertJob();
 startMonthlyMarketValueSnapshotJob();
 startMatchDayNotificationJob();
 startYouthWeeklyScheduleJob();
@@ -72,3 +76,5 @@ startQuarterlyJobPostingDraftJob();
 startEquipmentExpiryAlertJob();
 startInventoryThresholdJob();
 startMonthlyDepreciationJob();
+startMonthlyOperationsReportJob();
+startMonthlyBudgetReportJob();

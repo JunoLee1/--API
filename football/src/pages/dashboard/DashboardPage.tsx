@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { dashboardApi } from '@/services/dashboard.service'
 import { notificationApi, type NotificationItem } from '@/services/notification.service'
@@ -7,6 +8,9 @@ import { matchApi } from '@/services/match.service'
 import { analysisApi, type TeamRanking } from '@/services/analysis.service'
 import { seasonApi } from '@/services/season.service'
 import { operatingExpenseApi } from '@/services/operating-expense.service'
+import { opsReportApi } from '@/services/ops-report.service'
+import { salesApi } from '@/services/sales.service'
+import type { OpsSnapshotData } from '@/types/ops-report'
 import type { Match } from '@/types/match'
 import { COMPETITION_LABEL } from '@/types/match'
 import type { DashboardStats, YouthDevelopmentStats } from '@/types/dashboard'
@@ -20,6 +24,7 @@ import { RecentFeedCard, type FeedItem } from '@/components/dashboard/RecentFeed
 import { RankingCard } from '@/components/dashboard/RankingCard'
 import { YouthDevelopmentSection } from '@/components/dashboard/YouthDevelopmentSection'
 import { AcademyFinanceSection } from '@/components/dashboard/AcademyFinanceSection'
+import { OpsKpiSection } from '@/components/dashboard/OpsKpiSection'
 
 const OUR_TEAM_NAME = 'FC Seoul'
 
@@ -79,13 +84,16 @@ function toFeedItems(matches: Match[], tFn: (key: string) => string): FeedItem[]
 export function DashboardPage() {
   const { t } = useTranslation('common')
   const { user, loading: userLoading } = useCurrentUser()
+  const navigate = useNavigate()
   const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [seasonTicketRevenue, setSeasonTicketRevenue] = useState<number | null>(null)
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [matches, setMatches] = useState<Match[]>([])
   const [myRanking, setMyRanking] = useState<TeamRanking | null>(null)
   const [youthDev, setYouthDev] = useState<YouthDevelopmentStats | null>(null)
   const [academyFinance, setAcademyFinance] = useState<AcademyFinanceStats | null>(null)
   const [recentExpenses, setRecentExpenses] = useState<OperatingExpense[]>([])
+  const [opsKpi, setOpsKpi] = useState<OpsSnapshotData | null>(null)
   const [statsLoading, setStatsLoading] = useState(true)
   const [notiLoading, setNotiLoading] = useState(true)
   const [matchesLoading, setMatchesLoading] = useState(true)
@@ -122,6 +130,23 @@ export function DashboardPage() {
               .then(setRecentExpenses)
               .catch(() => null)
               .finally(() => setExpensesLoading(false))
+          )
+        }
+        if (config.showOpsKpi) {
+          const now = new Date()
+          const year = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+          const month = now.getMonth() === 0 ? 12 : now.getMonth()
+          tasks.push(
+            opsReportApi.getOpsKpi(season.id, year, month)
+              .then(setOpsKpi)
+              .catch(() => null)
+          )
+        }
+        if (config.showTicketRevenue) {
+          tasks.push(
+            salesApi.seasonTicketTotal(season.id)
+              .then((r) => setSeasonTicketRevenue(r.total))
+              .catch(() => null)
           )
         }
         return Promise.all(tasks)
@@ -161,6 +186,18 @@ export function DashboardPage() {
             highlight={card.highlight && stats ? (card.getValue(stats) as number) > 0 : false}
           />
         ))}
+        {config.showTicketRevenue && seasonTicketRevenue !== null && (
+          <button
+            type="button"
+            className="text-left hover:opacity-80 transition-opacity cursor-pointer"
+            onClick={() => navigate('/finance/ticket-sales')}
+          >
+            <StatCard
+              label="시즌 티켓 수입"
+              value={`₩${seasonTicketRevenue.toLocaleString()}`}
+            />
+          </button>
+        )}
       </div>
 
       {/* 유소년 포지션 편중 섹션 */}
@@ -172,6 +209,15 @@ export function DashboardPage() {
       {config.showAcademyFinance && academyFinance && (
         <AcademyFinanceSection data={academyFinance} />
       )}
+
+      {/* 운영/재무 KPI 섹션 */}
+      {config.showOpsKpi && opsKpi && (
+        <OpsKpiSection
+          role={user.frontOfficeRole === 'HR_MANAGER' ? 'HR_MANAGER' : 'FINANCE_MANAGER'}
+          data={opsKpi as unknown as Record<string, number>}
+        />
+      )}
+
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {config.showActionQueue && (
