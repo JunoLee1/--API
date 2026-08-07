@@ -19,6 +19,9 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter,
+} from '@/components/ui/table'
 import { ArrowLeft, Pencil, Trash2, Plus, Users, ScanLine } from 'lucide-react'
 import { playerApi } from '@/services/player.service'
 import { POSITION_ABBR, POSITION_ZONE, POSITION_LABEL } from '@/types/player'
@@ -785,6 +788,7 @@ export function MatchDetailPage() {
   const [statUploading, setStatUploading] = useState(false)
   const statFileRef = useRef<HTMLInputElement>(null)
   const [ticketSales, setTicketSales] = useState<SalesRecord[]>([])
+  const [deleteSaleId, setDeleteSaleId] = useState<number | null>(null)
   const [saleQty, setSaleQty] = useState('')
   const [salePrice, setSalePrice] = useState('')
   const [saleDate, setSaleDate] = useState(new Date().toISOString().slice(0, 10))
@@ -876,14 +880,16 @@ export function MatchDetailPage() {
     }
   }
 
-  const handleDeleteTicketSale = async (id: number) => {
-    if (!confirm('티켓 판매 기록을 삭제할까요?')) return
+  const handleDeleteTicketSale = async () => {
+    if (!deleteSaleId) return
     try {
-      await salesApi.delete(id)
-      setTicketSales((prev) => prev.filter((s) => s.id !== id))
+      await salesApi.delete(deleteSaleId)
+      setTicketSales((prev) => prev.filter((s) => s.id !== deleteSaleId))
       toast.success('삭제되었습니다.')
     } catch {
       toast.error('삭제에 실패했습니다.')
+    } finally {
+      setDeleteSaleId(null)
     }
   }
 
@@ -1268,50 +1274,52 @@ export function MatchDetailPage() {
                 <p className="text-sm text-muted-foreground">등록된 티켓 판매 기록이 없습니다.</p>
               ) : (
                 <div className="border rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-muted/50">
-                        <th className="text-left px-3 py-2">날짜</th>
-                        <th className="text-right px-3 py-2">수량</th>
-                        <th className="text-right px-3 py-2">단가</th>
-                        <th className="text-right px-3 py-2">합계</th>
-                        <th className="px-3 py-2"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>날짜</TableHead>
+                        <TableHead className="text-right">수량</TableHead>
+                        <TableHead className="text-right">단가</TableHead>
+                        <TableHead className="text-right">합계</TableHead>
+                        <TableHead />
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                       {ticketSales.map((s) => (
-                        <tr key={s.id} className="border-t">
-                          <td className="px-3 py-2">{new Date(s.saleDate).toLocaleDateString('ko-KR')}</td>
-                          <td className="px-3 py-2 text-right">{s.quantity.toLocaleString()}장</td>
-                          <td className="px-3 py-2 text-right">₩{Number(s.unitPrice).toLocaleString()}</td>
-                          <td className="px-3 py-2 text-right font-medium">₩{Number(s.totalAmount).toLocaleString()}</td>
-                          <td className="px-3 py-2 text-right">
+                        <TableRow key={s.id}>
+                          <TableCell>{new Date(s.saleDate).toLocaleDateString('ko-KR')}</TableCell>
+                          <TableCell className="text-right">{s.quantity.toLocaleString()}장</TableCell>
+                          <TableCell className="text-right">₩{Number(s.unitPrice).toLocaleString()}</TableCell>
+                          <TableCell className="text-right font-medium">₩{Number(s.totalAmount).toLocaleString()}</TableCell>
+                          <TableCell className="text-right">
                             {canDeleteSales && (
-                              <button
-                                className="text-destructive hover:text-destructive/80 text-xs"
-                                onClick={() => handleDeleteTicketSale(s.id)}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive h-7 px-2"
+                                onClick={() => setDeleteSaleId(s.id)}
                               >
                                 삭제
-                              </button>
+                              </Button>
                             )}
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       ))}
-                    </tbody>
-                    <tfoot>
-                      <tr className="border-t bg-muted/30 font-semibold">
-                        <td className="px-3 py-2">합계</td>
-                        <td className="px-3 py-2 text-right">
+                    </TableBody>
+                    <TableFooter>
+                      <TableRow>
+                        <TableCell className="font-semibold">합계</TableCell>
+                        <TableCell className="text-right font-semibold">
                           {ticketSales.reduce((s, r) => s + r.quantity, 0).toLocaleString()}장
-                        </td>
-                        <td></td>
-                        <td className="px-3 py-2 text-right">
+                        </TableCell>
+                        <TableCell />
+                        <TableCell className="text-right font-semibold">
                           ₩{ticketSales.reduce((s, r) => s + Number(r.totalAmount), 0).toLocaleString()}
-                        </td>
-                        <td></td>
-                      </tr>
-                    </tfoot>
-                  </table>
+                        </TableCell>
+                        <TableCell />
+                      </TableRow>
+                    </TableFooter>
+                  </Table>
                 </div>
               )}
             </div>
@@ -1319,6 +1327,20 @@ export function MatchDetailPage() {
 
         </div>
       </div>
+
+      {/* 티켓 판매 삭제 확인 */}
+      <Dialog open={deleteSaleId !== null} onOpenChange={(open) => { if (!open) setDeleteSaleId(null) }}>
+        <DialogContent className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle>티켓 판매 기록 삭제</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">이 판매 기록을 삭제할까요? 되돌릴 수 없습니다.</p>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" size="sm" onClick={() => setDeleteSaleId(null)}>취소</Button>
+            <Button variant="destructive" size="sm" onClick={handleDeleteTicketSale}>삭제</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {match && (
         <>

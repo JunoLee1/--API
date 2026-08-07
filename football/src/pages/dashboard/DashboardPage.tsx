@@ -186,6 +186,18 @@ export function DashboardPage() {
             highlight={card.highlight && stats ? (card.getValue(stats) as number) > 0 : false}
           />
         ))}
+        {config.showTicketRevenue && seasonTicketRevenue !== null && (
+          <button
+            type="button"
+            className="text-left hover:opacity-80 transition-opacity cursor-pointer"
+            onClick={() => navigate('/finance/ticket-sales')}
+          >
+            <StatCard
+              label="시즌 티켓 수입"
+              value={`₩${seasonTicketRevenue.toLocaleString()}`}
+            />
+          </button>
+        )}
       </div>
 
       {/* 유소년 포지션 편중 섹션 */}
@@ -206,21 +218,6 @@ export function DashboardPage() {
         />
       )}
 
-      {/* 시즌 티켓 수입 KPI 카드 */}
-      {config.showTicketRevenue && seasonTicketRevenue !== null && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <button
-            type="button"
-            className="text-left"
-            onClick={() => navigate('/finance/ticket-sales')}
-          >
-            <StatCard
-              label="시즌 티켓 수입"
-              value={`₩${seasonTicketRevenue.toLocaleString()}`}
-            />
-          </button>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {config.showActionQueue && (
