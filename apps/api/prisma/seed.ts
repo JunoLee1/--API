@@ -396,7 +396,7 @@ async function seedQACases() {
   const ball = await prisma.equipmentItem.upsert({
     where: { id: 1 },
     update: {},
-    create: { id: 1, name: '훈련용 축구공', category: 'BALL', trackedIndividually: false, quantity: 30, lowStockThreshold: 5 },
+    create: { id: 1, name: '훈련용 축구공', category: 'BALL_AND_TOOLS', trackedIndividually: false, quantity: 30, lowStockThreshold: 5 },
   });
 
   const vest = await prisma.equipmentItem.upsert({
