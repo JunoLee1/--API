@@ -65,7 +65,9 @@ export class MaintenanceService {
   async approve(id: number, approverId: number) {
     const existing = await this.get(id);
     if (existing.status !== "PENDING_APPROVAL") throw new AppError(400, "INVALID_STATUS_TRANSITION");
-    return this.repo.approve(id, approverId);
+    const record = await this.repo.approve(id, approverId);
+    void this.notifications.notifyMaintenanceApproved(existing.title, id, existing.createdBy.id).catch(console.error);
+    return record;
   }
 
   async gmApprove(id: number, gmId: number) {
@@ -95,6 +97,7 @@ export class MaintenanceService {
     const REJECTABLE = ["PENDING_APPROVAL", "APPROVED"];
     if (!REJECTABLE.includes(existing.status)) throw new AppError(400, "INVALID_STATUS_TRANSITION");
     const result = await this.repo.reject(id, reason);
+    void this.notifications.notifyMaintenanceRejected(existing.title, id, existing.createdBy.id, reason).catch(console.error);
     void writeAuditLog({
       actorId: actorId ?? 0,
       action: "MAINTENANCE_REJECTED",
