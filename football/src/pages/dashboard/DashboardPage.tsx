@@ -7,6 +7,8 @@ import { matchApi } from '@/services/match.service'
 import { analysisApi, type TeamRanking } from '@/services/analysis.service'
 import { seasonApi } from '@/services/season.service'
 import { operatingExpenseApi } from '@/services/operating-expense.service'
+import { opsReportApi } from '@/services/ops-report.service'
+import type { OpsSnapshotData } from '@/types/ops-report'
 import type { Match } from '@/types/match'
 import { COMPETITION_LABEL } from '@/types/match'
 import type { DashboardStats, YouthDevelopmentStats } from '@/types/dashboard'
@@ -20,6 +22,7 @@ import { RecentFeedCard, type FeedItem } from '@/components/dashboard/RecentFeed
 import { RankingCard } from '@/components/dashboard/RankingCard'
 import { YouthDevelopmentSection } from '@/components/dashboard/YouthDevelopmentSection'
 import { AcademyFinanceSection } from '@/components/dashboard/AcademyFinanceSection'
+import { OpsKpiSection } from '@/components/dashboard/OpsKpiSection'
 
 const OUR_TEAM_NAME = 'FC Seoul'
 
@@ -86,6 +89,7 @@ export function DashboardPage() {
   const [youthDev, setYouthDev] = useState<YouthDevelopmentStats | null>(null)
   const [academyFinance, setAcademyFinance] = useState<AcademyFinanceStats | null>(null)
   const [recentExpenses, setRecentExpenses] = useState<OperatingExpense[]>([])
+  const [opsKpi, setOpsKpi] = useState<OpsSnapshotData | null>(null)
   const [statsLoading, setStatsLoading] = useState(true)
   const [notiLoading, setNotiLoading] = useState(true)
   const [matchesLoading, setMatchesLoading] = useState(true)
@@ -122,6 +126,16 @@ export function DashboardPage() {
               .then(setRecentExpenses)
               .catch(() => null)
               .finally(() => setExpensesLoading(false))
+          )
+        }
+        if (config.showOpsKpi) {
+          const now = new Date()
+          const year = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+          const month = now.getMonth() === 0 ? 12 : now.getMonth()
+          tasks.push(
+            opsReportApi.getOpsKpi(season.id, year, month)
+              .then(setOpsKpi)
+              .catch(() => null)
           )
         }
         return Promise.all(tasks)
@@ -171,6 +185,14 @@ export function DashboardPage() {
       {/* 아카데미 회비 KPI 섹션 */}
       {config.showAcademyFinance && academyFinance && (
         <AcademyFinanceSection data={academyFinance} />
+      )}
+
+      {/* 운영/재무 KPI 섹션 */}
+      {config.showOpsKpi && opsKpi && (
+        <OpsKpiSection
+          role={user.frontOfficeRole === 'HR_MANAGER' ? 'HR_MANAGER' : 'FINANCE_MANAGER'}
+          data={opsKpi as unknown as Record<string, number>}
+        />
       )}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
