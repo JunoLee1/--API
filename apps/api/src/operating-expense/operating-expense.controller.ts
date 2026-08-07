@@ -9,7 +9,7 @@ const canRead = (role: string, foRole: string | null | undefined) =>
   canReadFinance(role, foRole) || (role === "FRONT_OFFICE" && foRole === "TD");
 
 const canCreate = (role: string, foRole: string | null | undefined) =>
-  canReadFinance(role, foRole);
+  canWriteFinance(role, foRole);
 
 const canDelete = (role: string, foRole: string | null | undefined) =>
   canWriteFinance(role, foRole);
@@ -32,14 +32,21 @@ export class OperatingExpenseController {
     try {
       const { role, frontOfficeRole, id: userId } = requireUser(req);
       if (!canCreate(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
-      const { seasonId, category, amount, date, note } = req.body as {
+      const { seasonId, category, amount, date, note, overrideReason } = req.body as {
         seasonId: number;
         category: OperatingCategory;
         amount: number;
         date: string;
         note?: string;
+        overrideReason?: string;
       };
-      const expense = await this.service.create({ seasonId, category, amount, date, ...(note !== undefined && { note }), createdById: userId });
+      const expense = await this.service.create({
+        seasonId, category, amount, date,
+        ...(note !== undefined && { note }),
+        ...(overrideReason !== undefined && { overrideReason }),
+        createdById: userId,
+        requesterRole: role,
+      });
       res.status(201).json(expense);
     } catch (err) { next(err); }
   };
