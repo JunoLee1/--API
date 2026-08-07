@@ -128,6 +128,47 @@ export class TacticalRepository {
     });
   }
 
+  findAllForPlayer(playerId: string) {
+    return this.prisma.tacticalAnalysis.findMany({
+      where: {
+        phase: "POST_MATCH",
+        status: "CONFIRMED",
+        match: {
+          matchLineup: {
+            slots: {
+              some: { playerId },
+            },
+          },
+        },
+      },
+      select: ANALYSIS_SELECT,
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  findByIdForPlayer(id: number, playerId: string) {
+    return this.prisma.tacticalAnalysis.findFirst({
+      where: {
+        id,
+        phase: "POST_MATCH",
+        status: "CONFIRMED",
+        match: {
+          matchLineup: {
+            slots: {
+              some: { playerId },
+            },
+          },
+        },
+      },
+      include: {
+        lineup: { include: { player: { select: { playerName: true } } } },
+        media: true,
+        momPlayer: { select: { playerName: true } },
+        improvementPlayer: { select: { playerName: true } },
+      },
+    });
+  }
+
   confirm(id: number) {
     return this.prisma.tacticalAnalysis.update({
       where: { id },

@@ -277,7 +277,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'nav.item.tacticalAnalysis',
     icon: FileText,
     section: 'nav.section.matchAnalysis',
-    roles: ['ADMIN', 'COACHING_STAFF'],
+    roles: ['ADMIN', 'COACHING_STAFF', 'PLAYER'],
   },
   {
     to: '/matches/rankings',
