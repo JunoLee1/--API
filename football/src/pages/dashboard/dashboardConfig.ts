@@ -24,6 +24,7 @@ export interface DashboardConfig {
   showYouthDevelopment: boolean
   showAcademyFinance?: boolean
   showOpsKpi?: 'finance' | 'hr' | 'all'
+  showTicketRevenue?: boolean
 }
 
 export function getDashboardConfig(user: UserDto): DashboardConfig {
@@ -164,6 +165,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         showMedicalSection: false,
         showYouthDevelopment: false,
         showOpsKpi: 'finance',
+        showTicketRevenue: true,
       }
     }
     if (frontOfficeRole === 'ASSET_MANAGER') {
