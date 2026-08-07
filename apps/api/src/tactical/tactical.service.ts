@@ -70,4 +70,25 @@ export class TacticalService {
     if (analysis.status === "CONFIRMED") throw new AppError(409, "ALREADY_CONFIRMED");
     return this.repo.confirm(id);
   }
+
+  private async resolvePlayerId(userId: number): Promise<string> {
+    const player = await getPrisma().player.findFirst({
+      where: { userId },
+      select: { id: true },
+    });
+    if (!player) throw new AppError(403, "PLAYER_PROFILE_NOT_FOUND");
+    return player.id;
+  }
+
+  async listForPlayer(userId: number) {
+    const playerId = await this.resolvePlayerId(userId);
+    return this.repo.findAllForPlayer(playerId);
+  }
+
+  async getByIdForPlayer(id: number, userId: number) {
+    const playerId = await this.resolvePlayerId(userId);
+    const analysis = await this.repo.findByIdForPlayer(id, playerId);
+    if (!analysis) throw new AppError(404, "ANALYSIS_NOT_FOUND");
+    return analysis;
+  }
 }

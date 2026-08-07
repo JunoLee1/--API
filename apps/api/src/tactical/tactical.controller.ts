@@ -12,6 +12,10 @@ export class TacticalController {
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const user = requireUser(req);
+      if (user.role === "PLAYER") {
+        return res.status(200).json(await this.service.listForPlayer(user.id));
+      }
       const filters = {
         ...(req.query["matchId"] && { matchId: Number(req.query["matchId"]) }),
         ...(req.query["phase"] && { phase: req.query["phase"] as string }),
@@ -28,7 +32,12 @@ export class TacticalController {
 
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      res.status(200).json(await this.service.getById(Number(req.params["id"])));
+      const user = requireUser(req);
+      const id = Number(req.params["id"]);
+      if (user.role === "PLAYER") {
+        return res.status(200).json(await this.service.getByIdForPlayer(id, user.id));
+      }
+      res.status(200).json(await this.service.getById(id));
     } catch (err) { next(err); }
   };
 
