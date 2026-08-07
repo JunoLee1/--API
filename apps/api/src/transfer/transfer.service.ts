@@ -1,5 +1,6 @@
 import { TransferRepository } from "./transfer.repo";
 import { AppError } from "../lib/appError";
+import { writeAuditLog } from "../lib/auditLog";
 import { CreateTransferDto, CreateRecallDto, UpdateRecallStatusDto } from "./dto/transfer.dto";
 import { RecallStatus } from "../generated/enums";
 
@@ -16,8 +17,10 @@ export class TransferService {
     return transfer;
   }
 
-  createTransfer(dto: CreateTransferDto) {
-    return this.repo.createTransfer(dto);
+  async createTransfer(dto: CreateTransferDto, actorId: number) {
+    const transfer = await this.repo.createTransfer(dto);
+    await writeAuditLog({ actorId, action: "TRANSFER_CREATED", targetId: transfer.id, detail: { playerId: dto.playerId, type: dto.type } });
+    return transfer;
   }
 
   getRecalls(status?: RecallStatus) {

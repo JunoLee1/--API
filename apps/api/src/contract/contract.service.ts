@@ -1,6 +1,7 @@
 import { ContractRepository } from "./contract.repo";
 import { WageCapService } from "./wage-cap.service";
 import { AppError } from "../lib/appError";
+import { writeAuditLog } from "../lib/auditLog";
 import {
   CreateContractDto,
   UpdateContractStatusDto,
@@ -25,7 +26,7 @@ export class ContractService {
     return contract;
   }
 
-  async createContract(dto: CreateContractDto) {
+  async createContract(dto: CreateContractDto, actorId: number) {
     if (dto.salary <= 0) throw new AppError(400, "INVALID_SALARY");
 
     const capResult = await this.wageCapService.check(dto.salary);
@@ -35,6 +36,7 @@ export class ContractService {
     }
 
     const contract = await this.repo.create(dto);
+    await writeAuditLog({ actorId, action: "CONTRACT_CREATED", targetId: contract.id, detail: { playerId: dto.playerId } });
 
     if (capResult.status === "WARNING") {
       return { ...contract, wageCapWarning: { percentOver: capResult.percentOver } };
@@ -43,9 +45,10 @@ export class ContractService {
     return contract;
   }
 
-  async updateStatus(id: number, dto: UpdateContractStatusDto) {
+  async updateStatus(id: number, dto: UpdateContractStatusDto, actorId: number) {
     const contract = await this.repo.findById(id);
     if (!contract) throw new AppError(404, "CONTRACT_NOT_FOUND");
+    await writeAuditLog({ actorId, action: "CONTRACT_STATUS_UPDATED", targetId: id, detail: { status: dto.status } });
     return this.repo.updateStatus(id, dto.status);
   }
 

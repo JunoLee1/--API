@@ -4,6 +4,7 @@ import type { CreateGrowthEvaluationDto, AwardBadgeDto } from "./dto/growth-repo
 const EVAL_INCLUDE = {
   player: { select: { id: true, playerName: true, guardianId: true } },
   coach: { select: { id: true, username: true, nickname: true } },
+  plan: { select: { id: true, goals: true, seasonId: true } },
 } as const;
 
 const BADGE_INCLUDE = {
@@ -34,9 +35,9 @@ export class GrowthReportRepository {
     });
   }
 
-  createEvaluation(dto: CreateGrowthEvaluationDto, coachId: number) {
+  createEvaluation(dto: CreateGrowthEvaluationDto, coachId: number, planId?: number) {
     return this.prisma.growthEvaluation.create({
-      data: { ...dto, coachId },
+      data: { ...dto, coachId, ...(planId !== undefined && { planId }) },
       include: EVAL_INCLUDE,
     });
   }

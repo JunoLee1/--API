@@ -74,6 +74,13 @@ export class DevelopmentPlanRepository {
     });
   }
 
+  findActiveByPlayer(playerId: string) {
+    return this.prisma.playerDevelopmentPlan.findFirst({
+      where: { playerId, status: "ACTIVE" },
+      select: { id: true },
+    });
+  }
+
   findPlayerUserId(playerId: string) {
     return this.prisma.player.findUnique({
       where: { id: playerId },

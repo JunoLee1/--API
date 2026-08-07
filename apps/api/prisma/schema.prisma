@@ -1754,9 +1754,10 @@ model PlayerDevelopmentPlan {
   createdAt  DateTime                    @default(now())
   updatedAt  DateTime                    @updatedAt
 
-  player Player @relation(fields: [playerId], references: [id])
-  coach  User   @relation("PDPCoach", fields: [coachId], references: [id])
-  season Season @relation(fields: [seasonId], references: [id])
+  player            Player             @relation(fields: [playerId], references: [id])
+  coach             User               @relation("PDPCoach", fields: [coachId], references: [id])
+  season            Season             @relation(fields: [seasonId], references: [id])
+  growthEvaluations GrowthEvaluation[]
 
   @@unique([playerId, seasonId])
 }
@@ -1898,6 +1899,7 @@ model GrowthEvaluation {
   id                  Int       @id @default(autoincrement())
   playerId            String
   coachId             Int
+  planId              Int?
   year                Int
   month               Int
   isPublished         Boolean   @default(false)
@@ -1913,8 +1915,9 @@ model GrowthEvaluation {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  player Player @relation(fields: [playerId], references: [id])
-  coach  User   @relation("CoachEvaluations", fields: [coachId], references: [id])
+  player Player                @relation(fields: [playerId], references: [id])
+  coach  User                  @relation("CoachEvaluations", fields: [coachId], references: [id])
+  plan   PlayerDevelopmentPlan? @relation(fields: [planId], references: [id])
 
   @@unique([playerId, year, month])
 }
