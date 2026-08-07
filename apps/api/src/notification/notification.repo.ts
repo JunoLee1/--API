@@ -102,6 +102,22 @@ export class NotificationRepository {
     });
   }
 
+  createForContractManager(type: string, getMsg: MsgFactory, entityId?: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const contractManagers = await tx.user.findMany({
+        where: { role: "FRONT_OFFICE", frontOfficeRole: "CONTRACT_MANAGER" },
+        select: { id: true, language: true },
+      });
+      if (contractManagers.length === 0) return;
+      await tx.notification.createMany({
+        data: contractManagers.map((u) => {
+          const { title, body } = getMsg(u.language);
+          return { userId: u.id, type, title, body, entityId };
+        }) as any,
+      });
+    });
+  }
+
   createForHeadCoach(type: string, getMsg: MsgFactory, entityId?: number) {
     return this.prisma.$transaction(async (tx) => {
       const headCoaches = await tx.user.findMany({
