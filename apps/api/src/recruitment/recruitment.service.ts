@@ -1,5 +1,6 @@
 import { RecruitmentRepository } from "./recruitment.repo";
 import { AppError } from "../lib/appError";
+import { maskEmail, maskPhone } from "../lib/maskPii";
 import type {
   CreateJobPostingDto,
   UpdateJobPostingDto,
@@ -12,6 +13,17 @@ import type {
   UpdateReferenceCheckDto,
 } from "./dto/recruitment.dto";
 import type { InterviewRound } from "../generated/enums";
+
+function maskApplication<T extends { email: string | null; phone: string | null; onboarding?: { user?: { email: string } | null } | null }>(app: T): T {
+  return {
+    ...app,
+    email: app.email ? maskEmail(app.email) : app.email,
+    phone: maskPhone(app.phone),
+    onboarding: app.onboarding?.user
+      ? { ...app.onboarding, user: { ...app.onboarding.user, email: maskEmail(app.onboarding.user.email) } }
+      : app.onboarding,
+  };
+}
 
 export class RecruitmentService {
   constructor(private repo: RecruitmentRepository) {}
@@ -53,13 +65,14 @@ export class RecruitmentService {
 
   async listApplications(postingId: number) {
     await this.getPosting(postingId);
-    return this.repo.findApplicationsByPosting(postingId);
+    const apps = await this.repo.findApplicationsByPosting(postingId);
+    return apps.map(maskApplication);
   }
 
   async getApplication(id: number) {
     const app = await this.repo.findApplicationById(id);
     if (!app) throw new AppError(404, "JOB_APPLICATION_NOT_FOUND");
-    return app;
+    return maskApplication(app);
   }
 
   async apply(postingId: number, dto: CreateJobApplicationDto) {

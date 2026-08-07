@@ -1,7 +1,13 @@
 import { AppError } from "../lib/appError";
+import { maskEmail } from "../lib/maskPii";
 import type { YouthRegistrationRepository } from "./youth-registration.repo";
 import type { NotificationRepository } from "../notification/notification.repo";
 import type { CreateYouthRegistrationDto, RejectYouthRegistrationDto, YouthRegistrationListQuery } from "./dto/youth-registration.dto";
+
+function maskGuardianEmail<T extends { guardian?: { email: string } | null }>(reg: T): T {
+  if (!reg.guardian) return reg;
+  return { ...reg, guardian: { ...reg.guardian, email: maskEmail(reg.guardian.email) } };
+}
 
 export class YouthRegistrationService {
   constructor(
@@ -10,14 +16,15 @@ export class YouthRegistrationService {
     private inviteService: { inviteUser: (data: { email: string; role: string }) => Promise<{ id: number }> },
   ) {}
 
-  getAll(query: YouthRegistrationListQuery) {
-    return this.repo.findAll(query);
+  async getAll(query: YouthRegistrationListQuery) {
+    const regs = await this.repo.findAll(query);
+    return regs.map(maskGuardianEmail);
   }
 
   async getById(id: number) {
     const reg = await this.repo.findById(id);
     if (!reg) throw new AppError(404, "YOUTH_REGISTRATION_NOT_FOUND");
-    return reg;
+    return maskGuardianEmail(reg);
   }
 
   async create(dto: CreateYouthRegistrationDto, requestedById: number) {
