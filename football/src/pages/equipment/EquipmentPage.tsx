@@ -357,7 +357,7 @@ function LoansTab({ isKitManager }: { isKitManager: boolean }) {
                         <Button size="sm" onClick={() => handleAction(() => loanApi.issue(loan.id), t('equipmentPage.approveSuccess'), t('equipmentPage.approveFailed'))}>{t('equipmentPage.assignButton')}</Button>
                       )}
                       {loan.status === 'ISSUED' && (
-                        <Button size="sm" variant="outline" onClick={() => handleAction(() => loanApi.return(loan.id), t('equipmentPage.returnSuccess'), t('equipmentPage.returnFailed'))}>{t('equipmentPage.returnButton')}</Button>
+                        <Button size="sm" onClick={() => handleAction(() => loanApi.return(loan.id), t('equipmentPage.returnSuccess'), t('equipmentPage.returnFailed'))}>{t('equipmentPage.returnButton')}</Button>
                       )}
                     </div>
                   </TableCell>
