@@ -4,6 +4,7 @@ import { canWriteFinance } from "../lib/permissions";
 import { requireUser } from "../lib/authMiddleware";
 import { FinancialReportService } from "./financial-report.service";
 import { OperatingCategory } from "../generated/client";
+import type { RevenueBreakdownDto } from "./financial-report.repo";
 
 const canWrite = (role: string, foRole: string | null | undefined) =>
   canWriteFinance(role, foRole);
@@ -19,9 +20,20 @@ export class FinancialReportController {
       const { role, frontOfficeRole } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
-      const { totalRevenue, note } = req.body as { totalRevenue: number; note?: string };
+      const { totalRevenue, note, breakdown } = req.body as { totalRevenue: number; note?: string; breakdown?: RevenueBreakdownDto };
       if (!Number.isInteger(totalRevenue)) throw new AppError(400, "INVALID_REVENUE");
-      const report = await this.service.set(seasonId, totalRevenue, note);
+      const report = await this.service.set(seasonId, totalRevenue, note, breakdown);
+      res.status(200).json(report);
+    } catch (err) { next(err); }
+  };
+
+  setBreakdown = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = requireUser(req);
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const seasonId = Number(req.params["seasonId"]);
+      const { note, ...breakdown } = req.body as RevenueBreakdownDto & { note?: string };
+      const report = await this.service.setBreakdown(seasonId, breakdown, note);
       res.status(200).json(report);
     } catch (err) { next(err); }
   };
@@ -87,6 +99,18 @@ export class FinancialReportController {
       const { category, amount, reason } = req.body as { category: OperatingCategory; amount: number; reason: string };
       const log = await this.service.addOverride(seasonId, category, amount, reason, userId);
       res.status(201).json(log);
+    } catch (err) { next(err); }
+  };
+
+  setFromPrevSeason = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = requireUser(req);
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const seasonId = Number(req.params["seasonId"]);
+      const { prevSeasonId } = req.body as { prevSeasonId: number };
+      if (!prevSeasonId) throw new AppError(400, "PREV_SEASON_ID_REQUIRED");
+      const report = await this.service.setFromPrevSeasonActuals(prevSeasonId, seasonId);
+      res.status(200).json(report);
     } catch (err) { next(err); }
   };
 
