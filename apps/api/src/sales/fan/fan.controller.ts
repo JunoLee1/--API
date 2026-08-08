@@ -37,6 +37,8 @@ export class FanController {
       requireUser(req);
       const fanId = Number(req.params["id"]);
       const { tier, startDate, endDate } = req.body as { tier: string; startDate: string; endDate: string };
+      if (!tier || !startDate || !endDate) throw new AppError(400, "MISSING_REQUIRED_FIELDS");
+      if (new Date(startDate) >= new Date(endDate)) throw new AppError(400, "INVALID_DATE_RANGE");
       res.status(201).json(await this.repo.createMembership({ fanId, tier, startDate: new Date(startDate), endDate: new Date(endDate) }));
     } catch (err) { next(err); }
   };

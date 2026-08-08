@@ -62,23 +62,27 @@ export class TrainingLoadRepository {
       select: { id: true, occurredAt: true, bodyPart: true, cause: true },
       orderBy: { occurredAt: "desc" },
     });
-    const result = [];
-    for (const injury of injuries) {
-      const windowStart = new Date(injury.occurredAt);
-      windowStart.setDate(windowStart.getDate() - weeksBeforeInjury * 7);
-      const loads = await this.prisma.trainingLoad.findMany({
-        where: {
-          playerId,
-          session: { date: { gte: windowStart, lte: injury.occurredAt } },
-        },
-        include: { session: { select: { date: true, sessionType: true } } },
-        orderBy: { session: { date: "asc" } },
-      });
+    if (injuries.length === 0) return [];
+
+    const windowMs = weeksBeforeInjury * 7 * 24 * 60 * 60 * 1000;
+    const earliest = new Date(Math.min(...injuries.map((i) => i.occurredAt.getTime())) - windowMs);
+    const latest = injuries[0]!.occurredAt;
+
+    const allLoads = await this.prisma.trainingLoad.findMany({
+      where: { playerId, session: { date: { gte: earliest, lte: latest } } },
+      include: { session: { select: { date: true, sessionType: true } } },
+      orderBy: { session: { date: "asc" } },
+    });
+
+    return injuries.map((injury) => {
+      const windowStart = new Date(injury.occurredAt.getTime() - windowMs);
+      const loads = allLoads.filter(
+        (l) => l.session.date >= windowStart && l.session.date <= injury.occurredAt,
+      );
       const totalLoad = loads.reduce((s, l) => s + (l.load ?? 0), 0);
-      const avgRpe = loads.length === 0 ? null : Math.round(loads.reduce((s, l) => s + l.rpe, 0) / loads.length * 10) / 10;
-      result.push({ injury, priorPeriodLoad: totalLoad, avgRpe, sessionCount: loads.length });
-    }
-    return result;
+      const avgRpe = loads.length === 0 ? null : Math.round((loads.reduce((s, l) => s + l.rpe, 0) / loads.length) * 10) / 10;
+      return { injury, priorPeriodLoad: totalLoad, avgRpe, sessionCount: loads.length };
+    });
   }
 
   async getPlayerGrowthTrajectory(playerId: string) {
