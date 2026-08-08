@@ -88,12 +88,12 @@ export class SalesController {
       if (!canReadFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const { type, matchId, fromDate, toDate, minAmount, maxAmount } = req.query as Record<string, string>;
       res.json(await this.service.searchSales({
-        type,
-        matchId: matchId ? Number(matchId) : undefined,
-        fromDate,
-        toDate,
-        minAmount: minAmount ? Number(minAmount) : undefined,
-        maxAmount: maxAmount ? Number(maxAmount) : undefined,
+        ...(type !== undefined ? { type } : {}),
+        ...(matchId ? { matchId: Number(matchId) } : {}),
+        ...(fromDate !== undefined ? { fromDate } : {}),
+        ...(toDate !== undefined ? { toDate } : {}),
+        ...(minAmount ? { minAmount: Number(minAmount) } : {}),
+        ...(maxAmount ? { maxAmount: Number(maxAmount) } : {}),
       }));
     } catch (e) { next(e); }
   };

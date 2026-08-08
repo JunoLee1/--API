@@ -20,7 +20,7 @@ const UNIT_SELECT = {
     take: 1,
     select: { player: { select: { name: true } } },
   },
-} as const;
+} as any;
 
 const ASSIGNMENT_SELECT = {
   id: true,

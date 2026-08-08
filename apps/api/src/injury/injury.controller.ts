@@ -32,7 +32,7 @@ export class InjuryController {
   getByPlayer = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);
-      void writeAuditLog({ actorId: user.id, action: "MEDICAL_DATA_READ", targetId: req.params["playerId"] }).catch(console.error);
+      void writeAuditLog({ actorId: user.id, action: "MEDICAL_DATA_READ", targetId: String(req.params["playerId"]) }).catch(console.error);
       res.status(200).json(await this.service.getByPlayer(String(req.params["playerId"])));
     } catch (err) { next(err); }
   };
@@ -40,7 +40,7 @@ export class InjuryController {
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);
-      void writeAuditLog({ actorId: user.id, action: "MEDICAL_DATA_READ", targetId: req.params["id"] }).catch(console.error);
+      void writeAuditLog({ actorId: user.id, action: "MEDICAL_DATA_READ", targetId: String(req.params["id"]) }).catch(console.error);
       res.status(200).json(await this.service.getById(Number(req.params["id"])));
     } catch (err) { next(err); }
   };
@@ -64,7 +64,7 @@ export class InjuryController {
   getReport = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);
-      void writeAuditLog({ actorId: user.id, action: "MEDICAL_DATA_READ", targetId: req.params["id"] }).catch(console.error);
+      void writeAuditLog({ actorId: user.id, action: "MEDICAL_DATA_READ", targetId: String(req.params["id"]) }).catch(console.error);
       const report = await this.service.getReport(Number(req.params["id"]));
       res.status(200).json(report ?? null);
     } catch (err) { next(err); }
@@ -115,7 +115,7 @@ export class InjuryController {
   getAssessment = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);
-      void writeAuditLog({ actorId: user.id, action: "MEDICAL_DATA_READ", targetId: req.params["id"] }).catch(console.error);
+      void writeAuditLog({ actorId: user.id, action: "MEDICAL_DATA_READ", targetId: String(req.params["id"]) }).catch(console.error);
       const data = await this.service.getAssessment(Number(req.params["id"]));
       res.status(200).json(data);
     } catch (err) { next(err); }
@@ -137,7 +137,7 @@ export class InjuryController {
   getExternalReports = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);
-      void writeAuditLog({ actorId: user.id, action: "MEDICAL_DATA_READ", targetId: req.params["id"] }).catch(console.error);
+      void writeAuditLog({ actorId: user.id, action: "MEDICAL_DATA_READ", targetId: String(req.params["id"]) }).catch(console.error);
       const data = await this.service.getExternalReports(Number(req.params["id"]));
       res.status(200).json(data);
     } catch (err) { next(err); }

@@ -30,7 +30,7 @@ export class EquipmentService {
     if (!item) throw new AppError(404, "EQUIPMENT_ITEM_NOT_FOUND");
     return {
       ...item,
-      units: item.units?.map(({ assignments, ...unit }) => ({
+      units: (item as any).units?.map(({ assignments, ...unit }: any) => ({
         ...unit,
         assignedTo: assignments[0]?.player ? { playerName: assignments[0].player.name } : null,
       })),
@@ -96,7 +96,7 @@ export class EquipmentService {
   async transitionUnitStatus(unitId: number, dto: UpdateUnitStatusDto, userId?: number) {
     const unit = await this.repo.findUnitById(unitId);
     if (!unit) throw new AppError(404, "EQUIPMENT_UNIT_NOT_FOUND");
-    const allowed = VALID_UNIT_TRANSITIONS[unit.status];
+    const allowed = VALID_UNIT_TRANSITIONS[unit.status as unknown as EquipmentUnitStatus];
     if (!allowed.includes(dto.status)) throw new AppError(409, "INVALID_STATUS_TRANSITION");
     const updated = await this.repo.updateUnitStatus(unitId, dto.status);
     if (dto.status === "RETIRED") {

@@ -35,7 +35,7 @@ export class PlayerController {
   getPlayerById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);
-      const includePrivate = isAdminLike(user.role) || user.role === "GM" || user.role === "TD";
+      const includePrivate = isAdminLike(user.role) || user.role === "GM" || user.frontOfficeRole === "TD";
       const player = await this.service.getPlayerById(String(req.params["id"]), includePrivate);
       if (user.role === "PLAYER") {
         const { currentMarketValue, ...safePlayer } = player as any;
@@ -101,7 +101,7 @@ export class PlayerController {
     try {
       const user = requireUser(req);
       if (!(this.MARKET_VALUE_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
-      void writeAuditLog({ actorId: user.id, action: "PLAYER_MARKET_VALUE_READ", targetId: req.params["id"] }).catch(console.error);
+      void writeAuditLog({ actorId: user.id, action: "PLAYER_MARKET_VALUE_READ", targetId: String(req.params["id"]) }).catch(console.error);
       const history = await this.service.getMarketValueHistory(String(req.params["id"]));
       res.json(history);
     } catch (err) { next(err); }

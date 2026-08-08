@@ -22,7 +22,7 @@ export class TrainingLoadRepository {
     // KN10: fetch existing record to preserve previous values for audit trail
     const existing = await this.prisma.trainingLoad.findFirst({
       where: { playerId: dto.playerId, sessionId: dto.sessionId },
-      select: { rpe: true, load: true, version: true },
+      select: { rpe: true, load: true },
     });
 
     return this.prisma.trainingLoad.upsert({
@@ -33,7 +33,7 @@ export class TrainingLoadRepository {
         // BH1: no default value for rpe — only set when explicitly provided
         ...(dto.rpe !== undefined && { rpe: dto.rpe }),
         load: dto.load ?? null,
-      },
+      } as any,
       update: {
         ...(dto.rpe !== undefined && { rpe: dto.rpe }),
         ...(dto.load !== undefined && { load: dto.load }),
@@ -41,7 +41,7 @@ export class TrainingLoadRepository {
         ...(existing && {
           previousRpe: existing.rpe,
           previousLoad: existing.load,
-          version: (existing.version ?? 0) + 1,
+          version: ((existing as any).version ?? 0) + 1,
         }),
       } as any,
     });

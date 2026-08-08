@@ -270,7 +270,13 @@ export class RecruitmentController {
       const { interviewerId, scoreSkill, scoreComm, scoreCulture, comment } = req.body as {
         interviewerId: number; scoreSkill?: number; scoreComm?: number; scoreCulture?: number; comment?: string;
       };
-      res.status(201).json(await this.service.addInterviewerScore(interviewId, { interviewerId, scoreSkill, scoreComm, scoreCulture, comment }, userId));
+      res.status(201).json(await this.service.addInterviewerScore(interviewId, {
+        interviewerId,
+        ...(scoreSkill !== undefined ? { scoreSkill } : {}),
+        ...(scoreComm !== undefined ? { scoreComm } : {}),
+        ...(scoreCulture !== undefined ? { scoreCulture } : {}),
+        ...(comment !== undefined ? { comment } : {}),
+      }, userId));
     } catch (err) {
       next(err);
     }
