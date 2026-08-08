@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import { validatePhoneEncryptionKey } from "./crypto";
 dotenv.config();
 
 const jwtAccessSecret = process.env["JWT_ACCESS_TOKEN_SECRET"];
@@ -10,6 +11,12 @@ const jwtRefreshSecret = process.env["JWT_REFRESH_TOKEN_SECRET"];
 if (!jwtRefreshSecret) {
   throw new Error("JWT_REFRESH_TOKEN_SECRET environment variable is required but not set");
 }
+
+if (!process.env["DATABASE_URL"]) {
+  throw new Error("DATABASE_URL environment variable is required but not set");
+}
+
+validatePhoneEncryptionKey();
 
 export const JWT_ACCESS_TOKEN_SECRET = jwtAccessSecret;
 export const JWT_REFRESH_TOKEN_SECRET = jwtRefreshSecret;

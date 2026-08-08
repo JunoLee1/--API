@@ -84,6 +84,55 @@ export class TrainingLoadService {
     };
   }
 
+  getInjuryLoadCorrelation(playerId: string, weeksBeforeInjury?: number) {
+    return this.repo.getInjuryLoadCorrelation(playerId, weeksBeforeInjury);
+  }
+
+  getPlayerGrowthTrajectory(playerId: string) {
+    return this.repo.getPlayerGrowthTrajectory(playerId);
+  }
+
+  async detectLoadRpeAnomalies(seasonId?: number) {
+    const loads = await this.repo.getAllWithSession(seasonId);
+    const anomalies = loads.filter((l) => {
+      const highLoad = (l.load ?? 0) >= (WEEKLY_LOAD_THRESHOLD * 0.14);
+      const lowRpe = l.rpe < 4;
+      const lowLoad = (l.load ?? 0) > 0 && (l.load ?? 0) < 20;
+      const highRpe = l.rpe >= 8;
+      return (highLoad && lowRpe) || (lowLoad && highRpe);
+    });
+    return anomalies.map((l) => ({
+      playerId: l.playerId,
+      sessionId: l.sessionId,
+      load: l.load,
+      rpe: l.rpe,
+      anomalyType: ((l.load ?? 0) >= (WEEKLY_LOAD_THRESHOLD * 0.14) && l.rpe < 4) ? "HIGH_LOAD_LOW_RPE" : "LOW_LOAD_HIGH_RPE",
+    }));
+  }
+
+  async getAcuteChronicRatio(playerId: string) {
+    const now = new Date();
+    const acuteStart = new Date(now); acuteStart.setDate(now.getDate() - 7);
+    const chronicStart = new Date(now); chronicStart.setDate(now.getDate() - 28);
+
+    const [acuteLoads, chronicLoads] = await Promise.all([
+      this.repo.getLoadsBetween(playerId, acuteStart, now),
+      this.repo.getLoadsBetween(playerId, chronicStart, now),
+    ]);
+
+    const acuteTotal = acuteLoads.reduce((s, l) => s + (l.load ?? 0), 0);
+    const chronicWeeklyAvg = chronicLoads.reduce((s, l) => s + (l.load ?? 0), 0) / 4;
+    const ratio = chronicWeeklyAvg === 0 ? null : Math.round((acuteTotal / chronicWeeklyAvg) * 100) / 100;
+
+    return {
+      playerId,
+      acuteLoad: acuteTotal,
+      chronicWeeklyAvg: Math.round(chronicWeeklyAvg),
+      acuteChronicRatio: ratio,
+      riskLevel: ratio == null ? "UNKNOWN" : ratio > 1.5 ? "HIGH" : ratio > 1.3 ? "MODERATE" : "LOW",
+    };
+  }
+
   private getWeekStart(date: Date): Date {
     const d = new Date(date);
     const day = d.getDay();

@@ -13,6 +13,13 @@ const service = new ContractService(repo, wageCapService);
 const controller = new ContractController(service);
 
 
+// 분석 엔드포인트 (구체적 경로 먼저)
+router.get("/squad-salary-overview", auth, controller.getSquadSalaryOverview);
+router.get("/expiring-with-value", auth, controller.getExpiringContractsWithValue);
+router.get("/transfer-pnl", auth, controller.getTransferPnL);
+router.get("/salary-benchmark", auth, controller.getSalaryBenchmark);
+router.get("/prospect-summary", auth, controller.getProspectSummary);
+
 // 선수별 계약 목록
 router.get("/player/:playerId", auth, controller.getByPlayer);
 

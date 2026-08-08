@@ -176,4 +176,58 @@ export class TacticalRepository {
       select: { id: true, status: true },
     });
   }
+
+  async getFormationResultCorrelation(seasonId: number) {
+    const analyses = await this.prisma.tacticalAnalysis.findMany({
+      where: { seasonId, phase: "PRE_MATCH", formation: { not: null }, status: "CONFIRMED" },
+      select: {
+        formation: true,
+        match: { select: { homeScore: true, awayScore: true, teamId: true } },
+      },
+    });
+    const formationMap = new Map<string, { wins: number; draws: number; losses: number; total: number }>();
+    for (const a of analyses) {
+      if (!a.formation || a.match.homeScore == null || a.match.awayScore == null) continue;
+      const f = a.formation;
+      const entry = formationMap.get(f) ?? { wins: 0, draws: 0, losses: 0, total: 0 };
+      entry.total++;
+      const isHome = !!a.match.teamId;
+      const scored = isHome ? a.match.homeScore : a.match.awayScore;
+      const conceded = isHome ? a.match.awayScore : a.match.homeScore;
+      if (scored > conceded) entry.wins++;
+      else if (scored === conceded) entry.draws++;
+      else entry.losses++;
+      formationMap.set(f, entry);
+    }
+    return Array.from(formationMap.entries()).map(([formation, stats]) => ({
+      formation,
+      ...stats,
+      winRate: stats.total === 0 ? 0 : Math.round((stats.wins / stats.total) * 100),
+    })).sort((a, b) => b.winRate - a.winRate);
+  }
+
+  searchOpponentAnalysis(keyword: string, seasonId?: number) {
+    return this.prisma.tacticalAnalysis.findMany({
+      where: {
+        ...(seasonId && { seasonId }),
+        OR: [
+          { opponentKeyThreat: { contains: keyword, mode: "insensitive" } },
+          { opponentWeakness: { contains: keyword, mode: "insensitive" } },
+          { opponentAnalysis: { contains: keyword, mode: "insensitive" } },
+          { opponentKeyPlayer: { contains: keyword, mode: "insensitive" } },
+        ],
+      },
+      select: {
+        id: true,
+        phase: true,
+        formation: true,
+        opponentAnalysis: true,
+        opponentKeyThreat: true,
+        opponentWeakness: true,
+        opponentKeyPlayer: true,
+        match: { select: { id: true, homeTeamName: true, awayTeamName: true, date: true, homeScore: true, awayScore: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
 }

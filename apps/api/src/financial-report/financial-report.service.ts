@@ -2,6 +2,7 @@ import { AppError } from "../lib/appError";
 import { FinancialReportRepository, UpsertBudgetPlanDto } from "./financial-report.repo";
 import { KnapsackService } from "../budget/knapsack.service";
 import { OperatingCategory } from "../generated/client";
+import { getPrisma } from "../lib/prisma";
 
 export class FinancialReportService {
   constructor(
@@ -78,6 +79,33 @@ export class FinancialReportService {
 
   async getActuals(seasonId: number) {
     return this.repo.getActuals(seasonId);
+  }
+
+  async getReportWithLedger(seasonId: number) {
+    const report = await this.repo.findBySeasonId(seasonId);
+    if (!report) throw new AppError(404, "FINANCIAL_REPORT_NOT_FOUND");
+    const prisma = getPrisma();
+    const ledgerEntries = await prisma.ledgerEntry.findMany({
+      where: { relatedModule: "FINANCIAL_REPORT", relatedId: report.id },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    });
+    return { ...report, ledgerEntries };
+  }
+
+  async getComparison(seasonId: number) {
+    const [plan, actuals] = await Promise.all([
+      this.getBudgetPlan(seasonId),
+      this.repo.getActuals(seasonId),
+    ]);
+    const comparison = plan.budgetCategoryPlans.map((c) => ({
+      category: c.category,
+      mandatoryMinimum: c.mandatoryMinimum,
+      knapsackAllocated: c.knapsackAllocated,
+      actual: actuals?.[c.category] ?? 0,
+      variance: (c.knapsackAllocated ?? c.mandatoryMinimum) - (actuals?.[c.category] ?? 0),
+    }));
+    return { ...plan, actuals, comparison };
   }
 
   private parseCSV(content: string): number {

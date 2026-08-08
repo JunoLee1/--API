@@ -206,4 +206,51 @@ export class RecruitmentRepository {
       data: { mfaRegisteredAt: new Date(), completedAt: new Date() },
     });
   }
+
+  async getHeadcountProgress() {
+    const postings = await this.prisma.jobPosting.findMany({
+      where: { status: { in: ["OPEN", "CLOSED"] } },
+      select: {
+        id: true,
+        title: true,
+        headcount: true,
+        status: true,
+        _count: { select: { applications: { where: { status: "ONBOARDED" } } } },
+      },
+    });
+    return postings.map((p) => ({
+      postingId: p.id,
+      title: p.title,
+      targetHeadcount: p.headcount,
+      hiredCount: p._count.applications,
+      fillRate: p.headcount === 0 ? 0 : Math.round((p._count.applications / p.headcount) * 100),
+      status: p.status,
+    }));
+  }
+
+  async getTimeToHireStats() {
+    const hired = await this.prisma.jobApplication.findMany({
+      where: { status: "ONBOARDED", offeredAt: { not: null } },
+      select: { createdAt: true, offeredAt: true, posting: { select: { title: true } } },
+    });
+    const stats = hired.map((a) => ({
+      title: a.posting.title,
+      daysToHire: Math.round((a.offeredAt!.getTime() - a.createdAt.getTime()) / (1000 * 60 * 60 * 24)),
+    }));
+    const avg = stats.length === 0 ? 0 : Math.round(stats.reduce((s, v) => s + v.daysToHire, 0) / stats.length);
+    return { averageDaysToHire: avg, records: stats };
+  }
+
+  // --- InterviewerScore ---
+
+  addInterviewerScore(data: { interviewId: number; interviewerId: number; scoreSkill?: number; scoreComm?: number; scoreCulture?: number; comment?: string }) {
+    return this.prisma.interviewerScore.create({ data });
+  }
+
+  getInterviewerScores(interviewId: number) {
+    return this.prisma.interviewerScore.findMany({
+      where: { interviewId },
+      include: { interviewer: { select: { id: true, nickname: true } } },
+    });
+  }
 }

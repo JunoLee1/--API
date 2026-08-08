@@ -35,4 +35,33 @@ export class TrainingLoadController {
       );
     } catch (err) { next(err); }
   };
+
+  getInjuryCorrelation = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const playerId = req.params["playerId"] as string;
+      const weeks = req.query["weeks"] ? Number(req.query["weeks"]) : undefined;
+      res.json(await this.service.getInjuryLoadCorrelation(playerId, weeks));
+    } catch (err) { next(err); }
+  };
+
+  getGrowthTrajectory = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const playerId = req.params["playerId"] as string;
+      res.json(await this.service.getPlayerGrowthTrajectory(playerId));
+    } catch (err) { next(err); }
+  };
+
+  getAnomalies = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const seasonId = req.query["seasonId"] ? Number(req.query["seasonId"]) : undefined;
+      res.json(await this.service.detectLoadRpeAnomalies(seasonId));
+    } catch (err) { next(err); }
+  };
+
+  getAcuteChronicRatio = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const playerId = req.params["playerId"] as string;
+      res.json(await this.service.getAcuteChronicRatio(playerId));
+    } catch (err) { next(err); }
+  };
 }

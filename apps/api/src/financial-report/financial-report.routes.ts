@@ -17,6 +17,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 1 *
 
 router.post("/:seasonId",                   auth, controller.set);
 router.post("/:seasonId/csv",               auth, upload.single("file"), controller.setFromCSV);
+router.get("/:seasonId/with-ledger",        auth, controller.getWithLedger);
 router.get("/:seasonId",                    auth, controller.get);
 router.get("/:seasonId/budget",             auth, controller.getBudgetPlan);
 router.put("/:seasonId/budget",             auth, controller.upsertBudgetPlan);
