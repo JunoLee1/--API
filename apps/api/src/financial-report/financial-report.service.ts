@@ -104,10 +104,10 @@ export class FinancialReportService {
     });
     if (!prevSeason) throw new AppError(404, "PREV_SEASON_NOT_FOUND");
 
-    // 1. 티켓 실수입 (SalesRecord type=TICKET, 해당 시즌 경기 연결)
+    // 1. 티켓 실수입 (TICKET + VIP_TICKET, 해당 시즌 경기 연결)
     const ticketResult = await prisma.salesRecord.aggregate({
       where: {
-        type: "TICKET",
+        type: { in: ["TICKET", "VIP_TICKET"] as any[] },
         match: { seasonId: prevSeasonId },
         deletedAt: null,
       } as any,
@@ -115,8 +115,19 @@ export class FinancialReportService {
     });
     const revenueTicket = Number((ticketResult._sum as any).totalAmount ?? 0);
 
-    // 2. MD 수입 (SalesRecord type=OTHER, saleDate 범위)
-    const mdResult = await prisma.salesRecord.aggregate({
+    // 2. 유니폼/MD 실수입 (SalesRecord type=UNIFORM, saleDate 범위)
+    const uniformResult = await prisma.salesRecord.aggregate({
+      where: {
+        type: "UNIFORM",
+        saleDate: { gte: prevSeason.startDate, lte: prevSeason.endDate },
+        deletedAt: null,
+      } as any,
+      _sum: { totalAmount: true },
+    });
+    const revenueMerchandise = Number((uniformResult._sum as any).totalAmount ?? 0);
+
+    // 3-extra. 기타 판매 실수입 (SalesRecord type=OTHER, saleDate 범위)
+    const otherSalesResult = await prisma.salesRecord.aggregate({
       where: {
         type: "OTHER",
         saleDate: { gte: prevSeason.startDate, lte: prevSeason.endDate },
@@ -124,9 +135,9 @@ export class FinancialReportService {
       } as any,
       _sum: { totalAmount: true },
     });
-    const revenueMerchandise = Number((mdResult._sum as any).totalAmount ?? 0);
+    const revenueOther = Number((otherSalesResult._sum as any).totalAmount ?? 0);
 
-    // 3. 스폰서십 실수입 (SponsorshipPayment status=PAID, paidAt 범위)
+    // 4. 스폰서십 실수입 (SponsorshipPayment status=PAID, paidAt 범위)
     const sponsorResult = await prisma.sponsorshipPayment.aggregate({
       where: {
         status: "PAID",
@@ -136,7 +147,7 @@ export class FinancialReportService {
     });
     const revenueSponsorship = Number(sponsorResult._sum.amount ?? 0);
 
-    // 4. 아카데미 회비 실수입 (LedgerEntry category=ACADEMY_FEE, 전년도 시즌 기간)
+    // 5. 아카데미 회비 실수입 (LedgerEntry category=ACADEMY_FEE, 전년도 시즌 기간)
     const academyFeeResult = await prisma.ledgerEntry.aggregate({
       where: {
         category: "ACADEMY_FEE",
@@ -152,10 +163,10 @@ export class FinancialReportService {
       revenueSponsorship,
       revenueMerchandise,
       revenueAcademyFee,
-      revenueBroadcast: 0,     // 중계권 — 시스템 외부 데이터, 0으로 초기화
-      revenueSubsidy: 0,       // 지자체 보조금 — 수동 입력
+      revenueBroadcast: 0,     // 중계권 — 시스템 외부 데이터, 수동 입력
+      revenueSubsidy: 0,       // 지자체/정부 보조금 — 시스템 외부 데이터, 수동 입력
       revenueParentCompany: 0, // 모기업 지원금 — 수동 입력
-      revenueOther: 0,
+      revenueOther,
     };
 
     const total = sumBreakdown(breakdown);
