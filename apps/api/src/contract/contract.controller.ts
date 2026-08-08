@@ -75,4 +75,50 @@ export class ContractController {
       next(err);
     }
   };
+
+  getSquadSalaryOverview = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      requireUser(req);
+      res.status(200).json(await this.service.getSquadSalaryOverview());
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getExpiringContractsWithValue = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      requireUser(req);
+      const days = req.query["days"] ? Number(req.query["days"]) : undefined;
+      res.status(200).json(await this.service.getExpiringContractsWithValue(days));
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getTransferPnL = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      requireUser(req);
+      res.status(200).json(await this.service.getTransferPnL());
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getSalaryBenchmark = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      requireUser(req);
+      res.status(200).json(await this.service.getSalaryBenchmark());
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getProspectSummary = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      requireUser(req);
+      res.status(200).json(await this.service.getProspectSummary());
+    } catch (err) {
+      next(err);
+    }
+  };
 }

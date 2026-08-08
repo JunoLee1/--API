@@ -104,4 +104,24 @@ export class ContractService {
     });
     return bonus;
   }
+
+  getSquadSalaryOverview() {
+    return this.repo.getSquadSalaryByPosition();
+  }
+
+  getExpiringContractsWithValue(days?: number) {
+    return this.repo.getContractExpirySoonWithMarketValue(days);
+  }
+
+  getTransferPnL() {
+    return this.repo.getTransferPnL();
+  }
+
+  getSalaryBenchmark() {
+    return this.repo.getSalaryBenchmarkByLevel();
+  }
+
+  getProspectSummary() {
+    return this.repo.getProspectCostSummary();
+  }
 }

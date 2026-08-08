@@ -90,4 +90,8 @@ export class SalesService {
   async seasonTicketTotal(seasonId: number) {
     return this.repo.seasonTicketTotal(seasonId);
   }
+
+  searchSales(filters: { type?: string; matchId?: number; fromDate?: string; toDate?: string; minAmount?: number; maxAmount?: number }) {
+    return this.repo.findWithFilters(filters);
+  }
 }

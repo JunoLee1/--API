@@ -236,4 +236,24 @@ export class RecruitmentController {
       next(err);
     }
   };
+
+  getHeadcountProgress = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole, coachingRole } = requireUser(req);
+      if (!canRead(role, frontOfficeRole, coachingRole)) throw new AppError(403, "FORBIDDEN");
+      res.json(await this.service.getHeadcountProgress());
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getTimeToHireStats = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole, coachingRole } = requireUser(req);
+      if (!canRead(role, frontOfficeRole, coachingRole)) throw new AppError(403, "FORBIDDEN");
+      res.json(await this.service.getTimeToHireStats());
+    } catch (err) {
+      next(err);
+    }
+  };
 }

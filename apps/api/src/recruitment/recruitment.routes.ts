@@ -10,6 +10,10 @@ const repo = new RecruitmentRepository(getPrisma());
 const service = new RecruitmentService(repo);
 const controller = new RecruitmentController(service);
 
+// 분석 엔드포인트
+router.get("/headcount-progress", auth, controller.getHeadcountProgress);
+router.get("/time-to-hire", auth, controller.getTimeToHireStats);
+
 // JobPosting
 router.get("/job-postings", auth, controller.listPostings);
 router.post("/job-postings", auth, controller.createPosting);

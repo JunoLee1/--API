@@ -11,8 +11,8 @@ export class PlayerService {
     return this.repo.findAll(query);
   }
 
-  async getPlayerById(id: string) {
-    const player = await this.repo.findById(id);
+  async getPlayerById(id: string, includePrivate = false) {
+    const player = await this.repo.findById(id, includePrivate);
     if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
     return player;
   }

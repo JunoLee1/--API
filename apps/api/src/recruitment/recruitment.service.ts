@@ -160,4 +160,20 @@ export class RecruitmentService {
     if (onboarding.mfaRegisteredAt) throw new AppError(409, "MFA_ALREADY_REGISTERED");
     return this.repo.markMfaRegistered(applicationId);
   }
+
+  getHeadcountProgress() {
+    return this.repo.getHeadcountProgress();
+  }
+
+  getTimeToHireStats() {
+    return this.repo.getTimeToHireStats();
+  }
+
+  addInterviewerScore(interviewId: number, data: { interviewerId: number; scoreSkill?: number; scoreComm?: number; scoreCulture?: number; comment?: string }) {
+    return this.repo.addInterviewerScore({ interviewId, ...data });
+  }
+
+  getInterviewerScores(interviewId: number) {
+    return this.repo.getInterviewerScores(interviewId);
+  }
 }

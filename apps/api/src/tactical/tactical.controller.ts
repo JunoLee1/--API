@@ -103,4 +103,21 @@ export class TacticalController {
       res.status(200).json(await this.service.confirmAnalysis(Number(req.params["id"])));
     } catch (err) { next(err); }
   };
+
+  getFormationCorrelation = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const seasonId = Number(req.query["seasonId"]);
+      if (!seasonId) throw new AppError(400, "SEASON_ID_REQUIRED");
+      res.status(200).json(await this.service.getFormationResultCorrelation(seasonId));
+    } catch (err) { next(err); }
+  };
+
+  searchOpponent = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const keyword = req.query["keyword"] as string;
+      if (!keyword) throw new AppError(400, "KEYWORD_REQUIRED");
+      const seasonId = req.query["seasonId"] ? Number(req.query["seasonId"]) : undefined;
+      res.status(200).json(await this.service.searchOpponentAnalysis(keyword, seasonId));
+    } catch (err) { next(err); }
+  };
 }

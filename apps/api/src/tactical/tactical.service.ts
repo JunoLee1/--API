@@ -91,4 +91,12 @@ export class TacticalService {
     if (!analysis) throw new AppError(404, "ANALYSIS_NOT_FOUND");
     return analysis;
   }
+
+  getFormationResultCorrelation(seasonId: number) {
+    return this.repo.getFormationResultCorrelation(seasonId);
+  }
+
+  searchOpponentAnalysis(keyword: string, seasonId?: number) {
+    return this.repo.searchOpponentAnalysis(keyword, seasonId);
+  }
 }

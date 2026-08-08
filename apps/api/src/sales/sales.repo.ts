@@ -85,4 +85,26 @@ export class SalesRepository {
     });
     return Number(result._sum.totalAmount ?? 0);
   }
+
+  findWithFilters(filters: {
+    type?: string;
+    matchId?: number;
+    fromDate?: string;
+    toDate?: string;
+    minAmount?: number;
+    maxAmount?: number;
+  }) {
+    return this.prisma.salesRecord.findMany({
+      where: {
+        ...(filters.type && { type: filters.type as any }),
+        ...(filters.matchId && { matchId: filters.matchId }),
+        ...(filters.fromDate && { saleDate: { gte: new Date(filters.fromDate) } }),
+        ...(filters.toDate && { saleDate: { lte: new Date(filters.toDate) } }),
+        ...(filters.minAmount !== undefined && { totalAmount: { gte: filters.minAmount } }),
+        ...(filters.maxAmount !== undefined && { totalAmount: { lte: filters.maxAmount } }),
+      },
+      include: { match: { select: { id: true, homeTeamName: true, awayTeamName: true, date: true } } },
+      orderBy: { saleDate: "desc" },
+    });
+  }
 }

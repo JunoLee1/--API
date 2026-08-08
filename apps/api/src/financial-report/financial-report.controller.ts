@@ -54,11 +54,8 @@ export class FinancialReportController {
       const { role, frontOfficeRole } = requireUser(req);
       if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
-      const [plan, actuals] = await Promise.all([
-        this.service.getBudgetPlan(seasonId),
-        this.service.getActuals(seasonId),
-      ]);
-      res.status(200).json({ ...plan, actuals });
+      const result = await this.service.getComparison(seasonId);
+      res.status(200).json(result);
     } catch (err) { next(err); }
   };
 
@@ -90,6 +87,16 @@ export class FinancialReportController {
       const { category, amount, reason } = req.body as { category: OperatingCategory; amount: number; reason: string };
       const log = await this.service.addOverride(seasonId, category, amount, reason, userId);
       res.status(201).json(log);
+    } catch (err) { next(err); }
+  };
+
+  getWithLedger = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = requireUser(req);
+      if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const seasonId = Number(req.params["seasonId"]);
+      const data = await this.service.getReportWithLedger(seasonId);
+      res.status(200).json(data);
     } catch (err) { next(err); }
   };
 }
