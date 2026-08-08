@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { MatchRepository } from "./match.repo";
 import { AppError } from "../lib/appError";
+import { getPrisma } from "../lib/prisma";
 import { anthropic } from "../lib/claude";
 import {
   CreateMatchDto,
@@ -108,6 +109,22 @@ export class MatchService {
     await this.repo.recalculateXgXa(matchId);
     await this.repo.recalculateTeamStats(matchId);
     return event;
+  }
+
+  async getRemainingCapacity(matchId: number) {
+    const match = await this.repo.findById(matchId);
+    if (!match) throw new AppError(404, "MATCH_NOT_FOUND");
+    if (!match.capacity) return { capacity: null, sold: 0, remaining: null };
+
+    // SalesRecord에서 해당 matchId의 총 판매량 집계
+    // type: TICKET, VIP_TICKET 모두 포함, deletedAt: null 필터
+    const prisma = getPrisma();
+    const sold = await prisma.salesRecord.aggregate({
+      where: { matchId, type: { in: ["TICKET", "VIP_TICKET"] }, deletedAt: null } as any,
+      _sum: { quantity: true },
+    });
+    const soldQty = Number((sold._sum as any).quantity ?? 0);
+    return { capacity: match.capacity, sold: soldQty, remaining: match.capacity - soldQty };
   }
 
   async deleteShotEvent(matchId: number, eventId: number) {

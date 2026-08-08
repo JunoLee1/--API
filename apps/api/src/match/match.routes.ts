@@ -41,6 +41,9 @@ router.get("/", auth, controller.getMatches);
 // 경기 단건 조회 (선수 스탯 + 팀 스탯 포함)
 router.get("/:id", auth, controller.getMatchById);
 
+// 잔여석 조회 (전 직원 접근 가능)
+router.get("/:id/remaining-capacity", auth, controller.getRemainingCapacity);
+
 // 경기 생성 (ADMIN, FRONT_OFFICE)
 router.post("/", auth, controller.createMatch);
 

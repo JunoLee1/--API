@@ -38,6 +38,10 @@ const MATCH_SELECT = {
   venue: true,
   seasonId: true,
   externalId: true,
+  capacity: true,
+  actualAttendance: true,
+  priceRegular: true,
+  priceVip: true,
 } as const;
 
 export class MatchRepository {
@@ -125,6 +129,8 @@ export class MatchRepository {
         seasonId: data.seasonId,
         ...(data.externalId && { externalId: data.externalId }),
         ...(data.venue && { venue: data.venue }),
+        ...(data.priceRegular !== undefined && { priceRegular: data.priceRegular }),
+        ...(data.priceVip !== undefined && { priceVip: data.priceVip }),
       },
       select: MATCH_SELECT,
     });
@@ -141,6 +147,8 @@ export class MatchRepository {
         ...(data.awayScore !== undefined && { awayScore: data.awayScore }),
         ...(data.competitionType && { competitionType: data.competitionType }),
         ...(data.venue && { venue: data.venue }),
+        ...(data.priceRegular !== undefined && { priceRegular: data.priceRegular }),
+        ...(data.priceVip !== undefined && { priceVip: data.priceVip }),
       },
       select: MATCH_SELECT,
     });
