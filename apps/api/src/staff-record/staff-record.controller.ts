@@ -5,7 +5,7 @@ import { requireUser } from "../lib/authMiddleware";
 import { StaffRecordService } from "./staff-record.service";
 
 const canWrite = (role: string) =>
-  role === "GM";
+  isAdminLike(role) || role === "GM";
 
 const canRead = (role: string) =>
   isAdminLike(role) || role === "GM";
