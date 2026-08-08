@@ -1,8 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
+import { useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
 import { dashboardApi } from '@/services/dashboard.service'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { UserX, Activity, Calendar } from 'lucide-react'
+import type { CoachDashboard as CoachDashboardData } from '@/services/dashboard.service'
 
 const ATTENDANCE_LABEL: Record<string, string> = {
   ABSENT_UNAUTHORIZED: '무단결석',
@@ -38,13 +40,24 @@ const BODY_PART_LABEL: Record<string, string> = {
 }
 
 export function CoachDashboard() {
-  const { data, isLoading } = useQuery({
-    queryKey: ['coach-dashboard'],
-    queryFn: () => dashboardApi.getCoachDashboard(),
-    refetchInterval: 60_000,
-  })
+  const [data, setData] = useState<CoachDashboardData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  if (isLoading) return <div className="p-6 text-muted-foreground">로딩 중...</div>
+  const fetchData = () => {
+    dashboardApi.getCoachDashboard()
+      .then(setData)
+      .catch(() => toast.error('대시보드 데이터를 불러오지 못했습니다.'))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    fetchData()
+    intervalRef.current = setInterval(fetchData, 60_000)
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
+  }, [])
+
+  if (loading) return <div className="p-6 text-muted-foreground">로딩 중...</div>
   if (!data) return null
 
   const { absentPlayers, injuredPlayers, nextMatch, sessionDate, isToday } = data
