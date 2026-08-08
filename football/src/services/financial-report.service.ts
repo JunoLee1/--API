@@ -1,6 +1,16 @@
 import { api } from './api'
 import type { BudgetPlan, UpsertBudgetPlanPayload, OptimizeResult } from '@/types/budget'
 
+export interface RevenueBreakdown {
+  revenueTicket: number
+  revenueSponsorship: number
+  revenueBroadcast: number
+  revenueMerchandise: number
+  revenueSubsidy: number
+  revenueParentCompany: number
+  revenueOther: number
+}
+
 export interface FinancialReport {
   id: number
   seasonId: number
@@ -8,6 +18,13 @@ export interface FinancialReport {
   note: string | null
   createdAt: string
   updatedAt: string
+  revenueTicket?: number
+  revenueSponsorship?: number
+  revenueBroadcast?: number
+  revenueMerchandise?: number
+  revenueSubsidy?: number
+  revenueParentCompany?: number
+  revenueOther?: number
 }
 
 export const financialReportApi = {
@@ -23,6 +40,12 @@ export const financialReportApi = {
     if (note) form.append('note', note)
     return api.postForm<FinancialReport>(`/financial-reports/${seasonId}/csv`, form)
   },
+
+  setRevenueBreakdown: (seasonId: number, breakdown: RevenueBreakdown) =>
+    api.put<FinancialReport>(`/financial-report/${seasonId}/revenue`, breakdown),
+
+  setFromPrevSeason: (seasonId: number, prevSeasonId: number) =>
+    api.post<FinancialReport>(`/financial-report/${seasonId}/from-prev-season`, { prevSeasonId }),
 }
 
 export const budgetPlanApi = {

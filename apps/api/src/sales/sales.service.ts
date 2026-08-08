@@ -26,31 +26,33 @@ export class SalesService {
     let matchHomeTeamName: string | undefined;
     let matchAwayTeamName: string | undefined;
 
-    if (dto.type === "TICKET") {
-      if (!dto.matchId) throw new AppError(400, "MATCH_ID_REQUIRED_FOR_TICKET");
-      const match = await this.prisma.match.findUnique({
-        where: { id: dto.matchId },
-        select: { homeTeamName: true, awayTeamName: true, capacity: true },
-      });
-      if (!match) throw new AppError(404, "MATCH_NOT_FOUND");
-      if (match.homeTeamName !== FC_SEOUL) throw new AppError(400, "AWAY_MATCH_TICKET_NOT_ALLOWED");
-      matchHomeTeamName = match.homeTeamName;
-      matchAwayTeamName = match.awayTeamName;
-
-      // JO3: capacity check — ensure sale doesn't exceed match seat limit
-      const sold = await this.prisma.salesRecord.aggregate({
-        where: { matchId: dto.matchId, type: "TICKET", deletedAt: null } as any,
-        _sum: { quantity: true },
-      });
-      const soldQty = Number((sold._sum as any).quantity ?? 0);
-      if (match.capacity && soldQty + dto.quantity > match.capacity) {
-        throw new AppError(400, "MATCH_CAPACITY_EXCEEDED");
-      }
-    }
-
     const totalAmount = dto.quantity * dto.unitPrice;
 
     return this.prisma.$transaction(async (tx) => {
+      // BUG-2: capacity 체크를 트랜잭션 안으로 이동 — race condition 방지
+      if (dto.type === "TICKET" || dto.type === "VIP_TICKET") {
+        if (!dto.matchId) throw new AppError(400, "MATCH_ID_REQUIRED_FOR_TICKET");
+        const match = await tx.match.findUnique({
+          where: { id: dto.matchId },
+          select: { homeTeamName: true, awayTeamName: true, capacity: true },
+        });
+        if (!match) throw new AppError(404, "MATCH_NOT_FOUND");
+        if (match.homeTeamName !== FC_SEOUL) throw new AppError(400, "AWAY_MATCH_TICKET_NOT_ALLOWED");
+        matchHomeTeamName = match.homeTeamName;
+        matchAwayTeamName = match.awayTeamName;
+
+        if (match.capacity) {
+          const sold = await tx.salesRecord.aggregate({
+            where: { matchId: dto.matchId, type: { in: ["TICKET", "VIP_TICKET"] }, deletedAt: null } as any,
+            _sum: { quantity: true },
+          });
+          const soldQty = Number((sold._sum as any).quantity ?? 0);
+          if (soldQty + dto.quantity > match.capacity) {
+            throw new AppError(400, "MATCH_CAPACITY_EXCEEDED");
+          }
+        }
+      }
+
       const record = await tx.salesRecord.create({
         data: {
           type: dto.type,
@@ -66,7 +68,7 @@ export class SalesService {
         } as any,
       });
 
-      if (dto.type === "TICKET") {
+      if (dto.type === "TICKET" || dto.type === "VIP_TICKET") {
         await tx.ledgerEntry.create({
           data: {
             type: "INCOME",
@@ -94,15 +96,22 @@ export class SalesService {
 
     return this.prisma.$transaction(async (tx) => {
       // capacity 사전 체크 (배치 전체에 대해 matchId별로 합산 후 한 번만 체크)
+      // BUG-1: 홈경기 체크 추가 + match 정보 캐시
       const matchQtyMap = new Map<number, number>();
       for (const dto of dtos) {
         if ((dto.type === "TICKET" || dto.type === "VIP_TICKET") && dto.matchId) {
           matchQtyMap.set(dto.matchId, (matchQtyMap.get(dto.matchId) ?? 0) + dto.quantity);
         }
       }
+      const matchInfoMap = new Map<number, { homeTeamName: string; awayTeamName: string; capacity: number | null }>();
       for (const [matchId, batchQty] of matchQtyMap) {
-        const match = await tx.match.findUnique({ where: { id: matchId }, select: { capacity: true } });
-        if (match?.capacity) {
+        const match = await tx.match.findUnique({
+          where: { id: matchId },
+          select: { homeTeamName: true, awayTeamName: true, capacity: true },
+        });
+        if (!match) throw new AppError(404, "MATCH_NOT_FOUND");
+        if (match.homeTeamName !== FC_SEOUL) throw new AppError(400, "AWAY_MATCH_TICKET_NOT_ALLOWED");
+        if (match.capacity) {
           const existing = await tx.salesRecord.aggregate({
             where: { matchId, type: { in: ["TICKET", "VIP_TICKET"] }, deletedAt: null } as any,
             _sum: { quantity: true },
@@ -112,6 +121,7 @@ export class SalesService {
             throw new AppError(400, "MATCH_CAPACITY_EXCEEDED");
           }
         }
+        matchInfoMap.set(matchId, match);
       }
 
       const results = [];
@@ -121,11 +131,6 @@ export class SalesService {
 
         if (dto.type === "TICKET" || dto.type === "VIP_TICKET") {
           if (!dto.matchId) throw new AppError(400, "MATCH_ID_REQUIRED_FOR_TICKET");
-          const match = await tx.match.findUnique({
-            where: { id: dto.matchId },
-            select: { homeTeamName: true, awayTeamName: true, capacity: true },
-          });
-          if (!match) throw new AppError(404, "MATCH_NOT_FOUND");
         }
 
         const totalAmount = dto.quantity * dto.unitPrice;
@@ -145,7 +150,7 @@ export class SalesService {
         });
 
         if (dto.type === "TICKET" || dto.type === "VIP_TICKET") {
-          const match = await tx.match.findUnique({ where: { id: dto.matchId! }, select: { homeTeamName: true, awayTeamName: true } });
+          const matchInfo = dto.matchId ? matchInfoMap.get(dto.matchId) : undefined;
           await tx.ledgerEntry.create({
             data: {
               type: "INCOME",
@@ -155,7 +160,7 @@ export class SalesService {
               exchangeRate: 1,
               amountKrw: totalAmount,
               isRefund: false,
-              description: `[SALES:TICKET_SALE] ${match?.homeTeamName ?? ""} vs ${match?.awayTeamName ?? ""}`,
+              description: formatLedgerDescription("sales", "ticket_sale", { home: matchInfo?.homeTeamName ?? "", away: matchInfo?.awayTeamName ?? "" }),
               relatedModule: "SalesRecord",
               relatedId: record.id,
               createdById,

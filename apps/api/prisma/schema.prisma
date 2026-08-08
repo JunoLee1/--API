@@ -2155,13 +2155,13 @@ model FinancialReport {
   seasonId             Int      @unique
   totalRevenue         Int
   // Revenue breakdown — sum must equal totalRevenue
-  revenueTicket        Int?     @default(0)
-  revenueSponsorship   Int?     @default(0)
-  revenueBroadcast     Int?     @default(0)
-  revenueMerchandise   Int?     @default(0)
-  revenueSubsidy       Int?     @default(0)
-  revenueParentCompany Int?     @default(0)
-  revenueOther         Int?     @default(0)
+  revenueTicket        Int      @default(0)
+  revenueSponsorship   Int      @default(0)
+  revenueBroadcast     Int      @default(0)
+  revenueMerchandise   Int      @default(0)
+  revenueSubsidy       Int      @default(0)
+  revenueParentCompany Int      @default(0)
+  revenueOther         Int      @default(0)
   totalOperatingBudget Int?
   contingencyReserve   Int?     @default(0)
   note                 String?

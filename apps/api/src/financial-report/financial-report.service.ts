@@ -15,7 +15,7 @@ export class FinancialReportService {
     // When breakdown is provided, its sum must equal totalRevenue
     if (breakdown) {
       const breakdownSum = sumBreakdown(breakdown);
-      if (breakdownSum > 0 && breakdownSum !== totalRevenue) {
+      if (breakdownSum !== totalRevenue) {
         throw new AppError(400, "REVENUE_BREAKDOWN_SUM_MISMATCH");
       }
     }
