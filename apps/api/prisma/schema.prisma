@@ -2624,10 +2624,13 @@ model LedgerEntry {
   relatedModule String?
   relatedId     Int?
   isRefund      Boolean             @default(false)
+  reversedById  Int?                @unique
   createdById   Int
   createdAt     DateTime            @default(now())
 
-  createdBy User @relation("LedgerEntryCreator", fields: [createdById], references: [id])
+  createdBy  User         @relation("LedgerEntryCreator", fields: [createdById], references: [id])
+  reversedBy LedgerEntry? @relation("LedgerReversal", fields: [reversedById], references: [id])
+  reversal   LedgerEntry? @relation("LedgerReversal")
 }
 
 model SalesRecord {
