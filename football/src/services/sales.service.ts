@@ -18,6 +18,9 @@ export const salesApi = {
   ticketSummary: (seasonId: number) =>
     api.get<TicketMatchSummary[]>(`/sales/ticket-summary?seasonId=${seasonId}`),
 
+  ticketsBySeason: (seasonId: number) =>
+    api.get<SalesRecord[]>(`/sales/tickets?seasonId=${seasonId}`),
+
   seasonTicketTotal: (seasonId: number) =>
     api.get<{ total: number }>(`/sales/ticket-season-total?seasonId=${seasonId}`),
 

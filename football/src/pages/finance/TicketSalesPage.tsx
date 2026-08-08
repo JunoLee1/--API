@@ -8,9 +8,15 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+
+const TICKET_TYPE_LABEL: Record<string, string> = {
+  TICKET: '일반',
+  VIP_TICKET: 'VIP',
+  COMPLIMENTARY: '무료',
+}
 
 export function TicketSalesPage() {
   const [seasons, setSeasons] = useState<Season[]>([])
@@ -32,10 +38,10 @@ export function TicketSalesPage() {
     setLoading(true)
     Promise.all([
       salesApi.ticketSummary(selectedSeasonId),
-      salesApi.list(),
+      salesApi.ticketsBySeason(selectedSeasonId),
     ]).then(([s, r]) => {
       setSummary(s)
-      setRecords(r.filter((rec) => rec.type === 'TICKET'))
+      setRecords(r)
     }).catch(() => toast.error('데이터 로드에 실패했습니다.'))
       .finally(() => setLoading(false))
   }, [selectedSeasonId])
@@ -55,7 +61,9 @@ export function TicketSalesPage() {
           onValueChange={(v) => setSelectedSeasonId(Number(v))}
         >
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="시즌 선택" />
+            <span className={selectedSeasonId ? '' : 'text-muted-foreground'}>
+              {seasons.find((s) => s.id === selectedSeasonId)?.name ?? '시즌 선택'}
+            </span>
           </SelectTrigger>
           <SelectContent>
             {seasons.map((s) => (
@@ -144,6 +152,7 @@ export function TicketSalesPage() {
               <TableRow>
                 <TableHead>날짜</TableHead>
                 <TableHead>경기</TableHead>
+                <TableHead>종류</TableHead>
                 <TableHead className="text-right">수량</TableHead>
                 <TableHead className="text-right">단가</TableHead>
                 <TableHead className="text-right">합계</TableHead>
@@ -153,7 +162,7 @@ export function TicketSalesPage() {
             <TableBody>
               {records.length === 0 && !loading && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                     판매 기록이 없습니다.
                   </TableCell>
                 </TableRow>
@@ -168,6 +177,7 @@ export function TicketSalesPage() {
                       ? `${r.match.homeTeamName} vs ${r.match.awayTeamName}`
                       : <span className="text-muted-foreground text-xs">미연결</span>}
                   </TableCell>
+                  <TableCell className="text-sm">{TICKET_TYPE_LABEL[r.type] ?? r.type}</TableCell>
                   <TableCell className="text-right">{r.quantity.toLocaleString()}</TableCell>
                   <TableCell className="text-right">₩{Number(r.unitPrice).toLocaleString()}</TableCell>
                   <TableCell className="text-right font-medium">₩{Number(r.totalAmount).toLocaleString()}</TableCell>
