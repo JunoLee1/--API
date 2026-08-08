@@ -377,6 +377,7 @@ export class OpsReportService {
         revenueMerchandise: true,
         revenueSubsidy: true,
         revenueParentCompany: true,
+        revenueAcademyFee: true,
         revenueOther: true,
       },
     });
@@ -396,6 +397,7 @@ export class OpsReportService {
             merchandise: report.revenueMerchandise ?? 0,
             subsidy: report.revenueSubsidy ?? 0,
             parentCompany: report.revenueParentCompany ?? 0,
+            academyFee: (report as any).revenueAcademyFee ?? 0,
             other: report.revenueOther ?? 0,
           }
         : null,
