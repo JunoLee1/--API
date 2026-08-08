@@ -37,11 +37,11 @@
 
 | # | 제목 | 파일 | 핵심 문제 |
 |---|------|------|-----------|
-| S1 | 출결 정정 후 기존 페널티 자동 해제 없음 | `TrainingResultsPage.tsx:47` | 정정으로 결석→출석 바꿔도 이미 발동된 페널티 레코드 잔존 |
+| S1 | 출결 정정 후 기존 페널티 자동 해제 없음 | `TrainingResultsPage.tsx:47` | 정정으로 결석→출석 바꿔도 이미 발동된 페널티 레코드 잔존 ✅ PR #202 |
 | S2 | 채용 공고 필요인원 충원 여부 추적 불가 | `JobPostingListPage.tsx:30` | headcount 대비 HIRED 수 집계 없어 채용 완료 여부 불명 |
 | S3 | 인터뷰 일정 변경 시 지원자 알림 없음 | `ApplicationDetailPage.tsx:117` | `scheduleInterview()`/`updateInterview()` 후 notification 발송 로직 없음 | ✅ PR #201 |
 | S4 | 세션별 출결 미등록 선수 현황 조회 불가 | `TrainingResultsPage.tsx:164` | "20명 중 3명 미입력" 뷰 없음, 전체 테이블 수동 스캔만 가능 |
-| S5 | 스태프 Active 상태 ≠ 실제 고용 기간 | `StaffRecordPage.tsx:23` | 고용 시작/종료일 필드 없어 퇴직 후에도 isActive 수동 관리 |
+| S5 | 스태프 Active 상태 ≠ 실제 고용 기간 | `StaffRecordPage.tsx:23` | 고용 시작/종료일 필드 없어 퇴직 후에도 isActive 수동 관리 ✅ PR #202 |
 
 ### 이연주 (K리그 HR팀장) — 5 Criticals
 
@@ -140,20 +140,20 @@
 |---|------|------|-----------|
 | KN1 | RPE 데이터 DB 레벨 검증 누락 | `training-load.repo.ts:27` | 서비스 레벨 1-10 검증만 있고 DB 제약 없음 — 직접 접근 시 무효 RPE 저장 가능, 부하 분석 신뢰성 파괴 | ✅ PR #201 |
 | KN2 | 트레이닝로드 입력자·타임스탬프 미기록 | `training-load.service.ts:22` | upsert 시 누가 언제 입력했는지 저장 안 됨 — 데이터 오류 원인 추적 불가 | ✅ PR #201 |
-| KN3 | 포지션별 부하 임계값 없음 (단일 500 고정) | `training-load.service.ts:6` | 전 포지션 WEEKLY_LOAD_THRESHOLD=500 동일 적용 — GK·CB·ST 체력 요구도 차이 무시 |
+| KN3 | 포지션별 부하 임계값 없음 (단일 500 고정) | `training-load.service.ts:6` | 전 포지션 WEEKLY_LOAD_THRESHOLD=500 동일 적용 — GK·CB·ST 체력 요구도 차이 무시 ✅ PR #202 |
 | KN4 | PerformanceScore 범위 검증 없음 | `training.dto.ts:25` | 점수 상한/하한 미정의 — 5000 입력 가능, 포지션 평균값 왜곡 | ✅ PR #201 |
 | KN5 | 주간 부하 집계 타임존 미처리 | `training-load.service.ts:87` | getWeekStart() UTC 기반 — 한국 오후 입력이 이전 주로 분류될 수 있음 | ✅ PR #200 |
 | KN6 | 재활 복귀 부분 훈련 부하 카운트 미반영 | `training.repo.ts:104` | 부상 선수 ABSENT_AUTHORIZED 자동 처리, 복귀 재활 훈련 부분 참여 기록 없음 |
 | KN7 | 부하-RPE 연관 분석 불가 | `training-load/` | 부하·RPE 분리 저장, "부하↑ RPE↓" 이상신호 자동 감지 쿼리 없음 | ✅ PR #197 |
 | KN8 | 세션별 목표 부하(targetLoad) 필드 없음 | `training.dto.ts:3` | 계획 부하 vs 실제 부하 비교 불가 — 훈련 완성도 평가 불가 | ✅ PR #200 |
 | KN9 | 부하 초과 알림 fire-and-forget | `training-load.service.ts:50` | Promise.all().catch(console.error) — 알림 실패해도 모름, 코치가 경고 미수신 가능 | ✅ PR #200 |
-| KN10 | 부하 이력 덮어쓰기 (변경 추적 불가) | `training-load.repo.ts:21` | upsert로 이전 값 영구 소실 — 부하 변동 패턴·조작 검증 불가 |
+| KN10 | 부하 이력 덮어쓰기 (변경 추적 불가) | `training-load.repo.ts:21` | upsert로 이전 값 영구 소실 — 부하 변동 패턴·조작 검증 불가 ✅ PR #202 |
 
 ### 박희수 (의무팀, 한국, 15년차) — 10 Criticals
 
 | # | 제목 | 파일 | 핵심 문제 |
 |---|------|------|-----------|
-| BH1 | RPE 기본값 5 자동 할당 — 의료진 투명성 없음 | `training-load.repo.ts:27` | 미입력 시 RPE=5 자동 채움 — 실제 체감강도와 무관한 데이터로 피로도 판단 오류 초래 |
+| BH1 | RPE 기본값 5 자동 할당 — 의료진 투명성 없음 | `training-load.repo.ts:27` | 미입력 시 RPE=5 자동 채움 — 실제 체감강도와 무관한 데이터로 피로도 판단 오류 초래 ✅ PR #202 |
 | BH2 | 재활 중 부분 훈련 참여 제어 없음 | `training.repo.ts:82` | REHABILITATING 선수 전체 결석 처리만 — 상체 훈련만 허용 등 세분화 제어 불가 |
 | BH3 | 부하 초과 알림에 의료진 미포함 | `training-load.service.ts:47` | HEAD_COACH·PHYSICAL_COACH만 알림 수신 — MEDICAL_DIRECTOR 제외, 부상 위험 선수 모니터링 불가 | ✅ PR #200 |
 | BH4 | 부상 시점 훈련 부하 연계 필드 없음 | `injury.dto.ts:1`, `training-load.dto.ts:1` | InjuryCause만 있고 직전 부하 데이터 링크 없음 — 훈련강도↔부상률 인과관계 분석 불가 |
@@ -255,7 +255,7 @@
 
 | # | 제목 | 파일 | 핵심 문제 |
 |---|------|------|-----------|
-| KD1 | 장비 반납 타임스탬프 미기록 | `equipment.repo.ts:136` | getUnreturnedByPlayer() 반납된 장비만 검색, 반납 타임스탬프 없음 — 실제 반납 여부 검증 불가, 사고 시 책임 소재 불명 |
+| KD1 | 장비 반납 타임스탬프 미기록 | `equipment.repo.ts:136` | getUnreturnedByPlayer() 반납된 장비만 검색, 반납 타임스탬프 없음 — 실제 반납 여부 검증 불가, 사고 시 책임 소재 불명 ✅ PR #202 |
 | KD2 | 장비 점검 주기·다음 점검일 필드 없음 | `schema.prisma:1359` | EquipmentUnit에 expiresAt만 있고 마지막 점검일·점검 주기·다음 점검 예정일 없음 — 장비 수명 관리 파탄 | ✅ PR #197 |
 | KD3 | 시설 점검 기록 변경 추적 불가 | `inspection.repo.ts:44` | FacilityInspection에 updatedAt 없음 — 점검 결과 변경·위변조 감시 불가 | ✅ PR #200 |
 | KD4 | 유지보수 비용 변경 감사 로그 없음 | `maintenance.service.ts:65` | actualCost 입력 시 감사 로그 없음 — 비용 조작·횡령 위험 | ✅ PR #200 |
@@ -274,8 +274,8 @@
 | TR2 | 유지보수 비용 임계값 하드코딩 | `maintenance.service.ts:100` | 재무 제출 최소 비용 1,000,000 KRW 고정 — 구단 정책 변경 불가, 감사 증명 불가 |
 | TR3 | 안전 인증 만료 추적 없음 | `inspection.repo.ts:27` | statutoryDeadline 저장만, 만료 알림·재검사 강제·준수 검증 없음 — UEFA 기준 미충족 |
 | TR4 | 정기 예방 유지보수 일정 없음 | `schema.prisma:2435` | 일회성 점검만 지원, 월간·분기·연간 예방 유지보수 스케줄링 불가 |
-| TR5 | 장비 반납 지연 자동 회수 없음 | `equipment.service.ts:187` | returnedAt 기록만, 반납 지연 시 자동 알림·벌금 없음 — 장비 손실 책임 추적 불가 |
-| TR6 | 승인 이력 변경 사유 미기록 | `maintenance.repo.ts:66` | 승인자 기록만 있고 거절 이유·이전 상태 이력 없음 — 규정 위반 추적 불가 |
+| TR5 | 장비 반납 지연 자동 회수 없음 | `equipment.service.ts:187` | returnedAt 기록만, 반납 지연 시 자동 알림·벌금 없음 — 장비 손실 책임 추적 불가 ✅ PR #202 |
+| TR6 | 승인 이력 변경 사유 미기록 | `maintenance.repo.ts:66` | 승인자 기록만 있고 거절 이유·이전 상태 이력 없음 — 규정 위반 추적 불가 ✅ PR #202 |
 | TR7 | 시설 접근 제어·보안 로깅 전무 | `facility.routes.ts:1` | 구역별 권한 관리·입출입 로그·비정상 접근 경보 없음 |
 | TR8 | 장비 폐기 물리 검증 없음 | `equipment.service.ts:94` | 폐기 시 bookValue 환입만, 물리 폐기 증명서·서명 프로세스 없음 |
 | TR9 | 예방 유지보수 자동 스케줄링 없음 | `maintenance.service.ts:1` | 검사 유형별 재검사 자동 스케줄링 없음 — 수동 누락 시 규정 위반 |
@@ -324,7 +324,7 @@
 | # | 제목 | 파일 | 핵심 문제 |
 |---|------|------|-----------|
 | BS1 | 티켓 삭제 시 Ledger 롤백 없음 | `sales.service.ts:78`, `sales.repo.ts:37` | SalesRecord 삭제 시 LedgerEntry 동시 삭제 없음 — 환불액 대차 불일치 | ✅ PR #200 |
-| BS2 | Refund 로직 SalesRecord 미연계 | `ledger.controller.ts:17` | Ledger만 음수 생성, SalesRecord는 refund 미처리 — 판매기록·원장 비정합 |
+| BS2 | Refund 로직 SalesRecord 미연계 | `ledger.controller.ts:17` | Ledger만 음수 생성, SalesRecord는 refund 미처리 — 판매기록·원장 비정합 ✅ PR #202 |
 | BS3 | Ticket·Fan·Membership 모델 전무 | `schema.prisma` 전체 | 티켓 타입·팬 구매 이력·멤버십 모델 없음 — 팬 이탈 추적·재방문율 분석 불가 | ✅ PR #197 |
 | BS4 | Match 모델에 관중수·점유율 필드 없음 | `schema.prisma:1087` | actualAttendance·capacity·occupancyRate 없음 — 경기별 매출 검증 불가 | ✅ PR #197 |
 | BS5 | SalesRecord 필터링 검색 없음 | `sales.repo.ts:7` | 팬ID·좌석구역·취소 상태 필터 없음 — 팬 이탈 원인 추적 봉쇄 | ✅ PR #197 |
@@ -341,9 +341,9 @@
 | JO1 | SalesRecord 물리 삭제 허용 | `sales.repo.ts:37` | soft-delete 없음 — 재정 보고·원장 불일치, 부정 삭제 감지 불가 | ✅ PR #200 |
 | JO2 | 티켓 일련번호 없음 | `schema.prisma:2633` | SalesRecord 수량만 추적 — 중복 판매·불법 재판매 감지 불가 | ✅ PR #200 |
 | JO3 | 경기장 수용인원 초과 판매 방지 없음 | `schema.prisma:1087` | Match·Team 모델에 capacity 없음 — 초과 판매 방지 메커니즘 부재 | ✅ PR #200 |
-| JO4 | 환불과 원본 티켓 연결 없음 | `ledger.service.ts:18` | 환불 시 원본 SalesRecord 연결 없음 — 중복 환불 가능 |
+| JO4 | 환불과 원본 티켓 연결 없음 | `ledger.service.ts:18` | 환불 시 원본 SalesRecord 연결 없음 — 중복 환불 가능 ✅ PR #202 |
 | JO5 | 환불 엔드포인트 권한 없음 | `ledger.routes.ts:16` | POST /:id/refund auth만 확인, canWriteFinance 없음 | ✅ PR #192 |
-| JO6 | 무료·VIP 티켓 분류 없음 | `sales.dto.ts:1` | COMPLIMENTARY·VIP_GUEST 카테고리 없음 — 경비 추적 불가 |
+| JO6 | 무료·VIP 티켓 분류 없음 | `sales.dto.ts:1` | COMPLIMENTARY·VIP_GUEST 카테고리 없음 — 경비 추적 불가 ✅ PR #202 |
 | JO7 | 티켓 수익 원장 자동 조정 없음 | `financial-report.service.ts:79` | 재정 보고 CSV 수동 입력 — SalesRecord 합계·LedgerEntry 자동 대사 없음 |
 | JO8 | SalesRecord 수정 감사 추적 없음 | `sales.service.ts:20` | updatedAt·updatedById 없음 — 수정·삭제 이력 추적 불가 | ✅ PR #200 |
 | JO9 | 시즌권 갱신 파이프라인 없음 | `schema.prisma` 전체 | 시즌권·멤버십 모델 없음 — 구독 갱신·만료 자동화 불가 | ✅ PR #197 |
