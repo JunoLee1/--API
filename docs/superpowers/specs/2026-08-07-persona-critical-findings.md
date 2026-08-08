@@ -71,9 +71,9 @@
 
 | # | 제목 | 파일 | 핵심 문제 |
 |---|------|------|-----------|
-| D1 | 계약 상태 변경 감사 추적·승인 체계 없음 | `contract.controller.ts:39` | 변경자·이유·승인 흐름 미기록, 분쟁 시 증빙 불가 |
+| D1 | 계약 상태 변경 감사 추적·승인 체계 없음 | `contract.controller.ts:39` | 변경자·이유·승인 흐름 미기록, 분쟁 시 증빙 불가 | ✅ PR #192 |
 | D2 | 선수 상태 ↔ 계약 상태 연계 없음 | `PlayerStatusDialog.tsx:34` | RELEASED 처리 후 ACTIVE 계약 잔존 가능, K리그 이중 등록 위험 |
-| D3 | 외국인 쿼터·비자·노동허가 관리 체계 전무 | `PlayerFormDialog.tsx:59` | 국적 필드만 있고 비자 상태·쿼터 추적 없음 |
+| D3 | 외국인 쿼터·비자·노동허가 관리 체계 전무 | `PlayerFormDialog.tsx:59` | 국적 필드만 있고 비자 상태·쿼터 추적 없음 | Issue #193 |
 | D4 | 이적 후 계약 종료·신규 계약 자동화 없음 | `TransfersPage.tsx:55` | LOAN_OUT 기록만 되고 기존 계약 TERMINATED 처리 미연동 |
 | D5 | 보너스·바이아웃·연장옵션 조건 자동 실행 없음 | `ContractDetailPage.tsx:110` | 조건 입력 가능하나 달성 감지·자동 실행 없음 |
 
@@ -85,16 +85,16 @@
 
 | # | 제목 | 파일 | 핵심 문제 |
 |---|------|------|-----------|
-| J1 | 원장 오류 거래 정정 불가 (감사 추적 단절) | `ledger.repo.ts` | Create만 있고 역분개 없음, 오류 거래 영구 잔존 |
-| J2 | 원장 환불 생성 권한 체크 전무 | `ledger.controller.ts:17` | refund 엔드포인트에 `canWriteFinance` 없음, 누구나 환불 생성 가능 |
-| J3 | 원장 조회 권한 제약 없음 | `ledger.controller.ts:8` | 모든 인증 사용자가 급여·계약금 포함 전체 원장 조회 가능 |
-| J4 | 환율 입력값 검증 부재 | `ledger.service.ts:13` | exchangeRate 상한/하한 없어 임의 환율 입력 → 원화 환산액 조작 가능 |
-| J5 | relatedModule/relatedId 존재 검증 없음 | `ledger.dto.ts:13` | 비존재 계약·이적 ID 연결 가능, 감사 추적 허위 기록 가능 |
+| J1 | 원장 오류 거래 정정 불가 (감사 추적 단절) | `ledger.repo.ts` | Create만 있고 역분개 없음, 오류 거래 영구 잔존 | ✅ PR #194 |
+| J2 | 원장 환불 생성 권한 체크 전무 | `ledger.controller.ts:17` | refund 엔드포인트에 `canWriteFinance` 없음, 누구나 환불 생성 가능 | ✅ PR #192 |
+| J3 | 원장 조회 권한 제약 없음 | `ledger.controller.ts:8` | 모든 인증 사용자가 급여·계약금 포함 전체 원장 조회 가능 | ✅ PR #192 |
+| J4 | 환율 입력값 검증 부재 | `ledger.service.ts:13` | exchangeRate 상한/하한 없어 임의 환율 입력 → 원화 환산액 조작 가능 | ✅ PR #194 |
+| J5 | relatedModule/relatedId 존재 검증 없음 | `ledger.dto.ts:13` | 비존재 계약·이적 ID 연결 가능, 감사 추적 허위 기록 가능 | ✅ PR #194 |
 | J6 | 월별 마감(Month-end Closing) 잠금 없음 | `schema.prisma` | LedgerEntry에 periodLock 필드 없어 결산 후 소급 입력 가능 |
 | J7 | 보고서-원장 연결고리 부재 | `ReportsPage.tsx:181` | Report와 LedgerEntry 미연결, 보고서 원본 거래 대사 불가 |
 | J8 | 예산 집행률 KPI 세분화 부재 | `ops-report.service.ts:66` | 카테고리별 집행률 없이 전체 단일 수치 — 의료비 150% 초과해도 감지 불가 |
 | J9 | 원장 description 자유 텍스트 (분류 오류) | `ledger.dto.ts:12` | 같은 SALARY 거래가 "계약금"/"보너스"/"수당"으로 혼용 기록 |
-| J10 | 재무보고서 자기 승인 가능 (이해충돌) | `report.controller.ts:126` | 작성자가 1차 승인자가 될 수 있는 권한 체크 부재 |
+| J10 | 재무보고서 자기 승인 가능 (이해충돌) | `report.controller.ts:126` | 작성자가 1차 승인자가 될 수 있는 권한 체크 부재 | ✅ PR #194 |
 
 ---
 
@@ -169,17 +169,19 @@
 ## 우선순위 요약
 
 ### 즉시 처리 필요 (보안·규정 위반)
-- **IS2/RA4** JWT 시크릿 기본값·예제값 노출
-- **IS3** 전화번호 암호화 키 하드코딩
-- **IS7/RA1** 부상 정보 무인증 전체 조회
-- **IS8** safeguard 신고 인증 없음
-- **IS10** 학비 엔드포인트 무인증
-- **RA3** DB 자격증명 평문
-- **RA5/J3** 원장 전체 공개
-- **J2** 원장 환불 권한 무방비
-- **PA7/JO5** 스폰서·환불 권한 없음
-- **D3** 외국인 쿼터·비자 관리 없음 (K리그 규정 위반)
-- **D1** 계약 변경 감사 추적 없음
+- **IS2/RA4** JWT 시크릿 기본값·예제값 노출 ✅ PR #192
+- **IS3** 전화번호 암호화 키 하드코딩 ✅ PR #192
+- **IS4** /uploads 정적 파일 전체 공개 ✅ PR #192
+- **IS7/RA1/RA2** 부상 정보 무인증 전체 조회 ✅ PR #192
+- **IS8** safeguard 신고 인증 없음 ✅ PR #192
+- **IS10** 학비 엔드포인트 무인증 ✅ PR #192
+- **RA3** DB 자격증명 평문 ✅ PR #192
+- **RA5/J3** 원장 전체 공개 ✅ PR #192
+- **J2** 원장 환불 권한 무방비 ✅ PR #192
+- **PA7/JO5** 스폰서·환불 권한 없음 ✅ PR #192
+- **IS1/RA9** SUPER_ADMIN 팀 컨텍스트 검증 ✅ PR #192
+- **D1** 계약 변경 감사 추적 없음 ✅ PR #192
+- **D3** 외국인 쿼터·비자 관리 없음 (K리그 규정 위반) → Issue #193
 
 ### 단기 처리 (데이터 정합성)
 - **IS1/RA9** SUPER_ADMIN x-team-id 헤더 위변조
@@ -188,7 +190,7 @@
 - **BS1/BS7/JO1** SalesRecord 삭제·트랜잭션 미처리
 - **D2** 선수 상태 ↔ 계약 상태 불일치
 - **J6** 결산 마감 잠금 없음
-- **J10** 자기 승인 이해충돌
+- **J10** 자기 승인 이해충돌 ✅ PR #194
 - **BH3** 부하 초과 알림 의료진 미포함
 - **KN9** 부하 초과 알림 fire-and-forget
 - **PA5** 스폰서 원장 연계 무음 실패
@@ -350,7 +352,7 @@
 |---|------|------|-----------|
 | IS1 | SUPER_ADMIN x-team-id 헤더 위변조 | `authMiddleware.ts:30` | SUPER_ADMIN이 헤더만으로 teamId 변경 가능 — 임의 팀 데이터 접근, 최소 권한 원칙 위반 |
 | IS2 | JWT 시크릿 예제값 그대로 .env 저장 | `.env:14` | "JWT_ACCESS_SECRET" 등 기본값 — 토큰 위조 가능, 개인정보보호법 시행령 제21조 위반 |
-| IS3 | 전화번호 암호화 키 하드코딩 노출 | `.env:18` | PHONE_ENCRYPTION_KEY 16진수 평문 — 전화번호 복호화 가능 |
+| IS3 | 전화번호 암호화 키 하드코딩 노출 | `.env:18` | PHONE_ENCRYPTION_KEY 16진수 평문 — 전화번호 복호화 가능 | ✅ PR #192 |
 | IS4 | /uploads 정적 파일 전체 공개 | `server.ts:39` | express.static으로 업로드 디렉토리 공개 — 의료·계약 파일 무인증 접근 가능 |
 | IS5 | 선수 시장가치 조회 접근 로그 없음 | `player.controller.ts:96` | 조회 권한 제한은 있으나 감사 로그 없음 — 누가 언제 조회했는지 추적 불가, 개인정보보호법 위반 |
 | IS6 | 보호자 초대 코드 4바이트 브루트포스 가능 | `guardian.service.ts:36` | randomBytes(4) = 2^32 — 브루트포스 가능, 사용 후 즉시 삭제 없음 |
@@ -365,7 +367,7 @@
 |---|------|------|-----------|
 | RA1 | 활성 부상 전체 조회 역할 제한 없음 | `injury.controller.ts:23` | getActive() 모든 인증 사용자 접근 — GDPR Art.9 특수 범주 데이터 무단 노출 |
 | RA2 | 의료 보고서 조회 인증 없음 | `injury.controller.ts:57` | getReport() 접근 제어 없음 — 진단·치료·재활 전 데이터 전체 공개 |
-| RA3 | DB 자격증명 평문 저장 | `.env:12` | DATABASE_URL에 postgres:1234 — 자격증명 유출 시 전체 DB 접근 가능 |
+| RA3 | DB 자격증명 평문 저장 | `.env:12` | DATABASE_URL에 postgres:1234 — 자격증명 유출 시 전체 DB 접근 가능 | ✅ PR #192 |
 | RA4 | JWT 시크릿 기본값 폴백 | `constants.ts:4` | env 미설정 시 "jwt-access-secret" 폴백 — 토큰 위조 허용, 7일 갱신 토큰 탈취 창 과대 |
 | RA5 | 원장 전체 조회 역할 제한 없음 | `ledger.routes.ts:13` | GET /·GET /:id auth만 — COACHING_STAFF·PLAYER가 급여·계약금 원장 조회 가능 |
 | RA6 | 선수 API 응답에 PII 과다 포함 | `player.repo.ts:55` | 표준 쿼리에 계약 급여·보호자·긴급연락처 포함 — 역할 무관 노출 |
