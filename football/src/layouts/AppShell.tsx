@@ -256,7 +256,7 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'COACHING_STAFF'],
   },
   {
-    to: '/training/dashboard',
+    to: '/training/analysis',
     label: 'nav.item.coachDashboard',
     icon: LayoutDashboard,
     section: 'nav.section.training',
@@ -277,7 +277,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'nav.item.tacticalAnalysis',
     icon: FileText,
     section: 'nav.section.matchAnalysis',
-    roles: ['ADMIN', 'COACHING_STAFF'],
+    roles: ['ADMIN', 'COACHING_STAFF', 'PLAYER'],
   },
   {
     to: '/matches/rankings',
@@ -445,7 +445,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: Package,
     section: 'nav.section.management',
     subSection: 'nav.subsection.facilityAssets',
-    roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
+    roles: ['ADMIN', 'FRONT_OFFICE'],
   },
   {
     to: '/facility',

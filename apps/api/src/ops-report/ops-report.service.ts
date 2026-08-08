@@ -1,6 +1,22 @@
 import { PrismaClient } from "../generated/client";
 import { OpsReportRepository, OpsSnapshotData } from "./ops-report.repo";
 
+export interface NoticeUnreadDrillRow {
+  userId: number;
+  name: string;
+  unreadCount: number;
+}
+
+export interface AttendanceDrillRow {
+  playerId: string;
+  playerName: string;
+  present: number;
+  lateUnauth: number;
+  absentUnauth: number;
+  authorizedAbsence: number;
+  effectiveAbsences: number;
+}
+
 export class OpsReportService {
   constructor(
     private repo: OpsReportRepository,
@@ -128,5 +144,95 @@ export class OpsReportService {
 
   async getAnnualBudgetReport(seasonId: number) {
     return this.repo.findBudgetSnapshotsBySeason(seasonId);
+  }
+
+  async drillNoticeUnread(year: number, month: number): Promise<NoticeUnreadDrillRow[]> {
+    const start = new Date(year, month - 1, 1);
+    const end = new Date(year, month, 1);
+
+    const groups = await this.prisma.notification.groupBy({
+      by: ["userId"],
+      where: { createdAt: { gte: start, lt: end }, readAt: null },
+      _count: { id: true },
+      orderBy: { _count: { id: "desc" } },
+    });
+
+    if (groups.length === 0) return [];
+
+    const userIds = groups.map((g) => g.userId);
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, nickname: true },
+    });
+    const userMap = new Map(users.map((u) => [u.id, u.nickname]));
+
+    return groups.map((g) => ({
+      userId: g.userId,
+      name: userMap.get(g.userId) ?? "",
+      unreadCount: g._count.id,
+    }));
+  }
+
+  async drillAttendance(year: number, month: number): Promise<AttendanceDrillRow[]> {
+    const start = new Date(year, month - 1, 1);
+    const end = new Date(year, month, 1);
+
+    const sessions = await this.prisma.trainingSession.findMany({
+      where: { date: { gte: start, lt: end }, isApproved: true },
+      select: { id: true },
+    });
+
+    if (sessions.length === 0) return [];
+
+    const sessionIds = sessions.map((s) => s.id);
+    const results = await this.prisma.trainingResult.findMany({
+      where: { sessionId: { in: sessionIds } },
+      select: {
+        playerId: true,
+        attendance: true,
+        player: { select: { playerName: true } },
+      },
+    });
+
+    const aggregates = new Map<
+      string,
+      { playerName: string; present: number; lateUnauth: number; absentUnauth: number; authorizedAbsence: number }
+    >();
+
+    for (const r of results) {
+      if (!aggregates.has(r.playerId)) {
+        aggregates.set(r.playerId, {
+          playerName: r.player.playerName,
+          present: 0,
+          lateUnauth: 0,
+          absentUnauth: 0,
+          authorizedAbsence: 0,
+        });
+      }
+      const agg = aggregates.get(r.playerId)!;
+      switch (r.attendance) {
+        case "PRESENT":
+          agg.present++;
+          break;
+        case "LATE_UNAUTHORIZED":
+          agg.lateUnauth++;
+          break;
+        case "ABSENT_UNAUTHORIZED":
+          agg.absentUnauth++;
+          break;
+        case "ABSENT_AUTHORIZED":
+          agg.authorizedAbsence++;
+          break;
+      }
+    }
+
+    const rows: AttendanceDrillRow[] = [];
+    for (const [playerId, agg] of aggregates) {
+      const effectiveAbsences = agg.absentUnauth + Math.floor(agg.lateUnauth / 3);
+      rows.push({ playerId, ...agg, effectiveAbsences });
+    }
+
+    rows.sort((a, b) => b.effectiveAbsences - a.effectiveAbsences);
+    return rows;
   }
 }

@@ -76,6 +76,7 @@ export class ReportService {
   async approve(id: number, reviewerId: number) {
     const report = await this.repo.findById(id);
     if (!report) throw new AppError(404, "REPORT_NOT_FOUND");
+    if (report.authorId === reviewerId) throw new AppError(403, "SELF_APPROVAL_FORBIDDEN");
 
     const nextStatus = ((): "FIRST_APPROVED" | "SECOND_APPROVED" | "APPROVED" => {
       switch (report.type) {

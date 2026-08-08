@@ -7,6 +7,7 @@ import passport from "./lib/strategy";
 import apiRouter from "./apiRouter";
 import { AppError } from "./lib/appError";
 import { Request, Response, NextFunction } from "express";
+import { auth } from "./lib/authMiddleware";
 import { initIO } from "./lib/io";
 import { startExternalReportReminderJob } from "./jobs/externalReportReminder";
 import { startVideoAssignmentOverdueJob } from "./jobs/videoAssignmentOverdue";
@@ -36,7 +37,7 @@ app.use(passport.initialize());
 
 app.get("/api/health", (_req, res) => res.status(200).json({ status: "ok" }));
 app.use("/api", apiRouter);
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+app.use("/uploads", auth, express.static(path.join(process.cwd(), "uploads")));
 
 app.use((_req: Request, _res: Response, next: NextFunction) => {
   next(new AppError(404, "NOT_FOUND"));

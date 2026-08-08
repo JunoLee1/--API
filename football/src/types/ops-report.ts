@@ -25,3 +25,19 @@ export interface AnnualOpsEntry {
   month: number
   data: OpsSnapshotData
 }
+
+export interface NoticeUnreadDrillItem {
+  userId: number
+  name: string
+  unreadCount: number
+}
+
+export interface AttendanceDrillItem {
+  playerId: string
+  playerName: string
+  present: number
+  lateUnauth: number
+  absentUnauth: number
+  authorizedAbsence: number
+  effectiveAbsences: number
+}

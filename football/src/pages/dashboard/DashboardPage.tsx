@@ -25,6 +25,7 @@ import { RankingCard } from '@/components/dashboard/RankingCard'
 import { YouthDevelopmentSection } from '@/components/dashboard/YouthDevelopmentSection'
 import { AcademyFinanceSection } from '@/components/dashboard/AcademyFinanceSection'
 import { OpsKpiSection } from '@/components/dashboard/OpsKpiSection'
+import { CoachQuickView } from '@/components/dashboard/CoachQuickView'
 
 const OUR_TEAM_NAME = 'FC Seoul'
 
@@ -87,6 +88,8 @@ export function DashboardPage() {
   const navigate = useNavigate()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [seasonTicketRevenue, setSeasonTicketRevenue] = useState<number | null>(null)
+  const [opsKpiYear, setOpsKpiYear] = useState<number>(new Date().getMonth() === 0 ? new Date().getFullYear() - 1 : new Date().getFullYear())
+  const [opsKpiMonth, setOpsKpiMonth] = useState<number>(new Date().getMonth() === 0 ? 12 : new Date().getMonth())
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [matches, setMatches] = useState<Match[]>([])
   const [myRanking, setMyRanking] = useState<TeamRanking | null>(null)
@@ -99,6 +102,7 @@ export function DashboardPage() {
   const [matchesLoading, setMatchesLoading] = useState(true)
   const [rankingLoading, setRankingLoading] = useState(true)
   const [expensesLoading, setExpensesLoading] = useState(false)
+  const [currentSeasonId, setCurrentSeasonId] = useState<number | undefined>(undefined)
 
   const showYouthDev = user?.role === 'ADMIN' || (user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'TD')
 
@@ -118,6 +122,7 @@ export function DashboardPage() {
     seasonApi.active()
       .then((season) => {
         if (!season) return
+        setCurrentSeasonId(season.id)
         const tasks: Promise<unknown>[] = [
           analysisApi.getRankings({ seasonId: season.id, competitionType: 'LEAGUE' })
             .then((rows) => setMyRanking(rows.find((r) => r.teamName === OUR_TEAM_NAME) ?? null))
@@ -134,10 +139,12 @@ export function DashboardPage() {
         }
         if (config.showOpsKpi) {
           const now = new Date()
-          const year = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
-          const month = now.getMonth() === 0 ? 12 : now.getMonth()
+          const kpiYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+          const kpiMonth = now.getMonth() === 0 ? 12 : now.getMonth()
+          setOpsKpiYear(kpiYear)
+          setOpsKpiMonth(kpiMonth)
           tasks.push(
-            opsReportApi.getOpsKpi(season.id, year, month)
+            opsReportApi.getOpsKpi(season.id, kpiYear, kpiMonth)
               .then(setOpsKpi)
               .catch(() => null)
           )
@@ -174,6 +181,11 @@ export function DashboardPage() {
         <h2 className="text-2xl font-semibold mb-1">{t('dashboard.title')}</h2>
         <p className="text-muted-foreground text-sm">{t('dashboard.greeting', { name: user.nickname })}</p>
       </div>
+
+      {/* HEAD_COACH 전용 퀵뷰 */}
+      {user.role === 'COACHING_STAFF' && user.coachingRole === 'HEAD_COACH' && (
+        <CoachQuickView seasonId={currentSeasonId} />
+      )}
 
       {/* 숫자 카드 */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -215,6 +227,8 @@ export function DashboardPage() {
         <OpsKpiSection
           role={user.frontOfficeRole === 'HR_MANAGER' ? 'HR_MANAGER' : 'FINANCE_MANAGER'}
           data={opsKpi as unknown as Record<string, number>}
+          year={opsKpiYear}
+          month={opsKpiMonth}
         />
       )}
 

@@ -5,6 +5,8 @@ import { InjuryService } from "./injury.service";
 import { InjuryRepository } from "./injury.repo";
 import { NotificationRepository } from "../notification/notification.repo";
 import { getPrisma } from "../lib/prisma";
+import { canReadActiveInjury, canReadInjuryReport } from "../lib/permissions";
+import { AppError } from "../lib/appError";
 
 const router = Router();
 const prisma = getPrisma();
@@ -15,12 +17,24 @@ const controller = new InjuryController(service);
 
 
 router.get("/stats", auth, controller.getStats);
-router.get("/active", auth, controller.getActive);
+router.get("/active", auth, (req, res, next) => {
+  const user = req.user!;
+  if (!canReadActiveInjury(user.role, user.coachingRole)) {
+    return next(new AppError(403, "FORBIDDEN"));
+  }
+  next();
+}, controller.getActive);
 router.get("/player/:playerId", auth, controller.getByPlayer);
 router.get("/:id", auth, controller.getById);
 router.post("/", auth, controller.create);
 router.patch("/:id/status", auth, controller.updateStatus);
-router.get("/:id/report", auth, controller.getReport);
+router.get("/:id/report", auth, (req, res, next) => {
+  const user = req.user!;
+  if (!canReadInjuryReport(user.role, user.coachingRole)) {
+    return next(new AppError(403, "FORBIDDEN"));
+  }
+  next();
+}, controller.getReport);
 router.put("/:id/report", auth, controller.saveReport);
 router.post("/:id/report/sign", auth, controller.signReport);
 router.delete("/:id/report/sign", auth, controller.unsignReport);
