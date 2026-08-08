@@ -499,7 +499,7 @@ export function TacticalAnalysisPage() {
 
   const canWrite =
     user?.role === 'ADMIN' ||
-    user?.role === 'COACHING_STAFF' ||
+    (user?.role === 'COACHING_STAFF' && user?.coachingRole !== 'HEAD_COACH') ||
     (user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'TACTICAL_ANALYST')
 
   const canConfirm = user?.role === 'ADMIN' || user?.coachingRole === 'HEAD_COACH'

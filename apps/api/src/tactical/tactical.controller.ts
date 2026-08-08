@@ -43,10 +43,10 @@ export class TacticalController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
+      const { role, frontOfficeRole, coachingRole } = requireUser(req);
       const canCreate =
         isAdminLike(role) ||
-        role === "COACHING_STAFF" ||
+        (role === "COACHING_STAFF" && coachingRole !== "HEAD_COACH") ||
         (role === "FRONT_OFFICE" && frontOfficeRole === "TACTICAL_ANALYST");
       if (!canCreate) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.createAnalysis(req.body, requireUser(req).id));
@@ -82,10 +82,10 @@ export class TacticalController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
+      const { role, frontOfficeRole, coachingRole } = requireUser(req);
       const canUpdate =
         isAdminLike(role) ||
-        role === "COACHING_STAFF" ||
+        (role === "COACHING_STAFF" && coachingRole !== "HEAD_COACH") ||
         (role === "FRONT_OFFICE" && frontOfficeRole === "TACTICAL_ANALYST");
       if (!canUpdate) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(
