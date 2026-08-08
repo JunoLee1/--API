@@ -33,6 +33,10 @@ export class TrainingService {
   }
 
   async createSession(dto: CreateSessionDto, createdById: number) {
+    const sessionDate = new Date(dto.date);
+    if (sessionDate > new Date()) {
+      throw new AppError(400, "SESSION_DATE_FUTURE_NOT_ALLOWED");
+    }
     const session = await this.repo.create(dto, createdById);
     void this.repo.addAllActivePlayers(session.id, session.teamId).catch(console.error);
     if (this.notifRepo) {
@@ -72,6 +76,9 @@ export class TrainingService {
   async upsertResult(sessionId: number, dto: UpsertResultDto) {
     const session = await this.repo.findById(sessionId);
     if (!session) throw new AppError(404, "SESSION_NOT_FOUND");
+    if (dto.performanceScore !== undefined && (dto.performanceScore < 0 || dto.performanceScore > 100)) {
+      throw new AppError(400, "PERFORMANCE_SCORE_OUT_OF_RANGE");
+    }
     const result = await this.repo.upsertResult(sessionId, dto);
 
     if (dto.attendance === "ABSENT_UNAUTHORIZED" || dto.attendance === "LATE_UNAUTHORIZED") {

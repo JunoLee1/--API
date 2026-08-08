@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
-import { canWriteHR, canManageTD } from "../lib/permissions";
+import { canWriteHR, canManageTD, isHeadCoach } from "../lib/permissions";
 import { requireUser } from "../lib/authMiddleware";
 import { RecruitmentService } from "./recruitment.service";
 import type { InterviewRound } from "../generated/enums";
@@ -17,10 +17,9 @@ import type {
   VerifyOtpDto,
 } from "./dto/recruitment.dto";
 
-const canRead = (role: string, foRole: string | null | undefined, coachRole: string | null | undefined) =>
+const canRead = (role: string, foRole: string | null | undefined, _coachRole: string | null | undefined) =>
   canWriteHR(role, foRole) ||
-  canManageTD(role, foRole) ||
-  (role === "COACHING_STAFF" && coachRole === "HEAD_COACH");
+  canManageTD(role, foRole);
 
 const canWrite = (role: string, foRole: string | null | undefined) =>
   canWriteHR(role, foRole);
@@ -173,10 +172,16 @@ export class RecruitmentController {
 
   updateInterview = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
+      const { role, frontOfficeRole, coachingRole } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const round = req.params["round"] as InterviewRound;
       const dto = req.body as UpdateInterviewDto;
+      // SJ4: only HEAD_COACH may assign interviewers
+      if (dto.interviewerIds !== undefined) {
+        if (!isHeadCoach(role, coachingRole)) {
+          throw new AppError(403, "FORBIDDEN_INTERVIEWER_ASSIGNMENT");
+        }
+      }
       res.json(await this.service.updateInterview(Number(req.params["id"]), round, dto));
     } catch (err) {
       next(err);

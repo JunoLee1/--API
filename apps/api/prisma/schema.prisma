@@ -315,6 +315,8 @@ enum NotificationType {
   FINANCE_SUBMIT_REQUIRED
   SALES_NEGATIVE_VALUE
   LICENSE_SEAT_EXCEEDED
+  INTERVIEW_SCHEDULED
+  COMPLIANCE_DEADLINE_REMINDER
 }
 
 enum DepreciationMethod {
@@ -906,6 +908,8 @@ model PerformanceBonus {
 
   contract Contract       @relation(fields: [contractId], references: [id])
   triggers BonusTrigger[]
+  triggeredAt  DateTime?
+  executedAt   DateTime?
 }
 
 model BonusTrigger {
@@ -1019,6 +1023,8 @@ model Injury {
   assessment      InjuryAssessment?
   externalReports ExternalReport[]
   incidentReports IncidentReport[]
+  dataRetentionFlaggedAt  DateTime?
+  dataRetentionReason     String?
 }
 
 model InjuryAssessment {
@@ -2337,6 +2343,10 @@ model JobApplication {
   interviews     Interview[]
   referenceCheck ReferenceCheck?
   onboarding     Onboarding?
+  referenceCheckConsent      Boolean?
+  referenceCheckConsentAt    DateTime?
+  dataRetentionDeadline      DateTime?
+  dataRetentionFlaggedAt     DateTime?
 
   @@unique([postingId, externalApplicantId])
 }
@@ -2531,6 +2541,7 @@ model Sponsorship {
   attachedContract PartnerContract?     @relation(fields: [attachedContractId], references: [id])
   createdBy        User                 @relation("SponsorshipCreator", fields: [createdById], references: [id])
   payments         SponsorshipPayment[]
+  deletedAt        DateTime?
 }
 
 model SponsorshipPayment {

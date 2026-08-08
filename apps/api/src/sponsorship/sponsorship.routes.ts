@@ -30,7 +30,8 @@ router.get("/",          auth, checkReadFinance, controller.list);
 router.get("/expiring",  auth, checkReadFinance, controller.getExpiring);
 router.post("/",         auth, checkWriteFinance, controller.create);
 router.get("/:id",       auth, checkReadFinance, controller.get);
-router.patch("/:id", auth, checkWriteFinance, controller.update);
+router.patch("/:id",     auth, checkWriteFinance, controller.update);
+router.delete("/:id",    auth, checkWriteFinance, controller.delete);
 router.get("/:id/payments", auth, checkReadFinance, controller.getPayments);
 router.patch("/:id/payments/:paymentId", auth, checkWriteFinance, controller.markPaid);
 

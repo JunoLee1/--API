@@ -28,7 +28,7 @@ export class TransferController {
         const allowed = ["TD", "CONTRACT_MANAGER"];
         if (!frontOfficeRole || !allowed.includes(frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       }
-      res.status(201).json(await this.service.createTransfer(req.body));
+      res.status(201).json(await this.service.createTransfer(req.body, requireUser(req).id));
     } catch (err) { next(err); }
   };
 

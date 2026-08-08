@@ -35,7 +35,13 @@ router.get("/:id/report", auth, (req, res, next) => {
   }
   next();
 }, controller.getReport);
-router.put("/:id/report", auth, controller.saveReport);
+router.put("/:id/report", auth, (req, res, next) => {
+  const user = req.user!;
+  if (!canReadInjuryReport(user.role, user.coachingRole)) {
+    return next(new AppError(403, "FORBIDDEN"));
+  }
+  next();
+}, controller.saveReport);
 router.post("/:id/report/sign", auth, controller.signReport);
 router.delete("/:id/report/sign", auth, controller.unsignReport);
 

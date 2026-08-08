@@ -1,4 +1,5 @@
 import { AppError } from "../lib/appError";
+import { formatLedgerDescription } from "../lib/ledger-formatter";
 import type { LedgerRepository } from "./ledger.repo";
 import type { CreateLedgerEntryDto, LedgerListQuery } from "./dto/ledger.dto";
 
@@ -45,7 +46,7 @@ export class LedgerService {
       exchangeRate: Number(original.exchangeRate),
       amountKrw: -Number(original.amountKrw),
       isRefund: true,
-      description: `Refund for #${original.id}`,
+      description: formatLedgerDescription("ledger", "refund", { entryId: original.id }),
       ...(original.relatedModule != null && { relatedModule: original.relatedModule }),
       ...(original.relatedId != null && { relatedId: original.relatedId }),
       createdById,
