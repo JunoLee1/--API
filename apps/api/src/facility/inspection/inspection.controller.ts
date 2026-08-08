@@ -35,7 +35,15 @@ export class InspectionController {
     try {
       const { id: userId } = requireUser(req);
       if (!canWrite(req)) throw new AppError(403, "FORBIDDEN");
-      const result = await this.service.create(req.body as CreateInspectionDto, userId);
+      const dto = req.body as CreateInspectionDto;
+      const result = await this.service.create(dto, userId);
+      if (dto.statutoryDeadline) {
+        const deadline = new Date(dto.statutoryDeadline);
+        const daysUntil = (deadline.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+        if (daysUntil <= 30) {
+          console.warn(`[SafetyCert] Statutory deadline in ${Math.round(daysUntil)} days for inspection ${result.id}`);
+        }
+      }
       res.status(201).json(result);
     } catch (err) {
       next(err);

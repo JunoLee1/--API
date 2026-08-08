@@ -40,9 +40,17 @@ export class SponsorshipController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
+      const { role, frontOfficeRole, id: userId } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.update(Number(req.params["id"]), req.body as UpdateSponsorshipDto));
+      res.json(await this.service.update(Number(req.params["id"]), req.body as UpdateSponsorshipDto, userId));
+    } catch (err) { next(err); }
+  };
+
+  getExpiring = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = requireUser(req);
+      if (!canRead(user.role)) throw new AppError(403, "FORBIDDEN");
+      res.json(await this.service.findExpiringContracts(Number(req.query["days"]) || 30));
     } catch (err) { next(err); }
   };
 

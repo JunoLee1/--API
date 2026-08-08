@@ -11,6 +11,7 @@ import type {
   UpdateReferenceCheckDto,
 } from "./dto/recruitment.dto";
 import type { InterviewRound, JobApplicationStatus } from "../generated/enums";
+import { writeAuditLog } from "../lib/auditLog";
 
 const POSTING_INCLUDE = {
   department: { select: { id: true, name: true } },
@@ -99,36 +100,66 @@ export class RecruitmentRepository {
     });
   }
 
-  rejectApplication(id: number) {
-    return this.prisma.jobApplication.update({
+  async rejectApplication(id: number, actorId: number) {
+    const result = await this.prisma.jobApplication.update({
       where: { id },
       data: { status: "REJECTED", rejectedAt: new Date() },
       include: APPLICATION_INCLUDE,
     });
+    void writeAuditLog({
+      actorId,
+      action: "JOB_APPLICATION_STATUS_CHANGED",
+      targetId: id,
+      detail: { newStatus: "REJECTED" },
+    }).catch(console.error);
+    return result;
   }
 
-  offerApplication(id: number, offeredById: number) {
-    return this.prisma.jobApplication.update({
+  async offerApplication(id: number, offeredById: number, actorId: number) {
+    const result = await this.prisma.jobApplication.update({
       where: { id },
       data: { status: "OFFERED", offeredAt: new Date(), offeredById },
       include: APPLICATION_INCLUDE,
     });
+    void writeAuditLog({
+      actorId,
+      action: "JOB_APPLICATION_STATUS_CHANGED",
+      targetId: id,
+      detail: { newStatus: "OFFERED" },
+    }).catch(console.error);
+    return result;
   }
 
-  completeOnboarding(id: number) {
-    return this.prisma.jobApplication.update({
+  async completeOnboarding(id: number, actorId: number) {
+    const result = await this.prisma.jobApplication.update({
       where: { id },
       data: { status: "ONBOARDED" },
       include: APPLICATION_INCLUDE,
     });
+    void writeAuditLog({
+      actorId,
+      action: "JOB_APPLICATION_STATUS_CHANGED",
+      targetId: id,
+      detail: { newStatus: "ONBOARDED" },
+    }).catch(console.error);
+    return result;
   }
 
-  setApplicationStatus(id: number, status: JobApplicationStatus) {
-    return this.prisma.jobApplication.update({
+  async setApplicationStatus(id: number, status: JobApplicationStatus, actorId?: number) {
+    const result = await this.prisma.jobApplication.update({
       where: { id },
       data: { status },
       include: APPLICATION_INCLUDE,
     });
+    if (actorId != null) {
+      void writeAuditLog({
+        actorId,
+        action: "JOB_APPLICATION_STATUS_CHANGED",
+        targetId: id,
+        detail: { newStatus: status },
+      }).catch(console.error);
+    }
+    return result;
   }
 
   // --- Interview ---
@@ -243,8 +274,20 @@ export class RecruitmentRepository {
 
   // --- InterviewerScore ---
 
-  addInterviewerScore(data: { interviewId: number; interviewerId: number; scoreSkill?: number; scoreComm?: number; scoreCulture?: number; comment?: string }) {
-    return this.prisma.interviewerScore.create({ data });
+  async addInterviewerScore(data: { interviewId: number; interviewerId: number; scoreSkill?: number; scoreComm?: number; scoreCulture?: number; comment?: string }, actorId: number) {
+    const result = await this.prisma.interviewerScore.create({ data });
+    void writeAuditLog({
+      actorId,
+      action: "INTERVIEW_SCORE_RECORDED",
+      targetId: data.interviewId,
+      detail: {
+        interviewerId: data.interviewerId,
+        scoreSkill: data.scoreSkill,
+        scoreComm: data.scoreComm,
+        scoreCulture: data.scoreCulture,
+      },
+    }).catch(console.error);
+    return result;
   }
 
   getInterviewerScores(interviewId: number) {

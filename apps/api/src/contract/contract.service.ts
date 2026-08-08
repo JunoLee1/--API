@@ -2,6 +2,7 @@ import { ContractRepository } from "./contract.repo";
 import { WageCapService } from "./wage-cap.service";
 import { AppError } from "../lib/appError";
 import { writeAuditLog } from "../lib/auditLog";
+import { getPrisma } from "../lib/prisma";
 import {
   CreateContractDto,
   UpdateContractStatusDto,
@@ -28,6 +29,14 @@ export class ContractService {
 
   async createContract(dto: CreateContractDto, actorId: number) {
     if (dto.salary <= 0) throw new AppError(400, "INVALID_SALARY");
+
+    const player = await getPrisma().player.findUnique({
+      where: { id: dto.playerId },
+      select: { status: true },
+    });
+    if (player?.status === "RELEASED") {
+      throw new AppError(409, "PLAYER_RELEASED_CANNOT_CONTRACT");
+    }
 
     const capResult = await this.wageCapService.check(dto.salary);
 

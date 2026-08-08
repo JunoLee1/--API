@@ -3,6 +3,8 @@ import { AppError } from "../lib/appError";
 import { CreatePlayerDto, UpdatePlayerDto, UpdatePlayerStatusDto, PlayerListQuery } from "./dto/player.dto";
 import { MarketValueRepository } from "./market-value.repo";
 import { UpdateMarketValueDto } from "./dto/market-value.dto";
+import { getPrisma } from "../lib/prisma";
+import { writeAuditLog } from "../lib/auditLog";
 
 export class PlayerService {
   constructor(private repo: PlayerRepository, private mvRepo?: MarketValueRepository) {}
@@ -27,10 +29,32 @@ export class PlayerService {
     return this.repo.update(id, dto);
   }
 
-  async updatePlayerStatus(id: string, { status }: UpdatePlayerStatusDto) {
+  async updatePlayerStatus(id: string, { status }: UpdatePlayerStatusDto, actorId: number) {
     const player = await this.repo.findById(id);
     if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
-    return this.repo.updateStatus(id, status);
+    const result = await this.repo.updateStatus(id, status);
+
+    if (status === "RELEASED") {
+      const prisma = getPrisma();
+      const activeContracts = await prisma.contract.findMany({
+        where: { playerId: id, status: "ACTIVE" },
+        select: { id: true },
+      });
+      if (activeContracts.length > 0) {
+        await prisma.contract.updateMany({
+          where: { playerId: id, status: "ACTIVE" },
+          data: { status: "TERMINATED" },
+        });
+        void writeAuditLog({
+          actorId,
+          action: "CONTRACTS_TERMINATED_ON_RELEASE",
+          targetId: id,
+          detail: { playerId: id, contractIds: activeContracts.map((c) => c.id) },
+        }).catch(console.error);
+      }
+    }
+
+    return result;
   }
 
   async deletePlayer(id: string) {

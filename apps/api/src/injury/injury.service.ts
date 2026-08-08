@@ -5,6 +5,7 @@ import { calculateTotalScore, SCORE_THRESHOLD } from "./injury.score";
 import { ExternalReportTarget, ExternalReportStatus } from "../generated/enums";
 import { NotificationRepository } from "../notification/notification.repo";
 import { getIO } from "../lib/io";
+import { writeAuditLog } from "../lib/auditLog";
 
 const DUE_DAYS: Record<ExternalReportTarget, number> = {
   EDUCATION_OFFICE: 3,
@@ -186,6 +187,14 @@ export class InjuryService {
         return { target, dueDate };
       });
       await this.repo.createExternalReports(injuryId, targetsWithDue, reportData);
+
+      // RA7: audit consent log for external medical data transmission
+      void writeAuditLog({
+        actorId: assessedById,
+        action: "MEDICAL_DATA_TRANSMITTED_EXTERNALLY",
+        targetId: injuryId,
+        detail: { targets: targets, playerName: reportData.playerName, triggeredByScore: scores.totalScore },
+      }).catch(console.error);
 
       try {
         await this.notifRepo.createForMedicalDirector(
