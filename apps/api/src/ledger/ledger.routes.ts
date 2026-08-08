@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import { auth } from "../lib/authMiddleware";
 import { canReadFinance, canWriteFinance } from "../lib/permissions";
 import { getPrisma } from "../lib/prisma";
+import { AppError } from "../lib/appError";
 import { LedgerRepository } from "./ledger.repo";
 import { LedgerService } from "./ledger.service";
 import { LedgerController } from "./ledger.controller";
@@ -13,13 +14,13 @@ const ctrl = new LedgerController(ledgerService);
 
 const checkReadFinance = (req: Request, res: Response, next: NextFunction) => {
   const { role, frontOfficeRole } = req.user!;
-  if (!canReadFinance(role, frontOfficeRole)) return res.status(403).json({ code: "FORBIDDEN" });
+  if (!canReadFinance(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
   next();
 };
 
 const checkWriteFinance = (req: Request, res: Response, next: NextFunction) => {
   const { role, frontOfficeRole } = req.user!;
-  if (!canWriteFinance(role, frontOfficeRole)) return res.status(403).json({ code: "FORBIDDEN" });
+  if (!canWriteFinance(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
   next();
 };
 
