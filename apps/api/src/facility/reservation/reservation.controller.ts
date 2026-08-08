@@ -28,7 +28,7 @@ export class ReservationController {
         title,
         startTime: new Date(startTime),
         endTime: new Date(endTime),
-        notes,
+        ...(notes !== undefined ? { notes } : {}),
         reservedById: user.id,
       }));
     } catch (err) { next(err); }

@@ -28,7 +28,7 @@ export class FanController {
       requireUser(req);
       const { name, email, phone } = req.body as { name: string; email?: string; phone?: string };
       if (!name) throw new AppError(400, "NAME_REQUIRED");
-      res.status(201).json(await this.repo.create({ name, email, phone }));
+      res.status(201).json(await this.repo.create({ name, ...(email !== undefined ? { email } : {}), ...(phone !== undefined ? { phone } : {}) }));
     } catch (err) { next(err); }
   };
 
