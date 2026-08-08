@@ -29,6 +29,40 @@ export interface FinancialReport {
   revenueOther?: number
 }
 
+export interface PnLRevenueActual {
+  ticket: number
+  merchandise: number
+  other: number
+  sponsorship: number
+  academyFee: number
+  broadcast: number
+  subsidy: number
+  parentCompany: number
+  total: number
+}
+
+export interface PnLExpenseActual {
+  playerSalary: number
+  staffPayroll: number
+  operating: number
+  operatingByCategory: Record<string, number>
+  medical: number
+  meals: number
+  total: number
+}
+
+export interface PnL {
+  season: { id: number; name: string; startDate: string; endDate: string }
+  plannedRevenue: number | null
+  revenue: PnLRevenueActual
+  expenses: PnLExpenseActual
+  summary: {
+    grossProfit: number
+    profitMargin: number
+    revenueVsPlan: number | null
+  }
+}
+
 export const financialReportApi = {
   get: (seasonId: number) =>
     api.get<FinancialReport>(`/financial-reports/${seasonId}`),
@@ -48,6 +82,9 @@ export const financialReportApi = {
 
   setFromPrevSeason: (seasonId: number, prevSeasonId: number) =>
     api.post<FinancialReport>(`/financial-report/${seasonId}/from-prev-season`, { prevSeasonId }),
+
+  getPnL: (seasonId: number) =>
+    api.get<PnL>(`/financial-reports/${seasonId}/pl`),
 }
 
 export const budgetPlanApi = {
