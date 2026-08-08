@@ -167,6 +167,20 @@ export class NotificationService {
     });
   }
 
+  async notifyMaintenanceApproved(requestTitle: string, requestId: number, requesterUserId: number) {
+    await this.repo.createForUser(requesterUserId, "MAINTENANCE_APPROVED", () => ({
+      title: "유지보수 요청 승인",
+      body: `'${requestTitle}' 유지보수 요청이 승인됐습니다.`,
+    }), requestId);
+  }
+
+  async notifyMaintenanceRejected(requestTitle: string, requestId: number, requesterUserId: number, reason?: string) {
+    await this.repo.createForUser(requesterUserId, "MAINTENANCE_REJECTED", () => ({
+      title: "유지보수 요청 거절",
+      body: `'${requestTitle}' 유지보수 요청이 거절됐습니다.${reason ? ` 사유: ${reason}` : ''}`,
+    }), requestId);
+  }
+
   async getPartnerAlerts() {
     const contracts = await this.repo.findExpiringContracts(30);
     return contracts.map((c) => {

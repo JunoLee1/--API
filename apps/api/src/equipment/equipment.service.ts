@@ -203,6 +203,15 @@ export class EquipmentService {
     if (!loan) throw new AppError(404, "LOAN_NOT_FOUND");
     if (loan.status !== "ISSUED") throw new AppError(409, "INVALID_LOAN_STATUS_TRANSITION");
     const result = await this.repo.returnLoan(loanId, returnedById, returnNote);
+    if (loan.equipmentUnitId) {
+      await this.repo.updateUnitStatus(loan.equipmentUnitId, "AVAILABLE");
+    }
+    void this.notificationRepo.create({
+      userId: loan.requestedBy.id,
+      type: "EQUIPMENT_LOAN_RETURNED",
+      title: "장비 반납 확인",
+      body: `${loan.equipmentItem.name} 반납이 확인됐습니다.`,
+    }).catch(console.error);
     void writeAuditLog({
       actorId: returnedById,
       action: "EQUIPMENT_LOAN_RETURNED",
