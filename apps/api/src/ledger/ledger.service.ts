@@ -38,6 +38,7 @@ export class LedgerService {
     const original = await this.repo.findById(originalId);
     if (!original) throw new AppError(404, "LEDGER_ENTRY_NOT_FOUND");
     if (original.reversedById != null) throw new AppError(400, "ALREADY_REVERSED");
+    // JO4: link refund entry back to original via reversalOfId
     const refund = await this.repo.create({
       type: original.type as any,       // Prisma $Enums.LedgerType → DTO "INCOME"|"EXPENSE" string literal union
       category: "REFUND",
@@ -49,9 +50,17 @@ export class LedgerService {
       description: formatLedgerDescription("ledger", "refund", { entryId: original.id }),
       ...(original.relatedModule != null && { relatedModule: original.relatedModule }),
       ...(original.relatedId != null && { relatedId: original.relatedId }),
+      reversalOfId: original.id, // JO4: bidirectional — refund points to original
       createdById,
-    });
+    } as any);
+    // JO4: mark original as reversed (reversedById already in schema)
     await this.repo.markReversed(originalId, refund.id);
+
+    // BS2: mark the source SalesRecord as refunded
+    if (original.relatedModule === "SalesRecord" && original.relatedId) {
+      await this.repo.markSalesRecordRefunded(original.relatedId);
+    }
+
     return refund;
   }
 

@@ -3,10 +3,27 @@ import { NotificationRepository } from "../notification/notification.repo";
 import { UpsertTrainingLoadDto, TrainingLoadQuery, WeeklySummaryQuery } from "./dto/training-load.dto";
 import { AppError } from "../lib/appError";
 
-export const WEEKLY_LOAD_THRESHOLD = 500;
+// KN3: position-based load thresholds instead of a single constant
+export const WEEKLY_LOAD_THRESHOLD: Record<string, number> = {
+  GK: 400,
+  CB: 500,
+  LB: 520,
+  RB: 520,
+  CDM: 540,
+  CM: 540,
+  CAM: 520,
+  LW: 530,
+  RW: 530,
+  ST: 500,
+  DEFAULT: 500,
+};
 
-export function isWeeklyOverload(weeklyTotal: number): boolean {
-  return weeklyTotal >= WEEKLY_LOAD_THRESHOLD;
+export function getLoadThreshold(position?: string | null): number {
+  return WEEKLY_LOAD_THRESHOLD[position ?? "DEFAULT"] ?? WEEKLY_LOAD_THRESHOLD["DEFAULT"]!;
+}
+
+export function isWeeklyOverload(weeklyTotal: number, position?: string | null): boolean {
+  return weeklyTotal >= getLoadThreshold(position);
 }
 
 export class TrainingLoadService {
@@ -51,30 +68,32 @@ export class TrainingLoadService {
     if (dto.load !== undefined) {
       const weekStart = this.getWeekStart(new Date());
       const total = await this.repo.getWeeklyLoadTotal(dto.playerId, weekStart);
-      if (isWeeklyOverload(total)) {
-        const player = await this.repo.getPlayerName(dto.playerId);
-        const playerName = player?.playerName ?? dto.playerId;
+      const player = await this.repo.getPlayerName(dto.playerId);
+      const playerName = player?.playerName ?? dto.playerId;
+      // KN3: use position-based threshold for overload check
+      if (isWeeklyOverload(total, player?.position)) {
+        const threshold = getLoadThreshold(player?.position);
         try {
           await Promise.all([
             this.notifRepo.createForPhysicalCoach(
               "TRAINING_LOAD_ALERT",
               () => ({
                 title: "훈련 부하 초과",
-                body: `${playerName} 선수의 이번 주 누적 부하(${total})가 임계값(${WEEKLY_LOAD_THRESHOLD})을 초과했습니다.`,
+                body: `${playerName} 선수의 이번 주 누적 부하(${total})가 임계값(${threshold})을 초과했습니다.`,
               }),
             ).catch(console.error),
             this.notifRepo.createForHeadCoach(
               "TRAINING_LOAD_ALERT",
               () => ({
                 title: "훈련 부하 초과",
-                body: `${playerName} 선수의 이번 주 누적 부하(${total})가 임계값(${WEEKLY_LOAD_THRESHOLD})을 초과했습니다.`,
+                body: `${playerName} 선수의 이번 주 누적 부하(${total})가 임계값(${threshold})을 초과했습니다.`,
               }),
             ).catch(console.error),
             this.notifRepo.createForMedicalDirector(
               "TRAINING_LOAD_ALERT",
               () => ({
                 title: "훈련 부하 초과",
-                body: `${playerName} 선수의 이번 주 누적 부하(${total})가 임계값(${WEEKLY_LOAD_THRESHOLD})을 초과했습니다.`,
+                body: `${playerName} 선수의 이번 주 누적 부하(${total})가 임계값(${threshold})을 초과했습니다.`,
               }),
             ).catch(console.error),
           ]);
@@ -89,12 +108,17 @@ export class TrainingLoadService {
 
   async getWeeklySummary(query: WeeklySummaryQuery) {
     const weekStart = new Date(query.weekStart);
-    const total = await this.repo.getWeeklyLoadTotal(query.playerId, weekStart);
+    const [total, player] = await Promise.all([
+      this.repo.getWeeklyLoadTotal(query.playerId, weekStart),
+      this.repo.getPlayerName(query.playerId),
+    ]);
+    // KN3: use position-based threshold for summary overload flag
     return {
       playerId: query.playerId,
       weekStart: query.weekStart,
       total,
-      overload: isWeeklyOverload(total),
+      overload: isWeeklyOverload(total, player?.position),
+      threshold: getLoadThreshold(player?.position),
     };
   }
 
@@ -109,7 +133,9 @@ export class TrainingLoadService {
   async detectLoadRpeAnomalies(seasonId?: number) {
     const loads = await this.repo.getAllWithSession(seasonId);
     const anomalies = loads.filter((l) => {
-      const highLoad = (l.load ?? 0) >= (WEEKLY_LOAD_THRESHOLD * 0.14);
+      // KN3: use DEFAULT threshold as session-level reference for anomaly detection
+      const sessionHighLoadRef = getLoadThreshold("DEFAULT") * 0.14;
+      const highLoad = (l.load ?? 0) >= sessionHighLoadRef;
       const lowRpe = l.rpe < 4;
       const lowLoad = (l.load ?? 0) > 0 && (l.load ?? 0) < 20;
       const highRpe = l.rpe >= 8;
@@ -120,7 +146,7 @@ export class TrainingLoadService {
       sessionId: l.sessionId,
       load: l.load,
       rpe: l.rpe,
-      anomalyType: ((l.load ?? 0) >= (WEEKLY_LOAD_THRESHOLD * 0.14) && l.rpe < 4) ? "HIGH_LOAD_LOW_RPE" : "LOW_LOAD_HIGH_RPE",
+      anomalyType: ((l.load ?? 0) >= (getLoadThreshold("DEFAULT") * 0.14) && l.rpe < 4) ? "HIGH_LOAD_LOW_RPE" : "LOW_LOAD_HIGH_RPE",
     }));
   }
 

@@ -89,11 +89,19 @@ export class MaintenanceService {
     return record;
   }
 
-  async reject(id: number, reason?: string) {
+  async reject(id: number, reason: string | undefined, actorId?: number) {
+    if (!reason) throw new AppError(400, "REJECTION_REASON_REQUIRED");
     const existing = await this.get(id);
     const REJECTABLE = ["PENDING_APPROVAL", "APPROVED"];
     if (!REJECTABLE.includes(existing.status)) throw new AppError(400, "INVALID_STATUS_TRANSITION");
-    return this.repo.reject(id, reason);
+    const result = await this.repo.reject(id, reason);
+    void writeAuditLog({
+      actorId: actorId ?? 0,
+      action: "MAINTENANCE_REJECTED",
+      targetId: id,
+      detail: { reason, previousStatus: existing.status },
+    }).catch(console.error);
+    return result;
   }
 
   async lock(id: number) {

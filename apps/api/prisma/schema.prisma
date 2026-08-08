@@ -317,6 +317,7 @@ enum NotificationType {
   LICENSE_SEAT_EXCEEDED
   INTERVIEW_SCHEDULED
   COMPLIANCE_DEADLINE_REMINDER
+  EQUIPMENT_RETURN_OVERDUE
 }
 
 enum DepreciationMethod {
@@ -353,6 +354,8 @@ enum SalesType {
   TICKET
   UNIFORM
   OTHER
+  COMPLIMENTARY
+  VIP_TICKET
 }
 
 enum BadgeType {
@@ -991,6 +994,7 @@ model EquipmentLoan {
   approvedById    Int?
   issuedAt        DateTime?
   returnedAt      DateTime?
+  returnNote      String?
   notes           String?
   equipmentItemId Int
   equipmentUnitId Int?
@@ -1759,11 +1763,14 @@ model CoachAvailability {
 }
 
 model TrainingLoad {
-  id        Int    @id @default(autoincrement())
-  playerId  String
-  sessionId Int
-  rpe       Int
-  load      Int?
+  id           Int    @id @default(autoincrement())
+  playerId     String
+  sessionId    Int
+  rpe          Int
+  load         Int?
+  version      Int    @default(1)
+  previousRpe  Int?
+  previousLoad Int?
 
   player  Player          @relation(fields: [playerId], references: [id])
   session TrainingSession @relation(fields: [sessionId], references: [id])
@@ -2128,6 +2135,8 @@ model StaffRecord {
 
   createdBy     User          @relation("StaffRecordCreator", fields: [createdById], references: [id])
   staffSalaries StaffSalary[]
+  employmentStartDate  DateTime?
+  employmentEndDate    DateTime?
 }
 
 model MealExpense {
