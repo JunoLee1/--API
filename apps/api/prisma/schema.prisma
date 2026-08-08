@@ -748,6 +748,8 @@ model User {
   squadPlans               SquadPlan[]
   facilityReservations     FacilityReservation[]     @relation("FacilityReservations")
   interviewerScores        InterviewerScore[]        @relation("InterviewerScores")
+  createdAppeals           AttendanceAppeal[]        @relation("AppealCreator")
+  reviewedAppeals          AttendanceAppeal[]        @relation("AppealReviewer")
 }
 
 model Season {
@@ -1293,6 +1295,7 @@ model TrainingResult {
   session  TrainingSession @relation(fields: [sessionId], references: [id])
   player   Player          @relation(fields: [playerId], references: [id])
   scoredBy User?           @relation("TrainingResultScorer", fields: [scoredById], references: [id])
+  appeals  AttendanceAppeal[]
 
   @@unique([sessionId, playerId])
 }
@@ -2857,4 +2860,29 @@ model SquadPlan {
 
   season    Season @relation(fields: [seasonId], references: [id])
   updatedBy User   @relation(fields: [updatedById], references: [id])
+}
+
+enum AppealStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model AttendanceAppeal {
+  id               Int              @id @default(autoincrement())
+  trainingResultId Int
+  originalStatus   AttendanceStatus
+  requestedStatus  AttendanceStatus
+  reason           String           @db.Text
+  status           AppealStatus     @default(PENDING)
+  reviewNote       String?          @db.Text
+  createdById      Int
+  reviewedById     Int?
+  reviewedAt       DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  trainingResult TrainingResult @relation(fields: [trainingResultId], references: [id])
+  createdBy      User           @relation("AppealCreator", fields: [createdById], references: [id])
+  reviewedBy     User?          @relation("AppealReviewer", fields: [reviewedById], references: [id])
 }

@@ -125,6 +125,14 @@ const SUBSECTION_ICON: Record<NavSubSection, LucideIcon> = {
 
 const NAV_ITEMS: NavItem[] = [
   { to: '/dashboard', label: 'nav.item.dashboard', icon: BarChart3, end: true },
+  {
+    to: '/coach-dashboard',
+    label: 'nav.item.coachOverview',
+    icon: LayoutDashboard,
+    end: true,
+    roles: ['COACHING_STAFF', 'ADMIN'],
+    coachingRoles: ['HEAD_COACH', 'ASSISTANT_COACH'],
+  },
 
   // 선수 관리
   {

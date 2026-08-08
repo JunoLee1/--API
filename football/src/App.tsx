@@ -3,6 +3,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { AppShell } from '@/layouts/AppShell'
 import { ConfirmProvider } from '@/lib/confirm-dialog'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
+import { CoachDashboard } from '@/pages/dashboard/CoachDashboard'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import InviteAcceptPage from '@/pages/auth/InviteAcceptPage'
 import { PlayersPage } from '@/pages/players/PlayersPage'
@@ -116,6 +117,7 @@ function App() {
             }
           >
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/coach-dashboard" element={<CoachDashboard />} />
             <Route path="/players" element={<PlayersPage />} />
             <Route path="/youth-players" element={<YouthPlayersPage />} />
             <Route path="/players/:id" element={<PlayerDetailPage />} />
