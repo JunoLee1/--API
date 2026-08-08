@@ -1,4 +1,4 @@
-export type SalesType = 'TICKET' | 'UNIFORM' | 'OTHER'
+export type SalesType = 'TICKET' | 'UNIFORM' | 'OTHER' | 'VIP_TICKET' | 'COMPLIMENTARY'
 
 export interface SalesRecord {
   id: number
@@ -10,6 +10,7 @@ export interface SalesRecord {
   saleDate: string
   description: string | null
   matchId: number | null
+  seatZoneId?: number
   createdById: number
   createdAt: string
   match: {
@@ -37,4 +38,5 @@ export interface CreateSalesRecordDto {
   saleDate: string
   description?: string
   matchId?: number
+  seatZoneId?: number
 }

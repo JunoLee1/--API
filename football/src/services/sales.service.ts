@@ -1,5 +1,6 @@
 import { api } from './api'
 import type { SalesRecord, TicketMatchSummary, CreateSalesRecordDto } from '@/types/sales'
+import type { RemainingCapacity } from '@/types/match'
 
 export const salesApi = {
   list: () =>
@@ -19,4 +20,10 @@ export const salesApi = {
 
   seasonTicketTotal: (seasonId: number) =>
     api.get<{ total: number }>(`/sales/ticket-season-total?seasonId=${seasonId}`),
+
+  createBatch: (dtos: CreateSalesRecordDto[]) =>
+    api.post<SalesRecord[]>('/sales/batch', dtos),
+
+  getRemainingCapacity: (matchId: number) =>
+    api.get<RemainingCapacity>(`/matches/${matchId}/remaining-capacity`),
 }

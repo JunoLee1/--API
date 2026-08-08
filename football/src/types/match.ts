@@ -10,6 +10,15 @@ export interface Match {
   competitionType: CompetitionType
   seasonId: number
   externalId: string | null
+  priceRegular?: number
+  priceVip?: number
+  capacity?: number
+}
+
+export interface RemainingCapacity {
+  capacity: number | null
+  sold: number
+  remaining: number | null
 }
 
 export interface PlayerMatchStat {
