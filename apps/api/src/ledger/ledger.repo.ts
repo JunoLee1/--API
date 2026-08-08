@@ -21,6 +21,13 @@ export class LedgerRepository {
     return this.prisma.ledgerEntry.findUnique({ where: { id } });
   }
 
+  markReversed(originalId: number, refundId: number) {
+    return this.prisma.ledgerEntry.update({
+      where: { id: originalId },
+      data: { reversedById: refundId },
+    });
+  }
+
   create(data: CreateLedgerEntryDto & { createdById: number; amountKrw: number }) {
     return this.prisma.ledgerEntry.create({
       data: {
