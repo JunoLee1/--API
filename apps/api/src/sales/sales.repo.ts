@@ -22,7 +22,7 @@ export class SalesRepository {
   create(data: CreateSalesRecordDto & { totalAmount: number; createdById: number }) {
     return this.prisma.salesRecord.create({
       data: {
-        type: data.type,
+        type: data.type as any,
         quantity: data.quantity,
         unitPrice: data.unitPrice,
         totalAmount: data.totalAmount,

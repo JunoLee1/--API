@@ -113,6 +113,14 @@ export class MatchController {
     }
   };
 
+  getRemainingCapacity = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // auth만 확인 (requireUser 호출) — 전 직원 접근 가능
+      requireUser(req);
+      res.status(200).json(await this.service.getRemainingCapacity(Number(req.params["id"])));
+    } catch (err) { next(err); }
+  };
+
   uploadStatSheet = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const ALLOWED = ["ADMIN", "COACHING_STAFF"] as const;

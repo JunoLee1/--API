@@ -16,6 +16,8 @@ const controller = new FinancialReportController(service);
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 1 * 1024 * 1024 } });
 
 router.post("/:seasonId",                   auth, controller.set);
+router.post("/:seasonId/from-prev-season",  auth, controller.setFromPrevSeason);
+router.put("/:seasonId/revenue",            auth, controller.setBreakdown);
 router.post("/:seasonId/csv",               auth, upload.single("file"), controller.setFromCSV);
 router.get("/:seasonId/with-ledger",        auth, controller.getWithLedger);
 router.get("/:seasonId",                    auth, controller.get);

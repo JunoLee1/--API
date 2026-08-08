@@ -1,5 +1,5 @@
 import { AppError } from "../lib/appError";
-import { FinancialReportRepository, UpsertBudgetPlanDto } from "./financial-report.repo";
+import { FinancialReportRepository, UpsertBudgetPlanDto, RevenueBreakdownDto, sumBreakdown } from "./financial-report.repo";
 import { KnapsackService } from "../budget/knapsack.service";
 import { OperatingCategory } from "../generated/client";
 import { getPrisma } from "../lib/prisma";
@@ -10,9 +10,22 @@ export class FinancialReportService {
     private knapsack: KnapsackService,
   ) {}
 
-  async set(seasonId: number, totalRevenue: number, note?: string) {
+  async set(seasonId: number, totalRevenue: number, note?: string, breakdown?: RevenueBreakdownDto) {
     if (totalRevenue <= 0) throw new AppError(400, "INVALID_REVENUE");
-    return this.repo.upsert(seasonId, totalRevenue, note);
+    // When breakdown is provided, its sum must equal totalRevenue
+    if (breakdown) {
+      const breakdownSum = sumBreakdown(breakdown);
+      if (breakdownSum > 0 && breakdownSum !== totalRevenue) {
+        throw new AppError(400, "REVENUE_BREAKDOWN_SUM_MISMATCH");
+      }
+    }
+    return this.repo.upsert(seasonId, totalRevenue, note, breakdown);
+  }
+
+  async setBreakdown(seasonId: number, breakdown: RevenueBreakdownDto, note?: string) {
+    const total = sumBreakdown(breakdown);
+    if (total <= 0) throw new AppError(400, "INVALID_REVENUE");
+    return this.repo.upsert(seasonId, total, note, breakdown);
   }
 
   async setFromCSV(seasonId: number, csvContent: string, note?: string) {
@@ -79,6 +92,64 @@ export class FinancialReportService {
 
   async getActuals(seasonId: number) {
     return this.repo.getActuals(seasonId);
+  }
+
+  async setFromPrevSeasonActuals(prevSeasonId: number, newSeasonId: number) {
+    const prisma = getPrisma();
+
+    // 전년도 시즌 날짜 범위 조회
+    const prevSeason = await prisma.season.findUnique({
+      where: { id: prevSeasonId },
+      select: { startDate: true, endDate: true },
+    });
+    if (!prevSeason) throw new AppError(404, "PREV_SEASON_NOT_FOUND");
+
+    // 1. 티켓 실수입 (SalesRecord type=TICKET, 해당 시즌 경기 연결)
+    const ticketResult = await prisma.salesRecord.aggregate({
+      where: {
+        type: "TICKET",
+        match: { seasonId: prevSeasonId },
+        deletedAt: null,
+      } as any,
+      _sum: { totalAmount: true },
+    });
+    const revenueTicket = Number((ticketResult._sum as any).totalAmount ?? 0);
+
+    // 2. MD 수입 (SalesRecord type=OTHER, saleDate 범위)
+    const mdResult = await prisma.salesRecord.aggregate({
+      where: {
+        type: "OTHER",
+        saleDate: { gte: prevSeason.startDate, lte: prevSeason.endDate },
+        deletedAt: null,
+      } as any,
+      _sum: { totalAmount: true },
+    });
+    const revenueMerchandise = Number((mdResult._sum as any).totalAmount ?? 0);
+
+    // 3. 스폰서십 실수입 (SponsorshipPayment status=PAID, paidAt 범위)
+    const sponsorResult = await prisma.sponsorshipPayment.aggregate({
+      where: {
+        status: "PAID",
+        paidAt: { gte: prevSeason.startDate, lte: prevSeason.endDate },
+      },
+      _sum: { amount: true },
+    });
+    const revenueSponsorship = Number(sponsorResult._sum.amount ?? 0);
+
+    const breakdown: RevenueBreakdownDto = {
+      revenueTicket,
+      revenueSponsorship,
+      revenueMerchandise,
+      revenueBroadcast: 0,     // 중계권 — 시스템 외부 데이터, 0으로 초기화
+      revenueSubsidy: 0,       // 지자체 보조금 — 수동 입력
+      revenueParentCompany: 0, // 모기업 지원금 — 수동 입력
+      revenueOther: 0,
+    };
+
+    const total = sumBreakdown(breakdown);
+    const note = `전년도(시즌 ${prevSeasonId}) 실적 기반 자동 생성`;
+    // total이 0일 수 있음 (집계 데이터 없는 경우) — repo.upsert 직접 호출로 0 허용
+    return this.repo.upsert(newSeasonId, total, note, breakdown);
   }
 
   async getReportWithLedger(seasonId: number) {
