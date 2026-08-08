@@ -114,6 +114,16 @@ export class FinancialReportController {
     } catch (err) { next(err); }
   };
 
+  getPnL = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = requireUser(req);
+      if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const seasonId = Number(req.params["seasonId"]);
+      const data = await this.service.getPnL(seasonId);
+      res.status(200).json(data);
+    } catch (err) { next(err); }
+  };
+
   getWithLedger = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, frontOfficeRole } = requireUser(req);

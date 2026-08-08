@@ -175,6 +175,146 @@ export class FinancialReportService {
     return this.repo.upsert(newSeasonId, total, note, breakdown);
   }
 
+  async getPnL(seasonId: number) {
+    const prisma = getPrisma();
+
+    const season = await prisma.season.findUnique({
+      where: { id: seasonId },
+      select: { id: true, name: true, startDate: true, endDate: true },
+    });
+    if (!season) throw new AppError(404, "SEASON_NOT_FOUND");
+
+    const { startDate, endDate } = season;
+    const financialReport = await this.repo.findBySeasonId(seasonId);
+
+    const [
+      ticketAgg, uniformAgg, otherSalesAgg,
+      sponsorshipAgg, academyFeeAgg,
+      payrollAgg,
+      operatingGroups,
+      medicalAgg, mealAgg,
+      playerContracts,
+    ] = await Promise.all([
+      // 티켓 수입 (TICKET + VIP_TICKET)
+      prisma.salesRecord.aggregate({
+        where: { type: { in: ["TICKET", "VIP_TICKET"] as any[] }, match: { seasonId }, deletedAt: null } as any,
+        _sum: { totalAmount: true },
+      }),
+      // 유니폼/MD 수입
+      prisma.salesRecord.aggregate({
+        where: { type: "UNIFORM", saleDate: { gte: startDate, lte: endDate }, deletedAt: null } as any,
+        _sum: { totalAmount: true },
+      }),
+      // 기타 판매 수입
+      prisma.salesRecord.aggregate({
+        where: { type: "OTHER", saleDate: { gte: startDate, lte: endDate }, deletedAt: null } as any,
+        _sum: { totalAmount: true },
+      }),
+      // 스폰서십 수납
+      prisma.sponsorshipPayment.aggregate({
+        where: { status: "PAID", paidAt: { gte: startDate, lte: endDate } },
+        _sum: { amount: true },
+      }),
+      // 아카데미 회비
+      prisma.ledgerEntry.aggregate({
+        where: { category: "ACADEMY_FEE", type: "INCOME", isRefund: false, createdAt: { gte: startDate, lte: endDate } },
+        _sum: { amountKrw: true },
+      }),
+      // 스태프 급여 (PayrollRun CONFIRMED, 시즌 기간)
+      prisma.payrollRun.aggregate({
+        where: { status: "CONFIRMED", month: { gte: startDate, lte: endDate } },
+        _sum: { grossPay: true },
+      }),
+      // 운영비 카테고리별
+      prisma.operatingExpense.groupBy({
+        by: ["category"],
+        where: { seasonId },
+        _sum: { amount: true },
+      }),
+      // 의무비
+      prisma.medicalExpense.aggregate({
+        where: { status: "APPROVED", receiptDate: { gte: startDate, lte: endDate } },
+        _sum: { totalAmount: true },
+      }),
+      // 식비
+      prisma.mealExpense.aggregate({
+        where: { date: { gte: startDate, lte: endDate } },
+        _sum: { amount: true },
+      }),
+      // 선수 계약 — 시즌 기간 겹치는 ACTIVE 계약
+      prisma.contract.findMany({
+        where: { status: "ACTIVE", startDate: { lte: endDate }, endDate: { gte: startDate } },
+        select: { salary: true, startDate: true, endDate: true },
+      }),
+    ]);
+
+    // 선수 연봉 시즌 비례 합산 (연봉 / 12 × 겹치는 개월 수)
+    const seasonMs = endDate.getTime() - startDate.getTime();
+    const seasonMonths = seasonMs / (1000 * 60 * 60 * 24 * 30.44);
+    const playerSalaryTotal = playerContracts.reduce((sum, c) => {
+      const overlapStart = c.startDate > startDate ? c.startDate : startDate;
+      const overlapEnd = c.endDate < endDate ? c.endDate : endDate;
+      if (overlapEnd <= overlapStart) return sum;
+      const months = (overlapEnd.getTime() - overlapStart.getTime()) / (1000 * 60 * 60 * 24 * 30.44);
+      return sum + (c.salary / 12) * months;
+    }, 0);
+
+    const operatingByCategory: Record<string, number> = {};
+    let totalOperating = 0;
+    for (const row of operatingGroups) {
+      const amt = row._sum.amount ?? 0;
+      operatingByCategory[row.category] = amt;
+      totalOperating += amt;
+    }
+
+    // --- Revenue ---
+    const revenueActual = {
+      ticket: Number((ticketAgg._sum as any).totalAmount ?? 0),
+      merchandise: Number((uniformAgg._sum as any).totalAmount ?? 0),
+      other: Number((otherSalesAgg._sum as any).totalAmount ?? 0),
+      sponsorship: Number(sponsorshipAgg._sum.amount ?? 0),
+      academyFee: Number(academyFeeAgg._sum.amountKrw ?? 0),
+      // 수동 기입 항목 — FinancialReport에서 읽음
+      broadcast: financialReport?.revenueBroadcast ?? 0,
+      subsidy: financialReport?.revenueSubsidy ?? 0,
+      parentCompany: financialReport?.revenueParentCompany ?? 0,
+    };
+    const totalRevenueActual = Object.values(revenueActual).reduce((a, b) => a + b, 0);
+
+    // --- Expenses ---
+    const expenseActual = {
+      playerSalary: Math.round(playerSalaryTotal),
+      staffPayroll: Number(payrollAgg._sum.grossPay ?? 0),
+      operating: totalOperating,
+      operatingByCategory,
+      medical: medicalAgg._sum.totalAmount ?? 0,
+      meals: mealAgg._sum.amount ?? 0,
+    };
+    const totalExpenseActual =
+      expenseActual.playerSalary +
+      expenseActual.staffPayroll +
+      expenseActual.operating +
+      expenseActual.medical +
+      expenseActual.meals;
+
+    const grossProfit = totalRevenueActual - totalExpenseActual;
+    const profitMargin = totalRevenueActual === 0 ? 0 : Math.round((grossProfit / totalRevenueActual) * 1000) / 10;
+
+    return {
+      season: { id: season.id, name: season.name, startDate, endDate },
+      plannedRevenue: financialReport?.totalRevenue ?? null,
+      revenue: { ...revenueActual, total: totalRevenueActual },
+      expenses: { ...expenseActual, total: totalExpenseActual },
+      summary: {
+        grossProfit,
+        profitMargin,
+        revenueVsPlan: financialReport?.totalRevenue
+          ? Math.round((totalRevenueActual / financialReport.totalRevenue) * 1000) / 10
+          : null,
+      },
+    };
+  }
+
   async getReportWithLedger(seasonId: number) {
     const report = await this.repo.findBySeasonId(seasonId);
     if (!report) throw new AppError(404, "FINANCIAL_REPORT_NOT_FOUND");
