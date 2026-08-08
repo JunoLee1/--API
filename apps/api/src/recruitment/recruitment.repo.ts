@@ -101,16 +101,24 @@ export class RecruitmentRepository {
   }
 
   async rejectApplication(id: number, actorId: number) {
+    // CL6: set data retention deadline to 1 year from now
+    const retentionDeadline = new Date();
+    retentionDeadline.setFullYear(retentionDeadline.getFullYear() + 1);
+
     const result = await this.prisma.jobApplication.update({
       where: { id },
-      data: { status: "REJECTED", rejectedAt: new Date() },
+      data: {
+        status: "REJECTED",
+        rejectedAt: new Date(),
+        dataRetentionDeadline: retentionDeadline,
+      } as any,
       include: APPLICATION_INCLUDE,
     });
     void writeAuditLog({
       actorId,
       action: "JOB_APPLICATION_STATUS_CHANGED",
       targetId: id,
-      detail: { newStatus: "REJECTED" },
+      detail: { newStatus: "REJECTED", dataRetentionDeadline: retentionDeadline.toISOString() },
     }).catch(console.error);
     return result;
   }

@@ -1,10 +1,15 @@
 import { TransferRepository } from "./transfer.repo";
+import { ContractRepository } from "../contract/contract.repo";
 import { AppError } from "../lib/appError";
+import { writeAuditLog } from "../lib/auditLog";
 import { CreateTransferDto, CreateRecallDto, UpdateRecallStatusDto } from "./dto/transfer.dto";
 import { RecallStatus } from "../generated/enums";
 
 export class TransferService {
-  constructor(private repo: TransferRepository) {}
+  constructor(
+    private repo: TransferRepository,
+    private contractRepo: ContractRepository,
+  ) {}
 
   getByPlayer(playerId: string) {
     return this.repo.findByPlayer(playerId);
@@ -16,8 +21,24 @@ export class TransferService {
     return transfer;
   }
 
-  createTransfer(dto: CreateTransferDto) {
-    return this.repo.createTransfer(dto);
+  async createTransfer(dto: CreateTransferDto, actorId: number) {
+    const transfer = await this.repo.createTransfer(dto);
+
+    // D4: auto-terminate active contracts when player is permanently transferred or released
+    const contractTerminatingTypes = ["PERMANENT_IN", "PERMANENT_OUT", "FREE", "RELEASE"];
+    if (contractTerminatingTypes.includes(dto.type)) {
+      const terminated = await this.contractRepo.terminateActiveContracts(dto.playerId);
+      if (terminated.count > 0) {
+        void writeAuditLog({
+          actorId: actorId ?? 0,
+          action: "CONTRACTS_AUTO_TERMINATED",
+          targetId: transfer.id,
+          detail: { count: terminated.count, reason: `Transfer type: ${dto.type}`, playerId: dto.playerId },
+        }).catch(console.error);
+      }
+    }
+
+    return transfer;
   }
 
   getRecalls(status?: RecallStatus) {

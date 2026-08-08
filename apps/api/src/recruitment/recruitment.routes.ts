@@ -3,11 +3,14 @@ import { Router } from "express";
 import { RecruitmentRepository } from "./recruitment.repo";
 import { RecruitmentService } from "./recruitment.service";
 import { RecruitmentController } from "./recruitment.controller";
+import { NotificationRepository } from "../notification/notification.repo";
 import { getPrisma } from "../lib/prisma";
 
 const router = Router();
-const repo = new RecruitmentRepository(getPrisma());
-const service = new RecruitmentService(repo);
+const prisma = getPrisma();
+const repo = new RecruitmentRepository(prisma);
+const notifRepo = new NotificationRepository(prisma);
+const service = new RecruitmentService(repo, notifRepo);
 const controller = new RecruitmentController(service);
 
 // 분석 엔드포인트

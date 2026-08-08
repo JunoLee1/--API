@@ -9,7 +9,7 @@ export class SponsorshipRepository {
   constructor(private prisma: PrismaClient) {}
 
   async findAll(query: SponsorshipListQuery, page = 1, pageSize = 10) {
-    const where = query.type ? { type: query.type } : {};
+    const where = { deletedAt: null, ...(query.type ? { type: query.type } : {}) } as any;
     const [data, total] = await this.prisma.$transaction([
       this.prisma.sponsorship.findMany({
         where,
@@ -31,17 +31,19 @@ export class SponsorshipRepository {
           SELECT id FROM "Sponsorship"
           WHERE LOWER(REGEXP_REPLACE("sponsorName", '\\s+', '', 'g')) = ${normalized}
             AND id != ${excludeId}
+            AND "deletedAt" IS NULL
           LIMIT 1`
       : await this.prisma.$queryRaw<Row[]>`
           SELECT id FROM "Sponsorship"
           WHERE LOWER(REGEXP_REPLACE("sponsorName", '\\s+', '', 'g')) = ${normalized}
+            AND "deletedAt" IS NULL
           LIMIT 1`
     return rows[0] ?? null
   }
 
   findById(id: number) {
-    return this.prisma.sponsorship.findUnique({
-      where: { id },
+    return this.prisma.sponsorship.findFirst({
+      where: { id, deletedAt: null } as any,
       include: {
         ...INCLUDE,
         payments: { orderBy: { dueDate: "asc" } },
@@ -99,8 +101,23 @@ export class SponsorshipRepository {
 
   findExpiring(from: Date, to: Date) {
     return this.prisma.sponsorship.findMany({
-      where: { contractEnd: { gte: from, lte: to } },
+      where: { contractEnd: { gte: from, lte: to }, deletedAt: null } as any,
       select: { id: true, sponsorName: true, contractEnd: true },
+    });
+  }
+
+  // PA1: delete all pending payments so they can be regenerated
+  deletePayments(sponsorshipId: number) {
+    return this.prisma.sponsorshipPayment.deleteMany({
+      where: { sponsorshipId, status: "PENDING" } as any,
+    });
+  }
+
+  // PB6: soft-delete a sponsorship contract
+  softDelete(id: number) {
+    return this.prisma.sponsorship.update({
+      where: { id },
+      data: { deletedAt: new Date() } as any,
     });
   }
 }

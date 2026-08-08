@@ -2,6 +2,8 @@ import { RecruitmentRepository } from "./recruitment.repo";
 import { AppError } from "../lib/appError";
 import { maskEmail, maskPhone } from "../lib/maskPii";
 import { getPrisma } from "../lib/prisma";
+import { NotificationRepository } from "../notification/notification.repo";
+import { sendApplicationStatusEmail } from "../lib/email";
 import type {
   CreateJobPostingDto,
   UpdateJobPostingDto,
@@ -27,7 +29,10 @@ function maskApplication<T extends { email: string | null; phone: string | null;
 }
 
 export class RecruitmentService {
-  constructor(private repo: RecruitmentRepository) {}
+  constructor(
+    private repo: RecruitmentRepository,
+    private notifRepo?: NotificationRepository,
+  ) {}
 
   // --- JobPosting ---
 
@@ -93,7 +98,13 @@ export class RecruitmentService {
   async rejectApplication(id: number, actorId: number) {
     const app = await this.getApplication(id);
     if (app.status === "REJECTED") throw new AppError(409, "APPLICATION_ALREADY_REJECTED");
-    return this.repo.rejectApplication(id, actorId);
+    const result = await this.repo.rejectApplication(id, actorId);
+    // SJ6: email applicant on rejection — fetch raw (unmasked) record for email address
+    const rawApp = await this.repo.findApplicationById(id);
+    if (rawApp?.email) {
+      void sendApplicationStatusEmail(rawApp.email, rawApp.applicantName, "REJECTED").catch(console.error);
+    }
+    return result;
   }
 
   async offerApplication(id: number, offeredById: number) {
@@ -106,7 +117,13 @@ export class RecruitmentService {
     if (refCheck?.result === "FLAGGED") {
       throw new AppError(409, "REFERENCE_CHECK_FLAGGED");
     }
-    return this.repo.offerApplication(id, offeredById, offeredById);
+    const result = await this.repo.offerApplication(id, offeredById, offeredById);
+    // SJ6: email applicant on offer — fetch raw (unmasked) record for email address
+    const rawApp = await this.repo.findApplicationById(id);
+    if (rawApp?.email) {
+      void sendApplicationStatusEmail(rawApp.email, rawApp.applicantName, "OFFERED").catch(console.error);
+    }
+    return result;
   }
 
   // --- Interview ---
@@ -118,7 +135,22 @@ export class RecruitmentService {
     const targetStatus: "INTERVIEW_1" | "INTERVIEW_2" =
       dto.round === "ROUND_1" ? "INTERVIEW_1" : "INTERVIEW_2";
     await this.repo.setApplicationStatus(applicationId, targetStatus, actorId);
-    return this.repo.createInterview(applicationId, dto);
+    const interview = await this.repo.createInterview(applicationId, dto);
+
+    // S3: notify assigned interviewers
+    if (dto.interviewerIds && dto.interviewerIds.length > 0 && this.notifRepo) {
+      void this.notifRepo.createForUsers(
+        dto.interviewerIds,
+        "INTERVIEW_SCHEDULED",
+        () => ({
+          title: "면접 일정 배정됨",
+          body: `${dto.round} 면접이 배정되었습니다. 일정을 확인해주세요.`,
+        }),
+        interview.id,
+      ).catch(console.error);
+    }
+
+    return interview;
   }
 
   async updateInterview(applicationId: number, round: InterviewRound, dto: UpdateInterviewDto) {
@@ -130,7 +162,13 @@ export class RecruitmentService {
   // --- ReferenceCheck ---
 
   async createReferenceCheck(applicationId: number, dto: CreateReferenceCheckDto, actorId: number) {
-    await this.getApplication(applicationId);
+    const app = await this.getApplication(applicationId);
+
+    // CL5: consent must not be explicitly declined
+    if ((app as any).referenceCheckConsent === false) {
+      throw new AppError(409, "REFERENCE_CHECK_CONSENT_DECLINED");
+    }
+
     await this.repo.setApplicationStatus(applicationId, "REFERENCE_CHECK", actorId);
     return this.repo.createReferenceCheck(applicationId, dto);
   }

@@ -129,4 +129,14 @@ export class TrainingLoadRepository {
       select: { load: true, rpe: true },
     });
   }
+
+  findActiveInjury(playerId: string) {
+    return this.prisma.injury.findFirst({
+      where: {
+        playerId,
+        status: { in: ["OCCURRED", "DIAGNOSED", "REHABILITATING"] as any },
+      },
+      select: { id: true, status: true },
+    });
+  }
 }

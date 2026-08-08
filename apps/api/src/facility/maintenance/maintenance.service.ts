@@ -1,5 +1,6 @@
 import { AppError } from "../../lib/appError";
 import { writeAuditLog } from "../../lib/auditLog";
+import { formatLedgerDescription } from "../../lib/ledger-formatter";
 import { NotificationService } from "../../notification/notification.service";
 import type { MaintenanceRepository } from "./maintenance.repo";
 import type { CreateMaintenanceDto, UpdateMaintenanceDto, MaintenanceListQuery } from "./dto/maintenance.dto";
@@ -80,7 +81,7 @@ export class MaintenanceService {
         currency: "KRW",
         exchangeRate: 1,
         amountKrw: Number(existing.actualCost),
-        description: `시설 수리 완료 - ${existing.title}`,
+        description: formatLedgerDescription("facility", "repair_completed", { title: existing.title }),
         relatedModule: "facility",
         relatedId: id,
       }, gmId).catch(err => console.error("[LedgerAutoEntry:facility]", err));

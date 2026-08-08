@@ -1,6 +1,7 @@
 import { PrismaClient } from "../generated/client";
 import { AppError } from "../lib/appError";
 import { writeAuditLog } from "../lib/auditLog";
+import { formatLedgerDescription } from "../lib/ledger-formatter";
 import type { SalesRepository } from "./sales.repo";
 import type { CreateSalesRecordDto } from "./dto/sales.dto";
 
@@ -74,7 +75,7 @@ export class SalesService {
             exchangeRate: 1,
             amountKrw: totalAmount,
             isRefund: false,
-            description: `티켓 판매 — ${matchHomeTeamName} vs ${matchAwayTeamName}`,
+            description: formatLedgerDescription("sales", "ticket_sale", { home: matchHomeTeamName!, away: matchAwayTeamName! }),
             relatedModule: "SalesRecord",
             relatedId: record.id,
             createdById,

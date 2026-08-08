@@ -2,6 +2,7 @@ import { EquipmentRepository } from "./equipment.repo";
 import { NotificationRepository } from "../notification/notification.repo";
 import { AppError } from "../lib/appError";
 import { writeAuditLog } from "../lib/auditLog";
+import { formatLedgerDescription } from "../lib/ledger-formatter";
 import { CreateEquipmentItemDto, UpdateQuantityDto, UpdateUnitStatusDto, CreateAssignmentDto, CreateEquipmentLoanDto, CreateEquipmentUnitDto } from "./dto/equipment.dto";
 import { EquipmentUnitStatus, EquipmentLoanStatus } from "../generated/enums";
 import type { LedgerService } from "../ledger/ledger.service";
@@ -109,7 +110,7 @@ export class EquipmentService {
           exchangeRate: 1,
           amountKrw: Number(unitWithBook.bookValue),
           isRefund: true,
-          description: `장비 폐기 - Unit #${unitId}`,
+          description: formatLedgerDescription("equipment", "retired", { unitId }),
           relatedModule: "equipment",
           relatedId: unitId,
         }, userId ?? 0).catch(err => console.error("[LedgerAutoEntry:equipment]", err));

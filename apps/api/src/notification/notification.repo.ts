@@ -236,6 +236,21 @@ export class NotificationRepository {
     });
   }
 
+  async createForUsers(
+    userIds: number[],
+    type: string,
+    getMsg: (locale?: string) => { title: string; body: string },
+    entityId?: number,
+  ) {
+    if (userIds.length === 0) return;
+    return this.prisma.notification.createMany({
+      data: userIds.map((userId) => {
+        const { title, body } = getMsg();
+        return { userId, type, title, body, ...(entityId !== undefined && { entityId }) } as any;
+      }),
+    });
+  }
+
   createForAllStaff(type: string, getMsg: MsgFactory, entityId?: number) {
     return this.prisma.$transaction(async (tx) => {
       const users = await tx.user.findMany({
