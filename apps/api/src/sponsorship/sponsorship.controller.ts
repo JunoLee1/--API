@@ -69,4 +69,14 @@ export class SponsorshipController {
       );
     } catch (err) { next(err); }
   };
+
+  // PB6: soft-delete a sponsorship contract
+  delete = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole, id: userId } = requireUser(req);
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      await this.service.delete(Number(req.params["id"]), userId);
+      res.status(204).send();
+    } catch (err) { next(err); }
+  };
 }

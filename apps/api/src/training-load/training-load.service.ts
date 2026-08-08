@@ -39,6 +39,13 @@ export class TrainingLoadService {
       if (!isPhysicalCoach && !isHeadCoach && !isAdmin) throw new AppError(403, "LOAD_COACH_ONLY");
     }
 
+    // BH10: warn if player has active injury
+    void this.repo.findActiveInjury(dto.playerId).then(async (activeInjury) => {
+      if (activeInjury) {
+        console.warn(`[TrainingLoad] Player ${dto.playerId} has active injury (${activeInjury.status}) but training load is being recorded`);
+      }
+    }).catch(console.error);
+
     const result = await this.repo.upsert(dto);
 
     if (dto.load !== undefined) {

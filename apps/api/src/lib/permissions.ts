@@ -65,3 +65,6 @@ export const canReadActiveInjury = (role: string, coachingRole?: string | null):
 export const canReadInjuryReport = (role: string, coachingRole?: string | null): boolean =>
   isAdminLike(role) ||
   (role === 'COACHING_STAFF' && (coachingRole === 'MEDICAL' || coachingRole === 'MEDICAL_DIRECTOR'))
+
+export const isHeadCoach = (role: string, coachingRole?: string | null): boolean =>
+  role === 'COACHING_STAFF' && coachingRole === 'HEAD_COACH'

@@ -114,6 +114,13 @@ export class ContractRepository {
     });
   }
 
+  terminateActiveContracts(playerId: string) {
+    return this.prisma.contract.updateMany({
+      where: { playerId, status: "ACTIVE" },
+      data: { status: "TERMINATED" },
+    });
+  }
+
   getSquadSalarySummary() {
     return this.prisma.contract.groupBy({
       by: ["playerId"],

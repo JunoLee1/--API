@@ -7,6 +7,14 @@ import { NotificationRepository } from "../notification/notification.repo";
 import { getIO } from "../lib/io";
 import { writeAuditLog } from "../lib/auditLog";
 
+const VALID_INJURY_TRANSITIONS: Record<string, string[]> = {
+  OCCURRED: ["DIAGNOSED"],
+  DIAGNOSED: ["REHABILITATING", "OCCURRED"],
+  REHABILITATING: ["READY_TO_RETURN", "DIAGNOSED"],
+  READY_TO_RETURN: ["RETURNED", "REHABILITATING"],
+  RETURNED: [],
+};
+
 const DUE_DAYS: Record<ExternalReportTarget, number> = {
   EDUCATION_OFFICE: 3,
   SCHOOL_SAFETY: 3,
@@ -76,6 +84,10 @@ export class InjuryService {
   async updateStatus(id: number, dto: UpdateInjuryStatusDto) {
     const injury = await this.repo.findById(id);
     if (!injury) throw new AppError(404, "INJURY_NOT_FOUND");
+    const allowed = VALID_INJURY_TRANSITIONS[injury.status] ?? [];
+    if (!allowed.includes(dto.status)) {
+      throw new AppError(400, "INVALID_INJURY_STATUS_TRANSITION");
+    }
     const result = await this.repo.updateStatus(id, dto);
     try {
       const player = await this.repo.getPlayerWithGuardian(injury.playerId);
