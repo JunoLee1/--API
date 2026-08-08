@@ -26,9 +26,10 @@ const checkWriteFinance = (req: Request, res: Response, next: NextFunction) => {
   next();
 };
 
-router.get("/",    auth, checkReadFinance, controller.list);
-router.post("/",   auth, checkWriteFinance, controller.create);
-router.get("/:id", auth, checkReadFinance, controller.get);
+router.get("/",          auth, checkReadFinance, controller.list);
+router.get("/expiring",  auth, checkReadFinance, controller.getExpiring);
+router.post("/",         auth, checkWriteFinance, controller.create);
+router.get("/:id",       auth, checkReadFinance, controller.get);
 router.patch("/:id", auth, checkWriteFinance, controller.update);
 router.get("/:id/payments", auth, checkReadFinance, controller.getPayments);
 router.patch("/:id/payments/:paymentId", auth, checkWriteFinance, controller.markPaid);

@@ -1,6 +1,7 @@
 import { EquipmentRepository } from "./equipment.repo";
 import { NotificationRepository } from "../notification/notification.repo";
 import { AppError } from "../lib/appError";
+import { writeAuditLog } from "../lib/auditLog";
 import { CreateEquipmentItemDto, UpdateQuantityDto, UpdateUnitStatusDto, CreateAssignmentDto, CreateEquipmentLoanDto, CreateEquipmentUnitDto } from "./dto/equipment.dto";
 import { EquipmentUnitStatus, EquipmentLoanStatus } from "../generated/enums";
 import type { LedgerService } from "../ledger/ledger.service";
@@ -92,6 +93,12 @@ export class EquipmentService {
     if (!allowed.includes(dto.status)) throw new AppError(409, "INVALID_STATUS_TRANSITION");
     const updated = await this.repo.updateUnitStatus(unitId, dto.status);
     if (dto.status === "RETIRED") {
+      void writeAuditLog({
+        actorId: userId ?? 0,
+        action: "EQUIPMENT_UNIT_RETIRED",
+        targetId: unitId,
+        detail: { previousStatus: unit.status },
+      }).catch(console.error);
       const unitWithBook = await this.repo.findUnitWithDepreciation(unitId);
       if (unitWithBook?.bookValue) {
         void this.ledgerService.createAutoEntry({
@@ -184,11 +191,17 @@ export class EquipmentService {
     });
   }
 
-  async returnLoan(loanId: number) {
+  async returnLoan(loanId: number, returnedById: number) {
     const loan = await this.repo.findLoanById(loanId);
     if (!loan) throw new AppError(404, "LOAN_NOT_FOUND");
     if (loan.status !== "ISSUED") throw new AppError(409, "INVALID_LOAN_STATUS_TRANSITION");
-    return this.repo.updateLoan(loanId, { status: "RETURNED", returnedAt: new Date() });
+    const result = await this.repo.updateLoan(loanId, { status: "RETURNED", returnedAt: new Date() });
+    void writeAuditLog({
+      actorId: returnedById,
+      action: "EQUIPMENT_LOAN_RETURNED",
+      targetId: loanId,
+    }).catch(console.error);
+    return result;
   }
 
   listLoans(status?: EquipmentLoanStatus) {

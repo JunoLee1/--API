@@ -35,11 +35,11 @@ export class SalesController {
 
   delete = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
+      const { role, frontOfficeRole, id: userId } = requireUser(req);
       if (!canWriteFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const id = Number(req.params["id"]);
       if (!id) throw new AppError(400, "ID_REQUIRED");
-      await this.service.delete(id);
+      await this.service.delete(id, userId);
       res.status(204).end();
     } catch (e) { next(e); }
   };

@@ -96,4 +96,11 @@ export class SponsorshipRepository {
       data,
     });
   }
+
+  findExpiring(from: Date, to: Date) {
+    return this.prisma.sponsorship.findMany({
+      where: { contractEnd: { gte: from, lte: to } },
+      select: { id: true, sponsorName: true, contractEnd: true },
+    });
+  }
 }

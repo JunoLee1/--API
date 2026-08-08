@@ -77,7 +77,7 @@ export class PlayerController {
     try {
       const user = requireUser(req);
       if (!isAdminLike(user.role)) throw new AppError(403, "FORBIDDEN");
-      const result = await this.service.updatePlayerStatus(String(req.params["id"]), req.body);
+      const result = await this.service.updatePlayerStatus(String(req.params["id"]), req.body, user.id);
       res.status(200).json(result);
     } catch (err) {
       next(err);

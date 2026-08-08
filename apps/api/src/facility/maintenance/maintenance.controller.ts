@@ -5,6 +5,14 @@ import { requireUser } from "../../lib/authMiddleware";
 import type { MaintenanceService } from "./maintenance.service";
 import type { CreateMaintenanceDto, UpdateMaintenanceDto, MaintenanceListQuery } from "./dto/maintenance.dto";
 
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  OPEN: ["IN_PROGRESS", "REJECTED"],
+  IN_PROGRESS: ["PENDING_APPROVAL", "REJECTED"],
+  PENDING_APPROVAL: ["RESOLVED", "REJECTED", "IN_PROGRESS"],
+  RESOLVED: [],
+  REJECTED: [],
+};
+
 const isFacilityManager = (req: Request) => {
   const user = requireUser(req);
   return isAdminLike(user.role) ||
@@ -43,14 +51,22 @@ export class MaintenanceController {
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!isFacilityManager(req)) throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.update(Number(req.params.id), req.body as UpdateMaintenanceDto));
+      const { id: updatedById } = requireUser(req);
+      res.json(await this.service.update(Number(req.params.id), req.body as UpdateMaintenanceDto, updatedById));
     } catch (err) { next(err); }
   };
 
   updateStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!isFacilityManager(req)) throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.updateStatus(Number(req.params.id), req.body.status));
+      const id = Number(req.params.id);
+      const { status } = req.body as { status: string };
+      const existing = await this.service.get(id);
+      const allowed = VALID_TRANSITIONS[existing.status] ?? [];
+      if (!allowed.includes(status)) {
+        throw new AppError(400, "INVALID_STATUS_TRANSITION");
+      }
+      res.json(await this.service.updateStatus(id, status));
     } catch (err) { next(err); }
   };
 

@@ -1,6 +1,7 @@
 import { RecruitmentRepository } from "./recruitment.repo";
 import { AppError } from "../lib/appError";
 import { maskEmail, maskPhone } from "../lib/maskPii";
+import { getPrisma } from "../lib/prisma";
 import type {
   CreateJobPostingDto,
   UpdateJobPostingDto,
@@ -89,27 +90,34 @@ export class RecruitmentService {
     return this.repo.updateApplication(id, dto);
   }
 
-  async rejectApplication(id: number) {
+  async rejectApplication(id: number, actorId: number) {
     const app = await this.getApplication(id);
     if (app.status === "REJECTED") throw new AppError(409, "APPLICATION_ALREADY_REJECTED");
-    return this.repo.rejectApplication(id);
+    return this.repo.rejectApplication(id, actorId);
   }
 
   async offerApplication(id: number, offeredById: number) {
     const app = await this.getApplication(id);
     if (app.status !== "REFERENCE_CHECK") throw new AppError(409, "APPLICATION_NOT_IN_REFERENCE_CHECK");
-    return this.repo.offerApplication(id, offeredById);
+    const refCheck = await getPrisma().referenceCheck.findUnique({
+      where: { applicationId: id },
+      select: { result: true },
+    });
+    if (refCheck?.result === "FLAGGED") {
+      throw new AppError(409, "REFERENCE_CHECK_FLAGGED");
+    }
+    return this.repo.offerApplication(id, offeredById, offeredById);
   }
 
   // --- Interview ---
 
-  async scheduleInterview(applicationId: number, dto: CreateInterviewDto) {
+  async scheduleInterview(applicationId: number, dto: CreateInterviewDto, actorId: number) {
     await this.getApplication(applicationId);
     const existing = await this.repo.findInterview(applicationId, dto.round);
     if (existing) throw new AppError(409, "INTERVIEW_ALREADY_EXISTS");
     const targetStatus: "INTERVIEW_1" | "INTERVIEW_2" =
       dto.round === "ROUND_1" ? "INTERVIEW_1" : "INTERVIEW_2";
-    await this.repo.setApplicationStatus(applicationId, targetStatus);
+    await this.repo.setApplicationStatus(applicationId, targetStatus, actorId);
     return this.repo.createInterview(applicationId, dto);
   }
 
@@ -121,9 +129,9 @@ export class RecruitmentService {
 
   // --- ReferenceCheck ---
 
-  async createReferenceCheck(applicationId: number, dto: CreateReferenceCheckDto) {
+  async createReferenceCheck(applicationId: number, dto: CreateReferenceCheckDto, actorId: number) {
     await this.getApplication(applicationId);
-    await this.repo.setApplicationStatus(applicationId, "REFERENCE_CHECK");
+    await this.repo.setApplicationStatus(applicationId, "REFERENCE_CHECK", actorId);
     return this.repo.createReferenceCheck(applicationId, dto);
   }
 
@@ -158,7 +166,32 @@ export class RecruitmentService {
     if (!onboarding) throw new AppError(404, "ONBOARDING_NOT_FOUND");
     if (!onboarding.emailVerifiedAt) throw new AppError(409, "EMAIL_NOT_VERIFIED");
     if (onboarding.mfaRegisteredAt) throw new AppError(409, "MFA_ALREADY_REGISTERED");
-    return this.repo.markMfaRegistered(applicationId);
+    const result = await this.repo.markMfaRegistered(applicationId);
+
+    // Mark application as ONBOARDED (system-initiated, no human actorId — use 0 as sentinel)
+    const prisma = getPrisma();
+    const application = await this.repo.findApplicationById(applicationId);
+    if (application) {
+      await this.repo.completeOnboarding(applicationId, 0);
+
+      // Auto-create StaffRecord if not already exists
+      const existingRecord = await prisma.staffRecord.findFirst({
+        where: { employeeId: String(applicationId) },
+      });
+      if (!existingRecord) {
+        await prisma.staffRecord.create({
+          data: {
+            name: application.applicantName,
+            role: application.posting?.title ?? "Staff",
+            employeeId: String(applicationId),
+            isActive: true,
+            createdById: application.offeredById ?? 1,
+          },
+        });
+      }
+    }
+
+    return result;
   }
 
   getHeadcountProgress() {
@@ -169,8 +202,8 @@ export class RecruitmentService {
     return this.repo.getTimeToHireStats();
   }
 
-  addInterviewerScore(interviewId: number, data: { interviewerId: number; scoreSkill?: number; scoreComm?: number; scoreCulture?: number; comment?: string }) {
-    return this.repo.addInterviewerScore({ interviewId, ...data });
+  addInterviewerScore(interviewId: number, data: { interviewerId: number; scoreSkill?: number; scoreComm?: number; scoreCulture?: number; comment?: string }, actorId: number) {
+    return this.repo.addInterviewerScore({ interviewId, ...data }, actorId);
   }
 
   getInterviewerScores(interviewId: number) {

@@ -35,6 +35,8 @@ router.post("/applications/:id/offer", auth, controller.offerApplication);
 // Interviews
 router.post("/applications/:id/interviews", auth, controller.scheduleInterview);
 router.patch("/applications/:id/interviews/:round", auth, controller.updateInterview);
+router.post("/interviews/:id/scores", auth, controller.addInterviewerScore);
+router.get("/interviews/:id/scores", auth, controller.getInterviewerScores);
 
 // Reference check
 router.post("/applications/:id/reference-check", auth, controller.createReferenceCheck);

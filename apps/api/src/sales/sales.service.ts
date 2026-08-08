@@ -1,5 +1,6 @@
 import { PrismaClient } from "../generated/client";
 import { AppError } from "../lib/appError";
+import { writeAuditLog } from "../lib/auditLog";
 import type { SalesRepository } from "./sales.repo";
 import type { CreateSalesRecordDto } from "./dto/sales.dto";
 
@@ -11,7 +12,7 @@ export class SalesService {
     private prisma: PrismaClient,
   ) {}
 
-  findAll() { return this.repo.findAll(); }
+  findAll() { return this.repo.findAll({ deletedAt: null } as any); }
 
   async findByMatch(matchId: number) {
     return this.repo.findByMatch(matchId);
@@ -28,12 +29,22 @@ export class SalesService {
       if (!dto.matchId) throw new AppError(400, "MATCH_ID_REQUIRED_FOR_TICKET");
       const match = await this.prisma.match.findUnique({
         where: { id: dto.matchId },
-        select: { homeTeamName: true, awayTeamName: true },
+        select: { homeTeamName: true, awayTeamName: true, capacity: true },
       });
       if (!match) throw new AppError(404, "MATCH_NOT_FOUND");
       if (match.homeTeamName !== FC_SEOUL) throw new AppError(400, "AWAY_MATCH_TICKET_NOT_ALLOWED");
       matchHomeTeamName = match.homeTeamName;
       matchAwayTeamName = match.awayTeamName;
+
+      // JO3: capacity check — ensure sale doesn't exceed match seat limit
+      const sold = await this.prisma.salesRecord.aggregate({
+        where: { matchId: dto.matchId, type: "TICKET", deletedAt: null } as any,
+        _sum: { quantity: true },
+      });
+      const soldQty = Number((sold._sum as any).quantity ?? 0);
+      if (match.capacity && soldQty + dto.quantity > match.capacity) {
+        throw new AppError(400, "MATCH_CAPACITY_EXCEEDED");
+      }
     }
 
     const totalAmount = dto.quantity * dto.unitPrice;
@@ -75,8 +86,26 @@ export class SalesService {
     });
   }
 
-  async delete(id: number) {
-    return this.repo.delete(id);
+  async delete(id: number, deletedById: number) {
+    await this.prisma.$transaction(async (tx) => {
+      // BS1: roll back the ledger entry linked to this sales record
+      await tx.ledgerEntry.deleteMany({
+        where: { relatedModule: "SalesRecord", relatedId: id },
+      });
+
+      // JO1: soft-delete instead of hard delete
+      await tx.salesRecord.update({
+        where: { id },
+        data: { deletedAt: new Date(), updatedById: deletedById, updatedAt: new Date() } as any,
+      });
+    });
+
+    // JO8: audit trail for deletion
+    await writeAuditLog({
+      actorId: deletedById,
+      action: "SALES_RECORD_DELETED",
+      targetId: id,
+    });
   }
 
   async getSummary() {

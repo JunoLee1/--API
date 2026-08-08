@@ -4,8 +4,9 @@ import type { CreateSalesRecordDto } from "./dto/sales.dto";
 export class SalesRepository {
   constructor(private prisma: PrismaClient) {}
 
-  findAll() {
+  findAll(extraWhere?: Record<string, unknown>) {
     return this.prisma.salesRecord.findMany({
+      where: { deletedAt: null, ...extraWhere } as any,
       orderBy: { saleDate: "desc" },
       include: { match: { select: { id: true, homeTeamName: true, awayTeamName: true, date: true } } },
     });

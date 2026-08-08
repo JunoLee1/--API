@@ -1,4 +1,5 @@
 import { AppError } from "../lib/appError";
+import { writeAuditLog } from "../lib/auditLog";
 import type { SponsorshipRepository } from "./sponsorship.repo";
 import type { CreateSponsorshipDto, UpdateSponsorshipDto, SponsorshipListQuery } from "./dto/sponsorship.dto";
 import type { PaymentSchedule } from "../generated/enums";
@@ -56,12 +57,19 @@ export class SponsorshipService {
     return this.get(sponsorship.id);
   }
 
-  async update(id: number, dto: UpdateSponsorshipDto) {
+  async update(id: number, dto: UpdateSponsorshipDto, updatedById: number) {
     await this.get(id);
     if (dto.sponsorName && await this.repo.findBySponsorName(dto.sponsorName, id)) {
       throw new AppError(409, "SPONSORSHIP_NAME_DUPLICATE");
     }
-    return this.repo.update(id, dto);
+    const result = await this.repo.update(id, dto);
+    void writeAuditLog({
+      actorId: updatedById,
+      action: "SPONSORSHIP_UPDATED",
+      targetId: id,
+      detail: { fields: Object.keys(dto) },
+    }).catch(console.error);
+    return result;
   }
 
   async getPayments(id: number) {
@@ -77,8 +85,9 @@ export class SponsorshipService {
       throw new AppError(404, "SPONSORSHIP_PAYMENT_NOT_FOUND");
     }
     if (payment.status === "PAID") throw new AppError(409, "ALREADY_PAID");
+    if (Number(payment.amount) <= 0) throw new AppError(400, "INVALID_PAYMENT_AMOUNT");
     const updated = await this.repo.updatePayment(paymentId, { status: "PAID", paidAt: new Date() });
-    void this.ledgerService.createAutoEntry({
+    await this.ledgerService.createAutoEntry({
       type: "INCOME",
       category: "SPONSORSHIP",
       amount: Number(payment.amount),
@@ -88,8 +97,14 @@ export class SponsorshipService {
       description: `스폰서십 수입 - ${sponsorship.sponsorName} payment #${paymentId}`,
       relatedModule: "sponsorship",
       relatedId: sponsorshipId,
-    }, userId).catch(err => console.error("[LedgerAutoEntry:sponsorship]", err));
+    }, userId);
     return updated;
+  }
+
+  async findExpiringContracts(daysAhead: number = 30) {
+    const now = new Date();
+    const threshold = new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000);
+    return this.repo.findExpiring(now, threshold);
   }
 
   private applyOverdue(payments: any[]) {

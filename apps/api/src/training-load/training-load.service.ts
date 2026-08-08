@@ -47,26 +47,33 @@ export class TrainingLoadService {
       if (isWeeklyOverload(total)) {
         const player = await this.repo.getPlayerName(dto.playerId);
         const playerName = player?.playerName ?? dto.playerId;
-        void Promise.all([
-          this.notifRepo
-            .createForPhysicalCoach(
+        try {
+          await Promise.all([
+            this.notifRepo.createForPhysicalCoach(
               "TRAINING_LOAD_ALERT",
               () => ({
                 title: "훈련 부하 초과",
                 body: `${playerName} 선수의 이번 주 누적 부하(${total})가 임계값(${WEEKLY_LOAD_THRESHOLD})을 초과했습니다.`,
               }),
-            )
-            .catch(console.error),
-          this.notifRepo
-            .createForHeadCoach(
+            ).catch(console.error),
+            this.notifRepo.createForHeadCoach(
               "TRAINING_LOAD_ALERT",
               () => ({
                 title: "훈련 부하 초과",
                 body: `${playerName} 선수의 이번 주 누적 부하(${total})가 임계값(${WEEKLY_LOAD_THRESHOLD})을 초과했습니다.`,
               }),
-            )
-            .catch(console.error),
-        ]);
+            ).catch(console.error),
+            this.notifRepo.createForMedicalDirector(
+              "TRAINING_LOAD_ALERT",
+              () => ({
+                title: "훈련 부하 초과",
+                body: `${playerName} 선수의 이번 주 누적 부하(${total})가 임계값(${WEEKLY_LOAD_THRESHOLD})을 초과했습니다.`,
+              }),
+            ).catch(console.error),
+          ]);
+        } catch (err) {
+          console.error("[TrainingLoad:overload-notify]", err);
+        }
       }
     }
 
@@ -134,11 +141,14 @@ export class TrainingLoadService {
   }
 
   private getWeekStart(date: Date): Date {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    d.setDate(diff);
-    d.setHours(0, 0, 0, 0);
-    return d;
+    // Convert to KST (UTC+9) before calculating week boundary
+    const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+    const kstTime = new Date(date.getTime() + KST_OFFSET_MS);
+    const day = kstTime.getUTCDay(); // 0=Sunday, 1=Monday
+    const diff = kstTime.getUTCDate() - day + (day === 0 ? -6 : 1);
+    kstTime.setUTCDate(diff);
+    kstTime.setUTCHours(0, 0, 0, 0);
+    // Return as UTC (subtract KST offset)
+    return new Date(kstTime.getTime() - KST_OFFSET_MS);
   }
 }
