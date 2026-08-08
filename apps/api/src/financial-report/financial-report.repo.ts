@@ -7,6 +7,7 @@ export interface RevenueBreakdownDto {
   revenueMerchandise?: number;
   revenueSubsidy?: number;
   revenueParentCompany?: number;
+  revenueAcademyFee?: number;
   revenueOther?: number;
 }
 
@@ -18,6 +19,7 @@ export function sumBreakdown(b: RevenueBreakdownDto): number {
     (b.revenueMerchandise ?? 0) +
     (b.revenueSubsidy ?? 0) +
     (b.revenueParentCompany ?? 0) +
+    (b.revenueAcademyFee ?? 0) +
     (b.revenueOther ?? 0)
   );
 }
@@ -45,6 +47,7 @@ export class FinancialReportRepository {
           revenueMerchandise: breakdown.revenueMerchandise ?? 0,
           revenueSubsidy: breakdown.revenueSubsidy ?? 0,
           revenueParentCompany: breakdown.revenueParentCompany ?? 0,
+          revenueAcademyFee: breakdown.revenueAcademyFee ?? 0,
           revenueOther: breakdown.revenueOther ?? 0,
         }
       : {};

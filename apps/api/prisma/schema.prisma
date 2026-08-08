@@ -2161,6 +2161,7 @@ model FinancialReport {
   revenueMerchandise   Int      @default(0)
   revenueSubsidy       Int      @default(0)
   revenueParentCompany Int      @default(0)
+  revenueAcademyFee    Int      @default(0)
   revenueOther         Int      @default(0)
   totalOperatingBudget Int?
   contingencyReserve   Int?     @default(0)

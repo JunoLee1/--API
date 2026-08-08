@@ -15,6 +15,8 @@ export function formatLedgerDescription(
       return `${tag} 급여 지급 — salaryId ${context["salaryId"]}, run #${context["runId"]}`;
     case "equipment:retired":
       return `${tag} 장비 폐기 — Unit #${context["unitId"]}`;
+    case "academy_fee:payment_approved":
+      return `${tag} 아카데미 회비 수납 — ${context["player"]} ${context["period"]}`;
     case "ledger:refund":
       return `${tag} Refund for entry #${context["entryId"]}`;
     default:

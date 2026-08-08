@@ -136,10 +136,22 @@ export class FinancialReportService {
     });
     const revenueSponsorship = Number(sponsorResult._sum.amount ?? 0);
 
+    // 4. 아카데미 회비 실수입 (LedgerEntry category=ACADEMY_FEE, 전년도 시즌 기간)
+    const academyFeeResult = await prisma.ledgerEntry.aggregate({
+      where: {
+        category: "ACADEMY_FEE",
+        type: "INCOME",
+        createdAt: { gte: prevSeason.startDate, lte: prevSeason.endDate },
+      },
+      _sum: { amountKrw: true },
+    });
+    const revenueAcademyFee = Number(academyFeeResult._sum.amountKrw ?? 0);
+
     const breakdown: RevenueBreakdownDto = {
       revenueTicket,
       revenueSponsorship,
       revenueMerchandise,
+      revenueAcademyFee,
       revenueBroadcast: 0,     // 중계권 — 시스템 외부 데이터, 0으로 초기화
       revenueSubsidy: 0,       // 지자체 보조금 — 수동 입력
       revenueParentCompany: 0, // 모기업 지원금 — 수동 입력

@@ -8,6 +8,7 @@ export interface RevenueBreakdown {
   revenueMerchandise: number
   revenueSubsidy: number
   revenueParentCompany: number
+  revenueAcademyFee: number
   revenueOther: number
 }
 
@@ -24,6 +25,7 @@ export interface FinancialReport {
   revenueMerchandise?: number
   revenueSubsidy?: number
   revenueParentCompany?: number
+  revenueAcademyFee?: number
   revenueOther?: number
 }
 
