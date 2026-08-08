@@ -35,7 +35,7 @@ export class SalesService {
 
     const totalAmount = dto.quantity * dto.unitPrice;
 
-    return this.prisma.$transaction(async (tx) => {
+    const record = await this.prisma.$transaction(async (tx) => {
       // BUG-2: capacity 체크를 트랜잭션 안으로 이동 — race condition 방지
       // JO3: COMPLIMENTARY/VIP_TICKET도 좌석 점유 → 전체 티켓 타입 포함
       const isTicketType = (t: string) =>
@@ -117,6 +117,14 @@ export class SalesService {
 
       return record;
     });
+
+    await writeAuditLog({
+      actorId: createdById,
+      action: "SALES_RECORD_CREATED",
+      targetId: record.id,
+      detail: { type: dto.type, quantity: dto.quantity, totalAmount, matchId: dto.matchId ?? null },
+    });
+    return record;
   }
 
   async createBatch(dtos: CreateSalesRecordDto[], createdById: number) {
