@@ -87,7 +87,8 @@ export class MaintenanceController {
   reject = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!isFacilityManager(req) && !isGM(req)) throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.reject(Number(req.params.id), req.body.reason));
+      const { id: actorId } = requireUser(req);
+      res.json(await this.service.reject(Number(req.params.id), req.body.reason, actorId));
     } catch (err) { next(err); }
   };
 }

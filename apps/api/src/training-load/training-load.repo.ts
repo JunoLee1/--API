@@ -18,19 +18,32 @@ export class TrainingLoadRepository {
     });
   }
 
-  upsert(dto: UpsertTrainingLoadDto) {
+  async upsert(dto: UpsertTrainingLoadDto) {
+    // KN10: fetch existing record to preserve previous values for audit trail
+    const existing = await this.prisma.trainingLoad.findFirst({
+      where: { playerId: dto.playerId, sessionId: dto.sessionId },
+      select: { rpe: true, load: true, version: true },
+    });
+
     return this.prisma.trainingLoad.upsert({
       where: { playerId_sessionId: { playerId: dto.playerId, sessionId: dto.sessionId } },
       create: {
         playerId: dto.playerId,
         sessionId: dto.sessionId,
-        rpe: dto.rpe ?? 5,
+        // BH1: no default value for rpe — only set when explicitly provided
+        ...(dto.rpe !== undefined && { rpe: dto.rpe }),
         load: dto.load ?? null,
       },
       update: {
         ...(dto.rpe !== undefined && { rpe: dto.rpe }),
         ...(dto.load !== undefined && { load: dto.load }),
-      },
+        // KN10: preserve previous values for audit trail
+        ...(existing && {
+          previousRpe: existing.rpe,
+          previousLoad: existing.load,
+          version: (existing.version ?? 0) + 1,
+        }),
+      } as any,
     });
   }
 
@@ -52,7 +65,7 @@ export class TrainingLoadRepository {
   getPlayerName(playerId: string) {
     return this.prisma.player.findUnique({
       where: { id: playerId },
-      select: { playerName: true },
+      select: { playerName: true, position: true },
     });
   }
 

@@ -65,7 +65,7 @@ export class StaffRecordRepository {
   terminate(id: number, terminatedAt: Date) {
     return this.prisma.staffRecord.update({
       where: { id },
-      data: { terminatedAt, isActive: false },
+      data: { terminatedAt, isActive: false, employmentEndDate: terminatedAt } as any,
       include: { department: { include: { parent: { select: { id: true, name: true } } } } },
     });
   }

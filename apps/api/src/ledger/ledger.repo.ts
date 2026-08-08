@@ -28,6 +28,14 @@ export class LedgerRepository {
     });
   }
 
+  // BS2: mark a SalesRecord as refunded when its linked ledger entry is reversed
+  markSalesRecordRefunded(salesRecordId: number) {
+    return this.prisma.salesRecord.update({
+      where: { id: salesRecordId },
+      data: { isRefunded: true, refundedAt: new Date() } as any,
+    });
+  }
+
   create(data: CreateLedgerEntryDto & { createdById: number; amountKrw: number }) {
     return this.prisma.ledgerEntry.create({
       data: {

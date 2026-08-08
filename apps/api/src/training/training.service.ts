@@ -172,6 +172,27 @@ export class TrainingService {
       targetId: resultId,
       detail: { before: result.attendance, after: attendance, reason: reason.trim() },
     });
+
+    // S1: re-evaluate penalty condition when corrected to a present-equivalent status
+    if (attendance === "PRESENT" || attendance === "LATE_AUTHORIZED") {
+      void (async () => {
+        const { absences, lateCount } = await this.repo.countUnexcusedAttendance(result.playerId);
+        const effective = calcEffectiveAbsences(absences, lateCount);
+        // Log that the penalty threshold was re-evaluated after correction
+        await writeAuditLog({
+          actorId: adminId,
+          action: "ATTENDANCE_PENALTY_CONDITION_REEVALUATED",
+          targetId: resultId,
+          detail: {
+            playerId: result.playerId,
+            effectiveAbsences: effective,
+            penaltyThresholdMet: shouldTriggerPenalty(effective),
+            reason: "Attendance corrected to present-equivalent status",
+          },
+        });
+      })().catch(console.error);
+    }
+
     return updated;
   }
 }
