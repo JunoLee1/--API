@@ -139,7 +139,8 @@ export class EquipmentController {
     try {
       const { role, frontOfficeRole, id: userId } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
-      res.status(200).json(await this.service.returnLoan(Number(req.params["loanId"]), userId));
+      const { returnNote } = req.body as { returnNote?: string };
+      res.status(200).json(await this.service.returnLoan(Number(req.params["loanId"]), userId, returnNote));
     } catch (err) { next(err); }
   };
 }

@@ -40,7 +40,8 @@ export class StaffRecordService {
       const existing = await this.repo.findByEmployeeId(data.employeeId);
       if (existing) throw new AppError(409, "STAFF_ALREADY_EXISTS");
     }
-    return this.repo.create({ ...data, createdById });
+    // S5: record employment start date on creation
+    return this.repo.create({ ...data, createdById, employmentStartDate: new Date() } as any);
   }
 
   async update(
@@ -48,7 +49,12 @@ export class StaffRecordService {
     data: { name?: string; role?: string; departmentId?: number | null; phone?: string; isActive?: boolean; notes?: string }
   ) {
     await this.get(id);
-    return this.repo.update(id, data);
+    // S5: when deactivating via update, record employment end date
+    const updateData: typeof data & { employmentEndDate?: Date } = { ...data };
+    if (data.isActive === false) {
+      updateData.employmentEndDate = new Date();
+    }
+    return this.repo.update(id, updateData as any);
   }
 
   async delete(id: number) {

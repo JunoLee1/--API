@@ -192,15 +192,16 @@ export class EquipmentService {
     });
   }
 
-  async returnLoan(loanId: number, returnedById: number) {
+  async returnLoan(loanId: number, returnedById: number, returnNote?: string) {
     const loan = await this.repo.findLoanById(loanId);
     if (!loan) throw new AppError(404, "LOAN_NOT_FOUND");
     if (loan.status !== "ISSUED") throw new AppError(409, "INVALID_LOAN_STATUS_TRANSITION");
-    const result = await this.repo.updateLoan(loanId, { status: "RETURNED", returnedAt: new Date() });
+    const result = await this.repo.returnLoan(loanId, returnedById, returnNote);
     void writeAuditLog({
       actorId: returnedById,
       action: "EQUIPMENT_LOAN_RETURNED",
       targetId: loanId,
+      detail: { ...(returnNote && { returnNote }) },
     }).catch(console.error);
     return result;
   }

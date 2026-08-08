@@ -203,4 +203,17 @@ export class EquipmentRepository {
       select: LOAN_SELECT,
     });
   }
+
+  returnLoan(id: number, returnedById: number, returnNote?: string) {
+    return this.prisma.equipmentLoan.update({
+      where: { id },
+      data: {
+        status: "RETURNED" as EquipmentLoanStatus,
+        returnedAt: new Date(),
+        returnedById,
+        ...(returnNote && { returnNote }) as any,
+      },
+      select: LOAN_SELECT,
+    });
+  }
 }

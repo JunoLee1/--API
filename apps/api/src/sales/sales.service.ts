@@ -23,6 +23,11 @@ export class SalesService {
     if (dto.quantity <= 0) throw new AppError(400, "NEGATIVE_SALES_VALUE");
     if (dto.unitPrice <= 0) throw new AppError(400, "NEGATIVE_SALES_VALUE");
 
+    // JO6: COMPLIMENTARY tickets require a description explaining the reason
+    if ((dto.type as string) === "COMPLIMENTARY" && !dto.description) {
+      throw new AppError(400, "COMPLIMENTARY_TICKET_REASON_REQUIRED");
+    }
+
     let matchHomeTeamName: string | undefined;
     let matchAwayTeamName: string | undefined;
 
@@ -30,7 +35,11 @@ export class SalesService {
 
     return this.prisma.$transaction(async (tx) => {
       // BUG-2: capacity 체크를 트랜잭션 안으로 이동 — race condition 방지
-      if (dto.type === "TICKET" || dto.type === "VIP_TICKET") {
+      // JO3: COMPLIMENTARY/VIP_TICKET도 좌석 점유 → 전체 티켓 타입 포함
+      const isTicketType = (t: string) =>
+        t === "TICKET" || t === "VIP_TICKET" || t === "COMPLIMENTARY";
+
+      if (isTicketType(dto.type as string)) {
         if (!dto.matchId) throw new AppError(400, "MATCH_ID_REQUIRED_FOR_TICKET");
         const match = await tx.match.findUnique({
           where: { id: dto.matchId },
@@ -43,7 +52,7 @@ export class SalesService {
 
         if (match.capacity) {
           const sold = await tx.salesRecord.aggregate({
-            where: { matchId: dto.matchId, type: { in: ["TICKET", "VIP_TICKET"] }, deletedAt: null } as any,
+            where: { matchId: dto.matchId, type: { in: ["TICKET", "VIP_TICKET", "COMPLIMENTARY"] as any[] }, deletedAt: null } as any,
             _sum: { quantity: true },
           });
           const soldQty = Number((sold._sum as any).quantity ?? 0);
@@ -68,7 +77,7 @@ export class SalesService {
         } as any,
       });
 
-      if (dto.type === "TICKET" || dto.type === "VIP_TICKET") {
+      if (dto.type === "TICKET" || (dto.type as string) === "VIP_TICKET") {
         await tx.ledgerEntry.create({
           data: {
             type: "INCOME",
@@ -83,6 +92,24 @@ export class SalesService {
             relatedId: record.id,
             createdById,
           },
+        });
+      } else if ((dto.type as string) === "COMPLIMENTARY") {
+        // JO6: COMPLIMENTARY tickets count for tracking but generate no revenue
+        // Create a zero-amount ledger entry so the entry is auditable without inflating revenue
+        await tx.ledgerEntry.create({
+          data: {
+            type: "INCOME",
+            category: "TICKET_SALES" as any,
+            amount: 0,
+            currency: dto.currency ?? "KRW",
+            exchangeRate: 1,
+            amountKrw: 0,
+            isRefund: false,
+            description: `무상 티켓 (사유: ${dto.description}) — ${matchHomeTeamName} vs ${matchAwayTeamName}`,
+            relatedModule: "SalesRecord",
+            relatedId: record.id,
+            createdById,
+          } as any,
         });
       }
 

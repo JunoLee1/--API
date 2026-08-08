@@ -47,6 +47,11 @@ export class SponsorshipService {
     if (dates.length > 0) {
       const count = dates.length;
       const { baseAmount, lastAmount } = divideEvenly(dto.totalFee, count);
+      // PB10: the final installment absorbs any remainder from integer/decimal division
+      // (e.g. 10,000 ÷ 3 → 3,333 / 3,333 / 3,334). lastAmount differs from baseAmount
+      // when totalFee is not evenly divisible by count.
+      // TODO: add `note String?` to SponsorshipPayment schema to surface this label via API.
+      //       Once added, spread `...(isLast && count > 1 && { note: `최종 회차 (잔액 조정: ...)` })`.
       await this.repo.createPayments(
         dates.map((dueDate, i) => ({
           sponsorshipId: sponsorship.id,
@@ -84,6 +89,7 @@ export class SponsorshipService {
       if (dates.length > 0) {
         const count = dates.length;
         const { baseAmount, lastAmount } = divideEvenly(totalFee, count);
+        // PB10: final installment absorbs remainder (see create() for details)
         await this.repo.createPayments(
           dates.map((dueDate, i) => ({
             sponsorshipId: id,

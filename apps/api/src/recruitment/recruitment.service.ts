@@ -224,7 +224,8 @@ export class RecruitmentService {
             employeeId: String(applicationId),
             isActive: true,
             createdById: application.offeredById ?? 1,
-          },
+            employmentStartDate: new Date(),
+          } as any,
         });
       }
     }
