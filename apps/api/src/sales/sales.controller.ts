@@ -3,6 +3,7 @@ import { AppError } from "../lib/appError";
 import { requireUser } from "../lib/authMiddleware";
 import { canReadFinance, canWriteFinance } from "../lib/permissions";
 import type { SalesService } from "./sales.service";
+import type { CreateSalesRecordDto } from "./dto/sales.dto";
 
 export class SalesController {
   constructor(private service: SalesService) {}
@@ -28,8 +29,18 @@ export class SalesController {
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, frontOfficeRole, id } = requireUser(req);
-      if (!canReadFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      if (!canWriteFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.create(req.body, id));
+    } catch (e) { next(e); }
+  };
+
+  createBatch = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole, id } = requireUser(req);
+      if (!canWriteFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const dtos = req.body as CreateSalesRecordDto[];
+      if (!Array.isArray(dtos)) throw new AppError(400, "ARRAY_REQUIRED");
+      res.status(201).json(await this.service.createBatch(dtos, id));
     } catch (e) { next(e); }
   };
 
@@ -54,8 +65,7 @@ export class SalesController {
 
   ticketSummary = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canReadFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      requireUser(req);
       const seasonId = Number(req.query["seasonId"]);
       if (!seasonId) throw new AppError(400, "SEASON_ID_REQUIRED");
       res.json(await this.service.ticketSummaryByMatch(seasonId));
@@ -64,8 +74,7 @@ export class SalesController {
 
   seasonTicketTotal = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canReadFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      requireUser(req);
       const seasonId = Number(req.query["seasonId"]);
       if (!seasonId) throw new AppError(400, "SEASON_ID_REQUIRED");
       const total = await this.service.seasonTicketTotal(seasonId);

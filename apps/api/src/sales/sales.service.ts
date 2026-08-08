@@ -61,8 +61,9 @@ export class SalesService {
           saleDate: new Date(dto.saleDate),
           ...(dto.description && { description: dto.description }),
           ...(dto.matchId && { matchId: dto.matchId }),
+          ...(dto.seatZoneId && { seatZoneId: dto.seatZoneId }),
           createdById,
-        },
+        } as any,
       });
 
       if (dto.type === "TICKET") {
@@ -84,6 +85,86 @@ export class SalesService {
       }
 
       return record;
+    });
+  }
+
+  async createBatch(dtos: CreateSalesRecordDto[], createdById: number) {
+    if (dtos.length === 0) throw new AppError(400, "EMPTY_BATCH");
+    if (dtos.length > 50) throw new AppError(400, "BATCH_TOO_LARGE");
+
+    return this.prisma.$transaction(async (tx) => {
+      // capacity 사전 체크 (배치 전체에 대해 matchId별로 합산 후 한 번만 체크)
+      const matchQtyMap = new Map<number, number>();
+      for (const dto of dtos) {
+        if ((dto.type === "TICKET" || dto.type === "VIP_TICKET") && dto.matchId) {
+          matchQtyMap.set(dto.matchId, (matchQtyMap.get(dto.matchId) ?? 0) + dto.quantity);
+        }
+      }
+      for (const [matchId, batchQty] of matchQtyMap) {
+        const match = await tx.match.findUnique({ where: { id: matchId }, select: { capacity: true } });
+        if (match?.capacity) {
+          const existing = await tx.salesRecord.aggregate({
+            where: { matchId, type: { in: ["TICKET", "VIP_TICKET"] }, deletedAt: null } as any,
+            _sum: { quantity: true },
+          });
+          const existingQty = Number((existing._sum as any).quantity ?? 0);
+          if (existingQty + batchQty > match.capacity) {
+            throw new AppError(400, "MATCH_CAPACITY_EXCEEDED");
+          }
+        }
+      }
+
+      const results = [];
+      for (const dto of dtos) {
+        if (dto.quantity <= 0) throw new AppError(400, "NEGATIVE_SALES_VALUE");
+        if (dto.unitPrice < 0) throw new AppError(400, "NEGATIVE_SALES_VALUE");
+
+        if (dto.type === "TICKET" || dto.type === "VIP_TICKET") {
+          if (!dto.matchId) throw new AppError(400, "MATCH_ID_REQUIRED_FOR_TICKET");
+          const match = await tx.match.findUnique({
+            where: { id: dto.matchId },
+            select: { homeTeamName: true, awayTeamName: true, capacity: true },
+          });
+          if (!match) throw new AppError(404, "MATCH_NOT_FOUND");
+        }
+
+        const totalAmount = dto.quantity * dto.unitPrice;
+        const record = await tx.salesRecord.create({
+          data: {
+            type: dto.type,
+            quantity: dto.quantity,
+            unitPrice: dto.unitPrice,
+            totalAmount,
+            currency: dto.currency ?? "KRW",
+            saleDate: new Date(dto.saleDate),
+            ...(dto.description && { description: dto.description }),
+            ...(dto.matchId && { matchId: dto.matchId }),
+            ...(dto.seatZoneId && { seatZoneId: dto.seatZoneId }),
+            createdById,
+          } as any,
+        });
+
+        if (dto.type === "TICKET" || dto.type === "VIP_TICKET") {
+          const match = await tx.match.findUnique({ where: { id: dto.matchId! }, select: { homeTeamName: true, awayTeamName: true } });
+          await tx.ledgerEntry.create({
+            data: {
+              type: "INCOME",
+              category: "TICKET_SALES",
+              amount: totalAmount,
+              currency: dto.currency ?? "KRW",
+              exchangeRate: 1,
+              amountKrw: totalAmount,
+              isRefund: false,
+              description: `[SALES:TICKET_SALE] ${match?.homeTeamName ?? ""} vs ${match?.awayTeamName ?? ""}`,
+              relatedModule: "SalesRecord",
+              relatedId: record.id,
+              createdById,
+            },
+          });
+        }
+        results.push(record);
+      }
+      return results;
     });
   }
 
