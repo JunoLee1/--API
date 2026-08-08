@@ -29,6 +29,7 @@ const checkWriteFinance = (req: Request, res: Response, next: NextFunction) => {
 router.get("/summary",              auth, checkReadFinance, ctrl.summary);
 router.get("/ticket-summary",       auth, ctrl.ticketSummary);
 router.get("/ticket-season-total",  auth, ctrl.seasonTicketTotal);
+router.get("/tickets",              auth, ctrl.listTicketsBySeason);
 router.get("/search",               auth, checkReadFinance, ctrl.search);
 router.get("/by-match/:matchId",    auth, checkReadFinance, ctrl.byMatch);
 router.get("/",                     auth, checkReadFinance, ctrl.list);

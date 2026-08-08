@@ -15,6 +15,8 @@ export class SalesService {
 
   findAll() { return this.repo.findAll({ deletedAt: null } as any); }
 
+  findTicketsBySeason(seasonId: number) { return this.repo.findTicketsBySeason(seasonId); }
+
   async findByMatch(matchId: number) {
     return this.repo.findByMatch(matchId);
   }

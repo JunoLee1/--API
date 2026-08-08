@@ -72,6 +72,15 @@ export class SalesController {
     } catch (e) { next(e); }
   };
 
+  listTicketsBySeason = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      requireUser(req);
+      const seasonId = Number(req.query["seasonId"]);
+      if (!seasonId) throw new AppError(400, "SEASON_ID_REQUIRED");
+      res.json(await this.service.findTicketsBySeason(seasonId));
+    } catch (e) { next(e); }
+  };
+
   seasonTicketTotal = async (req: Request, res: Response, next: NextFunction) => {
     try {
       requireUser(req);

@@ -48,7 +48,7 @@ export class SalesRepository {
 
   async ticketSummaryByMatch(seasonId: number) {
     const records = await this.prisma.salesRecord.findMany({
-      where: { type: "TICKET", match: { seasonId } },
+      where: { type: { in: ["TICKET", "VIP_TICKET", "COMPLIMENTARY"] as any[] }, match: { seasonId }, deletedAt: null } as any,
       include: { match: { select: { id: true, homeTeamName: true, awayTeamName: true, date: true } } },
     });
 
@@ -81,10 +81,22 @@ export class SalesRepository {
 
   async seasonTicketTotal(seasonId: number): Promise<number> {
     const result = await this.prisma.salesRecord.aggregate({
-      where: { type: "TICKET", match: { seasonId } },
+      where: { type: { in: ["TICKET", "VIP_TICKET", "COMPLIMENTARY"] as any[] }, match: { seasonId }, deletedAt: null } as any,
       _sum: { totalAmount: true },
     });
-    return Number(result._sum.totalAmount ?? 0);
+    return Number((result._sum as any).totalAmount ?? 0);
+  }
+
+  findTicketsBySeason(seasonId: number) {
+    return this.prisma.salesRecord.findMany({
+      where: {
+        type: { in: ["TICKET", "VIP_TICKET", "COMPLIMENTARY"] as any[] },
+        match: { seasonId },
+        deletedAt: null,
+      } as any,
+      orderBy: { saleDate: "desc" },
+      include: { match: { select: { id: true, homeTeamName: true, awayTeamName: true, date: true } } },
+    });
   }
 
   findWithFilters(filters: {
