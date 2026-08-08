@@ -367,19 +367,41 @@ export class OpsReportService {
   }
 
   async getSponsorshipVsBudget(seasonId: number) {
-    const report = await this.prisma.financialReport.findFirst({
+    const report = await (this.prisma.financialReport as any).findFirst({
       where: { seasonId },
-      select: { totalRevenue: true },
+      select: {
+        totalRevenue: true,
+        revenueTicket: true,
+        revenueSponsorship: true,
+        revenueBroadcast: true,
+        revenueMerchandise: true,
+        revenueSubsidy: true,
+        revenueParentCompany: true,
+        revenueOther: true,
+      },
     });
     const sponsorshipTotal = await this.prisma.sponsorshipPayment.aggregate({
       where: { status: "PAID" },
       _sum: { amount: true },
     });
+    const collected = Number(sponsorshipTotal._sum.amount ?? 0);
+    const plannedRevenue = report?.totalRevenue ?? 0;
     return {
-      plannedRevenue: report?.totalRevenue ?? 0,
-      sponsorshipCollected: Number(sponsorshipTotal._sum.amount ?? 0),
-      coverageRate: report?.totalRevenue
-        ? Math.round((Number(sponsorshipTotal._sum.amount ?? 0) / report.totalRevenue) * 1000) / 10
+      plannedRevenue,
+      revenueBreakdown: report
+        ? {
+            ticket: report.revenueTicket ?? 0,
+            sponsorship: report.revenueSponsorship ?? 0,
+            broadcast: report.revenueBroadcast ?? 0,
+            merchandise: report.revenueMerchandise ?? 0,
+            subsidy: report.revenueSubsidy ?? 0,
+            parentCompany: report.revenueParentCompany ?? 0,
+            other: report.revenueOther ?? 0,
+          }
+        : null,
+      sponsorshipCollected: collected,
+      coverageRate: plannedRevenue
+        ? Math.round((collected / plannedRevenue) * 1000) / 10
         : 0,
     };
   }
