@@ -1,5 +1,13 @@
 export type CompetitionType = 'LEAGUE' | 'DOMESTIC_CUP' | 'CONTINENTAL' | 'PLAYOFF' | 'FRIENDLY'
 
+export interface SeatZone {
+  id: number
+  name: string
+  capacity: number
+  unitPrice: number | null
+  matchId: number
+}
+
 export interface Match {
   id: number
   date: string

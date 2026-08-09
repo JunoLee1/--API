@@ -6,7 +6,7 @@ import { matchApi } from '@/services/match.service'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import type { TicketMatchSummary, SalesRecord } from '@/types/sales'
 import type { Season } from '@/types/season'
-import type { Match } from '@/types/match'
+import type { Match, SeatZone } from '@/types/match'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
@@ -27,6 +27,19 @@ const TICKET_TYPE_LABEL: Record<string, string> = {
 const TICKET_TYPES = ['TICKET', 'VIP_TICKET', 'COMPLIMENTARY'] as const
 type TicketType = typeof TICKET_TYPES[number]
 
+const CHANNEL_LABEL: Record<string, string> = {
+  ONLINE: '온라인',
+  ONSITE: '현장',
+  PARTNER: '제휴처',
+  SEASON_PASS: '시즌권',
+}
+
+const STATUS_BADGE: Record<string, { label: string; className: string }> = {
+  COMPLETED: { label: '완료', className: 'text-green-600' },
+  CANCELLED: { label: '취소', className: 'text-red-500' },
+  REFUNDED: { label: '환불', className: 'text-orange-500' },
+}
+
 const RECENT_MATCHES = 5
 const PAGE_SIZE = 5
 
@@ -35,6 +48,14 @@ const emptyForm = () => ({
   type: 'TICKET' as TicketType,
   quantity: '',
   unitPrice: '',
+  saleDate: new Date().toISOString().slice(0, 10),
+  description: '',
+  seatZoneId: '',
+  channel: '',
+})
+
+const emptyCancelForm = () => ({
+  quantity: '',
   saleDate: new Date().toISOString().slice(0, 10),
   description: '',
 })
@@ -61,6 +82,11 @@ export function TicketSalesPage() {
   const [editRecord, setEditRecord] = useState<SalesRecord | null>(null)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState(emptyForm())
+
+  const [seatZones, setSeatZones] = useState<SeatZone[]>([])
+  const [cancelTarget, setCancelTarget] = useState<SalesRecord | null>(null)
+  const [cancelForm, setCancelForm] = useState(emptyCancelForm())
+  const [cancelling, setCancelling] = useState(false)
 
   useEffect(() => {
     seasonApi.list().then((list) => {
@@ -111,7 +137,11 @@ export function TicketSalesPage() {
   })
 
   const totalRevenue = filteredSummary.reduce((s, m) => s + m.totalAmount, 0)
-  const totalQuantity = filteredSummary.reduce((s, m) => s + m.totalQuantity, 0)
+  const seasonNetSold = filteredSummary.reduce((s, m) => s + m.netSold, 0)
+  const seasonCapacityTotal = filteredSummary.reduce((s, m) => s + (m.capacity ?? 0), 0)
+  const seasonSellRate = seasonCapacityTotal > 0
+    ? Math.round(seasonNetSold / seasonCapacityTotal * 1000) / 10
+    : null
   const recentSummary = filteredSummary.slice(0, RECENT_MATCHES)
 
   const totalPages = Math.max(1, Math.ceil(filteredRecords.length / PAGE_SIZE))
@@ -119,7 +149,7 @@ export function TicketSalesPage() {
 
   useEffect(() => { setPage(1) }, [filterFrom, filterTo])
 
-  const openCreate = () => { setForm(emptyForm()); setCreateOpen(true) }
+  const openCreate = () => { setForm(emptyForm()); setSeatZones([]); setCreateOpen(true) }
 
   const openEdit = (r: SalesRecord) => {
     setEditRecord(r)
@@ -130,7 +160,28 @@ export function TicketSalesPage() {
       unitPrice: String(r.unitPrice),
       saleDate: r.saleDate.slice(0, 10),
       description: r.description ?? '',
+      seatZoneId: r.seatZoneId?.toString() ?? '',
+      channel: r.channel ?? '',
     })
+  }
+
+  const handleMatchChange = async (matchId: string) => {
+    const match = matches.find((m) => m.id.toString() === matchId)
+    setForm((prev) => ({
+      ...prev,
+      matchId,
+      unitPrice: match?.priceRegular ? String(match.priceRegular) : prev.unitPrice,
+      seatZoneId: '',
+    }))
+    setSeatZones([])
+    if (matchId) {
+      try {
+        const zones = await salesApi.seatZones(Number(matchId))
+        setSeatZones(zones)
+      } catch {
+        // seat zones are optional, ignore errors
+      }
+    }
   }
 
   const handleCreate = async () => {
@@ -149,6 +200,8 @@ export function TicketSalesPage() {
         saleDate: form.saleDate,
         matchId: Number(form.matchId),
         ...(form.description && { description: form.description }),
+        ...(form.seatZoneId && { seatZoneId: Number(form.seatZoneId) }),
+        ...(form.channel && { channel: form.channel as any }),
       })
       toast.success('저장됐습니다.')
       setCreateOpen(false)
@@ -194,6 +247,39 @@ export function TicketSalesPage() {
       await reload()
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : '삭제 실패')
+    }
+  }
+
+  const openCancel = (r: SalesRecord) => {
+    setCancelTarget(r)
+    setCancelForm(emptyCancelForm())
+  }
+
+  const handleCancel = async () => {
+    if (!cancelTarget) return
+    const qty = Number(cancelForm.quantity)
+    if (!qty || !cancelForm.saleDate) {
+      toast.error('취소 수량과 날짜를 입력해주세요.')
+      return
+    }
+    if (qty > cancelTarget.quantity) {
+      toast.error(`최대 취소 가능 수량은 ${cancelTarget.quantity}장입니다.`)
+      return
+    }
+    setCancelling(true)
+    try {
+      await salesApi.cancel(cancelTarget.id, {
+        quantity: qty,
+        saleDate: cancelForm.saleDate,
+        ...(cancelForm.description && { description: cancelForm.description }),
+      })
+      toast.success('취소 처리됐습니다.')
+      setCancelTarget(null)
+      await reload()
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : '취소 처리 실패')
+    } finally {
+      setCancelling(false)
     }
   }
 
@@ -248,21 +334,28 @@ export function TicketSalesPage() {
       </div>
 
       {/* 요약 카드 */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         {loading ? (
           <>
+            <Skeleton className="h-20 rounded-lg" />
             <Skeleton className="h-20 rounded-lg" />
             <Skeleton className="h-20 rounded-lg" />
           </>
         ) : (
           <>
             <div className="border rounded-lg p-4">
-              <p className="text-sm text-muted-foreground">시즌 티켓 수입</p>
+              <p className="text-sm text-muted-foreground">시즌 수입</p>
               <p className="text-2xl font-bold mt-1">₩{totalRevenue.toLocaleString()}</p>
             </div>
             <div className="border rounded-lg p-4">
-              <p className="text-sm text-muted-foreground">시즌 총 판매량</p>
-              <p className="text-2xl font-bold mt-1">{totalQuantity.toLocaleString()}장</p>
+              <p className="text-sm text-muted-foreground">순판매량</p>
+              <p className="text-2xl font-bold mt-1">{seasonNetSold.toLocaleString()}장</p>
+            </div>
+            <div className="border rounded-lg p-4">
+              <p className="text-sm text-muted-foreground">판매율</p>
+              <p className="text-2xl font-bold mt-1">
+                {seasonSellRate !== null ? `${seasonSellRate}%` : '-'}
+              </p>
             </div>
           </>
         )}
@@ -279,13 +372,15 @@ export function TicketSalesPage() {
                 <TableHead>홈</TableHead>
                 <TableHead>어웨이</TableHead>
                 <TableHead className="text-right">판매량</TableHead>
+                <TableHead className="text-right">순판매</TableHead>
+                <TableHead className="text-right">판매율</TableHead>
                 <TableHead className="text-right">수입</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading && (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-8">
+                  <TableCell colSpan={7} className="py-8">
                     <div className="space-y-2 px-4">
                       {Array.from({ length: 3 }).map((_, i) => (
                         <Skeleton key={i} className="h-6 w-full" />
@@ -296,7 +391,7 @@ export function TicketSalesPage() {
               )}
               {!loading && recentSummary.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                     경기 일정이 없습니다.
                   </TableCell>
                 </TableRow>
@@ -309,7 +404,13 @@ export function TicketSalesPage() {
                   <TableCell className="font-medium">{m.homeTeamName}</TableCell>
                   <TableCell>{m.awayTeamName}</TableCell>
                   <TableCell className="text-right text-muted-foreground">
-                    {m.totalQuantity > 0 ? `${m.totalQuantity.toLocaleString()}장` : '-'}
+                    {m.totalSold > 0 ? `${m.totalSold.toLocaleString()}장` : '-'}
+                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    {m.netSold > 0 ? `${m.netSold.toLocaleString()}장` : '-'}
+                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    {m.sellRate !== null ? `${m.sellRate}%` : '-'}
                   </TableCell>
                   <TableCell className="text-right font-semibold">
                     {m.totalAmount > 0 ? `₩${m.totalAmount.toLocaleString()}` : '-'}
@@ -331,6 +432,8 @@ export function TicketSalesPage() {
                 <TableHead>날짜</TableHead>
                 <TableHead>경기</TableHead>
                 <TableHead>종류</TableHead>
+                <TableHead>채널</TableHead>
+                <TableHead>상태</TableHead>
                 <TableHead className="text-right">수량</TableHead>
                 <TableHead className="text-right">단가</TableHead>
                 <TableHead className="text-right">합계</TableHead>
@@ -341,36 +444,53 @@ export function TicketSalesPage() {
             <TableBody>
               {records.length === 0 && !loading && (
                 <TableRow>
-                  <TableCell colSpan={canWrite ? 8 : 7} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={canWrite ? 10 : 9} className="text-center text-muted-foreground py-8">
                     판매 기록이 없습니다.
                   </TableCell>
                 </TableRow>
               )}
-              {pagedRecords.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell>
-                    {new Date(r.saleDate).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' })}
-                  </TableCell>
-                  <TableCell>
-                    {r.match
-                      ? `${r.match.homeTeamName} vs ${r.match.awayTeamName}`
-                      : <span className="text-muted-foreground text-xs">미연결</span>}
-                  </TableCell>
-                  <TableCell className="text-sm">{TICKET_TYPE_LABEL[r.type] ?? r.type}</TableCell>
-                  <TableCell className="text-right">{r.quantity.toLocaleString()}</TableCell>
-                  <TableCell className="text-right">₩{Number(r.unitPrice).toLocaleString()}</TableCell>
-                  <TableCell className="text-right font-medium">₩{Number(r.totalAmount).toLocaleString()}</TableCell>
-                  <TableCell className="text-muted-foreground text-sm">{r.description ?? '-'}</TableCell>
-                  {canWrite && (
-                    <TableCell className="text-right">
-                      <div className="flex gap-1 justify-end">
-                        <Button size="sm" variant="ghost" onClick={() => openEdit(r)}>수정</Button>
-                        <Button size="sm" variant="ghost" className="text-destructive" onClick={() => void handleDelete(r.id)}>삭제</Button>
-                      </div>
+              {pagedRecords.map((r) => {
+                const statusBadge = STATUS_BADGE[r.status] ?? STATUS_BADGE['COMPLETED']
+                const isCompleted = r.status === 'COMPLETED' || !r.status
+                return (
+                  <TableRow key={r.id}>
+                    <TableCell>
+                      {new Date(r.saleDate).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' })}
                     </TableCell>
-                  )}
-                </TableRow>
-              ))}
+                    <TableCell>
+                      {r.match
+                        ? `${r.match.homeTeamName} vs ${r.match.awayTeamName}`
+                        : <span className="text-muted-foreground text-xs">미연결</span>}
+                    </TableCell>
+                    <TableCell className="text-sm">{TICKET_TYPE_LABEL[r.type] ?? r.type}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {r.channel ? CHANNEL_LABEL[r.channel] ?? r.channel : '-'}
+                    </TableCell>
+                    <TableCell>
+                      <span className={`text-xs font-medium ${statusBadge.className}`}>
+                        {statusBadge.label}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">{r.quantity.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">₩{Number(r.unitPrice).toLocaleString()}</TableCell>
+                    <TableCell className="text-right font-medium">₩{Number(r.totalAmount).toLocaleString()}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm">{r.description ?? '-'}</TableCell>
+                    {canWrite && (
+                      <TableCell className="text-right">
+                        <div className="flex gap-1 justify-end">
+                          {isCompleted && (
+                            <>
+                              <Button size="sm" variant="ghost" onClick={() => openEdit(r)}>수정</Button>
+                              <Button size="sm" variant="ghost" className="text-orange-500" onClick={() => openCancel(r)}>취소</Button>
+                              <Button size="sm" variant="ghost" className="text-destructive" onClick={() => void handleDelete(r.id)}>삭제</Button>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </div>
@@ -391,9 +511,11 @@ export function TicketSalesPage() {
             form={form}
             setForm={setForm}
             matches={matches}
+            seatZones={seatZones}
             showMatchSelect
             saving={saving}
             onSubmit={() => void handleCreate()}
+            onMatchChange={(v) => void handleMatchChange(v)}
             submitLabel="저장"
           />
         </DialogContent>
@@ -407,11 +529,69 @@ export function TicketSalesPage() {
             form={form}
             setForm={setForm}
             matches={matches}
+            seatZones={seatZones}
             showMatchSelect={false}
             saving={saving}
             onSubmit={() => void handleUpdate()}
             submitLabel="수정 저장"
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* 취소 다이얼로그 */}
+      <Dialog open={!!cancelTarget} onOpenChange={(o) => { if (!o) setCancelTarget(null) }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>티켓 판매 취소</DialogTitle></DialogHeader>
+          {cancelTarget && (
+            <div className="space-y-3 pt-1">
+              <div className="text-sm text-muted-foreground border rounded-lg p-3 space-y-1">
+                <p>
+                  <span className="font-medium">경기:</span>{' '}
+                  {cancelTarget.match
+                    ? `${cancelTarget.match.homeTeamName} vs ${cancelTarget.match.awayTeamName}`
+                    : '-'}
+                </p>
+                <p><span className="font-medium">종류:</span> {TICKET_TYPE_LABEL[cancelTarget.type] ?? cancelTarget.type}</p>
+                <p><span className="font-medium">원래 수량:</span> {cancelTarget.quantity.toLocaleString()}장</p>
+                <p><span className="font-medium">단가:</span> ₩{Number(cancelTarget.unitPrice).toLocaleString()}</p>
+              </div>
+              <div className="space-y-1">
+                <Label>취소 수량 (최대 {cancelTarget.quantity}장)</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={cancelTarget.quantity}
+                  value={cancelForm.quantity}
+                  onChange={(e) => setCancelForm((prev) => ({ ...prev, quantity: e.target.value }))}
+                  placeholder="0"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>취소 날짜</Label>
+                <Input
+                  type="date"
+                  value={cancelForm.saleDate}
+                  onChange={(e) => setCancelForm((prev) => ({ ...prev, saleDate: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>메모 (선택)</Label>
+                <Input
+                  value={cancelForm.description}
+                  onChange={(e) => setCancelForm((prev) => ({ ...prev, description: e.target.value }))}
+                  placeholder="취소 사유"
+                />
+              </div>
+              {cancelForm.quantity && (
+                <p className="text-sm text-muted-foreground">
+                  취소 금액: ₩{(Number(cancelForm.quantity) * Number(cancelTarget.unitPrice)).toLocaleString()}
+                </p>
+              )}
+              <Button className="w-full" variant="destructive" onClick={() => void handleCancel()} disabled={cancelling}>
+                {cancelling ? '처리 중...' : '취소 처리'}
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
@@ -422,13 +602,15 @@ interface SaleFormProps {
   form: ReturnType<typeof emptyForm>
   setForm: React.Dispatch<React.SetStateAction<ReturnType<typeof emptyForm>>>
   matches: Match[]
+  seatZones: SeatZone[]
   showMatchSelect: boolean
   saving: boolean
   onSubmit: () => void
+  onMatchChange?: (matchId: string) => void
   submitLabel: string
 }
 
-function SaleForm({ form, setForm, matches, showMatchSelect, saving, onSubmit, submitLabel }: SaleFormProps) {
+function SaleForm({ form, setForm, matches, seatZones, showMatchSelect, saving, onSubmit, onMatchChange, submitLabel }: SaleFormProps) {
   const f = <K extends keyof ReturnType<typeof emptyForm>>(key: K) =>
     (val: ReturnType<typeof emptyForm>[K]) => setForm((prev) => ({ ...prev, [key]: val }))
 
@@ -445,7 +627,9 @@ function SaleForm({ form, setForm, matches, showMatchSelect, saving, onSubmit, s
                 ...prev,
                 matchId: v,
                 unitPrice: match?.priceRegular ? String(match.priceRegular) : prev.unitPrice,
+                seatZoneId: '',
               }))
+              onMatchChange?.(v)
             }}
           >
             <SelectTrigger><SelectValue placeholder="경기 선택" /></SelectTrigger>
@@ -478,6 +662,45 @@ function SaleForm({ form, setForm, matches, showMatchSelect, saving, onSubmit, s
           <SelectContent>
             {TICKET_TYPES.map((tp) => (
               <SelectItem key={tp} value={tp}>{TICKET_TYPE_LABEL[tp]}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      {seatZones.length > 0 && (
+        <div className="space-y-1">
+          <Label>좌석 구역 (선택)</Label>
+          <Select
+            value={form.seatZoneId}
+            onValueChange={(v) => {
+              const zone = seatZones.find((z) => z.id.toString() === v)
+              setForm((prev) => ({
+                ...prev,
+                seatZoneId: v,
+                unitPrice: zone?.unitPrice ? String(zone.unitPrice) : prev.unitPrice,
+              }))
+            }}
+          >
+            <SelectTrigger><SelectValue placeholder="구역 선택" /></SelectTrigger>
+            <SelectContent>
+              {seatZones.map((z) => (
+                <SelectItem key={z.id} value={z.id.toString()}>
+                  {z.name}{z.unitPrice ? ` (₩${z.unitPrice.toLocaleString()})` : ''}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+      <div className="space-y-1">
+        <Label>판매 채널 (선택)</Label>
+        <Select
+          value={form.channel}
+          onValueChange={f('channel')}
+        >
+          <SelectTrigger><SelectValue placeholder="채널 선택" /></SelectTrigger>
+          <SelectContent>
+            {Object.entries(CHANNEL_LABEL).map(([val, label]) => (
+              <SelectItem key={val} value={val}>{label}</SelectItem>
             ))}
           </SelectContent>
         </Select>

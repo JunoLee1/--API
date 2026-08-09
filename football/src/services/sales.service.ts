@@ -1,6 +1,6 @@
 import { api } from './api'
 import type { SalesRecord, TicketMatchSummary, CreateSalesRecordDto } from '@/types/sales'
-import type { RemainingCapacity } from '@/types/match'
+import type { RemainingCapacity, SeatZone } from '@/types/match'
 
 export const salesApi = {
   list: () =>
@@ -32,4 +32,10 @@ export const salesApi = {
 
   getRemainingCapacity: (matchId: number) =>
     api.get<RemainingCapacity>(`/matches/${matchId}/remaining-capacity`),
+
+  seatZones: (matchId: number) =>
+    api.get<SeatZone[]>(`/sales/seat-zones/${matchId}`),
+
+  cancel: (id: number, dto: { quantity: number; saleDate: string; description?: string }) =>
+    api.post<SalesRecord>(`/sales/${id}/cancel`, dto),
 }

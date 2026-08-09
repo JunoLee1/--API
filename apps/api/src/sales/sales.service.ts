@@ -75,6 +75,8 @@ export class SalesService {
           ...(dto.description && { description: dto.description }),
           ...(dto.matchId && { matchId: dto.matchId }),
           ...(dto.seatZoneId && { seatZoneId: dto.seatZoneId }),
+          ...(dto.status && { status: dto.status }),
+          ...(dto.channel && { channel: dto.channel }),
           createdById,
         } as any,
       });
@@ -291,5 +293,40 @@ export class SalesService {
 
   searchSales(filters: { type?: string; matchId?: number; fromDate?: string; toDate?: string; minAmount?: number; maxAmount?: number }) {
     return this.repo.findWithFilters(filters);
+  }
+
+  async createCancellation(
+    originalId: number,
+    dto: { quantity: number; saleDate: string; description?: string },
+    createdById: number,
+  ) {
+    const original = await this.prisma.salesRecord.findUnique({ where: { id: originalId } });
+    if (!original || original.deletedAt) throw new AppError(404, "SALES_RECORD_NOT_FOUND");
+    if (dto.quantity <= 0 || dto.quantity > original.quantity)
+      throw new AppError(400, "INVALID_CANCEL_QUANTITY");
+
+    const totalAmount = dto.quantity * Number(original.unitPrice);
+    const record = await this.prisma.salesRecord.create({
+      data: {
+        type: original.type,
+        quantity: dto.quantity,
+        unitPrice: original.unitPrice,
+        totalAmount,
+        currency: original.currency,
+        saleDate: new Date(dto.saleDate),
+        status: "CANCELLED" as any,
+        matchId: original.matchId,
+        ...(dto.description && { description: dto.description }),
+        createdById,
+      } as any,
+    });
+
+    await writeAuditLog({
+      actorId: createdById,
+      action: "SALES_RECORD_CREATED",
+      targetId: record.id,
+      detail: { type: "CANCELLATION", originalId, quantity: dto.quantity, totalAmount },
+    });
+    return record;
   }
 }

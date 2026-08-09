@@ -116,4 +116,14 @@ export class SalesController {
       }));
     } catch (e) { next(e); }
   };
+
+  cancel = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const id = Number(req.params["id"]);
+      const record = await this.service.createCancellation(id, req.body, req.user!.id);
+      res.json(record);
+    } catch (err) {
+      next(err);
+    }
+  };
 }

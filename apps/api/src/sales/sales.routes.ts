@@ -37,6 +37,7 @@ router.post("/batch",               auth, checkWriteFinance, ctrl.createBatch);
 router.post("/",                    auth, checkWriteFinance, ctrl.create);
 router.patch("/:id",                auth, checkWriteFinance, ctrl.update);
 router.delete("/:id",               auth, checkWriteFinance, ctrl.delete);
+router.post("/:id/cancel",          auth, checkWriteFinance, ctrl.cancel);
 
 router.get("/fans/membership-stats", auth, fanCtrl.membershipStats);
 router.get("/fans/:id",              auth, fanCtrl.getById);

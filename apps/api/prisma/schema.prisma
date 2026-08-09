@@ -578,6 +578,19 @@ enum PayrollRunStatus {
   CONFIRMED
 }
 
+enum SalesRecordStatus {
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+enum SalesChannel {
+  ONLINE
+  ONSITE
+  PARTNER
+  SEASON_PASS
+}
+
 // ─────────────────────────────────────────────
 // Models
 // ─────────────────────────────────────────────
@@ -2703,25 +2716,29 @@ model LedgerEntry {
 }
 
 model SalesRecord {
-  id                 Int          @id @default(autoincrement())
+  id                 Int                @id @default(autoincrement())
   type               SalesType
   quantity           Int
-  unitPrice          Decimal      @db.Decimal(12, 2)
-  totalAmount        Decimal      @db.Decimal(12, 2)
-  currency           CurrencyCode @default(KRW)
+  unitPrice          Decimal            @db.Decimal(12, 2)
+  totalAmount        Decimal            @db.Decimal(12, 2)
+  currency           CurrencyCode       @default(KRW)
   saleDate           DateTime
   description        String?
   matchId            Int?
+  seatZoneId         Int?
+  status             SalesRecordStatus  @default(COMPLETED)
+  channel            SalesChannel?
   createdById        Int
-  createdAt          DateTime     @default(now())
+  createdAt          DateTime           @default(now())
   deletedAt          DateTime?
-  updatedAt          DateTime     @updatedAt
+  updatedAt          DateTime           @updatedAt
   updatedById        Int?
   ticketSerialNumber String?
 
-  createdBy User   @relation("SalesRecordCreator", fields: [createdById], references: [id])
-  updatedBy User?  @relation("SalesRecordUpdater", fields: [updatedById], references: [id])
-  match     Match? @relation(fields: [matchId], references: [id])
+  createdBy User      @relation("SalesRecordCreator", fields: [createdById], references: [id])
+  updatedBy User?     @relation("SalesRecordUpdater", fields: [updatedById], references: [id])
+  match     Match?    @relation(fields: [matchId], references: [id])
+  seatZone  SeatZone? @relation(fields: [seatZoneId], references: [id])
 }
 
 model FacilityInventoryItem {
@@ -2793,12 +2810,14 @@ model FanPurchase {
 }
 
 model SeatZone {
-  id       Int    @id @default(autoincrement())
-  name     String
-  capacity Int
-  matchId  Int
+  id        Int    @id @default(autoincrement())
+  name      String
+  capacity  Int
+  unitPrice Int?
+  matchId   Int
 
-  match Match @relation(fields: [matchId], references: [id])
+  match        Match        @relation(fields: [matchId], references: [id])
+  salesRecords SalesRecord[]
 }
 
 model RefreshTokenBlacklist {
