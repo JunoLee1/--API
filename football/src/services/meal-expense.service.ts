@@ -18,7 +18,8 @@ export interface MealExpense {
 
 export const mealExpenseApi = {
   list: (params?: { type?: MealExpenseType; from?: string; to?: string }): Promise<MealExpense[]> => {
-    const qs = new URLSearchParams(params as any).toString();
+    const entries = Object.entries(params ?? {}).filter(([, v]) => v !== undefined) as [string, string][];
+    const qs = new URLSearchParams(entries).toString();
     return api.get(`/meal-expenses${qs ? `?${qs}` : ""}`);
   },
   get: (id: number): Promise<MealExpense> => api.get(`/meal-expenses/${id}`),

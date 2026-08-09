@@ -42,6 +42,24 @@ export async function sendGuardianInjuryEmail(
   });
 }
 
+export async function sendApplicationStatusEmail(
+  to: string,
+  applicantName: string,
+  status: "REJECTED" | "OFFERED",
+): Promise<void> {
+  const messages = {
+    REJECTED: { subject: "[FC Seoul ERP] 채용 지원 결과 안내", body: `${applicantName}님, 지원해 주셔서 감사합니다. 아쉽게도 이번 전형에서 합격하지 못하셨습니다.` },
+    OFFERED: { subject: "[FC Seoul ERP] 채용 제안 안내", body: `${applicantName}님, 축하합니다! 채용 제안을 드리게 되어 기쁩니다. 담당자가 곧 연락드릴 예정입니다.` },
+  };
+  const { subject, body } = messages[status];
+  await transporter.sendMail({
+    from: process.env["SMTP_FROM"] ?? "FC Seoul ERP <no-reply@fcs.example.com>",
+    to,
+    subject,
+    html: `<p>${body}</p>`,
+  });
+}
+
 export async function sendGuardianCallupEmail(
   to: string,
   playerName: string,

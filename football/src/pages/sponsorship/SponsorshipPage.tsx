@@ -1,10 +1,10 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { sponsorshipApi } from '@/services/sponsorship.service'
 import type {
   Sponsorship,
-  SponsorshipPayment,
   SponsorType,
   PaymentSchedule,
   CreateSponsorshipDto,
@@ -13,8 +13,6 @@ import {
   SPONSOR_TYPE_LABEL,
   SPONSOR_TYPE_STYLE,
   PAYMENT_SCHEDULE_LABEL,
-  PAYMENT_STATUS_LABEL,
-  PAYMENT_STATUS_STYLE,
 } from '@/types/sponsorship'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
@@ -43,7 +41,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { Plus, ChevronDown, ChevronRight } from 'lucide-react'
+import { Plus } from 'lucide-react'
 
 const SPONSOR_TYPES: SponsorType[] = ['TITLE', 'KIT', 'STADIUM_NAMING', 'DIGITAL', 'OTHER']
 const PAYMENT_SCHEDULES: PaymentSchedule[] = ['MONTHLY', 'QUARTERLY', 'ANNUAL']
@@ -189,48 +187,10 @@ function CreateSponsorshipDialog({ open, onOpenChange, onSaved }: CreateSponsors
   )
 }
 
-// ── Payment Row ───────────────────────────────────────────────────────────────
-interface PaymentRowProps {
-  payment: SponsorshipPayment
-  canWrite: boolean
-  onMarkPaid: (paymentId: number) => void
-}
-
-function PaymentRow({ payment, canWrite, onMarkPaid }: PaymentRowProps) {
-  const { t } = useTranslation('sponsorship')
-  return (
-    <TableRow className="bg-muted/30">
-      <TableCell className="pl-10 tabular-nums text-sm text-muted-foreground">
-        {formatDate(payment.dueDate)}
-      </TableCell>
-      <TableCell className="text-sm tabular-nums">{formatCurrency(payment.amount)}</TableCell>
-      <TableCell>
-        <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${PAYMENT_STATUS_STYLE[payment.status]}`}>
-          {PAYMENT_STATUS_LABEL[payment.status]}
-        </span>
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground tabular-nums">
-        {payment.paidAt ? formatDate(payment.paidAt) : '—'}
-      </TableCell>
-      <TableCell>
-        {canWrite && payment.status !== 'PAID' && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 text-xs"
-            onClick={() => onMarkPaid(payment.id)}
-          >
-            {t('payment.markPaid')}
-          </Button>
-        )}
-      </TableCell>
-    </TableRow>
-  )
-}
-
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export function SponsorshipPage() {
   const { t } = useTranslation('sponsorship')
+  const navigate = useNavigate()
   const { user } = useCurrentUser()
   const canWrite =
     user?.role === 'ADMIN' ||
@@ -245,9 +205,6 @@ export function SponsorshipPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [showCreate, setShowCreate] = useState(false)
-  const [expandedId, setExpandedId] = useState<number | null>(null)
-  const [payments, setPayments] = useState<Record<number, SponsorshipPayment[]>>({})
-  const [paymentsLoading, setPaymentsLoading] = useState<Record<number, boolean>>({})
 
   const fetchSponsorships = useCallback(() => {
     setLoading(true)
@@ -265,39 +222,6 @@ export function SponsorshipPage() {
   const handleTypeFilter = (v: string) => {
     setTypeFilter(v as SponsorType | '')
     setPage(1)
-    setExpandedId(null)
-  }
-
-  const toggleExpand = async (sp: Sponsorship) => {
-    if (expandedId === sp.id) {
-      setExpandedId(null)
-      return
-    }
-    setExpandedId(sp.id)
-    if (!payments[sp.id]) {
-      setPaymentsLoading((prev) => ({ ...prev, [sp.id]: true }))
-      try {
-        const data = await sponsorshipApi.getPayments(sp.id)
-        setPayments((prev) => ({ ...prev, [sp.id]: data }))
-      } catch {
-        toast.error('납부 내역을 불러오지 못했습니다.')
-      } finally {
-        setPaymentsLoading((prev) => ({ ...prev, [sp.id]: false }))
-      }
-    }
-  }
-
-  const handleMarkPaid = async (sponsorshipId: number, paymentId: number) => {
-    try {
-      const updated = await sponsorshipApi.markPaid(sponsorshipId, paymentId)
-      setPayments((prev) => ({
-        ...prev,
-        [sponsorshipId]: prev[sponsorshipId].map((p) => (p.id === paymentId ? updated : p)),
-      }))
-      toast.success(t('markedPaid'))
-    } catch {
-      toast.error(t('markPaidFailed'))
-    }
   }
 
   return (
@@ -340,7 +264,6 @@ export function SponsorshipPage() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-8" />
                 <TableHead>{t('col.sponsorName')}</TableHead>
                 <TableHead className="w-32">{t('col.type')}</TableHead>
                 <TableHead className="w-36 tabular-nums">{t('col.totalFee')}</TableHead>
@@ -352,67 +275,23 @@ export function SponsorshipPage() {
             </TableHeader>
             <TableBody>
               {sponsorships.map((sp) => (
-                <>
-                  <TableRow
-                    key={sp.id}
-                    className="cursor-pointer"
-                    onClick={() => void toggleExpand(sp)}
-                  >
-                    <TableCell className="w-8 text-muted-foreground">
-                      {expandedId === sp.id
-                        ? <ChevronDown className="h-4 w-4" />
-                        : <ChevronRight className="h-4 w-4" />}
-                    </TableCell>
-                    <TableCell className="font-medium">{sp.sponsorName}</TableCell>
-                    <TableCell>
-                      <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${SPONSOR_TYPE_STYLE[sp.type]}`}>
-                        {SPONSOR_TYPE_LABEL[sp.type]}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-sm tabular-nums">{formatCurrency(sp.totalFee)}</TableCell>
-                    <TableCell className="text-sm">{PAYMENT_SCHEDULE_LABEL[sp.paymentSchedule]}</TableCell>
-                    <TableCell className="text-sm tabular-nums text-muted-foreground">{formatDate(sp.contractStart)}</TableCell>
-                    <TableCell className="text-sm tabular-nums text-muted-foreground">{formatDate(sp.contractEnd)}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{sp.createdBy.username}</TableCell>
-                  </TableRow>
-
-                  {expandedId === sp.id && (
-                    paymentsLoading[sp.id] ? (
-                      <TableRow key={`${sp.id}-loading`} className="bg-muted/30">
-                        <TableCell colSpan={8} className="py-4">
-                          <div className="pl-8 space-y-2">
-                            {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-6 w-full" />)}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ) : !payments[sp.id]?.length ? (
-                      <TableRow key={`${sp.id}-empty`} className="bg-muted/30">
-                        <TableCell colSpan={8} className="py-4 pl-10 text-sm text-muted-foreground">
-                          {t('payment.noData')}
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      <>
-                        <TableRow key={`${sp.id}-header`} className="bg-muted/50 hover:bg-muted/50">
-                          <TableCell />
-                          <TableCell className="text-xs font-medium text-muted-foreground pl-10">{t('payment.dueDate')}</TableCell>
-                          <TableCell className="text-xs font-medium text-muted-foreground">{t('payment.amount')}</TableCell>
-                          <TableCell className="text-xs font-medium text-muted-foreground">{t('payment.status')}</TableCell>
-                          <TableCell className="text-xs font-medium text-muted-foreground">{t('payment.paidAt')}</TableCell>
-                          <TableCell colSpan={4} />
-                        </TableRow>
-                        {payments[sp.id].map((pmt) => (
-                          <PaymentRow
-                            key={pmt.id}
-                            payment={pmt}
-                            canWrite={canWrite}
-                            onMarkPaid={(paymentId) => void handleMarkPaid(sp.id, paymentId)}
-                          />
-                        ))}
-                      </>
-                    )
-                  )}
-                </>
+                <TableRow
+                  key={sp.id}
+                  className="cursor-pointer"
+                  onClick={() => navigate(`/sponsorship/${sp.id}`)}
+                >
+                  <TableCell className="font-medium">{sp.sponsorName}</TableCell>
+                  <TableCell>
+                    <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${SPONSOR_TYPE_STYLE[sp.type]}`}>
+                      {SPONSOR_TYPE_LABEL[sp.type]}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-sm tabular-nums">{formatCurrency(sp.totalFee)}</TableCell>
+                  <TableCell className="text-sm">{PAYMENT_SCHEDULE_LABEL[sp.paymentSchedule]}</TableCell>
+                  <TableCell className="text-sm tabular-nums text-muted-foreground">{formatDate(sp.contractStart)}</TableCell>
+                  <TableCell className="text-sm tabular-nums text-muted-foreground">{formatDate(sp.contractEnd)}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{sp.createdBy.username}</TableCell>
+                </TableRow>
               ))}
             </TableBody>
           </Table>
@@ -446,7 +325,7 @@ export function SponsorshipPage() {
       <CreateSponsorshipDialog
         open={showCreate}
         onOpenChange={setShowCreate}
-        onSaved={() => { fetchSponsorships(); setExpandedId(null) }}
+        onSaved={fetchSponsorships}
       />
     </div>
   )

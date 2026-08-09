@@ -7,6 +7,7 @@ import { PlayerListQuery } from "./dto/player.dto";
 import { PlayerStatus, Position, PlayerLevel, TeamType } from "../generated/enums";
 import { getPlayerRadarData } from "./radar.service";
 import { SecondaryPositionRepository } from "./secondary-position.repo";
+import { writeAuditLog } from "../lib/auditLog";
 
 const WRITE_ROLES = ["ADMIN", "FRONT_OFFICE"] as const;
 const SECONDARY_POS_WRITE_ROLES = ["ADMIN", "COACHING_STAFF"] as const;
@@ -33,8 +34,9 @@ export class PlayerController {
 
   getPlayerById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const player = await this.service.getPlayerById(String(req.params["id"]));
       const user = requireUser(req);
+      const includePrivate = isAdminLike(user.role) || user.role === "GM" || user.frontOfficeRole === "TD";
+      const player = await this.service.getPlayerById(String(req.params["id"]), includePrivate);
       if (user.role === "PLAYER") {
         const { currentMarketValue, ...safePlayer } = player as any;
         return res.status(200).json(safePlayer);
@@ -75,7 +77,7 @@ export class PlayerController {
     try {
       const user = requireUser(req);
       if (!isAdminLike(user.role)) throw new AppError(403, "FORBIDDEN");
-      const result = await this.service.updatePlayerStatus(String(req.params["id"]), req.body);
+      const result = await this.service.updatePlayerStatus(String(req.params["id"]), req.body, user.id);
       res.status(200).json(result);
     } catch (err) {
       next(err);
@@ -99,6 +101,7 @@ export class PlayerController {
     try {
       const user = requireUser(req);
       if (!(this.MARKET_VALUE_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
+      void writeAuditLog({ actorId: user.id, action: "PLAYER_MARKET_VALUE_READ", targetId: String(req.params["id"]) }).catch(console.error);
       const history = await this.service.getMarketValueHistory(String(req.params["id"]));
       res.json(history);
     } catch (err) { next(err); }

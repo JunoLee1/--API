@@ -499,22 +499,26 @@ export function TacticalAnalysisPage() {
 
   const canWrite =
     user?.role === 'ADMIN' ||
-    user?.role === 'COACHING_STAFF' ||
+    (user?.role === 'COACHING_STAFF' && user?.coachingRole !== 'HEAD_COACH') ||
     (user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'TACTICAL_ANALYST')
 
   const canConfirm = user?.role === 'ADMIN' || user?.coachingRole === 'HEAD_COACH'
 
+  const isPlayer = user?.role === 'PLAYER'
+
   const fetchAnalyses = () =>
     tacticalApi
-      .list()
+      .list(isPlayer ? { phase: 'POST_MATCH' } : undefined)
       .then(setAnalyses)
       .catch(() => toast.error(t('tactical.loadFailed')))
       .finally(() => setLoading(false))
 
   useEffect(() => {
     void fetchAnalyses()
-    matchApi.list().then(setMatches).catch(() => null)
-    playerApi.list().then(setPlayers).catch(() => null)
+    if (!isPlayer) {
+      matchApi.list().then(setMatches).catch(() => null)
+      playerApi.list().then(setPlayers).catch(() => null)
+    }
   }, [])
 
   const handleConfirm = async (id: number, e: React.MouseEvent) => {
@@ -538,7 +542,9 @@ export function TacticalAnalysisPage() {
       <div className="border-b px-6 py-4 flex items-center justify-between gap-4 shrink-0">
         <div>
           <h1 className="text-lg font-semibold tracking-tight">{t('tactical.title')}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{t('tactical.description')}</p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {isPlayer ? t('tactical.playerDescription') : t('tactical.description')}
+          </p>
         </div>
         {canWrite && (
           <Button size="sm" onClick={() => setCreateOpen(true)}>

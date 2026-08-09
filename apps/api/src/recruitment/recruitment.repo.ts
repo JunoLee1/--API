@@ -11,6 +11,7 @@ import type {
   UpdateReferenceCheckDto,
 } from "./dto/recruitment.dto";
 import type { InterviewRound, JobApplicationStatus } from "../generated/enums";
+import { writeAuditLog } from "../lib/auditLog";
 
 const POSTING_INCLUDE = {
   department: { select: { id: true, name: true } },
@@ -99,36 +100,74 @@ export class RecruitmentRepository {
     });
   }
 
-  rejectApplication(id: number) {
-    return this.prisma.jobApplication.update({
+  async rejectApplication(id: number, actorId: number) {
+    // CL6: set data retention deadline to 1 year from now
+    const retentionDeadline = new Date();
+    retentionDeadline.setFullYear(retentionDeadline.getFullYear() + 1);
+
+    const result = await this.prisma.jobApplication.update({
       where: { id },
-      data: { status: "REJECTED", rejectedAt: new Date() },
+      data: {
+        status: "REJECTED",
+        rejectedAt: new Date(),
+        dataRetentionDeadline: retentionDeadline,
+      } as any,
       include: APPLICATION_INCLUDE,
     });
+    void writeAuditLog({
+      actorId,
+      action: "JOB_APPLICATION_STATUS_CHANGED",
+      targetId: id,
+      detail: { newStatus: "REJECTED", dataRetentionDeadline: retentionDeadline.toISOString() },
+    }).catch(console.error);
+    return result;
   }
 
-  offerApplication(id: number, offeredById: number) {
-    return this.prisma.jobApplication.update({
+  async offerApplication(id: number, offeredById: number, actorId: number) {
+    const result = await this.prisma.jobApplication.update({
       where: { id },
       data: { status: "OFFERED", offeredAt: new Date(), offeredById },
       include: APPLICATION_INCLUDE,
     });
+    void writeAuditLog({
+      actorId,
+      action: "JOB_APPLICATION_STATUS_CHANGED",
+      targetId: id,
+      detail: { newStatus: "OFFERED" },
+    }).catch(console.error);
+    return result;
   }
 
-  completeOnboarding(id: number) {
-    return this.prisma.jobApplication.update({
+  async completeOnboarding(id: number, actorId: number) {
+    const result = await this.prisma.jobApplication.update({
       where: { id },
       data: { status: "ONBOARDED" },
       include: APPLICATION_INCLUDE,
     });
+    void writeAuditLog({
+      actorId,
+      action: "JOB_APPLICATION_STATUS_CHANGED",
+      targetId: id,
+      detail: { newStatus: "ONBOARDED" },
+    }).catch(console.error);
+    return result;
   }
 
-  setApplicationStatus(id: number, status: JobApplicationStatus) {
-    return this.prisma.jobApplication.update({
+  async setApplicationStatus(id: number, status: JobApplicationStatus, actorId?: number) {
+    const result = await this.prisma.jobApplication.update({
       where: { id },
       data: { status },
       include: APPLICATION_INCLUDE,
     });
+    if (actorId != null) {
+      void writeAuditLog({
+        actorId,
+        action: "JOB_APPLICATION_STATUS_CHANGED",
+        targetId: id,
+        detail: { newStatus: status },
+      }).catch(console.error);
+    }
+    return result;
   }
 
   // --- Interview ---
@@ -204,6 +243,65 @@ export class RecruitmentRepository {
     return this.prisma.onboarding.update({
       where: { applicationId },
       data: { mfaRegisteredAt: new Date(), completedAt: new Date() },
+    });
+  }
+
+  async getHeadcountProgress() {
+    const postings = await this.prisma.jobPosting.findMany({
+      where: { status: { in: ["OPEN", "CLOSED"] } },
+      select: {
+        id: true,
+        title: true,
+        headcount: true,
+        status: true,
+        _count: { select: { applications: { where: { status: "ONBOARDED" } } } },
+      },
+    });
+    return postings.map((p) => ({
+      postingId: p.id,
+      title: p.title,
+      targetHeadcount: p.headcount,
+      hiredCount: p._count.applications,
+      fillRate: p.headcount === 0 ? 0 : Math.round((p._count.applications / p.headcount) * 100),
+      status: p.status,
+    }));
+  }
+
+  async getTimeToHireStats() {
+    const hired = await this.prisma.jobApplication.findMany({
+      where: { status: "ONBOARDED", offeredAt: { not: null } },
+      select: { createdAt: true, offeredAt: true, posting: { select: { title: true } } },
+    });
+    const stats = hired.map((a) => ({
+      title: a.posting.title,
+      daysToHire: Math.round((a.offeredAt!.getTime() - a.createdAt.getTime()) / (1000 * 60 * 60 * 24)),
+    }));
+    const avg = stats.length === 0 ? 0 : Math.round(stats.reduce((s, v) => s + v.daysToHire, 0) / stats.length);
+    return { averageDaysToHire: avg, records: stats };
+  }
+
+  // --- InterviewerScore ---
+
+  async addInterviewerScore(data: { interviewId: number; interviewerId: number; scoreSkill?: number; scoreComm?: number; scoreCulture?: number; comment?: string }, actorId: number) {
+    const result = await this.prisma.interviewerScore.create({ data });
+    void writeAuditLog({
+      actorId,
+      action: "INTERVIEW_SCORE_RECORDED",
+      targetId: data.interviewId,
+      detail: {
+        interviewerId: data.interviewerId,
+        scoreSkill: data.scoreSkill,
+        scoreComm: data.scoreComm,
+        scoreCulture: data.scoreCulture,
+      },
+    }).catch(console.error);
+    return result;
+  }
+
+  getInterviewerScores(interviewId: number) {
+    return this.prisma.interviewerScore.findMany({
+      where: { interviewId },
+      include: { interviewer: { select: { id: true, nickname: true } } },
     });
   }
 }

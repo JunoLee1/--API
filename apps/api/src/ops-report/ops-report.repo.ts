@@ -9,6 +9,8 @@ export interface OpsSnapshotData {
   registrationRate: number;
   attendanceRate: number;
   noticeReadRate: number;
+  ticketRevenue?: number;
+  ticketSalesCount?: number;
 }
 
 export class OpsReportRepository {

@@ -137,9 +137,10 @@ export class EquipmentController {
 
   returnLoan = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
+      const { role, frontOfficeRole, id: userId } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
-      res.status(200).json(await this.service.returnLoan(Number(req.params["loanId"])));
+      const { returnNote } = req.body as { returnNote?: string };
+      res.status(200).json(await this.service.returnLoan(Number(req.params["loanId"]), userId, returnNote));
     } catch (err) { next(err); }
   };
 }

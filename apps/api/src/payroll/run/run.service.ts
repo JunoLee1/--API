@@ -1,4 +1,5 @@
 import { AppError } from "../../lib/appError";
+import { formatLedgerDescription } from "../../lib/ledger-formatter";
 import type { RunRepository } from "./run.repo";
 import type { SalaryRepository } from "../salary/salary.repo";
 import type { ConfigRepository } from "../config/config.repo";
@@ -85,7 +86,7 @@ export class RunService {
       currency: "KRW",
       exchangeRate: 1,
       amountKrw: Number(updated.netPay),
-      description: `급여 지급 - salaryId ${salaryId} runId ${runId}`,
+      description: formatLedgerDescription("payroll", "salary_disbursed", { salaryId, runId }),
       relatedModule: "payroll",
       relatedId: runId,
     }, userId).catch(err => console.error("[LedgerAutoEntry:payroll]", err));

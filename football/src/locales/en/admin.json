@@ -396,10 +396,13 @@
     "loansLoadFailed": "Failed to load loan requests.",
     "approveButton": "Approve",
     "rejectButton": "Reject",
+    "returnButton": "Return",
     "approveSuccess": "Approved.",
     "rejectSuccess": "Rejected.",
+    "returnSuccess": "Returned successfully.",
     "approveFailed": "Failed to approve.",
     "rejectFailed": "Failed to reject.",
+    "returnFailed": "Failed to process return.",
     "loansTable": {
       "item": "Item",
       "requester": "Requester",

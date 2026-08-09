@@ -14,6 +14,10 @@ const controller = new TrainingLoadController(service);
 
 router.get("/", auth, controller.getAll);
 router.get("/weekly-summary", auth, controller.getWeeklySummary);
+router.get("/anomalies", auth, controller.getAnomalies);
+router.get("/injury-correlation/:playerId", auth, controller.getInjuryCorrelation);
+router.get("/growth-trajectory/:playerId", auth, controller.getGrowthTrajectory);
+router.get("/acute-chronic/:playerId", auth, controller.getAcuteChronicRatio);
 router.post("/", auth, controller.upsert);
 
 export default router;

@@ -121,6 +121,10 @@ export function PlayerDetailPage() {
     user?.role === 'GM' ||
     (user?.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'TD')
   const canUpdateMarketValue = canSeeMarketValue
+  const canSeeContract =
+    user?.role === 'ADMIN' ||
+    user?.role === 'GM' ||
+    (user?.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'TD')
   const isYouthPlayer = player?.team?.type === 'YOUTH'
   const canCoachGrowth =
     user?.role === 'ADMIN' ||
@@ -301,7 +305,7 @@ export function PlayerDetailPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className={`grid grid-cols-1 gap-4 ${canSeeContract ? 'md:grid-cols-2' : ''}`}>
                 {/* 신체 정보 */}
                 <div className="rounded-lg border bg-card p-5">
                   <h3 className="text-sm font-semibold text-foreground mb-1">{t('detailPage.physicalTitle')}</h3>
@@ -337,25 +341,27 @@ export function PlayerDetailPage() {
                 </div>
 
                 {/* 최근 계약 */}
-                <div className="rounded-lg border bg-card p-5">
-                  <h3 className="text-sm font-semibold text-foreground mb-1">{t('detailPage.contractTitle')}</h3>
-                  <Separator className="mb-1" />
-                  {latestContract ? (
-                    <>
-                      <StatRow label={t('detailPage.contractStart')} value={formatDate(latestContract.startDate)} />
-                      <Separator />
-                      <StatRow label={t('detailPage.contractEnd')} value={formatDate(latestContract.endDate)} />
-                      <Separator />
-                      <StatRow label={t('detailPage.salary')} value={formatSalary(latestContract.salary)} />
-                      <Separator />
-                      <StatRow label={t('detailPage.contractStatus')} value={latestContract.status} />
-                    </>
-                  ) : (
-                    <p className="text-sm text-muted-foreground py-4 text-center">
-                      {t('detailPage.noContract')}
-                    </p>
-                  )}
-                </div>
+                {canSeeContract && (
+                  <div className="rounded-lg border bg-card p-5">
+                    <h3 className="text-sm font-semibold text-foreground mb-1">{t('detailPage.contractTitle')}</h3>
+                    <Separator className="mb-1" />
+                    {latestContract ? (
+                      <>
+                        <StatRow label={t('detailPage.contractStart')} value={formatDate(latestContract.startDate)} />
+                        <Separator />
+                        <StatRow label={t('detailPage.contractEnd')} value={formatDate(latestContract.endDate)} />
+                        <Separator />
+                        <StatRow label={t('detailPage.salary')} value={formatSalary(latestContract.salary)} />
+                        <Separator />
+                        <StatRow label={t('detailPage.contractStatus')} value={latestContract.status} />
+                      </>
+                    ) : (
+                      <p className="text-sm text-muted-foreground py-4 text-center">
+                        {t('detailPage.noContract')}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* 이적 이력 */}

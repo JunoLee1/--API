@@ -50,8 +50,14 @@ export function MealExpensePage() {
 
   useEffect(() => { void fetchExpenses() }, [filterType, filterFrom, filterTo])
 
+  const handleAmountChange = (raw: string) => {
+    const digits = raw.replace(/[^0-9]/g, "")
+    const formatted = digits ? Number(digits).toLocaleString("ko-KR") : ""
+    setForm((f) => ({ ...f, amount: formatted }))
+  }
+
   const handleSubmit = async () => {
-    const amount = parseInt(form.amount, 10)
+    const amount = parseInt(form.amount.replace(/,/g, ""), 10)
     if (!form.date || isNaN(amount)) { toast.error("날짜와 금액을 입력하세요"); return }
     setSaving(true)
     try {
@@ -102,7 +108,9 @@ export function MealExpensePage() {
           <Label className="text-xs">{t("mealExpense.type")}</Label>
           <Select value={filterType} onValueChange={(v) => setFilterType(v as MealExpenseType | "")}>
             <SelectTrigger className="w-36 h-8 text-sm">
-              <SelectValue placeholder="전체" />
+              <SelectValue placeholder="전체">
+                {(v: string) => v ? t(`mealExpense.${v}`) : undefined}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">전체</SelectItem>
@@ -158,7 +166,7 @@ export function MealExpensePage() {
             <div className="space-y-1">
               <Label>{t("mealExpense.type")}</Label>
               <Select value={form.type} onValueChange={(v) => setForm((f) => ({ ...f, type: v as MealExpenseType }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger><SelectValue>{(v: string) => t(`mealExpense.${v}`)}</SelectValue></SelectTrigger>
                 <SelectContent>
                   {TYPES.map((tp) => (
                     <SelectItem key={tp} value={tp}>{t(`mealExpense.${tp}`)}</SelectItem>
@@ -172,7 +180,7 @@ export function MealExpensePage() {
             </div>
             <div className="space-y-1">
               <Label>{t("mealExpense.amount")}</Label>
-              <Input type="number" min={0} value={form.amount} onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))} />
+              <Input type="text" inputMode="numeric" value={form.amount} onChange={(e) => handleAmountChange(e.target.value)} placeholder="0" />
             </div>
             <div className="space-y-1">
               <Label>{t("mealExpense.restaurantName")}</Label>

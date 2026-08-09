@@ -1,4 +1,7 @@
 import { AppError } from "../lib/appError";
+import { writeAuditLog } from "../lib/auditLog";
+import { divideEvenly } from "../lib/money";
+import { formatLedgerDescription } from "../lib/ledger-formatter";
 import type { SponsorshipRepository } from "./sponsorship.repo";
 import type { CreateSponsorshipDto, UpdateSponsorshipDto, SponsorshipListQuery } from "./dto/sponsorship.dto";
 import type { PaymentSchedule } from "../generated/enums";
@@ -43,8 +46,12 @@ export class SponsorshipService {
     );
     if (dates.length > 0) {
       const count = dates.length;
-      const baseAmount = Math.floor((dto.totalFee * 100) / count) / 100;
-      const lastAmount = parseFloat((dto.totalFee - baseAmount * (count - 1)).toFixed(2));
+      const { baseAmount, lastAmount } = divideEvenly(dto.totalFee, count);
+      // PB10: the final installment absorbs any remainder from integer/decimal division
+      // (e.g. 10,000 ÷ 3 → 3,333 / 3,333 / 3,334). lastAmount differs from baseAmount
+      // when totalFee is not evenly divisible by count.
+      // TODO: add `note String?` to SponsorshipPayment schema to surface this label via API.
+      //       Once added, spread `...(isLast && count > 1 && { note: `최종 회차 (잔액 조정: ...)` })`.
       await this.repo.createPayments(
         dates.map((dueDate, i) => ({
           sponsorshipId: sponsorship.id,
@@ -56,12 +63,50 @@ export class SponsorshipService {
     return this.get(sponsorship.id);
   }
 
-  async update(id: number, dto: UpdateSponsorshipDto) {
-    await this.get(id);
+  async update(id: number, dto: UpdateSponsorshipDto, updatedById: number) {
+    const current = await this.get(id);
     if (dto.sponsorName && await this.repo.findBySponsorName(dto.sponsorName, id)) {
       throw new AppError(409, "SPONSORSHIP_NAME_DUPLICATE");
     }
-    return this.repo.update(id, dto);
+    const result = await this.repo.update(id, dto);
+    void writeAuditLog({
+      actorId: updatedById,
+      action: "SPONSORSHIP_UPDATED",
+      targetId: id,
+      detail: { fields: Object.keys(dto) },
+    }).catch(console.error);
+
+    // PA1: recalculate payment schedule if contract terms changed
+    const paymentTermsChanged = dto.contractStart || dto.contractEnd || dto.paymentSchedule || dto.totalFee !== undefined;
+    if (paymentTermsChanged) {
+      const contractStart = new Date(dto.contractStart ?? current.contractStart);
+      const contractEnd = new Date(dto.contractEnd ?? current.contractEnd);
+      const paymentSchedule = (dto.paymentSchedule ?? current.paymentSchedule) as PaymentSchedule;
+      const totalFee = dto.totalFee ?? Number(current.totalFee);
+
+      await this.repo.deletePayments(id);
+      const dates = generatePaymentDates(contractStart, contractEnd, paymentSchedule);
+      if (dates.length > 0) {
+        const count = dates.length;
+        const { baseAmount, lastAmount } = divideEvenly(totalFee, count);
+        // PB10: final installment absorbs remainder (see create() for details)
+        await this.repo.createPayments(
+          dates.map((dueDate, i) => ({
+            sponsorshipId: id,
+            dueDate,
+            amount: i === count - 1 ? lastAmount : baseAmount,
+          })),
+        );
+      }
+      void writeAuditLog({
+        actorId: updatedById,
+        action: "SPONSORSHIP_PAYMENT_SCHEDULE_RECALCULATED",
+        targetId: id,
+        detail: { contractStart: contractStart.toISOString(), contractEnd: contractEnd.toISOString(), paymentSchedule, totalFee },
+      }).catch(console.error);
+    }
+
+    return result;
   }
 
   async getPayments(id: number) {
@@ -77,19 +122,37 @@ export class SponsorshipService {
       throw new AppError(404, "SPONSORSHIP_PAYMENT_NOT_FOUND");
     }
     if (payment.status === "PAID") throw new AppError(409, "ALREADY_PAID");
+    if (Number(payment.amount) <= 0) throw new AppError(400, "INVALID_PAYMENT_AMOUNT");
     const updated = await this.repo.updatePayment(paymentId, { status: "PAID", paidAt: new Date() });
-    void this.ledgerService.createAutoEntry({
+    await this.ledgerService.createAutoEntry({
       type: "INCOME",
       category: "SPONSORSHIP",
       amount: Number(payment.amount),
       currency: "KRW",
       exchangeRate: 1,
       amountKrw: Number(payment.amount),
-      description: `스폰서십 수입 - ${sponsorship.sponsorName} payment #${paymentId}`,
+      description: formatLedgerDescription("sponsorship", "payment_received", { sponsorName: sponsorship.sponsorName, paymentId }),
       relatedModule: "sponsorship",
       relatedId: sponsorshipId,
-    }, userId).catch(err => console.error("[LedgerAutoEntry:sponsorship]", err));
+    }, userId);
     return updated;
+  }
+
+  async findExpiringContracts(daysAhead: number = 30) {
+    const now = new Date();
+    const threshold = new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000);
+    return this.repo.findExpiring(now, threshold);
+  }
+
+  // PB6: soft-delete a sponsorship contract
+  async delete(id: number, deletedById: number) {
+    await this.get(id);
+    await this.repo.softDelete(id);
+    void writeAuditLog({
+      actorId: deletedById,
+      action: "SPONSORSHIP_DELETED",
+      targetId: id,
+    }).catch(console.error);
   }
 
   private applyOverdue(payments: any[]) {

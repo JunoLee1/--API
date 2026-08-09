@@ -8,6 +8,7 @@ const LEAGUE_SELECT = {
   level: true,
   year: true,
   isActive: true,
+  confederation: true,
   createdAt: true,
   country: { select: { id: true, name: true, code: true } },
   clubs: {
@@ -54,6 +55,7 @@ export class LeagueRepository {
         level: dto.level,
         year: dto.year,
         ...(dto.countryId !== undefined && { countryId: dto.countryId }),
+        ...(dto.confederation !== undefined && { confederation: dto.confederation }),
       },
       select: LEAGUE_SELECT,
     });

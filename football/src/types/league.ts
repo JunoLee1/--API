@@ -1,5 +1,7 @@
 export type LeagueLevel = 'K3' | 'K_LEAGUE_2' | 'K_LEAGUE_1' | 'EPL' | 'OTHER'
 
+export type Confederation = 'UEFA' | 'AFC' | 'CONMEBOL' | 'CONCACAF' | 'CAF' | 'OFC'
+
 export interface LeagueClub {
   clubId: number
   joinedAt: string
@@ -12,6 +14,8 @@ export interface League {
   level: LeagueLevel
   year: number
   isActive: boolean
+  countryId: number | null
+  confederation: Confederation | null
   country: { id: number; name: string; code: string } | null
   clubs: LeagueClub[]
   createdAt: string
@@ -22,11 +26,14 @@ export interface CreateLeagueDto {
   level: LeagueLevel
   year: number
   countryId?: number
+  confederation?: Confederation
 }
 
 export interface UpdateLeagueDto {
   name?: string
   isActive?: boolean
+  countryId?: number | null
+  confederation?: Confederation | null
 }
 
 export const LEAGUE_LEVEL_LABEL: Record<LeagueLevel, string> = {

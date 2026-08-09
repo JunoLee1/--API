@@ -1,14 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useCallback, useState } from 'react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { playerApi } from '@/services/player.service'
 import { injuryApi } from '@/services/injury.service'
 import { tacticalApi } from '@/services/tactical.service'
+import { seasonApi } from '@/services/season.service'
+import { squadPlanApi } from '@/services/squadPlan.service'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 import type { Player, PositionZone } from '@/types/player'
 import { POSITION_ZONE } from '@/types/player'
 import type { InjuryStatus } from '@/types/injury'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, Save } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
@@ -33,12 +37,26 @@ interface ActiveInjury {
 
 export function SquadPlannerPage() {
   const { t } = useTranslation('squad')
+  const { user } = useCurrentUser()
+
   const [allPlayers, setAllPlayers] = useState<Player[]>([])
   const [activeInjuries, setActiveInjuries] = useState<ActiveInjury[]>([])
   const [formation, setFormation] = useState<SupportedFormation>('4-3-3')
   const [viewMode, setViewMode] = useState<ViewMode>('formation')
   const [placement, setPlacement] = useState<Record<string, string | null>>({})
   const [loading, setLoading] = useState(true)
+  const [isDirty, setIsDirty] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [currentSeasonId, setCurrentSeasonId] = useState<number | null>(null)
+
+  const skipRebuildRef = useRef(false)
+
+  const canSave =
+    user !== null &&
+    (user.role === 'ADMIN' ||
+      user.role === 'SUPER_ADMIN' ||
+      user.role === 'GM' ||
+      (user.role === 'COACHING_STAFF' && user.coachingRole === 'HEAD_COACH'))
 
   const injuredIds = useMemo(
     () => new Set(activeInjuries.map((i) => i.playerId)),
@@ -65,12 +83,46 @@ export function SquadPlannerPage() {
       playerApi.list({ status: 'ACTIVE' }),
       injuryApi.active(),
       tacticalApi.list(),
+      seasonApi.active(),
     ])
-      .then(([players, injuries, analyses]) => {
+      .then(async ([players, injuries, analyses, activeSeason]) => {
         setAllPlayers(players)
         setActiveInjuries(injuries)
+
         const lastFormation = analyses[0]?.formation
         const supported = SUPPORTED_FORMATIONS.find((f) => f === lastFormation)
+
+        if (activeSeason) {
+          setCurrentSeasonId(activeSeason.id)
+          try {
+            const savedPlan = await squadPlanApi.get(activeSeason.id)
+            if (savedPlan) {
+              const savedFormation = SUPPORTED_FORMATIONS.find((f) => f === savedPlan.formation)
+              if (savedFormation) setFormation(savedFormation)
+              else if (supported) setFormation(supported)
+
+              const injuredSet = new Set(injuries.map((i: ActiveInjury) => i.playerId))
+              const availableIds = new Set(
+                players
+                  .filter((p) => p.status === 'ACTIVE' && p.level !== 'YOUTH' && !injuredSet.has(p.id))
+                  .map((p) => p.id),
+              )
+
+              const restoredPlacement: Record<string, string | null> = {}
+              for (const [slotKey, playerId] of Object.entries(savedPlan.slots)) {
+                restoredPlacement[slotKey] =
+                  playerId !== null && availableIds.has(playerId) ? playerId : null
+              }
+
+              setPlacement(restoredPlacement)
+              skipRebuildRef.current = true
+              return
+            }
+          } catch {
+            // Fall through to default
+          }
+        }
+
         if (supported) setFormation(supported)
       })
       .catch(() => toast.error(t('planner.loadFailed')))
@@ -78,10 +130,14 @@ export function SquadPlannerPage() {
   }, [])
 
   useEffect(() => {
-    if (!loading) {
-      const slots = FORMATION_LAYOUTS[formation]
-      setPlacement(buildInitialPlacement(slots, availablePlayers))
+    if (loading) return
+    if (skipRebuildRef.current) {
+      skipRebuildRef.current = false
+      return
     }
+    const slots = FORMATION_LAYOUTS[formation]
+    setPlacement(buildInitialPlacement(slots, availablePlayers))
+    setIsDirty(false)
   }, [formation, loading, availablePlayers])
 
   const slots = FORMATION_LAYOUTS[formation]
@@ -93,6 +149,7 @@ export function SquadPlannerPage() {
 
   const handleConfirmSuggestion = (slotKey: string, playerId: string) => {
     setPlacement((prev) => ({ ...prev, [slotKey]: playerId }))
+    setIsDirty(true)
   }
 
   const handleDrop = (toSlotKey: string, playerId: string, fromSlotKey: string | null) => {
@@ -107,19 +164,39 @@ export function SquadPlannerPage() {
       }
       return next
     })
+    setIsDirty(true)
   }
 
   const handleRemove = (slotKey: string) => {
     setPlacement((prev) => ({ ...prev, [slotKey]: null }))
+    setIsDirty(true)
   }
 
   const handleBenchDrop = (_playerId: string, fromSlotKey: string) => {
     setPlacement((prev) => ({ ...prev, [fromSlotKey]: null }))
+    setIsDirty(true)
   }
 
   const handleFormationChange = (f: string) => {
     setFormation(f as SupportedFormation)
   }
+
+  const handleSave = useCallback(async () => {
+    if (!currentSeasonId) {
+      toast.error(t('planner.saveNoSeason'))
+      return
+    }
+    setSaving(true)
+    try {
+      await squadPlanApi.save({ seasonId: currentSeasonId, formation, slots: placement })
+      setIsDirty(false)
+      toast.success(t('planner.saveSuccess'))
+    } catch {
+      toast.error(t('planner.saveFailed'))
+    } finally {
+      setSaving(false)
+    }
+  }, [currentSeasonId, formation, placement, t])
 
   if (loading) {
     return (
@@ -161,6 +238,18 @@ export function SquadPlannerPage() {
           )}
         </div>
         <div className="flex items-center gap-2">
+          {canSave && (
+            <Button
+              size="sm"
+              variant={isDirty ? 'default' : 'outline'}
+              disabled={!isDirty || saving}
+              onClick={handleSave}
+              className="gap-1.5"
+            >
+              <Save className="size-3.5" />
+              {saving ? t('planner.saving') : t('planner.save')}
+            </Button>
+          )}
           <Select value={formation} onValueChange={handleFormationChange}>
             <SelectTrigger className="w-32">
               <SelectValue>{formation}</SelectValue>
