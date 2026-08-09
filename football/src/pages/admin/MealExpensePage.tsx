@@ -34,6 +34,8 @@ export function MealExpensePage() {
     note: "",
   })
 
+  const typeItems = TYPES.map((tp) => ({ value: tp, label: t(`mealExpense.${tp}`) }))
+
   const fetchExpenses = async () => {
     try {
       setExpenses(
@@ -106,14 +108,14 @@ export function MealExpensePage() {
         </div>
         <div className="space-y-1">
           <Label className="text-xs">{t("mealExpense.type")}</Label>
-          <Select value={filterType} onValueChange={(v) => setFilterType(v as MealExpenseType | "")}>
+          <Select value={filterType} onValueChange={(v) => setFilterType(v as MealExpenseType | "")} items={typeItems}>
             <SelectTrigger className="w-36 h-8 text-sm">
               <SelectValue placeholder="전체" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">전체</SelectItem>
               {TYPES.map((tp) => (
-                <SelectItem key={tp} value={tp} textValue={t(`mealExpense.${tp}`)}>{t(`mealExpense.${tp}`)}</SelectItem>
+                <SelectItem key={tp} value={tp}>{t(`mealExpense.${tp}`)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -163,11 +165,11 @@ export function MealExpensePage() {
           <div className="space-y-3">
             <div className="space-y-1">
               <Label>{t("mealExpense.type")}</Label>
-              <Select value={form.type} onValueChange={(v) => setForm((f) => ({ ...f, type: v as MealExpenseType }))}>
+              <Select value={form.type} onValueChange={(v) => setForm((f) => ({ ...f, type: v as MealExpenseType }))} items={typeItems}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {TYPES.map((tp) => (
-                    <SelectItem key={tp} value={tp} textValue={t(`mealExpense.${tp}`)}>{t(`mealExpense.${tp}`)}</SelectItem>
+                    <SelectItem key={tp} value={tp}>{t(`mealExpense.${tp}`)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
