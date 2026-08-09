@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { canWriteFinance } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { FinancialReportService } from "./financial-report.service";
 import { OperatingCategory } from "../generated/client";
+import type { RevenueBreakdownDto } from "./financial-report.repo";
 
 const canWrite = (role: string, foRole: string | null | undefined) =>
   canWriteFinance(role, foRole);
@@ -15,19 +17,30 @@ export class FinancialReportController {
 
   set = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
-      const { totalRevenue, note } = req.body as { totalRevenue: number; note?: string };
+      const { totalRevenue, note, breakdown } = req.body as { totalRevenue: number; note?: string; breakdown?: RevenueBreakdownDto };
       if (!Number.isInteger(totalRevenue)) throw new AppError(400, "INVALID_REVENUE");
-      const report = await this.service.set(seasonId, totalRevenue, note);
+      const report = await this.service.set(seasonId, totalRevenue, note, breakdown);
+      res.status(200).json(report);
+    } catch (err) { next(err); }
+  };
+
+  setBreakdown = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = requireUser(req);
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const seasonId = Number(req.params["seasonId"]);
+      const { note, ...breakdown } = req.body as RevenueBreakdownDto & { note?: string };
+      const report = await this.service.setBreakdown(seasonId, breakdown, note);
       res.status(200).json(report);
     } catch (err) { next(err); }
   };
 
   setFromCSV = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
       if (!req.file) throw new AppError(400, "FILE_REQUIRED");
@@ -40,7 +53,7 @@ export class FinancialReportController {
 
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
       const report = await this.service.get(seasonId);
@@ -50,20 +63,17 @@ export class FinancialReportController {
 
   getBudgetPlan = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
-      const [plan, actuals] = await Promise.all([
-        this.service.getBudgetPlan(seasonId),
-        this.service.getActuals(seasonId),
-      ]);
-      res.status(200).json({ ...plan, actuals });
+      const result = await this.service.getComparison(seasonId);
+      res.status(200).json(result);
     } catch (err) { next(err); }
   };
 
   upsertBudgetPlan = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
       const plan = await this.service.upsertBudgetPlan(seasonId, req.body);
@@ -73,7 +83,7 @@ export class FinancialReportController {
 
   optimize = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
       const result = await this.service.optimize(seasonId);
@@ -83,12 +93,44 @@ export class FinancialReportController {
 
   addOverride = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole, id: userId } = req.user!;
+      const { role, frontOfficeRole, id: userId } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
       const { category, amount, reason } = req.body as { category: OperatingCategory; amount: number; reason: string };
       const log = await this.service.addOverride(seasonId, category, amount, reason, userId);
       res.status(201).json(log);
+    } catch (err) { next(err); }
+  };
+
+  setFromPrevSeason = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = requireUser(req);
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const seasonId = Number(req.params["seasonId"]);
+      const { prevSeasonId } = req.body as { prevSeasonId: number };
+      if (!prevSeasonId) throw new AppError(400, "PREV_SEASON_ID_REQUIRED");
+      const report = await this.service.setFromPrevSeasonActuals(prevSeasonId, seasonId);
+      res.status(200).json(report);
+    } catch (err) { next(err); }
+  };
+
+  getPnL = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = requireUser(req);
+      if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const seasonId = Number(req.params["seasonId"]);
+      const data = await this.service.getPnL(seasonId);
+      res.status(200).json(data);
+    } catch (err) { next(err); }
+  };
+
+  getWithLedger = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = requireUser(req);
+      if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const seasonId = Number(req.params["seasonId"]);
+      const data = await this.service.getReportWithLedger(seasonId);
+      res.status(200).json(data);
     } catch (err) { next(err); }
   };
 }

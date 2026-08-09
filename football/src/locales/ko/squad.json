@@ -13,7 +13,12 @@
     "zoneWarning": "{{zone}} 가용 {{count}}명 (최소 {{min}}명)",
     "formation": "포메이션",
     "spanishGrid": "스페인 그리드",
-    "loadFailed": "데이터를 불러오지 못했습니다."
+    "loadFailed": "데이터를 불러오지 못했습니다.",
+    "save": "저장",
+    "saving": "저장 중...",
+    "saveSuccess": "스쿼드 플랜이 저장되었습니다.",
+    "saveFailed": "저장에 실패했습니다.",
+    "saveNoSeason": "활성 시즌이 없습니다."
   },
   "slot": {
     "dragHint": "드래그로 이동 / 더블클릭으로 해제",

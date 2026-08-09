@@ -1,4 +1,6 @@
 import { AppError } from "../lib/appError";
+import { getPrisma } from "../lib/prisma";
+import { formatLedgerDescription } from "../lib/ledger-formatter";
 import type { AcademyFeeRepository } from "./academy-fee.repo";
 import type { NotificationRepository } from "../notification/notification.repo";
 import type { FeeListQuery, SubmitPaymentProofDto } from "./dto/academy-fee.dto";
@@ -87,11 +89,50 @@ export class AcademyFeeService {
     return this.repo.submitPaymentProof(id, dto.paymentProofUrl);
   }
 
-  async approvePayment(id: number) {
+  async approvePayment(id: number, approverId: number) {
     const fee = await this.repo.findById(id);
     if (!fee) throw new AppError(404, "FEE_NOT_FOUND");
     if (fee.status !== "SUBMITTED") throw new AppError(409, "INVALID_STATUS");
+
+    const prisma = getPrisma();
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+
+    // 기간 마감 체크: 이번 달에 periodLocked=true 항목이 있으면 거부
+    const periodStart = new Date(year, month - 1, 1);
+    const periodEnd = new Date(year, month, 1);
+    const lockedEntry = await prisma.ledgerEntry.findFirst({
+      where: { periodLocked: true, createdAt: { gte: periodStart, lt: periodEnd } },
+      select: { id: true },
+    });
+    if (lockedEntry) throw new AppError(400, "PERIOD_LOCKED");
+
+    // PAID로 전환
     const paid = await this.repo.approvePayment(id);
+
+    // LedgerEntry 생성 (fee.amount가 Decimal일 수 있으므로 Number() 변환)
+    const amount = Number((fee as any).amount ?? 0);
+    await prisma.ledgerEntry.create({
+      data: {
+        type: "INCOME",
+        category: "ACADEMY_FEE",
+        amount,
+        currency: "KRW",
+        exchangeRate: 1,
+        amountKrw: amount,
+        isRefund: false,
+        description: formatLedgerDescription("academy_fee", "payment_approved", {
+          player: (fee as any).player?.playerName ?? String(fee.playerId),
+          period: `${(fee as any).year ?? year}년 ${(fee as any).month ?? month}월`,
+        }),
+        relatedModule: "AcademyFee",
+        relatedId: id,
+        createdById: approverId,
+      } as any,
+    });
+
+    // guardian 알림
     void this.notifRepo.createForGuardian(
       fee.guardianId, "FEE_INVOICE_ISSUED",
       () => ({
@@ -100,6 +141,7 @@ export class AcademyFeeService {
       }),
       id,
     ).catch(console.error);
+
     return paid;
   }
 
@@ -111,11 +153,17 @@ export class AcademyFeeService {
       .reduce((s, r) => s + (r._count.id ?? 0), 0);
     const locked = rows.find(r => r.status === "LOCKED")?._count.id ?? 0;
     const totalRevenue = rows.find(r => r.status === "PAID")?._sum.amount ?? 0;
+
+    // lockedAmount: LOCKED 상태 회비 총액
+    const lockedAmountRow = rows.find(r => r.status === "LOCKED");
+    const lockedAmount = Number(lockedAmountRow?._sum?.amount ?? 0);
+
     return {
       monthlyCollectionRate: total > 0 ? Math.round((paid / total) * 100) : 0,
       totalRevenue,
       overdueCount: overdue,
       lockedPlayerCount: locked,
+      lockedAmount,
     };
   }
 }

@@ -1,6 +1,8 @@
 import { EquipmentRepository } from "./equipment.repo";
 import { NotificationRepository } from "../notification/notification.repo";
 import { AppError } from "../lib/appError";
+import { writeAuditLog } from "../lib/auditLog";
+import { formatLedgerDescription } from "../lib/ledger-formatter";
 import { CreateEquipmentItemDto, UpdateQuantityDto, UpdateUnitStatusDto, CreateAssignmentDto, CreateEquipmentLoanDto, CreateEquipmentUnitDto } from "./dto/equipment.dto";
 import { EquipmentUnitStatus, EquipmentLoanStatus } from "../generated/enums";
 import type { LedgerService } from "../ledger/ledger.service";
@@ -26,7 +28,13 @@ export class EquipmentService {
   async getItemById(id: number) {
     const item = await this.repo.findItemById(id);
     if (!item) throw new AppError(404, "EQUIPMENT_ITEM_NOT_FOUND");
-    return item;
+    return {
+      ...item,
+      units: (item as any).units?.map(({ assignments, ...unit }: any) => ({
+        ...unit,
+        assignedTo: assignments[0]?.player ? { playerName: assignments[0].player.name } : null,
+      })),
+    };
   }
 
   createItem(dto: CreateEquipmentItemDto) {
@@ -88,10 +96,16 @@ export class EquipmentService {
   async transitionUnitStatus(unitId: number, dto: UpdateUnitStatusDto, userId?: number) {
     const unit = await this.repo.findUnitById(unitId);
     if (!unit) throw new AppError(404, "EQUIPMENT_UNIT_NOT_FOUND");
-    const allowed = VALID_UNIT_TRANSITIONS[unit.status];
+    const allowed = VALID_UNIT_TRANSITIONS[unit.status as unknown as EquipmentUnitStatus];
     if (!allowed.includes(dto.status)) throw new AppError(409, "INVALID_STATUS_TRANSITION");
     const updated = await this.repo.updateUnitStatus(unitId, dto.status);
     if (dto.status === "RETIRED") {
+      void writeAuditLog({
+        actorId: userId ?? 0,
+        action: "EQUIPMENT_UNIT_RETIRED",
+        targetId: unitId,
+        detail: { previousStatus: unit.status },
+      }).catch(console.error);
       const unitWithBook = await this.repo.findUnitWithDepreciation(unitId);
       if (unitWithBook?.bookValue) {
         void this.ledgerService.createAutoEntry({
@@ -102,7 +116,7 @@ export class EquipmentService {
           exchangeRate: 1,
           amountKrw: Number(unitWithBook.bookValue),
           isRefund: true,
-          description: `장비 폐기 - Unit #${unitId}`,
+          description: formatLedgerDescription("equipment", "retired", { unitId }),
           relatedModule: "equipment",
           relatedId: unitId,
         }, userId ?? 0).catch(err => console.error("[LedgerAutoEntry:equipment]", err));
@@ -184,11 +198,27 @@ export class EquipmentService {
     });
   }
 
-  async returnLoan(loanId: number) {
+  async returnLoan(loanId: number, returnedById: number, returnNote?: string) {
     const loan = await this.repo.findLoanById(loanId);
     if (!loan) throw new AppError(404, "LOAN_NOT_FOUND");
     if (loan.status !== "ISSUED") throw new AppError(409, "INVALID_LOAN_STATUS_TRANSITION");
-    return this.repo.updateLoan(loanId, { status: "RETURNED", returnedAt: new Date() });
+    const result = await this.repo.returnLoan(loanId, returnedById, returnNote);
+    if (loan.equipmentUnitId) {
+      await this.repo.updateUnitStatus(loan.equipmentUnitId, "AVAILABLE");
+    }
+    void this.notificationRepo.create({
+      userId: loan.requestedBy.id,
+      type: "EQUIPMENT_LOAN_RETURNED",
+      title: "장비 반납 확인",
+      body: `${loan.equipmentItem.name} 반납이 확인됐습니다.`,
+    }).catch(console.error);
+    void writeAuditLog({
+      actorId: returnedById,
+      action: "EQUIPMENT_LOAN_RETURNED",
+      targetId: loanId,
+      detail: { ...(returnNote && { returnNote }) },
+    }).catch(console.error);
+    return result;
   }
 
   listLoans(status?: EquipmentLoanStatus) {

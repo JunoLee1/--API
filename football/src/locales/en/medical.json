@@ -17,6 +17,7 @@
       "status": "Status",
       "changeStatus": "Change Status"
     },
+    "returningImminent": "Imminent",
     "createDialog": {
       "title": "Report Injury",
       "bodyPart": "Body Part *",

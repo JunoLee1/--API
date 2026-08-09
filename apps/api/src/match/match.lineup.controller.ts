@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { requireUser } from "../lib/authMiddleware";
 import { MatchLineupService } from "./match.lineup.service";
 import type { SaveLineupDto } from "./dto/lineup.dto";
 
@@ -19,7 +20,8 @@ export class MatchLineupController {
 
   saveLineup = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!EDIT_ROLES.includes(req.user!.role as any)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!(EDIT_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       const matchId = Number(req.params["id"]);
       const dto = req.body as SaveLineupDto;
       const result = await this.service.saveLineup(matchId, dto);
@@ -29,9 +31,10 @@ export class MatchLineupController {
 
   confirmLineup = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!CONFIRM_ROLES.includes(req.user!.role as any)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!(CONFIRM_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       const matchId = Number(req.params["id"]);
-      const result = await this.service.confirmLineup(matchId, req.user!.id);
+      const result = await this.service.confirmLineup(matchId, user.id);
       res.json(result);
     } catch (err) { next(err); }
   };

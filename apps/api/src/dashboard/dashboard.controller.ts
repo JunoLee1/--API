@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { requireUser } from "../lib/authMiddleware";
 import { DashboardService } from "./dashboard.service";
 
 export class DashboardController {
@@ -6,7 +7,8 @@ export class DashboardController {
 
   getStats = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      res.status(200).json(await this.service.getStats(req.user!));
+      const user = requireUser(req);
+      res.status(200).json(await this.service.getStats(user));
     } catch (err) {
       next(err);
     }

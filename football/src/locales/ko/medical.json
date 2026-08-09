@@ -17,6 +17,7 @@
       "status": "상태",
       "changeStatus": "상태 변경"
     },
+    "returningImminent": "임박",
     "createDialog": {
       "title": "부상 등록",
       "bodyPart": "부상 부위 *",

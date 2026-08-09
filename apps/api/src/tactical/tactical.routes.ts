@@ -41,6 +41,10 @@ const upload = multer({
 
 // 전술 분석 목록 (전체, 쿼리: matchId, phase)
 router.get("/", auth, controller.list);
+// 포메이션-경기결과 상관관계 (쿼리: seasonId)
+router.get("/formation-correlation", auth, controller.getFormationCorrelation);
+// 상대팀 분석 텍스트 검색 (쿼리: keyword, seasonId)
+router.get("/opponent-search", auth, controller.searchOpponent);
 // 경기별 전술 분석 목록
 router.get("/match/:matchId", auth, controller.getByMatch);
 // 전술 분석 단건 (라인업 + 미디어 포함)
