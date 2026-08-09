@@ -13,6 +13,12 @@ const PLAN_INCLUDE = {
   reviewedBy: { select: { id: true, username: true } },
   budgetItems: true,
   kpiItems: true,
+  reviews: {
+    include: {
+      reviewerDept: { select: { id: true, name: true } },
+      confirmedBy: { select: { id: true, username: true } },
+    },
+  },
 };
 
 export class DepartmentPlanRepository {
@@ -123,12 +129,50 @@ export class DepartmentPlanRepository {
     });
   }
 
-  submit(id: number) {
-    return this.prisma.departmentAnnualPlan.update({
-      where: { id },
-      data: { status: "REVIEWING", submittedAt: new Date() },
-      include: PLAN_INCLUDE,
+  async submit(id: number) {
+    // 해당 부서의 검토 부서 목록 조회
+    const plan = await this.prisma.departmentAnnualPlan.findUniqueOrThrow({ where: { id } });
+    const reviewerDeptIds = await this.prisma.departmentReviewerConfig
+      .findMany({
+        where: { subjectDepartmentId: plan.departmentId },
+        select: { reviewerDepartmentId: true },
+      })
+      .then((rows) => rows.map((r) => r.reviewerDepartmentId));
+
+    return this.prisma.$transaction(async (tx) => {
+      if (reviewerDeptIds.length > 0) {
+        await tx.planReview.createMany({
+          data: reviewerDeptIds.map((reviewerDeptId) => ({ planId: id, reviewerDeptId })),
+          skipDuplicates: true,
+        });
+      }
+      return tx.departmentAnnualPlan.update({
+        where: { id },
+        data: { status: "REVIEWING", submittedAt: new Date() },
+        include: PLAN_INCLUDE,
+      });
     });
+  }
+
+  async allReviewsComplete(planId: number): Promise<boolean> {
+    const total = await this.prisma.planReview.count({ where: { planId } });
+    if (total === 0) return true;
+    const confirmed = await this.prisma.planReview.count({
+      where: { planId, status: "CONFIRMED" },
+    });
+    return total === confirmed;
+  }
+
+  async withReviewStatus(plan: { id: number } & Record<string, any>) {
+    const total = await this.prisma.planReview.count({ where: { planId: plan.id } });
+    const confirmed = await this.prisma.planReview.count({
+      where: { planId: plan.id, status: "CONFIRMED" },
+    });
+    return {
+      ...plan,
+      allReviewsComplete: total === 0 || total === confirmed,
+      reviewProgress: { total, confirmed },
+    };
   }
 
   approve(id: number, reviewedById: number) {

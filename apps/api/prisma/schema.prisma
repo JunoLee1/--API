@@ -786,6 +786,7 @@ model User {
   transferRequestsRejected   TransferRequest[]         @relation("TRRejectedBy")
   createdPlans               DepartmentAnnualPlan[]    @relation("PlanCreatedBy")
   reviewedPlans              DepartmentAnnualPlan[]    @relation("PlanReviewedBy")
+  confirmedPlanReviews       PlanReview[]              @relation("PlanReviewConfirmer")
 }
 
 model Season {
@@ -2276,6 +2277,9 @@ model Department {
   members      UserDepartment[]
   ibiConfigs   DepartmentIbiConfig[]
   annualPlans  DepartmentAnnualPlan[]
+  subjectConfigs   DepartmentReviewerConfig[] @relation("SubjectDept")
+  reviewerConfigs  DepartmentReviewerConfig[] @relation("ReviewerDept")
+  planReviews      PlanReview[]               @relation("PlanReviewerDept")
 }
 
 enum DeptRole {
@@ -3001,6 +3005,7 @@ model DepartmentAnnualPlan {
   reviewedBy      User?        @relation("PlanReviewedBy", fields: [reviewedById], references: [id])
   budgetItems     DepartmentBudgetItem[]
   kpiItems        DepartmentKpiItem[]
+  reviews         PlanReview[]
 
   @@unique([seasonId, departmentId])
 }
@@ -3024,4 +3029,42 @@ model DepartmentKpiItem {
   quarter     Int?
 
   plan        DepartmentAnnualPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────
+// 부서 간 교차 검토
+// ─────────────────────────────────────────────
+
+enum ReviewStatus {
+  PENDING
+  CONFIRMED
+}
+
+model DepartmentReviewerConfig {
+  id                   Int        @id @default(autoincrement())
+  subjectDepartmentId  Int
+  reviewerDepartmentId Int
+  createdAt            DateTime   @default(now())
+
+  subjectDepartment    Department @relation("SubjectDept", fields: [subjectDepartmentId], references: [id], onDelete: Cascade)
+  reviewerDepartment   Department @relation("ReviewerDept", fields: [reviewerDepartmentId], references: [id], onDelete: Cascade)
+
+  @@unique([subjectDepartmentId, reviewerDepartmentId])
+}
+
+model PlanReview {
+  id             Int          @id @default(autoincrement())
+  planId         Int
+  reviewerDeptId Int
+  status         ReviewStatus @default(PENDING)
+  comment        String?
+  confirmedById  Int?
+  confirmedAt    DateTime?
+  createdAt      DateTime     @default(now())
+
+  plan           DepartmentAnnualPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  reviewerDept   Department           @relation("PlanReviewerDept", fields: [reviewerDeptId], references: [id])
+  confirmedBy    User?                @relation("PlanReviewConfirmer", fields: [confirmedById], references: [id])
+
+  @@unique([planId, reviewerDeptId])
 }

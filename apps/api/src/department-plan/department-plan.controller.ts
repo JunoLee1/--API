@@ -16,7 +16,8 @@ export class DepartmentPlanController {
 
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      res.status(200).json(await this.service.getById(Number(req.params["id"])));
+      const plan = await this.service.getById(Number(req.params["id"]));
+      res.status(200).json(await this.service.withReviewStatus(plan));
     } catch (err) { next(err); }
   };
 

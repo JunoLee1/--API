@@ -1,4 +1,26 @@
 export type PlanStatus = 'DRAFT' | 'REVIEWING' | 'APPROVED' | 'REJECTED'
+export type ReviewStatus = 'PENDING' | 'CONFIRMED'
+
+export interface PlanReview {
+  id: number
+  planId: number
+  reviewerDeptId: number
+  reviewerDept: { id: number; name: string }
+  status: ReviewStatus
+  comment: string | null
+  confirmedById: number | null
+  confirmedBy: { id: number; username: string } | null
+  confirmedAt: string | null
+  createdAt: string
+}
+
+export interface DepartmentReviewerConfig {
+  id: number
+  subjectDepartmentId: number
+  reviewerDepartmentId: number
+  reviewerDepartment: { id: number; name: string }
+  createdAt: string
+}
 export type OperatingCategory = 'MEDICAL' | 'MEAL' | 'TRAVEL' | 'EQUIPMENT' | 'SCOUTING' | 'YOUTH'
 
 export interface DepartmentBudgetItem {
@@ -31,6 +53,9 @@ export interface DepartmentAnnualPlan {
   reviewedBy: { id: number; username: string } | null
   budgetItems: DepartmentBudgetItem[]
   kpiItems: DepartmentKpiItem[]
+  reviews: PlanReview[]
+  allReviewsComplete: boolean
+  reviewProgress: { total: number; confirmed: number }
 }
 
 export const OPERATING_CATEGORIES: OperatingCategory[] = [
