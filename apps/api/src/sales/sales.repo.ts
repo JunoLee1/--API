@@ -35,6 +35,10 @@ export class SalesRepository {
     });
   }
 
+  update(id: number, data: { quantity?: number; unitPrice?: number; totalAmount?: number; saleDate?: Date; description?: string | null; updatedById: number }) {
+    return this.prisma.salesRecord.update({ where: { id }, data: data as any });
+  }
+
   delete(id: number) {
     return this.prisma.salesRecord.delete({ where: { id } });
   }
@@ -46,9 +50,9 @@ export class SalesRepository {
     });
   }
 
-  async ticketSummaryByMatch(seasonId: number) {
+  async ticketSummaryByMatch(seasonId: number, homeTeamName?: string) {
     const matches = await this.prisma.match.findMany({
-      where: { seasonId },
+      where: { seasonId, ...(homeTeamName && { homeTeamName }) },
       orderBy: { date: "desc" },
       include: {
         salesRecords: {
