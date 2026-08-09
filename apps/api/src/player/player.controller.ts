@@ -11,6 +11,12 @@ import { writeAuditLog } from "../lib/auditLog";
 
 const WRITE_ROLES = ["ADMIN", "FRONT_OFFICE"] as const;
 const SECONDARY_POS_WRITE_ROLES = ["ADMIN", "COACHING_STAFF"] as const;
+const MARKET_VALUE_ROLES = ["GM", "TD", "ADMIN"] as const;
+
+function requireUser(req: Request) {
+  if (!req.user) throw new AppError(401, "UNAUTHORIZED");
+  return req.user;
+}
 
 export class PlayerController {
   constructor(private service: PlayerService, private spRepo?: SecondaryPositionRepository) {}
@@ -25,8 +31,7 @@ export class PlayerController {
       if (q["nationalityId"]) query.nationalityId = Number(q["nationalityId"]);
       if (q["excludeYouth"] === "true") query.excludeYouth = true;
       if (q["teamType"]) query.teamType = q["teamType"] as TeamType;
-      const players = await this.service.getPlayers(query);
-      res.status(200).json(players);
+      res.status(200).json(await this.service.getPlayers(query));
     } catch (err) {
       next(err);
     }
@@ -38,7 +43,7 @@ export class PlayerController {
       const includePrivate = isAdminLike(user.role) || user.role === "GM" || user.frontOfficeRole === "TD";
       const player = await this.service.getPlayerById(String(req.params["id"]), includePrivate);
       if (user.role === "PLAYER") {
-        const { currentMarketValue, ...safePlayer } = player as any;
+        const { currentMarketValue: _mv, ...safePlayer } = player as typeof player & { currentMarketValue?: unknown };
         return res.status(200).json(safePlayer);
       }
       res.status(200).json(player);
@@ -50,10 +55,8 @@ export class PlayerController {
   createPlayer = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);
-      if (!WRITE_ROLES.includes(user.role as (typeof WRITE_ROLES)[number])) {
-        throw new AppError(403, "FORBIDDEN");
-      }
-      const player = await this.service.createPlayer(req.body);
+      if (!(WRITE_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
+      const player = await this.service.createPlayer(req.body, user.id);
       res.status(201).json(player);
     } catch (err) {
       next(err);
@@ -63,9 +66,7 @@ export class PlayerController {
   updatePlayer = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);
-      if (!WRITE_ROLES.includes(user.role as (typeof WRITE_ROLES)[number])) {
-        throw new AppError(403, "FORBIDDEN");
-      }
+      if (!(WRITE_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       const player = await this.service.updatePlayer(String(req.params["id"]), req.body);
       res.status(200).json(player);
     } catch (err) {
@@ -88,19 +89,17 @@ export class PlayerController {
     try {
       const user = requireUser(req);
       if (!isAdminLike(user.role)) throw new AppError(403, "FORBIDDEN");
-      await this.service.deletePlayer(String(req.params["id"]));
+      await this.service.deletePlayer(String(req.params["id"]), user.id);
       res.status(204).send();
     } catch (err) {
       next(err);
     }
   };
 
-  private readonly MARKET_VALUE_ROLES = ["GM", "TD", "ADMIN"] as const;
-
   getMarketValueHistory = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);
-      if (!(this.MARKET_VALUE_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
+      if (!(MARKET_VALUE_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       void writeAuditLog({ actorId: user.id, action: "PLAYER_MARKET_VALUE_READ", targetId: String(req.params["id"]) }).catch(console.error);
       const history = await this.service.getMarketValueHistory(String(req.params["id"]));
       res.json(history);
@@ -110,7 +109,7 @@ export class PlayerController {
   updateMarketValue = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);
-      if (!(this.MARKET_VALUE_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
+      if (!(MARKET_VALUE_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       const result = await this.service.updateMarketValue(
         String(req.params["id"]),
         req.body,
@@ -123,30 +122,21 @@ export class PlayerController {
   getMatchStats = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const seasonId = req.query["seasonId"] ? Number(req.query["seasonId"]) : undefined;
-      const stats = await this.service.getMatchStats(String(req.params["id"]), seasonId);
-      res.json(stats);
+      res.json(await this.service.getMatchStats(String(req.params["id"]), seasonId));
     } catch (err) { next(err); }
   };
 
   getTrainingResults = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { from, to } = req.query as Record<string, string | undefined>;
       const user = requireUser(req);
-      const results = await this.service.getTrainingResults(
-        String(req.params["id"]),
-        String(user.id),
-        user.role,
-        from,
-        to,
-      );
-      res.json(results);
+      const { from, to } = req.query as Record<string, string | undefined>;
+      res.json(await this.service.getTrainingResults(String(req.params["id"]), String(user.id), user.role, from, to));
     } catch (err) { next(err); }
   };
 
   getPositionDiversity = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = await this.service.getPositionDiversity(String(req.params["id"]));
-      res.json(data);
+      res.json(await this.service.getPositionDiversity(String(req.params["id"])));
     } catch (err) { next(err); }
   };
 
@@ -155,7 +145,7 @@ export class PlayerController {
       const playerId = String(req.params["id"]);
       const player = await this.service.getPlayerById(playerId);
       const stats = await this.service.getMatchStats(playerId);
-      const radar = await getPlayerRadarData(player.position, stats as any);
+      const radar = await getPlayerRadarData(player.position, stats);
       if (!radar) return res.json({ scores: {}, strengths: [], weaknesses: [], message: "데이터 부족" });
       res.json(radar);
     } catch (err) { next(err); }
@@ -163,28 +153,27 @@ export class PlayerController {
 
   listSecondaryPositions = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const rows = await this.spRepo!.list(String(req.params["playerId"]));
-      res.json(rows);
+      if (!this.spRepo) throw new AppError(500, "SECONDARY_POSITION_REPO_NOT_CONFIGURED");
+      res.json(await this.spRepo.list(String(req.params["playerId"])));
     } catch (err) { next(err); }
   };
 
   upsertSecondaryPosition = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);
-      if (!(SECONDARY_POS_WRITE_ROLES as readonly string[]).includes(user.role))
-        throw new AppError(403, "FORBIDDEN");
+      if (!this.spRepo) throw new AppError(500, "SECONDARY_POSITION_REPO_NOT_CONFIGURED");
+      if (!(SECONDARY_POS_WRITE_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       const { position, fitnessTarget } = req.body as { position: Position; fitnessTarget: number };
-      const row = await this.spRepo!.upsert(String(req.params["playerId"]), position, fitnessTarget);
-      res.json(row);
+      res.json(await this.spRepo.upsert(String(req.params["playerId"]), position, fitnessTarget));
     } catch (err) { next(err); }
   };
 
   deleteSecondaryPosition = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);
-      if (!(SECONDARY_POS_WRITE_ROLES as readonly string[]).includes(user.role))
-        throw new AppError(403, "FORBIDDEN");
-      await this.spRepo!.delete(String(req.params["playerId"]), String(req.params["position"]) as Position);
+      if (!this.spRepo) throw new AppError(500, "SECONDARY_POSITION_REPO_NOT_CONFIGURED");
+      if (!(SECONDARY_POS_WRITE_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
+      await this.spRepo.delete(String(req.params["playerId"]), String(req.params["position"]) as Position);
       res.status(204).send();
     } catch (err) { next(err); }
   };

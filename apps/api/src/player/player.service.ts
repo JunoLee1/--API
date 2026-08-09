@@ -1,5 +1,6 @@
 import { PlayerRepository } from "./player.repo";
 import { AppError } from "../lib/appError";
+import { writeAuditLog } from "../lib/auditLog";
 import { CreatePlayerDto, UpdatePlayerDto, UpdatePlayerStatusDto, PlayerListQuery } from "./dto/player.dto";
 import { MarketValueRepository } from "./market-value.repo";
 import { UpdateMarketValueDto } from "./dto/market-value.dto";
@@ -19,8 +20,10 @@ export class PlayerService {
     return player;
   }
 
-  createPlayer(dto: CreatePlayerDto) {
-    return this.repo.create(dto);
+  async createPlayer(dto: CreatePlayerDto, actorId: number) {
+    const player = await this.repo.create(dto);
+    await writeAuditLog({ actorId, action: "PLAYER_CREATED", targetId: player.id });
+    return player;
   }
 
   async updatePlayer(id: string, dto: UpdatePlayerDto) {
@@ -57,10 +60,11 @@ export class PlayerService {
     return result;
   }
 
-  async deletePlayer(id: string) {
+  async deletePlayer(id: string, actorId: number) {
     const player = await this.repo.findById(id);
     if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
     await this.repo.delete(id);
+    await writeAuditLog({ actorId, action: "PLAYER_DELETED", targetId: id, detail: { playerName: player.playerName } });
   }
 
   async getMarketValueHistory(playerId: string) {

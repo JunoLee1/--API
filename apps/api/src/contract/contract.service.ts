@@ -45,6 +45,7 @@ export class ContractService {
     }
 
     const contract = await this.repo.create(dto);
+    await writeAuditLog({ actorId, action: "CONTRACT_CREATED", targetId: contract.id, detail: { playerId: dto.playerId } });
 
     await writeAuditLog({
       actorId,

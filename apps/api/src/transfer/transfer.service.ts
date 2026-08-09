@@ -23,6 +23,7 @@ export class TransferService {
 
   async createTransfer(dto: CreateTransferDto, actorId: number) {
     const transfer = await this.repo.createTransfer(dto);
+    await writeAuditLog({ actorId, action: "TRANSFER_CREATED", targetId: transfer.id, detail: { playerId: dto.playerId, type: dto.type } });
 
     // D4: auto-terminate active contracts when player is permanently transferred or released
     const contractTerminatingTypes = ["PERMANENT_IN", "PERMANENT_OUT", "FREE", "RELEASE"];

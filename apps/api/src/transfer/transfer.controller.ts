@@ -5,6 +5,11 @@ import { requireUser } from "../lib/authMiddleware";
 import { TransferService } from "./transfer.service";
 import { RecallStatus } from "../generated/enums";
 
+function requireUser(req: Request) {
+  if (!req.user) throw new AppError(401, "UNAUTHORIZED");
+  return req.user;
+}
+
 export class TransferController {
   constructor(private service: TransferService) {}
 
@@ -22,13 +27,14 @@ export class TransferController {
 
   createTransfer = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
+      const user = requireUser(req);
+      const { role, frontOfficeRole } = user;
       if (!isAdminLike(role) && role !== "GM" && role !== "FRONT_OFFICE") throw new AppError(403, "FORBIDDEN");
       if (role === "FRONT_OFFICE") {
         const allowed = ["TD", "CONTRACT_MANAGER"];
         if (!frontOfficeRole || !allowed.includes(frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       }
-      res.status(201).json(await this.service.createTransfer(req.body, requireUser(req).id));
+      res.status(201).json(await this.service.createTransfer(req.body, user.id));
     } catch (err) { next(err); }
   };
 
@@ -41,18 +47,16 @@ export class TransferController {
 
   createRecall = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      res.status(201).json(await this.service.createRecall(req.body, requireUser(req).id));
+      const user = requireUser(req);
+      res.status(201).json(await this.service.createRecall(req.body, user.id));
     } catch (err) { next(err); }
   };
 
   updateRecallStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, id: userId } = requireUser(req);
-      const isGM = role === "GM";
-      if (!isGM) throw new AppError(403, "FORBIDDEN");
-      res.status(200).json(
-        await this.service.updateRecallStatus(Number(req.params["id"]), req.body, userId),
-      );
+      const user = requireUser(req);
+      if (user.role !== "GM") throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(await this.service.updateRecallStatus(Number(req.params["id"]), req.body, user.id));
     } catch (err) { next(err); }
   };
 

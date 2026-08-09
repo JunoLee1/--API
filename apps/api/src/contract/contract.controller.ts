@@ -5,7 +5,6 @@ import { requireUser } from "../lib/authMiddleware";
 import { ContractService } from "./contract.service";
 
 const WRITE_ROLES = ["ADMIN", "FRONT_OFFICE"] as const;
-type WriteRole = (typeof WRITE_ROLES)[number];
 
 export class ContractController {
   constructor(private service: ContractService) {}

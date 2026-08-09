@@ -1,6 +1,7 @@
 import { GrowthReportService } from "./growth-report.service";
 import type { GrowthReportRepository } from "./growth-report.repo";
 import type { NotificationRepository } from "../notification/notification.repo";
+import type { DevelopmentPlanRepository } from "../development-plan/development-plan.repo";
 
 const makeRepo = (overrides: Partial<GrowthReportRepository> = {}): GrowthReportRepository =>
   ({
@@ -19,6 +20,11 @@ const makeNotifRepo = (): NotificationRepository =>
   ({
     createForGuardian: jest.fn().mockResolvedValue(undefined),
   } as unknown as NotificationRepository);
+
+const makePlanRepo = (activePlanId?: number): DevelopmentPlanRepository =>
+  ({
+    findActiveByPlayer: jest.fn().mockResolvedValue(activePlanId ? { id: activePlanId } : null),
+  } as unknown as DevelopmentPlanRepository);
 
 const fakePlayer = { id: "player-uuid-1", playerName: "김철수", guardianId: 99 };
 const fakeEval = {
@@ -45,7 +51,7 @@ describe("GrowthReportService", () => {
   describe("createEvaluation", () => {
     it("중복 기간이면 409 에러", async () => {
       const repo = makeRepo({ findEvaluationByPeriod: jest.fn().mockResolvedValue(fakeEval) });
-      const svc = new GrowthReportService(repo, makeNotifRepo());
+      const svc = new GrowthReportService(repo, makeNotifRepo(), makePlanRepo());
       await expect(
         svc.createEvaluation(
           {
@@ -72,7 +78,7 @@ describe("GrowthReportService", () => {
         findEvaluationByPeriod: jest.fn().mockResolvedValue(null),
         createEvaluation: jest.fn().mockResolvedValue(created),
       });
-      const svc = new GrowthReportService(repo, makeNotifRepo());
+      const svc = new GrowthReportService(repo, makeNotifRepo(), makePlanRepo());
       const result = await svc.createEvaluation(
         {
           playerId: "player-uuid-1",
@@ -96,7 +102,7 @@ describe("GrowthReportService", () => {
   describe("publishEvaluation", () => {
     it("존재하지 않으면 404", async () => {
       const repo = makeRepo({ findEvaluationById: jest.fn().mockResolvedValue(null) });
-      const svc = new GrowthReportService(repo, makeNotifRepo());
+      const svc = new GrowthReportService(repo, makeNotifRepo(), makePlanRepo());
       await expect(svc.publishEvaluation(999)).rejects.toMatchObject({ statusCode: 404 });
     });
 
@@ -104,7 +110,7 @@ describe("GrowthReportService", () => {
       const repo = makeRepo({
         findEvaluationById: jest.fn().mockResolvedValue({ ...fakeEval, isPublished: true }),
       });
-      const svc = new GrowthReportService(repo, makeNotifRepo());
+      const svc = new GrowthReportService(repo, makeNotifRepo(), makePlanRepo());
       await expect(svc.publishEvaluation(1)).rejects.toMatchObject({ statusCode: 409 });
     });
 
@@ -115,13 +121,12 @@ describe("GrowthReportService", () => {
         publishEvaluation: jest.fn().mockResolvedValue(published),
       });
       const notifRepo = makeNotifRepo();
-      const svc = new GrowthReportService(repo, notifRepo);
+      const svc = new GrowthReportService(repo, notifRepo, makePlanRepo());
       await svc.publishEvaluation(1);
       expect(notifRepo.createForGuardian).toHaveBeenCalledWith(
         fakePlayer.guardianId,
         "GROWTH_REPORT_PUBLISHED",
-        expect.any(String),
-        expect.any(String),
+        expect.any(Function),
         1,
       );
     });
@@ -133,7 +138,7 @@ describe("GrowthReportService", () => {
         publishEvaluation: jest.fn().mockResolvedValue({ ...evalNoGuardian, isPublished: true }),
       });
       const notifRepo = makeNotifRepo();
-      const svc = new GrowthReportService(repo, notifRepo);
+      const svc = new GrowthReportService(repo, notifRepo, makePlanRepo());
       await svc.publishEvaluation(1);
       expect(notifRepo.createForGuardian).not.toHaveBeenCalled();
     });
@@ -154,7 +159,7 @@ describe("GrowthReportService", () => {
         session: null,
       };
       const repo = makeRepo({ awardBadge: jest.fn().mockResolvedValue(badge) });
-      const svc = new GrowthReportService(repo, makeNotifRepo());
+      const svc = new GrowthReportService(repo, makeNotifRepo(), makePlanRepo());
       const result = await svc.awardBadge(
         { playerId: "player-uuid-1", badgeType: "PASSION_KING" as const },
         10,
