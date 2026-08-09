@@ -1,4 +1,6 @@
-export type SalesType = 'TICKET' | 'UNIFORM' | 'OTHER'
+export type SalesType = 'TICKET' | 'UNIFORM' | 'OTHER' | 'VIP_TICKET' | 'COMPLIMENTARY'
+export type SalesRecordStatus = 'COMPLETED' | 'CANCELLED' | 'REFUNDED'
+export type SalesChannel = 'ONLINE' | 'ONSITE' | 'PARTNER' | 'SEASON_PASS'
 
 export interface SalesRecord {
   id: number
@@ -10,6 +12,9 @@ export interface SalesRecord {
   saleDate: string
   description: string | null
   matchId: number | null
+  seatZoneId: number | null
+  status: SalesRecordStatus
+  channel: SalesChannel | null
   createdById: number
   createdAt: string
   match: {
@@ -25,8 +30,16 @@ export interface TicketMatchSummary {
   date: string
   homeTeamName: string
   awayTeamName: string
-  totalQuantity: number
+  totalSold: number
+  netSold: number
+  cancelled: number
+  refunded: number
+  complimentary: number
   totalAmount: number
+  capacity: number | null
+  sellRate: number | null
+  // backward compat
+  totalQuantity: number
 }
 
 export interface CreateSalesRecordDto {
@@ -37,4 +50,7 @@ export interface CreateSalesRecordDto {
   saleDate: string
   description?: string
   matchId?: number
+  seatZoneId?: number
+  status?: SalesRecordStatus
+  channel?: SalesChannel
 }

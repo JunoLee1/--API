@@ -1,5 +1,29 @@
 import { PrismaClient, OperatingCategory } from "../generated/client";
 
+export interface RevenueBreakdownDto {
+  revenueTicket?: number;
+  revenueSponsorship?: number;
+  revenueBroadcast?: number;
+  revenueMerchandise?: number;
+  revenueSubsidy?: number;
+  revenueParentCompany?: number;
+  revenueAcademyFee?: number;
+  revenueOther?: number;
+}
+
+export function sumBreakdown(b: RevenueBreakdownDto): number {
+  return (
+    (b.revenueTicket ?? 0) +
+    (b.revenueSponsorship ?? 0) +
+    (b.revenueBroadcast ?? 0) +
+    (b.revenueMerchandise ?? 0) +
+    (b.revenueSubsidy ?? 0) +
+    (b.revenueParentCompany ?? 0) +
+    (b.revenueAcademyFee ?? 0) +
+    (b.revenueOther ?? 0)
+  );
+}
+
 export interface UpsertBudgetPlanDto {
   totalOperatingBudget: number;
   contingencyReserve: number;
@@ -13,12 +37,24 @@ export interface UpsertBudgetPlanDto {
 export class FinancialReportRepository {
   constructor(private prisma: PrismaClient) {}
 
-  async upsert(seasonId: number, totalRevenue: number, note?: string) {
+  async upsert(seasonId: number, totalRevenue: number, note?: string, breakdown?: RevenueBreakdownDto) {
     const noteVal = note ?? null;
-    return this.prisma.financialReport.upsert({
+    const breakdownData = breakdown
+      ? {
+          revenueTicket: breakdown.revenueTicket ?? 0,
+          revenueSponsorship: breakdown.revenueSponsorship ?? 0,
+          revenueBroadcast: breakdown.revenueBroadcast ?? 0,
+          revenueMerchandise: breakdown.revenueMerchandise ?? 0,
+          revenueSubsidy: breakdown.revenueSubsidy ?? 0,
+          revenueParentCompany: breakdown.revenueParentCompany ?? 0,
+          revenueAcademyFee: breakdown.revenueAcademyFee ?? 0,
+          revenueOther: breakdown.revenueOther ?? 0,
+        }
+      : {};
+    return (this.prisma.financialReport as any).upsert({
       where: { seasonId },
-      create: { seasonId, totalRevenue, note: noteVal },
-      update: { totalRevenue, note: noteVal },
+      create: { seasonId, totalRevenue, note: noteVal, ...breakdownData },
+      update: { totalRevenue, note: noteVal, ...breakdownData },
     });
   }
 

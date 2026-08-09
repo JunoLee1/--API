@@ -10,6 +10,8 @@ export interface CreateMatchDto {
   seasonId: number;
   externalId?: string;
   venue?: Venue;
+  priceRegular?: number;
+  priceVip?: number;
 }
 
 export interface UpdateMatchDto {
@@ -20,6 +22,8 @@ export interface UpdateMatchDto {
   awayScore?: number;
   competitionType?: CompetitionType;
   venue?: Venue;
+  priceRegular?: number;
+  priceVip?: number;
 }
 
 export interface MatchListQuery {

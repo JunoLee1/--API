@@ -1,5 +1,6 @@
 import { api } from './api'
 import type { SalesRecord, TicketMatchSummary, CreateSalesRecordDto } from '@/types/sales'
+import type { RemainingCapacity, SeatZone } from '@/types/match'
 
 export const salesApi = {
   list: () =>
@@ -11,12 +12,30 @@ export const salesApi = {
   create: (dto: CreateSalesRecordDto) =>
     api.post<SalesRecord>('/sales', dto),
 
+  update: (id: number, dto: Partial<Pick<CreateSalesRecordDto, 'quantity' | 'unitPrice' | 'saleDate' | 'description'>>) =>
+    api.patch<SalesRecord>(`/sales/${id}`, dto),
+
   delete: (id: number) =>
     api.delete<void>(`/sales/${id}`),
 
   ticketSummary: (seasonId: number) =>
     api.get<TicketMatchSummary[]>(`/sales/ticket-summary?seasonId=${seasonId}`),
 
+  ticketsBySeason: (seasonId: number) =>
+    api.get<SalesRecord[]>(`/sales/tickets?seasonId=${seasonId}`),
+
   seasonTicketTotal: (seasonId: number) =>
     api.get<{ total: number }>(`/sales/ticket-season-total?seasonId=${seasonId}`),
+
+  createBatch: (dtos: CreateSalesRecordDto[]) =>
+    api.post<SalesRecord[]>('/sales/batch', dtos),
+
+  getRemainingCapacity: (matchId: number) =>
+    api.get<RemainingCapacity>(`/matches/${matchId}/remaining-capacity`),
+
+  seatZones: (matchId: number) =>
+    api.get<SeatZone[]>(`/sales/seat-zones/${matchId}`),
+
+  cancel: (id: number, dto: { quantity: number; saleDate: string; description?: string }) =>
+    api.post<SalesRecord>(`/sales/${id}/cancel`, dto),
 }

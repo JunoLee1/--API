@@ -398,10 +398,13 @@
     "loansLoadFailed": "대출 신청 목록을 불러오지 못했습니다.",
     "approveButton": "승인",
     "rejectButton": "거절",
+    "returnButton": "반납",
     "approveSuccess": "승인됐습니다.",
     "rejectSuccess": "거절됐습니다.",
+    "returnSuccess": "반납 처리됐습니다.",
     "approveFailed": "승인에 실패했습니다.",
     "rejectFailed": "거절에 실패했습니다.",
+    "returnFailed": "반납 처리에 실패했습니다.",
     "loansTable": {
       "item": "장비",
       "requester": "신청자",

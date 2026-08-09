@@ -10,8 +10,11 @@ import { InspectionController } from "./inspection/inspection.controller";
 import { MaintenanceRepository } from "./maintenance/maintenance.repo";
 import { MaintenanceService } from "./maintenance/maintenance.service";
 import { MaintenanceController } from "./maintenance/maintenance.controller";
+import { ReservationController } from "./reservation/reservation.controller";
 
 const router = Router();
+
+const reservationCtrl = new ReservationController();
 
 const notificationService = new NotificationService(new NotificationRepository(getPrisma()));
 const maintenanceRepo = new MaintenanceRepository(getPrisma());
@@ -21,6 +24,10 @@ const maintenanceController = new MaintenanceController(maintenanceService);
 const inspectionRepo = new InspectionRepository(getPrisma());
 const inspectionService = new InspectionService(inspectionRepo, maintenanceService);
 const inspectionController = new InspectionController(inspectionService);
+
+router.get("/reservations", auth, reservationCtrl.list);
+router.post("/reservations", auth, reservationCtrl.create);
+router.delete("/reservations/:id", auth, reservationCtrl.remove);
 
 router.get("/inspections", auth, inspectionController.list);
 router.post("/inspections", auth, inspectionController.create);

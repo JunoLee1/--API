@@ -35,7 +35,7 @@ export class AcademyFeeController {
   };
 
   approvePayment = async (req: Request, res: Response, next: NextFunction) => {
-    try { res.json(await this.service.approvePayment(Number(req.params.id))); }
+    try { res.json(await this.service.approvePayment(Number(req.params.id), req.user!.id)); }
     catch (e) { next(e); }
   };
 

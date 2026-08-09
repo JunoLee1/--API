@@ -47,11 +47,11 @@ async function seedDepartments() {
 
 async function seedLeagues() {
   const leagues = [
-    { name: 'K리그1 2026', level: 'K_LEAGUE_1' as const, year: 2026, isActive: true },
-    { name: 'K리그2 2026', level: 'K_LEAGUE_2' as const, year: 2026, isActive: true },
-    { name: 'K3리그 2026', level: 'K3' as const, year: 2026, isActive: true },
-    { name: 'K리그1 2025', level: 'K_LEAGUE_1' as const, year: 2025, isActive: false },
-    { name: 'K리그2 2025', level: 'K_LEAGUE_2' as const, year: 2025, isActive: false },
+    { name: 'K리그1 2026', level: 'K_LEAGUE_1' as const, year: 2026, isActive: true,  countryId: 1, confederation: 'AFC' as const },
+    { name: 'K리그2 2026', level: 'K_LEAGUE_2' as const, year: 2026, isActive: true,  countryId: 1, confederation: 'AFC' as const },
+    { name: 'K3리그 2026', level: 'K3'          as const, year: 2026, isActive: true,  countryId: 1, confederation: 'AFC' as const },
+    { name: 'K리그1 2025', level: 'K_LEAGUE_1' as const, year: 2025, isActive: false, countryId: 1, confederation: 'AFC' as const },
+    { name: 'K리그2 2025', level: 'K_LEAGUE_2' as const, year: 2025, isActive: false, countryId: 1, confederation: 'AFC' as const },
   ];
 
   for (const l of leagues) {
@@ -1655,6 +1655,7 @@ async function main() {
   });
 
   // PlayerMatchStats — match1
+  await prisma.playerMatchStats.deleteMany();
   await prisma.playerMatchStats.upsert({
     where: { id: 1 },
     update: { passesAttempted: 32, passesCompleted: 26, xA: 0.65, shotsOnTarget: 3 },

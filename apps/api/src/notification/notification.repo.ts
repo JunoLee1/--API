@@ -102,6 +102,22 @@ export class NotificationRepository {
     });
   }
 
+  createForContractManager(type: string, getMsg: MsgFactory, entityId?: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const contractManagers = await tx.user.findMany({
+        where: { role: "FRONT_OFFICE", frontOfficeRole: "CONTRACT_MANAGER" },
+        select: { id: true, language: true },
+      });
+      if (contractManagers.length === 0) return;
+      await tx.notification.createMany({
+        data: contractManagers.map((u) => {
+          const { title, body } = getMsg(u.language);
+          return { userId: u.id, type, title, body, entityId };
+        }) as any,
+      });
+    });
+  }
+
   createForHeadCoach(type: string, getMsg: MsgFactory, entityId?: number) {
     return this.prisma.$transaction(async (tx) => {
       const headCoaches = await tx.user.findMany({
@@ -217,6 +233,21 @@ export class NotificationRepository {
           return { userId: u.id, type, title, body, entityId };
         }) as any,
       });
+    });
+  }
+
+  async createForUsers(
+    userIds: number[],
+    type: string,
+    getMsg: (locale?: string) => { title: string; body: string },
+    entityId?: number,
+  ) {
+    if (userIds.length === 0) return;
+    return this.prisma.notification.createMany({
+      data: userIds.map((userId) => {
+        const { title, body } = getMsg();
+        return { userId, type, title, body, ...(entityId !== undefined && { entityId }) } as any;
+      }),
     });
   }
 

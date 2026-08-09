@@ -37,7 +37,7 @@ export class PlayerRepository {
     });
   }
 
-  findById(id: string) {
+  findById(id: string, includePrivate = false) {
     return this.prisma.player.findUnique({
       where: { id },
       select: {
@@ -45,11 +45,13 @@ export class PlayerRepository {
         userId: true,
         agentId: true,
         agencyId: true,
-        emergencyContactName: true,
-        emergencyContactPhone: true,
-        emergencyContactRelation: true,
-        allergies: true,
-        foodPreferences: true,
+        ...(includePrivate && {
+          emergencyContactName: true,
+          emergencyContactPhone: true,
+          emergencyContactRelation: true,
+          allergies: true,
+          foodPreferences: true,
+        }),
         agency: { select: { id: true, name: true, contactName: true, phone: true } },
         team: { select: { id: true, type: true } },
         contracts: {
@@ -57,7 +59,7 @@ export class PlayerRepository {
             id: true,
             startDate: true,
             endDate: true,
-            salary: true,
+            ...(includePrivate && { salary: true }),
             status: true,
           },
           orderBy: { startDate: "desc" },

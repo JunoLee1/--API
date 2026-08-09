@@ -15,7 +15,12 @@ const UNIT_SELECT = {
   id: true,
   status: true,
   equipmentItemId: true,
-} as const;
+  assignments: {
+    where: { returnedAt: null },
+    take: 1,
+    select: { player: { select: { name: true } } },
+  },
+} as any;
 
 const ASSIGNMENT_SELECT = {
   id: true,
@@ -200,6 +205,19 @@ export class EquipmentRepository {
     return this.prisma.equipmentLoan.update({
       where: { id },
       data,
+      select: LOAN_SELECT,
+    });
+  }
+
+  returnLoan(id: number, returnedById: number, returnNote?: string) {
+    return this.prisma.equipmentLoan.update({
+      where: { id },
+      data: {
+        status: "RETURNED" as EquipmentLoanStatus,
+        returnedAt: new Date(),
+        returnedById,
+        ...(returnNote && { returnNote }) as any,
+      },
       select: LOAN_SELECT,
     });
   }

@@ -43,7 +43,7 @@ export const canReadFinance = (role: string, foRole?: string | null): boolean =>
 
 export const canWriteFinance = (role: string, foRole?: string | null): boolean =>
   isAdminLike(role) ||
-  (role === 'FRONT_OFFICE' && foRole === 'FINANCE_MANAGER')
+  (role === 'FRONT_OFFICE' && (foRole === 'FINANCE_MANAGER' || foRole === 'FINANCE_STAFF'))
 
 export const canReadHR = (role: string, foRole?: string | null): boolean =>
   isAdminLike(role) ||
@@ -56,3 +56,15 @@ export const canWriteHR = (role: string, foRole?: string | null): boolean =>
 export const canManageTD = (role: string, foRole?: string | null): boolean =>
   isAdminLike(role) ||
   (role === 'FRONT_OFFICE' && foRole === 'TD')
+
+export const canReadActiveInjury = (role: string, coachingRole?: string | null): boolean =>
+  isAdminLike(role) ||
+  role === 'COACHING_STAFF' ||
+  (role === 'FRONT_OFFICE' && coachingRole === 'TD')
+
+export const canReadInjuryReport = (role: string, coachingRole?: string | null): boolean =>
+  isAdminLike(role) ||
+  (role === 'COACHING_STAFF' && (coachingRole === 'MEDICAL' || coachingRole === 'MEDICAL_DIRECTOR'))
+
+export const isHeadCoach = (role: string, coachingRole?: string | null): boolean =>
+  role === 'COACHING_STAFF' && coachingRole === 'HEAD_COACH'

@@ -3,6 +3,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { AppShell } from '@/layouts/AppShell'
 import { ConfirmProvider } from '@/lib/confirm-dialog'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
+import { CoachDashboard } from '@/pages/dashboard/CoachDashboard'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import InviteAcceptPage from '@/pages/auth/InviteAcceptPage'
 import { PlayersPage } from '@/pages/players/PlayersPage'
@@ -30,6 +31,7 @@ import { TacticalAnalysisPage } from '@/pages/tactical/TacticalAnalysisPage'
 import { EquipmentPage } from '@/pages/equipment/EquipmentPage'
 import { FacilityPage } from '@/pages/facility/FacilityPage'
 import { SponsorshipPage } from '@/pages/sponsorship/SponsorshipPage'
+import { SponsorshipDetailPage } from '@/pages/sponsorship/SponsorshipDetailPage'
 import { ProspectsPage } from '@/pages/prospects/ProspectsPage'
 import { NotificationsPage } from '@/pages/notifications/NotificationsPage'
 import { MePage } from '@/pages/me/MePage'
@@ -115,6 +117,7 @@ function App() {
             }
           >
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/coach-dashboard" element={<CoachDashboard />} />
             <Route path="/players" element={<PlayersPage />} />
             <Route path="/youth-players" element={<YouthPlayersPage />} />
             <Route path="/players/:id" element={<PlayerDetailPage />} />
@@ -136,7 +139,8 @@ function App() {
             <Route path="/training/references" element={<TrainingReferencePage />} />
             <Route path="/training/videos" element={<TrainingVideoPage />} />
             <Route path="/training/coach-availability" element={<CoachAvailabilityPage />} />
-            <Route path="/training/dashboard" element={<CoachDashboardPage />} />
+            <Route path="/training/dashboard" element={<Navigate to="/training/analysis" replace />} />
+            <Route path="/training/analysis" element={<CoachDashboardPage />} />
             <Route path="/training/:id" element={<TrainingDetailPage />} />
             <Route path="/matches" element={<MatchesPage />} />
             <Route path="/matches/analysis" element={<TacticalAnalysisPage />} />
@@ -147,6 +151,7 @@ function App() {
             <Route path="/equipment" element={<EquipmentPage />} />
             <Route path="/facility" element={<FacilityPage />} />
             <Route path="/sponsorship" element={<SponsorshipPage />} />
+            <Route path="/sponsorship/:id" element={<SponsorshipDetailPage />} />
             <Route path="/prospects" element={<ProspectsPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/me" element={<MePage />} />

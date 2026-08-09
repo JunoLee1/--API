@@ -23,6 +23,7 @@ export interface DashboardConfig {
   showMedicalSection: boolean
   showYouthDevelopment: boolean
   showAcademyFinance?: boolean
+  showOpsKpi?: 'finance' | 'hr' | 'all'
   showTicketRevenue?: boolean
 }
 
@@ -43,6 +44,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
       showMedicalSection: false,
       showYouthDevelopment: true,
       showAcademyFinance: true,
+      showOpsKpi: 'all',
     }
   }
 
@@ -147,6 +149,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         showRanking: false,
         showMedicalSection: false,
         showYouthDevelopment: false,
+        showOpsKpi: 'hr',
       }
     }
     if (frontOfficeRole === 'FINANCE_MANAGER') {
@@ -161,6 +164,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         showRanking: false,
         showMedicalSection: false,
         showYouthDevelopment: false,
+        showOpsKpi: 'finance',
         showTicketRevenue: true,
       }
     }
