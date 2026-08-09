@@ -43,7 +43,7 @@ export const canReadFinance = (role: string, foRole?: string | null): boolean =>
 
 export const canWriteFinance = (role: string, foRole?: string | null): boolean =>
   isAdminLike(role) ||
-  (role === 'FRONT_OFFICE' && foRole === 'FINANCE_MANAGER')
+  (role === 'FRONT_OFFICE' && (foRole === 'FINANCE_MANAGER' || foRole === 'FINANCE_STAFF'))
 
 export const canReadHR = (role: string, foRole?: string | null): boolean =>
   isAdminLike(role) ||
