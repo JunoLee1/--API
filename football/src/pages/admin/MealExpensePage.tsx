@@ -50,8 +50,14 @@ export function MealExpensePage() {
 
   useEffect(() => { void fetchExpenses() }, [filterType, filterFrom, filterTo])
 
+  const handleAmountChange = (raw: string) => {
+    const digits = raw.replace(/[^0-9]/g, "")
+    const formatted = digits ? Number(digits).toLocaleString("ko-KR") : ""
+    setForm((f) => ({ ...f, amount: formatted }))
+  }
+
   const handleSubmit = async () => {
-    const amount = parseInt(form.amount, 10)
+    const amount = parseInt(form.amount.replace(/,/g, ""), 10)
     if (!form.date || isNaN(amount)) { toast.error("날짜와 금액을 입력하세요"); return }
     setSaving(true)
     try {
@@ -172,7 +178,7 @@ export function MealExpensePage() {
             </div>
             <div className="space-y-1">
               <Label>{t("mealExpense.amount")}</Label>
-              <Input type="number" min={0} value={form.amount} onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))} />
+              <Input type="text" inputMode="numeric" value={form.amount} onChange={(e) => handleAmountChange(e.target.value)} placeholder="0" />
             </div>
             <div className="space-y-1">
               <Label>{t("mealExpense.restaurantName")}</Label>
