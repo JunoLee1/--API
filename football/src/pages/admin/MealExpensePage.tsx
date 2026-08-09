@@ -113,7 +113,7 @@ export function MealExpensePage() {
             <SelectContent>
               <SelectItem value="">전체</SelectItem>
               {TYPES.map((tp) => (
-                <SelectItem key={tp} value={tp}>{t(`mealExpense.${tp}`)}</SelectItem>
+                <SelectItem key={tp} value={tp} textValue={t(`mealExpense.${tp}`)}>{t(`mealExpense.${tp}`)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -167,7 +167,7 @@ export function MealExpensePage() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {TYPES.map((tp) => (
-                    <SelectItem key={tp} value={tp}>{t(`mealExpense.${tp}`)}</SelectItem>
+                    <SelectItem key={tp} value={tp} textValue={t(`mealExpense.${tp}`)}>{t(`mealExpense.${tp}`)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
