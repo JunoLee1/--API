@@ -57,6 +57,7 @@ import transferRequestRouter from "./transfer-request/transfer-request.routes";
 import opsReportRouter from "./ops-report/ops-report.routes";
 import squadPlanRouter from "./squad-plan/squad-plan.routes";
 import attendanceAppealRouter from "./attendance-appeal/attendance-appeal.routes";
+import departmentPlanRouter from "./department-plan/department-plan.routes";
 
 const apiRouter = Router();
 
@@ -118,5 +119,6 @@ apiRouter.use("/transfer-requests", transferRequestRouter);
 apiRouter.use("/ops-reports", opsReportRouter);
 apiRouter.use("/squad-plan", squadPlanRouter);
 apiRouter.use("/attendance-appeals", attendanceAppealRouter);
+apiRouter.use("/department-plans", departmentPlanRouter);
 
 export default apiRouter;

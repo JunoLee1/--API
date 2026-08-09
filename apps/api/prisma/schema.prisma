@@ -784,6 +784,8 @@ model User {
   transferRequestsReviewed   TransferRequest[]         @relation("TRReviewedBy")
   transferRequestsConfirmed  TransferRequest[]         @relation("TRConfirmedBy")
   transferRequestsRejected   TransferRequest[]         @relation("TRRejectedBy")
+  createdPlans               DepartmentAnnualPlan[]    @relation("PlanCreatedBy")
+  reviewedPlans              DepartmentAnnualPlan[]    @relation("PlanReviewedBy")
 }
 
 model Season {
@@ -808,6 +810,7 @@ model Season {
   monthlyBudgetSnapshots   MonthlyBudgetSnapshot[]
   monthlyOperationsSnapshots MonthlyOperationsSnapshot[]
   squadPlan                SquadPlan?
+  departmentPlans          DepartmentAnnualPlan[]
 }
 
 model League {
@@ -2272,6 +2275,7 @@ model Department {
   postings     JobPosting[]
   members      UserDepartment[]
   ibiConfigs   DepartmentIbiConfig[]
+  annualPlans  DepartmentAnnualPlan[]
 }
 
 enum DeptRole {
@@ -2963,4 +2967,61 @@ model AttendanceAppeal {
   trainingResult TrainingResult @relation(fields: [trainingResultId], references: [id])
   createdBy      User           @relation("AppealCreator", fields: [createdById], references: [id])
   reviewedBy     User?          @relation("AppealReviewer", fields: [reviewedById], references: [id])
+}
+
+// ─────────────────────────────────────────────
+// 부서별 연간 계획서
+// ─────────────────────────────────────────────
+
+enum PlanStatus {
+  DRAFT
+  REVIEWING
+  APPROVED
+  REJECTED
+}
+
+model DepartmentAnnualPlan {
+  id              Int          @id @default(autoincrement())
+  seasonId        Int
+  departmentId    Int
+  status          PlanStatus   @default(DRAFT)
+  objectives      String[]
+  milestones      Json         // [{ quarter: 1|2|3|4, text: "..." }]
+  rejectionReason String?
+  submittedAt     DateTime?
+  reviewedAt      DateTime?
+  createdById     Int
+  reviewedById    Int?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  season          Season       @relation(fields: [seasonId], references: [id])
+  department      Department   @relation(fields: [departmentId], references: [id])
+  createdBy       User         @relation("PlanCreatedBy", fields: [createdById], references: [id])
+  reviewedBy      User?        @relation("PlanReviewedBy", fields: [reviewedById], references: [id])
+  budgetItems     DepartmentBudgetItem[]
+  kpiItems        DepartmentKpiItem[]
+
+  @@unique([seasonId, departmentId])
+}
+
+model DepartmentBudgetItem {
+  id       Int               @id @default(autoincrement())
+  planId   Int
+  category OperatingCategory
+  amount   Int
+
+  plan     DepartmentAnnualPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, category])
+}
+
+model DepartmentKpiItem {
+  id          Int    @id @default(autoincrement())
+  planId      Int
+  title       String
+  targetValue String
+  quarter     Int?
+
+  plan        DepartmentAnnualPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
 }
