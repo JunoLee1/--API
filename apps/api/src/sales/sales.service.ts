@@ -210,6 +210,51 @@ export class SalesService {
     });
   }
 
+  async update(
+    id: number,
+    dto: { quantity?: number; unitPrice?: number; saleDate?: string; description?: string | null },
+    updatedById: number,
+  ) {
+    const existing = await this.prisma.salesRecord.findUnique({ where: { id } });
+    if (!existing || existing.deletedAt) throw new AppError(404, "SALES_RECORD_NOT_FOUND");
+
+    const quantity = dto.quantity ?? existing.quantity;
+    const unitPrice = dto.unitPrice !== undefined ? dto.unitPrice : Number(existing.unitPrice);
+    const totalAmount = quantity * unitPrice;
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.salesRecord.update({
+        where: { id },
+        data: {
+          ...(dto.quantity !== undefined && { quantity: dto.quantity }),
+          ...(dto.unitPrice !== undefined && { unitPrice: dto.unitPrice }),
+          ...(dto.saleDate !== undefined && { saleDate: new Date(dto.saleDate) }),
+          ...(dto.description !== undefined && { description: dto.description }),
+          totalAmount,
+          updatedById,
+          updatedAt: new Date(),
+        } as any,
+      });
+
+      await tx.ledgerEntry.updateMany({
+        where: { relatedModule: "SalesRecord", relatedId: id },
+        data: { amount: totalAmount, amountKrw: totalAmount },
+      });
+    });
+
+    await writeAuditLog({
+      actorId: updatedById,
+      action: "SALES_RECORD_UPDATED",
+      targetId: id,
+      detail: { quantity, unitPrice, totalAmount },
+    });
+
+    return this.prisma.salesRecord.findUnique({
+      where: { id },
+      include: { match: { select: { id: true, homeTeamName: true, awayTeamName: true, date: true } } },
+    });
+  }
+
   async delete(id: number, deletedById: number) {
     await this.prisma.$transaction(async (tx) => {
       // BS1: roll back the ledger entry linked to this sales record
@@ -237,7 +282,7 @@ export class SalesService {
   }
 
   async ticketSummaryByMatch(seasonId: number) {
-    return this.repo.ticketSummaryByMatch(seasonId);
+    return this.repo.ticketSummaryByMatch(seasonId, FC_SEOUL);
   }
 
   async seasonTicketTotal(seasonId: number) {

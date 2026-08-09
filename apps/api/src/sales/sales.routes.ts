@@ -35,6 +35,7 @@ router.get("/by-match/:matchId",    auth, checkReadFinance, ctrl.byMatch);
 router.get("/",                     auth, checkReadFinance, ctrl.list);
 router.post("/batch",               auth, checkWriteFinance, ctrl.createBatch);
 router.post("/",                    auth, checkWriteFinance, ctrl.create);
+router.patch("/:id",                auth, checkWriteFinance, ctrl.update);
 router.delete("/:id",               auth, checkWriteFinance, ctrl.delete);
 
 router.get("/fans/membership-stats", auth, fanCtrl.membershipStats);

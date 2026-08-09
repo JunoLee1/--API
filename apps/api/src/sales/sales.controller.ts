@@ -44,6 +44,16 @@ export class SalesController {
     } catch (e) { next(e); }
   };
 
+  update = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole, id: userId } = requireUser(req);
+      if (!canWriteFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const id = Number(req.params["id"]);
+      if (!id) throw new AppError(400, "ID_REQUIRED");
+      res.json(await this.service.update(id, req.body, userId));
+    } catch (e) { next(e); }
+  };
+
   delete = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, frontOfficeRole, id: userId } = requireUser(req);

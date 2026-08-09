@@ -12,6 +12,9 @@ export const salesApi = {
   create: (dto: CreateSalesRecordDto) =>
     api.post<SalesRecord>('/sales', dto),
 
+  update: (id: number, dto: Partial<Pick<CreateSalesRecordDto, 'quantity' | 'unitPrice' | 'saleDate' | 'description'>>) =>
+    api.patch<SalesRecord>(`/sales/${id}`, dto),
+
   delete: (id: number) =>
     api.delete<void>(`/sales/${id}`),
 
