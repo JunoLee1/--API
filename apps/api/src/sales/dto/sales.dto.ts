@@ -7,4 +7,6 @@ export interface CreateSalesRecordDto {
   description?: string;
   matchId?: number;
   seatZoneId?: number;
+  status?: "COMPLETED" | "CANCELLED" | "REFUNDED";
+  channel?: "ONLINE" | "ONSITE" | "PARTNER" | "SEASON_PASS";
 }

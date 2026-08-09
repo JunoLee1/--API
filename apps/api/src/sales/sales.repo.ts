@@ -54,22 +54,54 @@ export class SalesRepository {
     const matches = await this.prisma.match.findMany({
       where: { seasonId, ...(homeTeamName && { homeTeamName }) },
       orderBy: { date: "desc" },
-      include: {
+      select: {
+        id: true,
+        date: true,
+        homeTeamName: true,
+        awayTeamName: true,
+        capacity: true,
         salesRecords: {
-          where: { type: { in: ["TICKET", "VIP_TICKET", "COMPLIMENTARY"] as any[] }, deletedAt: null } as any,
-          select: { quantity: true, totalAmount: true },
+          where: {
+            type: { in: ["TICKET", "VIP_TICKET", "COMPLIMENTARY"] as any[] },
+            deletedAt: null,
+          } as any,
+          select: { quantity: true, totalAmount: true, status: true, type: true },
         },
       },
     });
 
-    return matches.map((m) => ({
-      matchId: m.id,
-      date: m.date.toISOString(),
-      homeTeamName: m.homeTeamName,
-      awayTeamName: m.awayTeamName,
-      totalQuantity: m.salesRecords.reduce((s: number, r: { quantity: number }) => s + r.quantity, 0),
-      totalAmount: m.salesRecords.reduce((s: number, r: { totalAmount: unknown }) => s + Number(r.totalAmount), 0),
-    }));
+    return matches.map((m) => {
+      const completed = m.salesRecords.filter((r: any) => r.status === "COMPLETED" || !r.status);
+      const cancelled = m.salesRecords.filter((r: any) => r.status === "CANCELLED");
+      const refunded = m.salesRecords.filter((r: any) => r.status === "REFUNDED");
+      const complimentary = m.salesRecords.filter((r: any) => (r as any).type === "COMPLIMENTARY");
+
+      const totalSold = completed.reduce((s: number, r: any) => s + r.quantity, 0);
+      const cancelledQty = cancelled.reduce((s: number, r: any) => s + r.quantity, 0);
+      const refundedQty = refunded.reduce((s: number, r: any) => s + r.quantity, 0);
+      const complimentaryQty = complimentary.reduce((s: number, r: any) => s + r.quantity, 0);
+      const netSold = totalSold - cancelledQty - refundedQty;
+      const totalAmount = completed.reduce((s: number, r: any) => s + Number(r.totalAmount), 0);
+      const capacity = m.capacity ?? null;
+      const sellRate = capacity && capacity > 0 ? Math.round((netSold / capacity) * 1000) / 10 : null;
+
+      return {
+        matchId: m.id,
+        date: m.date.toISOString(),
+        homeTeamName: m.homeTeamName,
+        awayTeamName: m.awayTeamName,
+        totalSold,
+        netSold,
+        cancelled: cancelledQty,
+        refunded: refundedQty,
+        complimentary: complimentaryQty,
+        totalAmount,
+        capacity,
+        sellRate,
+        // keep for backward compat
+        totalQuantity: totalSold,
+      };
+    });
   }
 
   async seasonTicketTotal(seasonId: number): Promise<number> {

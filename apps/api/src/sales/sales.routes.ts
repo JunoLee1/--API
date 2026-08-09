@@ -27,9 +27,9 @@ const checkWriteFinance = (req: Request, res: Response, next: NextFunction) => {
 };
 
 router.get("/summary",              auth, checkReadFinance, ctrl.summary);
-router.get("/ticket-summary",       auth, ctrl.ticketSummary);
-router.get("/ticket-season-total",  auth, ctrl.seasonTicketTotal);
-router.get("/tickets",              auth, ctrl.listTicketsBySeason);
+router.get("/ticket-summary",       auth, checkReadFinance, ctrl.ticketSummary);
+router.get("/ticket-season-total",  auth, checkReadFinance, ctrl.seasonTicketTotal);
+router.get("/tickets",              auth, checkReadFinance, ctrl.listTicketsBySeason);
 router.get("/search",               auth, checkReadFinance, ctrl.search);
 router.get("/by-match/:matchId",    auth, checkReadFinance, ctrl.byMatch);
 router.get("/",                     auth, checkReadFinance, ctrl.list);
@@ -37,6 +37,7 @@ router.post("/batch",               auth, checkWriteFinance, ctrl.createBatch);
 router.post("/",                    auth, checkWriteFinance, ctrl.create);
 router.patch("/:id",                auth, checkWriteFinance, ctrl.update);
 router.delete("/:id",               auth, checkWriteFinance, ctrl.delete);
+router.post("/:id/cancel",          auth, checkWriteFinance, ctrl.cancel);
 
 router.get("/fans/membership-stats", auth, fanCtrl.membershipStats);
 router.get("/fans/:id",              auth, fanCtrl.getById);
