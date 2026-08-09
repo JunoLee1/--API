@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { VideoService } from "./video.service";
 
 const CAN_WRITE = ["ADMIN", "SUPER_ADMIN", "COACHING_STAFF"];
@@ -25,18 +26,20 @@ export class VideoController {
 
   createVideo = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!CAN_WRITE.includes(req.user!.role)) throw new AppError(403, "FORBIDDEN");
-      res.status(201).json(await this.service.createVideo(req.body, req.user!.id));
+      const user = requireUser(req);
+      if (!CAN_WRITE.includes(user.role)) throw new AppError(403, "FORBIDDEN");
+      res.status(201).json(await this.service.createVideo(req.body, user.id));
     } catch (err) { next(err); }
   };
 
   deleteVideo = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!CAN_WRITE.includes(req.user!.role)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!CAN_WRITE.includes(user.role)) throw new AppError(403, "FORBIDDEN");
       await this.service.deleteVideo(
         Number(req.params["id"]),
-        req.user!.id,
-        isAdminLike(req.user!.role),
+        user.id,
+        isAdminLike(user.role),
       );
       res.status(204).send();
     } catch (err) { next(err); }
@@ -44,18 +47,20 @@ export class VideoController {
 
   getMyAssignments = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (req.user!.role !== "PLAYER") throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.getMyAssignments(req.user!.id));
+      const user = requireUser(req);
+      if (user.role !== "PLAYER") throw new AppError(403, "FORBIDDEN");
+      res.json(await this.service.getMyAssignments(user.id));
     } catch (err) { next(err); }
   };
 
   createAssignment = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!CAN_WRITE.includes(req.user!.role)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!CAN_WRITE.includes(user.role)) throw new AppError(403, "FORBIDDEN");
       const dto: import("./dto/video.dto").CreateAssignmentDto = {
         videoId: Number(req.params["id"]),
         playerId: req.body.playerId,
-        assignedById: req.user!.id,
+        assignedById: user.id,
       };
       if (req.body.dueDate) dto.dueDate = new Date(req.body.dueDate);
       if (req.body.note) dto.note = req.body.note;
@@ -65,19 +70,21 @@ export class VideoController {
 
   updateProgress = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (req.user!.role !== "PLAYER") throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (user.role !== "PLAYER") throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.updateProgress(
         Number(req.params["id"]),
         String(req.params["playerId"]),
         Number(req.body.progressRate),
-        req.user!.id,
+        user.id,
       ));
     } catch (err) { next(err); }
   };
 
   generateAiSummary = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!CAN_WRITE.includes(req.user!.role)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!CAN_WRITE.includes(user.role)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(
         await this.service.generateAiSummary(Number(req.params["id"])),
       );

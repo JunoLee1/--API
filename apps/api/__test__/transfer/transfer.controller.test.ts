@@ -70,7 +70,7 @@ describe("TransferController - createTransfer", () => {
 
   test("GM can create Transfer → 201", async () => {
     const req = mockReq({
-      user: { id: 4, role: "FRONT_OFFICE", coachingRole: null, frontOfficeRole: "GM" },
+      user: { id: 4, role: "GM", coachingRole: null, frontOfficeRole: null },
       body: { type: "PERMANENT" },
     });
     const res = mockRes();

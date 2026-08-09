@@ -37,22 +37,29 @@ export class PlayerRepository {
     });
   }
 
-  findById(id: string) {
+  findById(id: string, includePrivate = false) {
     return this.prisma.player.findUnique({
       where: { id },
       select: {
         ...PLAYER_SELECT,
         userId: true,
         agentId: true,
-        allergies: true,
-        foodPreferences: true,
+        agencyId: true,
+        ...(includePrivate && {
+          emergencyContactName: true,
+          emergencyContactPhone: true,
+          emergencyContactRelation: true,
+          allergies: true,
+          foodPreferences: true,
+        }),
+        agency: { select: { id: true, name: true, contactName: true, phone: true } },
         team: { select: { id: true, type: true } },
         contracts: {
           select: {
             id: true,
             startDate: true,
             endDate: true,
-            salary: true,
+            ...(includePrivate && { salary: true }),
             status: true,
           },
           orderBy: { startDate: "desc" },
@@ -87,6 +94,10 @@ export class PlayerRepository {
         ...(data.externalId && { externalId: data.externalId }),
         ...(data.userId && { userId: data.userId }),
         ...(data.agentId && { agentId: data.agentId }),
+        ...(data.agencyId && { agencyId: data.agencyId }),
+        ...(data.emergencyContactName && { emergencyContactName: data.emergencyContactName }),
+        ...(data.emergencyContactPhone && { emergencyContactPhone: data.emergencyContactPhone }),
+        ...(data.emergencyContactRelation && { emergencyContactRelation: data.emergencyContactRelation }),
       },
       select: PLAYER_SELECT,
     });
@@ -106,6 +117,10 @@ export class PlayerRepository {
         ...(data.nationalityId && { nationalityId: data.nationalityId }),
         ...(data.externalId !== undefined && { externalId: data.externalId }),
         ...(data.agentId !== undefined && { agentId: data.agentId }),
+        ...(data.agencyId !== undefined && { agencyId: data.agencyId }),
+        ...(data.emergencyContactName !== undefined && { emergencyContactName: data.emergencyContactName }),
+        ...(data.emergencyContactPhone !== undefined && { emergencyContactPhone: data.emergencyContactPhone }),
+        ...(data.emergencyContactRelation !== undefined && { emergencyContactRelation: data.emergencyContactRelation }),
         ...(data.allergies !== undefined && { allergies: data.allergies }),
         ...(data.foodPreferences !== undefined && { foodPreferences: data.foodPreferences }),
       },

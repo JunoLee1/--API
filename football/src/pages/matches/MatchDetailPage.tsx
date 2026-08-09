@@ -3,7 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { matchApi } from '@/services/match.service'
+import { salesApi } from '@/services/sales.service'
 import type { MatchDetail, ShotEvent, ShotResult, StatSheetData } from '@/types/match'
+import type { SalesRecord } from '@/types/sales'
 import { SHOT_RESULT_STYLE } from '@/types/match'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
@@ -17,6 +19,9 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter,
+} from '@/components/ui/table'
 import { ArrowLeft, Pencil, Trash2, Plus, Users, ScanLine } from 'lucide-react'
 import { playerApi } from '@/services/player.service'
 import { POSITION_ABBR, POSITION_ZONE, POSITION_LABEL } from '@/types/player'
@@ -782,15 +787,33 @@ export function MatchDetailPage() {
   const [deletingShot, setDeletingShot] = useState<number | null>(null)
   const [statUploading, setStatUploading] = useState(false)
   const statFileRef = useRef<HTMLInputElement>(null)
+  const [ticketSales, setTicketSales] = useState<SalesRecord[]>([])
+  const [deleteSaleId, setDeleteSaleId] = useState<number | null>(null)
+  const [saleQty, setSaleQty] = useState('')
+  const [salePrice, setSalePrice] = useState('')
+  const [saleDate, setSaleDate] = useState(new Date().toISOString().slice(0, 10))
+  const [saleNote, setSaleNote] = useState('')
+  const [savingSale, setSavingSale] = useState(false)
 
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
   const canInputStats = canWrite || user?.role === 'COACHING_STAFF'
   const canUploadOcr = user?.role === 'ADMIN' || user?.role === 'COACHING_STAFF'
 
+  const isFO = user?.role === 'FRONT_OFFICE'
+  const foRole = user?.frontOfficeRole
+  const canViewSales = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
+  const canWriteSales = user?.role === 'ADMIN' || (isFO && (foRole === 'FINANCE_MANAGER' || foRole === 'FINANCE_STAFF'))
+  const canDeleteSales = user?.role === 'ADMIN' || (isFO && foRole === 'FINANCE_MANAGER')
+
   const fetchMatch = () => {
     if (!id) return
     matchApi.get(Number(id))
-      .then(setMatch)
+      .then((data) => {
+        setMatch(data)
+        if (data.homeTeamName === 'FC Seoul') {
+          salesApi.byMatch(data.id).then(setTicketSales).catch(() => null)
+        }
+      })
       .catch(() => toast.error(t('detail.loadFailed')))
       .finally(() => setLoading(false))
   }
@@ -828,6 +851,45 @@ export function MatchDetailPage() {
     } finally {
       setStatUploading(false)
       if (statFileRef.current) statFileRef.current.value = ''
+    }
+  }
+
+  const handleAddTicketSale = async () => {
+    if (!match || !saleQty || !salePrice) return
+    setSavingSale(true)
+    try {
+      const newSale = await salesApi.create({
+        type: 'TICKET',
+        quantity: Number(saleQty),
+        unitPrice: Number(salePrice),
+        saleDate,
+        matchId: match.id,
+        ...(saleNote && { description: saleNote }),
+      })
+      setTicketSales((prev) => [newSale, ...prev])
+      setSaleQty('')
+      setSalePrice('')
+      setSaleNote('')
+      toast.success('티켓 판매 기록이 저장되었습니다.')
+    } catch (err: any) {
+      const code = err?.response?.data?.code
+      if (code === 'AWAY_MATCH_TICKET_NOT_ALLOWED') toast.error('홈경기만 티켓 판매를 기록할 수 있습니다.')
+      else toast.error('저장에 실패했습니다.')
+    } finally {
+      setSavingSale(false)
+    }
+  }
+
+  const handleDeleteTicketSale = async () => {
+    if (!deleteSaleId) return
+    try {
+      await salesApi.delete(deleteSaleId)
+      setTicketSales((prev) => prev.filter((s) => s.id !== deleteSaleId))
+      toast.success('삭제되었습니다.')
+    } catch {
+      toast.error('삭제에 실패했습니다.')
+    } finally {
+      setDeleteSaleId(null)
     }
   }
 
@@ -1178,8 +1240,107 @@ export function MatchDetailPage() {
             </div>
           )}
 
+          {/* 티켓 판매 */}
+          {match?.homeTeamName === 'FC Seoul' && canViewSales && (
+            <div className="rounded-xl border bg-white p-4 space-y-3">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                티켓 판매
+              </h3>
+
+              {canWriteSales && (
+                <div className="border rounded-lg p-3 space-y-2 bg-muted/30">
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <Label className="text-xs">수량</Label>
+                      <Input type="number" placeholder="1200" value={saleQty} onChange={(e) => setSaleQty(e.target.value)} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">단가 (원)</Label>
+                      <Input type="number" placeholder="15000" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">날짜</Label>
+                      <Input type="date" value={saleDate} onChange={(e) => setSaleDate(e.target.value)} />
+                    </div>
+                  </div>
+                  <Input placeholder="메모 (선택)" value={saleNote} onChange={(e) => setSaleNote(e.target.value)} />
+                  <Button size="sm" onClick={handleAddTicketSale} disabled={savingSale || !saleQty || !salePrice}>
+                    {savingSale ? '저장 중...' : '기록 추가'}
+                  </Button>
+                </div>
+              )}
+
+              {ticketSales.length === 0 ? (
+                <p className="text-sm text-muted-foreground">등록된 티켓 판매 기록이 없습니다.</p>
+              ) : (
+                <div className="border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>날짜</TableHead>
+                        <TableHead className="text-right">수량</TableHead>
+                        <TableHead className="text-right">단가</TableHead>
+                        <TableHead className="text-right">합계</TableHead>
+                        <TableHead />
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {ticketSales.map((s) => (
+                        <TableRow key={s.id}>
+                          <TableCell>{new Date(s.saleDate).toLocaleDateString('ko-KR')}</TableCell>
+                          <TableCell className="text-right">{s.quantity.toLocaleString()}장</TableCell>
+                          <TableCell className="text-right">₩{Number(s.unitPrice).toLocaleString()}</TableCell>
+                          <TableCell className="text-right font-medium">₩{Number(s.totalAmount).toLocaleString()}</TableCell>
+                          <TableCell className="text-right">
+                            {canDeleteSales && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive h-7 px-2"
+                                onClick={() => setDeleteSaleId(s.id)}
+                              >
+                                삭제
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                    <TableFooter>
+                      <TableRow>
+                        <TableCell className="font-semibold">합계</TableCell>
+                        <TableCell className="text-right font-semibold">
+                          {ticketSales.reduce((s, r) => s + r.quantity, 0).toLocaleString()}장
+                        </TableCell>
+                        <TableCell />
+                        <TableCell className="text-right font-semibold">
+                          ₩{ticketSales.reduce((s, r) => s + Number(r.totalAmount), 0).toLocaleString()}
+                        </TableCell>
+                        <TableCell />
+                      </TableRow>
+                    </TableFooter>
+                  </Table>
+                </div>
+              )}
+            </div>
+          )}
+
         </div>
       </div>
+
+      {/* 티켓 판매 삭제 확인 */}
+      <Dialog open={deleteSaleId !== null} onOpenChange={(open) => { if (!open) setDeleteSaleId(null) }}>
+        <DialogContent className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle>티켓 판매 기록 삭제</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">이 판매 기록을 삭제할까요? 되돌릴 수 없습니다.</p>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" size="sm" onClick={() => setDeleteSaleId(null)}>취소</Button>
+            <Button variant="destructive" size="sm" onClick={handleDeleteTicketSale}>삭제</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {match && (
         <>

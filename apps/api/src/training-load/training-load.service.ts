@@ -3,10 +3,27 @@ import { NotificationRepository } from "../notification/notification.repo";
 import { UpsertTrainingLoadDto, TrainingLoadQuery, WeeklySummaryQuery } from "./dto/training-load.dto";
 import { AppError } from "../lib/appError";
 
-export const WEEKLY_LOAD_THRESHOLD = 500;
+// KN3: position-based load thresholds instead of a single constant
+export const WEEKLY_LOAD_THRESHOLD: Record<string, number> = {
+  GK: 400,
+  CB: 500,
+  LB: 520,
+  RB: 520,
+  CDM: 540,
+  CM: 540,
+  CAM: 520,
+  LW: 530,
+  RW: 530,
+  ST: 500,
+  DEFAULT: 500,
+};
 
-export function isWeeklyOverload(weeklyTotal: number): boolean {
-  return weeklyTotal >= WEEKLY_LOAD_THRESHOLD;
+export function getLoadThreshold(position?: string | null): number {
+  return WEEKLY_LOAD_THRESHOLD[position ?? "DEFAULT"] ?? WEEKLY_LOAD_THRESHOLD["DEFAULT"]!;
+}
+
+export function isWeeklyOverload(weeklyTotal: number, position?: string | null): boolean {
+  return weeklyTotal >= getLoadThreshold(position);
 }
 
 export class TrainingLoadService {
@@ -39,34 +56,50 @@ export class TrainingLoadService {
       if (!isPhysicalCoach && !isHeadCoach && !isAdmin) throw new AppError(403, "LOAD_COACH_ONLY");
     }
 
+    // BH10: warn if player has active injury
+    void this.repo.findActiveInjury(dto.playerId).then(async (activeInjury) => {
+      if (activeInjury) {
+        console.warn(`[TrainingLoad] Player ${dto.playerId} has active injury (${activeInjury.status}) but training load is being recorded`);
+      }
+    }).catch(console.error);
+
     const result = await this.repo.upsert(dto);
 
     if (dto.load !== undefined) {
       const weekStart = this.getWeekStart(new Date());
       const total = await this.repo.getWeeklyLoadTotal(dto.playerId, weekStart);
-      if (isWeeklyOverload(total)) {
-        const player = await this.repo.getPlayerName(dto.playerId);
-        const playerName = player?.playerName ?? dto.playerId;
-        void Promise.all([
-          this.notifRepo
-            .createForPhysicalCoach(
+      const player = await this.repo.getPlayerName(dto.playerId);
+      const playerName = player?.playerName ?? dto.playerId;
+      // KN3: use position-based threshold for overload check
+      if (isWeeklyOverload(total, player?.position)) {
+        const threshold = getLoadThreshold(player?.position);
+        try {
+          await Promise.all([
+            this.notifRepo.createForPhysicalCoach(
               "TRAINING_LOAD_ALERT",
               () => ({
                 title: "훈련 부하 초과",
-                body: `${playerName} 선수의 이번 주 누적 부하(${total})가 임계값(${WEEKLY_LOAD_THRESHOLD})을 초과했습니다.`,
+                body: `${playerName} 선수의 이번 주 누적 부하(${total})가 임계값(${threshold})을 초과했습니다.`,
               }),
-            )
-            .catch(console.error),
-          this.notifRepo
-            .createForHeadCoach(
+            ).catch(console.error),
+            this.notifRepo.createForHeadCoach(
               "TRAINING_LOAD_ALERT",
               () => ({
                 title: "훈련 부하 초과",
-                body: `${playerName} 선수의 이번 주 누적 부하(${total})가 임계값(${WEEKLY_LOAD_THRESHOLD})을 초과했습니다.`,
+                body: `${playerName} 선수의 이번 주 누적 부하(${total})가 임계값(${threshold})을 초과했습니다.`,
               }),
-            )
-            .catch(console.error),
-        ]);
+            ).catch(console.error),
+            this.notifRepo.createForMedicalDirector(
+              "TRAINING_LOAD_ALERT",
+              () => ({
+                title: "훈련 부하 초과",
+                body: `${playerName} 선수의 이번 주 누적 부하(${total})가 임계값(${threshold})을 초과했습니다.`,
+              }),
+            ).catch(console.error),
+          ]);
+        } catch (err) {
+          console.error("[TrainingLoad:overload-notify]", err);
+        }
       }
     }
 
@@ -75,21 +108,80 @@ export class TrainingLoadService {
 
   async getWeeklySummary(query: WeeklySummaryQuery) {
     const weekStart = new Date(query.weekStart);
-    const total = await this.repo.getWeeklyLoadTotal(query.playerId, weekStart);
+    const [total, player] = await Promise.all([
+      this.repo.getWeeklyLoadTotal(query.playerId, weekStart),
+      this.repo.getPlayerName(query.playerId),
+    ]);
+    // KN3: use position-based threshold for summary overload flag
     return {
       playerId: query.playerId,
       weekStart: query.weekStart,
       total,
-      overload: isWeeklyOverload(total),
+      overload: isWeeklyOverload(total, player?.position),
+      threshold: getLoadThreshold(player?.position),
+    };
+  }
+
+  getInjuryLoadCorrelation(playerId: string, weeksBeforeInjury?: number) {
+    return this.repo.getInjuryLoadCorrelation(playerId, weeksBeforeInjury);
+  }
+
+  getPlayerGrowthTrajectory(playerId: string) {
+    return this.repo.getPlayerGrowthTrajectory(playerId);
+  }
+
+  async detectLoadRpeAnomalies(seasonId?: number) {
+    const loads = await this.repo.getAllWithSession(seasonId);
+    const anomalies = loads.filter((l) => {
+      // KN3: use DEFAULT threshold as session-level reference for anomaly detection
+      const sessionHighLoadRef = getLoadThreshold("DEFAULT") * 0.14;
+      const highLoad = (l.load ?? 0) >= sessionHighLoadRef;
+      const lowRpe = l.rpe < 4;
+      const lowLoad = (l.load ?? 0) > 0 && (l.load ?? 0) < 20;
+      const highRpe = l.rpe >= 8;
+      return (highLoad && lowRpe) || (lowLoad && highRpe);
+    });
+    return anomalies.map((l) => ({
+      playerId: l.playerId,
+      sessionId: l.sessionId,
+      load: l.load,
+      rpe: l.rpe,
+      anomalyType: ((l.load ?? 0) >= (getLoadThreshold("DEFAULT") * 0.14) && l.rpe < 4) ? "HIGH_LOAD_LOW_RPE" : "LOW_LOAD_HIGH_RPE",
+    }));
+  }
+
+  async getAcuteChronicRatio(playerId: string) {
+    const now = new Date();
+    const acuteStart = new Date(now); acuteStart.setDate(now.getDate() - 7);
+    const chronicStart = new Date(now); chronicStart.setDate(now.getDate() - 28);
+
+    const [acuteLoads, chronicLoads] = await Promise.all([
+      this.repo.getLoadsBetween(playerId, acuteStart, now),
+      this.repo.getLoadsBetween(playerId, chronicStart, now),
+    ]);
+
+    const acuteTotal = acuteLoads.reduce((s, l) => s + (l.load ?? 0), 0);
+    const chronicWeeklyAvg = chronicLoads.reduce((s, l) => s + (l.load ?? 0), 0) / 4;
+    const ratio = chronicWeeklyAvg === 0 ? null : Math.round((acuteTotal / chronicWeeklyAvg) * 100) / 100;
+
+    return {
+      playerId,
+      acuteLoad: acuteTotal,
+      chronicWeeklyAvg: Math.round(chronicWeeklyAvg),
+      acuteChronicRatio: ratio,
+      riskLevel: ratio == null ? "UNKNOWN" : ratio > 1.5 ? "HIGH" : ratio > 1.3 ? "MODERATE" : "LOW",
     };
   }
 
   private getWeekStart(date: Date): Date {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    d.setDate(diff);
-    d.setHours(0, 0, 0, 0);
-    return d;
+    // Convert to KST (UTC+9) before calculating week boundary
+    const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+    const kstTime = new Date(date.getTime() + KST_OFFSET_MS);
+    const day = kstTime.getUTCDay(); // 0=Sunday, 1=Monday
+    const diff = kstTime.getUTCDate() - day + (day === 0 ? -6 : 1);
+    kstTime.setUTCDate(diff);
+    kstTime.setUTCHours(0, 0, 0, 0);
+    // Return as UTC (subtract KST offset)
+    return new Date(kstTime.getTime() - KST_OFFSET_MS);
   }
 }

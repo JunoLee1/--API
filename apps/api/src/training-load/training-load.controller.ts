@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { requireUser } from "../lib/authMiddleware";
 import { TrainingLoadService } from "./training-load.service";
 
 export class TrainingLoadController {
@@ -16,7 +17,7 @@ export class TrainingLoadController {
 
   upsert = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id, role, coachingRole } = req.user!;
+      const { id, role, coachingRole } = requireUser(req);
       res.status(200).json(
         await this.service.upsert(req.body, String(id), role, coachingRole ?? null),
       );
@@ -32,6 +33,35 @@ export class TrainingLoadController {
           weekStart: weekStart as string,
         }),
       );
+    } catch (err) { next(err); }
+  };
+
+  getInjuryCorrelation = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const playerId = req.params["playerId"] as string;
+      const weeks = req.query["weeks"] ? Number(req.query["weeks"]) : undefined;
+      res.json(await this.service.getInjuryLoadCorrelation(playerId, weeks));
+    } catch (err) { next(err); }
+  };
+
+  getGrowthTrajectory = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const playerId = req.params["playerId"] as string;
+      res.json(await this.service.getPlayerGrowthTrajectory(playerId));
+    } catch (err) { next(err); }
+  };
+
+  getAnomalies = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const seasonId = req.query["seasonId"] ? Number(req.query["seasonId"]) : undefined;
+      res.json(await this.service.detectLoadRpeAnomalies(seasonId));
+    } catch (err) { next(err); }
+  };
+
+  getAcuteChronicRatio = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const playerId = req.params["playerId"] as string;
+      res.json(await this.service.getAcuteChronicRatio(playerId));
     } catch (err) { next(err); }
   };
 }

@@ -19,7 +19,7 @@ export class AuthService {
     const valid = await comparePassword(password, user.password);
     if (!valid) throw new AppError(401, "INVALID_CREDENTIALS");
 
-    const tokens = generateTokens({ id: user.id, role: user.role, coachingRole: user.coachingRole, frontOfficeRole: user.frontOfficeRole, teamId: user.teamId, clubId: user.clubId });
+    const tokens = generateTokens({ id: user.id, role: user.role, coachingRole: user.coachingRole, frontOfficeRole: user.frontOfficeRole, teamId: user.teamId, clubId: user.clubId, isDemo: user.isDemo });
     return { ...tokens, userId: user.id };
   }
 
@@ -54,9 +54,15 @@ export class AuthService {
     const invite = await this.repo.createInvite(dto);
     const appUrl = process.env["APP_URL"] ?? "http://localhost:5173";
     const inviteUrl = `${appUrl}/invite/${invite.token}`;
-    const { sendInviteEmail } = await import("../lib/email");
-    await sendInviteEmail(dto.email, inviteUrl, dto.role);
-    return invite;
+    let emailSent = false;
+    try {
+      const { sendInviteEmail } = await import("../lib/email");
+      await sendInviteEmail(dto.email, inviteUrl, dto.role);
+      emailSent = true;
+    } catch {
+      // SMTP 미설정 또는 발송 실패 — 초대 토큰은 유효, inviteUrl로 수동 전달 가능
+    }
+    return { ...invite, emailSent, ...(!emailSent && { inviteUrl }) };
   }
 
   async getInvite(token: string) {
@@ -91,6 +97,15 @@ export class AuthService {
     });
     await this.repo.markInviteUsed(invite.id);
     return user;
+  }
+
+  async blacklistToken(jti: string, expiresAt: Date) {
+    await this.repo.blacklistToken(jti, expiresAt);
+    void this.repo.deleteExpiredBlacklistEntries().catch(() => {});
+  }
+
+  isTokenBlacklisted(jti: string) {
+    return this.repo.isTokenBlacklisted(jti);
   }
 
   listInvites() {

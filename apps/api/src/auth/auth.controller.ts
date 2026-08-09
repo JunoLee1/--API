@@ -1,9 +1,12 @@
 import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
 import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME, ACCESS_TOKEN_COOKIE_OPTIONS, REFRESH_TOKEN_COOKIE_OPTIONS } from "../lib/constants";
 import { AuthService } from "./auth.service";
 import { AuthRepository } from "./auth.repo";
+import { Role, CoachingRole, FrontOfficeRole } from "../generated/enums";
 
 export class AuthController {
   constructor(
@@ -44,7 +47,10 @@ export class AuthController {
 
   refresh = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = req.user!;
+      const user = requireUser(req);
+      const oldJti = (user as Express.User & { jti?: string; exp?: number }).jti;
+      const oldExp = (user as Express.User & { jti?: string; exp?: number }).exp;
+
       const tokens = (await import("../lib/token")).generateTokens({
         id: user.id,
         role: user.role,
@@ -53,6 +59,11 @@ export class AuthController {
         teamId: user.teamId ?? null,
         clubId: user.clubId ?? null,
       });
+
+      if (oldJti && oldExp) {
+        void this.service.blacklistToken(oldJti, new Date(oldExp * 1000)).catch(console.error);
+      }
+
       res.cookie(ACCESS_TOKEN_COOKIE_NAME, tokens.accessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
       res.cookie(REFRESH_TOKEN_COOKIE_NAME, tokens.refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
       res.status(200).json({ message: "OK" });
@@ -61,7 +72,16 @@ export class AuthController {
     }
   };
 
-  logout = (_req: Request, res: Response) => {
+  logout = async (req: Request, res: Response) => {
+    const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE_NAME] as string | undefined;
+    if (refreshToken) {
+      try {
+        const decoded = jwt.decode(refreshToken) as { jti?: string; exp?: number } | null;
+        if (decoded?.jti && decoded.exp) {
+          void this.service.blacklistToken(decoded.jti, new Date(decoded.exp * 1000)).catch(console.error);
+        }
+      } catch { /* 토큰 파싱 실패 시 무시 */ }
+    }
     res.clearCookie(ACCESS_TOKEN_COOKIE_NAME);
     res.clearCookie(REFRESH_TOKEN_COOKIE_NAME);
     res.status(200).json({ message: "OK" });
@@ -109,9 +129,9 @@ export class AuthController {
       };
       if (!email || !role) throw new AppError(400, "EMAIL_AND_ROLE_REQUIRED");
       const invite = await this.service.createInvite({
-        email, role: role as any,
-        coachingRole: coachingRole as any ?? null,
-        frontOfficeRole: frontOfficeRole as any ?? null,
+        email, role: role as Role,
+        coachingRole: (coachingRole as CoachingRole) ?? null,
+        frontOfficeRole: (frontOfficeRole as FrontOfficeRole) ?? null,
         createdById: userInfo.id,
       });
       res.status(201).json(invite);

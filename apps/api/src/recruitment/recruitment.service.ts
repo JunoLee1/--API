@@ -1,5 +1,9 @@
 import { RecruitmentRepository } from "./recruitment.repo";
 import { AppError } from "../lib/appError";
+import { maskEmail, maskPhone } from "../lib/maskPii";
+import { getPrisma } from "../lib/prisma";
+import { NotificationRepository } from "../notification/notification.repo";
+import { sendApplicationStatusEmail } from "../lib/email";
 import type {
   CreateJobPostingDto,
   UpdateJobPostingDto,
@@ -13,8 +17,22 @@ import type {
 } from "./dto/recruitment.dto";
 import type { InterviewRound } from "../generated/enums";
 
+function maskApplication<T extends { email: string | null; phone: string | null; onboarding?: { user?: { email: string } | null } | null }>(app: T): T {
+  return {
+    ...app,
+    email: app.email ? maskEmail(app.email) : app.email,
+    phone: maskPhone(app.phone),
+    onboarding: app.onboarding?.user
+      ? { ...app.onboarding, user: { ...app.onboarding.user, email: maskEmail(app.onboarding.user.email) } }
+      : app.onboarding,
+  };
+}
+
 export class RecruitmentService {
-  constructor(private repo: RecruitmentRepository) {}
+  constructor(
+    private repo: RecruitmentRepository,
+    private notifRepo?: NotificationRepository,
+  ) {}
 
   // --- JobPosting ---
 
@@ -53,13 +71,14 @@ export class RecruitmentService {
 
   async listApplications(postingId: number) {
     await this.getPosting(postingId);
-    return this.repo.findApplicationsByPosting(postingId);
+    const apps = await this.repo.findApplicationsByPosting(postingId);
+    return apps.map(maskApplication);
   }
 
   async getApplication(id: number) {
     const app = await this.repo.findApplicationById(id);
     if (!app) throw new AppError(404, "JOB_APPLICATION_NOT_FOUND");
-    return app;
+    return maskApplication(app);
   }
 
   async apply(postingId: number, dto: CreateJobApplicationDto) {
@@ -76,28 +95,62 @@ export class RecruitmentService {
     return this.repo.updateApplication(id, dto);
   }
 
-  async rejectApplication(id: number) {
+  async rejectApplication(id: number, actorId: number) {
     const app = await this.getApplication(id);
     if (app.status === "REJECTED") throw new AppError(409, "APPLICATION_ALREADY_REJECTED");
-    return this.repo.rejectApplication(id);
+    const result = await this.repo.rejectApplication(id, actorId);
+    // SJ6: email applicant on rejection — fetch raw (unmasked) record for email address
+    const rawApp = await this.repo.findApplicationById(id);
+    if (rawApp?.email) {
+      void sendApplicationStatusEmail(rawApp.email, rawApp.applicantName, "REJECTED").catch(console.error);
+    }
+    return result;
   }
 
   async offerApplication(id: number, offeredById: number) {
     const app = await this.getApplication(id);
     if (app.status !== "REFERENCE_CHECK") throw new AppError(409, "APPLICATION_NOT_IN_REFERENCE_CHECK");
-    return this.repo.offerApplication(id, offeredById);
+    const refCheck = await getPrisma().referenceCheck.findUnique({
+      where: { applicationId: id },
+      select: { result: true },
+    });
+    if (refCheck?.result === "FLAGGED") {
+      throw new AppError(409, "REFERENCE_CHECK_FLAGGED");
+    }
+    const result = await this.repo.offerApplication(id, offeredById, offeredById);
+    // SJ6: email applicant on offer — fetch raw (unmasked) record for email address
+    const rawApp = await this.repo.findApplicationById(id);
+    if (rawApp?.email) {
+      void sendApplicationStatusEmail(rawApp.email, rawApp.applicantName, "OFFERED").catch(console.error);
+    }
+    return result;
   }
 
   // --- Interview ---
 
-  async scheduleInterview(applicationId: number, dto: CreateInterviewDto) {
+  async scheduleInterview(applicationId: number, dto: CreateInterviewDto, actorId: number) {
     await this.getApplication(applicationId);
     const existing = await this.repo.findInterview(applicationId, dto.round);
     if (existing) throw new AppError(409, "INTERVIEW_ALREADY_EXISTS");
     const targetStatus: "INTERVIEW_1" | "INTERVIEW_2" =
       dto.round === "ROUND_1" ? "INTERVIEW_1" : "INTERVIEW_2";
-    await this.repo.setApplicationStatus(applicationId, targetStatus);
-    return this.repo.createInterview(applicationId, dto);
+    await this.repo.setApplicationStatus(applicationId, targetStatus, actorId);
+    const interview = await this.repo.createInterview(applicationId, dto);
+
+    // S3: notify assigned interviewers
+    if (dto.interviewerIds && dto.interviewerIds.length > 0 && this.notifRepo) {
+      void this.notifRepo.createForUsers(
+        dto.interviewerIds,
+        "INTERVIEW_SCHEDULED",
+        () => ({
+          title: "면접 일정 배정됨",
+          body: `${dto.round} 면접이 배정되었습니다. 일정을 확인해주세요.`,
+        }),
+        interview.id,
+      ).catch(console.error);
+    }
+
+    return interview;
   }
 
   async updateInterview(applicationId: number, round: InterviewRound, dto: UpdateInterviewDto) {
@@ -108,9 +161,15 @@ export class RecruitmentService {
 
   // --- ReferenceCheck ---
 
-  async createReferenceCheck(applicationId: number, dto: CreateReferenceCheckDto) {
-    await this.getApplication(applicationId);
-    await this.repo.setApplicationStatus(applicationId, "REFERENCE_CHECK");
+  async createReferenceCheck(applicationId: number, dto: CreateReferenceCheckDto, actorId: number) {
+    const app = await this.getApplication(applicationId);
+
+    // CL5: consent must not be explicitly declined
+    if ((app as any).referenceCheckConsent === false) {
+      throw new AppError(409, "REFERENCE_CHECK_CONSENT_DECLINED");
+    }
+
+    await this.repo.setApplicationStatus(applicationId, "REFERENCE_CHECK", actorId);
     return this.repo.createReferenceCheck(applicationId, dto);
   }
 
@@ -145,6 +204,48 @@ export class RecruitmentService {
     if (!onboarding) throw new AppError(404, "ONBOARDING_NOT_FOUND");
     if (!onboarding.emailVerifiedAt) throw new AppError(409, "EMAIL_NOT_VERIFIED");
     if (onboarding.mfaRegisteredAt) throw new AppError(409, "MFA_ALREADY_REGISTERED");
-    return this.repo.markMfaRegistered(applicationId);
+    const result = await this.repo.markMfaRegistered(applicationId);
+
+    // Mark application as ONBOARDED (system-initiated, no human actorId — use 0 as sentinel)
+    const prisma = getPrisma();
+    const application = await this.repo.findApplicationById(applicationId);
+    if (application) {
+      await this.repo.completeOnboarding(applicationId, 0);
+
+      // Auto-create StaffRecord if not already exists
+      const existingRecord = await prisma.staffRecord.findFirst({
+        where: { employeeId: String(applicationId) },
+      });
+      if (!existingRecord) {
+        await prisma.staffRecord.create({
+          data: {
+            name: application.applicantName,
+            role: application.posting?.title ?? "Staff",
+            employeeId: String(applicationId),
+            isActive: true,
+            createdById: application.offeredById ?? 1,
+            employmentStartDate: new Date(),
+          } as any,
+        });
+      }
+    }
+
+    return result;
+  }
+
+  getHeadcountProgress() {
+    return this.repo.getHeadcountProgress();
+  }
+
+  getTimeToHireStats() {
+    return this.repo.getTimeToHireStats();
+  }
+
+  addInterviewerScore(interviewId: number, data: { interviewerId: number; scoreSkill?: number; scoreComm?: number; scoreCulture?: number; comment?: string }, actorId: number) {
+    return this.repo.addInterviewerScore({ interviewId, ...data }, actorId);
+  }
+
+  getInterviewerScores(interviewId: number) {
+    return this.repo.getInterviewerScores(interviewId);
   }
 }

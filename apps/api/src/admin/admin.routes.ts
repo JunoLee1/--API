@@ -10,14 +10,15 @@ const repo = new AdminRepository(getPrisma());
 const service = new AdminService(repo);
 const controller = new AdminController(service);
 
-
 router.get("/audit-logs", auth, controller.listAuditLogs);
 router.get("/users", auth, controller.listUsers);
 router.get("/players-without-accounts", auth, controller.listPlayersWithoutAccounts);
 router.get("/users/:id", auth, controller.getUser);
 router.patch("/users/:id/role", auth, controller.updateRole);
+router.patch("/users/:id/demo", auth, controller.setDemoStatus);
 router.patch("/users/:id/deactivate", auth, controller.deactivateUser);
 router.patch("/users/:id/reactivate", auth, controller.reactivateUser);
 router.delete("/users/:id", auth, controller.deleteUser);
+router.patch("/users/:id/demo", auth, controller.setDemoStatus);
 
 export default router;

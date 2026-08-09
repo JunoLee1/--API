@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { MedicalExpenseService } from "./medical-expense.service";
 
 function isMedical(req: Request) {
@@ -20,7 +21,8 @@ export class MedicalExpenseController {
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      res.json(await this.service.list(req.user!.id, req.user!.role, req.user!.coachingRole ?? null));
+      const user = requireUser(req);
+      res.json(await this.service.list(user.id, user.role, user.coachingRole ?? null));
     } catch (err) {
       next(err);
     }
@@ -32,7 +34,7 @@ export class MedicalExpenseController {
       const canAccess =
         isAdmin(req) ||
         isMedicalDirector(req) ||
-        expense.submittedById === req.user!.id;
+        expense.submittedById === requireUser(req).id;
       if (!canAccess) throw new AppError(403, "FORBIDDEN");
       res.json(expense);
     } catch (err) {
@@ -47,7 +49,7 @@ export class MedicalExpenseController {
       const file = req.file;
       res.status(201).json(
         await this.service.create({
-          submittedById: req.user!.id,
+          submittedById: requireUser(req).id,
           receiptDate: new Date(receiptDate),
           costCategory,
           totalAmount: Number(totalAmount),
@@ -68,7 +70,7 @@ export class MedicalExpenseController {
       const { receiptDate, costCategory, totalAmount, payerType, injuryId, playerId, description } = req.body;
       const file = req.file;
       res.json(
-        await this.service.update(Number(req.params["id"]), req.user!.id, {
+        await this.service.update(Number(req.params["id"]), requireUser(req).id, {
           ...(receiptDate !== undefined && { receiptDate: new Date(receiptDate) }),
           ...(costCategory !== undefined && { costCategory }),
           ...(totalAmount !== undefined && { totalAmount: Number(totalAmount) }),
@@ -86,7 +88,7 @@ export class MedicalExpenseController {
 
   submit = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      res.json(await this.service.submit(Number(req.params["id"]), req.user!.id));
+      res.json(await this.service.submit(Number(req.params["id"]), requireUser(req).id));
     } catch (err) {
       next(err);
     }
@@ -95,7 +97,7 @@ export class MedicalExpenseController {
   leaderApprove = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!isMedicalDirector(req)) throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.leaderApprove(Number(req.params["id"]), req.user!.id));
+      res.json(await this.service.leaderApprove(Number(req.params["id"]), requireUser(req).id));
     } catch (err) {
       next(err);
     }
@@ -104,7 +106,7 @@ export class MedicalExpenseController {
   leaderReject = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!isMedicalDirector(req)) throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.leaderReject(Number(req.params["id"]), req.user!.id, req.body.reason));
+      res.json(await this.service.leaderReject(Number(req.params["id"]), requireUser(req).id, req.body.reason));
     } catch (err) {
       next(err);
     }
@@ -113,7 +115,7 @@ export class MedicalExpenseController {
   approve = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!isAdmin(req)) throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.approve(Number(req.params["id"]), req.user!.id));
+      res.json(await this.service.approve(Number(req.params["id"]), requireUser(req).id));
     } catch (err) {
       next(err);
     }
@@ -122,7 +124,7 @@ export class MedicalExpenseController {
   reject = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!isAdmin(req)) throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.reject(Number(req.params["id"]), req.user!.id, req.body.reason));
+      res.json(await this.service.reject(Number(req.params["id"]), requireUser(req).id, req.body.reason));
     } catch (err) {
       next(err);
     }

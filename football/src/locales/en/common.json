@@ -51,6 +51,7 @@
       "tacticalReferences": "Tactical References",
       "coachAvailability": "Coach Availability",
       "coachDashboard": "Coach Dashboard",
+      "coachOverview": "Coach Overview",
       "matchList": "Matches",
       "tacticalAnalysis": "Tactical Analysis",
       "rankings": "Rankings",
@@ -73,6 +74,7 @@
       "staffRecords": "Staff Records",
       "mealExpenses": "Meal Expenses",
       "financialReport": "Financial Report",
+      "ticketSales": "Ticket Sales",
       "sponsorship": "Sponsorship",
       "departments": "Departments",
       "budgetPlan": "Operating Budget",
@@ -259,6 +261,9 @@
         "TACTICAL_ANALYSIS_CONFIRM_REQUESTED": "Tactical Confirm",
         "INJURY_READY_TO_RETURN": "Return Ready",
         "CONTRACT_EXPIRY": "Contract Expiry",
+        "CONTRACT_EXPIRY_90D": "Contract Expiry Warning (90 Days)",
+        "CONTRACT_EXPIRY_60D": "Contract Expiry Warning (60 Days)",
+        "CONTRACT_EXPIRY_30D": "Contract Expiry Warning (30 Days)",
         "PERFORMANCE_BONUS_ACHIEVED": "Bonus Achieved",
         "EQUIPMENT_LOW_STOCK": "Low Stock",
         "TRAINING_ATTENDANCE_WARNING": "Attendance Warning",
@@ -333,6 +338,17 @@
       "WIN": "W",
       "DRAW": "D",
       "LOSS": "L"
+    },
+    "coachView": {
+      "todayAbsent": "Today's Absences",
+      "noSession": "No session today",
+      "allPresent": "All present",
+      "absentCount": "{{count}} absent",
+      "injuryStatus": "Injury Status",
+      "noInjuries": "No injuries",
+      "injuredCount": "{{count}} injured",
+      "nextMatch": "Next Match",
+      "noUpcoming": "No upcoming matches"
     }
   }
 }

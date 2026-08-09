@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { PartnerService } from "./partner.service";
 import { PartnerType } from "../generated/enums";
 
@@ -18,7 +19,8 @@ export class PartnerController {
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!canRead(req.user!.role)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!canRead(user.role)) throw new AppError(403, "FORBIDDEN");
       const rawType = req.query["type"] as string | undefined;
       if (rawType && !Object.values(PartnerType).includes(rawType as PartnerType)) {
         throw new AppError(400, "INVALID_PARTNER_TYPE");
@@ -30,14 +32,15 @@ export class PartnerController {
 
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!canRead(req.user!.role)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!canRead(user.role)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.getById(Number(req.params["id"])));
     } catch (err) { next(err); }
   };
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canManage(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.create(req.body));
     } catch (err) { next(err); }
@@ -45,7 +48,7 @@ export class PartnerController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canManage(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.update(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
@@ -53,7 +56,7 @@ export class PartnerController {
 
   createContract = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!isAssetManager(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.createContract(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
@@ -61,7 +64,7 @@ export class PartnerController {
 
   updateContract = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!isAssetManager(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.updateContract(
         Number(req.params["id"]),

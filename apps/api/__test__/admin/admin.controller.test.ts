@@ -1,6 +1,8 @@
 import { describe, test, jest, expect, beforeEach } from "@jest/globals";
 import { AdminController } from "../../src/admin/admin.controller";
 
+jest.mock("../../src/lib/auditLog", () => ({ writeAuditLog: jest.fn().mockResolvedValue(undefined) }));
+
 const mockService = {
   listUsers: jest.fn<() => Promise<any[]>>().mockResolvedValue([]),
   getUserById: jest.fn(),
@@ -8,6 +10,9 @@ const mockService = {
   deactivateUser: jest.fn(),
   reactivateUser: jest.fn(),
   deleteUser: jest.fn(),
+  setDemoStatus: jest.fn(),
+  getPlayersWithoutAccounts: jest.fn(),
+  getAuditLogs: jest.fn(),
 } as any;
 
 const controller = new AdminController(mockService);
@@ -86,6 +91,7 @@ describe("AdminController - updateRole", () => {
     mockService.updateUserRole.mockResolvedValue({ id: 2, role: "FRONT_OFFICE" });
     const res = mockRes();
     await controller.updateRole(adminReq({ params: { id: "2" }, body: { role: "FRONT_OFFICE" } }), res, next);
+    expect(next).not.toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(200);
   });
 
@@ -103,6 +109,7 @@ describe("AdminController - deactivateUser", () => {
     mockService.deactivateUser.mockResolvedValue({ id: 2, isDeleted: true });
     const res = mockRes();
     await controller.deactivateUser(adminReq({ params: { id: "2" } }), res, next);
+    expect(next).not.toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(200);
   });
 
@@ -120,6 +127,7 @@ describe("AdminController - reactivateUser", () => {
     mockService.reactivateUser.mockResolvedValue({ id: 2, isDeleted: false });
     const res = mockRes();
     await controller.reactivateUser(adminReq({ params: { id: "2" } }), res, next);
+    expect(next).not.toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(200);
   });
 
@@ -133,12 +141,20 @@ describe("AdminController - reactivateUser", () => {
 describe("AdminController - deleteUser", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  test("ADMIN gets 204", async () => {
+  test("SUPER_ADMIN gets 204", async () => {
     mockService.deleteUser.mockResolvedValue(undefined);
     const res = mockRes();
-    await controller.deleteUser(adminReq({ params: { id: "2" } }), res, next);
+    const req = { user: { id: 1, role: "SUPER_ADMIN", coachingRole: null, frontOfficeRole: null }, body: {}, params: { id: "2" }, query: {} } as any;
+    await controller.deleteUser(req, res, next);
+    expect(next).not.toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(204);
     expect(res.send).toHaveBeenCalled();
+  });
+
+  test("ADMIN gets 403", async () => {
+    const res = mockRes();
+    await controller.deleteUser(adminReq({ params: { id: "2" } }), res, next);
+    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403, code: "FORBIDDEN" }));
   });
 
   test("non-ADMIN gets 403", async () => {

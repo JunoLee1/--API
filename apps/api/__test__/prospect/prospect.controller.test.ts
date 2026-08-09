@@ -53,7 +53,7 @@ describe("ProspectController - create (write permission)", () => {
 
   test("GM can create prospect → 201", async () => {
     const req = mockReq({
-      user: { id: 3, role: "FRONT_OFFICE", coachingRole: null, frontOfficeRole: "GM" },
+      user: { id: 3, role: "GM", coachingRole: null, frontOfficeRole: null },
       body: { name: "Test", nationality: "French", position: "STRIKER", currentTeam: "FC Lyon" },
     });
     const res = mockRes();

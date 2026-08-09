@@ -27,7 +27,9 @@ router.get("/youth-development", auth, async (req, res, next) => {
 router.get("/academy-finance", auth, async (req, res, next) => {
   try {
     const user = req.user as any;
-    if (!isAdminLike(user.role) && user.role !== "FRONT_OFFICE") {
+    const foRole = user.frontOfficeRole;
+    const allowedFoRoles = ["FINANCE_MANAGER", "TD"];
+    if (!isAdminLike(user.role) && !(user.role === "FRONT_OFFICE" && allowedFoRoles.includes(foRole))) {
       return res.status(403).json({ message: "Forbidden" });
     }
     const now = new Date();
@@ -35,6 +37,20 @@ router.get("/academy-finance", auth, async (req, res, next) => {
     const month = Number(req.query.month ?? now.getMonth() + 1);
     res.json(await service.getAcademyFinanceStats(year, month));
   } catch (e) { next(e); }
+});
+
+router.get("/coach", auth, async (req, res, next) => {
+  try {
+    const user = req.user as any;
+    const isCoach = user.role === "COACHING_STAFF";
+    const isAdmin = user.role === "ADMIN" || user.role === "SUPER_ADMIN";
+    if (!isCoach && !isAdmin) {
+      return res.status(403).json({ code: "FORBIDDEN" });
+    }
+    res.json(await service.getCoachDashboard());
+  } catch (e) {
+    next(e);
+  }
 });
 
 export default router;

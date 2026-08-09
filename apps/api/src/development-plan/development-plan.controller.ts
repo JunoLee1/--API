@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { requireUser } from "../lib/authMiddleware";
 import { DevelopmentPlanService } from "./development-plan.service";
 
 export class DevelopmentPlanController {
@@ -23,29 +24,30 @@ export class DevelopmentPlanController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (req.user!.role !== "COACHING_STAFF") throw new AppError(403, "FORBIDDEN");
-      res.status(201).json(await this.service.create(req.body, req.user!.id));
+      const user = requireUser(req);
+      if (user.role !== "COACHING_STAFF") throw new AppError(403, "FORBIDDEN");
+      res.status(201).json(await this.service.create(req.body, user.id));
     } catch (err) { next(err); }
   };
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = req.user!;
-      res.json(await this.service.update(Number(req.params["id"]), req.body, req.user!.id, role, coachingRole));
+      const { role, coachingRole, id: userId } = requireUser(req);
+      res.json(await this.service.update(Number(req.params["id"]), req.body, userId, role, coachingRole));
     } catch (err) { next(err); }
   };
 
   activate = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = req.user!;
-      res.json(await this.service.activate(Number(req.params["id"]), req.user!.id, role, coachingRole));
+      const { role, coachingRole, id: userId } = requireUser(req);
+      res.json(await this.service.activate(Number(req.params["id"]), userId, role, coachingRole));
     } catch (err) { next(err); }
   };
 
   review = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = req.user!;
-      res.json(await this.service.review(Number(req.params["id"]), req.user!.id, role, coachingRole));
+      const { role, coachingRole, id: userId } = requireUser(req);
+      res.json(await this.service.review(Number(req.params["id"]), userId, role, coachingRole));
     } catch (err) { next(err); }
   };
 }

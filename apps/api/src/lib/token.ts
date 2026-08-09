@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { randomUUID } from "crypto";
 import { JWT_ACCESS_TOKEN_SECRET, JWT_REFRESH_TOKEN_SECRET } from "./constants";
 import { Role, CoachingRole, FrontOfficeRole } from "../generated/enums";
 
@@ -9,10 +10,12 @@ interface TokenPayload {
   frontOfficeRole?: FrontOfficeRole | null;
   teamId?: number | null;
   clubId?: number | null;
+  isDemo?: boolean;
 }
 
 export function generateTokens(payload: TokenPayload) {
   const accessToken = jwt.sign(payload, JWT_ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
-  const refreshToken = jwt.sign(payload, JWT_REFRESH_TOKEN_SECRET, { expiresIn: "7d" });
+  const jti = randomUUID();
+  const refreshToken = jwt.sign({ ...payload, jti }, JWT_REFRESH_TOKEN_SECRET, { expiresIn: "7d" });
   return { accessToken, refreshToken };
 }

@@ -12,6 +12,10 @@ export interface CreatePlayerDto {
   externalId?: string;
   userId?: number;
   agentId?: number;
+  agencyId?: number;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelation?: string;
 }
 
 export interface UpdatePlayerDto {
@@ -25,6 +29,10 @@ export interface UpdatePlayerDto {
   nationalityId?: number;
   externalId?: string;
   agentId?: number;
+  agencyId?: number | null;
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
+  emergencyContactRelation?: string | null;
   allergies?: string[];
   foodPreferences?: string | null;
 }

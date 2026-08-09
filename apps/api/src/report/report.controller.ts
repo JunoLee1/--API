@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
-import { isAdminLike } from "../lib/permissions";
+import { isAdminLike, canReadHR, canReadFinance } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { ReportService } from "./report.service";
 
 function isGM(req: Request): boolean {
@@ -11,28 +12,12 @@ function isHeadCoach(req: Request): boolean {
   return req.user?.role === "COACHING_STAFF" && req.user?.coachingRole === "HEAD_COACH";
 }
 
-function isHrManager(req: Request): boolean {
-  return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "HR_MANAGER";
-}
-
-function isFinanceManager(req: Request): boolean {
-  return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "FINANCE_MANAGER";
-}
-
 function isAssetManager(req: Request): boolean {
   return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "ASSET_MANAGER";
 }
 
-function isHrStaff(req: Request): boolean {
-  return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "HR_STAFF";
-}
-
 function isAssetStaff(req: Request): boolean {
   return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "ASSET_STAFF";
-}
-
-function isFinanceStaff(req: Request): boolean {
-  return req.user?.role === "FRONT_OFFICE" && req.user?.frontOfficeRole === "FINANCE_STAFF";
 }
 
 const AUTHOR_ROLES = ["ADMIN", "COACHING_STAFF", "FRONT_OFFICE"] as const;
@@ -46,18 +31,19 @@ export class ReportController {
       const filters: { type?: string; status?: string } = {};
       if (type !== undefined) filters.type = type;
       if (status !== undefined) filters.status = status;
+      const { role, frontOfficeRole, id: userId } = requireUser(req);
       res.json(
         await this.service.list(
-          req.user!.id,
+          userId,
           isGM(req),
           isHeadCoach(req),
           filters,
-          isHrManager(req),
-          isFinanceManager(req),
+          role === "FRONT_OFFICE" && frontOfficeRole === "HR_MANAGER",
+          role === "FRONT_OFFICE" && frontOfficeRole === "FINANCE_MANAGER",
           isAssetManager(req),
-          isHrStaff(req),
+          role === "FRONT_OFFICE" && frontOfficeRole === "HR_STAFF",
           isAssetStaff(req),
-          isFinanceStaff(req),
+          role === "FRONT_OFFICE" && frontOfficeRole === "FINANCE_STAFF",
         ),
       );
     } catch (err) {
@@ -68,14 +54,13 @@ export class ReportController {
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const report = await this.service.get(Number(req.params["id"]));
+      const { role, frontOfficeRole: foRole, id: userId } = requireUser(req);
       const canView =
         isGM(req) ||
         isHeadCoach(req) ||
-        report.authorId === req.user!.id ||
-        (isHrManager(req) && report.type === "HR") ||
-        (isHrStaff(req) && report.type === "HR") ||
-        (isFinanceManager(req) && report.type === "FINANCIAL") ||
-        (isFinanceStaff(req) && report.type === "FINANCIAL") ||
+        report.authorId === userId ||
+        (canReadHR(role, foRole) && report.type === "HR") ||
+        (canReadFinance(role, foRole) && report.type === "FINANCIAL") ||
         (isAssetManager(req) && report.type === "ASSET") ||
         (isAssetStaff(req) && report.type === "ASSET");
       if (!canView) throw new AppError(403, "FORBIDDEN");
@@ -87,14 +72,13 @@ export class ReportController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const role = req.user!.role;
-      if (!AUTHOR_ROLES.includes(role as any)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole: foRole, id: userId } = requireUser(req);
+      if (!(AUTHOR_ROLES as readonly string[]).includes(role)) throw new AppError(403, "FORBIDDEN");
       const { type, title, content } = req.body;
-      const foRole = req.user!.frontOfficeRole;
-      if (type === "HR" && !(isAdminLike(role) || foRole === "HR_MANAGER" || foRole === "HR_STAFF")) {
+      if (type === "HR" && !canReadHR(role, foRole)) {
         throw new AppError(403, "FORBIDDEN");
       }
-      if (type === "FINANCIAL" && !(isAdminLike(role) || role === "GM" || foRole === "FINANCE_MANAGER" || foRole === "FINANCE_STAFF")) {
+      if (type === "FINANCIAL" && !canReadFinance(role, foRole)) {
         throw new AppError(403, "FORBIDDEN");
       }
       if (type === "ASSET" && !(isAdminLike(role) || foRole === "ASSET_MANAGER" || foRole === "ASSET_STAFF")) {
@@ -103,7 +87,7 @@ export class ReportController {
       const file = req.file;
       res.status(201).json(
         await this.service.create({
-          authorId: req.user!.id,
+          authorId: userId,
           type,
           title,
           content,
@@ -120,7 +104,7 @@ export class ReportController {
       const { title, content } = req.body;
       const file = req.file;
       res.json(
-        await this.service.update(Number(req.params["id"]), req.user!.id, {
+        await this.service.update(Number(req.params["id"]), requireUser(req).id, {
           ...(title !== undefined && { title }),
           ...(content !== undefined && { content }),
           ...(file && { fileUrl: `/uploads/reports/${file.filename}`, fileName: file.originalname }),
@@ -133,7 +117,7 @@ export class ReportController {
 
   submit = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      res.json(await this.service.submit(Number(req.params["id"]), req.user!.id));
+      res.json(await this.service.submit(Number(req.params["id"]), requireUser(req).id));
     } catch (err) {
       next(err);
     }
@@ -142,11 +126,12 @@ export class ReportController {
   approve = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const report = await this.service.get(Number(req.params["id"]));
+      const { role: userRole, frontOfficeRole: userFoRole, id: userId } = requireUser(req);
 
       const canApprove = (() => {
         switch (report.type) {
           case "HR":
-            if (report.status === "SUBMITTED") return isHrManager(req);
+            if (report.status === "SUBMITTED") return userRole === "FRONT_OFFICE" && userFoRole === "HR_MANAGER";
             if (report.status === "FIRST_APPROVED") return isAssetManager(req);
             if (report.status === "SECOND_APPROVED") return isGM(req);
             return false;
@@ -155,7 +140,7 @@ export class ReportController {
             if (report.status === "FIRST_APPROVED") return isGM(req);
             return false;
           case "FINANCIAL":
-            if (report.status === "SUBMITTED") return isFinanceManager(req);
+            if (report.status === "SUBMITTED") return userRole === "FRONT_OFFICE" && userFoRole === "FINANCE_MANAGER";
             if (report.status === "FIRST_APPROVED") return isGM(req);
             return false;
           case "TRAINING":
@@ -166,7 +151,7 @@ export class ReportController {
       })();
 
       if (!canApprove) throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.approve(Number(req.params["id"]), req.user!.id));
+      res.json(await this.service.approve(Number(req.params["id"]), userId));
     } catch (err) {
       next(err);
     }
@@ -175,11 +160,12 @@ export class ReportController {
   reject = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const report = await this.service.get(Number(req.params["id"]));
+      const { role: userRole, frontOfficeRole: userFoRole, id: userId } = requireUser(req);
 
       const canReject = (() => {
         switch (report.type) {
           case "HR":
-            if (report.status === "SUBMITTED") return isHrManager(req);
+            if (report.status === "SUBMITTED") return userRole === "FRONT_OFFICE" && userFoRole === "HR_MANAGER";
             if (report.status === "FIRST_APPROVED") return isAssetManager(req);
             if (report.status === "SECOND_APPROVED") return isGM(req);
             return false;
@@ -188,7 +174,7 @@ export class ReportController {
             if (report.status === "FIRST_APPROVED") return isGM(req);
             return false;
           case "FINANCIAL":
-            if (report.status === "SUBMITTED") return isFinanceManager(req);
+            if (report.status === "SUBMITTED") return userRole === "FRONT_OFFICE" && userFoRole === "FINANCE_MANAGER";
             if (report.status === "FIRST_APPROVED") return isGM(req);
             return false;
           case "TRAINING":
@@ -199,7 +185,7 @@ export class ReportController {
       })();
 
       if (!canReject) throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.reject(Number(req.params["id"]), req.user!.id, req.body.reason));
+      res.json(await this.service.reject(Number(req.params["id"]), userId, req.body.reason));
     } catch (err) {
       next(err);
     }

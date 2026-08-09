@@ -52,6 +52,7 @@ import {
   Shield,
   SlidersHorizontal,
   Stethoscope,
+  Ticket,
   TrendingUp,
   Trophy,
   UserPlus,
@@ -124,6 +125,14 @@ const SUBSECTION_ICON: Record<NavSubSection, LucideIcon> = {
 
 const NAV_ITEMS: NavItem[] = [
   { to: '/dashboard', label: 'nav.item.dashboard', icon: BarChart3, end: true },
+  {
+    to: '/coach-dashboard',
+    label: 'nav.item.coachOverview',
+    icon: LayoutDashboard,
+    end: true,
+    roles: ['COACHING_STAFF', 'ADMIN'],
+    coachingRoles: ['HEAD_COACH', 'ASSISTANT_COACH'],
+  },
 
   // 선수 관리
   {
@@ -255,7 +264,7 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'COACHING_STAFF'],
   },
   {
-    to: '/training/dashboard',
+    to: '/training/analysis',
     label: 'nav.item.coachDashboard',
     icon: LayoutDashboard,
     section: 'nav.section.training',
@@ -276,7 +285,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'nav.item.tacticalAnalysis',
     icon: FileText,
     section: 'nav.section.matchAnalysis',
-    roles: ['ADMIN', 'COACHING_STAFF'],
+    roles: ['ADMIN', 'COACHING_STAFF', 'PLAYER'],
   },
   {
     to: '/matches/rankings',
@@ -427,6 +436,15 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'FRONT_OFFICE'],
     frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF', 'TD'],
   },
+  {
+    to: '/finance/ticket-sales',
+    label: 'nav.item.ticketSales',
+    icon: Ticket,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.finance',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF'],
+  },
 
   // 관리 > 시설·자산
   {
@@ -435,7 +453,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: Package,
     section: 'nav.section.management',
     subSection: 'nav.subsection.facilityAssets',
-    roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
+    roles: ['ADMIN', 'FRONT_OFFICE'],
   },
   {
     to: '/facility',
@@ -853,9 +871,9 @@ export function AppShell() {
   )
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="h-screen flex bg-background overflow-hidden">
       {/* 데스크탑 사이드바 */}
-      <aside className="w-60 border-r bg-card hidden md:flex flex-col">
+      <aside className="w-60 border-r bg-card hidden md:flex flex-col overflow-hidden">
         <div className="px-4 h-14 border-b flex items-center shrink-0">
           <h1 className="text-base font-semibold tracking-tight">Football ERP</h1>
         </div>
@@ -903,29 +921,8 @@ export function AppShell() {
           </div>
         )}
 
-        {user && !['PLAYER', 'GUARDIAN'].includes(user.role) && (
-          <div className="px-3 py-2 border-b">
-            <div className="flex rounded-md bg-muted p-0.5 gap-0.5">
-              <button
-                type="button"
-                onClick={() => switchTeamCtx('FIRST_TEAM')}
-                className={cn('flex-1 text-xs px-2 py-1 rounded transition-colors', teamCtx === 'FIRST_TEAM' ? 'bg-background shadow-sm text-foreground font-medium' : 'text-muted-foreground hover:text-foreground')}
-              >
-                1군
-              </button>
-              <button
-                type="button"
-                onClick={() => switchTeamCtx('YOUTH')}
-                className={cn('flex-1 text-xs px-2 py-1 rounded transition-colors', teamCtx === 'YOUTH' ? 'bg-background shadow-sm text-foreground font-medium' : 'text-muted-foreground hover:text-foreground')}
-              >
-                유소년
-              </button>
-            </div>
-          </div>
-        )}
-
         <nav
-          className={`flex-1 px-2 py-3 transition-opacity ${
+          className={`flex-1 px-2 py-3 overflow-y-auto transition-opacity ${
             apiPending ? 'opacity-50' : ''
           }`}
           aria-busy={apiPending}

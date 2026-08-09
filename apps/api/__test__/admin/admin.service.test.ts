@@ -8,6 +8,9 @@ const mockRepo = {
   setDeleted: jest.fn(),
   getLinkedData: jest.fn(),
   hardDelete: jest.fn(),
+  setDemo: jest.fn(),
+  listAuditLogs: jest.fn(),
+  countAuditLogs: jest.fn(),
 } as any;
 
 const service = new AdminService(mockRepo);
@@ -66,7 +69,7 @@ describe("AdminService - updateUserRole", () => {
 
     await service.updateUserRole(2, { role: "FRONT_OFFICE", frontOfficeRole: "GM" }, 1);
 
-    expect(mockRepo.updateRole).toHaveBeenCalledWith(2, "FRONT_OFFICE", null, "GM");
+    expect(mockRepo.updateRole).toHaveBeenCalledWith(2, "FRONT_OFFICE", null, "GM", undefined);
   });
 
   test("clears frontOfficeRole when switching to COACHING_STAFF", async () => {
@@ -75,7 +78,7 @@ describe("AdminService - updateUserRole", () => {
 
     await service.updateUserRole(3, { role: "COACHING_STAFF", coachingRole: "HEAD_COACH" }, 1);
 
-    expect(mockRepo.updateRole).toHaveBeenCalledWith(3, "COACHING_STAFF", "HEAD_COACH", null);
+    expect(mockRepo.updateRole).toHaveBeenCalledWith(3, "COACHING_STAFF", "HEAD_COACH", null, undefined);
   });
 });
 
@@ -170,5 +173,89 @@ describe("AdminService - deleteUser", () => {
     await service.deleteUser(2, 1);
 
     expect(mockRepo.hardDelete).toHaveBeenCalledWith(2);
+  });
+});
+
+describe("AdminService - listUsers (isDemo masking)", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test("isDemo=false이면 email/username 원본 반환", async () => {
+    mockRepo.listUsers.mockResolvedValue([
+      { id: 1, email: "hong@kfa.kr", username: "hong_gildong", nickname: "홍길동", role: "ADMIN", isDemo: false },
+    ]);
+    const result = await service.listUsers({}, false);
+    expect(result[0]!.email).toBe("hong@kfa.kr");
+    expect(result[0]!.username).toBe("hong_gildong");
+  });
+
+  test("isDemo=true이면 email/username 마스킹", async () => {
+    mockRepo.listUsers.mockResolvedValue([
+      { id: 1, email: "hong@kfa.kr", username: "hong_gildong", nickname: "홍길동", role: "ADMIN", isDemo: false },
+    ]);
+    const result = await service.listUsers({}, true);
+    expect(result[0]!.email).toBe("ho***@kfa.kr");
+    expect(result[0]!.username).toBe("hon***");
+  });
+});
+
+describe("AdminService - getUserById (isDemo masking)", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test("isDemo=true이면 단건 조회도 마스킹", async () => {
+    mockRepo.findById.mockResolvedValue({ id: 1, email: "abc@test.com", username: "abcdef", nickname: "테스트", role: "ADMIN" });
+    const result = await service.getUserById(1, true);
+    expect(result.email).toBe("a***@test.com");
+    expect(result.username).toBe("abc***");
+  });
+});
+
+describe("AdminService - getAuditLogs (isDemo masking)", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test("isDemo=true이면 actor.username 마스킹", async () => {
+    mockRepo.listAuditLogs.mockResolvedValue([
+      { id: 1, action: "ROLE_UPDATE", targetId: 2, detail: {}, createdAt: new Date(),
+        actor: { id: 1, username: "hong_gildong", nickname: "홍길동", role: "ADMIN" } },
+    ]);
+    mockRepo.countAuditLogs.mockResolvedValue(1);
+    const { logs } = await service.getAuditLogs({}, true);
+    expect(logs[0]!.actor.username).toBe("hon***");
+  });
+
+  test("isDemo=false이면 actor.username 원본", async () => {
+    mockRepo.listAuditLogs.mockResolvedValue([
+      { id: 1, action: "ROLE_UPDATE", targetId: 2, detail: {}, createdAt: new Date(),
+        actor: { id: 1, username: "hong_gildong", nickname: "홍길동", role: "ADMIN" } },
+    ]);
+    mockRepo.countAuditLogs.mockResolvedValue(1);
+    const { logs } = await service.getAuditLogs({}, false);
+    expect(logs[0]!.actor.username).toBe("hong_gildong");
+  });
+});
+
+describe("AdminService - setDemoStatus", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test("자기 자신에게는 설정 불가 → 403", async () => {
+    await expect(service.setDemoStatus(1, { isDemo: true }, 1)).rejects.toMatchObject({
+      statusCode: 403,
+      code: "CANNOT_MODIFY_SELF",
+    });
+  });
+
+  test("대상 유저 없으면 404", async () => {
+    mockRepo.findById.mockResolvedValue(null);
+    await expect(service.setDemoStatus(2, { isDemo: true }, 1)).rejects.toMatchObject({
+      statusCode: 404,
+      code: "USER_NOT_FOUND",
+    });
+  });
+
+  test("isDemo 설정 성공", async () => {
+    mockRepo.findById.mockResolvedValue({ id: 2, isDemo: false });
+    mockRepo.setDemo.mockResolvedValue({ id: 2, isDemo: true });
+    const result = await service.setDemoStatus(2, { isDemo: true }, 1);
+    expect(mockRepo.setDemo).toHaveBeenCalledWith(2, true);
+    expect(result.isDemo).toBe(true);
   });
 });

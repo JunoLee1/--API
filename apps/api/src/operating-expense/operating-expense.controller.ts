@@ -1,30 +1,25 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
-import { isAdminLike } from "../lib/permissions";
+import { canReadFinance, canWriteFinance } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { OperatingExpenseService } from "./operating-expense.service";
 import { OperatingCategory } from "../generated/client";
 
 const canRead = (role: string, foRole: string | null | undefined) =>
-  isAdminLike(role) ||
-  role === "GM" ||
-  (role === "FRONT_OFFICE" && (foRole === "TD" || foRole === "FINANCE_MANAGER" || foRole === "FINANCE_STAFF"));
+  canReadFinance(role, foRole) || (role === "FRONT_OFFICE" && foRole === "TD");
 
 const canCreate = (role: string, foRole: string | null | undefined) =>
-  isAdminLike(role) ||
-  role === "GM" ||
-  (role === "FRONT_OFFICE" && (foRole === "FINANCE_MANAGER" || foRole === "FINANCE_STAFF"));
+  canWriteFinance(role, foRole);
 
 const canDelete = (role: string, foRole: string | null | undefined) =>
-  isAdminLike(role) ||
-  role === "GM" ||
-  (role === "FRONT_OFFICE" && foRole === "FINANCE_MANAGER");
+  canWriteFinance(role, foRole);
 
 export class OperatingExpenseController {
   constructor(private service: OperatingExpenseService) {}
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.query["seasonId"]);
       if (!seasonId) throw new AppError(400, "SEASON_ID_REQUIRED");
@@ -35,23 +30,30 @@ export class OperatingExpenseController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole, id: userId } = req.user!;
+      const { role, frontOfficeRole, id: userId } = requireUser(req);
       if (!canCreate(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
-      const { seasonId, category, amount, date, note } = req.body as {
+      const { seasonId, category, amount, date, note, overrideReason } = req.body as {
         seasonId: number;
         category: OperatingCategory;
         amount: number;
         date: string;
         note?: string;
+        overrideReason?: string;
       };
-      const expense = await this.service.create({ seasonId, category, amount, date, ...(note !== undefined && { note }), createdById: userId });
+      const expense = await this.service.create({
+        seasonId, category, amount, date,
+        ...(note !== undefined && { note }),
+        ...(overrideReason !== undefined && { overrideReason }),
+        createdById: userId,
+        requesterRole: role,
+      });
       res.status(201).json(expense);
     } catch (err) { next(err); }
   };
 
   delete = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole, id: userId } = req.user!;
+      const { role, frontOfficeRole, id: userId } = requireUser(req);
       if (!canDelete(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const id = Number(req.params["id"]);
       await this.service.delete(id, userId, role);

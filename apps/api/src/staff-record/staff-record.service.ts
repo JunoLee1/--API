@@ -1,18 +1,31 @@
 import { StaffRecordRepository } from "./staff-record.repo";
 import { AppError } from "../lib/appError";
 import { writeAuditLog } from "../lib/auditLog";
+import { maskPhone, maskEmail } from "../lib/maskPii";
+
+type StaffRecord = Awaited<ReturnType<StaffRecordRepository["findById"]>>;
+
+function maskStaff<T extends StaffRecord>(record: T): T {
+  if (!record) return record;
+  return {
+    ...record,
+    phone: maskPhone(record.phone),
+    email: record.email ? maskEmail(record.email) : record.email,
+  };
+}
 
 export class StaffRecordService {
   constructor(private repo: StaffRecordRepository) {}
 
   async list(includeInactive = false) {
-    return this.repo.findAll(includeInactive);
+    const records = await this.repo.findAll(includeInactive);
+    return records.map(maskStaff);
   }
 
   async get(id: number) {
     const record = await this.repo.findById(id);
     if (!record) throw new AppError(404, "STAFF_RECORD_NOT_FOUND");
-    return record;
+    return maskStaff(record);
   }
 
   async create(
@@ -27,7 +40,8 @@ export class StaffRecordService {
       const existing = await this.repo.findByEmployeeId(data.employeeId);
       if (existing) throw new AppError(409, "STAFF_ALREADY_EXISTS");
     }
-    return this.repo.create({ ...data, createdById });
+    // S5: record employment start date on creation
+    return this.repo.create({ ...data, createdById, employmentStartDate: new Date() } as any);
   }
 
   async update(
@@ -35,7 +49,12 @@ export class StaffRecordService {
     data: { name?: string; role?: string; departmentId?: number | null; phone?: string; isActive?: boolean; notes?: string }
   ) {
     await this.get(id);
-    return this.repo.update(id, data);
+    // S5: when deactivating via update, record employment end date
+    const updateData: typeof data & { employmentEndDate?: Date } = { ...data };
+    if (data.isActive === false) {
+      updateData.employmentEndDate = new Date();
+    }
+    return this.repo.update(id, updateData as any);
   }
 
   async delete(id: number) {

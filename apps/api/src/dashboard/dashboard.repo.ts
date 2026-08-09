@@ -491,4 +491,77 @@ export class DashboardRepository {
       ]);
     return { lowStockEquipmentCount, totalEquipmentItemCount, activeEquipmentLoanCount };
   }
+
+  async findTodayTrainingSession(todayStart: Date, todayEnd: Date) {
+    return this.prisma.trainingSession.findFirst({
+      where: { date: { gte: todayStart, lt: todayEnd }, isApproved: true },
+      include: {
+        results: {
+          where: {
+            attendance: {
+              in: ["ABSENT_UNAUTHORIZED", "LATE_UNAUTHORIZED", "ABSENT_AUTHORIZED"],
+            },
+          },
+          include: {
+            player: { select: { id: true, playerName: true, position: true } },
+          },
+        },
+      },
+    });
+  }
+
+  async findRecentTrainingSession(beforeDate: Date) {
+    return this.prisma.trainingSession.findFirst({
+      where: { isApproved: true, date: { lt: beforeDate } },
+      orderBy: { date: "desc" },
+      include: {
+        results: {
+          where: {
+            attendance: {
+              in: ["ABSENT_UNAUTHORIZED", "LATE_UNAUTHORIZED", "ABSENT_AUTHORIZED"],
+            },
+          },
+          include: {
+            player: { select: { id: true, playerName: true, position: true } },
+          },
+        },
+      },
+    });
+  }
+
+  async findActiveInjuries() {
+    return this.prisma.injury.findMany({
+      where: { status: { notIn: ["RETURNED"] } },
+      include: {
+        player: { select: { id: true, playerName: true, position: true } },
+      },
+      orderBy: { expectedReturnDate: "asc" },
+      take: 10,
+    });
+  }
+
+  async findNextMatch(from: Date) {
+    return this.prisma.match.findFirst({
+      where: { date: { gte: from } },
+      orderBy: { date: "asc" },
+      select: {
+        id: true,
+        date: true,
+        homeTeamName: true,
+        awayTeamName: true,
+        venue: true,
+      },
+    });
+  }
+
+  async getFacilityStats() {
+    const [openMaintenanceCount, lowStockInventoryCount] = await Promise.all([
+      this.prisma.maintenanceRequest.count({ where: { status: { in: ["OPEN", "PENDING_APPROVAL"] } } }),
+      this.prisma.$queryRaw<{ count: bigint }[]>`
+        SELECT COUNT(*) as count FROM "FacilityInventoryItem"
+        WHERE "quantity" <= "minThreshold"
+      `.then((r) => Number(r[0]?.count ?? 0)),
+    ]);
+    return { openMaintenanceCount, lowStockInventoryCount };
+  }
 }

@@ -45,6 +45,26 @@ async function seedDepartments() {
   console.log(`Departments seeded: 재무관리, 자산관리 + ${subDepts.length} sub-departments`);
 }
 
+async function seedLeagues() {
+  const leagues = [
+    { name: 'K리그1 2026', level: 'K_LEAGUE_1' as const, year: 2026, isActive: true },
+    { name: 'K리그2 2026', level: 'K_LEAGUE_2' as const, year: 2026, isActive: true },
+    { name: 'K3리그 2026', level: 'K3' as const, year: 2026, isActive: true },
+    { name: 'K리그1 2025', level: 'K_LEAGUE_1' as const, year: 2025, isActive: false },
+    { name: 'K리그2 2025', level: 'K_LEAGUE_2' as const, year: 2025, isActive: false },
+  ];
+
+  for (const l of leagues) {
+    await prisma.league.upsert({
+      where: { level_year: { level: l.level, year: l.year } },
+      create: l,
+      update: {},
+    });
+  }
+
+  console.log('✅ Leagues seeded: K리그1/2/3 2026 (active), K리그1/2 2025 (inactive)');
+}
+
 async function seedDepartmentHeads() {
   const asset   = await prisma.department.findUniqueOrThrow({ where: { name: '자산관리' } });
   const finance  = await prisma.department.findUniqueOrThrow({ where: { name: '재무관리' } });
@@ -223,6 +243,204 @@ async function seedReports() {
 
   await prisma.report.createMany({ data: reports as any });
   console.log(`✅ Reports seeded: ${reports.length}개 (HR×6, ASSET×4, FINANCIAL×4, TRAINING×3, PERFORMANCE×1)`);
+}
+
+async function seedQACases() {
+  const d = (days: number) => new Date(Date.now() - days * 24 * 3600_000);
+  const f = (days: number) => new Date(Date.now() + days * 24 * 3600_000);
+
+  // ── 0. Agency ────────────────────────────────────────────
+  await prisma.agency.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      id: 1,
+      name: 'SEM 스포츠 매니지먼트',
+      contactName: '김대리',
+      phone: '02-1234-5678',
+      email: 'contact@sem-sports.kr',
+      commissionRate: 5.0,
+    },
+  });
+  await prisma.agency.upsert({
+    where: { id: 2 },
+    update: {},
+    create: {
+      id: 2,
+      name: '프로스포츠 에이전시',
+      contactName: '이팀장',
+      phone: '031-9876-5432',
+      email: 'info@prosports-agency.kr',
+      commissionRate: 4.5,
+    },
+  });
+
+  // ── 1. Contract edge cases ────────────────────────────
+  // p2 (이서준) 계약 만료: endDate 2026-06-30 이미 지났으므로 EXPIRED로 업데이트
+  await prisma.contract.update({ where: { id: 2 }, data: { status: 'EXPIRED' } });
+
+  // p4 (박지훈, GK) — 만료 임박 계약 (25일 후)
+  await prisma.contract.upsert({
+    where: { id: 4 },
+    update: {},
+    create: { id: 4, playerId: 'player-004', startDate: new Date('2024-01-01'), endDate: f(25), salary: 45_000_000, status: 'ACTIVE', managedById: 1 },
+  });
+
+  // p6 (최재원) — 해지된 계약
+  await prisma.contract.upsert({
+    where: { id: 5 },
+    update: {},
+    create: { id: 5, playerId: 'player-006', startDate: new Date('2023-01-01'), endDate: new Date('2025-12-31'), salary: 60_000_000, status: 'TERMINATED', managedById: 1 },
+  });
+
+  // ── 2. Player status edge cases ───────────────────────
+  await prisma.player.update({ where: { id: 'player-003' }, data: { status: 'ON_LOAN' } });   // Carlos Silva 임대 중
+  await prisma.player.update({ where: { id: 'player-007' }, data: { status: 'RELEASED' } });  // 한동민 방출
+
+  // ── 3. Injury — 현재 부상 중 + 과거 완치 ────────────────
+  await prisma.injury.upsert({
+    where: { id: 2 },
+    update: {},
+    create: {
+      id: 2, playerId: 'player-001',
+      bodyPart: 'ANKLE', cause: 'MATCH',
+      status: 'REHABILITATING',
+      expectedReturnDate: f(14),
+      medicalStaffId: 1,
+    },
+  });
+
+  await prisma.injury.upsert({
+    where: { id: 3 },
+    update: {},
+    create: {
+      id: 3, playerId: 'player-005',
+      bodyPart: 'KNEE', cause: 'TRAINING',
+      status: 'RETURNED',
+      medicalStaffId: 1,
+    },
+  });
+
+  // ── 4. MaintenanceRequest — 전 단계 커버 ─────────────
+  const facilityMgr  = await prisma.user.findUniqueOrThrow({ where: { email: 'facility.manager@club.com' }, select: { id: true } });
+  const assetMgr     = await prisma.user.findUniqueOrThrow({ where: { email: 'asset@club.com' },            select: { id: true } });
+  const gm           = await prisma.user.findUniqueOrThrow({ where: { email: 'gm@club.com' },              select: { id: true } });
+
+  const mrCases: Parameters<typeof prisma.maintenanceRequest.create>[0]['data'][] = [
+    {
+      title: '[QA] 주차장 조명 교체 요청',
+      description: '주차장 B구역 형광등 3개 교체 필요.',
+      priority: 'NORMAL',
+      status: 'OPEN',
+      createdById: facilityMgr.id,
+    },
+    {
+      title: '[QA] 탈의실 환기 시스템 수리',
+      description: '탈의실 환기팬 이상 소음 발생, 점검 필요.',
+      priority: 'HIGH',
+      status: 'IN_PROGRESS',
+      createdById: facilityMgr.id,
+    },
+    {
+      title: '[QA] 그라운드 잔디 보수 공사',
+      description: '중앙 잔디 훼손 구간 보수. 견적 첨부.',
+      priority: 'HIGH',
+      status: 'PENDING_APPROVAL',
+      estimatedCost: 3_500_000,
+      createdById: facilityMgr.id,
+    },
+    {
+      title: '[QA] 냉방기 교체 (APPROVED)',
+      description: '훈련실 냉방기 노후화로 신규 교체 승인 완료.',
+      priority: 'NORMAL',
+      status: 'APPROVED',
+      estimatedCost: 2_800_000,
+      createdById: facilityMgr.id,
+      approvedById: assetMgr.id,
+      approvedAt: d(5),
+      gmApprovedById: gm.id,
+      gmApprovedAt: d(4),
+    },
+    {
+      title: '[QA] 헬스장 러닝머신 수리 완료',
+      description: '러닝머신 2호기 모터 교체 완료.',
+      priority: 'NORMAL',
+      status: 'RESOLVED',
+      estimatedCost: 1_200_000,
+      actualCost: 1_050_000,
+      createdById: facilityMgr.id,
+      approvedById: assetMgr.id,
+      approvedAt: d(15),
+      gmApprovedById: gm.id,
+      gmApprovedAt: d(14),
+      resolvedAt: d(3),
+    },
+    {
+      title: '[QA] 관중석 좌석 교체 — 반려됨',
+      description: '일부 파손 좌석 일괄 교체 요청.',
+      priority: 'NORMAL',
+      status: 'REJECTED',
+      estimatedCost: 12_000_000,
+      createdById: facilityMgr.id,
+      rejectionReason: '예산 초과. 부분 교체로 재신청 바람.',
+    },
+  ];
+
+  for (const data of mrCases) {
+    await prisma.maintenanceRequest.create({ data: data as any });
+  }
+
+  // ── 5. EquipmentItem + EquipmentLoan — 전 단계 커버 ──
+  const assetStaff = await prisma.user.findUniqueOrThrow({ where: { email: 'asset.staff@club.com' }, select: { id: true } });
+
+  const ball = await prisma.equipmentItem.upsert({
+    where: { id: 1 },
+    update: {},
+    create: { id: 1, name: '훈련용 축구공', category: 'BALL_AND_TOOLS', trackedIndividually: false, quantity: 30, lowStockThreshold: 5 },
+  });
+
+  const vest = await prisma.equipmentItem.upsert({
+    where: { id: 2 },
+    update: {},
+    create: { id: 2, name: '훈련 조끼', category: 'CLOTHING', trackedIndividually: true, quantity: 20 },
+  });
+
+  const vestUnit = await prisma.equipmentUnit.upsert({
+    where: { id: 1 },
+    update: {},
+    create: { id: 1, equipmentItemId: vest.id, status: 'IN_USE', serialNumber: 'VEST-001', purchasedAt: new Date('2025-01-01'), purchaseValue: 50_000 },
+  });
+
+  const loanCases: Parameters<typeof prisma.equipmentLoan.create>[0]['data'][] = [
+    { equipmentItemId: ball.id, requestedById: assetStaff.id, status: 'REQUESTED' },
+    { equipmentItemId: ball.id, requestedById: assetStaff.id, status: 'APPROVED',  approvedById: assetMgr.id },
+    { equipmentItemId: ball.id, requestedById: assetStaff.id, status: 'REJECTED',  approvedById: assetMgr.id },
+    { equipmentItemId: vest.id, equipmentUnitId: vestUnit.id, requestedById: assetStaff.id, status: 'ISSUED',   approvedById: assetMgr.id, issuedAt: d(10) },
+    { equipmentItemId: vest.id, requestedById: assetStaff.id, status: 'RETURNED',  approvedById: assetMgr.id, issuedAt: d(30), returnedAt: d(2) },
+  ];
+
+  for (const data of loanCases) {
+    await prisma.equipmentLoan.create({ data: data as any });
+  }
+
+  // ── 6. SafeguardReport — 전 단계 커버 ────────────────
+  const sgCases = [
+    { description: '[QA] 훈련 중 부적절한 발언 신고 (접수됨)', status: 'RECEIVED' as const },
+    { description: '[QA] 팀원 간 갈등 상황 보고 (검토 중)', status: 'UNDER_REVIEW' as const, contactInfo: '제보자 이메일: anonymous@safe.com' },
+    { description: '[QA] 전 시즌 하라스먼트 신고 (처리 완료)', status: 'RESOLVED' as const, resolvedNote: '내부 징계위원회 처리 완료. 재발 방지 교육 실시.' },
+  ];
+
+  for (const data of sgCases) {
+    await prisma.safeguardReport.create({ data });
+  }
+
+  console.log('✅ QA edge cases seeded:');
+  console.log('   - Contracts: EXPIRED×1, 만료임박(25일)×1, TERMINATED×1');
+  console.log('   - Players: ON_LOAN(Carlos Silva), RELEASED(한동민)');
+  console.log('   - Injuries: ONGOING×1, RECOVERED×1 (추가)');
+  console.log('   - MaintenanceRequests: OPEN/IN_PROGRESS/PENDING_APPROVAL/APPROVED/RESOLVED/REJECTED');
+  console.log('   - EquipmentLoans: REQUESTED/APPROVED/REJECTED/ISSUED/RETURNED');
+  console.log('   - SafeguardReports: RECEIVED/UNDER_REVIEW/RESOLVED');
 }
 
 async function seedRecruitment() {
@@ -1437,6 +1655,7 @@ async function main() {
   });
 
   // PlayerMatchStats — match1
+  await prisma.playerMatchStats.deleteMany();
   await prisma.playerMatchStats.upsert({
     where: { id: 1 },
     update: { passesAttempted: 32, passesCompleted: 26, xA: 0.65, shotsOnTarget: 3 },
@@ -2267,6 +2486,9 @@ async function main() {
   }
   if (playedStats.length) console.log(`   - Activity mock: ${playedStats.length}개 레코드 패치 완료`);
 
+  // ── Leagues ───────────────────────────────────────────
+  await seedLeagues();
+
   // ── Department Heads ─────────────────────────────────
   await seedDepartmentHeads();
 
@@ -2281,6 +2503,9 @@ async function main() {
 
   // ── Reports ───────────────────────────────────────────
   await seedReports();
+
+  // ── QA edge cases ─────────────────────────────────────
+  await seedQACases();
 
   console.log("✅ Seed complete");
   console.log(`   - Countries: 2`);

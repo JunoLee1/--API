@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { requireUser } from "../lib/authMiddleware";
 import { NotificationService } from "./notification.service";
 
 export class NotificationController {
@@ -6,13 +7,13 @@ export class NotificationController {
 
   getMy = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      res.status(200).json(await this.service.getMyNotifications(req.user!.id));
+      res.status(200).json(await this.service.getMyNotifications(requireUser(req).id));
     } catch (err) { next(err); }
   };
 
   markRead = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      res.status(200).json(await this.service.markRead(Number(req.params["id"]), req.user!.id));
+      res.status(200).json(await this.service.markRead(Number(req.params["id"]), requireUser(req).id));
     } catch (err) { next(err); }
   };
 

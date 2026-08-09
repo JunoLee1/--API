@@ -1,11 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { requireSuperAdmin } from "../lib/permissions";
 import { LeagueService } from "./league.service";
 import { CreateLeagueDto, UpdateLeagueDto } from "./league.dto";
-
-const requireSuperAdmin = (req: Request) => {
-  if (req.user!.role !== "SUPER_ADMIN") throw new AppError(403, "FORBIDDEN");
-};
 
 export class LeagueController {
   constructor(private service: LeagueService) {}

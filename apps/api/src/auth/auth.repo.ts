@@ -21,7 +21,7 @@ export class AuthRepository {
   findByEmail(email: string) {
     return this.prisma.user.findUnique({
       where: { email },
-      select: { id: true, email: true, username: true, nickname: true, role: true, coachingRole: true, frontOfficeRole: true, teamId: true, clubId: true, password: true },
+      select: { id: true, email: true, username: true, nickname: true, role: true, coachingRole: true, frontOfficeRole: true, teamId: true, clubId: true, password: true, isDemo: true },
     });
   }
 
@@ -105,6 +105,18 @@ export class AuthRepository {
       where: { id },
       data: { usedAt: new Date() },
     });
+  }
+
+  blacklistToken(jti: string, expiresAt: Date) {
+    return this.prisma.refreshTokenBlacklist.create({ data: { jti, expiresAt } });
+  }
+
+  isTokenBlacklisted(jti: string) {
+    return this.prisma.refreshTokenBlacklist.findUnique({ where: { jti }, select: { jti: true } });
+  }
+
+  deleteExpiredBlacklistEntries() {
+    return this.prisma.refreshTokenBlacklist.deleteMany({ where: { expiresAt: { lt: new Date() } } });
   }
 
   listInvites(limit = 50) {

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { SeasonService } from "./season.service";
 import { SetWageCapDto } from "./dto/season.dto";
 
@@ -9,7 +10,8 @@ export class SeasonController {
 
   createSeason = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!isAdminLike(req.user!.role)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!isAdminLike(user.role)) throw new AppError(403, "FORBIDDEN");
       const season = await this.service.createSeason(req.body);
       res.status(201).json(season);
     } catch (err) {
@@ -48,7 +50,8 @@ export class SeasonController {
 
   activateSeason = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!isAdminLike(req.user!.role)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!isAdminLike(user.role)) throw new AppError(403, "FORBIDDEN");
       const id = Number(req.params["id"]);
       const season = await this.service.activateSeason(id);
       res.status(200).json(season);
@@ -59,7 +62,8 @@ export class SeasonController {
 
   closeSeason = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!isAdminLike(req.user!.role)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!isAdminLike(user.role)) throw new AppError(403, "FORBIDDEN");
       const id = Number(req.params["id"]);
       const season = await this.service.closeSeason(id);
       res.status(200).json(season);
@@ -70,7 +74,8 @@ export class SeasonController {
 
   setWageCap = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!isAdminLike(req.user!.role)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!isAdminLike(user.role)) throw new AppError(403, "FORBIDDEN");
       const id = Number(req.params["id"]);
       const season = await this.service.setWageCap(id, req.body as SetWageCapDto);
       res.status(200).json(season);

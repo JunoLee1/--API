@@ -14,6 +14,7 @@ export const USER_SELECT = {
   clubId: true,
   isDeleted: true,
   isOutOfOffice: true,
+  isDemo: true,
   player: { select: { id: true, playerName: true } },
 } as const;
 
@@ -78,10 +79,19 @@ export class AdminRepository {
     });
   }
 
+
   getLinkedData(id: number) {
     return this.prisma.user.findUnique({
       where: { id },
       select: LINKED_COUNT_SELECT,
+    });
+  }
+
+  setDemo(id: number, isDemo: boolean) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { isDemo },
+      select: USER_SELECT,
     });
   }
 

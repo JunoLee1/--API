@@ -1,4 +1,6 @@
 import { AppError } from "../../lib/appError";
+import { writeAuditLog } from "../../lib/auditLog";
+import { formatLedgerDescription } from "../../lib/ledger-formatter";
 import { NotificationService } from "../../notification/notification.service";
 import type { MaintenanceRepository } from "./maintenance.repo";
 import type { CreateMaintenanceDto, UpdateMaintenanceDto, MaintenanceListQuery } from "./dto/maintenance.dto";
@@ -31,14 +33,23 @@ export class MaintenanceService {
     return record;
   }
 
-  async update(id: number, dto: UpdateMaintenanceDto) {
+  async update(id: number, dto: UpdateMaintenanceDto, updatedById: number) {
     const existing = await this.repo.findById(id);
     if (!existing) throw new AppError(404, "MAINTENANCE_NOT_FOUND");
     if (existing.isLocked) throw new AppError(400, "MAINTENANCE_LOCKED");
     if ((TERMINAL_STATUSES as readonly string[]).includes(existing.status)) {
       throw new AppError(409, "ALREADY_RESOLVED");
     }
-    return this.repo.update(id, dto);
+    const result = await this.repo.update(id, dto);
+    if (dto.actualCost !== undefined) {
+      void writeAuditLog({
+        actorId: updatedById,
+        action: "MAINTENANCE_COST_UPDATED",
+        targetId: id,
+        detail: { actualCost: dto.actualCost },
+      }).catch(console.error);
+    }
+    return result;
   }
 
   async updateStatus(id: number, status: string) {
@@ -54,7 +65,9 @@ export class MaintenanceService {
   async approve(id: number, approverId: number) {
     const existing = await this.get(id);
     if (existing.status !== "PENDING_APPROVAL") throw new AppError(400, "INVALID_STATUS_TRANSITION");
-    return this.repo.approve(id, approverId);
+    const record = await this.repo.approve(id, approverId);
+    void this.notifications.notifyMaintenanceApproved(existing.title, id, existing.createdBy.id).catch(console.error);
+    return record;
   }
 
   async gmApprove(id: number, gmId: number) {
@@ -70,7 +83,7 @@ export class MaintenanceService {
         currency: "KRW",
         exchangeRate: 1,
         amountKrw: Number(existing.actualCost),
-        description: `시설 수리 완료 - ${existing.title}`,
+        description: formatLedgerDescription("facility", "repair_completed", { title: existing.title }),
         relatedModule: "facility",
         relatedId: id,
       }, gmId).catch(err => console.error("[LedgerAutoEntry:facility]", err));
@@ -78,11 +91,20 @@ export class MaintenanceService {
     return record;
   }
 
-  async reject(id: number, reason?: string) {
+  async reject(id: number, reason: string | undefined, actorId?: number) {
+    if (!reason) throw new AppError(400, "REJECTION_REASON_REQUIRED");
     const existing = await this.get(id);
     const REJECTABLE = ["PENDING_APPROVAL", "APPROVED"];
     if (!REJECTABLE.includes(existing.status)) throw new AppError(400, "INVALID_STATUS_TRANSITION");
-    return this.repo.reject(id, reason);
+    const result = await this.repo.reject(id, reason);
+    void this.notifications.notifyMaintenanceRejected(existing.title, id, existing.createdBy.id, reason).catch(console.error);
+    void writeAuditLog({
+      actorId: actorId ?? 0,
+      action: "MAINTENANCE_REJECTED",
+      targetId: id,
+      detail: { reason, previousStatus: existing.status },
+    }).catch(console.error);
+    return result;
   }
 
   async lock(id: number) {

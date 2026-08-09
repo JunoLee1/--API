@@ -52,6 +52,10 @@ import softwareLicenseRouter from "./software-license/software-license.routes";
 import ledgerRouter from "./ledger/ledger.routes";
 import salesRouter from "./sales/sales.routes";
 import inventoryRouter from "./inventory/inventory.routes";
+import agencyRouter from "./agency/agency.routes";
+import opsReportRouter from "./ops-report/ops-report.routes";
+import squadPlanRouter from "./squad-plan/squad-plan.routes";
+import attendanceAppealRouter from "./attendance-appeal/attendance-appeal.routes";
 
 const apiRouter = Router();
 
@@ -108,5 +112,9 @@ apiRouter.use("/software-licenses", softwareLicenseRouter);
 apiRouter.use("/ledger", ledgerRouter);
 apiRouter.use("/sales", salesRouter);
 apiRouter.use("/inventory", inventoryRouter);
+apiRouter.use("/agencies", agencyRouter);
+apiRouter.use("/ops-reports", opsReportRouter);
+apiRouter.use("/squad-plan", squadPlanRouter);
+apiRouter.use("/attendance-appeals", attendanceAppealRouter);
 
 export default apiRouter;
