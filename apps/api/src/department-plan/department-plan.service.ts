@@ -59,6 +59,9 @@ export class DepartmentPlanService {
     if (plan.status !== "REVIEWING") {
       throw new AppError(409, "CANNOT_APPROVE_NON_REVIEWING");
     }
+    // 교차 검토 완료 여부 확인
+    const allComplete = await this.repo.allReviewsComplete(id);
+    if (!allComplete) throw new AppError(409, "REVIEWS_NOT_COMPLETE");
     return this.repo.approve(id, userId);
   }
 
@@ -74,5 +77,9 @@ export class DepartmentPlanService {
 
   getBudgetSummary(seasonId: number) {
     return this.repo.budgetSummary(seasonId);
+  }
+
+  withReviewStatus(plan: { id: number } & Record<string, any>) {
+    return this.repo.withReviewStatus(plan);
   }
 }

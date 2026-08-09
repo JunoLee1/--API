@@ -366,6 +366,14 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN'],
   },
   {
+    to: '/admin/department-review-configs',
+    label: 'nav.item.departmentReviewConfigs',
+    icon: ClipboardList,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.hr',
+    roles: ['ADMIN'],
+  },
+  {
     to: '/admin/staff-records',
     label: 'nav.item.staffRecords',
     icon: Users2,
