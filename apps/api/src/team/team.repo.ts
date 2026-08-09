@@ -49,6 +49,10 @@ export class TeamRepository {
     });
   }
 
+  findClubById(id: number) {
+    return this.prisma.club.findUnique({ where: { id }, select: { id: true } });
+  }
+
   findActiveByNameAndClub(name: string, clubId: number, excludeId?: number) {
     return this.prisma.team.findFirst({
       where: {
