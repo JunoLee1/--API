@@ -33,7 +33,7 @@ export class GuardianService {
     const existing = await this.repo.findActiveInviteCode(dto.playerId);
     if (existing) return existing;
 
-    const code = crypto.randomBytes(4).toString("hex").toUpperCase();
+    const code = crypto.randomBytes(16).toString("hex").toUpperCase();
     const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
     return this.repo.createInviteCode({ code, playerId: dto.playerId, issuedById, expiresAt });
   }

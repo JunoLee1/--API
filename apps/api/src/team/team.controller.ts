@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { requireUser } from "../lib/authMiddleware";
 import { TeamService } from "./team.service";
 
 const isSuperAdmin = (role: string) => role === "SUPER_ADMIN";
@@ -10,7 +11,7 @@ export class TeamController {
 
   getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role } = req.user!;
+      const { role } = requireUser(req);
       if (!isSuperAdmin(role) && !isAdminOrGM(role)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.getAll());
     } catch (err) { next(err); }
@@ -18,7 +19,7 @@ export class TeamController {
 
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role } = req.user!;
+      const { role } = requireUser(req);
       if (!isSuperAdmin(role) && !isAdminOrGM(role)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.getById(Number(req.params["id"])));
     } catch (err) { next(err); }
@@ -26,7 +27,7 @@ export class TeamController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, clubId } = req.user!;
+      const { role, clubId } = requireUser(req);
       if (isSuperAdmin(role)) {
         res.status(201).json(await this.service.create(req.body));
         return;
@@ -43,7 +44,7 @@ export class TeamController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, clubId } = req.user!;
+      const { role, clubId } = requireUser(req);
       const id = Number(req.params["id"]);
       if (isSuperAdmin(role)) {
         res.json(await this.service.update(id, req.body));
@@ -62,7 +63,7 @@ export class TeamController {
 
   deactivate = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, clubId } = req.user!;
+      const { role, clubId } = requireUser(req);
       const id = Number(req.params["id"]);
       if (isSuperAdmin(role)) {
         res.json(await this.service.deactivate(id));

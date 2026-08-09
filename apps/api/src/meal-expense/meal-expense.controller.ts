@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { MealExpenseType } from "../generated/client";
 import { AppError } from "../lib/appError";
 import { canReadFinance, canWriteFinance } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { MealExpenseService } from "./meal-expense.service";
 
 const canRead = (role: string, frontOfficeRole: string | null | undefined) =>
@@ -20,7 +21,7 @@ export class MealExpenseController {
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const { type, from, to } = req.query as Record<string, string | undefined>;
       const filters: { type?: MealExpenseType; from?: string; to?: string } = {};
@@ -33,7 +34,7 @@ export class MealExpenseController {
 
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.get(Number(req.params["id"])));
     } catch (err) { next(err); }
@@ -41,7 +42,7 @@ export class MealExpenseController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole, id } = req.user!;
+      const { role, frontOfficeRole, id } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.create(req.body, id));
     } catch (err) { next(err); }
@@ -49,7 +50,7 @@ export class MealExpenseController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.update(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
@@ -57,7 +58,7 @@ export class MealExpenseController {
 
   delete = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canDelete(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       await this.service.delete(Number(req.params["id"]));
       res.status(204).send();

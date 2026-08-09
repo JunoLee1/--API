@@ -1655,6 +1655,7 @@ async function main() {
   });
 
   // PlayerMatchStats — match1
+  await prisma.playerMatchStats.deleteMany();
   await prisma.playerMatchStats.upsert({
     where: { id: 1 },
     update: { passesAttempted: 32, passesCompleted: 26, xA: 0.65, shotsOnTarget: 3 },

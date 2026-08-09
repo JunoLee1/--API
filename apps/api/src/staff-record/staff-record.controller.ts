@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { StaffRecordService } from "./staff-record.service";
 
 const canWrite = (role: string) =>
-  role === "GM";
+  isAdminLike(role) || role === "GM";
 
 const canRead = (role: string) =>
   isAdminLike(role) || role === "GM";
@@ -27,7 +28,7 @@ export class StaffRecordController {
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role } = req.user!;
+      const { role } = requireUser(req);
       if (!canRead(role)) throw new AppError(403, "FORBIDDEN");
       const includeInactive = req.query["includeInactive"] === "true";
       const records = await this.service.list(includeInactive);
@@ -39,7 +40,7 @@ export class StaffRecordController {
 
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role } = req.user!;
+      const { role } = requireUser(req);
       if (!canRead(role)) throw new AppError(403, "FORBIDDEN");
       res.json(withMaskedPhone(await this.service.get(Number(req.params["id"])), role));
     } catch (err) {
@@ -49,7 +50,7 @@ export class StaffRecordController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, id } = req.user!;
+      const { role, id } = requireUser(req);
       if (!canWrite(role)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.create(req.body, id));
     } catch (err) {
@@ -59,7 +60,7 @@ export class StaffRecordController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role } = req.user!;
+      const { role } = requireUser(req);
       if (!canWrite(role)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.update(Number(req.params["id"]), req.body));
     } catch (err) {
@@ -69,7 +70,7 @@ export class StaffRecordController {
 
   delete = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role } = req.user!;
+      const { role } = requireUser(req);
       if (!canWrite(role)) throw new AppError(403, "FORBIDDEN");
       await this.service.delete(Number(req.params["id"]));
       res.status(204).send();
@@ -80,7 +81,7 @@ export class StaffRecordController {
 
   terminate = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, id } = req.user!;
+      const { role, id } = requireUser(req);
       if (!canWrite(role)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.terminate(Number(req.params["id"]), id));
     } catch (err) {

@@ -12,6 +12,7 @@ export interface League {
   level: LeagueLevel
   year: number
   isActive: boolean
+  country: { id: number; name: string; code: string } | null
   clubs: LeagueClub[]
   createdAt: string
 }
@@ -20,6 +21,7 @@ export interface CreateLeagueDto {
   name: string
   level: LeagueLevel
   year: number
+  countryId?: number
 }
 
 export interface UpdateLeagueDto {

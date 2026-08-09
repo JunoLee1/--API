@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { canManageTD } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { CoachService } from "./coach.service";
 import { CoachStatus } from "../generated/enums";
 
@@ -20,7 +21,7 @@ export class CoachController {
 
   listRounds = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.getAllRounds());
     } catch (err) { next(err); }
@@ -28,7 +29,7 @@ export class CoachController {
 
   createRound = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole, id } = req.user!;
+      const { role, frontOfficeRole, id } = requireUser(req);
       if (!canApprove(role)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.createRound({ ...req.body, createdById: id }));
     } catch (err) { next(err); }
@@ -36,7 +37,7 @@ export class CoachController {
 
   updateRoundStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canApprove(role)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.updateRoundStatus(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
@@ -46,7 +47,7 @@ export class CoachController {
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const filter: { roundId?: number; status?: CoachStatus } = {};
       if (req.query["roundId"]) filter.roundId = Number(req.query["roundId"]);
@@ -57,7 +58,7 @@ export class CoachController {
 
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.getById(Number(req.params["id"])));
     } catch (err) { next(err); }
@@ -65,7 +66,7 @@ export class CoachController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const { name, coachingRole } = req.body as { name: unknown; coachingRole: unknown };
       if (typeof name !== "string" || !name.trim()) throw new AppError(400, "NAME_REQUIRED");
@@ -76,7 +77,7 @@ export class CoachController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.update(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
@@ -84,7 +85,7 @@ export class CoachController {
 
   updateStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (req.body.status === "CONTRACTED") {
         if (!canApprove(role)) throw new AppError(403, "FORBIDDEN");
       } else {
@@ -98,7 +99,7 @@ export class CoachController {
 
   upsertEvaluation = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.upsertEvaluation(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
@@ -108,7 +109,7 @@ export class CoachController {
 
   listTutors = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.getTutors(Number(req.params["id"])));
     } catch (err) { next(err); }
@@ -116,7 +117,7 @@ export class CoachController {
 
   createTutor = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.createTutor(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
@@ -124,7 +125,7 @@ export class CoachController {
 
   updateTutor = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.updateTutor(Number(req.params["tutorId"]), req.body));
     } catch (err) { next(err); }
