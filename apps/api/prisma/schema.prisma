@@ -142,6 +142,14 @@ enum TransferType {
   RELEASE
 }
 
+enum TransferRequestStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  CONFIRMED
+  REJECTED
+}
+
 enum RecallStatus {
   PENDING
   APPROVED
@@ -766,12 +774,16 @@ model User {
   createdSoftwareLicenses  SoftwareLicense[]         @relation("SoftwareLicenseCreator")
   ledgerEntries            LedgerEntry[]             @relation("LedgerEntryCreator")
   salesRecords             SalesRecord[]             @relation("SalesRecordCreator")
-  salesRecordsUpdated      SalesRecord[]             @relation("SalesRecordUpdater")
-  squadPlans               SquadPlan[]
-  facilityReservations     FacilityReservation[]     @relation("FacilityReservations")
-  interviewerScores        InterviewerScore[]        @relation("InterviewerScores")
-  createdAppeals           AttendanceAppeal[]        @relation("AppealCreator")
-  reviewedAppeals          AttendanceAppeal[]        @relation("AppealReviewer")
+  salesRecordsUpdated        SalesRecord[]             @relation("SalesRecordUpdater")
+  squadPlans                 SquadPlan[]
+  facilityReservations       FacilityReservation[]     @relation("FacilityReservations")
+  interviewerScores          InterviewerScore[]        @relation("InterviewerScores")
+  createdAppeals             AttendanceAppeal[]        @relation("AppealCreator")
+  reviewedAppeals            AttendanceAppeal[]        @relation("AppealReviewer")
+  transferRequestsRequested  TransferRequest[]         @relation("TRRequestedBy")
+  transferRequestsReviewed   TransferRequest[]         @relation("TRReviewedBy")
+  transferRequestsConfirmed  TransferRequest[]         @relation("TRConfirmedBy")
+  transferRequestsRejected   TransferRequest[]         @relation("TRRejectedBy")
 }
 
 model Season {
@@ -889,6 +901,7 @@ model Player {
   secondaryPositions     PlayerSecondaryPosition[]
   studentCode            String?                   @unique
   guardianInviteCodes    GuardianInviteCode[]
+  transferRequests       TransferRequest[]
 }
 
 model Contract {
@@ -979,6 +992,38 @@ model Recall {
   transfer    Transfer @relation(fields: [transferId], references: [id])
   requestedBy User     @relation("RecallRequestedBy", fields: [requestedById], references: [id])
   approvedBy  User?    @relation("RecallApprovedBy", fields: [approvedById], references: [id])
+}
+
+model TransferRequest {
+  id           Int                   @id @default(autoincrement())
+  status       TransferRequestStatus @default(DRAFT)
+  type         TransferType
+  playerId     String
+  agencyId     Int
+  fromClub     String?
+  toClub       String?
+  fee          Int?
+  startDate    DateTime?
+  endDate      DateTime?
+  rejectReason String?
+
+  requestedById Int
+  reviewedById  Int?
+  confirmedById Int?
+  rejectedById  Int?
+
+  reviewedAt  DateTime?
+  confirmedAt DateTime?
+  rejectedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  player      Player  @relation(fields: [playerId], references: [id])
+  agency      Agency  @relation(fields: [agencyId], references: [id])
+  requestedBy User    @relation("TRRequestedBy", fields: [requestedById], references: [id])
+  reviewedBy  User?   @relation("TRReviewedBy", fields: [reviewedById], references: [id])
+  confirmedBy User?   @relation("TRConfirmedBy", fields: [confirmedById], references: [id])
+  rejectedBy  User?   @relation("TRRejectedBy", fields: [rejectedById], references: [id])
 }
 
 model Partner {
@@ -2847,8 +2892,9 @@ model Agency {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  players   Player[]
-  contracts Contract[]
+  players          Player[]
+  contracts        Contract[]
+  transferRequests TransferRequest[]
 }
 
 model MonthlyBudgetSnapshot {
