@@ -34,8 +34,6 @@ export function MealExpensePage() {
     note: "",
   })
 
-  const typeItems = TYPES.map((tp) => ({ value: tp, label: t(`mealExpense.${tp}`) }))
-
   const fetchExpenses = async () => {
     try {
       setExpenses(
@@ -108,9 +106,11 @@ export function MealExpensePage() {
         </div>
         <div className="space-y-1">
           <Label className="text-xs">{t("mealExpense.type")}</Label>
-          <Select value={filterType} onValueChange={(v) => setFilterType(v as MealExpenseType | "")} items={typeItems}>
+          <Select value={filterType} onValueChange={(v) => setFilterType(v as MealExpenseType | "")}>
             <SelectTrigger className="w-36 h-8 text-sm">
-              <SelectValue placeholder="전체" />
+              <SelectValue placeholder="전체">
+                {(v: string) => v ? t(`mealExpense.${v}`) : undefined}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">전체</SelectItem>
@@ -165,8 +165,8 @@ export function MealExpensePage() {
           <div className="space-y-3">
             <div className="space-y-1">
               <Label>{t("mealExpense.type")}</Label>
-              <Select value={form.type} onValueChange={(v) => setForm((f) => ({ ...f, type: v as MealExpenseType }))} items={typeItems}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select value={form.type} onValueChange={(v) => setForm((f) => ({ ...f, type: v as MealExpenseType }))}>
+                <SelectTrigger><SelectValue>{(v: string) => t(`mealExpense.${v}`)}</SelectValue></SelectTrigger>
                 <SelectContent>
                   {TYPES.map((tp) => (
                     <SelectItem key={tp} value={tp}>{t(`mealExpense.${tp}`)}</SelectItem>
