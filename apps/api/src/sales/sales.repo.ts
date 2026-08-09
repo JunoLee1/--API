@@ -47,36 +47,25 @@ export class SalesRepository {
   }
 
   async ticketSummaryByMatch(seasonId: number) {
-    const records = await this.prisma.salesRecord.findMany({
-      where: { type: { in: ["TICKET", "VIP_TICKET", "COMPLIMENTARY"] as any[] }, match: { seasonId }, deletedAt: null } as any,
-      include: { match: { select: { id: true, homeTeamName: true, awayTeamName: true, date: true } } },
+    const matches = await this.prisma.match.findMany({
+      where: { seasonId },
+      orderBy: { date: "desc" },
+      include: {
+        salesRecords: {
+          where: { type: { in: ["TICKET", "VIP_TICKET", "COMPLIMENTARY"] as any[] }, deletedAt: null } as any,
+          select: { quantity: true, totalAmount: true },
+        },
+      },
     });
 
-    const map = new Map<number, {
-      matchId: number; date: string; homeTeamName: string; awayTeamName: string;
-      totalQuantity: number; totalAmount: number;
-    }>();
-
-    for (const r of records) {
-      if (!r.match) continue;
-      const key = r.match.id;
-      const existing = map.get(key);
-      if (existing) {
-        existing.totalQuantity += r.quantity;
-        existing.totalAmount += Number(r.totalAmount);
-      } else {
-        map.set(key, {
-          matchId: r.match.id,
-          date: r.match.date.toISOString(),
-          homeTeamName: r.match.homeTeamName,
-          awayTeamName: r.match.awayTeamName,
-          totalQuantity: r.quantity,
-          totalAmount: Number(r.totalAmount),
-        });
-      }
-    }
-
-    return Array.from(map.values()).sort((a, b) => b.date.localeCompare(a.date));
+    return matches.map((m) => ({
+      matchId: m.id,
+      date: m.date.toISOString(),
+      homeTeamName: m.homeTeamName,
+      awayTeamName: m.awayTeamName,
+      totalQuantity: m.salesRecords.reduce((s: number, r: { quantity: number }) => s + r.quantity, 0),
+      totalAmount: m.salesRecords.reduce((s: number, r: { totalAmount: unknown }) => s + Number(r.totalAmount), 0),
+    }));
   }
 
   async seasonTicketTotal(seasonId: number): Promise<number> {
