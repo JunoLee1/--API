@@ -43,7 +43,7 @@ export function TicketSalesPage() {
   const { user } = useCurrentUser()
   const canWrite = !!user && (
     ['ADMIN', 'SUPER_ADMIN', 'GM'].includes(user.role) ||
-    (user.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'FINANCE_MANAGER')
+    (user.role === 'FRONT_OFFICE' && (user.frontOfficeRole === 'FINANCE_MANAGER' || user.frontOfficeRole === 'FINANCE_STAFF'))
   )
 
   const [seasons, setSeasons] = useState<Season[]>([])
@@ -395,7 +395,17 @@ function SaleForm({ form, setForm, matches, showMatchSelect, saving, onSubmit, s
       {showMatchSelect && (
         <div className="space-y-1">
           <Label>경기</Label>
-          <Select value={form.matchId} onValueChange={f('matchId')}>
+          <Select
+            value={form.matchId}
+            onValueChange={(v) => {
+              const match = matches.find((m) => m.id.toString() === v)
+              setForm((prev) => ({
+                ...prev,
+                matchId: v,
+                unitPrice: match?.priceRegular ? String(match.priceRegular) : prev.unitPrice,
+              }))
+            }}
+          >
             <SelectTrigger><SelectValue placeholder="경기 선택" /></SelectTrigger>
             <SelectContent>
               {matches.map((m) => (
@@ -409,7 +419,19 @@ function SaleForm({ form, setForm, matches, showMatchSelect, saving, onSubmit, s
       )}
       <div className="space-y-1">
         <Label>종류</Label>
-        <Select value={form.type} onValueChange={(v) => f('type')(v as TicketType)}>
+        <Select
+          value={form.type}
+          onValueChange={(v) => {
+            const tp = v as TicketType
+            const match = matches.find((m) => m.id.toString() === form.matchId)
+            const autoPrice = tp === 'VIP_TICKET' ? match?.priceVip : match?.priceRegular
+            setForm((prev) => ({
+              ...prev,
+              type: tp,
+              unitPrice: autoPrice ? String(autoPrice) : prev.unitPrice,
+            }))
+          }}
+        >
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
             {TICKET_TYPES.map((tp) => (
