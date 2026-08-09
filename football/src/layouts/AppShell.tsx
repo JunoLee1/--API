@@ -445,6 +445,24 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'FRONT_OFFICE'],
     frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF'],
   },
+  {
+    to: '/finance/department-plans',
+    label: 'nav.item.departmentPlans',
+    icon: ClipboardList,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.finance',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF'],
+  },
+  {
+    to: '/finance/department-plans/budget-summary',
+    label: 'nav.item.departmentBudgetSummary',
+    icon: PieChart,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.finance',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF'],
+  },
 
   // 관리 > 시설·자산
   {
