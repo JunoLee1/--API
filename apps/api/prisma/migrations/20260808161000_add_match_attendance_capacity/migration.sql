@@ -1,0 +1,3 @@
+ALTER TABLE "Match"
+  ADD COLUMN IF NOT EXISTS "actualAttendance" INTEGER,
+  ADD COLUMN IF NOT EXISTS "capacity"         INTEGER;

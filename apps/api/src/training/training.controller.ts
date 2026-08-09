@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { TrainingService } from "./training.service";
 import { SessionListQuery } from "./dto/training.dto";
 
 const STAFF_ROLES = ["ADMIN", "SUPER_ADMIN", "COACHING_STAFF"] as const;
-type StaffRole = (typeof STAFF_ROLES)[number];
 
 export class TrainingController {
   constructor(private service: TrainingService) {}
@@ -26,42 +26,46 @@ export class TrainingController {
 
   createSession = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!STAFF_ROLES.includes(req.user!.role as StaffRole)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!(STAFF_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       if (req.body.sessionType === "GOALKEEPER") {
-        const isGK = isAdminLike(req.user!.role) || req.user!.coachingRole === "GOALKEEPER_COACH";
+        const isGK = isAdminLike(user.role) || user.coachingRole === "GOALKEEPER_COACH";
         if (!isGK) throw new AppError(403, "FORBIDDEN");
       }
-      res.status(201).json(await this.service.createSession(req.body, req.user!.id));
+      res.status(201).json(await this.service.createSession(req.body, user.id));
     } catch (err) { next(err); }
   };
 
   approveSession = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = req.user!;
+      const { role, coachingRole, id: userId } = requireUser(req);
       const canApprove =
         isAdminLike(role) || (role === "COACHING_STAFF" && coachingRole === "HEAD_COACH");
       if (!canApprove) throw new AppError(403, "FORBIDDEN");
-      res.status(200).json(await this.service.approveSession(Number(req.params["id"]), req.user!.id));
+      res.status(200).json(await this.service.approveSession(Number(req.params["id"]), userId));
     } catch (err) { next(err); }
   };
 
   addContent = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!STAFF_ROLES.includes(req.user!.role as StaffRole)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!(STAFF_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.addContent(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
   };
 
   addParticipants = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!STAFF_ROLES.includes(req.user!.role as StaffRole)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!(STAFF_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.addParticipants(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
   };
 
   upsertResult = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!STAFF_ROLES.includes(req.user!.role as StaffRole)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!(STAFF_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.upsertResult(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
   };
@@ -81,10 +85,11 @@ export class TrainingController {
 
   correctAttendance = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!isAdminLike(req.user!.role)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!isAdminLike(user.role)) throw new AppError(403, "FORBIDDEN");
       const { attendance, reason } = req.body;
       res.status(200).json(
-        await this.service.correctAttendance(Number(req.params["resultId"]), req.user!.id, attendance, reason)
+        await this.service.correctAttendance(Number(req.params["resultId"]), user.id, attendance, reason)
       );
     } catch (err) { next(err); }
   };

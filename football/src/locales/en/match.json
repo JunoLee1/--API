@@ -287,6 +287,7 @@
   "tactical": {
     "title": "Tactical Analysis",
     "description": "Tactical analysis reports by match",
+    "playerDescription": "View post-match tactical analyses for matches you appeared in.",
     "addButton": "Add Analysis",
     "loadFailed": "Failed to load tactical analyses.",
     "noData": "No tactical analyses registered.",

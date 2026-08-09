@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
+import { requireUser } from "../lib/authMiddleware";
 import { MatchSquadService } from "./match.squad.service";
 
 const CONFIRM_ROLES = ["ADMIN", "COACHING_STAFF"] as const;
@@ -18,7 +19,8 @@ export class MatchSquadController {
 
   addPlayer = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!MANAGE_ROLES.includes(req.user!.role as any)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!(MANAGE_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       const matchId = Number(req.params["id"]);
       const { playerId } = req.body as { playerId: string };
       if (!playerId) throw new AppError(400, "PLAYER_ID_REQUIRED");
@@ -29,7 +31,8 @@ export class MatchSquadController {
 
   removePlayer = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!MANAGE_ROLES.includes(req.user!.role as any)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!(MANAGE_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       const matchId = Number(req.params["id"]);
       const { playerId } = req.body as { playerId: string };
       if (!playerId) throw new AppError(400, "PLAYER_ID_REQUIRED");
@@ -40,9 +43,10 @@ export class MatchSquadController {
 
   confirmSquad = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!CONFIRM_ROLES.includes(req.user!.role as any)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!(CONFIRM_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       const matchId = Number(req.params["id"]);
-      const result = await this.service.confirmSquad(matchId, req.user!.id);
+      const result = await this.service.confirmSquad(matchId, user.id);
       res.json({ confirmed: result.count });
     } catch (err) { next(err); }
   };

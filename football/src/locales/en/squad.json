@@ -13,7 +13,12 @@
     "zoneWarning": "{{zone}}: {{count}} available (min {{min}})",
     "formation": "Formation",
     "spanishGrid": "Spanish Grid",
-    "loadFailed": "Failed to load data."
+    "loadFailed": "Failed to load data.",
+    "save": "Save",
+    "saving": "Saving...",
+    "saveSuccess": "Squad plan saved.",
+    "saveFailed": "Failed to save squad plan.",
+    "saveNoSeason": "No active season found."
   },
   "slot": {
     "dragHint": "Drag to move / double-click to remove",

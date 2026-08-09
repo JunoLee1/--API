@@ -51,6 +51,7 @@
       "tacticalReferences": "전술 레퍼런스",
       "coachAvailability": "코치 가용성",
       "coachDashboard": "코치 대시보드",
+      "coachOverview": "감독 현황판",
       "matchList": "경기 목록",
       "tacticalAnalysis": "전술 분석",
       "rankings": "팀 순위",
@@ -73,6 +74,7 @@
       "staffRecords": "직원 기록",
       "mealExpenses": "식대 관리",
       "financialReport": "재무 보고서",
+      "ticketSales": "티켓 판매",
       "sponsorship": "스폰서십",
       "departments": "부서 관리",
       "budgetPlan": "운영비 예산",
@@ -259,6 +261,9 @@
         "TACTICAL_ANALYSIS_CONFIRM_REQUESTED": "전술 분석 확인 요청",
         "INJURY_READY_TO_RETURN": "부상 복귀 가능",
         "CONTRACT_EXPIRY": "계약 만료 임박",
+        "CONTRACT_EXPIRY_90D": "계약 만료 임박 (90일)",
+        "CONTRACT_EXPIRY_60D": "계약 만료 임박 (60일)",
+        "CONTRACT_EXPIRY_30D": "계약 만료 임박 (30일)",
         "PERFORMANCE_BONUS_ACHIEVED": "성과 보너스 달성",
         "EQUIPMENT_LOW_STOCK": "장비 재고 부족",
         "TRAINING_ATTENDANCE_WARNING": "훈련 출석 경고",
@@ -333,6 +338,17 @@
       "WIN": "승",
       "DRAW": "무",
       "LOSS": "패"
+    },
+    "coachView": {
+      "todayAbsent": "오늘 훈련 결석",
+      "noSession": "오늘 훈련 없음",
+      "allPresent": "전원 출석",
+      "absentCount": "결석 {{count}}명",
+      "injuryStatus": "부상자 현황",
+      "noInjuries": "부상자 없음",
+      "injuredCount": "부상 {{count}}명",
+      "nextMatch": "다음 경기",
+      "noUpcoming": "예정 경기 없음"
     }
   }
 }

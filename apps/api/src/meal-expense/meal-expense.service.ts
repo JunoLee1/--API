@@ -31,10 +31,6 @@ export class MealExpenseService {
     },
     createdById: number,
   ) {
-    if (data.type === "TRAINING" && !data.sessionId)
-      throw new Error("sessionId required for TRAINING type");
-    if (data.type === "MATCH" && !data.matchId)
-      throw new Error("matchId required for MATCH type");
     return this.repo.create({ ...data, date: new Date(data.date), createdById });
   }
 

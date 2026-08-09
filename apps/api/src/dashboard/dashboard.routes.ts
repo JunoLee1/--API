@@ -39,4 +39,18 @@ router.get("/academy-finance", auth, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+router.get("/coach", auth, async (req, res, next) => {
+  try {
+    const user = req.user as any;
+    const isCoach = user.role === "COACHING_STAFF";
+    const isAdmin = user.role === "ADMIN" || user.role === "SUPER_ADMIN";
+    if (!isCoach && !isAdmin) {
+      return res.status(403).json({ code: "FORBIDDEN" });
+    }
+    res.json(await service.getCoachDashboard());
+  } catch (e) {
+    next(e);
+  }
+});
+
 export default router;

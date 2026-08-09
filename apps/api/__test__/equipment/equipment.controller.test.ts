@@ -53,7 +53,7 @@ describe("EquipmentController - createItem (write permission)", () => {
   });
 
   test("GM can create item → 201", async () => {
-    const req = mockReq({ user: { id: 3, role: "FRONT_OFFICE", coachingRole: null, frontOfficeRole: "GM" }, body: { name: "Ball", category: "BALL_AND_TOOLS", trackedIndividually: false } });
+    const req = mockReq({ user: { id: 3, role: "GM", coachingRole: null, frontOfficeRole: null }, body: { name: "Ball", category: "BALL_AND_TOOLS", trackedIndividually: false } });
     const res = mockRes();
     await controller.createItem(req, res, mockNext);
     expect(res.status).toHaveBeenCalledWith(201);

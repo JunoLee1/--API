@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { TransferService } from "./transfer.service";
 import { RecallStatus } from "../generated/enums";
 
@@ -61,11 +62,11 @@ export class TransferController {
 
   exportLoanIn = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = requireUser(req);
-      const { role, frontOfficeRole } = user;
-      if (!isAdminLike(role) && role !== "GM" && !(role === "FRONT_OFFICE" && frontOfficeRole === "TD")) {
-        throw new AppError(403, "FORBIDDEN");
-      }
+      const { role, frontOfficeRole } = requireUser(req);
+      const isAdmin = isAdminLike(role);
+      const isGMRole = role === "GM";
+      const isFrontOffice = role === "FRONT_OFFICE" && ["TD"].includes(frontOfficeRole ?? "");
+      if (!isAdmin && !isGMRole && !isFrontOffice) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.exportLoanIn(Number(req.params["id"])));
     } catch (err) { next(err); }
   };

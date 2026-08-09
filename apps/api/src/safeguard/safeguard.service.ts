@@ -1,4 +1,5 @@
 import { AppError } from '../lib/appError'
+import { writeAuditLog } from '../lib/auditLog'
 import type { SafeguardRepository } from './safeguard.repo'
 import type { NotificationRepository } from '../notification/notification.repo'
 import type { CreateSafeguardReportDto, UpdateSafeguardStatusDto } from './dto/safeguard.dto'
@@ -50,10 +51,17 @@ export class SafeguardService {
     return report
   }
 
-  async updateStatus(id: number, dto: UpdateSafeguardStatusDto) {
+  async updateStatus(id: number, dto: UpdateSafeguardStatusDto, actorId: number) {
     const report = await this.repo.findById(id)
     if (!report) throw new AppError(404, 'SAFEGUARD_REPORT_NOT_FOUND')
     if (report.status === 'RESOLVED') throw new AppError(409, 'ALREADY_RESOLVED')
-    return this.repo.updateStatus(id, dto)
+    const updated = await this.repo.updateStatus(id, dto)
+    await writeAuditLog({
+      actorId,
+      action: 'SAFEGUARD_STATUS_UPDATED',
+      targetId: id,
+      detail: { previousStatus: report.status, newStatus: dto.status },
+    })
+    return updated
   }
 }

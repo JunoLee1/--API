@@ -3,9 +3,11 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { leagueApi } from '@/services/league.service'
 import { clubApi } from '@/services/club.service'
+import { countryApi } from '@/services/country.service'
 import type { League, LeagueLevel } from '@/types/league'
 import { LEAGUE_LEVEL_LABEL, LEAGUE_LEVELS } from '@/types/league'
 import type { Club } from '@/types/team'
+import type { CountryItem } from '@/types/country'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -32,7 +34,13 @@ function CreateLeagueDialog({ open, onOpenChange, onSaved }: CreateLeagueDialogP
   const [name, setName] = useState('')
   const [level, setLevel] = useState<LeagueLevel | ''>('')
   const [year, setYear] = useState(String(new Date().getFullYear()))
+  const [countryId, setCountryId] = useState<string>('')
+  const [countries, setCountries] = useState<CountryItem[]>([])
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (open) countryApi.list().then(setCountries).catch(() => null)
+  }, [open])
 
   const handleSave = async () => {
     if (!name.trim() || !level || !year) {
@@ -46,13 +54,19 @@ function CreateLeagueDialog({ open, onOpenChange, onSaved }: CreateLeagueDialogP
     }
     setSaving(true)
     try {
-      await leagueApi.create({ name: name.trim(), level, year: parsedYear })
+      await leagueApi.create({
+        name: name.trim(),
+        level,
+        year: parsedYear,
+        ...(countryId && { countryId: Number(countryId) }),
+      })
       toast.success('리그가 생성되었습니다.')
       onSaved()
       onOpenChange(false)
       setName('')
       setLevel('')
       setYear(String(new Date().getFullYear()))
+      setCountryId('')
     } catch (err: any) {
       const code = err?.response?.data?.code
       if (code === 'LEAGUE_ALREADY_EXISTS') toast.error('동일한 레벨과 연도의 리그가 이미 존재합니다.')
@@ -99,6 +113,21 @@ function CreateLeagueDialog({ open, onOpenChange, onSaved }: CreateLeagueDialogP
               min={2000}
               max={2100}
             />
+          </div>
+          <div className="space-y-1.5">
+            <Label>국가 (선택)</Label>
+            <Select value={countryId} onValueChange={setCountryId}>
+              <SelectTrigger>
+                <SelectValue placeholder="국가 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                {countries.map((c) => (
+                  <SelectItem key={c.id} value={String(c.id)}>
+                    {c.name} ({c.code})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <DialogFooter>
@@ -299,6 +328,7 @@ export function LeaguePage() {
                 <TableRow>
                   <TableHead>리그명</TableHead>
                   <TableHead>레벨</TableHead>
+                  <TableHead>국가</TableHead>
                   <TableHead>연도</TableHead>
                   <TableHead>구단 수</TableHead>
                   <TableHead>상태</TableHead>
@@ -307,14 +337,14 @@ export function LeaguePage() {
               <TableBody>
                 {loading && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                       로딩 중...
                     </TableCell>
                   </TableRow>
                 )}
                 {!loading && leagues.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                       등록된 리그가 없습니다.
                     </TableCell>
                   </TableRow>
@@ -329,6 +359,7 @@ export function LeaguePage() {
                     <TableCell>
                       <Badge variant="outline">{levelLabel(league.level)}</Badge>
                     </TableCell>
+                    <TableCell>{league.country ? `${league.country.name} (${league.country.code})` : '—'}</TableCell>
                     <TableCell>{league.year}</TableCell>
                     <TableCell>{league.clubs.length}</TableCell>
                     <TableCell>

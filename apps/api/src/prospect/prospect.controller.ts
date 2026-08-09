@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { ProspectService } from "./prospect.service";
 import { ProspectStatus } from "../generated/enums";
 import { TransitionProspectStatusDto, SignProspectDto } from "./dto/prospect.dto";
@@ -8,7 +9,7 @@ import { TransitionProspectStatusDto, SignProspectDto } from "./dto/prospect.dto
 const canWrite = (role: string, frontOfficeRole: string | null | undefined): boolean =>
   isAdminLike(role) ||
   role === "GM" ||
-  (role === "FRONT_OFFICE" && (frontOfficeRole === "SCOUT" || frontOfficeRole === "TD"));
+  (role === "FRONT_OFFICE" && frontOfficeRole === "SCOUT");
 
 const canRead = (role: string, coachingRole: string | null | undefined): boolean =>
   isAdminLike(role) ||
@@ -25,7 +26,7 @@ export class ProspectController {
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = req.user!;
+      const { role, coachingRole } = requireUser(req);
       if (!canRead(role, coachingRole)) throw new AppError(403, "FORBIDDEN");
       const status = req.query["status"] as ProspectStatus | undefined;
       res.status(200).json(await this.service.getAll(status));
@@ -34,7 +35,7 @@ export class ProspectController {
 
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = req.user!;
+      const { role, coachingRole } = requireUser(req);
       if (!canRead(role, coachingRole)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.getById(Number(req.params["id"])));
     } catch (err) { next(err); }
@@ -42,7 +43,7 @@ export class ProspectController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole, id } = req.user!;
+      const { role, frontOfficeRole, id } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.create({ ...req.body, createdById: id }));
     } catch (err) { next(err); }
@@ -50,7 +51,7 @@ export class ProspectController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.update(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
@@ -58,7 +59,7 @@ export class ProspectController {
 
   updateStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(
         await this.service.updateStatus(Number(req.params["id"]), req.body as TransitionProspectStatusDto)
@@ -68,7 +69,7 @@ export class ProspectController {
 
   sign = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canSign(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(
         await this.service.sign(Number(req.params["id"]), req.body as SignProspectDto)

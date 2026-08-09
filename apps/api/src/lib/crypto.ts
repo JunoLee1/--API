@@ -2,6 +2,8 @@ import crypto from "crypto";
 
 const ALGORITHM = "aes-256-cbc";
 
+export function validatePhoneEncryptionKey(): void { getKey(); }
+
 function getKey(): Buffer {
   const raw = process.env["PHONE_ENCRYPTION_KEY"];
   if (!raw) throw new Error("PHONE_ENCRYPTION_KEY not set");

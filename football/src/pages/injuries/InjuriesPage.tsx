@@ -48,6 +48,15 @@ function formatDate(d: string) {
   return new Date(d).toLocaleDateString('ko-KR')
 }
 
+function isReturningImminent(inj: Injury): boolean {
+  if (inj.status === 'RETURNED' || !inj.expectedReturnDate) return false
+  const returnDateStr = inj.expectedReturnDate.slice(0, 10)
+  const cutoff = new Date()
+  cutoff.setDate(cutoff.getDate() + 7)
+  const cutoffStr = cutoff.toISOString().slice(0, 10)
+  return returnDateStr <= cutoffStr
+}
+
 interface CreateInjuryDialogProps {
   open: boolean
   onOpenChange: (v: boolean) => void
@@ -272,7 +281,14 @@ export function InjuriesPage() {
                   <TableCell>{t(`injuries.cause.${inj.cause}`)}</TableCell>
                   <TableCell className="tabular-nums">{formatDate(inj.occurredAt)}</TableCell>
                   <TableCell className="tabular-nums">
-                    {inj.expectedReturnDate ? formatDate(inj.expectedReturnDate) : '—'}
+                    <span className="inline-flex items-center gap-1.5">
+                      {inj.expectedReturnDate ? formatDate(inj.expectedReturnDate) : '—'}
+                      {isReturningImminent(inj) && (
+                        <span className="inline-flex items-center rounded border border-amber-400 bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-600">
+                          {t('injuries.returningImminent')}
+                        </span>
+                      )}
+                    </span>
                   </TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${INJURY_STATUS_STYLE[inj.status]}`}>

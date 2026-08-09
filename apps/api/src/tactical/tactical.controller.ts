@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
 import { TacticalService } from "./tactical.service";
 
 const STAFF_ROLES = ["ADMIN", "SUPER_ADMIN", "COACHING_STAFF"] as const;
@@ -11,6 +12,10 @@ export class TacticalController {
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const user = requireUser(req);
+      if (user.role === "PLAYER") {
+        return res.status(200).json(await this.service.listForPlayer(user.id));
+      }
       const filters = {
         ...(req.query["matchId"] && { matchId: Number(req.query["matchId"]) }),
         ...(req.query["phase"] && { phase: req.query["phase"] as string }),
@@ -27,32 +32,39 @@ export class TacticalController {
 
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      res.status(200).json(await this.service.getById(Number(req.params["id"])));
+      const user = requireUser(req);
+      const id = Number(req.params["id"]);
+      if (user.role === "PLAYER") {
+        return res.status(200).json(await this.service.getByIdForPlayer(id, user.id));
+      }
+      res.status(200).json(await this.service.getById(id));
     } catch (err) { next(err); }
   };
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole, coachingRole } = requireUser(req);
       const canCreate =
         isAdminLike(role) ||
-        role === "COACHING_STAFF" ||
+        (role === "COACHING_STAFF" && coachingRole !== "HEAD_COACH") ||
         (role === "FRONT_OFFICE" && frontOfficeRole === "TACTICAL_ANALYST");
       if (!canCreate) throw new AppError(403, "FORBIDDEN");
-      res.status(201).json(await this.service.createAnalysis(req.body, req.user!.id));
+      res.status(201).json(await this.service.createAnalysis(req.body, requireUser(req).id));
     } catch (err) { next(err); }
   };
 
   addLineup = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!STAFF_ROLES.includes(req.user!.role as StaffRole)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!STAFF_ROLES.includes(user.role as StaffRole)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.addLineup(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
   };
 
   addMedia = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!STAFF_ROLES.includes(req.user!.role as StaffRole)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!STAFF_ROLES.includes(user.role as StaffRole)) throw new AppError(403, "FORBIDDEN");
       const analysisId = Number(req.params["id"]);
       const files = req.files as Express.Multer.File[];
       if (!files || files.length === 0) throw new AppError(400, "NO_FILES");
@@ -70,10 +82,10 @@ export class TacticalController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = req.user!;
+      const { role, frontOfficeRole, coachingRole } = requireUser(req);
       const canUpdate =
         isAdminLike(role) ||
-        role === "COACHING_STAFF" ||
+        (role === "COACHING_STAFF" && coachingRole !== "HEAD_COACH") ||
         (role === "FRONT_OFFICE" && frontOfficeRole === "TACTICAL_ANALYST");
       if (!canUpdate) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(
@@ -84,11 +96,28 @@ export class TacticalController {
 
   confirm = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = req.user!;
+      const { role, coachingRole } = requireUser(req);
       const canConfirm =
         isAdminLike(role) || (role === "COACHING_STAFF" && coachingRole === "HEAD_COACH");
       if (!canConfirm) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.confirmAnalysis(Number(req.params["id"])));
+    } catch (err) { next(err); }
+  };
+
+  getFormationCorrelation = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const seasonId = Number(req.query["seasonId"]);
+      if (!seasonId) throw new AppError(400, "SEASON_ID_REQUIRED");
+      res.status(200).json(await this.service.getFormationResultCorrelation(seasonId));
+    } catch (err) { next(err); }
+  };
+
+  searchOpponent = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const keyword = req.query["keyword"] as string;
+      if (!keyword) throw new AppError(400, "KEYWORD_REQUIRED");
+      const seasonId = req.query["seasonId"] ? Number(req.query["seasonId"]) : undefined;
+      res.status(200).json(await this.service.searchOpponentAnalysis(keyword, seasonId));
     } catch (err) { next(err); }
   };
 }

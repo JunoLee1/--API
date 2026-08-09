@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
+import { requireUser } from "../lib/authMiddleware";
+import { DepartmentCategory } from "../generated/enums";
 import { DepartmentService } from "./department.service";
 
 const canManage = (role: string) =>
@@ -14,7 +16,8 @@ export class DepartmentController {
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!canRead(req.user!.role)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!canRead(user.role)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.list());
     } catch (err) {
       next(err);
@@ -23,7 +26,8 @@ export class DepartmentController {
 
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!canRead(req.user!.role)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!canRead(user.role)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.get(Number(req.params["id"])));
     } catch (err) {
       next(err);
@@ -32,7 +36,7 @@ export class DepartmentController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, id: userId } = req.user!;
+      const { role, id: userId } = requireUser(req);
       const { name, parentId, category } = req.body as { name: string; parentId?: number; category?: string };
       if (typeof name !== "string" || !name.trim()) throw new AppError(400, "NAME_REQUIRED");
 
@@ -47,7 +51,7 @@ export class DepartmentController {
         await this.service.create({
           name: name.trim(),
           ...(parentId !== undefined && { parentId }),
-          ...(category !== undefined && { category: category as any }),
+          ...(category !== undefined && { category: category as DepartmentCategory }),
         })
       );
     } catch (err) {
@@ -57,7 +61,7 @@ export class DepartmentController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, id: userId } = req.user!;
+      const { role, id: userId } = requireUser(req);
       const data = req.body as { name?: string; isActive?: boolean; parentId?: number | null; category?: import("../generated/enums").DepartmentCategory | null };
 
       if (!canManage(role)) {
@@ -73,7 +77,7 @@ export class DepartmentController {
 
   delete = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, id: userId } = req.user!;
+      const { role, id: userId } = requireUser(req);
 
       if (!canManage(role)) {
         const dept = await this.service.get(Number(req.params["id"]));
