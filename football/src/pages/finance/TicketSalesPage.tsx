@@ -54,6 +54,9 @@ export function TicketSalesPage() {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
 
+  const [filterFrom, setFilterFrom] = useState('')
+  const [filterTo, setFilterTo] = useState('')
+
   const [createOpen, setCreateOpen] = useState(false)
   const [editRecord, setEditRecord] = useState<SalesRecord | null>(null)
   const [saving, setSaving] = useState(false)
@@ -93,12 +96,28 @@ export function TicketSalesPage() {
     setRecords(r)
   }
 
-  const totalRevenue = summary.reduce((s, m) => s + m.totalAmount, 0)
-  const totalQuantity = summary.reduce((s, m) => s + m.totalQuantity, 0)
-  const recentSummary = summary.slice(0, RECENT_MATCHES)
+  const filteredSummary = summary.filter((m) => {
+    const d = m.date.slice(0, 10)
+    if (filterFrom && d < filterFrom) return false
+    if (filterTo && d > filterTo) return false
+    return true
+  })
 
-  const totalPages = Math.max(1, Math.ceil(records.length / PAGE_SIZE))
-  const pagedRecords = records.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const filteredRecords = records.filter((r) => {
+    const d = (r.match?.date ?? '').slice(0, 10)
+    if (filterFrom && d < filterFrom) return false
+    if (filterTo && d > filterTo) return false
+    return true
+  })
+
+  const totalRevenue = filteredSummary.reduce((s, m) => s + m.totalAmount, 0)
+  const totalQuantity = filteredSummary.reduce((s, m) => s + m.totalQuantity, 0)
+  const recentSummary = filteredSummary.slice(0, RECENT_MATCHES)
+
+  const totalPages = Math.max(1, Math.ceil(filteredRecords.length / PAGE_SIZE))
+  const pagedRecords = filteredRecords.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  useEffect(() => { setPage(1) }, [filterFrom, filterTo])
 
   const openCreate = () => { setForm(emptyForm()); setCreateOpen(true) }
 
@@ -203,6 +222,29 @@ export function TicketSalesPage() {
           </Select>
           {canWrite && <Button onClick={openCreate}>판매 등록</Button>}
         </div>
+      </div>
+
+      {/* 경기일 날짜 필터 */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-sm text-muted-foreground shrink-0">경기일</span>
+        <Input
+          type="date"
+          className="w-38"
+          value={filterFrom}
+          onChange={(e) => setFilterFrom(e.target.value)}
+        />
+        <span className="text-sm text-muted-foreground">~</span>
+        <Input
+          type="date"
+          className="w-38"
+          value={filterTo}
+          onChange={(e) => setFilterTo(e.target.value)}
+        />
+        {(filterFrom || filterTo) && (
+          <Button size="sm" variant="ghost" onClick={() => { setFilterFrom(''); setFilterTo('') }}>
+            초기화
+          </Button>
+        )}
       </div>
 
       {/* 요약 카드 */}
