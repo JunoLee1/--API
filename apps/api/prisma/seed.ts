@@ -2507,6 +2507,9 @@ async function main() {
   // ── QA edge cases ─────────────────────────────────────
   await seedQACases();
 
+  // ── 2025 시즌 홈 경기 & 티켓 판매 ─────────────────────
+  await seedTicketSales2025(admin.id);
+
   console.log("✅ Seed complete");
   console.log(`   - Countries: 2`);
   console.log(`   - Users: 21 + 10 유소년 / pw: Password1!`);
@@ -2530,6 +2533,97 @@ async function main() {
   console.log(`   - Players: 20 (1군) + 10 (유소년: U15×5, U18×5)`);
   console.log(`   - Youth Teams: U-15 (id:${u15Team.id}), U-18 (id:${u18Team.id})`);
   console.log(`   - YouthRegistrations: 6 (CONTRACTED×3, GUARDIAN_APPROVED×1, PENDING×2)`);
+}
+
+async function seedTicketSales2025(adminId: number) {
+  const season2025 = await prisma.season.upsert({
+    where: { id: 2 },
+    update: {},
+    create: { name: "2025 시즌", startDate: new Date("2025-03-01"), endDate: new Date("2025-11-30"), status: "CLOSED" },
+  });
+
+  const homeMathces = [
+    { id: 13, date: "2025-03-15T15:00:00", away: "Jeonbuk Hyundai Motors", hs: 2, as: 1, att: 28000 },
+    { id: 14, date: "2025-04-05T15:00:00", away: "Ulsan HD",                hs: 1, as: 0, att: 22500 },
+    { id: 15, date: "2025-05-03T14:00:00", away: "Daegu FC",                hs: 3, as: 0, att: 19500 },
+    { id: 16, date: "2025-06-07T19:00:00", away: "Busan IPark",             hs: 2, as: 2, att: 25000 },
+    { id: 17, date: "2025-07-12T19:00:00", away: "Incheon United",          hs: 1, as: 1, att: 18000 },
+    { id: 18, date: "2025-08-16T19:00:00", away: "Suwon Samsung Bluewings", hs: 2, as: 0, att: 30000 },
+    { id: 19, date: "2025-09-20T16:00:00", away: "Jeju United",             hs: 3, as: 1, att: 21000 },
+    { id: 20, date: "2025-10-25T16:00:00", away: "Seongnam FC",             hs: 1, as: 0, att: 16000 },
+  ];
+
+  const match2025Ids = homeMathces.map((m) => m.id);
+  await prisma.salesRecord.deleteMany({ where: { matchId: { in: match2025Ids } } });
+  await prisma.seatZone.deleteMany({ where: { matchId: { in: match2025Ids } } });
+
+  for (const m of homeMathces) {
+    const match = await prisma.match.upsert({
+      where: { id: m.id },
+      update: {},
+      create: {
+        id: m.id,
+        date: new Date(m.date),
+        homeTeamName: "FC Seoul",
+        awayTeamName: m.away,
+        homeScore: m.hs,
+        awayScore: m.as,
+        competitionType: "LEAGUE",
+        venue: "HOME",
+        seasonId: season2025.id,
+        actualAttendance: m.att,
+        capacity: 40000,
+        priceRegular: 20000,
+        priceVip: 80000,
+      },
+    });
+
+    const genZone = await prisma.seatZone.create({
+      data: { name: "일반석", capacity: 34000, unitPrice: 20000, matchId: match.id },
+    });
+    const vipZone = await prisma.seatZone.create({
+      data: { name: "VIP석",  capacity: 6000,  unitPrice: 80000, matchId: match.id },
+    });
+
+    const genQty = Math.round(m.att * 0.85);
+    const vipQty = m.att - genQty;
+    const saleDate = new Date(m.date);
+
+    await prisma.salesRecord.create({
+      data: {
+        type: "TICKET",
+        quantity: genQty,
+        unitPrice: 20000,
+        totalAmount: genQty * 20000,
+        currency: "KRW",
+        saleDate,
+        matchId: match.id,
+        seatZoneId: genZone.id,
+        status: "COMPLETED",
+        channel: "ONLINE",
+        createdById: adminId,
+      },
+    });
+    await prisma.salesRecord.create({
+      data: {
+        type: "VIP_TICKET",
+        quantity: vipQty,
+        unitPrice: 80000,
+        totalAmount: vipQty * 80000,
+        currency: "KRW",
+        saleDate,
+        matchId: match.id,
+        seatZoneId: vipZone.id,
+        status: "COMPLETED",
+        channel: "PARTNER",
+        createdById: adminId,
+      },
+    });
+  }
+
+  const totalGenRevenue = homeMathces.reduce((s, m) => s + Math.round(m.att * 0.85) * 20000, 0);
+  const totalVipRevenue = homeMathces.reduce((s, m) => s + (m.att - Math.round(m.att * 0.85)) * 80000, 0);
+  console.log(`✅ 2025 시즌 홈경기 티켓 시드: ${homeMathces.length}경기, 일반석 ${(totalGenRevenue / 1e8).toFixed(1)}억원 + VIP석 ${(totalVipRevenue / 1e8).toFixed(1)}억원`);
 }
 
 main()
