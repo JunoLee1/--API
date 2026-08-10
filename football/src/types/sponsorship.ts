@@ -27,6 +27,15 @@ export interface Sponsorship {
   updatedAt: string
   createdBy: { id: number; username: string }
   payments?: SponsorshipPayment[]
+  // 국내 계좌
+  domesticBankName: string | null
+  domesticAccountNumber: string | null
+  domesticAccountHolder: string | null
+  // 영국 계좌
+  ukBankName: string | null
+  ukSortCode: string | null
+  ukAccountNumber: string | null
+  ukSwiftBic: string | null
 }
 
 export interface SponsorshipListResponse {
@@ -43,6 +52,13 @@ export interface CreateSponsorshipDto {
   contractStart: string   // ISO date string e.g. "2026-01-01"
   contractEnd: string
   paymentSchedule: PaymentSchedule
+  domesticBankName?: string
+  domesticAccountNumber?: string
+  domesticAccountHolder?: string
+  ukBankName?: string
+  ukSortCode?: string
+  ukAccountNumber?: string
+  ukSwiftBic?: string
 }
 
 export interface UpdateSponsorshipDto {
@@ -52,6 +68,13 @@ export interface UpdateSponsorshipDto {
   contractStart?: string
   contractEnd?: string
   paymentSchedule?: PaymentSchedule
+  domesticBankName?: string
+  domesticAccountNumber?: string
+  domesticAccountHolder?: string
+  ukBankName?: string
+  ukSortCode?: string
+  ukAccountNumber?: string
+  ukSwiftBic?: string
 }
 
 export const SPONSOR_TYPE_LABEL: Record<SponsorType, string> = {

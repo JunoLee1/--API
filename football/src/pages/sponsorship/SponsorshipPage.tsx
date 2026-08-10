@@ -69,6 +69,13 @@ function CreateSponsorshipDialog({ open, onOpenChange, onSaved }: CreateSponsors
   const [contractStart, setContractStart] = useState('')
   const [contractEnd, setContractEnd] = useState('')
   const [paymentSchedule, setPaymentSchedule] = useState<PaymentSchedule>('ANNUAL')
+  const [domesticBankName, setDomesticBankName] = useState('')
+  const [domesticAccountNumber, setDomesticAccountNumber] = useState('')
+  const [domesticAccountHolder, setDomesticAccountHolder] = useState('')
+  const [ukBankName, setUkBankName] = useState('')
+  const [ukSortCode, setUkSortCode] = useState('')
+  const [ukAccountNumber, setUkAccountNumber] = useState('')
+  const [ukSwiftBic, setUkSwiftBic] = useState('')
   const [saving, setSaving] = useState(false)
 
   const reset = () => {
@@ -78,6 +85,13 @@ function CreateSponsorshipDialog({ open, onOpenChange, onSaved }: CreateSponsors
     setContractStart('')
     setContractEnd('')
     setPaymentSchedule('ANNUAL')
+    setDomesticBankName('')
+    setDomesticAccountNumber('')
+    setDomesticAccountHolder('')
+    setUkBankName('')
+    setUkSortCode('')
+    setUkAccountNumber('')
+    setUkSwiftBic('')
   }
 
   const handleSave = async () => {
@@ -96,6 +110,13 @@ function CreateSponsorshipDialog({ open, onOpenChange, onSaved }: CreateSponsors
         contractStart,
         contractEnd,
         paymentSchedule,
+        ...(domesticBankName && { domesticBankName }),
+        ...(domesticAccountNumber && { domesticAccountNumber }),
+        ...(domesticAccountHolder && { domesticAccountHolder }),
+        ...(ukBankName && { ukBankName }),
+        ...(ukSortCode && { ukSortCode }),
+        ...(ukAccountNumber && { ukAccountNumber }),
+        ...(ukSwiftBic && { ukSwiftBic }),
       }
       await sponsorshipApi.create(dto)
       toast.success(t('created'))
@@ -111,7 +132,7 @@ function CreateSponsorshipDialog({ open, onOpenChange, onSaved }: CreateSponsors
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset() }}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{t('form.title')}</DialogTitle>
         </DialogHeader>
@@ -172,6 +193,29 @@ function CreateSponsorshipDialog({ open, onOpenChange, onSaved }: CreateSponsors
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* 국내 계좌 */}
+          <div className="pt-1">
+            <p className="text-xs font-medium text-muted-foreground mb-2">{t('form.bankSection.domestic')}</p>
+            <div className="space-y-2">
+              <Input placeholder={t('form.bank.bankName')} value={domesticBankName} onChange={(e) => setDomesticBankName(e.target.value)} />
+              <Input placeholder={t('form.bank.accountNumber')} value={domesticAccountNumber} onChange={(e) => setDomesticAccountNumber(e.target.value)} />
+              <Input placeholder={t('form.bank.accountHolder')} value={domesticAccountHolder} onChange={(e) => setDomesticAccountHolder(e.target.value)} />
+            </div>
+          </div>
+
+          {/* 영국 계좌 */}
+          <div className="pt-1">
+            <p className="text-xs font-medium text-muted-foreground mb-2">{t('form.bankSection.uk')}</p>
+            <div className="space-y-2">
+              <Input placeholder={t('form.bank.bankName')} value={ukBankName} onChange={(e) => setUkBankName(e.target.value)} />
+              <div className="grid grid-cols-2 gap-2">
+                <Input placeholder={t('form.bank.sortCode')} value={ukSortCode} onChange={(e) => setUkSortCode(e.target.value)} />
+                <Input placeholder={t('form.bank.accountNumber')} value={ukAccountNumber} onChange={(e) => setUkAccountNumber(e.target.value)} />
+              </div>
+              <Input placeholder={t('form.bank.swiftBic')} value={ukSwiftBic} onChange={(e) => setUkSwiftBic(e.target.value)} />
+            </div>
           </div>
         </div>
         <DialogFooter>
