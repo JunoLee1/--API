@@ -57,10 +57,10 @@ describe("FinancialReportService.autoGenerateBudgetPlan", () => {
 
     const callArg = (repo.upsertBudgetPlan as jest.Mock).mock.calls[0][1];
     // mandatoryTotal = 10_000_000
-    // totalOperatingBudget = 10_000_000 * 1.1 = 11_000_000
-    // contingencyReserve = 11_000_000 * 0.1 = 1_100_000
-    expect(callArg.totalOperatingBudget).toBe(11_000_000);
-    expect(callArg.contingencyReserve).toBe(1_100_000);
+    // contingencyReserve = 10_000_000 * 0.1 = 1_000_000
+    // totalOperatingBudget = 10_000_000 + 1_000_000 = 11_000_000
+    expect(callArg.totalOperatingBudget).toBe(11_000_000);  // same total, same value
+    expect(callArg.contingencyReserve).toBe(1_000_000);     // 1_000_000 not 1_100_000
   });
 
   it("실적 없는 카테고리를 zeroCategories에 포함", async () => {

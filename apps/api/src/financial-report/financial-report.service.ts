@@ -116,7 +116,8 @@ export class FinancialReportService {
     });
     if (!prevSeason) throw new AppError(404, "PREV_SEASON_NOT_FOUND");
 
-    const prevActuals = (await this.repo.getActuals(prevSeason.id)) ?? {};
+    const prevActuals = await this.repo.getActuals(prevSeason.id);
+    if (!prevActuals) throw new AppError(404, "PREV_SEASON_NOT_FOUND");
 
     const ALL_CATS: OperatingCategory[] = ["MEDICAL", "MEAL", "TRAVEL", "EQUIPMENT", "SCOUTING", "YOUTH"];
     const zeroCategories: OperatingCategory[] = [];
@@ -132,8 +133,8 @@ export class FinancialReportService {
     });
 
     const mandatoryTotal = categories.reduce((s, c) => s + c.mandatoryMinimum, 0);
-    const totalOperatingBudget = Math.round(mandatoryTotal * (1 + contingencyRate));
-    const contingencyReserve = Math.round(totalOperatingBudget * contingencyRate);
+    const contingencyReserve = Math.round(mandatoryTotal * contingencyRate);
+    const totalOperatingBudget = mandatoryTotal + contingencyReserve;
 
     await this.repo.upsertBudgetPlan(seasonId, {
       totalOperatingBudget,
