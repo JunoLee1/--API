@@ -89,7 +89,7 @@ interface AnnualData {
   monthlyBreakdown: MonthRow[]
   totalAnnualWage: string; avgSalary: string; minSalary: string; maxSalary: string
   dist300: string; dist300_500: string; dist500_1000: string; dist1000plus: string
-  annualTurnoverRateTurnover: string; totalDepartures: string; peakMonth: string
+  totalDepartures: string; peakMonth: string
   annualAttendanceRate: string; totalAbsences: string; worstMonth: string
   totalIssues: string; totalInjuries: string; issuesByType: string
   summary: string
@@ -101,7 +101,7 @@ const initAnnual = (): AnnualData => ({
   monthlyBreakdown: Array.from({ length: 12 }, () => ({ headcount: '', turnoverRate: '', attendanceRate: '', incidents: '' })),
   totalAnnualWage: '', avgSalary: '', minSalary: '', maxSalary: '',
   dist300: '', dist300_500: '', dist500_1000: '', dist1000plus: '',
-  annualTurnoverRateTurnover: '', totalDepartures: '', peakMonth: '',
+  totalDepartures: '', peakMonth: '',
   annualAttendanceRate: '', totalAbsences: '', worstMonth: '',
   totalIssues: '', totalInjuries: '', issuesByType: '',
   summary: '',
@@ -125,11 +125,11 @@ function serializeAnnual(d: AnnualData): string {
 ${monthTable}
 
 ## 3. 임금 분석
-- 총 연봉합계: ${d.totalAnnualWage}원 / 평균: ${d.avgSalary}원 / 최소: ${d.minSalary}원 / 최대: ${d.maxSalary}원
+- 총 연봉합계: ${d.totalAnnualWage}만원 / 평균: ${d.avgSalary}만원 / 최소: ${d.minSalary}만원 / 최대: ${d.maxSalary}만원
 - 구간별: 300만미만 ${d.dist300}명 / 300~500만 ${d.dist300_500}명 / 500~1000만 ${d.dist500_1000}명 / 1000만+ ${d.dist1000plus}명
 
 ## 4. 이직
-- 연간 이직률: ${d.annualTurnoverRateTurnover}% / 총 방출: ${d.totalDepartures}명 / 최다 이직 월: ${d.peakMonth}월
+- 연간 이직률: ${d.annualTurnoverRate}% / 총 방출: ${d.totalDepartures}명 / 최다 이직 월: ${d.peakMonth}월
 
 ## 5. 출석
 - 연간 출석률: ${d.annualAttendanceRate}% / 총 결석·지각: ${d.totalAbsences}건 / 최저 출석 월: ${d.worstMonth}월
@@ -152,10 +152,10 @@ function FieldRow({ label, children }: { label: string; children: React.ReactNod
   )
 }
 
-function NumInput({ value, onChange, unit }: { value: string; onChange: (v: string) => void; unit?: string }) {
+function NumInput({ value, onChange, unit, wide }: { value: string; onChange: (v: string) => void; unit?: string; wide?: boolean }) {
   return (
     <div className="flex items-center gap-1">
-      <Input type="number" min={0} value={value} onChange={(e) => onChange(e.target.value)} className="w-24 h-8 text-sm" />
+      <Input type="number" min={0} value={value} onChange={(e) => onChange(e.target.value)} className={`${wide ? 'w-36' : 'w-24'} h-8 text-sm`} />
       {unit && <span className="text-sm text-muted-foreground">{unit}</span>}
     </div>
   )
@@ -218,9 +218,10 @@ function MonthlyForm({ data, onChange }: { data: MonthlyData; onChange: (d: Mont
           <FieldRow label="무단 결석"><NumInput value={data.absentUnauthorized} onChange={set('absentUnauthorized')} unit="건" /></FieldRow>
           <FieldRow label="무단 지각"><NumInput value={data.lateUnauthorized} onChange={set('lateUnauthorized')} unit="건" /></FieldRow>
           <FieldRow label="공인 결석"><NumInput value={data.absentAuthorized} onChange={set('absentAuthorized')} unit="건" /></FieldRow>
-          <div className="flex items-center gap-2 pt-1 text-sm">
-            <span className="w-36 text-muted-foreground shrink-0">출석률 (자동계산)</span>
-            <span className="font-medium">{attendanceRate}%</span>
+          <div className="flex items-center gap-3 pt-2 border-t mt-1">
+            <span className="w-36 text-sm text-muted-foreground shrink-0">출석률</span>
+            <span className="text-sm font-semibold tabular-nums">{attendanceRate}%</span>
+            <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">자동계산</span>
           </div>
         </CardContent>
       </Card>
@@ -304,13 +305,13 @@ function AnnualForm({ data, onChange }: { data: AnnualData; onChange: (d: Annual
       <Card>
         <CardHeader className="pb-2"><CardTitle className="text-sm">3. 임금 분석</CardTitle></CardHeader>
         <CardContent className="space-y-2">
-          <FieldRow label="총 연봉합계"><NumInput value={data.totalAnnualWage} onChange={set('totalAnnualWage')} unit="원" /></FieldRow>
-          <FieldRow label="평균 연봉"><NumInput value={data.avgSalary} onChange={set('avgSalary')} unit="원" /></FieldRow>
-          <FieldRow label="최소 연봉"><NumInput value={data.minSalary} onChange={set('minSalary')} unit="원" /></FieldRow>
-          <FieldRow label="최대 연봉"><NumInput value={data.maxSalary} onChange={set('maxSalary')} unit="원" /></FieldRow>
+          <FieldRow label="총 연봉합계"><NumInput value={data.totalAnnualWage} onChange={set('totalAnnualWage')} unit="만원" wide /></FieldRow>
+          <FieldRow label="평균 연봉"><NumInput value={data.avgSalary} onChange={set('avgSalary')} unit="만원" wide /></FieldRow>
+          <FieldRow label="최소 연봉"><NumInput value={data.minSalary} onChange={set('minSalary')} unit="만원" wide /></FieldRow>
+          <FieldRow label="최대 연봉"><NumInput value={data.maxSalary} onChange={set('maxSalary')} unit="만원" wide /></FieldRow>
           <div className="pt-1 space-y-1">
             <p className="text-xs text-muted-foreground">구간별 계약 수</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-2">
               <FieldRow label="300만 미만"><NumInput value={data.dist300} onChange={set('dist300')} unit="명" /></FieldRow>
               <FieldRow label="300~500만"><NumInput value={data.dist300_500} onChange={set('dist300_500')} unit="명" /></FieldRow>
               <FieldRow label="500~1000만"><NumInput value={data.dist500_1000} onChange={set('dist500_1000')} unit="명" /></FieldRow>
@@ -323,7 +324,6 @@ function AnnualForm({ data, onChange }: { data: AnnualData; onChange: (d: Annual
       <Card>
         <CardHeader className="pb-2"><CardTitle className="text-sm">4. 이직</CardTitle></CardHeader>
         <CardContent className="space-y-2">
-          <FieldRow label="연간 이직률"><NumInput value={data.annualTurnoverRateTurnover} onChange={set('annualTurnoverRateTurnover')} unit="%" /></FieldRow>
           <FieldRow label="총 방출"><NumInput value={data.totalDepartures} onChange={set('totalDepartures')} unit="명" /></FieldRow>
           <FieldRow label="최다 이직 월">
             <Select value={data.peakMonth} onValueChange={set('peakMonth')}>
@@ -384,9 +384,10 @@ export function ReportFormPage() {
   const { user } = useCurrentUser()
   const isAdmin = user?.role === 'ADMIN'
   const foRole = user?.frontOfficeRole
+  const deptCategories = user?.departmentCategories ?? []
   const TYPES = ALL_TYPES.filter((tp) => {
-    if (tp === 'HR') return isAdmin || foRole === 'HR_MANAGER' || foRole === 'HR_STAFF'
-    if (tp === 'FINANCIAL') return isAdmin || user?.role === 'GM' || foRole === 'FINANCE_MANAGER' || foRole === 'FINANCE_STAFF'
+    if (tp === 'HR') return isAdmin || foRole === 'HR_MANAGER' || foRole === 'HR_STAFF' || deptCategories.includes('HR')
+    if (tp === 'FINANCIAL') return isAdmin || user?.role === 'GM' || foRole === 'FINANCE_MANAGER' || foRole === 'FINANCE_STAFF' || deptCategories.includes('FINANCE')
     if (tp === 'ASSET') return isAdmin || foRole === 'ASSET_MANAGER' || foRole === 'ASSET_STAFF'
     return true
   })
@@ -462,7 +463,6 @@ export function ReportFormPage() {
           dist300_500: result.dist300_500 != null ? String(result.dist300_500) : prev.dist300_500,
           dist500_1000: result.dist500_1000 != null ? String(result.dist500_1000) : prev.dist500_1000,
           dist1000plus: result.dist1000plus != null ? String(result.dist1000plus) : prev.dist1000plus,
-          annualTurnoverRateTurnover: result.annualTurnoverRateTurnover != null ? String(result.annualTurnoverRateTurnover) : prev.annualTurnoverRateTurnover,
           totalDepartures: result.totalDepartures != null ? String(result.totalDepartures) : prev.totalDepartures,
           peakMonth: result.peakMonth != null ? String(result.peakMonth) : prev.peakMonth,
           annualAttendanceRate: result.annualAttendanceRate != null ? String(result.annualAttendanceRate) : prev.annualAttendanceRate,
