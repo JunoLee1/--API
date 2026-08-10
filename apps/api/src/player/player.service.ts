@@ -5,7 +5,6 @@ import { CreatePlayerDto, UpdatePlayerDto, UpdatePlayerStatusDto, PlayerListQuer
 import { MarketValueRepository } from "./market-value.repo";
 import { UpdateMarketValueDto } from "./dto/market-value.dto";
 import { getPrisma } from "../lib/prisma";
-import { writeAuditLog } from "../lib/auditLog";
 
 export class PlayerService {
   constructor(private repo: PlayerRepository, private mvRepo?: MarketValueRepository) {}
