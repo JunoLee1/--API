@@ -119,6 +119,15 @@ export class AuthRepository {
     return this.prisma.refreshTokenBlacklist.deleteMany({ where: { expiresAt: { lt: new Date() } } });
   }
 
+  async getDepartmentCategories(userId: number): Promise<string[]> {
+    const rows = await this.prisma.userDepartment.findMany({
+      where: { userId },
+      select: { department: { select: { category: true } } },
+    });
+    const categories = rows.map((r) => r.department.category).filter((c) => c !== null) as string[];
+    return [...new Set(categories)];
+  }
+
   listInvites(limit = 50) {
     return this.prisma.userInvite.findMany({
       orderBy: { createdAt: "desc" },

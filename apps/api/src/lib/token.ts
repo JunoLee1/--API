@@ -8,6 +8,7 @@ interface TokenPayload {
   role: Role;
   coachingRole?: CoachingRole | null;
   frontOfficeRole?: FrontOfficeRole | null;
+  departmentCategories?: string[];
   teamId?: number | null;
   clubId?: number | null;
   isDemo?: boolean;

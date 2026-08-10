@@ -37,21 +37,25 @@ export function requireSuperAdmin(req: Request): void {
   }
 }
 
-export const canReadFinance = (role: string, foRole?: string | null): boolean =>
+export const canReadFinance = (role: string, foRole?: string | null, deptCategories?: string[]): boolean =>
   isAdminLike(role) ||
-  (role === 'FRONT_OFFICE' && (foRole === 'FINANCE_MANAGER' || foRole === 'FINANCE_STAFF'))
+  (role === 'FRONT_OFFICE' && (foRole === 'FINANCE_MANAGER' || foRole === 'FINANCE_STAFF')) ||
+  (deptCategories?.includes('FINANCE') ?? false)
 
-export const canWriteFinance = (role: string, foRole?: string | null): boolean =>
+export const canWriteFinance = (role: string, foRole?: string | null, deptCategories?: string[]): boolean =>
   isAdminLike(role) ||
-  (role === 'FRONT_OFFICE' && (foRole === 'FINANCE_MANAGER' || foRole === 'FINANCE_STAFF'))
+  (role === 'FRONT_OFFICE' && (foRole === 'FINANCE_MANAGER' || foRole === 'FINANCE_STAFF')) ||
+  (deptCategories?.includes('FINANCE') ?? false)
 
-export const canReadHR = (role: string, foRole?: string | null): boolean =>
+export const canReadHR = (role: string, foRole?: string | null, deptCategories?: string[]): boolean =>
   isAdminLike(role) ||
-  (role === 'FRONT_OFFICE' && (foRole === 'HR_MANAGER' || foRole === 'HR_STAFF'))
+  (role === 'FRONT_OFFICE' && (foRole === 'HR_MANAGER' || foRole === 'HR_STAFF')) ||
+  (deptCategories?.includes('HR') ?? false)
 
-export const canWriteHR = (role: string, foRole?: string | null): boolean =>
+export const canWriteHR = (role: string, foRole?: string | null, deptCategories?: string[]): boolean =>
   isAdminLike(role) ||
-  (role === 'FRONT_OFFICE' && foRole === 'HR_MANAGER')
+  (role === 'FRONT_OFFICE' && foRole === 'HR_MANAGER') ||
+  (deptCategories?.includes('HR') ?? false)
 
 export const canManageTD = (role: string, foRole?: string | null): boolean =>
   isAdminLike(role) ||
