@@ -1482,18 +1482,36 @@ async function main() {
     create: { contractId: contract1.id, amount: BigInt(5_000_000_000) },
   });
 
+  // ── Match 데이터 전체 클린 리셋 (idempotent) ─────────────
+  await prisma.salesRecord.deleteMany();
+  await prisma.seatZone.deleteMany();
+  await prisma.fanPurchase.deleteMany();
+  await prisma.shotEvent.deleteMany();
+  await prisma.incidentReport.deleteMany();
+  await prisma.matchLineup.deleteMany();
+  await prisma.tacticalLineup.deleteMany();
+  await prisma.tacticalAnalysis.deleteMany();
+  await prisma.teamMatchStats.deleteMany();
+  await prisma.playerMatchStats.deleteMany();
+  await prisma.matchSquad.deleteMany();
+  await prisma.match.deleteMany();
+  await prisma.$executeRaw`ALTER SEQUENCE "Match_id_seq" RESTART WITH 1`;
+
   // ── Matches ───────────────────────────────────────────
   const match1 = await prisma.match.upsert({
     where: { id: 1 },
     update: {},
     create: {
+      id: 1,
       date: new Date("2026-04-05T15:00:00"),
       homeTeamName: "FC Seoul",
       awayTeamName: "Busan IPark",
       homeScore: 3,
       awayScore: 1,
       competitionType: "LEAGUE",
+      venue: "HOME",
       seasonId: season.id,
+      actualAttendance: 29500, capacity: 40000, priceRegular: 20000, priceVip: 80000,
     },
   });
 
@@ -1501,12 +1519,14 @@ async function main() {
     where: { id: 2 },
     update: {},
     create: {
+      id: 2,
       date: new Date("2026-04-19T14:00:00"),
       homeTeamName: "Incheon United",
       awayTeamName: "FC Seoul",
       homeScore: 0,
       awayScore: 2,
       competitionType: "LEAGUE",
+      venue: "AWAY",
       seasonId: season.id,
     },
   });
@@ -1516,13 +1536,16 @@ async function main() {
     where: { id: 3 },
     update: {},
     create: {
+      id: 3,
       date: new Date("2026-05-03T14:00:00"),
       homeTeamName: "FC Seoul",
       awayTeamName: "Suwon Samsung Bluewings",
       homeScore: 1,
       awayScore: 1,
       competitionType: "LEAGUE",
+      venue: "HOME",
       seasonId: season.id,
+      actualAttendance: 22000, capacity: 40000, priceRegular: 20000, priceVip: 80000,
     },
   });
 
@@ -1530,12 +1553,14 @@ async function main() {
     where: { id: 4 },
     update: {},
     create: {
+      id: 4,
       date: new Date("2026-05-17T16:00:00"),
       homeTeamName: "Jeonbuk Hyundai Motors",
       awayTeamName: "FC Seoul",
       homeScore: 2,
       awayScore: 0,
       competitionType: "LEAGUE",
+      venue: "AWAY",
       seasonId: season.id,
     },
   });
@@ -1544,13 +1569,16 @@ async function main() {
     where: { id: 5 },
     update: {},
     create: {
+      id: 5,
       date: new Date("2026-06-07T19:00:00"),
       homeTeamName: "FC Seoul",
       awayTeamName: "Daegu FC",
       homeScore: 2,
       awayScore: 1,
       competitionType: "LEAGUE",
+      venue: "HOME",
       seasonId: season.id,
+      actualAttendance: 18500, capacity: 40000, priceRegular: 20000, priceVip: 80000,
     },
   });
 
@@ -1558,12 +1586,14 @@ async function main() {
     where: { id: 6 },
     update: {},
     create: {
+      id: 6,
       date: new Date("2026-06-21T19:00:00"),
       homeTeamName: "Ulsan HD",
       awayTeamName: "FC Seoul",
       homeScore: 3,
       awayScore: 1,
       competitionType: "LEAGUE",
+      venue: "AWAY",
       seasonId: season.id,
     },
   });
@@ -1572,13 +1602,16 @@ async function main() {
     where: { id: 7 },
     update: {},
     create: {
+      id: 7,
       date: new Date("2026-07-05T19:00:00"),
       homeTeamName: "FC Seoul",
       awayTeamName: "Pohang Steelers",
       homeScore: 0,
       awayScore: 0,
       competitionType: "LEAGUE",
+      venue: "HOME",
       seasonId: season.id,
+      actualAttendance: 17000, capacity: 40000, priceRegular: 20000, priceVip: 80000,
     },
   });
 
@@ -1586,13 +1619,16 @@ async function main() {
     where: { id: 8 },
     update: {},
     create: {
+      id: 8,
       date: new Date("2026-07-12T14:00:00"),
       homeTeamName: "FC Seoul",
       awayTeamName: "Gangwon FC",
       homeScore: 3,
       awayScore: 0,
       competitionType: "DOMESTIC_CUP",
+      venue: "HOME",
       seasonId: season.id,
+      actualAttendance: 15000, capacity: 40000, priceRegular: 15000, priceVip: 60000,
     },
   });
 
@@ -1600,10 +1636,12 @@ async function main() {
     where: { id: 9 },
     update: {},
     create: {
+      id: 9,
       date: new Date("2026-07-26T19:00:00"),
       homeTeamName: "Seongnam FC",
       awayTeamName: "FC Seoul",
       competitionType: "LEAGUE",
+      venue: "AWAY",
       seasonId: season.id,
     },
   });
@@ -1612,11 +1650,14 @@ async function main() {
     where: { id: 10 },
     update: {},
     create: {
+      id: 10,
       date: new Date("2026-08-09T19:00:00"),
       homeTeamName: "FC Seoul",
       awayTeamName: "Gimcheon Sangmu",
       competitionType: "LEAGUE",
+      venue: "HOME",
       seasonId: season.id,
+      capacity: 40000, priceRegular: 20000, priceVip: 80000,
     },
   });
 
@@ -1624,10 +1665,12 @@ async function main() {
     where: { id: 11 },
     update: {},
     create: {
+      id: 11,
       date: new Date("2026-08-23T16:00:00"),
       homeTeamName: "Jeju United",
       awayTeamName: "FC Seoul",
       competitionType: "LEAGUE",
+      venue: "AWAY",
       seasonId: season.id,
     },
   });
@@ -1636,11 +1679,14 @@ async function main() {
     where: { id: 12 },
     update: {},
     create: {
+      id: 12,
       date: new Date("2026-09-06T19:00:00"),
       homeTeamName: "FC Seoul",
       awayTeamName: "Jeonbuk Hyundai Motors",
       competitionType: "LEAGUE",
+      venue: "HOME",
       seasonId: season.id,
+      capacity: 40000, priceRegular: 20000, priceVip: 80000,
     },
   });
 
@@ -1655,7 +1701,6 @@ async function main() {
   });
 
   // PlayerMatchStats — match1
-  await prisma.playerMatchStats.deleteMany();
   await prisma.playerMatchStats.upsert({
     where: { id: 1 },
     update: { passesAttempted: 32, passesCompleted: 26, xA: 0.65, shotsOnTarget: 3 },
@@ -2542,7 +2587,43 @@ async function seedTicketSales2025(adminId: number) {
     create: { name: "2025 시즌", startDate: new Date("2025-03-01"), endDate: new Date("2025-11-30"), status: "CLOSED" },
   });
 
-  const homeMathces = [
+  // 2026 홈경기: 종료된 경기 + 예매 완료 예정 경기
+  const homeMatches2026 = [
+    { matchId: 1,  date: "2026-04-05T15:00:00", priceReg: 20000, priceVip: 80000, att: 29500 },
+    { matchId: 3,  date: "2026-05-03T14:00:00", priceReg: 20000, priceVip: 80000, att: 22000 },
+    { matchId: 5,  date: "2026-06-07T19:00:00", priceReg: 20000, priceVip: 80000, att: 18500 },
+    { matchId: 7,  date: "2026-07-05T19:00:00", priceReg: 20000, priceVip: 80000, att: 17000 },
+    { matchId: 8,  date: "2026-07-12T14:00:00", priceReg: 15000, priceVip: 60000, att: 15000 },
+    { matchId: 10, date: "2026-08-09T19:00:00", priceReg: 20000, priceVip: 80000, att: 24000 },
+    { matchId: 12, date: "2026-09-06T19:00:00", priceReg: 20000, priceVip: 80000, att: 31000 },
+  ];
+
+  for (const m of homeMatches2026) {
+    const genQty = Math.round(m.att * 0.85);
+    const vipQty = m.att - genQty;
+    const saleDate = new Date(m.date);
+
+    const genZone = await prisma.seatZone.create({
+      data: { name: "일반석", capacity: 34000, unitPrice: m.priceReg, matchId: m.matchId },
+    });
+    const vipZone = await prisma.seatZone.create({
+      data: { name: "VIP석", capacity: 6000, unitPrice: m.priceVip, matchId: m.matchId },
+    });
+    await prisma.salesRecord.createMany({
+      data: [
+        { type: "TICKET",     quantity: genQty, unitPrice: m.priceReg, totalAmount: genQty * m.priceReg, currency: "KRW", saleDate, matchId: m.matchId, seatZoneId: genZone.id, status: "COMPLETED", channel: "ONLINE",   createdById: adminId },
+        { type: "VIP_TICKET", quantity: vipQty, unitPrice: m.priceVip, totalAmount: vipQty * m.priceVip, currency: "KRW", saleDate, matchId: m.matchId, seatZoneId: vipZone.id, status: "COMPLETED", channel: "PARTNER",  createdById: adminId },
+      ] as any[],
+    });
+  }
+  const rev2026 = homeMatches2026.reduce((s, m) => {
+    const g = Math.round(m.att * 0.85); const v = m.att - g;
+    return s + g * m.priceReg + v * m.priceVip;
+  }, 0);
+  console.log(`✅ 2026 시즌 홈경기 티켓 시드: ${homeMatches2026.length}경기, ${(rev2026 / 1e8).toFixed(1)}억원`);
+
+  // 2025 홈경기
+  const homeMatches2025 = [
     { id: 13, date: "2025-03-15T15:00:00", away: "Jeonbuk Hyundai Motors", hs: 2, as: 1, att: 28000 },
     { id: 14, date: "2025-04-05T15:00:00", away: "Ulsan HD",                hs: 1, as: 0, att: 22500 },
     { id: 15, date: "2025-05-03T14:00:00", away: "Daegu FC",                hs: 3, as: 0, att: 19500 },
@@ -2553,29 +2634,25 @@ async function seedTicketSales2025(adminId: number) {
     { id: 20, date: "2025-10-25T16:00:00", away: "Seongnam FC",             hs: 1, as: 0, att: 16000 },
   ];
 
-  const match2025Ids = homeMathces.map((m) => m.id);
-  await prisma.salesRecord.deleteMany({ where: { matchId: { in: match2025Ids } } });
-  await prisma.seatZone.deleteMany({ where: { matchId: { in: match2025Ids } } });
-
-  for (const m of homeMathces) {
+  for (const m of homeMatches2025) {
+    const matchData = {
+      date: new Date(m.date),
+      homeTeamName: "FC Seoul",
+      awayTeamName: m.away,
+      homeScore: m.hs,
+      awayScore: m.as,
+      competitionType: "LEAGUE" as const,
+      venue: "HOME" as const,
+      seasonId: season2025.id,
+      actualAttendance: m.att,
+      capacity: 40000,
+      priceRegular: 20000,
+      priceVip: 80000,
+    };
     const match = await prisma.match.upsert({
       where: { id: m.id },
-      update: {},
-      create: {
-        id: m.id,
-        date: new Date(m.date),
-        homeTeamName: "FC Seoul",
-        awayTeamName: m.away,
-        homeScore: m.hs,
-        awayScore: m.as,
-        competitionType: "LEAGUE",
-        venue: "HOME",
-        seasonId: season2025.id,
-        actualAttendance: m.att,
-        capacity: 40000,
-        priceRegular: 20000,
-        priceVip: 80000,
-      },
+      update: matchData,
+      create: { id: m.id, ...matchData },
     });
 
     const genZone = await prisma.seatZone.create({
@@ -2589,41 +2666,19 @@ async function seedTicketSales2025(adminId: number) {
     const vipQty = m.att - genQty;
     const saleDate = new Date(m.date);
 
-    await prisma.salesRecord.create({
-      data: {
-        type: "TICKET",
-        quantity: genQty,
-        unitPrice: 20000,
-        totalAmount: genQty * 20000,
-        currency: "KRW",
-        saleDate,
-        matchId: match.id,
-        seatZoneId: genZone.id,
-        status: "COMPLETED",
-        channel: "ONLINE",
-        createdById: adminId,
-      },
-    });
-    await prisma.salesRecord.create({
-      data: {
-        type: "VIP_TICKET",
-        quantity: vipQty,
-        unitPrice: 80000,
-        totalAmount: vipQty * 80000,
-        currency: "KRW",
-        saleDate,
-        matchId: match.id,
-        seatZoneId: vipZone.id,
-        status: "COMPLETED",
-        channel: "PARTNER",
-        createdById: adminId,
-      },
+    await prisma.salesRecord.createMany({
+      data: [
+        { type: "TICKET",     quantity: genQty, unitPrice: 20000, totalAmount: genQty * 20000, currency: "KRW", saleDate, matchId: match.id, seatZoneId: genZone.id, status: "COMPLETED", channel: "ONLINE",  createdById: adminId },
+        { type: "VIP_TICKET", quantity: vipQty, unitPrice: 80000, totalAmount: vipQty * 80000, currency: "KRW", saleDate, matchId: match.id, seatZoneId: vipZone.id, status: "COMPLETED", channel: "PARTNER", createdById: adminId },
+      ] as any[],
     });
   }
 
-  const totalGenRevenue = homeMathces.reduce((s, m) => s + Math.round(m.att * 0.85) * 20000, 0);
-  const totalVipRevenue = homeMathces.reduce((s, m) => s + (m.att - Math.round(m.att * 0.85)) * 80000, 0);
-  console.log(`✅ 2025 시즌 홈경기 티켓 시드: ${homeMathces.length}경기, 일반석 ${(totalGenRevenue / 1e8).toFixed(1)}억원 + VIP석 ${(totalVipRevenue / 1e8).toFixed(1)}억원`);
+  const totalRev2025 = homeMatches2025.reduce((s, m) => {
+    const g = Math.round(m.att * 0.85); const v = m.att - g;
+    return s + g * 20000 + v * 80000;
+  }, 0);
+  console.log(`✅ 2025 시즌 홈경기 티켓 시드: ${homeMatches2025.length}경기, ${(totalRev2025 / 1e8).toFixed(1)}억원`);
 }
 
 main()
