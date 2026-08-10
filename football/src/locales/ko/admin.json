@@ -353,18 +353,6 @@
     "enableLite": "Lite Mode 활성화",
     "disableLite": "Lite Mode 비활성화"
   },
-  "mealExpense": {
-    "title": "식대 관리",
-    "add": "식대 기록 추가",
-    "type": "구분",
-    "TRAINING": "훈련일",
-    "MATCH": "경기일",
-    "date": "날짜",
-    "amount": "금액",
-    "restaurantName": "식당명",
-    "note": "비고",
-    "confirmDelete": "이 식대 기록을 삭제하시겠습니까?"
-  },
   "staffRecord": {
     "title": "직원 기록",
     "add": "직원 추가",

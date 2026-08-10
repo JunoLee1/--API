@@ -353,18 +353,6 @@
     "enableLite": "Enable Lite Mode",
     "disableLite": "Disable Lite Mode"
   },
-  "mealExpense": {
-    "title": "Meal Expenses",
-    "add": "Add Meal Expense",
-    "type": "Type",
-    "TRAINING": "Training Day",
-    "MATCH": "Match Day",
-    "date": "Date",
-    "amount": "Amount",
-    "restaurantName": "Restaurant",
-    "note": "Note",
-    "confirmDelete": "Delete this meal expense?"
-  },
   "staffRecord": {
     "title": "Staff Records",
     "add": "Add Staff",
