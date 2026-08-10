@@ -33,6 +33,7 @@ import {
   ChevronRight,
   ClipboardList,
   Cpu,
+  ListChecks,
   CreditCard,
   FileClock,
   FileText,
@@ -92,6 +93,7 @@ interface NavItem {
   roles?: Role[]
   coachingRoles?: CoachingRole[]
   frontOfficeRoles?: FrontOfficeRole[]
+  anyDeptCategory?: boolean
   description?: string
   liteBlocked?: boolean
   teamCtx?: TeamCtx
@@ -354,6 +356,14 @@ const NAV_ITEMS: NavItem[] = [
     section: 'nav.section.management',
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
     frontOfficeRoles: ['TD', 'HR_MANAGER', 'HR_STAFF', 'FINANCE_MANAGER', 'FINANCE_STAFF', 'ASSET_MANAGER', 'ASSET_STAFF', 'SCOUT'],
+    anyDeptCategory: true,
+  },
+  {
+    to: '/admin/review-rule-sets',
+    label: '보고서 결재 룰셋',
+    icon: ListChecks,
+    section: 'nav.section.management',
+    roles: ['ADMIN'],
   },
 
   // 관리 > 인사
@@ -368,14 +378,6 @@ const NAV_ITEMS: NavItem[] = [
   {
     to: '/admin/department-review-configs',
     label: 'nav.item.departmentReviewConfigs',
-    icon: ClipboardList,
-    section: 'nav.section.management',
-    subSection: 'nav.subsection.hr',
-    roles: ['ADMIN'],
-  },
-  {
-    to: '/admin/review-rule-sets',
-    label: '보고서 검토 룰셋',
     icon: ClipboardList,
     section: 'nav.section.management',
     subSection: 'nav.subsection.hr',
@@ -683,7 +685,9 @@ export function AppShell() {
       return user.coachingRole !== null && item.coachingRoles.includes(user.coachingRole)
     }
     if (item.frontOfficeRoles && user.role === 'FRONT_OFFICE') {
-      return user.frontOfficeRole !== null && item.frontOfficeRoles.includes(user.frontOfficeRole)
+      const roleMatch = user.frontOfficeRole !== null && item.frontOfficeRoles.includes(user.frontOfficeRole)
+      const deptMatch = item.anyDeptCategory === true && (user.departmentCategories?.length ?? 0) > 0
+      return roleMatch || deptMatch
     }
     return true
   })
