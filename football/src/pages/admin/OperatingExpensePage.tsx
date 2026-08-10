@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { operatingExpenseApi } from '@/services/operating-expense.service'
 import { seasonApi } from '@/services/season.service'
 import type { OperatingExpense, OperatingCategory } from '@/types/budget'
-import { OPERATING_CATEGORY_LABEL } from '@/types/budget'
+import { OPERATING_CATEGORY_LABEL, ALL_OPERATING_CATEGORIES } from '@/types/budget'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,7 +17,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 
-const DISCRETIONARY_CATEGORIES: OperatingCategory[] = ['TRAVEL', 'EQUIPMENT', 'SCOUTING', 'YOUTH']
+const FORM_CATEGORIES = ALL_OPERATING_CATEGORIES.filter((c) => c !== 'MEDICAL')
 
 function fmt(n: number) {
   return n.toLocaleString('ko-KR') + '원'
@@ -150,7 +150,7 @@ export function OperatingExpensePage() {
                 value={form.category}
                 onChange={(e) => setForm((p) => ({ ...p, category: e.target.value as OperatingCategory }))}
               >
-                {DISCRETIONARY_CATEGORIES.map((c) => (
+                {FORM_CATEGORIES.map((c) => (
                   <option key={c} value={c}>{OPERATING_CATEGORY_LABEL[c]}</option>
                 ))}
               </select>

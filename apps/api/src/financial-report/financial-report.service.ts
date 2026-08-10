@@ -192,7 +192,7 @@ export class FinancialReportService {
       sponsorshipAgg, academyFeeAgg,
       payrollAgg,
       operatingGroups,
-      medicalAgg, mealAgg,
+      medicalAgg,
       playerContracts,
     ] = await Promise.all([
       // 티켓 수입 (TICKET + VIP_TICKET)
@@ -235,11 +235,6 @@ export class FinancialReportService {
       prisma.medicalExpense.aggregate({
         where: { status: "APPROVED", receiptDate: { gte: startDate, lte: endDate } },
         _sum: { totalAmount: true },
-      }),
-      // 식비
-      prisma.mealExpense.aggregate({
-        where: { date: { gte: startDate, lte: endDate } },
-        _sum: { amount: true },
       }),
       // 선수 계약 — 시즌 기간 겹치는 ACTIVE 계약
       prisma.contract.findMany({
@@ -288,14 +283,12 @@ export class FinancialReportService {
       operating: totalOperating,
       operatingByCategory,
       medical: medicalAgg._sum.totalAmount ?? 0,
-      meals: mealAgg._sum.amount ?? 0,
     };
     const totalExpenseActual =
       expenseActual.playerSalary +
       expenseActual.staffPayroll +
       expenseActual.operating +
-      expenseActual.medical +
-      expenseActual.meals;
+      expenseActual.medical;
 
     const grossProfit = totalRevenueActual - totalExpenseActual;
     const profitMargin = totalRevenueActual === 0 ? 0 : Math.round((grossProfit / totalRevenueActual) * 1000) / 10;

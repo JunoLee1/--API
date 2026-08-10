@@ -33,7 +33,29 @@
     "totalFee": "Total Fee (KRW) *",
     "contractStart": "Contract Start *",
     "contractEnd": "Contract End *",
-    "paymentSchedule": "Payment Schedule *"
+    "paymentSchedule": "Payment Schedule *",
+    "bankSection.domestic": "Domestic Account",
+    "bankSection.uk": "UK Account",
+    "bank.bankName": "Bank Name",
+    "bank.accountNumber": "Account Number",
+    "bank.accountHolder": "Account Holder",
+    "bank.sortCode": "Sort Code",
+    "bank.swiftBic": "SWIFT / BIC"
   },
-  "filterAll": "All"
+  "filterAll": "All",
+  "bank": {
+    "sectionTitle": "Bank Accounts",
+    "domestic": "Domestic",
+    "uk": "UK",
+    "bankName": "Bank Name",
+    "accountNumber": "Account Number",
+    "accountHolder": "Account Holder",
+    "sortCode": "Sort Code",
+    "swiftBic": "SWIFT / BIC",
+    "editButton": "Edit",
+    "editTitle": "Edit Bank Accounts",
+    "noInfo": "No bank accounts registered.",
+    "saved": "Bank accounts saved.",
+    "saveFailed": "Failed to save."
+  }
 }
