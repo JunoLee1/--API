@@ -62,6 +62,13 @@ export class SponsorshipRepository {
         paymentSchedule: data.paymentSchedule,
         createdById: data.createdById,
         ...(data.attachedContractId && { attachedContractId: data.attachedContractId }),
+        ...(data.domesticBankName && { domesticBankName: data.domesticBankName }),
+        ...(data.domesticAccountNumber && { domesticAccountNumber: data.domesticAccountNumber }),
+        ...(data.domesticAccountHolder && { domesticAccountHolder: data.domesticAccountHolder }),
+        ...(data.ukBankName && { ukBankName: data.ukBankName }),
+        ...(data.ukSortCode && { ukSortCode: data.ukSortCode }),
+        ...(data.ukAccountNumber && { ukAccountNumber: data.ukAccountNumber }),
+        ...(data.ukSwiftBic && { ukSwiftBic: data.ukSwiftBic }),
       },
     });
   }
