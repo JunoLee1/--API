@@ -5,11 +5,6 @@ import { requireUser } from "../lib/authMiddleware";
 import { TransferService } from "./transfer.service";
 import { RecallStatus } from "../generated/enums";
 
-function requireUser(req: Request) {
-  if (!req.user) throw new AppError(401, "UNAUTHORIZED");
-  return req.user;
-}
-
 export class TransferController {
   constructor(private service: TransferService) {}
 

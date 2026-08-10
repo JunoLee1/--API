@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { isAdminLike } from "../lib/permissions";
-import { requireUser } from "../lib/authMiddleware";
 import { PlayerService } from "./player.service";
 import { PlayerListQuery } from "./dto/player.dto";
 import { PlayerStatus, Position, PlayerLevel, TeamType } from "../generated/enums";
