@@ -791,6 +791,7 @@ model User {
   createdPlans               DepartmentAnnualPlan[]    @relation("PlanCreatedBy")
   reviewedPlans              DepartmentAnnualPlan[]    @relation("PlanReviewedBy")
   confirmedPlanReviews       PlanReview[]              @relation("PlanReviewConfirmer")
+  confirmedReportReviews     ReportReview[]            @relation("ReportReviewConfirmer")
 }
 
 model Season {
@@ -1531,6 +1532,7 @@ enum ReportType {
 enum ReportStatus {
   DRAFT
   SUBMITTED
+  REVIEWING
   FIRST_APPROVED
   SECOND_APPROVED
   APPROVED
@@ -1561,10 +1563,11 @@ model Report {
   secondReviewer   User?     @relation("ReportSecondReviewer", fields: [secondReviewerId], references: [id])
   secondReviewedAt DateTime?
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
   submittedAt DateTime?
   reviewedAt  DateTime?
+  reviews     ReportReview[]
 }
 
 enum ExpenseCostCategory {
@@ -2286,6 +2289,7 @@ model Department {
   subjectConfigs   DepartmentReviewerConfig[] @relation("SubjectDept")
   reviewerConfigs  DepartmentReviewerConfig[] @relation("ReviewerDept")
   planReviews      PlanReview[]               @relation("PlanReviewerDept")
+  reportReviews    ReportReview[]             @relation("ReportReviewerDept")
   reports          Report[]
 }
 
@@ -3045,6 +3049,7 @@ model DepartmentKpiItem {
 enum ReviewStatus {
   PENDING
   CONFIRMED
+  REJECTED
 }
 
 model DepartmentReviewerConfig {
@@ -3074,4 +3079,30 @@ model PlanReview {
   confirmedBy    User?                @relation("PlanReviewConfirmer", fields: [confirmedById], references: [id])
 
   @@unique([planId, reviewerDeptId])
+}
+
+model ReportReview {
+  id             Int          @id @default(autoincrement())
+  reportId       Int
+  reviewerDeptId Int
+  status         ReviewStatus @default(PENDING)
+  comment        String?
+  confirmedById  Int?
+  confirmedAt    DateTime?
+  createdAt      DateTime     @default(now())
+
+  report       Report     @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  reviewerDept Department @relation("ReportReviewerDept", fields: [reviewerDeptId], references: [id])
+  confirmedBy  User?      @relation("ReportReviewConfirmer", fields: [confirmedById], references: [id])
+
+  @@unique([reportId, reviewerDeptId])
+}
+
+model ReviewRuleSet {
+  id               Int                @id @default(autoincrement())
+  reportType       ReportType
+  reviewerCategory DepartmentCategory
+  createdAt        DateTime           @default(now())
+
+  @@unique([reportType, reviewerCategory])
 }

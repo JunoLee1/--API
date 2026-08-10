@@ -31,21 +31,8 @@ export class ReportController {
       const filters: { type?: string; status?: string } = {};
       if (type !== undefined) filters.type = type;
       if (status !== undefined) filters.status = status;
-      const { role, frontOfficeRole, id: userId } = requireUser(req);
-      res.json(
-        await this.service.list(
-          userId,
-          isGM(req),
-          isHeadCoach(req),
-          filters,
-          role === "FRONT_OFFICE" && frontOfficeRole === "HR_MANAGER",
-          role === "FRONT_OFFICE" && frontOfficeRole === "FINANCE_MANAGER",
-          isAssetManager(req),
-          role === "FRONT_OFFICE" && frontOfficeRole === "HR_STAFF",
-          isAssetStaff(req),
-          role === "FRONT_OFFICE" && frontOfficeRole === "FINANCE_STAFF",
-        ),
-      );
+      const { id: userId, departmentCategories = [] } = requireUser(req);
+      res.json(await this.service.list(userId, isGM(req), isHeadCoach(req), filters, departmentCategories));
     } catch (err) {
       next(err);
     }
@@ -54,15 +41,16 @@ export class ReportController {
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const report = await this.service.get(Number(req.params["id"]));
-      const { role, frontOfficeRole: foRole, id: userId } = requireUser(req);
+      const { role, frontOfficeRole: foRole, id: userId, departmentCategories = [] } = requireUser(req);
       const canView =
         isGM(req) ||
         isHeadCoach(req) ||
         report.authorId === userId ||
-        (canReadHR(role, foRole) && report.type === "HR") ||
-        (canReadFinance(role, foRole) && report.type === "FINANCIAL") ||
+        (canReadHR(role, foRole, departmentCategories) && report.type === "HR") ||
+        (canReadFinance(role, foRole, departmentCategories) && report.type === "FINANCIAL") ||
         (isAssetManager(req) && report.type === "ASSET") ||
-        (isAssetStaff(req) && report.type === "ASSET");
+        (isAssetStaff(req) && report.type === "ASSET") ||
+        report.reviews.some((r) => r.reviewerDept && departmentCategories.includes(r.reviewerDept.category ?? ""));
       if (!canView) throw new AppError(403, "FORBIDDEN");
       res.json(report);
     } catch (err) {
@@ -72,18 +60,12 @@ export class ReportController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole: foRole, id: userId } = requireUser(req);
+      const { role, frontOfficeRole: foRole, id: userId, departmentCategories = [] } = requireUser(req);
       if (!(AUTHOR_ROLES as readonly string[]).includes(role)) throw new AppError(403, "FORBIDDEN");
-      const { type, title, content } = req.body;
-      if (type === "HR" && !canReadHR(role, foRole)) {
-        throw new AppError(403, "FORBIDDEN");
-      }
-      if (type === "FINANCIAL" && !canReadFinance(role, foRole)) {
-        throw new AppError(403, "FORBIDDEN");
-      }
-      if (type === "ASSET" && !(isAdminLike(role) || foRole === "ASSET_MANAGER" || foRole === "ASSET_STAFF")) {
-        throw new AppError(403, "FORBIDDEN");
-      }
+      const { type, title, content, departmentId } = req.body;
+      if (type === "HR" && !canReadHR(role, foRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
+      if (type === "FINANCIAL" && !canReadFinance(role, foRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
+      if (type === "ASSET" && !(isAdminLike(role) || foRole === "ASSET_MANAGER" || foRole === "ASSET_STAFF")) throw new AppError(403, "FORBIDDEN");
       const file = req.file;
       res.status(201).json(
         await this.service.create({
@@ -91,6 +73,7 @@ export class ReportController {
           type,
           title,
           content,
+          ...(departmentId && { departmentId: Number(departmentId) }),
           ...(file && { fileUrl: `/uploads/reports/${file.filename}`, fileName: file.originalname }),
         }),
       );
@@ -123,69 +106,51 @@ export class ReportController {
     }
   };
 
-  approve = async (req: Request, res: Response, next: NextFunction) => {
+  confirmReview = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const report = await this.service.get(Number(req.params["id"]));
-      const { role: userRole, frontOfficeRole: userFoRole, id: userId } = requireUser(req);
-
-      const canApprove = (() => {
-        switch (report.type) {
-          case "HR":
-            if (report.status === "SUBMITTED") return userRole === "FRONT_OFFICE" && userFoRole === "HR_MANAGER";
-            if (report.status === "FIRST_APPROVED") return isAssetManager(req);
-            if (report.status === "SECOND_APPROVED") return isGM(req);
-            return false;
-          case "ASSET":
-            if (report.status === "SUBMITTED") return isAssetManager(req);
-            if (report.status === "FIRST_APPROVED") return isGM(req);
-            return false;
-          case "FINANCIAL":
-            if (report.status === "SUBMITTED") return userRole === "FRONT_OFFICE" && userFoRole === "FINANCE_MANAGER";
-            if (report.status === "FIRST_APPROVED") return isGM(req);
-            return false;
-          case "TRAINING":
-            return isHeadCoach(req) && report.status === "SUBMITTED";
-          default:
-            return isGM(req) && report.status === "SUBMITTED";
-        }
-      })();
-
-      if (!canApprove) throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.approve(Number(req.params["id"]), userId));
+      const { id: userId } = requireUser(req);
+      const reportId = Number(req.params["id"]);
+      const reviewerDeptId = Number(req.params["deptId"]);
+      const { comment } = req.body;
+      res.json(await this.service.confirmReview(reportId, reviewerDeptId, userId, comment));
     } catch (err) {
       next(err);
     }
   };
 
-  reject = async (req: Request, res: Response, next: NextFunction) => {
+  rejectReview = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const report = await this.service.get(Number(req.params["id"]));
-      const { role: userRole, frontOfficeRole: userFoRole, id: userId } = requireUser(req);
+      const { id: userId } = requireUser(req);
+      const reportId = Number(req.params["id"]);
+      const reviewerDeptId = Number(req.params["deptId"]);
+      const { reason } = req.body;
+      res.json(await this.service.rejectReview(reportId, reviewerDeptId, userId, reason));
+    } catch (err) {
+      next(err);
+    }
+  };
 
-      const canReject = (() => {
-        switch (report.type) {
-          case "HR":
-            if (report.status === "SUBMITTED") return userRole === "FRONT_OFFICE" && userFoRole === "HR_MANAGER";
-            if (report.status === "FIRST_APPROVED") return isAssetManager(req);
-            if (report.status === "SECOND_APPROVED") return isGM(req);
-            return false;
-          case "ASSET":
-            if (report.status === "SUBMITTED") return isAssetManager(req);
-            if (report.status === "FIRST_APPROVED") return isGM(req);
-            return false;
-          case "FINANCIAL":
-            if (report.status === "SUBMITTED") return userRole === "FRONT_OFFICE" && userFoRole === "FINANCE_MANAGER";
-            if (report.status === "FIRST_APPROVED") return isGM(req);
-            return false;
-          case "TRAINING":
-            return isHeadCoach(req) && report.status === "SUBMITTED";
-          default:
-            return isGM(req) && report.status === "SUBMITTED";
-        }
-      })();
+  listRuleSets = async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.json(await this.service.listRuleSets());
+    } catch (err) {
+      next(err);
+    }
+  };
 
-      if (!canReject) throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.reject(Number(req.params["id"]), userId, req.body.reason));
+  createRuleSet = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { reportType, reviewerCategory } = req.body;
+      res.status(201).json(await this.service.createRuleSet(reportType, reviewerCategory));
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  deleteRuleSet = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await this.service.deleteRuleSet(Number(req.params["ruleId"]));
+      res.status(204).end();
     } catch (err) {
       next(err);
     }
