@@ -19,7 +19,8 @@ export class AuthService {
     const valid = await comparePassword(password, user.password);
     if (!valid) throw new AppError(401, "INVALID_CREDENTIALS");
 
-    const tokens = generateTokens({ id: user.id, role: user.role, coachingRole: user.coachingRole, frontOfficeRole: user.frontOfficeRole, teamId: user.teamId, clubId: user.clubId, isDemo: user.isDemo });
+    const departmentCategories = await this.repo.getDepartmentCategories(user.id);
+    const tokens = generateTokens({ id: user.id, role: user.role, coachingRole: user.coachingRole, frontOfficeRole: user.frontOfficeRole, departmentCategories, teamId: user.teamId, clubId: user.clubId, isDemo: user.isDemo });
     return { ...tokens, userId: user.id };
   }
 
