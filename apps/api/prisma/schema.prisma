@@ -2626,6 +2626,16 @@ model Sponsorship {
   mediaValue    Decimal? @db.Decimal(15, 2)
   fanReach      Int?
 
+  // 국내 계좌
+  domesticBankName      String?
+  domesticAccountNumber String?
+  domesticAccountHolder String?
+  // 영국 계좌
+  ukBankName            String?
+  ukSortCode            String?
+  ukAccountNumber       String?
+  ukSwiftBic            String?
+
   attachedContract PartnerContract?     @relation(fields: [attachedContractId], references: [id])
   createdBy        User                 @relation("SponsorshipCreator", fields: [createdById], references: [id])
   payments         SponsorshipPayment[]
