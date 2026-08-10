@@ -1,5 +1,5 @@
 import { api } from './api'
-import type { BudgetPlan, UpsertBudgetPlanPayload, OptimizeResult } from '@/types/budget'
+import type { BudgetPlan, UpsertBudgetPlanPayload, OptimizeResult, AutoGenerateResult } from '@/types/budget'
 
 export interface RevenueBreakdown {
   revenueTicket: number
@@ -99,4 +99,7 @@ export const budgetPlanApi = {
 
   addOverride: (seasonId: number, payload: { category: string; amount: number; reason: string }) =>
     api.post(`/financial-reports/${seasonId}/budget/override`, payload),
+
+  autoGenerate: (seasonId: number, payload: { growthRate: number; contingencyRate?: number }) =>
+    api.post<AutoGenerateResult>(`/financial-reports/${seasonId}/budget/auto-generate`, payload),
 }
