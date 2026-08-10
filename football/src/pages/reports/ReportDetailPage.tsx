@@ -1,18 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { reportApi } from '@/services/report.service'
-import type { Report } from '@/types/report'
-import {
-  REPORT_TYPE_STYLE,
-  REPORT_STATUS_STYLE,
-} from '@/types/report'
+import type { Report, ReportReview } from '@/types/report'
+import { REPORT_TYPE_STYLE, REPORT_STATUS_STYLE, REVIEW_STATUS_STYLE, REVIEW_STATUS_LABEL } from '@/types/report'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
 import {
   Dialog,
   DialogContent,
@@ -20,7 +18,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { ArrowLeft, Download, Check, X } from 'lucide-react'
+import { ArrowLeft, Download, Check, X, Clock } from 'lucide-react'
 
 function formatDateTime(d: string) {
   return new Date(d).toLocaleString('ko-KR', {
@@ -29,13 +27,22 @@ function formatDateTime(d: string) {
   })
 }
 
-function RejectDialog({ open, onOpenChange, onConfirm }: { open: boolean; onOpenChange: (v: boolean) => void; onConfirm: (reason: string) => Promise<void> }) {
-  const { t } = useTranslation('report')
+function RejectDialog({
+  open,
+  onOpenChange,
+  onConfirm,
+  title = '반려 사유',
+}: {
+  open: boolean
+  onOpenChange: (v: boolean) => void
+  onConfirm: (reason: string) => Promise<void>
+  title?: string
+}) {
   const [reason, setReason] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleConfirm = async () => {
-    if (!reason.trim()) { toast.error(t('detail.rejectDialog.reasonRequired')); return }
+    if (!reason.trim()) { toast.error('사유를 입력해주세요'); return }
     setLoading(true)
     try { await onConfirm(reason.trim()) } finally { setLoading(false) }
   }
@@ -43,20 +50,20 @@ function RejectDialog({ open, onOpenChange, onConfirm }: { open: boolean; onOpen
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>{t('detail.rejectDialog.title')}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{title}</DialogTitle></DialogHeader>
         <div className="space-y-1.5 py-2">
-          <Label>{t('detail.rejectDialog.reasonLabel')} *</Label>
+          <Label>사유 *</Label>
           <Textarea
-            placeholder={t('detail.rejectDialog.reasonPlaceholder')}
+            placeholder="반려 사유를 입력하세요"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             rows={4}
           />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>{t('detail.rejectDialog.cancel')}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>취소</Button>
           <Button variant="destructive" onClick={handleConfirm} disabled={loading}>
-            {loading ? t('detail.rejectDialog.processing') : t('detail.rejectDialog.confirm')}
+            {loading ? '처리 중...' : '반려 확정'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -64,90 +71,137 @@ function RejectDialog({ open, onOpenChange, onConfirm }: { open: boolean; onOpen
   )
 }
 
+function ReviewStatusIcon({ status }: { status: ReportReview['status'] }) {
+  if (status === 'CONFIRMED') return <Check className="h-3.5 w-3.5 text-green-600" />
+  if (status === 'REJECTED') return <X className="h-3.5 w-3.5 text-red-600" />
+  return <Clock className="h-3.5 w-3.5 text-yellow-600" />
+}
+
+function ReviewSection({
+  reviews,
+  myDeptIds,
+  acting,
+  onConfirm,
+  onReject,
+}: {
+  reviews: ReportReview[]
+  myDeptIds: number[]
+  acting: boolean
+  onConfirm: (deptId: number) => void
+  onReject: (deptId: number) => void
+}) {
+  if (reviews.length === 0) return null
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">부서 검토 현황</p>
+      <div className="rounded border divide-y">
+        {reviews.map((review) => {
+          const canAct = myDeptIds.includes(review.reviewerDeptId) && review.status === 'PENDING'
+          return (
+            <div key={review.id} className="flex items-center gap-3 px-3 py-2.5">
+              <ReviewStatusIcon status={review.status} />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">{review.reviewerDept.name}</p>
+                {review.comment && (
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{review.comment}</p>
+                )}
+                {review.confirmedBy && review.confirmedAt && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {review.confirmedBy.nickname} · {formatDateTime(review.confirmedAt)}
+                  </p>
+                )}
+              </div>
+              <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${REVIEW_STATUS_STYLE[review.status]}`}>
+                {REVIEW_STATUS_LABEL[review.status]}
+              </span>
+              {canAct && (
+                <div className="flex gap-1.5 ml-1">
+                  <Button size="sm" variant="outline" className="h-7 text-xs text-red-600 border-red-300 hover:bg-red-50" disabled={acting} onClick={() => onReject(review.reviewerDeptId)}>
+                    <X className="h-3 w-3 mr-0.5" />반려
+                  </Button>
+                  <Button size="sm" className="h-7 text-xs" disabled={acting} onClick={() => onConfirm(review.reviewerDeptId)}>
+                    <Check className="h-3 w-3 mr-0.5" />승인
+                  </Button>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 export function ReportDetailPage() {
-  const { t } = useTranslation('report')
   const { id } = useParams<{ id: string }>()
   const { user } = useCurrentUser()
   const navigate = useNavigate()
   const [report, setReport] = useState<Report | null>(null)
   const [loading, setLoading] = useState(true)
   const [rejectOpen, setRejectOpen] = useState(false)
+  const [rejectingDeptId, setRejectingDeptId] = useState<number | null>(null)
   const [acting, setActing] = useState(false)
 
-  const isGM = user?.role === 'GM'
-  const isHrManager = user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'HR_MANAGER'
-  const isAssetManager = user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'ASSET_MANAGER'
-  const isFinanceManager = user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'FINANCE_MANAGER'
-  const isHeadCoach = user?.role === 'COACHING_STAFF' && user?.coachingRole === 'HEAD_COACH'
-
-  const canApprove = (() => {
-    if (!report) return false
-    switch (report.type) {
-      case 'HR':
-        if (report.status === 'SUBMITTED') return isHrManager
-        if (report.status === 'FIRST_APPROVED') return isAssetManager
-        if (report.status === 'SECOND_APPROVED') return isGM
-        return false
-      case 'ASSET':
-        if (report.status === 'SUBMITTED') return isAssetManager
-        if (report.status === 'FIRST_APPROVED') return isGM
-        return false
-      case 'FINANCIAL':
-        if (report.status === 'SUBMITTED') return isFinanceManager
-        if (report.status === 'FIRST_APPROVED') return isGM
-        return false
-      case 'TRAINING':
-        return isHeadCoach && report.status === 'SUBMITTED'
-      default:
-        return isGM && report.status === 'SUBMITTED'
-    }
-  })()
   const isAuthor = report?.authorId === user?.id
   const canSubmit = isAuthor && (report?.status === 'DRAFT' || report?.status === 'REJECTED')
+
+  // Departments where this user is head (for review actions)
+  const myDeptIds: number[] = []
+  if (report?.reviews && user) {
+    // Backend already guards this; we just show action buttons for depts whose headId === user.id
+    // We derive this from departmentCategories in JWT — but for simplicity we let the backend guard
+    // and show action buttons for all PENDING reviews if user has matching dept category
+    const userCategories = user.departmentCategories ?? []
+    for (const review of report.reviews) {
+      if (review.status === 'PENDING' && userCategories.includes(review.reviewerDept.category ?? '')) {
+        myDeptIds.push(review.reviewerDeptId)
+      }
+    }
+  }
 
   useEffect(() => {
     if (!id) return
     reportApi
       .get(Number(id))
       .then(setReport)
-      .catch(() => { toast.error(t('detail.loadFailed')); navigate('/reports') })
+      .catch(() => { toast.error('보고서를 불러오지 못했습니다'); navigate('/reports') })
       .finally(() => setLoading(false))
-  }, [id, navigate, t])
+  }, [id, navigate])
 
   const handleSubmit = async () => {
     if (!report) return
     setActing(true)
     try {
-      const updated = await reportApi.submit(report.id)
-      setReport(updated)
-      toast.success(t('detail.submitSuccess'))
+      setReport(await reportApi.submit(report.id))
+      toast.success('보고서가 제출됐습니다')
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : t('detail.submitFailed'))
-    } finally {
-      setActing(false)
-    }
+      toast.error(err instanceof Error ? err.message : '제출에 실패했습니다')
+    } finally { setActing(false) }
   }
 
-  const handleApprove = async () => {
+  const handleConfirmReview = async (deptId: number) => {
     if (!report) return
     setActing(true)
     try {
-      const updated = await reportApi.approve(report.id)
-      setReport(updated)
-      toast.success(t('detail.approveSuccess'))
+      setReport(await reportApi.confirmReview(report.id, deptId))
+      toast.success('승인됐습니다')
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : t('detail.approveFailed'))
-    } finally {
-      setActing(false)
-    }
+      toast.error(err instanceof Error ? err.message : '승인에 실패했습니다')
+    } finally { setActing(false) }
   }
 
-  const handleReject = async (reason: string) => {
-    if (!report) return
-    const updated = await reportApi.reject(report.id, reason)
-    setReport(updated)
+  const handleRejectReview = async (reason: string) => {
+    if (!report || rejectingDeptId === null) return
+    setReport(await reportApi.rejectReview(report.id, rejectingDeptId, reason))
     setRejectOpen(false)
-    toast.success(t('detail.rejectSuccess'))
+    setRejectingDeptId(null)
+    toast.success('반려됐습니다')
+  }
+
+  const openRejectDialog = (deptId: number) => {
+    setRejectingDeptId(deptId)
+    setRejectOpen(true)
   }
 
   if (loading) {
@@ -170,26 +224,21 @@ export function ReportDetailPage() {
           <h1 className="text-lg font-semibold tracking-tight">{report.title}</h1>
           <div className="flex items-center gap-2 mt-0.5">
             <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${REPORT_TYPE_STYLE[report.type]}`}>
-              {t(`type.${report.type}`)}
+              {report.type}
             </span>
             <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${REPORT_STATUS_STYLE[report.status]}`}>
-              {t(`status.${report.status}`)}
+              {report.status === 'REVIEWING'
+                ? `검토 중 (${report.reviews.filter((r) => r.status === 'CONFIRMED').length}/${report.reviews.length})`
+                : report.status}
             </span>
+            {report.department && (
+              <Badge variant="outline" className="text-xs">{report.department.name}</Badge>
+            )}
           </div>
         </div>
         <div className="flex gap-2">
           {canSubmit && (
-            <Button size="sm" onClick={handleSubmit} disabled={acting}>{t('detail.submitButton')}</Button>
-          )}
-          {canApprove && (
-            <>
-              <Button size="sm" variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={() => setRejectOpen(true)} disabled={acting}>
-                <X className="h-3.5 w-3.5 mr-1" />{t('detail.rejectButton')}
-              </Button>
-              <Button size="sm" onClick={handleApprove} disabled={acting}>
-                <Check className="h-3.5 w-3.5 mr-1" />{t('detail.approveButton')}
-              </Button>
-            </>
+            <Button size="sm" onClick={handleSubmit} disabled={acting}>제출</Button>
           )}
         </div>
       </div>
@@ -198,48 +247,51 @@ export function ReportDetailPage() {
         <div className="max-w-2xl space-y-6">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-muted-foreground text-xs mb-0.5">{t('detail.authorLabel')}</p>
+              <p className="text-muted-foreground text-xs mb-0.5">작성자</p>
               <p className="font-medium">{report.author.nickname}</p>
             </div>
             <div>
-              <p className="text-muted-foreground text-xs mb-0.5">{t('detail.createdAtLabel')}</p>
+              <p className="text-muted-foreground text-xs mb-0.5">작성일</p>
               <p>{formatDateTime(report.createdAt)}</p>
             </div>
             {report.submittedAt && (
               <div>
-                <p className="text-muted-foreground text-xs mb-0.5">{t('detail.submittedAtLabel')}</p>
+                <p className="text-muted-foreground text-xs mb-0.5">제출일</p>
                 <p>{formatDateTime(report.submittedAt)}</p>
               </div>
             )}
-            {report.firstReviewedAt && report.firstReviewer && (
+            {report.reviewedAt && (
               <div>
-                <p className="text-muted-foreground text-xs mb-0.5">{t('detail.firstApprovedAtLabel')}</p>
-                <p>{formatDateTime(report.firstReviewedAt)} ({report.firstReviewer.nickname})</p>
-              </div>
-            )}
-            {report.secondReviewedAt && report.secondReviewer && (
-              <div>
-                <p className="text-muted-foreground text-xs mb-0.5">{t('detail.secondApprovedAtLabel')}</p>
-                <p>{formatDateTime(report.secondReviewedAt)} ({report.secondReviewer.nickname})</p>
-              </div>
-            )}
-            {report.reviewedAt && report.reviewer && (
-              <div>
-                <p className="text-muted-foreground text-xs mb-0.5">{t('page.col.approvedAt')}</p>
-                <p>{formatDateTime(report.reviewedAt)} ({report.reviewer.nickname})</p>
+                <p className="text-muted-foreground text-xs mb-0.5">최종 처리일</p>
+                <p>{formatDateTime(report.reviewedAt)}</p>
               </div>
             )}
           </div>
 
           {report.rejectionReason && (
             <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              <p className="font-medium mb-0.5">{t('detail.rejectionReasonLabel')}</p>
+              <p className="font-medium mb-0.5">반려 사유</p>
               <p className="whitespace-pre-wrap">{report.rejectionReason}</p>
             </div>
           )}
 
+          {report.reviews.length > 0 && (
+            <>
+              <Separator />
+              <ReviewSection
+                reviews={report.reviews}
+                myDeptIds={myDeptIds}
+                acting={acting}
+                onConfirm={handleConfirmReview}
+                onReject={openRejectDialog}
+              />
+            </>
+          )}
+
+          <Separator />
+
           <div>
-            <p className="text-muted-foreground text-xs mb-1.5">{t('detail.contentLabel')}</p>
+            <p className="text-muted-foreground text-xs mb-1.5">본문</p>
             <div className="rounded border p-4 text-sm whitespace-pre-wrap leading-relaxed min-h-32">
               {report.content}
             </div>
@@ -247,21 +299,25 @@ export function ReportDetailPage() {
 
           {report.fileUrl && (
             <div>
-              <p className="text-muted-foreground text-xs mb-1.5">{t('detail.attachLabel')}</p>
+              <p className="text-muted-foreground text-xs mb-1.5">첨부파일</p>
               <a
                 href={report.fileUrl}
                 download={report.fileName ?? true}
                 className="inline-flex items-center gap-2 rounded border px-3 py-2 text-sm hover:bg-muted transition-colors"
               >
                 <Download className="h-4 w-4" />
-                {report.fileName ?? t('detail.defaultAttachName')}
+                {report.fileName ?? '파일 다운로드'}
               </a>
             </div>
           )}
         </div>
       </div>
 
-      <RejectDialog open={rejectOpen} onOpenChange={setRejectOpen} onConfirm={handleReject} />
+      <RejectDialog
+        open={rejectOpen}
+        onOpenChange={(v) => { setRejectOpen(v); if (!v) setRejectingDeptId(null) }}
+        onConfirm={handleRejectReview}
+      />
     </div>
   )
 }

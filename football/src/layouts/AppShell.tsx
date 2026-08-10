@@ -374,6 +374,14 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN'],
   },
   {
+    to: '/admin/review-rule-sets',
+    label: '보고서 검토 룰셋',
+    icon: ClipboardList,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.hr',
+    roles: ['ADMIN'],
+  },
+  {
     to: '/admin/staff-records',
     label: 'nav.item.staffRecords',
     icon: Users2,

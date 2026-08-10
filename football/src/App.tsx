@@ -77,6 +77,7 @@ import { DepartmentPlanFormPage } from '@/pages/finance/DepartmentPlanFormPage'
 import { DepartmentPlanDetailPage } from '@/pages/finance/DepartmentPlanDetailPage'
 import { DepartmentBudgetSummaryPage } from '@/pages/finance/DepartmentBudgetSummaryPage'
 import { DepartmentReviewConfigPage } from '@/pages/admin/DepartmentReviewConfigPage'
+import { ReviewRuleSetPage } from '@/pages/admin/ReviewRuleSetPage'
 
 function GrowthReportRedirect() {
   const { playerId } = useParams<{ playerId: string }>()
@@ -192,6 +193,7 @@ function App() {
             <Route path="/admin/leagues" element={<LeaguePage />} />
             <Route path="/finance/ticket-sales" element={<TicketSalesPage />} />
             <Route path="/admin/department-review-configs" element={<DepartmentReviewConfigPage />} />
+            <Route path="/admin/review-rule-sets" element={<ReviewRuleSetPage />} />
             <Route path="/finance/department-plans" element={<DepartmentPlanListPage />} />
             <Route path="/finance/department-plans/new" element={<DepartmentPlanFormPage />} />
             <Route path="/finance/department-plans/budget-summary" element={<DepartmentBudgetSummaryPage />} />
