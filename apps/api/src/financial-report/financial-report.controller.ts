@@ -114,6 +114,20 @@ export class FinancialReportController {
     } catch (err) { next(err); }
   };
 
+  autoGenerateBudget = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = requireUser(req);
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const seasonId = Number(req.params["seasonId"]);
+      const body = req.body as { growthRate?: number; contingencyRate?: number };
+      const opts: { growthRate?: number; contingencyRate?: number } = {};
+      if (body.growthRate !== undefined) opts.growthRate = body.growthRate;
+      if (body.contingencyRate !== undefined) opts.contingencyRate = body.contingencyRate;
+      const result = await this.service.autoGenerateBudgetPlan(seasonId, opts);
+      res.status(200).json(result);
+    } catch (err) { next(err); }
+  };
+
   getPnL = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, frontOfficeRole } = requireUser(req);
