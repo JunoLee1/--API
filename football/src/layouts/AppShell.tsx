@@ -460,7 +460,7 @@ const NAV_ITEMS: NavItem[] = [
     section: 'nav.section.management',
     subSection: 'nav.subsection.finance',
     roles: ['ADMIN', 'FRONT_OFFICE'],
-    frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF'],
+    frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF', 'HR_MANAGER', 'HR_STAFF'],
   },
   {
     to: '/finance/department-plans/budget-summary',

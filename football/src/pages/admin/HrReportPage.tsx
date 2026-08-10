@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { hrReportApi } from "@/services/hr-report.service"
 import type { HrMonthlyReport, HrAnnualReport } from "@/types/hr-report"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -15,7 +17,7 @@ import {
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { FileBarChart2 } from "lucide-react"
+import { FileBarChart2, FilePlus } from "lucide-react"
 
 function EmptyState({ message }: { message: string }) {
   return (
@@ -270,6 +272,12 @@ function AnnualReport({ data }: { data: HrAnnualReport }) {
 
 export default function HrReportPage() {
   const { t } = useTranslation("admin")
+  const navigate = useNavigate()
+  const { user } = useCurrentUser()
+  const canCreate =
+    user?.role === 'ADMIN' ||
+    user?.frontOfficeRole === 'HR_MANAGER' ||
+    user?.frontOfficeRole === 'HR_STAFF'
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth() + 1)
@@ -297,7 +305,15 @@ export default function HrReportPage() {
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-4">
-      <h1 className="text-2xl font-bold">{t("hrReport.title")}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">{t("hrReport.title")}</h1>
+        {canCreate && (
+          <Button size="sm" onClick={() => navigate('/reports/new?type=HR')}>
+            <FilePlus className="h-4 w-4 mr-1" />
+            보고서 작성
+          </Button>
+        )}
+      </div>
 
       <Tabs value={tab} onValueChange={(v) => { setTab(v as "monthly" | "annual"); setMonthly(null); setAnnual(null) }}>
         <TabsList>
