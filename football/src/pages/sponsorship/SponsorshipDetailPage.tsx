@@ -14,6 +14,8 @@ import {
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Table,
   TableBody,
@@ -22,6 +24,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { ArrowLeft } from 'lucide-react'
 
 function formatDate(d: string) {
@@ -30,6 +39,106 @@ function formatDate(d: string) {
 
 function formatCurrency(n: number) {
   return n.toLocaleString('ko-KR') + '원'
+}
+
+// ── Bank Edit Dialog ──────────────────────────────────────────────────────────
+interface BankEditDialogProps {
+  open: boolean
+  onOpenChange: (v: boolean) => void
+  sponsorship: Sponsorship
+  onSaved: (updated: Sponsorship) => void
+}
+
+function BankEditDialog({ open, onOpenChange, sponsorship, onSaved }: BankEditDialogProps) {
+  const { t } = useTranslation('sponsorship')
+  const [form, setForm] = useState({
+    domesticBankName: sponsorship.domesticBankName ?? '',
+    domesticAccountNumber: sponsorship.domesticAccountNumber ?? '',
+    domesticAccountHolder: sponsorship.domesticAccountHolder ?? '',
+    ukBankName: sponsorship.ukBankName ?? '',
+    ukSortCode: sponsorship.ukSortCode ?? '',
+    ukAccountNumber: sponsorship.ukAccountNumber ?? '',
+    ukSwiftBic: sponsorship.ukSwiftBic ?? '',
+  })
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (open) {
+      setForm({
+        domesticBankName: sponsorship.domesticBankName ?? '',
+        domesticAccountNumber: sponsorship.domesticAccountNumber ?? '',
+        domesticAccountHolder: sponsorship.domesticAccountHolder ?? '',
+        ukBankName: sponsorship.ukBankName ?? '',
+        ukSortCode: sponsorship.ukSortCode ?? '',
+        ukAccountNumber: sponsorship.ukAccountNumber ?? '',
+        ukSwiftBic: sponsorship.ukSwiftBic ?? '',
+      })
+    }
+  }, [open, sponsorship])
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const updated = await sponsorshipApi.update(sponsorship.id, {
+        domesticBankName: form.domesticBankName || undefined,
+        domesticAccountNumber: form.domesticAccountNumber || undefined,
+        domesticAccountHolder: form.domesticAccountHolder || undefined,
+        ukBankName: form.ukBankName || undefined,
+        ukSortCode: form.ukSortCode || undefined,
+        ukAccountNumber: form.ukAccountNumber || undefined,
+        ukSwiftBic: form.ukSwiftBic || undefined,
+      })
+      toast.success(t('bank.saved'))
+      onSaved(updated)
+      onOpenChange(false)
+    } catch {
+      toast.error(t('bank.saveFailed'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const field = (label: string, key: keyof typeof form) => (
+    <div className="space-y-1">
+      <Label className="text-xs text-muted-foreground">{label}</Label>
+      <Input value={form[key]} onChange={(e) => setForm((p) => ({ ...p, [key]: e.target.value }))} />
+    </div>
+  )
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>{t('bank.editTitle')}</DialogTitle></DialogHeader>
+        <div className="space-y-4 py-1">
+          <div>
+            <p className="text-xs font-medium mb-2">{t('bank.domestic')}</p>
+            <div className="space-y-2">
+              {field(t('bank.bankName'), 'domesticBankName')}
+              {field(t('bank.accountNumber'), 'domesticAccountNumber')}
+              {field(t('bank.accountHolder'), 'domesticAccountHolder')}
+            </div>
+          </div>
+          <div>
+            <p className="text-xs font-medium mb-2">{t('bank.uk')}</p>
+            <div className="space-y-2">
+              {field(t('bank.bankName'), 'ukBankName')}
+              <div className="grid grid-cols-2 gap-2">
+                {field(t('bank.sortCode'), 'ukSortCode')}
+                {field(t('bank.accountNumber'), 'ukAccountNumber')}
+              </div>
+              {field(t('bank.swiftBic'), 'ukSwiftBic')}
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>
+          <Button onClick={() => void handleSave()} disabled={saving}>
+            {saving ? '저장 중...' : t('bank.editButton')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
 }
 
 export function SponsorshipDetailPage() {
@@ -48,6 +157,7 @@ export function SponsorshipDetailPage() {
   const [payments, setPayments] = useState<SponsorshipPayment[]>([])
   const [loading, setLoading] = useState(true)
   const [paymentsLoading, setPaymentsLoading] = useState(true)
+  const [bankEditOpen, setBankEditOpen] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -123,6 +233,41 @@ export function SponsorshipDetailPage() {
             </div>
           </div>
 
+          {/* 계좌 정보 섹션 */}
+          <div className="px-6 py-4 border-b">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-medium">{t('bank.sectionTitle')}</h2>
+              {canWrite && (
+                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setBankEditOpen(true)}>
+                  {t('bank.editButton')}
+                </Button>
+              )}
+            </div>
+            {!sponsorship.domesticBankName && !sponsorship.ukBankName ? (
+              <p className="text-xs text-muted-foreground">{t('bank.noInfo')}</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                {sponsorship.domesticBankName && (
+                  <div>
+                    <p className="text-xs text-muted-foreground font-medium mb-1">{t('bank.domestic')}</p>
+                    <p>{sponsorship.domesticBankName}</p>
+                    {sponsorship.domesticAccountNumber && <p className="tabular-nums text-muted-foreground">{sponsorship.domesticAccountNumber}</p>}
+                    {sponsorship.domesticAccountHolder && <p className="text-muted-foreground">{sponsorship.domesticAccountHolder}</p>}
+                  </div>
+                )}
+                {sponsorship.ukBankName && (
+                  <div>
+                    <p className="text-xs text-muted-foreground font-medium mb-1">{t('bank.uk')}</p>
+                    <p>{sponsorship.ukBankName}</p>
+                    {sponsorship.ukSortCode && <p className="tabular-nums text-muted-foreground">{t('bank.sortCode')}: {sponsorship.ukSortCode}</p>}
+                    {sponsorship.ukAccountNumber && <p className="tabular-nums text-muted-foreground">{sponsorship.ukAccountNumber}</p>}
+                    {sponsorship.ukSwiftBic && <p className="text-muted-foreground">SWIFT: {sponsorship.ukSwiftBic}</p>}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <div className="flex-1 overflow-auto">
             <div className="px-6 pt-5 pb-2">
               <h2 className="text-sm font-medium">{t('payment.dueDate')} 스케줄</h2>
@@ -182,6 +327,15 @@ export function SponsorshipDetailPage() {
         <div className="flex items-center justify-center flex-1 text-sm text-muted-foreground">
           스폰서십 정보를 찾을 수 없습니다.
         </div>
+      )}
+
+      {sponsorship && (
+        <BankEditDialog
+          open={bankEditOpen}
+          onOpenChange={setBankEditOpen}
+          sponsorship={sponsorship}
+          onSaved={(updated) => setSponsorship(updated)}
+        />
       )}
     </div>
   )

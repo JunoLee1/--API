@@ -8,6 +8,15 @@ export interface CreateSponsorshipDto {
   contractEnd: string;
   paymentSchedule: PaymentSchedule;
   attachedContractId?: number;
+  // 국내 계좌
+  domesticBankName?: string;
+  domesticAccountNumber?: string;
+  domesticAccountHolder?: string;
+  // 영국 계좌
+  ukBankName?: string;
+  ukSortCode?: string;
+  ukAccountNumber?: string;
+  ukSwiftBic?: string;
 }
 
 export interface UpdateSponsorshipDto {
@@ -18,6 +27,15 @@ export interface UpdateSponsorshipDto {
   contractEnd?: string;
   paymentSchedule?: PaymentSchedule;
   attachedContractId?: number;
+  // 국내 계좌
+  domesticBankName?: string;
+  domesticAccountNumber?: string;
+  domesticAccountHolder?: string;
+  // 영국 계좌
+  ukBankName?: string;
+  ukSortCode?: string;
+  ukAccountNumber?: string;
+  ukSwiftBic?: string;
 }
 
 export interface SponsorshipListQuery {

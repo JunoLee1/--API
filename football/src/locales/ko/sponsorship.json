@@ -33,7 +33,29 @@
     "totalFee": "계약금액 (원) *",
     "contractStart": "계약 시작일 *",
     "contractEnd": "계약 종료일 *",
-    "paymentSchedule": "납부 방식 *"
+    "paymentSchedule": "납부 방식 *",
+    "bankSection.domestic": "국내 계좌",
+    "bankSection.uk": "영국 계좌",
+    "bank.bankName": "은행명",
+    "bank.accountNumber": "계좌번호",
+    "bank.accountHolder": "예금주",
+    "bank.sortCode": "Sort Code",
+    "bank.swiftBic": "SWIFT/BIC"
   },
-  "filterAll": "전체"
+  "filterAll": "전체",
+  "bank": {
+    "sectionTitle": "계좌 정보",
+    "domestic": "국내",
+    "uk": "영국",
+    "bankName": "은행명",
+    "accountNumber": "계좌번호",
+    "accountHolder": "예금주",
+    "sortCode": "Sort Code",
+    "swiftBic": "SWIFT/BIC",
+    "editButton": "수정",
+    "editTitle": "계좌 정보 수정",
+    "noInfo": "등록된 계좌 정보가 없습니다.",
+    "saved": "계좌 정보가 저장되었습니다.",
+    "saveFailed": "저장에 실패했습니다."
+  }
 }

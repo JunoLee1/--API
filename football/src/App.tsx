@@ -61,7 +61,6 @@ import IncidentReportPage from '@/pages/youth/IncidentReportPage'
 import AcademyFeePage from '@/pages/youth/AcademyFeePage'
 import { StaffRecordPage } from '@/pages/admin/StaffRecordPage'
 import { DepartmentPage } from '@/pages/admin/DepartmentPage'
-import { MealExpensePage } from '@/pages/admin/MealExpensePage'
 import { FinancialReportPage } from '@/pages/admin/FinancialReportPage'
 import { BudgetPlanPage } from '@/pages/admin/BudgetPlanPage'
 import { OperatingExpensePage } from '@/pages/admin/OperatingExpensePage'
@@ -182,7 +181,6 @@ function App() {
             <Route path="/admin/team-settings" element={<TeamSettingsPage />} />
             <Route path="/admin/departments" element={<DepartmentPage />} />
             <Route path="/admin/staff-records" element={<StaffRecordPage />} />
-            <Route path="/admin/meal-expenses" element={<MealExpensePage />} />
             <Route path="/admin/financial-report" element={<FinancialReportPage />} />
             <Route path="/admin/budget-plan" element={<BudgetPlanPage />} />
             <Route path="/admin/operating-expenses" element={<OperatingExpensePage />} />

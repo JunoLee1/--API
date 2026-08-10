@@ -498,7 +498,7 @@
   },
   "operatingExpense": {
     "title": "Operating Expense Log",
-    "subtitle": "Record travel, equipment, scouting, and youth expenses",
+    "subtitle": "Record meals, travel, equipment, scouting, and youth expenses",
     "add": "Add Expense",
     "createTitle": "Register Operating Expense",
     "empty": "No expenses registered",

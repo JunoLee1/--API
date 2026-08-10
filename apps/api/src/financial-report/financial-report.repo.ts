@@ -141,14 +141,10 @@ export class FinancialReportRepository {
     });
     if (!season) return null;
 
-    const [medical, meal, operating] = await Promise.all([
+    const [medical, operating] = await Promise.all([
       this.prisma.medicalExpense.aggregate({
         where: { status: "APPROVED", receiptDate: { gte: season.startDate, lte: season.endDate } },
         _sum: { totalAmount: true },
-      }),
-      this.prisma.mealExpense.aggregate({
-        where: { date: { gte: season.startDate, lte: season.endDate } },
-        _sum: { amount: true },
       }),
       this.prisma.operatingExpense.groupBy({
         by: ["category"],
@@ -159,7 +155,6 @@ export class FinancialReportRepository {
 
     const result: Record<string, number> = {
       MEDICAL: medical._sum?.totalAmount ?? 0,
-      MEAL: meal._sum?.amount ?? 0,
     };
     for (const row of operating) {
       result[row.category] = row._sum?.amount ?? 0;

@@ -419,15 +419,6 @@ const NAV_ITEMS: NavItem[] = [
 
   // 관리 > 재무
   {
-    to: '/admin/meal-expenses',
-    label: 'nav.item.mealExpenses',
-    icon: Receipt,
-    section: 'nav.section.management',
-    subSection: 'nav.subsection.finance',
-    roles: ['ADMIN', 'FRONT_OFFICE'],
-    frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF'],
-  },
-  {
     to: '/admin/financial-report',
     label: 'nav.item.financialReport',
     icon: TrendingUp,
