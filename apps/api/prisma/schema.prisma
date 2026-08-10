@@ -755,7 +755,6 @@ model User {
   givenEvaluations         CoachingStaffEvaluation[] @relation("EvaluationGiver")
   receivedEvaluations      CoachingStaffEvaluation[] @relation("EvaluationReceiver")
   staffRecordsCreated      StaffRecord[]             @relation("StaffRecordCreator")
-  mealExpensesCreated      MealExpense[]             @relation("MealExpenseCreator")
   inspectedFacilities      FacilityInspection[]      @relation("FacilityInspector")
   maintenanceRequests      MaintenanceRequest[]      @relation("MaintenanceRequestCreator")
   createdSponsorships      Sponsorship[]             @relation("SponsorshipCreator")
@@ -1205,7 +1204,6 @@ model Match {
   shotEvents       ShotEvent[]
   matchLineup      MatchLineup?
   incidentReports  IncidentReport[]
-  mealExpenses     MealExpense[]
   salesRecords     SalesRecord[]
   fanPurchases     FanPurchase[]
   seatZones        SeatZone[]
@@ -1338,7 +1336,6 @@ model TrainingSession {
   trainingLoads   TrainingLoad[]
   incidentReports IncidentReport[]
   playerBadges    PlayerBadge[]
-  mealExpenses    MealExpense[]
 }
 
 model TrainingContent {
@@ -1592,10 +1589,6 @@ enum MedicalExpenseStatus {
   REJECTED
 }
 
-enum MealExpenseType {
-  TRAINING
-  MATCH
-}
 
 model MedicalExpense {
   id              Int                  @id @default(autoincrement())
@@ -2226,24 +2219,6 @@ model StaffRecord {
   staffSalaries StaffSalary[]
   employmentStartDate  DateTime?
   employmentEndDate    DateTime?
-}
-
-model MealExpense {
-  id             Int             @id @default(autoincrement())
-  type           MealExpenseType
-  sessionId      Int?
-  matchId        Int?
-  date           DateTime
-  amount         Int
-  restaurantName String?
-  note           String?
-  createdById    Int
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-
-  session   TrainingSession? @relation(fields: [sessionId], references: [id])
-  match     Match?           @relation(fields: [matchId], references: [id])
-  createdBy User             @relation("MealExpenseCreator", fields: [createdById], references: [id])
 }
 
 model FinancialReport {
