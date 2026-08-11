@@ -11,12 +11,12 @@ export function requireUser(req: Request) {
   return req.user;
 }
 
-export const requireRole = (...roles: Role[]) => (req: Request, res: Response, next: NextFunction) => {
+export const requireRole = (...roles: Role[]) => (req: Request, _res: Response, next: NextFunction) => {
   if (!req.user) {
-    return res.status(401).json({ code: "UNAUTHORIZED" });
+    return next(new AppError(401, "UNAUTHORIZED"));
   }
   if (!roles.includes(req.user.role as Role)) {
-    return res.status(403).json({ code: "FORBIDDEN" });
+    return next(new AppError(403, "FORBIDDEN"));
   }
   return next();
 };
@@ -24,7 +24,7 @@ export const requireRole = (...roles: Role[]) => (req: Request, res: Response, n
 export const teamSwitchLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 20,
-  keyGenerator: (req) => String((req.user as Express.User | undefined)?.id ?? req.ip),
+  keyGenerator: (req) => String(req.user?.id ?? req.ip),
   message: { code: "TOO_MANY_REQUESTS" },
   standardHeaders: true,
   legacyHeaders: false,
