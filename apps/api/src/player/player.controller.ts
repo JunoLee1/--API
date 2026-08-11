@@ -109,6 +109,11 @@ export class PlayerController {
     try {
       const user = requireUser(req);
       if (!(MARKET_VALUE_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
+      // SH11: TD role은 자신의 팀 선수만 수정 가능
+      if (user.frontOfficeRole === "TD") {
+        const player = await this.service.getPlayerById(String(req.params["id"]));
+        if (player.teamId !== user.teamId) throw new AppError(403, "FORBIDDEN");
+      }
       const result = await this.service.updateMarketValue(
         String(req.params["id"]),
         req.body,

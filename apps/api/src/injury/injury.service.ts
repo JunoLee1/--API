@@ -6,6 +6,7 @@ import { ExternalReportTarget, ExternalReportStatus } from "../generated/enums";
 import { NotificationRepository } from "../notification/notification.repo";
 import { getIO } from "../lib/io";
 import { writeAuditLog } from "../lib/auditLog";
+import { getPrisma } from "../lib/prisma";
 
 const VALID_INJURY_TRANSITIONS: Record<string, string[]> = {
   OCCURRED: ["DIAGNOSED"],
@@ -145,9 +146,19 @@ export class InjuryService {
     return this.repo.upsertReport(injuryId, dto, userId);
   }
 
-  async signReport(injuryId: number, role: 'COACH' | 'TRAINER' | 'MEDICAL', userId: number) {
+  async signReport(injuryId: number, role: 'COACH' | 'TRAINER' | 'MEDICAL', userId: number, signerTeamId?: number | null) {
     const report = await this.repo.findReport(injuryId);
     if (!report) throw new AppError(404, "INJURY_REPORT_NOT_FOUND");
+    // SH20: 부상 선수의 팀 == 서명자의 팀 검증 (SUPER_ADMIN은 signerTeamId가 undefined로 전달되어 스킵)
+    if (signerTeamId !== undefined) {
+      const injury = await this.repo.findById(injuryId);
+      if (!injury) throw new AppError(404, "INJURY_NOT_FOUND");
+      const player = await getPrisma().player.findUnique({
+        where: { id: injury.playerId },
+        select: { teamId: true },
+      });
+      if (player && player.teamId !== signerTeamId) throw new AppError(403, "FORBIDDEN");
+    }
     return this.repo.signReport(injuryId, role, userId);
   }
 

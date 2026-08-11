@@ -95,8 +95,10 @@ export class InjuryController {
       const user = requireUser(req);
       const role = this.getSignRole(user);
       if (!role) throw new AppError(403, "FORBIDDEN");
+      // SH20: SUPER_ADMIN은 모든 팀 접근 가능, 그 외는 자신의 팀 부상 선수만 서명 가능
+      const signerTeamId = user.role === "SUPER_ADMIN" ? undefined : user.teamId;
       res.status(200).json(
-        await this.service.signReport(Number(req.params["id"]), role, user.id)
+        await this.service.signReport(Number(req.params["id"]), role, user.id, signerTeamId)
       );
     } catch (err) { next(err); }
   };
