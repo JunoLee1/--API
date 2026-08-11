@@ -104,8 +104,10 @@ export class AuthService {
 
   async blacklistToken(jti: string, expiresAt: Date) {
     await this.repo.blacklistToken(jti, expiresAt);
-    // 만료된 블랙리스트 정리 실패 시 에러를 전파해 로그아웃이 실패했음을 클라이언트에 알림
-    await this.repo.deleteExpiredBlacklistEntries();
+    // 만료 항목 정리는 fire-and-forget — 실패해도 로그아웃은 성공
+    this.repo.deleteExpiredBlacklistEntries().catch((err) =>
+      console.error('[auth] blacklist cleanup failed:', err)
+    );
   }
 
   isTokenBlacklisted(jti: string) {
