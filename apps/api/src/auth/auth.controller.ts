@@ -34,8 +34,9 @@ export class AuthController {
     const userAgent = req.get("user-agent") ?? "unknown";
     const email: string = req.body?.email ?? "";
     try {
-      const { accessToken, refreshToken, userId } = await this.service.login(req.body);
+      const { accessToken, refreshToken, userId, teamId } = await this.service.login(req.body);
       void this.repo.createLoginHistory({ userId, email, ip, userAgent, success: true }).catch(console.error);
+      console.log("[AUTH] login success", { userId, teamId, ip });
       res.cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, ACCESS_TOKEN_COOKIE_OPTIONS);
       res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
       res.status(200).json({ message: "OK" });
@@ -138,11 +139,17 @@ export class AuthController {
     } catch (err) { next(err); }
   };
 
+  private maskEmail(email: string): string {
+    const atIndex = email.indexOf("@");
+    if (atIndex < 0) return "***";
+    return email[0] + "***" + email.slice(atIndex);
+  }
+
   getInvite = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { token } = req.params as { token: string };
       const invite = await this.service.getInvite(token);
-      res.json({ email: invite.email, role: invite.role, coachingRole: invite.coachingRole, frontOfficeRole: invite.frontOfficeRole });
+      res.json({ email: this.maskEmail(invite.email), role: invite.role, coachingRole: invite.coachingRole, frontOfficeRole: invite.frontOfficeRole });
     } catch (err) { next(err); }
   };
 

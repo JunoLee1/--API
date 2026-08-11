@@ -21,7 +21,7 @@ export class AuthService {
 
     const departmentCategories = await this.repo.getDepartmentCategories(user.id);
     const tokens = generateTokens({ id: user.id, role: user.role, coachingRole: user.coachingRole, frontOfficeRole: user.frontOfficeRole, departmentCategories, teamId: user.teamId, clubId: user.clubId, isDemo: user.isDemo });
-    return { ...tokens, userId: user.id };
+    return { ...tokens, userId: user.id, teamId: user.teamId };
   }
 
   async createUser(dto: CreateUserDto) {
