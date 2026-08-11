@@ -23,7 +23,7 @@ export class PlanReviewService {
     if (!review) throw new AppError(403, "NOT_A_REVIEWER");
     if (review.status === "CONFIRMED") throw new AppError(409, "ALREADY_CONFIRMED");
 
-    const plan = await this.prisma.departmentAnnualPlan.findUnique({ where: { id: planId } });
+    const plan = await this.prisma.planReport.findUnique({ where: { id: planId } });
     if (!plan || plan.status !== "REVIEWING") throw new AppError(409, "PLAN_NOT_IN_REVIEWING");
 
     return this.repo.confirm(planId, review.reviewerDeptId, userId, comment);

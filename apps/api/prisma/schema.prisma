@@ -791,8 +791,8 @@ model User {
   transferRequestsReviewed   TransferRequest[]         @relation("TRReviewedBy")
   transferRequestsConfirmed  TransferRequest[]         @relation("TRConfirmedBy")
   transferRequestsRejected   TransferRequest[]         @relation("TRRejectedBy")
-  createdPlans               DepartmentAnnualPlan[]    @relation("PlanCreatedBy")
-  reviewedPlans              DepartmentAnnualPlan[]    @relation("PlanReviewedBy")
+  createdPlanReports         PlanReport[]              @relation("PlanReportCreatedBy")
+  approvedPlanReports        PlanReport[]              @relation("PlanReportApprovedBy")
   confirmedPlanReviews       PlanReview[]              @relation("PlanReviewConfirmer")
   confirmedReportReviews     ReportReview[]            @relation("ReportReviewConfirmer")
 }
@@ -819,7 +819,6 @@ model Season {
   monthlyBudgetSnapshots   MonthlyBudgetSnapshot[]
   monthlyOperationsSnapshots MonthlyOperationsSnapshot[]
   squadPlan                SquadPlan?
-  departmentPlans          DepartmentAnnualPlan[]
 }
 
 model League {
@@ -2203,9 +2202,11 @@ model AcademyFee {
 }
 
 model ClubSettings {
-  id       Int    @id @default(1)
-  currency String @default("KRW")
-  ibiBeta  Float  @default(1.0)
+  id                Int    @id @default(1)
+  currency          String @default("KRW")
+  ibiBeta           Float  @default(1.0)
+  planApprovalLimit Int    @default(10000000)
+  reviewerDeptMap   Json?
 }
 
 model StaffRecord {
@@ -2269,7 +2270,7 @@ model Department {
   postings     JobPosting[]
   members      UserDepartment[]
   ibiConfigs   DepartmentIbiConfig[]
-  annualPlans  DepartmentAnnualPlan[]
+  planReports      PlanReport[]
   subjectConfigs   DepartmentReviewerConfig[] @relation("SubjectDept")
   reviewerConfigs  DepartmentReviewerConfig[] @relation("ReviewerDept")
   planReviews      PlanReview[]               @relation("PlanReviewerDept")
@@ -2979,7 +2980,7 @@ model AttendanceAppeal {
 }
 
 // ─────────────────────────────────────────────
-// 부서별 연간 계획서
+// 계획보고서
 // ─────────────────────────────────────────────
 
 enum PlanStatus {
@@ -2989,51 +2990,43 @@ enum PlanStatus {
   REJECTED
 }
 
-model DepartmentAnnualPlan {
-  id              Int          @id @default(autoincrement())
-  seasonId        Int
-  departmentId    Int
-  status          PlanStatus   @default(DRAFT)
-  objectives      String[]
-  milestones      Json         // [{ quarter: 1|2|3|4, text: "..." }]
-  rejectionReason String?
-  submittedAt     DateTime?
-  reviewedAt      DateTime?
-  createdById     Int
-  reviewedById    Int?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+model PlanReport {
+  id                    Int              @id @default(autoincrement())
+  title                 String
+  purpose               String
+  departmentId          Int
+  startDate             DateTime
+  endDate               DateTime
+  budget                Int
+  expectedEffect        String
+  risks                 String
+  attachments           String[]
+  resultDueDate         DateTime
+  templateType          PlanTemplateType
+  extraFields           Json?
+  hasNewStaff           Boolean          @default(false)
+  hasContract           Boolean          @default(false)
+  hasExternalLease      Boolean          @default(false)
+  hasPersonalInfo       Boolean          @default(false)
+  isNewBusiness         Boolean          @default(false)
+  status                PlanStatus       @default(DRAFT)
+  requiredApproverLevel ApproverLevel?
+  rejectionReason       String?
+  resultContent         String?
+  resultSubmittedAt     DateTime?
+  submittedAt           DateTime?
+  approvedAt            DateTime?
+  rejectedAt            DateTime?
+  vaultPath             String?
+  createdById           Int
+  approvedById          Int?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
 
-  season          Season       @relation(fields: [seasonId], references: [id])
-  department      Department   @relation(fields: [departmentId], references: [id])
-  createdBy       User         @relation("PlanCreatedBy", fields: [createdById], references: [id])
-  reviewedBy      User?        @relation("PlanReviewedBy", fields: [reviewedById], references: [id])
-  budgetItems     DepartmentBudgetItem[]
-  kpiItems        DepartmentKpiItem[]
-  reviews         PlanReview[]
-
-  @@unique([seasonId, departmentId])
-}
-
-model DepartmentBudgetItem {
-  id       Int               @id @default(autoincrement())
-  planId   Int
-  category OperatingCategory
-  amount   Int
-
-  plan     DepartmentAnnualPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
-
-  @@unique([planId, category])
-}
-
-model DepartmentKpiItem {
-  id          Int    @id @default(autoincrement())
-  planId      Int
-  title       String
-  targetValue String
-  quarter     Int?
-
-  plan        DepartmentAnnualPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  department  Department  @relation(fields: [departmentId], references: [id])
+  createdBy   User        @relation("PlanReportCreatedBy", fields: [createdById], references: [id])
+  approvedBy  User?       @relation("PlanReportApprovedBy", fields: [approvedById], references: [id])
+  reviews     PlanReview[]
 }
 
 // ─────────────────────────────────────────────
@@ -3044,6 +3037,22 @@ enum ReviewStatus {
   PENDING
   CONFIRMED
   REJECTED
+}
+
+enum PlanTemplateType {
+  GENERAL
+  HR
+  MARKETING
+  GOODS
+  SQUAD
+  MEDICAL
+  IT
+}
+
+enum ApproverLevel {
+  HEAD
+  GM
+  ADMIN
 }
 
 model DepartmentReviewerConfig {
@@ -3068,9 +3077,9 @@ model PlanReview {
   confirmedAt    DateTime?
   createdAt      DateTime     @default(now())
 
-  plan           DepartmentAnnualPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
-  reviewerDept   Department           @relation("PlanReviewerDept", fields: [reviewerDeptId], references: [id])
-  confirmedBy    User?                @relation("PlanReviewConfirmer", fields: [confirmedById], references: [id])
+  plan         PlanReport @relation(fields: [planId], references: [id], onDelete: Cascade)
+  reviewerDept Department @relation("PlanReviewerDept", fields: [reviewerDeptId], references: [id])
+  confirmedBy  User?      @relation("PlanReviewConfirmer", fields: [confirmedById], references: [id])
 
   @@unique([planId, reviewerDeptId])
 }
