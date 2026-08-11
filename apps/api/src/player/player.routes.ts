@@ -32,6 +32,9 @@ router.get("/:id", auth, controller.getPlayerById);
 // 선수 등록 (ADMIN, FRONT_OFFICE)
 router.post("/", auth, controller.createPlayer);
 
+// RC18: PLAYER 본인이 응급연락처 필드만 수정 (자기 정보만)
+router.patch("/:id/my-info", auth, requireRole("PLAYER"), controller.updateMyInfo);
+
 // 선수 정보 수정 (ADMIN, FRONT_OFFICE)
 router.patch("/:id", auth, controller.updatePlayer);
 
