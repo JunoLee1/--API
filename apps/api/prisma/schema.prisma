@@ -750,6 +750,7 @@ model User {
   coachEvaluations         GrowthEvaluation[]      @relation("CoachEvaluations")
   awardedBadges            PlayerBadge[]           @relation("CoachBadges")
   isSuspended              Boolean                 @default(false)
+  suspendedAt              DateTime?
   safeguardReportsAccused  SafeguardReport[]       @relation("SafeguardAccused")
   guardianFees             AcademyFee[]            @relation("GuardianFees")
   givenEvaluations         CoachingStaffEvaluation[] @relation("EvaluationGiver")
@@ -865,6 +866,14 @@ model Player {
   emergencyContactName     String?
   emergencyContactPhone    String?
   emergencyContactRelation String?
+  emergencyContactNameEncrypted     String?
+  emergencyContactNameIv            String?
+  emergencyContactPhoneEncrypted    String?
+  emergencyContactPhoneIv           String?
+  emergencyContactRelationEncrypted String?
+  emergencyContactRelationIv        String?
+  dateOfBirthEncrypted              String?
+  dateOfBirthIv                     String?
   workPermitStatus WorkPermitStatus @default(NOT_REQUIRED)
   workPermitExpiry DateTime?
   teamId           Int?
@@ -1107,6 +1116,7 @@ model Injury {
   incidentReports IncidentReport[]
   dataRetentionFlaggedAt  DateTime?
   dataRetentionReason     String?
+  retainUntil             DateTime?
 }
 
 model InjuryAssessment {
