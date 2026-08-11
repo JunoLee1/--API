@@ -18,8 +18,8 @@ const checkWriteFinance = (req: Request, res: Response, next: NextFunction) => {
   next();
 };
 
-router.get("/",      auth, controller.list);
-router.post("/",     auth, controller.create);
+router.get("/", auth, controller.list);
+router.post("/", auth, controller.create);
 router.delete("/:id", auth, checkWriteFinance, controller.delete);
 
 export default router;
