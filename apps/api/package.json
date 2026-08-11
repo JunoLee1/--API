@@ -11,7 +11,8 @@
     "setup": "prisma db push && npm run seed",
     "test": "jest",
     "seed": "ts-node --transpile-only prisma/seed.ts",
-    "generate": "prisma generate"
+    "generate": "prisma generate",
+    "script:encrypt-pii": "tsx prisma/scripts/encrypt-pii.ts"
   },
   "prisma": {
     "seed": "npm run seed"
