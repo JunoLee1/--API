@@ -229,4 +229,31 @@ export class PlayerController {
       res.status(204).send();
     } catch (err) { next(err); }
   };
+
+  // RC18: PLAYER 본인만 응급연락처 필드 수정 가능
+  updateMyInfo = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = requireUser(req);
+      const playerId = String(req.params["id"]);
+
+      const player = await this.service.getPlayerById(playerId);
+      if (player.userId !== user.id) throw new AppError(403, "FORBIDDEN");
+
+      const { emergencyContactName, emergencyContactPhone, emergencyContactRelation } = req.body as {
+        emergencyContactName?: string;
+        emergencyContactPhone?: string;
+        emergencyContactRelation?: string;
+      };
+
+      const result = await this.service.updatePlayer(playerId, {
+        ...(emergencyContactName !== undefined && { emergencyContactName }),
+        ...(emergencyContactPhone !== undefined && { emergencyContactPhone }),
+        ...(emergencyContactRelation !== undefined && { emergencyContactRelation }),
+      });
+
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
 }
