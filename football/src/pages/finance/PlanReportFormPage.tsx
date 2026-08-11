@@ -107,6 +107,7 @@ export function PlanReportFormPage() {
     } catch {
       toast.error('파일 업로드에 실패했습니다.')
     } finally {
+      e.target.value = ''
       setUploading(false)
     }
   }
@@ -147,6 +148,11 @@ export function PlanReportFormPage() {
     }
     if (!form.resultDueDate) {
       setError('결과보고 예정일을 입력해주세요.')
+      return
+    }
+
+    if (form.endDate && form.startDate && new Date(form.endDate) < new Date(form.startDate)) {
+      setError('종료일이 시작일보다 후여야 합니다')
       return
     }
 
@@ -415,7 +421,7 @@ export function PlanReportFormPage() {
                 type="checkbox"
                 className="h-4 w-4 rounded border border-input accent-primary"
                 checked={form[key as keyof typeof EMPTY_FORM] as boolean}
-                onChange={e => set(key as keyof typeof EMPTY_FORM, e.target.checked as any)}
+                onChange={e => set(key as keyof typeof EMPTY_FORM, e.target.checked)}
               />
               <span className="text-sm">{label}</span>
             </label>
