@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ComponentProps } from 'react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { budgetPlanApi } from '@/services/financial-report.service'
@@ -7,7 +7,6 @@ import type { BudgetPlan, UpsertBudgetPlanPayload, OperatingCategory } from '@/t
 import { ALL_OPERATING_CATEGORIES, OPERATING_CATEGORY_LABEL } from '@/types/budget'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { CurrencyInput } from '@/components/ui/currency-input'
 import { Label } from '@/components/ui/label'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -35,6 +34,22 @@ const defaultCategories = () =>
   Object.fromEntries(
     ALL_OPERATING_CATEGORIES.map((c) => [c, { mandatoryMinimum: '', tiers: defaultTiers() }])
   ) as Record<OperatingCategory, CategoryRow>
+
+type CurrencyInputProps = Omit<ComponentProps<typeof Input>, 'onChange'> & {
+  value: string
+  onChange: (value: string) => void
+}
+
+function CurrencyInput({ value, onChange, type = 'text', ...props }: CurrencyInputProps) {
+  return (
+    <Input
+      type={type}
+      {...props}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  )
+}
 
 export function BudgetPlanPage() {
   const { t } = useTranslation('admin')
