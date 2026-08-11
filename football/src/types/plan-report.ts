@@ -64,6 +64,28 @@ export const TEMPLATE_TYPE_LABELS: Record<PlanTemplateType, string> = {
   IT: 'IT',
 }
 
+export interface CreatePlanReportPayload {
+  title: string
+  purpose: string
+  departmentId: number
+  startDate: string
+  endDate: string
+  budget: number
+  expectedEffect: string
+  risks: string
+  attachments?: string[]
+  resultDueDate: string
+  templateType: PlanTemplateType
+  extraFields?: Record<string, unknown>
+  hasNewStaff?: boolean
+  hasContract?: boolean
+  hasExternalLease?: boolean
+  hasPersonalInfo?: boolean
+  isNewBusiness?: boolean
+}
+
+export type UpdatePlanReportPayload = Partial<CreatePlanReportPayload>
+
 export const EXTRA_FIELDS_CONFIG: Record<PlanTemplateType, Array<{ key: string; label: string; type: 'text' | 'number' | 'date' }>> = {
   GENERAL: [],
   HR: [

@@ -1,5 +1,5 @@
 import { api } from './api'
-import type { PlanReport } from '@/types/plan-report'
+import type { PlanReport, CreatePlanReportPayload, UpdatePlanReportPayload } from '@/types/plan-report'
 
 export const planReportApi = {
   list: (params?: Record<string, string>) => {
@@ -10,10 +10,10 @@ export const planReportApi = {
   get: (id: number) =>
     api.get<PlanReport>(`/plan-reports/${id}`),
 
-  create: (data: object) =>
+  create: (data: CreatePlanReportPayload) =>
     api.post<PlanReport>('/plan-reports', data),
 
-  update: (id: number, data: object) =>
+  update: (id: number, data: UpdatePlanReportPayload) =>
     api.put<PlanReport>(`/plan-reports/${id}`, data),
 
   submit: (id: number) =>
