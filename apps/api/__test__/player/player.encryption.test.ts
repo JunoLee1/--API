@@ -86,3 +86,38 @@ describe("PlayerRepository — encryption on write", () => {
     expect(savedData.emergencyContactNameEncrypted).toBeUndefined();
   });
 });
+
+describe("PlayerRepository — encrypted field selection on read", () => {
+  let repo: PlayerRepository;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    repo = new PlayerRepository(mockPrisma as any);
+  });
+
+  test("findById(id, true) selects encrypted emergency contact fields", async () => {
+    (mockPrisma.player.findUnique as jest.Mock).mockResolvedValue(null);
+    await repo.findById("p1", true);
+
+    const selectArg = (mockPrisma.player.findUnique as jest.Mock).mock.calls[0][0].select;
+    expect(selectArg.emergencyContactNameEncrypted).toBe(true);
+    expect(selectArg.emergencyContactNameIv).toBe(true);
+    expect(selectArg.emergencyContactName).toBeUndefined();
+  });
+
+  test("findById(id, false) does NOT select emergency contact fields", async () => {
+    (mockPrisma.player.findUnique as jest.Mock).mockResolvedValue(null);
+    await repo.findById("p1", false);
+
+    const selectArg = (mockPrisma.player.findUnique as jest.Mock).mock.calls[0][0].select;
+    expect(selectArg.emergencyContactNameEncrypted).toBeUndefined();
+  });
+
+  test("PLAYER_SELECT does not include dateOfBirth plaintext", async () => {
+    (mockPrisma.player.findMany as jest.Mock).mockResolvedValue([]);
+    await repo.findAll({});
+
+    const selectArg = (mockPrisma.player.findMany as jest.Mock).mock.calls[0][0].select;
+    expect(selectArg.dateOfBirth).toBeUndefined();
+  });
+});
