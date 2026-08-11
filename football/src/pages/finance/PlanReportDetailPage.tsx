@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Fragment } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
+import { toast } from 'sonner'
 import { planReportApi } from '@/services/plan-report.service'
 import type { PlanReport } from '@/types/plan-report'
 import { TEMPLATE_TYPE_LABELS, EXTRA_FIELDS_CONFIG } from '@/types/plan-report'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const STATUS_LABELS: Record<string, string> = {
   DRAFT: '작성중', REVIEWING: '검토중', APPROVED: '승인완료', REJECTED: '반려',
@@ -19,37 +21,73 @@ export function PlanReportDetailPage() {
   const [showRejectBox, setShowRejectBox] = useState(false)
   const [showResultBox, setShowResultBox] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    planReportApi.get(Number(id)).then(setPlan)
+    planReportApi.get(Number(id))
+      .then(setPlan)
+      .catch(() => setError('보고서를 불러오지 못했습니다'))
   }, [id])
 
-  if (!plan) return <div className="p-6">로딩 중...</div>
+  if (error) return <div className="p-6 text-red-500">{error}</div>
+  if (!plan) return (
+    <div className="p-6 max-w-3xl mx-auto space-y-4">
+      <Skeleton className="h-8 w-64" />
+      <Skeleton className="h-48 w-full" />
+      <Skeleton className="h-48 w-full" />
+    </div>
+  )
 
-  const isHead = user?.id === plan.department.headId
+  const isHead = plan.department.headId !== null && user?.id === plan.department.headId
   const isAdminLike = ['ADMIN', 'SUPER_ADMIN', 'GM'].includes(user?.role ?? '')
   const extraFields = EXTRA_FIELDS_CONFIG[plan.templateType]
 
   const handleApprove = async () => {
     setLoading(true)
-    try { setPlan(await planReportApi.approve(plan.id)) } finally { setLoading(false) }
+    try {
+      setPlan(await planReportApi.approve(plan.id))
+    } catch {
+      toast.error('승인에 실패했습니다')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleReject = async () => {
     if (!rejectReason.trim()) return
     setLoading(true)
-    try { setPlan(await planReportApi.reject(plan.id, rejectReason)); setShowRejectBox(false) } finally { setLoading(false) }
+    try {
+      setPlan(await planReportApi.reject(plan.id, rejectReason))
+      setShowRejectBox(false)
+    } catch {
+      toast.error('반려에 실패했습니다')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleSubmit = async () => {
     setLoading(true)
-    try { setPlan(await planReportApi.submit(plan.id)) } finally { setLoading(false) }
+    try {
+      setPlan(await planReportApi.submit(plan.id))
+    } catch {
+      toast.error('결재 상신에 실패했습니다')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleResult = async () => {
     if (!resultContent.trim()) return
     setLoading(true)
-    try { setPlan(await planReportApi.submitResult(plan.id, resultContent)); setShowResultBox(false) } finally { setLoading(false) }
+    try {
+      setPlan(await planReportApi.submitResult(plan.id, resultContent))
+      setShowResultBox(false)
+    } catch {
+      toast.error('결과보고 제출에 실패했습니다')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -100,10 +138,10 @@ export function PlanReportDetailPage() {
           <h2 className="text-lg font-semibold mb-4">{TEMPLATE_TYPE_LABELS[plan.templateType]} 추가 정보</h2>
           <dl className="grid grid-cols-2 gap-y-3 text-sm">
             {extraFields.map(f => (
-              <>
-                <dt key={`${f.key}-dt`} className="font-medium text-gray-500">{f.label}</dt>
-                <dd key={`${f.key}-dd`}>{String(plan.extraFields![f.key] ?? '-')}</dd>
-              </>
+              <Fragment key={f.key}>
+                <dt className="font-medium text-gray-500">{f.label}</dt>
+                <dd>{String(plan.extraFields![f.key] ?? '-')}</dd>
+              </Fragment>
             ))}
           </dl>
         </section>
