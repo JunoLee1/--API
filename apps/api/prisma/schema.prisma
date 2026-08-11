@@ -578,6 +578,33 @@ enum PayrollRunStatus {
   CONFIRMED
 }
 
+enum PlanStatus {
+  DRAFT
+  REVIEWING
+  APPROVED
+}
+
+enum ReviewStatus {
+  PENDING
+  CONFIRMED
+}
+
+enum PlanTemplateType {
+  GENERAL
+  HR
+  MARKETING
+  GOODS
+  SQUAD
+  MEDICAL
+  IT
+}
+
+enum ApproverLevel {
+  HEAD
+  GM
+  ADMIN
+}
+
 // ─────────────────────────────────────────────
 // Models
 // ─────────────────────────────────────────────
@@ -748,6 +775,9 @@ model User {
   squadPlans               SquadPlan[]
   facilityReservations     FacilityReservation[]     @relation("FacilityReservations")
   interviewerScores        InterviewerScore[]        @relation("InterviewerScores")
+  createdPlanReports       PlanReport[]              @relation("PlanReportCreatedBy")
+  approvedPlanReports      PlanReport[]              @relation("PlanReportApprovedBy")
+  confirmedPlanReviews     PlanReview[]              @relation("PlanReviewConfirmer")
 }
 
 model Season {
@@ -2112,9 +2142,11 @@ model AcademyFee {
 }
 
 model ClubSettings {
-  id       Int    @id @default(1)
-  currency String @default("KRW")
-  ibiBeta  Float  @default(1.0)
+  id                Int    @id @default(1)
+  currency          String @default("KRW")
+  ibiBeta           Float  @default(1.0)
+  planApprovalLimit Int    @default(10000000)
+  reviewerDeptMap   Json?
 }
 
 model StaffRecord {
@@ -2187,6 +2219,8 @@ model Department {
   postings     JobPosting[]
   members      UserDepartment[]
   ibiConfigs   DepartmentIbiConfig[]
+  planReports  PlanReport[]
+  planReviews  PlanReview[]       @relation("PlanReviewerDept")
 }
 
 enum DeptRole {
@@ -2452,6 +2486,66 @@ model DepartmentIbiConfig {
   department Department @relation(fields: [departmentId], references: [id])
 
   @@unique([departmentId, jobTitle, effectiveFrom])
+}
+
+// ─────────────────────────────────────────────
+// 계획보고서
+// ─────────────────────────────────────────────
+
+model PlanReport {
+  id                    Int              @id @default(autoincrement())
+  title                 String
+  purpose               String
+  departmentId          Int
+  startDate             DateTime
+  endDate               DateTime
+  budget                Int
+  expectedEffect        String
+  risks                 String
+  attachments           String[]
+  resultDueDate         DateTime
+  templateType          PlanTemplateType
+  extraFields           Json?
+  hasNewStaff           Boolean          @default(false)
+  hasContract           Boolean          @default(false)
+  hasExternalLease      Boolean          @default(false)
+  hasPersonalInfo       Boolean          @default(false)
+  isNewBusiness         Boolean          @default(false)
+  status                PlanStatus       @default(DRAFT)
+  requiredApproverLevel ApproverLevel?
+  rejectionReason       String?
+  resultContent         String?
+  resultSubmittedAt     DateTime?
+  submittedAt           DateTime?
+  approvedAt            DateTime?
+  rejectedAt            DateTime?
+  vaultPath             String?
+  createdById           Int
+  approvedById          Int?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  department  Department   @relation(fields: [departmentId], references: [id])
+  createdBy   User         @relation("PlanReportCreatedBy", fields: [createdById], references: [id])
+  approvedBy  User?        @relation("PlanReportApprovedBy", fields: [approvedById], references: [id])
+  reviews     PlanReview[]
+}
+
+model PlanReview {
+  id             Int          @id @default(autoincrement())
+  planId         Int
+  reviewerDeptId Int
+  status         ReviewStatus @default(PENDING)
+  comment        String?
+  confirmedById  Int?
+  confirmedAt    DateTime?
+  createdAt      DateTime     @default(now())
+
+  plan         PlanReport @relation(fields: [planId], references: [id], onDelete: Cascade)
+  reviewerDept Department @relation("PlanReviewerDept", fields: [reviewerDeptId], references: [id])
+  confirmedBy  User?      @relation("PlanReviewConfirmer", fields: [confirmedById], references: [id])
+
+  @@unique([planId, reviewerDeptId])
 }
 
 model SeasonComplianceCheck {
