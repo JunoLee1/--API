@@ -41,12 +41,16 @@ export class VideoService {
     return this.repo.findAssignmentsByPlayer(player.id);
   }
 
-  async createAssignment(dto: CreateAssignmentDto) {
-    const assignment = await this.repo.createAssignment(dto);
+  async createAssignment(dto: CreateAssignmentDto & { assignerTeamId?: number | null }) {
+    // SH18: 선수의 팀 == 요청자의 팀 검증 (SUPER_ADMIN 제외)
     const player = await getPrisma().player.findUnique({
       where: { id: dto.playerId },
-      select: { userId: true },
+      select: { userId: true, teamId: true },
     });
+    if (dto.assignerTeamId !== undefined && player && player.teamId !== dto.assignerTeamId) {
+      throw new AppError(403, "FORBIDDEN");
+    }
+    const assignment = await this.repo.createAssignment(dto);
     if (player?.userId) {
       void this.notifRepo
         .create({

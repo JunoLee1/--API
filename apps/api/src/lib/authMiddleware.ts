@@ -1,13 +1,34 @@
 import passport from "passport";
 import { Request, Response, NextFunction } from "express";
+import rateLimit from "express-rate-limit";
 import { getPrisma } from "./prisma";
 import { AppError } from "./appError";
 import { writeAuditLog } from "./auditLog";
+import { Role } from "../generated/enums";
 
 export function requireUser(req: Request) {
   if (!req.user) throw new AppError(401, "UNAUTHORIZED");
   return req.user;
 }
+
+export const requireRole = (...roles: Role[]) => (req: Request, _res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return next(new AppError(401, "UNAUTHORIZED"));
+  }
+  if (!roles.includes(req.user.role as Role)) {
+    return next(new AppError(403, "FORBIDDEN"));
+  }
+  return next();
+};
+
+export const teamSwitchLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  keyGenerator: (req) => String(req.user?.id ?? req.ip),
+  message: { code: "TOO_MANY_REQUESTS" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 export const auth = (req: Request, res: Response, next: NextFunction) => {
   passport.authenticate(

@@ -21,14 +21,15 @@ export class AuthService {
 
     const departmentCategories = await this.repo.getDepartmentCategories(user.id);
     const tokens = generateTokens({ id: user.id, role: user.role, coachingRole: user.coachingRole, frontOfficeRole: user.frontOfficeRole, departmentCategories, teamId: user.teamId, clubId: user.clubId, isDemo: user.isDemo });
-    return { ...tokens, userId: user.id };
+    return { ...tokens, userId: user.id, teamId: user.teamId };
   }
 
   async createUser(dto: CreateUserDto) {
     if (dto.password !== dto.confirmedPassword) throw new AppError(400, "PASSWORD_MISMATCH");
 
-    // 010-1234-5678 형식
-    if (!/^\d{2,3}-\d{3,4}-\d{4}$/.test(dto.phoneNumber)) throw new AppError(400, "INVALID_PHONE_NUMBER");
+    // 공백·특수문자 완전 제거 후 숫자만 검증 (010-1234-5678 등 다양한 포맷 허용)
+    const phoneDigits = dto.phoneNumber.replace(/\D/g, '');
+    if (!/^\d{10,11}$/.test(phoneDigits)) throw new AppError(400, "INVALID_PHONE_NUMBER");
 
     if (await this.repo.isEmailTaken(dto.email)) throw new AppError(409, "EMAIL_TAKEN");
     if (await this.repo.isNicknameTaken(dto.nickname)) throw new AppError(409, "NICKNAME_TAKEN");
@@ -78,7 +79,8 @@ export class AuthService {
     const invite = await this.getInvite(token);
 
     if (dto.password !== dto.confirmedPassword) throw new AppError(400, "PASSWORD_MISMATCH");
-    if (!/^\d{2,3}-\d{3,4}-\d{4}$/.test(dto.phoneNumber)) throw new AppError(400, "INVALID_PHONE_NUMBER");
+    const invitePhoneDigits = dto.phoneNumber.replace(/\D/g, '');
+    if (!/^\d{10,11}$/.test(invitePhoneDigits)) throw new AppError(400, "INVALID_PHONE_NUMBER");
     if (await this.repo.isNicknameTaken(dto.nickname)) throw new AppError(409, "NICKNAME_TAKEN");
 
     const password = await hashPassword(dto.password);
@@ -102,7 +104,10 @@ export class AuthService {
 
   async blacklistToken(jti: string, expiresAt: Date) {
     await this.repo.blacklistToken(jti, expiresAt);
-    void this.repo.deleteExpiredBlacklistEntries().catch(() => {});
+    // 만료 항목 정리는 fire-and-forget — 실패해도 로그아웃은 성공
+    this.repo.deleteExpiredBlacklistEntries().catch((err) =>
+      console.error('[auth] blacklist cleanup failed:', err)
+    );
   }
 
   isTokenBlacklisted(jti: string) {

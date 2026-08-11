@@ -1,4 +1,4 @@
-import { auth } from "../lib/authMiddleware";
+import { auth, requireRole } from "../lib/authMiddleware";
 import { Router } from "express";
 import { PlayerController } from "./player.controller";
 import { PlayerService } from "./player.service";
@@ -47,17 +47,17 @@ router.get("/jersey/teams/:teamId", auth, jerseyController.listByTeam);
 // 선수의 등번호 조회
 router.get("/:id/jersey-numbers", auth, jerseyController.listByPlayer);
 
-// 등번호 배정 (GM, ADMIN, FRONT_OFFICE)
-router.post("/:id/jersey-numbers/assign", auth, jerseyController.assign);
+// 등번호 배정 (GM, ADMIN, SUPER_ADMIN, FRONT_OFFICE)
+router.post("/:id/jersey-numbers/assign", auth, requireRole('GM', 'ADMIN', 'SUPER_ADMIN', 'FRONT_OFFICE'), jerseyController.assign);
 
-// 등번호 해제 (GM, ADMIN, FRONT_OFFICE)
-router.post("/:id/jersey-numbers/release", auth, jerseyController.release);
+// 등번호 해제 (GM, ADMIN, SUPER_ADMIN, FRONT_OFFICE)
+router.post("/:id/jersey-numbers/release", auth, requireRole('GM', 'ADMIN', 'SUPER_ADMIN', 'FRONT_OFFICE'), jerseyController.release);
 
-// 등번호 영구 결번 (GM, ADMIN)
-router.post("/:id/jersey-numbers/retire", auth, jerseyController.retire);
+// 등번호 영구 결번 (GM, ADMIN, SUPER_ADMIN)
+router.post("/:id/jersey-numbers/retire", auth, requireRole('GM', 'ADMIN', 'SUPER_ADMIN'), jerseyController.retire);
 
-// 결번 재활성화 (ADMIN only)
-router.post("/:id/jersey-numbers/reactivate", auth, jerseyController.reactivate);
+// 결번 재활성화 (ADMIN, SUPER_ADMIN only)
+router.post("/:id/jersey-numbers/reactivate", auth, requireRole('ADMIN', 'SUPER_ADMIN'), jerseyController.reactivate);
 
 // 시장 가치 이력 조회 (GM, TD, ADMIN)
 router.get("/:id/market-value/history", auth, controller.getMarketValueHistory);
