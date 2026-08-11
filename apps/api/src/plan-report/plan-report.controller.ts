@@ -2,13 +2,14 @@ import { Request, Response, NextFunction } from "express";
 import path from "path";
 import { PlanReportService } from "./plan-report.service";
 import { requireUser } from "../lib/authMiddleware";
+import { ListPlanReportQuery } from "./dto/plan-report.dto";
 
 export class PlanReportController {
   constructor(private service: PlanReportService) {}
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const plans = await this.service.list(req.query as any);
+      const plans = await this.service.list(req.query as ListPlanReportQuery);
       res.json(plans);
     } catch (err) {
       next(err);
@@ -92,9 +93,11 @@ export class PlanReportController {
     }
   };
 
-  uploadAttachment = (req: Request, res: Response) => {
-    if (!req.file) return res.status(400).json({ error: "NO_FILE_UPLOADED" });
-    const relativePath = `/uploads/${path.basename(req.file.path)}`;
-    res.json({ url: relativePath });
+  uploadAttachment = (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.file) return res.status(400).json({ error: "NO_FILE_UPLOADED" });
+      const relativePath = `/uploads/plan-reports/${path.basename(req.file.path)}`;
+      res.json({ url: relativePath });
+    } catch (e) { next(e); }
   };
 }

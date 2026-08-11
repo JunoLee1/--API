@@ -1,6 +1,7 @@
 import { Router } from "express";
 import multer from "multer";
 import path from "path";
+import fs from "fs";
 import { PlanReportController } from "./plan-report.controller";
 import { PlanReportService } from "./plan-report.service";
 import { PlanReportRepository } from "./plan-report.repo";
@@ -12,10 +13,16 @@ const repo = new PlanReportRepository(getPrisma());
 const service = new PlanReportService(repo);
 const controller = new PlanReportController(service);
 
+const uploadDir = path.join(process.cwd(), "uploads", "plan-reports");
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
 const upload = multer({
   storage: multer.diskStorage({
-    destination: path.join(process.cwd(), "uploads"),
-    filename: (_req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`),
+    destination: (_req, _file, cb) => cb(null, uploadDir),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname);
+      cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
+    },
   }),
   limits: { fileSize: 10 * 1024 * 1024 },
 });
