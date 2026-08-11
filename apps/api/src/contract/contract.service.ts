@@ -29,6 +29,10 @@ export class ContractService {
 
   async createContract(dto: CreateContractDto, actorId: number) {
     if (dto.salary <= 0) throw new AppError(400, "INVALID_SALARY");
+    // SH17: salary 최대값 10억 KRW
+    if (!Number.isInteger(dto.salary) || dto.salary > 1_000_000_000) {
+      throw new AppError(400, "SALARY_EXCEEDS_LIMIT");
+    }
 
     const player = await getPrisma().player.findUnique({
       where: { id: dto.playerId },
