@@ -112,7 +112,7 @@ export class PlayerController {
       // SH11: TD role은 자신의 팀 선수만 수정 가능
       if (user.frontOfficeRole === "TD") {
         const player = await this.service.getPlayerById(String(req.params["id"]));
-        if (player.teamId !== user.teamId) throw new AppError(403, "FORBIDDEN");
+        if (!player || player.teamId !== user.teamId) throw new AppError(403, "FORBIDDEN");
       }
       const result = await this.service.updateMarketValue(
         String(req.params["id"]),
