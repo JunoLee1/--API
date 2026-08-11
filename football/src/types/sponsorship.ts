@@ -45,6 +45,31 @@ export interface SponsorshipListResponse {
   totalPages: number
 }
 
+export interface SponsorshipRoiItem {
+  id: number
+  sponsorName: string
+  type: SponsorType
+  totalFee: number
+  paid: number
+  mediaValue: number
+  fanReach: number
+  exposureCount: number
+  roi: number
+  expiresSoon: boolean
+  contractEnd: string
+}
+
+export interface SponsorshipRoiSummary {
+  totalContracts: number
+  totalFee: number
+  totalPaid: number
+  totalMediaValue: number
+  totalFanReach: number
+  totalExposureCount: number
+  overallRoi: number
+  sponsorships: SponsorshipRoiItem[]
+}
+
 export interface CreateSponsorshipDto {
   sponsorName: string
   type: SponsorType

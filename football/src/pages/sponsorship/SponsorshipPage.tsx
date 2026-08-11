@@ -8,6 +8,7 @@ import type {
   SponsorType,
   PaymentSchedule,
   CreateSponsorshipDto,
+  SponsorshipRoiSummary,
 } from '@/types/sponsorship'
 import {
   SPONSOR_TYPE_LABEL,
@@ -41,7 +42,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { Plus } from 'lucide-react'
+import { Plus, TrendingUp, TrendingDown } from 'lucide-react'
 
 const SPONSOR_TYPES: SponsorType[] = ['TITLE', 'KIT', 'STADIUM_NAMING', 'DIGITAL', 'OTHER']
 const PAYMENT_SCHEDULES: PaymentSchedule[] = ['MONTHLY', 'QUARTERLY', 'ANNUAL']
@@ -231,6 +232,55 @@ function CreateSponsorshipDialog({ open, onOpenChange, onSaved }: CreateSponsors
   )
 }
 
+// ── ROI Summary Bar ───────────────────────────────────────────────────────────
+function RoiSummaryBar({ roi }: { roi: SponsorshipRoiSummary }) {
+  const positive = roi.overallRoi >= 0
+  return (
+    <div className="px-6 py-3 border-b bg-muted/30 shrink-0">
+      <div className="flex items-center gap-6 text-sm flex-wrap">
+        <div>
+          <span className="text-muted-foreground mr-1.5">계약 총액</span>
+          <span className="font-medium tabular-nums">{roi.totalFee.toLocaleString('ko-KR')}원</span>
+        </div>
+        <div>
+          <span className="text-muted-foreground mr-1.5">수납 완료</span>
+          <span className="font-medium tabular-nums text-green-600">{roi.totalPaid.toLocaleString('ko-KR')}원</span>
+        </div>
+        {roi.totalMediaValue > 0 && (
+          <div>
+            <span className="text-muted-foreground mr-1.5">미디어 가치</span>
+            <span className="font-medium tabular-nums">{roi.totalMediaValue.toLocaleString('ko-KR')}원</span>
+          </div>
+        )}
+        {roi.totalMediaValue > 0 && (
+          <div className="flex items-center gap-1">
+            <span className="text-muted-foreground mr-0.5">ROI</span>
+            {positive
+              ? <TrendingUp className="h-3.5 w-3.5 text-green-600" />
+              : <TrendingDown className="h-3.5 w-3.5 text-red-500" />}
+            <span className={`font-semibold tabular-nums ${positive ? 'text-green-600' : 'text-red-500'}`}>
+              {positive ? '+' : ''}{roi.overallRoi}%
+            </span>
+          </div>
+        )}
+        {roi.totalFanReach > 0 && (
+          <div>
+            <span className="text-muted-foreground mr-1.5">팬 도달</span>
+            <span className="font-medium tabular-nums">{roi.totalFanReach.toLocaleString('ko-KR')}</span>
+          </div>
+        )}
+        {roi.sponsorships.some((s) => s.expiresSoon) && (
+          <div className="ml-auto">
+            <span className="inline-flex items-center rounded-full bg-amber-100 text-amber-800 text-xs font-medium px-2 py-0.5 border border-amber-200">
+              만료 임박 {roi.sponsorships.filter((s) => s.expiresSoon).length}건
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export function SponsorshipPage() {
   const { t } = useTranslation('sponsorship')
@@ -244,6 +294,7 @@ export function SponsorshipPage() {
         user.frontOfficeRole === 'GM'))
 
   const [sponsorships, setSponsorships] = useState<Sponsorship[]>([])
+  const [roiSummary, setRoiSummary] = useState<SponsorshipRoiSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [typeFilter, setTypeFilter] = useState<SponsorType | ''>('')
   const [page, setPage] = useState(1)
@@ -252,10 +303,14 @@ export function SponsorshipPage() {
 
   const fetchSponsorships = useCallback(() => {
     setLoading(true)
-    sponsorshipApi.list({ type: typeFilter || undefined, page })
-      .then((res) => {
-        setSponsorships(res.data)
-        setTotalPages(res.totalPages)
+    Promise.all([
+      sponsorshipApi.list({ type: typeFilter || undefined, page }),
+      sponsorshipApi.getRoiSummary(),
+    ])
+      .then(([listRes, roiRes]) => {
+        setSponsorships(listRes.data)
+        setTotalPages(listRes.totalPages)
+        setRoiSummary(roiRes)
       })
       .catch(() => toast.error(t('loadFailed')))
       .finally(() => setLoading(false))
@@ -278,6 +333,8 @@ export function SponsorshipPage() {
           </Button>
         )}
       </div>
+
+      {roiSummary && <RoiSummaryBar roi={roiSummary} />}
 
       <div className="px-6 py-3 border-b shrink-0">
         <Select value={typeFilter} onValueChange={handleTypeFilter}>

@@ -138,6 +138,10 @@ export class SponsorshipService {
     return updated;
   }
 
+  getRoiSummary() {
+    return this.repo.getRoiSummary();
+  }
+
   async findExpiringContracts(daysAhead: number = 30) {
     const now = new Date();
     const threshold = new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000);
