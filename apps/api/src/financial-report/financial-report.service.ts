@@ -94,6 +94,57 @@ export class FinancialReportService {
     return this.repo.getActuals(seasonId);
   }
 
+  async autoGenerateBudgetPlan(
+    seasonId: number,
+    opts: { growthRate?: number; contingencyRate?: number }
+  ) {
+    const { growthRate = 0.1, contingencyRate = 0 } = opts;
+    const prisma = getPrisma();
+
+    // 현재 시즌의 endDate 조회
+    const currentSeason = await prisma.season.findUnique({
+      where: { id: seasonId },
+      select: { endDate: true },
+    });
+    if (!currentSeason) throw new AppError(404, "SEASON_NOT_FOUND");
+
+    // 직전 시즌 탐색 (endDate 기준 현재보다 이전, 가장 최근)
+    const prevSeason = await prisma.season.findFirst({
+      where: { endDate: { lt: currentSeason.endDate } },
+      orderBy: { endDate: "desc" },
+      select: { id: true },
+    });
+    if (!prevSeason) throw new AppError(404, "PREV_SEASON_NOT_FOUND");
+
+    const prevActuals = await this.repo.getActuals(prevSeason.id);
+    if (!prevActuals) throw new AppError(404, "PREV_SEASON_NOT_FOUND");
+
+    const ALL_CATS: OperatingCategory[] = ["MEDICAL", "MEAL", "TRAVEL", "EQUIPMENT", "SCOUTING", "YOUTH"];
+    const zeroCategories: OperatingCategory[] = [];
+
+    const categories = ALL_CATS.map((cat) => {
+      const actual = prevActuals[cat] ?? 0;
+      if (actual === 0) zeroCategories.push(cat);
+      return {
+        category: cat,
+        mandatoryMinimum: Math.round(actual * (1 + growthRate)),
+        tiers: [] as { name: string; cost: number; value: number }[],
+      };
+    });
+
+    const mandatoryTotal = categories.reduce((s, c) => s + c.mandatoryMinimum, 0);
+    const contingencyReserve = Math.round(mandatoryTotal * contingencyRate);
+    const totalOperatingBudget = mandatoryTotal + contingencyReserve;
+
+    await this.repo.upsertBudgetPlan(seasonId, {
+      totalOperatingBudget,
+      contingencyReserve,
+      categories,
+    });
+
+    return { totalOperatingBudget, contingencyReserve, categories, zeroCategories };
+  }
+
   async setFromPrevSeasonActuals(prevSeasonId: number, newSeasonId: number) {
     const prisma = getPrisma();
 

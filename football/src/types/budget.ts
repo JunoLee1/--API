@@ -78,3 +78,10 @@ export interface OperatingExpense {
   createdAt: string
   createdBy: { id: number; username: string }
 }
+
+export interface AutoGenerateResult {
+  totalOperatingBudget: number
+  contingencyReserve: number
+  categories: { category: OperatingCategory; mandatoryMinimum: number }[]
+  zeroCategories: OperatingCategory[]
+}

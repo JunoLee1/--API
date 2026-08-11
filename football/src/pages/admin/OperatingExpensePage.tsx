@@ -5,6 +5,7 @@ import { operatingExpenseApi } from '@/services/operating-expense.service'
 import { seasonApi } from '@/services/season.service'
 import type { OperatingExpense, OperatingCategory } from '@/types/budget'
 import { OPERATING_CATEGORY_LABEL, ALL_OPERATING_CATEGORIES } from '@/types/budget'
+import type { Season } from '@/types/season'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -25,6 +26,7 @@ function fmt(n: number) {
 
 export function OperatingExpensePage() {
   const { t } = useTranslation('admin')
+  const [seasons, setSeasons] = useState<Season[]>([])
   const [seasonId, setSeasonId] = useState<number | null>(null)
   const [expenses, setExpenses] = useState<OperatingExpense[]>([])
   const [loading, setLoading] = useState(true)
@@ -40,14 +42,24 @@ export function OperatingExpensePage() {
   useEffect(() => {
     void (async () => {
       try {
-        const season = await seasonApi.active()
-        if (!season) { setLoading(false); return }
-        setSeasonId(season.id)
-        await load(season.id)
+        const [list, active] = await Promise.all([seasonApi.list(), seasonApi.active()])
+        setSeasons(list)
+        const defaultId = active?.id ?? list[0]?.id ?? null
+        if (!defaultId) { setLoading(false); return }
+        setSeasonId(defaultId)
+        await load(defaultId)
       } catch { toast.error(t('operatingExpense.loadFailed')) }
       finally { setLoading(false) }
     })()
   }, [])
+
+  const handleSeasonChange = async (id: number) => {
+    setSeasonId(id)
+    setLoading(true)
+    try { await load(id) }
+    catch { toast.error(t('operatingExpense.loadFailed')) }
+    finally { setLoading(false) }
+  }
 
   const handleCreate = async () => {
     if (!seasonId || !form.amount || !form.date) {
@@ -88,7 +100,7 @@ export function OperatingExpensePage() {
       {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
     </div>
   )
-  if (!seasonId) return <div className="p-6 text-sm text-muted-foreground">{t('operatingExpense.noActiveSeason')}</div>
+  if (seasons.length === 0) return <div className="p-6 text-sm text-muted-foreground">{t('operatingExpense.noActiveSeason')}</div>
 
   return (
     <div className="flex flex-col h-full">
@@ -97,9 +109,20 @@ export function OperatingExpensePage() {
           <h1 className="text-lg font-semibold">{t('operatingExpense.title')}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{t('operatingExpense.subtitle')}</p>
         </div>
-        <Button size="sm" onClick={() => setCreateOpen(true)}>
-          <Plus className="h-3.5 w-3.5 mr-1.5" />{t('operatingExpense.add')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <select
+            className="border rounded px-2.5 py-1 text-sm bg-transparent"
+            value={seasonId ?? ''}
+            onChange={(e) => void handleSeasonChange(Number(e.target.value))}
+          >
+            {seasons.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+          <Button size="sm" onClick={() => setCreateOpen(true)}>
+            <Plus className="h-3.5 w-3.5 mr-1.5" />{t('operatingExpense.add')}
+          </Button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-auto">

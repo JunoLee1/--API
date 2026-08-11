@@ -1,7 +1,7 @@
 import { AuthRepository } from "./auth.repo";
 import { AppError } from "../lib/appError";
 import { hashPassword, comparePassword } from "../lib/hash";
-import { encrypt, decrypt } from "../lib/crypto";
+import { encrypt } from "../lib/crypto";
 import { generateTokens } from "../lib/token";
 import { LoginDto, CreateUserDto } from "../lib/dto";
 import { Role, CoachingRole, FrontOfficeRole } from "../generated/enums";
@@ -155,17 +155,6 @@ export class AuthService {
 
     const data = await this.repo.exportUserData(targetUserId);
     if (!data) throw new AppError(404, "USER_NOT_FOUND");
-
-    // Decrypt encrypted fields before returning to client
-    if (data.player) {
-      const { dateOfBirthEncrypted, dateOfBirthIv, ...playerRest } = data.player as any;
-      data.player = {
-        ...playerRest,
-        dateOfBirth: dateOfBirthEncrypted && dateOfBirthIv
-          ? decrypt(dateOfBirthEncrypted, dateOfBirthIv)
-          : null,
-      };
-    }
 
     return data;
   }

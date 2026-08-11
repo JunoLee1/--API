@@ -186,7 +186,6 @@ export class AuthRepository {
         nickname: true,
         role: true,
         language: true,
-        createdAt: true,
         player: {
           select: {
             id: true,
@@ -194,8 +193,6 @@ export class AuthRepository {
             position: true,
             level: true,
             status: true,
-            dateOfBirthEncrypted: true,
-            dateOfBirthIv: true,
             contracts: {
               select: { id: true, startDate: true, endDate: true, status: true },
               orderBy: { startDate: "desc" as const },
