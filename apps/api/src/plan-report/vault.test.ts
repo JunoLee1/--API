@@ -44,7 +44,7 @@ describe('writeApprovalVaultNote', () => {
 
   it('노트에 planId frontmatter와 결과보고 미완료 섹션이 포함된다', async () => {
     await writeApprovalVaultNote(baseData)
-    const content = mockFs.writeFile.mock.calls[0][1] as string
+    const content = mockFs.writeFile.mock.calls[0]![1] as string
     expect(content).toContain('planId: 1')
     expect(content).toContain('## 결과보고 (제출: 미완료)')
     expect(content).toContain('여름 페스타')
@@ -52,13 +52,13 @@ describe('writeApprovalVaultNote', () => {
 
   it('extraFields 없으면 업무별 섹션이 없다', async () => {
     await writeApprovalVaultNote({ ...baseData, extraFields: null })
-    const content = mockFs.writeFile.mock.calls[0][1] as string
+    const content = mockFs.writeFile.mock.calls[0]![1] as string
     expect(content).not.toContain('## 업무별 추가사항')
   })
 
   it('첨부자료가 노트에 포함된다', async () => {
     await writeApprovalVaultNote(baseData)
-    const content = mockFs.writeFile.mock.calls[0][1] as string
+    const content = mockFs.writeFile.mock.calls[0]![1] as string
     expect(content).toContain('https://drive.google.com/abc')
   })
 })
@@ -77,7 +77,7 @@ describe('appendResultToVaultNote', () => {
       submittedByUsername: 'user1',
     })
 
-    const written = mockFs.writeFile.mock.calls[0][1] as string
+    const written = mockFs.writeFile.mock.calls[0]![1] as string
     expect(written).toContain('## 결과보고 (제출: 2026-09-15)')
     expect(written).toContain('목표 달성 완료')
     expect(written).not.toContain('## 결과보고 (제출: 미완료)')
