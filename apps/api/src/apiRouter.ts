@@ -56,7 +56,7 @@ import transferRequestRouter from "./transfer-request/transfer-request.routes";
 import opsReportRouter from "./ops-report/ops-report.routes";
 import squadPlanRouter from "./squad-plan/squad-plan.routes";
 import attendanceAppealRouter from "./attendance-appeal/attendance-appeal.routes";
-import departmentPlanRouter from "./department-plan/department-plan.routes";
+import planReportRouter from "./plan-report/plan-report.routes";
 import departmentReviewConfigRouter from "./department-review-config/department-review-config.routes";
 import planReviewRouter from "./plan-review/plan-review.routes";
 
@@ -119,7 +119,7 @@ apiRouter.use("/transfer-requests", transferRequestRouter);
 apiRouter.use("/ops-reports", opsReportRouter);
 apiRouter.use("/squad-plan", squadPlanRouter);
 apiRouter.use("/attendance-appeals", attendanceAppealRouter);
-apiRouter.use("/department-plans", departmentPlanRouter);
+apiRouter.use("/plan-reports", planReportRouter);
 apiRouter.use("/department-review-configs", departmentReviewConfigRouter);
 apiRouter.use("/plan-reviews", planReviewRouter);
 

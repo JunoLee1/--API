@@ -71,10 +71,9 @@ import { ApplicationDetailPage } from '@/pages/admin/recruitment/ApplicationDeta
 import { TeamSelectPage } from '@/pages/team-select/TeamSelectPage'
 import { LeaguePage } from '@/pages/admin/LeaguePage'
 import { TicketSalesPage } from '@/pages/finance/TicketSalesPage'
-import { DepartmentPlanListPage } from '@/pages/finance/DepartmentPlanListPage'
-import { DepartmentPlanFormPage } from '@/pages/finance/DepartmentPlanFormPage'
-import { DepartmentPlanDetailPage } from '@/pages/finance/DepartmentPlanDetailPage'
-import { DepartmentBudgetSummaryPage } from '@/pages/finance/DepartmentBudgetSummaryPage'
+import { PlanReportListPage } from '@/pages/finance/PlanReportListPage'
+import { PlanReportFormPage } from '@/pages/finance/PlanReportFormPage'
+import { PlanReportDetailPage } from '@/pages/finance/PlanReportDetailPage'
 import { DepartmentReviewConfigPage } from '@/pages/admin/DepartmentReviewConfigPage'
 import { ReviewRuleSetPage } from '@/pages/admin/ReviewRuleSetPage'
 
@@ -192,11 +191,10 @@ function App() {
             <Route path="/finance/ticket-sales" element={<TicketSalesPage />} />
             <Route path="/admin/department-review-configs" element={<DepartmentReviewConfigPage />} />
             <Route path="/admin/review-rule-sets" element={<ReviewRuleSetPage />} />
-            <Route path="/finance/department-plans" element={<DepartmentPlanListPage />} />
-            <Route path="/finance/department-plans/new" element={<DepartmentPlanFormPage />} />
-            <Route path="/finance/department-plans/budget-summary" element={<DepartmentBudgetSummaryPage />} />
-            <Route path="/finance/department-plans/:id/edit" element={<DepartmentPlanFormPage />} />
-            <Route path="/finance/department-plans/:id" element={<DepartmentPlanDetailPage />} />
+            <Route path="/finance/plan-reports" element={<PlanReportListPage />} />
+            <Route path="/finance/plan-reports/new" element={<PlanReportFormPage />} />
+            <Route path="/finance/plan-reports/:id/edit" element={<PlanReportFormPage />} />
+            <Route path="/finance/plan-reports/:id" element={<PlanReportDetailPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/login" replace />} />
