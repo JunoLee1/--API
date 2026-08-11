@@ -91,7 +91,7 @@ export class TransferRepository {
     const [player, trainingResults, injuries, matchStats] = await Promise.all([
       this.prisma.player.findUnique({
         where: { id: transfer.playerId },
-        select: { id: true, playerName: true, position: true, nationality: true, dateOfBirth: true },
+        select: { id: true, playerName: true, position: true, nationality: true, dateOfBirthEncrypted: true, dateOfBirthIv: true },
       }),
       this.prisma.trainingResult.findMany({
         where: { playerId: transfer.playerId },

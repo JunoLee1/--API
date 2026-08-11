@@ -850,7 +850,6 @@ model ClubLeague {
 model Player {
   id               String           @id @default(uuid())
   playerName       String
-  dateOfBirth      DateTime
   preferredFoot    Foot
   height           Int
   weight           Int
@@ -863,9 +862,6 @@ model Player {
   agentId          Int?
   guardianId       Int?
   agencyId         Int?
-  emergencyContactName     String?
-  emergencyContactPhone    String?
-  emergencyContactRelation String?
   emergencyContactNameEncrypted     String?
   emergencyContactNameIv            String?
   emergencyContactPhoneEncrypted    String?

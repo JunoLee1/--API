@@ -126,9 +126,9 @@ export class PlayerRepository {
 
   update(id: string, data: UpdatePlayerDto) {
     const encDob = data.dateOfBirth ? encrypt(data.dateOfBirth) : null;
-    const encName = data.emergencyContactName !== undefined ? encrypt(data.emergencyContactName) : null;
-    const encPhone = data.emergencyContactPhone !== undefined ? encrypt(data.emergencyContactPhone) : null;
-    const encRelation = data.emergencyContactRelation !== undefined ? encrypt(data.emergencyContactRelation) : null;
+    const encName = data.emergencyContactName != null ? encrypt(data.emergencyContactName) : null;
+    const encPhone = data.emergencyContactPhone != null ? encrypt(data.emergencyContactPhone) : null;
+    const encRelation = data.emergencyContactRelation != null ? encrypt(data.emergencyContactRelation) : null;
 
     return this.prisma.player.update({
       where: { id },
