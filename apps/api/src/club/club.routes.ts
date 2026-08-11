@@ -1,4 +1,4 @@
-import { auth } from "../lib/authMiddleware";
+import { auth, requireRole } from "../lib/authMiddleware";
 import { Router } from "express";
 import { ClubController } from "./club.controller";
 import { ClubService } from "./club.service";
@@ -15,7 +15,7 @@ const controller = new ClubController(service);
 
 router.get("/", auth, controller.getAll);
 router.get("/:id", auth, controller.getById);
-router.post("/", auth, controller.create);
-router.patch("/:id", auth, controller.update);
+router.post("/", auth, requireRole('ADMIN', 'SUPER_ADMIN'), controller.create);
+router.patch("/:id", auth, requireRole('ADMIN', 'SUPER_ADMIN'), controller.update);
 
 export default router;

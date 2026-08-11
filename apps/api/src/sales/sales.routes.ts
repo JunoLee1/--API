@@ -42,7 +42,7 @@ router.post("/:id/cancel",          auth, checkWriteFinance, ctrl.cancel);
 router.get("/fans/membership-stats", auth, fanCtrl.membershipStats);
 router.get("/fans/:id",              auth, fanCtrl.getById);
 router.get("/fans",                  auth, fanCtrl.list);
-router.post("/fans",                 auth, fanCtrl.create);
+router.post("/fans",                 auth, checkWriteFinance, fanCtrl.create);
 router.post("/fans/:id/memberships", auth, fanCtrl.createMembership);
 router.get("/seat-zones/:matchId",   auth, fanCtrl.getSeatZones);
 router.post("/seat-zones",           auth, fanCtrl.createSeatZone);
