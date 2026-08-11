@@ -68,3 +68,15 @@ export const canReadInjuryReport = (role: string, coachingRole?: string | null):
 
 export const isHeadCoach = (role: string, coachingRole?: string | null): boolean =>
   role === 'COACHING_STAFF' && coachingRole === 'HEAD_COACH'
+
+export function canApprovePlan(userRole: string, requiredLevel: string | null): boolean {
+  switch (requiredLevel ?? 'HEAD') {
+    case 'HEAD':
+    case 'GM':
+      return isAdminLike(userRole)
+    case 'ADMIN':
+      return userRole === 'ADMIN' || userRole === 'SUPER_ADMIN'
+    default:
+      return false
+  }
+}
