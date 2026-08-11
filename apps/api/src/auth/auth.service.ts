@@ -1,7 +1,7 @@
 import { AuthRepository } from "./auth.repo";
 import { AppError } from "../lib/appError";
 import { hashPassword, comparePassword } from "../lib/hash";
-import { encrypt } from "../lib/crypto";
+import { encrypt, decrypt } from "../lib/crypto";
 import { generateTokens } from "../lib/token";
 import { LoginDto, CreateUserDto } from "../lib/dto";
 import { Role, CoachingRole, FrontOfficeRole } from "../generated/enums";
@@ -135,6 +135,7 @@ export class AuthService {
   async gdprErasure(targetUserId: number, actorId: number) {
     const user = await this.repo.findById(targetUserId);
     if (!user) throw new AppError(404, "USER_NOT_FOUND");
+    if (user.isDeleted) throw new AppError(409, "USER_ALREADY_ERASED");
 
     const result = await this.repo.anonymizeUser(targetUserId);
 
@@ -154,6 +155,17 @@ export class AuthService {
 
     const data = await this.repo.exportUserData(targetUserId);
     if (!data) throw new AppError(404, "USER_NOT_FOUND");
+
+    // Decrypt encrypted fields before returning to client
+    if (data.player) {
+      const { dateOfBirthEncrypted, dateOfBirthIv, ...playerRest } = data.player as any;
+      data.player = {
+        ...playerRest,
+        dateOfBirth: dateOfBirthEncrypted && dateOfBirthIv
+          ? decrypt(dateOfBirthEncrypted, dateOfBirthIv)
+          : null,
+      };
+    }
 
     return data;
   }
