@@ -71,6 +71,9 @@ import { ApplicationDetailPage } from '@/pages/admin/recruitment/ApplicationDeta
 import { TeamSelectPage } from '@/pages/team-select/TeamSelectPage'
 import { LeaguePage } from '@/pages/admin/LeaguePage'
 import { TicketSalesPage } from '@/pages/finance/TicketSalesPage'
+import { PlanReportListPage } from '@/pages/finance/PlanReportListPage'
+import { PlanReportFormPage } from '@/pages/finance/PlanReportFormPage'
+import { PlanReportDetailPage } from '@/pages/finance/PlanReportDetailPage'
 
 function GrowthReportRedirect() {
   const { playerId } = useParams<{ playerId: string }>()
@@ -184,6 +187,10 @@ function App() {
             <Route path="/admin/recruitment/applications/:id" element={<ApplicationDetailPage />} />
             <Route path="/admin/leagues" element={<LeaguePage />} />
             <Route path="/finance/ticket-sales" element={<TicketSalesPage />} />
+            <Route path="/finance/plan-reports" element={<PlanReportListPage />} />
+            <Route path="/finance/plan-reports/new" element={<PlanReportFormPage />} />
+            <Route path="/finance/plan-reports/:id/edit" element={<PlanReportFormPage />} />
+            <Route path="/finance/plan-reports/:id" element={<PlanReportDetailPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/login" replace />} />
