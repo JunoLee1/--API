@@ -56,18 +56,23 @@ export function PlanReportListPage() {
 
   const [plans, setPlans] = useState<PlanReport[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [typeFilter, setTypeFilter] = useState<PlanTemplateType | ''>('')
   const [statusFilter, setStatusFilter] = useState<PlanStatus | ''>('')
 
   const fetchPlans = useCallback(() => {
     setLoading(true)
+    setError('')
     const params: Record<string, string> = {}
     if (typeFilter) params.templateType = typeFilter
     if (statusFilter) params.status = statusFilter
 
     planReportApi.list(params)
       .then(setPlans)
-      .catch(() => toast.error('계획보고서 목록을 불러오지 못했습니다.'))
+      .catch(() => {
+        setError('계획보고서를 불러오지 못했습니다')
+        toast.error('계획보고서 목록을 불러오지 못했습니다.')
+      })
       .finally(() => setLoading(false))
   }, [typeFilter, statusFilter])
 
@@ -84,7 +89,7 @@ export function PlanReportListPage() {
         )}
       </div>
 
-      <div className="px-6 py-3 border-b shrink-0 flex gap-3">
+      <div className="px-6 py-3 border-b shrink-0 flex gap-3 items-center">
         <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v as PlanTemplateType | ''); }}>
           <SelectTrigger className="w-40 h-8 text-sm">
             <SelectValue>
@@ -112,6 +117,20 @@ export function PlanReportListPage() {
             ))}
           </SelectContent>
         </Select>
+
+        {(typeFilter || statusFilter) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 text-sm"
+            onClick={() => {
+              setTypeFilter('')
+              setStatusFilter('')
+            }}
+          >
+            필터 초기화
+          </Button>
+        )}
       </div>
 
       <div className="flex-1 overflow-auto">
@@ -119,6 +138,27 @@ export function PlanReportListPage() {
           <div className="p-6 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
           </div>
+        ) : error ? (
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>보고서명</TableHead>
+                <TableHead className="w-24">업무</TableHead>
+                <TableHead className="w-32">주관부서</TableHead>
+                <TableHead className="w-32 tabular-nums text-right">예산</TableHead>
+                <TableHead className="w-24">상태</TableHead>
+                <TableHead className="w-28 tabular-nums">생성일</TableHead>
+                <TableHead className="w-24 text-muted-foreground">작성자</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={7} className="h-24 text-center text-sm text-red-600">
+                  {error}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         ) : plans.length === 0 ? (
           <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
             보고서가 없습니다
