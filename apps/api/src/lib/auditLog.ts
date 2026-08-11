@@ -1,5 +1,25 @@
 import { getPrisma } from './prisma'
 
+const SENSITIVE_KEYS = [
+  'salary',
+  'wage',
+  'phone',
+  'phoneNumber',
+  'password',
+  'token',
+  'emergencyContact',
+  'dateOfBirth',
+]
+
+function sanitizeDetail(detail: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(detail).map(([k, v]) => {
+      const isSensitive = SENSITIVE_KEYS.some(s => k.toLowerCase().includes(s.toLowerCase()))
+      return [k, isSensitive ? '[REDACTED]' : v]
+    }),
+  )
+}
+
 export async function writeAuditLog(params: {
   actorId: number
   action: string
@@ -12,7 +32,7 @@ export async function writeAuditLog(params: {
       actorId: params.actorId,
       action: params.action,
       targetId: params.targetId != null ? String(params.targetId) : null,
-      detail: params.detail ? JSON.stringify(params.detail) : null,
+      detail: params.detail ? JSON.stringify(sanitizeDetail(params.detail)) : null,
     },
   })
 }

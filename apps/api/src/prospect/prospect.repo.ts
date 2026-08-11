@@ -1,6 +1,7 @@
 import { PrismaClient } from "../generated/client";
 import { ProspectStatus } from "../generated/enums";
 import { AppError } from "../lib/appError";
+import { encrypt } from "../lib/crypto";
 import { CreateProspectDto, UpdateProspectDto, SignProspectDto } from "./dto/prospect.dto";
 
 const PROSPECT_SELECT = {
@@ -88,10 +89,12 @@ export class ProspectRepository {
     if (prospect.status !== "CONTRACT_PENDING") throw new AppError(409, "INVALID_STATUS_TRANSITION");
 
     return this.prisma.$transaction(async (tx) => {
+      const encDob = encrypt(new Date(dto.dateOfBirth).toISOString());
       const player = await tx.player.create({
         data: {
           playerName: prospect.name,
-          dateOfBirth: new Date(dto.dateOfBirth),
+          dateOfBirthEncrypted: encDob.encrypted,
+          dateOfBirthIv: encDob.iv,
           preferredFoot: dto.preferredFoot ?? "RIGHT",
           height: dto.height,
           weight: dto.weight,

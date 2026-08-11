@@ -3,10 +3,16 @@ import type { PrismaClient } from "../generated/client";
 export class GuardianRepository {
   constructor(private prisma: PrismaClient) {}
 
-  findPlayerBySearch(studentCode: string, playerName: string, dateOfBirth: Date) {
+  findPlayerBySearch(studentCode: string, playerName: string) {
     return this.prisma.player.findFirst({
-      where: { studentCode, playerName, dateOfBirth },
-      select: { id: true, guardianId: true, playerName: true },
+      where: { studentCode, playerName },
+      select: {
+        id: true,
+        guardianId: true,
+        playerName: true,
+        dateOfBirthEncrypted: true,
+        dateOfBirthIv: true,
+      },
     });
   }
 

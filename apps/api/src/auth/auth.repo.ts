@@ -49,12 +49,13 @@ export class AuthRepository {
   }
 
   createLoginHistory(data: { userId?: number; email: string; ip: string; userAgent: string; success: boolean }) {
+    const userAgentHash = crypto.createHash('sha256').update(data.userAgent).digest('hex');
     return this.prisma.loginHistory.create({
       data: {
         userId: data.userId ?? null,
         email: data.email,
         ip: data.ip,
-        userAgent: data.userAgent,
+        userAgent: userAgentHash,
         success: data.success,
       },
     });

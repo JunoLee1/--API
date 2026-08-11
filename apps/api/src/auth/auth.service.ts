@@ -5,6 +5,7 @@ import { encrypt } from "../lib/crypto";
 import { generateTokens } from "../lib/token";
 import { LoginDto, CreateUserDto } from "../lib/dto";
 import { Role, CoachingRole, FrontOfficeRole } from "../generated/enums";
+import { writeAuditLog } from "../lib/auditLog";
 
 export class AuthService {
   constructor(private repo: AuthRepository) {}
@@ -54,6 +55,12 @@ export class AuthService {
   async createInvite(dto: { email: string; role: Role; coachingRole?: CoachingRole | null; frontOfficeRole?: FrontOfficeRole | null; createdById: number }) {
     if (await this.repo.isEmailTaken(dto.email)) throw new AppError(409, "EMAIL_TAKEN");
     const invite = await this.repo.createInvite(dto);
+    void writeAuditLog({
+      actorId: dto.createdById,
+      action: 'GUARDIAN_INVITE_CREATED',
+      targetId: invite.id,
+      detail: { email: dto.email, role: dto.role },
+    }).catch(console.error);
     const appUrl = process.env["APP_URL"] ?? "http://localhost:5173";
     const inviteUrl = `${appUrl}/invite/${invite.token}`;
     let emailSent = false;
