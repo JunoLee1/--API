@@ -3,6 +3,7 @@ import type {
   Sponsorship,
   SponsorshipListResponse,
   SponsorshipPayment,
+  SponsorshipRoiSummary,
   CreateSponsorshipDto,
   UpdateSponsorshipDto,
   SponsorType,
@@ -31,4 +32,7 @@ export const sponsorshipApi = {
 
   markPaid: (sponsorshipId: number, paymentId: number) =>
     api.patch<SponsorshipPayment>(`/sponsorships/${sponsorshipId}/payments/${paymentId}`, {}),
+
+  getRoiSummary: () =>
+    api.get<SponsorshipRoiSummary>(`/sponsorships/roi`),
 }

@@ -46,6 +46,14 @@ export class SponsorshipController {
     } catch (err) { next(err); }
   };
 
+  getRoiSummary = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = requireUser(req);
+      if (!canRead(user.role)) throw new AppError(403, "FORBIDDEN");
+      res.json(await this.service.getRoiSummary());
+    } catch (err) { next(err); }
+  };
+
   getExpiring = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);

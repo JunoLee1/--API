@@ -27,6 +27,7 @@ const checkWriteFinance = (req: Request, res: Response, next: NextFunction) => {
 };
 
 router.get("/",          auth, checkReadFinance, controller.list);
+router.get("/roi",       auth, checkReadFinance, controller.getRoiSummary);
 router.get("/expiring",  auth, checkReadFinance, controller.getExpiring);
 router.post("/",         auth, checkWriteFinance, controller.create);
 router.get("/:id",       auth, checkReadFinance, controller.get);

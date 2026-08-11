@@ -120,6 +120,72 @@ export class SponsorshipRepository {
     });
   }
 
+  async getRoiSummary() {
+    const sponsorships = await this.prisma.sponsorship.findMany({
+      where: { deletedAt: null } as any,
+      select: {
+        id: true,
+        sponsorName: true,
+        type: true,
+        totalFee: true,
+        contractEnd: true,
+        exposureCount: true,
+        mediaValue: true,
+        fanReach: true,
+        payments: { select: { status: true, amount: true } },
+      },
+    });
+
+    let totalFee = 0;
+    let totalPaid = 0;
+    let totalMediaValue = 0;
+    let totalFanReach = 0;
+    let totalExposureCount = 0;
+    const now = new Date();
+
+    const perSponsor = sponsorships.map((s) => {
+      const fee = Number(s.totalFee);
+      const paid = s.payments
+        .filter((p) => p.status === "PAID")
+        .reduce((sum, p) => sum + Number(p.amount), 0);
+      const mv = Number(s.mediaValue ?? 0);
+      const roi = fee > 0 ? ((mv - fee) / fee) * 100 : 0;
+
+      totalFee += fee;
+      totalPaid += paid;
+      totalMediaValue += mv;
+      totalFanReach += s.fanReach ?? 0;
+      totalExposureCount += s.exposureCount ?? 0;
+
+      return {
+        id: s.id,
+        sponsorName: s.sponsorName,
+        type: s.type,
+        totalFee: fee,
+        paid,
+        mediaValue: mv,
+        fanReach: s.fanReach ?? 0,
+        exposureCount: s.exposureCount ?? 0,
+        roi: Math.round(roi * 10) / 10,
+        expiresSoon: s.contractEnd <= new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000),
+        contractEnd: s.contractEnd,
+      };
+    });
+
+    const overallRoi = totalFee > 0 ? ((totalMediaValue - totalFee) / totalFee) * 100 : 0;
+
+    return {
+      totalContracts: sponsorships.length,
+      totalFee,
+      totalPaid,
+      totalMediaValue,
+      totalFanReach,
+      totalExposureCount,
+      overallRoi: Math.round(overallRoi * 10) / 10,
+      sponsorships: perSponsor,
+    };
+  }
+
   // PB6: soft-delete a sponsorship contract
   softDelete(id: number) {
     return this.prisma.sponsorship.update({
