@@ -55,6 +55,7 @@ import inventoryRouter from "./inventory/inventory.routes";
 import agencyRouter from "./agency/agency.routes";
 import opsReportRouter from "./ops-report/ops-report.routes";
 import squadPlanRouter from "./squad-plan/squad-plan.routes";
+import planReportRouter from "./plan-report/plan-report.routes";
 
 const apiRouter = Router();
 
@@ -114,5 +115,6 @@ apiRouter.use("/inventory", inventoryRouter);
 apiRouter.use("/agencies", agencyRouter);
 apiRouter.use("/ops-reports", opsReportRouter);
 apiRouter.use("/squad-plan", squadPlanRouter);
+apiRouter.use("/plan-reports", planReportRouter);
 
 export default apiRouter;
