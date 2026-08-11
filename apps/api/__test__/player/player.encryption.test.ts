@@ -121,3 +121,56 @@ describe("PlayerRepository — encrypted field selection on read", () => {
     expect(selectArg.dateOfBirth).toBeUndefined();
   });
 });
+
+// Must be after all the repo tests — import PlayerService here
+import { PlayerService } from "../../src/player/player.service";
+
+describe("PlayerService — decrypt on read", () => {
+  test("getPlayerById decrypts emergencyContactName and dateOfBirth", async () => {
+    const nameEnc = encrypt("Jane Doe");
+    const dobEnc = encrypt("2000-01-01");
+
+    const mockRepo = {
+      findById: jest.fn().mockResolvedValue({
+        id: "p1",
+        playerName: "Test Player",
+        dateOfBirthEncrypted: dobEnc.encrypted,
+        dateOfBirthIv: dobEnc.iv,
+        emergencyContactNameEncrypted: nameEnc.encrypted,
+        emergencyContactNameIv: nameEnc.iv,
+        emergencyContactPhoneEncrypted: null,
+        emergencyContactPhoneIv: null,
+        emergencyContactRelationEncrypted: null,
+        emergencyContactRelationIv: null,
+      }),
+    };
+
+    const service = new PlayerService(mockRepo as any);
+    const result = await service.getPlayerById("p1", true);
+
+    expect(result.emergencyContactName).toBe("Jane Doe");
+    expect((result as any).emergencyContactNameEncrypted).toBeUndefined();
+    expect((result as any).emergencyContactNameIv).toBeUndefined();
+    expect((result as any).dateOfBirth).toBe("2000-01-01");
+    expect((result as any).dateOfBirthEncrypted).toBeUndefined();
+  });
+
+  test("getPlayerById with includePrivate=false returns dateOfBirth but no emergency contacts", async () => {
+    const dobEnc = encrypt("1998-03-10");
+
+    const mockRepo = {
+      findById: jest.fn().mockResolvedValue({
+        id: "p1",
+        playerName: "Test Player",
+        dateOfBirthEncrypted: dobEnc.encrypted,
+        dateOfBirthIv: dobEnc.iv,
+      }),
+    };
+
+    const service = new PlayerService(mockRepo as any);
+    const result = await service.getPlayerById("p1", false);
+
+    expect((result as any).dateOfBirth).toBe("1998-03-10");
+    expect((result as any).emergencyContactName).toBeUndefined();
+  });
+});
