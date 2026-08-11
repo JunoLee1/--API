@@ -182,9 +182,27 @@ describe('reject', () => {
     const svc = new PlanReportService(repo)
     await expect(svc.reject(1, 10, 'ADMIN', '')).rejects.toMatchObject({ statusCode: 400 })
   })
+
+  it('FRONT_OFFICE 역할이 거절하면 403', async () => {
+    const repo = makeRepo({ findById: jest.fn().mockResolvedValue(fakePlan({ status: 'REVIEWING' })) })
+    const svc = new PlanReportService(repo)
+    await expect(svc.reject(1, 10, 'FRONT_OFFICE', '사유')).rejects.toMatchObject({ statusCode: 403 })
+  })
+
+  it('REVIEWING이 아니면 409', async () => {
+    const repo = makeRepo({ findById: jest.fn().mockResolvedValue(fakePlan({ status: 'DRAFT' })) })
+    const svc = new PlanReportService(repo)
+    await expect(svc.reject(1, 10, 'ADMIN', '사유')).rejects.toMatchObject({ statusCode: 409 })
+  })
 })
 
 describe('submitResult', () => {
+  it('resultContent가 비어있으면 400', async () => {
+    const repo = makeRepo({ findById: jest.fn().mockResolvedValue(fakePlan({ status: 'APPROVED' })) })
+    const svc = new PlanReportService(repo)
+    await expect(svc.submitResult(1, 10, '')).rejects.toMatchObject({ statusCode: 400 })
+  })
+
   it('APPROVED가 아니면 409', async () => {
     const repo = makeRepo({ findById: jest.fn().mockResolvedValue(fakePlan({ status: 'REVIEWING' })) })
     const svc = new PlanReportService(repo)
