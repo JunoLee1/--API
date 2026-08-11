@@ -5,6 +5,7 @@ import { CreatePlayerDto, UpdatePlayerDto, UpdatePlayerStatusDto, PlayerListQuer
 import { MarketValueRepository } from "./market-value.repo";
 import { UpdateMarketValueDto } from "./dto/market-value.dto";
 import { getPrisma } from "../lib/prisma";
+import { decrypt } from "../lib/crypto";
 
 export class PlayerService {
   constructor(private repo: PlayerRepository, private mvRepo?: MarketValueRepository) {}
@@ -14,9 +15,43 @@ export class PlayerService {
   }
 
   async getPlayerById(id: string, includePrivate = false) {
-    const player = await this.repo.findById(id, includePrivate);
-    if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
-    return player;
+    const raw = await this.repo.findById(id, includePrivate);
+    if (!raw) throw new AppError(404, "PLAYER_NOT_FOUND");
+
+    const {
+      dateOfBirthEncrypted, dateOfBirthIv,
+      emergencyContactNameEncrypted, emergencyContactNameIv,
+      emergencyContactPhoneEncrypted, emergencyContactPhoneIv,
+      emergencyContactRelationEncrypted, emergencyContactRelationIv,
+      ...rest
+    } = raw as typeof raw & {
+      dateOfBirthEncrypted?: string | null;
+      dateOfBirthIv?: string | null;
+      emergencyContactNameEncrypted?: string | null;
+      emergencyContactNameIv?: string | null;
+      emergencyContactPhoneEncrypted?: string | null;
+      emergencyContactPhoneIv?: string | null;
+      emergencyContactRelationEncrypted?: string | null;
+      emergencyContactRelationIv?: string | null;
+    };
+
+    return {
+      ...rest,
+      dateOfBirth: dateOfBirthEncrypted && dateOfBirthIv
+        ? decrypt(dateOfBirthEncrypted, dateOfBirthIv)
+        : null,
+      ...(includePrivate && {
+        emergencyContactName: emergencyContactNameEncrypted && emergencyContactNameIv
+          ? decrypt(emergencyContactNameEncrypted, emergencyContactNameIv)
+          : null,
+        emergencyContactPhone: emergencyContactPhoneEncrypted && emergencyContactPhoneIv
+          ? decrypt(emergencyContactPhoneEncrypted, emergencyContactPhoneIv)
+          : null,
+        emergencyContactRelation: emergencyContactRelationEncrypted && emergencyContactRelationIv
+          ? decrypt(emergencyContactRelationEncrypted, emergencyContactRelationIv)
+          : null,
+      }),
+    };
   }
 
   async createPlayer(dto: CreatePlayerDto, actorId: number) {

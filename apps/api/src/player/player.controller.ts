@@ -12,6 +12,46 @@ const WRITE_ROLES = ["ADMIN", "FRONT_OFFICE"] as const;
 const SECONDARY_POS_WRITE_ROLES = ["ADMIN", "COACHING_STAFF"] as const;
 const MARKET_VALUE_ROLES = ["GM", "TD", "ADMIN"] as const;
 
+// RC7: PII 필드 — includePrivate=true 역할만 볼 수 있는 민감 정보
+const EMERGENCY_CONTACT_FIELDS = [
+  "emergencyContactName",
+  "emergencyContactPhone",
+  "emergencyContactRelation",
+] as const;
+
+const PII_FIELDS = [...EMERGENCY_CONTACT_FIELDS, "dateOfBirth"] as const;
+
+/** RC7: 역할에 따라 PII 필드를 제거한 플레이어 객체를 반환 */
+function stripPiiFields(
+  player: Record<string, unknown>,
+  role: string,
+  coachingRole?: string | null,
+): Record<string, unknown> {
+  const result = { ...player };
+
+  // GUARDIAN, AGENT: 모든 PII 제거
+  if (role === "GUARDIAN" || role === "AGENT") {
+    for (const field of PII_FIELDS) {
+      delete result[field];
+    }
+    return result;
+  }
+
+  // COACHING_STAFF 중 MEDICAL/MEDICAL_DIRECTOR 제외한 나머지: 응급연락처 제거
+  if (
+    role === "COACHING_STAFF" &&
+    coachingRole !== "MEDICAL" &&
+    coachingRole !== "MEDICAL_DIRECTOR"
+  ) {
+    for (const field of EMERGENCY_CONTACT_FIELDS) {
+      delete result[field];
+    }
+    return result;
+  }
+
+  return result;
+}
+
 function requireUser(req: Request) {
   if (!req.user) throw new AppError(401, "UNAUTHORIZED");
   return req.user;
@@ -41,11 +81,19 @@ export class PlayerController {
       const user = requireUser(req);
       const includePrivate = isAdminLike(user.role) || user.role === "GM" || user.frontOfficeRole === "TD";
       const player = await this.service.getPlayerById(String(req.params["id"]), includePrivate);
+
+      // RC7: 역할별 PII 마스킹 적용
+      const masked = stripPiiFields(
+        player as Record<string, unknown>,
+        user.role,
+        user.coachingRole,
+      );
+
       if (user.role === "PLAYER") {
-        const { currentMarketValue: _mv, ...safePlayer } = player as typeof player & { currentMarketValue?: unknown };
+        const { currentMarketValue: _mv, ...safePlayer } = masked;
         return res.status(200).json(safePlayer);
       }
-      res.status(200).json(player);
+      res.status(200).json(masked);
     } catch (err) {
       next(err);
     }
@@ -109,6 +157,11 @@ export class PlayerController {
     try {
       const user = requireUser(req);
       if (!(MARKET_VALUE_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
+      // SH11: TD role은 자신의 팀 선수만 수정 가능
+      if (user.frontOfficeRole === "TD") {
+        const player = await this.service.getPlayerById(String(req.params["id"]));
+        if (!player || player.teamId !== user.teamId) throw new AppError(403, "FORBIDDEN");
+      }
       const result = await this.service.updateMarketValue(
         String(req.params["id"]),
         req.body,
@@ -175,5 +228,32 @@ export class PlayerController {
       await this.spRepo.delete(String(req.params["playerId"]), String(req.params["position"]) as Position);
       res.status(204).send();
     } catch (err) { next(err); }
+  };
+
+  // RC18: PLAYER 본인만 응급연락처 필드 수정 가능
+  updateMyInfo = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = requireUser(req);
+      const playerId = String(req.params["id"]);
+
+      const player = await this.service.getPlayerById(playerId);
+      if (player.userId !== user.id) throw new AppError(403, "FORBIDDEN");
+
+      const { emergencyContactName, emergencyContactPhone, emergencyContactRelation } = req.body as {
+        emergencyContactName?: string;
+        emergencyContactPhone?: string;
+        emergencyContactRelation?: string;
+      };
+
+      const result = await this.service.updatePlayer(playerId, {
+        ...(emergencyContactName !== undefined && { emergencyContactName }),
+        ...(emergencyContactPhone !== undefined && { emergencyContactPhone }),
+        ...(emergencyContactRelation !== undefined && { emergencyContactRelation }),
+      });
+
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
   };
 }

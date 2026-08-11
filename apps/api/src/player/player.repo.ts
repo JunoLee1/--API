@@ -1,11 +1,13 @@
 import { PrismaClient } from "../generated/client";
 import { PlayerStatus } from "../generated/enums";
 import { CreatePlayerDto, UpdatePlayerDto, PlayerListQuery } from "./dto/player.dto";
+import { encrypt } from "../lib/crypto";
 
 const PLAYER_SELECT = {
   id: true,
   playerName: true,
-  dateOfBirth: true,
+  dateOfBirthEncrypted: true,
+  dateOfBirthIv: true,
   preferredFoot: true,
   height: true,
   weight: true,
@@ -46,9 +48,12 @@ export class PlayerRepository {
         agentId: true,
         agencyId: true,
         ...(includePrivate && {
-          emergencyContactName: true,
-          emergencyContactPhone: true,
-          emergencyContactRelation: true,
+          emergencyContactNameEncrypted: true,
+          emergencyContactNameIv: true,
+          emergencyContactPhoneEncrypted: true,
+          emergencyContactPhoneIv: true,
+          emergencyContactRelationEncrypted: true,
+          emergencyContactRelationIv: true,
           allergies: true,
           foodPreferences: true,
         }),
@@ -81,10 +86,17 @@ export class PlayerRepository {
   }
 
   create(data: CreatePlayerDto) {
+    const dobEnc = encrypt(data.dateOfBirth);
+
+    const encName = data.emergencyContactName ? encrypt(data.emergencyContactName) : null;
+    const encPhone = data.emergencyContactPhone ? encrypt(data.emergencyContactPhone) : null;
+    const encRelation = data.emergencyContactRelation ? encrypt(data.emergencyContactRelation) : null;
+
     return this.prisma.player.create({
       data: {
         playerName: data.playerName,
-        dateOfBirth: new Date(data.dateOfBirth),
+        dateOfBirthEncrypted: dobEnc.encrypted,
+        dateOfBirthIv: dobEnc.iv,
         preferredFoot: data.preferredFoot,
         height: data.height,
         weight: data.weight,
@@ -95,20 +107,37 @@ export class PlayerRepository {
         ...(data.userId && { userId: data.userId }),
         ...(data.agentId && { agentId: data.agentId }),
         ...(data.agencyId && { agencyId: data.agencyId }),
-        ...(data.emergencyContactName && { emergencyContactName: data.emergencyContactName }),
-        ...(data.emergencyContactPhone && { emergencyContactPhone: data.emergencyContactPhone }),
-        ...(data.emergencyContactRelation && { emergencyContactRelation: data.emergencyContactRelation }),
+        ...(encName && {
+          emergencyContactNameEncrypted: encName.encrypted,
+          emergencyContactNameIv: encName.iv,
+        }),
+        ...(encPhone && {
+          emergencyContactPhoneEncrypted: encPhone.encrypted,
+          emergencyContactPhoneIv: encPhone.iv,
+        }),
+        ...(encRelation && {
+          emergencyContactRelationEncrypted: encRelation.encrypted,
+          emergencyContactRelationIv: encRelation.iv,
+        }),
       },
       select: PLAYER_SELECT,
     });
   }
 
   update(id: string, data: UpdatePlayerDto) {
+    const encDob = data.dateOfBirth ? encrypt(data.dateOfBirth) : null;
+    const encName = data.emergencyContactName != null ? encrypt(data.emergencyContactName) : null;
+    const encPhone = data.emergencyContactPhone != null ? encrypt(data.emergencyContactPhone) : null;
+    const encRelation = data.emergencyContactRelation != null ? encrypt(data.emergencyContactRelation) : null;
+
     return this.prisma.player.update({
       where: { id },
       data: {
         ...(data.playerName && { playerName: data.playerName }),
-        ...(data.dateOfBirth && { dateOfBirth: new Date(data.dateOfBirth) }),
+        ...(encDob && {
+          dateOfBirthEncrypted: encDob.encrypted,
+          dateOfBirthIv: encDob.iv,
+        }),
         ...(data.preferredFoot && { preferredFoot: data.preferredFoot }),
         ...(data.height && { height: data.height }),
         ...(data.weight && { weight: data.weight }),
@@ -118,9 +147,18 @@ export class PlayerRepository {
         ...(data.externalId !== undefined && { externalId: data.externalId }),
         ...(data.agentId !== undefined && { agentId: data.agentId }),
         ...(data.agencyId !== undefined && { agencyId: data.agencyId }),
-        ...(data.emergencyContactName !== undefined && { emergencyContactName: data.emergencyContactName }),
-        ...(data.emergencyContactPhone !== undefined && { emergencyContactPhone: data.emergencyContactPhone }),
-        ...(data.emergencyContactRelation !== undefined && { emergencyContactRelation: data.emergencyContactRelation }),
+        ...(encName && {
+          emergencyContactNameEncrypted: encName.encrypted,
+          emergencyContactNameIv: encName.iv,
+        }),
+        ...(encPhone && {
+          emergencyContactPhoneEncrypted: encPhone.encrypted,
+          emergencyContactPhoneIv: encPhone.iv,
+        }),
+        ...(encRelation && {
+          emergencyContactRelationEncrypted: encRelation.encrypted,
+          emergencyContactRelationIv: encRelation.iv,
+        }),
         ...(data.allergies !== undefined && { allergies: data.allergies }),
         ...(data.foodPreferences !== undefined && { foodPreferences: data.foodPreferences }),
       },

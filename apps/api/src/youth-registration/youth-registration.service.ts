@@ -1,5 +1,6 @@
 import { AppError } from "../lib/appError";
 import { maskEmail } from "../lib/maskPii";
+import { writeAuditLog } from "../lib/auditLog";
 import type { YouthRegistrationRepository } from "./youth-registration.repo";
 import type { NotificationRepository } from "../notification/notification.repo";
 import type { CreateYouthRegistrationDto, RejectYouthRegistrationDto, YouthRegistrationListQuery } from "./dto/youth-registration.dto";
@@ -47,7 +48,16 @@ export class YouthRegistrationService {
     if (reg.guardianId !== guardianUserId) throw new AppError(403, "FORBIDDEN");
     if (reg.status !== "PENDING") throw new AppError(409, "INVALID_STATUS");
 
-    return this.repo.updateStatus(id, "GUARDIAN_APPROVED");
+    const result = await this.repo.updateStatus(id, "GUARDIAN_APPROVED");
+
+    void writeAuditLog({
+      actorId: guardianUserId,
+      action: "GUARDIAN_CONSENT_GRANTED",
+      targetId: id,
+      detail: { playerName: reg.playerName },
+    }).catch(console.error);
+
+    return result;
   }
 
   async reject(id: number, dto: RejectYouthRegistrationDto) {

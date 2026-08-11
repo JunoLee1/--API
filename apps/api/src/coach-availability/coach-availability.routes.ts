@@ -1,4 +1,4 @@
-import { auth } from "../lib/authMiddleware";
+import { auth, requireRole } from "../lib/authMiddleware";
 import { Router } from "express";
 import { CoachAvailabilityController } from "./coach-availability.controller";
 import { CoachAvailabilityService } from "./coach-availability.service";
@@ -10,8 +10,8 @@ const repo = new CoachAvailabilityRepository(getPrisma());
 const service = new CoachAvailabilityService(repo);
 const controller = new CoachAvailabilityController(service);
 
-router.get("/", auth, controller.getAll);
-router.get("/conflicts", auth, controller.getConflicts);
+router.get("/", auth, requireRole('ADMIN', 'GM', 'SUPER_ADMIN', 'COACHING_STAFF'), controller.getAll);
+router.get("/conflicts", auth, requireRole('ADMIN', 'GM', 'SUPER_ADMIN', 'COACHING_STAFF'), controller.getConflicts);
 router.post("/", auth, controller.create);
 router.delete("/:id", auth, controller.delete);
 

@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { AppError } from "../lib/appError";
+import { decrypt } from "../lib/crypto";
 import type { GuardianRepository } from "./guardian.repo";
 import type { LinkBySearchDto, LinkByCodeDto, IssueInviteCodeDto } from "./dto/guardian.dto";
 
@@ -10,9 +11,17 @@ export class GuardianService {
     const player = await this.repo.findPlayerBySearch(
       dto.studentCode,
       dto.playerName,
-      new Date(dto.dateOfBirth),
     );
     if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
+
+    // dateOfBirth is now encrypted — verify by decrypting and comparing date string
+    if (player.dateOfBirthEncrypted && player.dateOfBirthIv) {
+      const decryptedDob = decrypt(player.dateOfBirthEncrypted, player.dateOfBirthIv);
+      const requestedDob = new Date(dto.dateOfBirth).toISOString().slice(0, 10);
+      const storedDob = new Date(decryptedDob).toISOString().slice(0, 10);
+      if (requestedDob !== storedDob) throw new AppError(404, "PLAYER_NOT_FOUND");
+    }
+
     if (player.guardianId !== null) throw new AppError(409, "ALREADY_LINKED");
     return this.repo.linkGuardianToPlayer(player.id, guardianId);
   }

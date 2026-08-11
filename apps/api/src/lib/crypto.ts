@@ -20,6 +20,15 @@ export function encrypt(text: string): { encrypted: string; iv: string } {
   return { encrypted, iv: iv.toString("hex") };
 }
 
+/**
+ * @security 호출 제한: ADMIN 또는 MEDICAL 역할을 가진 액터의 요청 컨텍스트에서만 호출할 것.
+ * 반환된 평문(개인정보)이 API 응답에 직접 포함되지 않도록 호출 측에서 역할 체크를 선행해야 함.
+ *
+ * @example
+ * // 올바른 사용 예시
+ * if (actor.role !== 'ADMIN' && actor.role !== 'MEDICAL') throw new AppError(403, 'FORBIDDEN');
+ * const plainPhone = decrypt(player.phoneEncrypted, player.phoneIv);
+ */
 export function decrypt(encrypted: string, ivHex: string): string {
   const decipher = crypto.createDecipheriv(ALGORITHM, getKey(), Buffer.from(ivHex, "hex"));
   let decrypted = decipher.update(encrypted, "hex", "utf8");

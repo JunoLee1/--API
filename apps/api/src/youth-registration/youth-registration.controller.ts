@@ -26,8 +26,19 @@ export class YouthRegistrationController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { playerName, birthDate, preferredJerseyNumber, teamId, guardianEmail } = req.body;
+      const { playerName, birthDate, preferredJerseyNumber, teamId, guardianEmail, note } = req.body;
       if (!playerName || !birthDate || !teamId || !guardianEmail) throw new AppError(400, "MISSING_REQUIRED_FIELDS");
+      // SH7: playerName 길이(1-100) 및 SQL injection 위험 문자 차단
+      if (typeof playerName !== "string" || playerName.trim().length === 0 || playerName.length > 100) {
+        throw new AppError(400, "INVALID_NAME");
+      }
+      if (/['";]|--|\/\*/i.test(playerName)) {
+        throw new AppError(400, "INVALID_NAME");
+      }
+      // SH7: note 최대 500자
+      if (note !== undefined && (typeof note !== "string" || note.length > 500)) {
+        throw new AppError(400, "INVALID_NOTE");
+      }
       const dto: CreateYouthRegistrationDto = { playerName, birthDate, preferredJerseyNumber, teamId: Number(teamId), guardianEmail };
       const data = await this.service.create(dto, requireUser(req).id);
       res.status(201).json(data);

@@ -1,10 +1,12 @@
 import { AuthRepository } from "./auth.repo";
 import { AppError } from "../lib/appError";
 import { hashPassword, comparePassword } from "../lib/hash";
-import { encrypt } from "../lib/crypto";
+import { encrypt, decrypt } from "../lib/crypto";
 import { generateTokens } from "../lib/token";
 import { LoginDto, CreateUserDto } from "../lib/dto";
 import { Role, CoachingRole, FrontOfficeRole } from "../generated/enums";
+import { writeAuditLog } from "../lib/auditLog";
+import { isAdminLike } from "../lib/permissions";
 
 export class AuthService {
   constructor(private repo: AuthRepository) {}
@@ -21,14 +23,15 @@ export class AuthService {
 
     const departmentCategories = await this.repo.getDepartmentCategories(user.id);
     const tokens = generateTokens({ id: user.id, role: user.role, coachingRole: user.coachingRole, frontOfficeRole: user.frontOfficeRole, departmentCategories, teamId: user.teamId, clubId: user.clubId, isDemo: user.isDemo });
-    return { ...tokens, userId: user.id };
+    return { ...tokens, userId: user.id, teamId: user.teamId };
   }
 
   async createUser(dto: CreateUserDto) {
     if (dto.password !== dto.confirmedPassword) throw new AppError(400, "PASSWORD_MISMATCH");
 
-    // 010-1234-5678 형식
-    if (!/^\d{2,3}-\d{3,4}-\d{4}$/.test(dto.phoneNumber)) throw new AppError(400, "INVALID_PHONE_NUMBER");
+    // 공백·특수문자 완전 제거 후 숫자만 검증 (010-1234-5678 등 다양한 포맷 허용)
+    const phoneDigits = dto.phoneNumber.replace(/\D/g, '');
+    if (!/^\d{10,11}$/.test(phoneDigits)) throw new AppError(400, "INVALID_PHONE_NUMBER");
 
     if (await this.repo.isEmailTaken(dto.email)) throw new AppError(409, "EMAIL_TAKEN");
     if (await this.repo.isNicknameTaken(dto.nickname)) throw new AppError(409, "NICKNAME_TAKEN");
@@ -53,6 +56,12 @@ export class AuthService {
   async createInvite(dto: { email: string; role: Role; coachingRole?: CoachingRole | null; frontOfficeRole?: FrontOfficeRole | null; createdById: number }) {
     if (await this.repo.isEmailTaken(dto.email)) throw new AppError(409, "EMAIL_TAKEN");
     const invite = await this.repo.createInvite(dto);
+    void writeAuditLog({
+      actorId: dto.createdById,
+      action: 'GUARDIAN_INVITE_CREATED',
+      targetId: invite.id,
+      detail: { email: dto.email, role: dto.role },
+    }).catch(console.error);
     const appUrl = process.env["APP_URL"] ?? "http://localhost:5173";
     const inviteUrl = `${appUrl}/invite/${invite.token}`;
     let emailSent = false;
@@ -78,7 +87,8 @@ export class AuthService {
     const invite = await this.getInvite(token);
 
     if (dto.password !== dto.confirmedPassword) throw new AppError(400, "PASSWORD_MISMATCH");
-    if (!/^\d{2,3}-\d{3,4}-\d{4}$/.test(dto.phoneNumber)) throw new AppError(400, "INVALID_PHONE_NUMBER");
+    const invitePhoneDigits = dto.phoneNumber.replace(/\D/g, '');
+    if (!/^\d{10,11}$/.test(invitePhoneDigits)) throw new AppError(400, "INVALID_PHONE_NUMBER");
     if (await this.repo.isNicknameTaken(dto.nickname)) throw new AppError(409, "NICKNAME_TAKEN");
 
     const password = await hashPassword(dto.password);
@@ -102,7 +112,10 @@ export class AuthService {
 
   async blacklistToken(jti: string, expiresAt: Date) {
     await this.repo.blacklistToken(jti, expiresAt);
-    void this.repo.deleteExpiredBlacklistEntries().catch(() => {});
+    // 만료 항목 정리는 fire-and-forget — 실패해도 로그아웃은 성공
+    this.repo.deleteExpiredBlacklistEntries().catch((err) =>
+      console.error('[auth] blacklist cleanup failed:', err)
+    );
   }
 
   isTokenBlacklisted(jti: string) {
@@ -117,5 +130,43 @@ export class AuthService {
     const user = await this.repo.findById(id);
     if (!user) throw new AppError(404, "USER_NOT_FOUND");
     return user;
+  }
+
+  async gdprErasure(targetUserId: number, actorId: number) {
+    const user = await this.repo.findById(targetUserId);
+    if (!user) throw new AppError(404, "USER_NOT_FOUND");
+    if (user.isDeleted) throw new AppError(409, "USER_ALREADY_ERASED");
+
+    const result = await this.repo.anonymizeUser(targetUserId);
+
+    void writeAuditLog({
+      actorId,
+      action: "GDPR_ERASURE_REQUESTED",
+      targetId: targetUserId,
+    }).catch(console.error);
+
+    return result;
+  }
+
+  async gdprExport(targetUserId: number, actorId: number, actorRole: string) {
+    if (actorId !== targetUserId && !isAdminLike(actorRole)) {
+      throw new AppError(403, "FORBIDDEN");
+    }
+
+    const data = await this.repo.exportUserData(targetUserId);
+    if (!data) throw new AppError(404, "USER_NOT_FOUND");
+
+    // Decrypt encrypted fields before returning to client
+    if (data.player) {
+      const { dateOfBirthEncrypted, dateOfBirthIv, ...playerRest } = data.player as any;
+      data.player = {
+        ...playerRest,
+        dateOfBirth: dateOfBirthEncrypted && dateOfBirthIv
+          ? decrypt(dateOfBirthEncrypted, dateOfBirthIv)
+          : null,
+      };
+    }
+
+    return data;
   }
 }

@@ -1,4 +1,5 @@
 import type { PrismaClient } from "../generated/client";
+import { encrypt } from "../lib/crypto";
 import type { CreateYouthRegistrationDto, YouthRegistrationListQuery } from "./dto/youth-registration.dto";
 
 export class YouthRegistrationRepository {
@@ -62,10 +63,12 @@ export class YouthRegistrationRepository {
   ) {
     return this.prisma.$transaction(async (tx) => {
       await tx.youthRegistration.update({ where: { id }, data: { status: "CONTRACTED" } });
+      const encDob = encrypt(registration.birthDate.toISOString());
       const player = await tx.player.create({
         data: {
           playerName: registration.playerName,
-          dateOfBirth: registration.birthDate,
+          dateOfBirthEncrypted: encDob.encrypted,
+          dateOfBirthIv: encDob.iv,
           preferredFoot: "RIGHT",
           height: 0,
           weight: 0,

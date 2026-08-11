@@ -57,11 +57,13 @@ export class VideoController {
     try {
       const user = requireUser(req);
       if (!CAN_WRITE.includes(user.role)) throw new AppError(403, "FORBIDDEN");
-      const dto: import("./dto/video.dto").CreateAssignmentDto = {
+      const dto: import("./dto/video.dto").CreateAssignmentDto & { assignerTeamId?: number | null } = {
         videoId: Number(req.params["id"]),
         playerId: req.body.playerId,
         assignedById: user.id,
       };
+      // SH18: SUPER_ADMIN은 팀 제한 없음, 그 외 역할은 자신의 팀 선수에게만 배정 가능
+      if (user.role !== "SUPER_ADMIN") dto.assignerTeamId = user.teamId ?? null;
       if (req.body.dueDate) dto.dueDate = new Date(req.body.dueDate);
       if (req.body.note) dto.note = req.body.note;
       res.status(201).json(await this.service.createAssignment(dto));
