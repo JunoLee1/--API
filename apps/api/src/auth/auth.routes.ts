@@ -41,4 +41,10 @@ router.post("/invites/:token/accept", controller.acceptInvite);
 router.get("/login-history", auth, controller.loginHistory);
 router.get("/login-history/:userId", auth, controller.loginHistory);
 
+// GDPR 삭제권 (ADMIN 전용)
+router.delete("/users/:id/gdpr-erasure", auth, controller.gdprErasure);
+
+// GDPR 데이터 내보내기 (ADMIN 또는 본인)
+router.get("/users/:id/gdpr-export", auth, controller.gdprExport);
+
 export default router;

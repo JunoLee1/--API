@@ -161,4 +161,61 @@ export class AuthRepository {
       select: { id: true, email: true, username: true, nickname: true, role: true, coachingRole: true, frontOfficeRole: true },
     });
   }
+
+  anonymizeUser(id: number) {
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        email: `deleted_${id}@deleted.com`,
+        username: `deleted_${id}`,
+        nickname: `deleted_${id}`,
+        isDeleted: true,
+      },
+      select: { id: true, email: true, isDeleted: true },
+    });
+  }
+
+  async exportUserData(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        nickname: true,
+        role: true,
+        language: true,
+        createdAt: true,
+        player: {
+          select: {
+            id: true,
+            playerName: true,
+            position: true,
+            level: true,
+            status: true,
+            dateOfBirthEncrypted: true,
+            dateOfBirthIv: true,
+            contracts: {
+              select: { id: true, startDate: true, endDate: true, status: true },
+              orderBy: { startDate: "desc" as const },
+            },
+            injuries: {
+              select: { id: true, bodyPart: true, cause: true, status: true, occurredAt: true },
+              orderBy: { occurredAt: "desc" as const },
+            },
+          },
+        },
+        loginHistory: {
+          select: { ip: true, success: true, createdAt: true },
+          orderBy: { createdAt: "desc" as const },
+          take: 100,
+        },
+      },
+    });
+
+    if (!user) return null;
+
+    const { player, ...profile } = user;
+    return { profile, player: player ?? null };
+  }
 }

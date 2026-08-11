@@ -182,4 +182,33 @@ export class AuthController {
       next(err);
     }
   };
+
+  gdprErasure = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = this.getAuthenticatedUser(req);
+      if (!isAdminLike(user.role)) throw new AppError(403, "FORBIDDEN");
+
+      const targetId = Number(req.params["id"]);
+      if (!Number.isFinite(targetId)) throw new AppError(400, "INVALID_ID");
+
+      const result = await this.service.gdprErasure(targetId, user.id);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  gdprExport = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = this.getAuthenticatedUser(req);
+
+      const targetId = Number(req.params["id"]);
+      if (!Number.isFinite(targetId)) throw new AppError(400, "INVALID_ID");
+
+      const data = await this.service.gdprExport(targetId, user.id, user.role);
+      res.json(data);
+    } catch (err) {
+      next(err);
+    }
+  };
 }
