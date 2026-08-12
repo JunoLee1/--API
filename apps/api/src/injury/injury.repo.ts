@@ -103,7 +103,7 @@ export class InjuryRepository {
       where: { playerId },
       select: {
         ...INJURY_SELECT,
-        report: { select: INJURY_REPORT_SELECT },
+        injuryReport: { select: INJURY_REPORT_SELECT },
       },
       orderBy: { occurredAt: "desc" },
     });
