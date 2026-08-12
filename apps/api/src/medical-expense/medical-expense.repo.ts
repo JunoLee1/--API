@@ -34,6 +34,12 @@ export class MedicalExpenseRepository {
     });
   }
 
+  findPlayerLevel(playerId: string) {
+    return this.prisma.player
+      .findUnique({ where: { id: playerId }, select: { level: true } })
+      .then((p) => p?.level ?? null);
+  }
+
   create(data: {
     submittedById: number;
     receiptDate: Date;

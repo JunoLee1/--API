@@ -60,6 +60,10 @@ export class GrowthReportService {
     return published;
   }
 
+  getPositionAverage(playerId: string) {
+    return this.repo.getPositionAverage(playerId);
+  }
+
   getBadgesByPlayer(playerId: string) {
     return this.repo.findBadgesByPlayer(playerId);
   }

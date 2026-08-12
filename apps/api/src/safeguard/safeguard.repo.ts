@@ -46,6 +46,13 @@ export class SafeguardRepository {
     })
   }
 
+  unsuspendUser(userId: number) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { isSuspended: false, suspendedAt: null },
+    })
+  }
+
   findEmergencyRecipients() {
     return this.prisma.user.findMany({
       where: {

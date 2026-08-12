@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { growthReportApi } from '@/services/growthReport.service'
-import type { GrowthEvaluation, PlayerBadge } from '@/types/growth-report'
+import type { GrowthEvaluation, PlayerBadge, PositionAverage } from '@/types/growth-report'
 import { GrowthRadarChart } from '@/components/player/GrowthRadarChart'
 import { GrowthEvaluationFormDialog } from '../GrowthEvaluationFormDialog'
 import { BadgeAwardDialog } from '../BadgeAwardDialog'
@@ -19,6 +19,7 @@ export function GrowthReportTab({ playerId, canCoach }: Props) {
   const { t } = useTranslation('player')
   const [evaluations, setEvaluations] = useState<GrowthEvaluation[]>([])
   const [badges, setBadges] = useState<PlayerBadge[]>([])
+  const [positionAvg, setPositionAvg] = useState<PositionAverage | null>(null)
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<GrowthEvaluation | null>(null)
   const [formOpen, setFormOpen] = useState(false)
@@ -37,6 +38,10 @@ export function GrowthReportTab({ playerId, canCoach }: Props) {
       })
       .catch(() => toast.error(t('growthReport.loadFailed')))
       .finally(() => setLoading(false))
+
+    growthReportApi.getPositionAverage(playerId)
+      .then(setPositionAvg)
+      .catch(() => {})
   }
 
   useEffect(() => {
@@ -163,6 +168,38 @@ export function GrowthReportTab({ playerId, canCoach }: Props) {
                   </div>
                 ))}
               </div>
+
+              {positionAvg && (
+                <div className="border-t pt-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground">{t('growthReport.positionAvg')}</span>
+                    {positionAvg.sampleCount < 3 && (
+                      <span className="text-xs text-amber-600 font-medium">
+                        {t('growthReport.sampleInsufficient', { count: positionAvg.sampleCount })}
+                      </span>
+                    )}
+                  </div>
+                  {[
+                    { label: t('growthReport.attitude'), playerScore: selected.attitudeScore, avgScore: positionAvg.avgAttitudeScore },
+                    { label: t('growthReport.fundamentals'), playerScore: selected.fundamentalsScore, avgScore: positionAvg.avgFundamentalsScore },
+                    { label: t('growthReport.spatial'), playerScore: selected.spatialScore, avgScore: positionAvg.avgSpatialScore },
+                    { label: t('growthReport.physical'), playerScore: selected.physicalScore, avgScore: positionAvg.avgPhysicalScore },
+                  ].map(({ label, playerScore, avgScore }) => (
+                    <div key={label} className="flex items-center gap-2 text-xs">
+                      <span className="w-16 text-muted-foreground shrink-0">{label}</span>
+                      <span className="font-semibold w-5 text-right">{playerScore}</span>
+                      {avgScore != null && (
+                        <>
+                          <span className="text-muted-foreground">vs</span>
+                          <span className={`w-5 text-right ${positionAvg.sampleCount < 3 ? 'text-muted-foreground/60' : 'text-muted-foreground'}`}>
+                            {avgScore.toFixed(1)}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

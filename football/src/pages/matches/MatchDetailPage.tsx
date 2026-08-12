@@ -4,8 +4,11 @@ import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { matchApi } from '@/services/match.service'
 import { salesApi } from '@/services/sales.service'
+import { formationSnapshotApi } from '@/services/formationSnapshot.service'
 import type { MatchDetail, ShotEvent, ShotResult, StatSheetData } from '@/types/match'
 import type { SalesRecord } from '@/types/sales'
+import type { FormationSnapshot } from '@/types/formation-snapshot'
+import { FormationSnapshotCard } from '@/components/match/FormationSnapshotCard'
 import { SHOT_RESULT_STYLE } from '@/types/match'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
@@ -794,10 +797,12 @@ export function MatchDetailPage() {
   const [saleDate, setSaleDate] = useState(new Date().toISOString().slice(0, 10))
   const [saleNote, setSaleNote] = useState('')
   const [savingSale, setSavingSale] = useState(false)
+  const [snapshots, setSnapshots] = useState<FormationSnapshot[]>([])
 
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
   const canInputStats = canWrite || user?.role === 'COACHING_STAFF'
   const canUploadOcr = user?.role === 'ADMIN' || user?.role === 'COACHING_STAFF'
+  const canEditSnapshot = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'COACHING_STAFF'
 
   const isFO = user?.role === 'FRONT_OFFICE'
   const foRole = user?.frontOfficeRole
@@ -816,6 +821,7 @@ export function MatchDetailPage() {
       })
       .catch(() => toast.error(t('detail.loadFailed')))
       .finally(() => setLoading(false))
+    formationSnapshotApi.listByMatch(Number(id)).then(setSnapshots).catch(() => {})
   }
 
   const fetchShots = () => {
@@ -1239,6 +1245,14 @@ export function MatchDetailPage() {
               )}
             </div>
           )}
+
+          {/* 대형 변화 기록 */}
+          <FormationSnapshotCard
+            matchId={match.id}
+            snapshots={snapshots}
+            canEdit={canEditSnapshot}
+            onAdded={(s) => setSnapshots(prev => [...prev, s])}
+          />
 
           {/* 티켓 판매 */}
           {match?.homeTeamName === 'FC Seoul' && canViewSales && (

@@ -222,6 +222,7 @@
       "myThisMonthSessionCount": "My Sessions (Mo.)",
       "thisSeasonMatchCount": "Matches (Season)",
       "thisMonthAttendanceRate": "Attendance Rate (Mo.)",
+      "trainingEvalEntryRate": "Training Eval Entry Rate",
       "managedPlayerCount": "Managed Players",
       "injuredManagedPlayerCount": "Injured Managed",
       "expiringManagedContractCount": "Expiring Contracts",

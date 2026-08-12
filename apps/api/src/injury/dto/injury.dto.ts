@@ -25,6 +25,8 @@ export interface UpsertInjuryReportDto {
   reinjuryRisk?: RiskLevel;
   medicalOpinion?: string;
   securityLevel?: SecurityLevel;
+  allowedActivities?: string;
+  rehabLoadPercentage?: number;
 }
 
 export interface UpsertAssessmentDto {
