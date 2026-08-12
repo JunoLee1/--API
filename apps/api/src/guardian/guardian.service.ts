@@ -60,7 +60,7 @@ export class GuardianService {
   }
 
   async getChildAttendance(playerId: string, from?: string, to?: string) {
-    return this.trainingRepo.findResults({ playerId, from, to });
+    return this.trainingRepo.findResults({ playerId, ...(from !== undefined ? { from } : {}), ...(to !== undefined ? { to } : {}) });
   }
 
   async getChildInjuries(playerId: string) {
