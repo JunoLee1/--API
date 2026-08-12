@@ -27,8 +27,9 @@ export interface DashboardConfig {
   showTicketRevenue?: boolean
 }
 
-export function getDashboardConfig(user: UserDto): DashboardConfig {
+export function getDashboardConfig(user: UserDto, teamCtx: 'FIRST_TEAM' | 'YOUTH' = 'FIRST_TEAM'): DashboardConfig {
   const { role, coachingRole, frontOfficeRole } = user
+  const isYouth = teamCtx === 'YOUTH'
 
   if (role === 'ADMIN') {
     return {
@@ -39,7 +40,7 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
         { label: 'dashboard.stat.lowStockEquipmentCount', getValue: (s) => (s as AdminStats).lowStockEquipmentCount, unit: 'dashboard.stat.unit.item', highlight: true },
       ],
       showActionQueue: true,
-      showSchedule: true,
+      showSchedule: !isYouth,
       showRanking: false,
       showMedicalSection: false,
       showYouthDevelopment: true,
@@ -194,11 +195,12 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
           { label: 'dashboard.stat.attendanceWarningPlayerCount', getValue: (s) => (s as HeadCoachStats).attendanceWarningPlayerCount, unit: 'dashboard.stat.unit.person', highlight: true },
         ],
         showActionQueue: true,
-        showSchedule: true,
-        showRanking: true,
-        recentFeedTitle: 'dashboard.recentFeed.recentMatches',
+        showSchedule: !isYouth,
+        showRanking: !isYouth,
+        recentFeedTitle: isYouth ? undefined : 'dashboard.recentFeed.recentMatches',
         showMedicalSection: true,
         showYouthDevelopment: false,
+        showAcademyFinance: isYouth,
       }
     }
     if (coachingRole === 'ASSISTANT_COACH') {
@@ -209,11 +211,12 @@ export function getDashboardConfig(user: UserDto): DashboardConfig {
           { label: 'dashboard.stat.attendanceWarningPlayerCount', getValue: (s) => (s as HeadCoachStats).attendanceWarningPlayerCount, unit: 'dashboard.stat.unit.person', highlight: true },
         ],
         showActionQueue: true,
-        showSchedule: true,
-        showRanking: true,
-        recentFeedTitle: 'dashboard.recentFeed.recentMatches',
+        showSchedule: !isYouth,
+        showRanking: !isYouth,
+        recentFeedTitle: isYouth ? undefined : 'dashboard.recentFeed.recentMatches',
         showMedicalSection: false,
         showYouthDevelopment: false,
+        showAcademyFinance: isYouth,
       }
     }
     if (coachingRole === 'MEDICAL_DIRECTOR') {
