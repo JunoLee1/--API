@@ -23,7 +23,9 @@ export class SalesService {
 
   async create(dto: CreateSalesRecordDto, createdById: number) {
     if (dto.quantity <= 0) throw new AppError(400, "NEGATIVE_SALES_VALUE");
-    if (dto.unitPrice <= 0) throw new AppError(400, "NEGATIVE_SALES_VALUE");
+    if (dto.unitPrice < 0 || (dto.unitPrice === 0 && (dto.type as string) !== "COMPLIMENTARY")) {
+      throw new AppError(400, "NEGATIVE_SALES_VALUE");
+    }
 
     // JO6: COMPLIMENTARY tickets require a description explaining the reason
     if ((dto.type as string) === "COMPLIMENTARY" && !dto.description) {
@@ -306,8 +308,11 @@ export class SalesService {
       // Fetch existing record for seatZoneId/quantity needed for BS10 decrement
       const existing = await tx.salesRecord.findUnique({
         where: { id },
-        select: { seatZoneId: true, quantity: true },
+        select: { seatZoneId: true, quantity: true, deletedAt: true },
       });
+
+      if (!existing) throw new AppError(404, "SALES_RECORD_NOT_FOUND");
+      if (existing.deletedAt !== null) throw new AppError(400, "ALREADY_CANCELLED");
 
       // BS1: roll back the ledger entry linked to this sales record
       await tx.ledgerEntry.deleteMany({

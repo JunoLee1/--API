@@ -85,8 +85,7 @@ describe("SalesService.create — COMPLIMENTARY limit (BS6)", () => {
     const service = new SalesService(makeRepo(), prisma);
     await expect(
       service.create(
-        // unitPrice=1 (not 0) — COMPLIMENTARY tickets are free but the guard rejects unitPrice<=0
-        { type: "COMPLIMENTARY", quantity: 1, unitPrice: 1, matchId: 42, saleDate: "2026-08-05", description: "VIP guest" } as any,
+        { type: "COMPLIMENTARY", quantity: 1, unitPrice: 0, matchId: 42, saleDate: "2026-08-05", description: "VIP guest" } as any,
         1,
       ),
     ).rejects.toThrow(new AppError(400, "COMPLIMENTARY_LIMIT_EXCEEDED"));
@@ -100,7 +99,7 @@ describe("SalesService.create — COMPLIMENTARY limit (BS6)", () => {
     const service = new SalesService(makeRepo(), prisma);
     await expect(
       service.create(
-        { type: "COMPLIMENTARY", quantity: 1, unitPrice: 1, matchId: 42, saleDate: "2026-08-05", description: "VIP guest" } as any,
+        { type: "COMPLIMENTARY", quantity: 1, unitPrice: 0, matchId: 42, saleDate: "2026-08-05", description: "VIP guest" } as any,
         1,
       ),
     ).resolves.toBeDefined();
@@ -238,6 +237,45 @@ describe("SalesService.delete — REFUNDED status (BS8)", () => {
         data: expect.objectContaining({ status: "REFUNDED" }),
       }),
     );
+  });
+});
+
+// Double-cancel protection
+describe("SalesService.delete — double-cancel protection", () => {
+  it("throws ALREADY_CANCELLED when record is already soft-deleted", async () => {
+    const alreadyDeleted = { id: 50, seatZoneId: null, quantity: 1, deletedAt: new Date("2026-08-01") };
+    const mockTx = {
+      ledgerEntry: { deleteMany: jest.fn() },
+      salesRecord: {
+        findUnique: jest.fn().mockResolvedValue(alreadyDeleted),
+        update: jest.fn(),
+      },
+      seatZone: { update: jest.fn() },
+    };
+    const prisma = makePrisma({
+      $transaction: jest.fn().mockImplementation((fn) => fn(mockTx)),
+    } as any);
+    const service = new SalesService(makeRepo(), prisma);
+    await expect(service.delete(50, 1)).rejects.toThrow(new AppError(400, "ALREADY_CANCELLED"));
+    // must NOT have attempted the soft-delete update or soldCount decrement
+    expect(mockTx.salesRecord.update).not.toHaveBeenCalled();
+    expect(mockTx.seatZone.update).not.toHaveBeenCalled();
+  });
+
+  it("throws SALES_RECORD_NOT_FOUND when record does not exist", async () => {
+    const mockTx = {
+      ledgerEntry: { deleteMany: jest.fn() },
+      salesRecord: {
+        findUnique: jest.fn().mockResolvedValue(null),
+        update: jest.fn(),
+      },
+      seatZone: { update: jest.fn() },
+    };
+    const prisma = makePrisma({
+      $transaction: jest.fn().mockImplementation((fn) => fn(mockTx)),
+    } as any);
+    const service = new SalesService(makeRepo(), prisma);
+    await expect(service.delete(999, 1)).rejects.toThrow(new AppError(404, "SALES_RECORD_NOT_FOUND"));
   });
 });
 
