@@ -62,3 +62,68 @@ describe("InjuryService — securityLevel gate", () => {
     expect(result).toBeDefined();
   });
 });
+
+describe("InjuryService — allowedActivities write guard", () => {
+  let service: InjuryService;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    service = new InjuryService(mockRepo as any, mockNotifRepo as any);
+    mockRepo.findById.mockResolvedValue({ id: 1 });
+  });
+
+  test("MEDICAL_DIRECTOR can set allowedActivities", async () => {
+    mockRepo.upsertReport.mockResolvedValue({ matchAvailable: null, medicalSignedAt: null, allowedActivities: "Water rehab only" });
+
+    await service.saveReport(1, { allowedActivities: "Water rehab only" }, 99, { role: "COACHING_STAFF", coachingRole: "MEDICAL_DIRECTOR" });
+
+    expect(mockRepo.upsertReport).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ allowedActivities: "Water rehab only" }),
+      99,
+    );
+  });
+
+  test("HEAD_COACH cannot set allowedActivities — field is stripped", async () => {
+    mockRepo.upsertReport.mockResolvedValue({ matchAvailable: null, medicalSignedAt: null, allowedActivities: null });
+
+    await service.saveReport(1, { allowedActivities: "Full training" }, 99, { role: "COACHING_STAFF", coachingRole: "HEAD_COACH" });
+
+    const calledDto = (mockRepo.upsertReport as jest.Mock).mock.calls[0][1];
+    expect(calledDto.allowedActivities).toBeUndefined();
+  });
+});
+
+describe("InjuryService — matchAvailable soft gate", () => {
+  let service: InjuryService;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    service = new InjuryService(mockRepo as any, mockNotifRepo as any);
+    mockRepo.findById.mockResolvedValue({ id: 1 });
+  });
+
+  test("matchAvailable=true without medical signature returns warning", async () => {
+    mockRepo.upsertReport.mockResolvedValue({ matchAvailable: true, medicalSignedAt: null });
+
+    const result = await service.saveReport(1, { matchAvailable: true }, 99, { role: "COACHING_STAFF", coachingRole: "HEAD_COACH" });
+
+    expect((result as any)._warning).toBe("MATCH_AVAILABLE_WITHOUT_MEDICAL_CLEARANCE");
+  });
+
+  test("matchAvailable=true with medical signature returns no warning", async () => {
+    mockRepo.upsertReport.mockResolvedValue({ matchAvailable: true, medicalSignedAt: new Date() });
+
+    const result = await service.saveReport(1, { matchAvailable: true }, 99, { role: "COACHING_STAFF", coachingRole: "HEAD_COACH" });
+
+    expect((result as any)._warning).toBeUndefined();
+  });
+
+  test("matchAvailable=false never returns warning", async () => {
+    mockRepo.upsertReport.mockResolvedValue({ matchAvailable: false, medicalSignedAt: null });
+
+    const result = await service.saveReport(1, { matchAvailable: false }, 99, { role: "COACHING_STAFF", coachingRole: "HEAD_COACH" });
+
+    expect((result as any)._warning).toBeUndefined();
+  });
+});

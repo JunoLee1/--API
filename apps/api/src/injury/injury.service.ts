@@ -151,10 +151,27 @@ export class InjuryService {
     return report;
   }
 
-  async saveReport(injuryId: number, dto: UpsertInjuryReportDto, userId: number) {
+  async saveReport(
+    injuryId: number,
+    dto: UpsertInjuryReportDto,
+    userId: number,
+    requester: { role: string; coachingRole: string | null },
+  ) {
     const injury = await this.repo.findById(injuryId);
     if (!injury) throw new AppError(404, "INJURY_NOT_FOUND");
-    return this.repo.upsertReport(injuryId, dto, userId);
+
+    const safeDto: UpsertInjuryReportDto = this.isMedicalRole(requester.role, requester.coachingRole)
+      ? dto
+      : { ...dto, allowedActivities: undefined };
+
+    const report = await this.repo.upsertReport(injuryId, safeDto, userId);
+
+    const warning =
+      report.matchAvailable === true && !report.medicalSignedAt
+        ? "MATCH_AVAILABLE_WITHOUT_MEDICAL_CLEARANCE"
+        : undefined;
+
+    return warning ? { ...report, _warning: warning } : report;
   }
 
   async signReport(injuryId: number, role: 'COACH' | 'TRAINER' | 'MEDICAL', userId: number, signerTeamId?: number | null) {

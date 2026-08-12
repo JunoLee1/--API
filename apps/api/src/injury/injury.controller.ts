@@ -78,7 +78,12 @@ export class InjuryController {
       const user = requireUser(req);
       if (!(MEDICAL_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(
-        await this.service.saveReport(Number(req.params["id"]), req.body, user.id)
+        await this.service.saveReport(
+          Number(req.params["id"]),
+          req.body,
+          user.id,
+          { role: user.role, coachingRole: user.coachingRole ?? null },
+        )
       );
     } catch (err) { next(err); }
   };
