@@ -1401,6 +1401,9 @@ model TacticalAnalysis {
   opponentKeyThreat   String? @db.Text
   opponentWeakness    String? @db.Text
   opponentKeyPlayer   String?
+  opponentPressureScore Int?
+  opponentSetPieceScore Int?
+  opponentCounterScore  Int?
   // POST_MATCH
   tacticalCompliance  String? @db.Text
   concededAnalysis    String? @db.Text

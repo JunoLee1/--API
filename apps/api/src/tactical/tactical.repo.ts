@@ -18,6 +18,9 @@ const ANALYSIS_SELECT = {
   opponentKeyThreat: true,
   opponentWeakness: true,
   opponentKeyPlayer: true,
+  opponentPressureScore: true,
+  opponentSetPieceScore: true,
+  opponentCounterScore: true,
   tacticalCompliance: true,
   concededAnalysis: true,
   momPlayerId: true,
@@ -103,6 +106,9 @@ export class TacticalRepository {
     if (dto.opponentKeyThreat !== undefined) data.opponentKeyThreat = snv(dto.opponentKeyThreat);
     if (dto.opponentWeakness !== undefined) data.opponentWeakness = snv(dto.opponentWeakness);
     if (dto.opponentKeyPlayer !== undefined) data.opponentKeyPlayer = snv(dto.opponentKeyPlayer);
+    if (dto.opponentPressureScore !== undefined) data.opponentPressureScore = dto.opponentPressureScore;
+    if (dto.opponentSetPieceScore !== undefined) data.opponentSetPieceScore = dto.opponentSetPieceScore;
+    if (dto.opponentCounterScore !== undefined) data.opponentCounterScore = dto.opponentCounterScore;
     if (dto.tacticalCompliance !== undefined) data.tacticalCompliance = snv(dto.tacticalCompliance);
     if (dto.concededAnalysis !== undefined) data.concededAnalysis = snv(dto.concededAnalysis);
     if (dto.momPlayerId !== undefined) data.momPlayerId = dto.momPlayerId || null;
