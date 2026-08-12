@@ -34,7 +34,12 @@ export class MedicalExpenseService {
     fileUrl?: string;
     fileName?: string;
   }) {
-    return this.repo.create(data);
+    let payerType = data.payerType;
+    if (data.playerId) {
+      const level = await this.repo.findPlayerLevel(data.playerId);
+      if (level === "YOUTH") payerType = "CLUB";
+    }
+    return this.repo.create({ ...data, payerType });
   }
 
   async update(id: number, userId: number, data: {
