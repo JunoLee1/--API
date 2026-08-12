@@ -134,10 +134,21 @@ export class InjuryService {
     });
   }
 
-  async getReport(injuryId: number) {
+  private isMedicalRole(role: string, coachingRole: string | null): boolean {
+    if (role === 'ADMIN' || role === 'SUPER_ADMIN') return true;
+    return role === 'COACHING_STAFF' &&
+      (coachingRole === 'MEDICAL' || coachingRole === 'MEDICAL_DIRECTOR');
+  }
+
+  async getReport(injuryId: number, requester: { role: string; coachingRole: string | null }) {
     const injury = await this.repo.findById(injuryId);
     if (!injury) throw new AppError(404, "INJURY_NOT_FOUND");
-    return this.repo.findReport(injuryId);
+    const report = await this.repo.findReport(injuryId);
+    if (!report) return null;
+    if (report.securityLevel === 'PRIVATE' && !this.isMedicalRole(requester.role, requester.coachingRole)) {
+      throw new AppError(403, "FORBIDDEN");
+    }
+    return report;
   }
 
   async saveReport(injuryId: number, dto: UpsertInjuryReportDto, userId: number) {

@@ -65,7 +65,10 @@ export class InjuryController {
     try {
       const user = requireUser(req);
       void writeAuditLog({ actorId: user.id, action: "MEDICAL_DATA_READ", targetId: String(req.params["id"]) }).catch(console.error);
-      const report = await this.service.getReport(Number(req.params["id"]));
+      const report = await this.service.getReport(
+        Number(req.params["id"]),
+        { role: user.role, coachingRole: user.coachingRole ?? null },
+      );
       res.status(200).json(report ?? null);
     } catch (err) { next(err); }
   };
