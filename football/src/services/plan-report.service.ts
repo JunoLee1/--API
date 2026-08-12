@@ -1,7 +1,18 @@
 import { api } from './api'
 import type { PlanReport } from '@/types/plan-report'
 
+export interface ApprovedHrReport {
+  id: number
+  title: string
+  departmentId: number
+  department: { id: number; name: string }
+  approvedAt: string
+}
+
 export const planReportApi = {
+  listApprovedHr: (): Promise<ApprovedHrReport[]> =>
+    api.get('/plan-reports/approved-hr'),
+
   list: (params?: { templateType?: string; departmentId?: number; status?: string }) => {
     const q = new URLSearchParams()
     if (params?.templateType) q.set('templateType', params.templateType)
