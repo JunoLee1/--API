@@ -4,6 +4,7 @@ export interface CreateInspectionDto {
   type: InspectionType;
   facilityZone: FacilityZone;
   result: InspectionResult;
+  sanitationScore?: number;
   isStatutory?: boolean;
   certificateUrl?: string;
   statutoryDeadline?: string;
@@ -15,6 +16,7 @@ export interface UpdateInspectionDto {
   type?: InspectionType;
   facilityZone?: FacilityZone;
   result?: InspectionResult;
+  sanitationScore?: number;
   isStatutory?: boolean;
   certificateUrl?: string;
   statutoryDeadline?: string;

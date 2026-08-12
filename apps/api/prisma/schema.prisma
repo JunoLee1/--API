@@ -543,6 +543,9 @@ enum FacilityZone {
   SAFETY
   SANITATION
   OPERATIONS
+  LOCKER_ROOM
+  MEDICAL_ROOM
+  SHOWER_ROOM
 }
 
 enum InspectionType {
@@ -1477,6 +1480,8 @@ model EquipmentUnit {
   lastInspectedAt       DateTime?
   inspectionIntervalDays Int?
   nextInspectionDue     DateTime?
+  lastSanitizedAt       DateTime?
+  sanitationStatus      String?
 
   item        EquipmentItem         @relation(fields: [equipmentItemId], references: [id])
   assignments EquipmentAssignment[]
@@ -2575,6 +2580,7 @@ model FacilityInspection {
   type                InspectionType
   facilityZone        FacilityZone
   result              InspectionResult
+  sanitationScore     Int?
   isStatutory         Boolean          @default(false)
   certificateUrl      String?
   statutoryDeadline   DateTime?

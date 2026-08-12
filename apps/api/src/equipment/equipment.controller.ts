@@ -63,6 +63,14 @@ export class EquipmentController {
     } catch (err) { next(err); }
   };
 
+  updateUnitSanitation = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = requireUser(req);
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      res.json(await this.service.updateUnitSanitation(Number(req.params["unitId"]), req.body));
+    } catch (err) { next(err); }
+  };
+
   createAssignment = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, frontOfficeRole } = requireUser(req);

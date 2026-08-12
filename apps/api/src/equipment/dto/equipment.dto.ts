@@ -25,6 +25,14 @@ export interface UpdateUnitStatusDto {
   status: EquipmentUnitStatus;
 }
 
+export interface UpdateUnitSanitationDto {
+  lastSanitizedAt?: string;
+  sanitationStatus?: string;
+  lastInspectedAt?: string;
+  inspectionIntervalDays?: number;
+  nextInspectionDue?: string;
+}
+
 export interface CreateAssignmentDto {
   playerId: string;
   equipmentItemId?: number;

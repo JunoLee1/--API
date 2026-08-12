@@ -20,6 +20,12 @@ export class InspectionService {
   }
 
   async create(dto: CreateInspectionDto, inspectedById: number) {
+    if (
+      dto.sanitationScore !== undefined &&
+      (dto.sanitationScore < 1 || dto.sanitationScore > 5 || !Number.isInteger(dto.sanitationScore))
+    ) {
+      throw new AppError(400, "INVALID_SANITATION_SCORE");
+    }
     const record = await this.repo.create({ ...dto, inspectedById });
 
     if (record.result === "ISSUE_FOUND") {

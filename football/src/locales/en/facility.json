@@ -69,7 +69,10 @@
     "STRUCTURAL": "Structural",
     "SAFETY": "Safety",
     "SANITATION": "Sanitation",
-    "OPERATIONS": "Operations"
+    "OPERATIONS": "Operations",
+    "LOCKER_ROOM": "Locker Room",
+    "MEDICAL_ROOM": "Medical Room",
+    "SHOWER_ROOM": "Shower Room"
   },
   "inspectionType": {
     "DAILY": "Daily",

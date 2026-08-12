@@ -69,7 +69,10 @@
     "STRUCTURAL": "구조물",
     "SAFETY": "안전시설",
     "SANITATION": "위생",
-    "OPERATIONS": "운영시설"
+    "OPERATIONS": "운영시설",
+    "LOCKER_ROOM": "라커룸",
+    "MEDICAL_ROOM": "의무실",
+    "SHOWER_ROOM": "샤워실"
   },
   "inspectionType": {
     "DAILY": "일일",

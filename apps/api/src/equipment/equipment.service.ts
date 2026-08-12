@@ -3,7 +3,7 @@ import { NotificationRepository } from "../notification/notification.repo";
 import { AppError } from "../lib/appError";
 import { writeAuditLog } from "../lib/auditLog";
 import { formatLedgerDescription } from "../lib/ledger-formatter";
-import { CreateEquipmentItemDto, UpdateQuantityDto, UpdateUnitStatusDto, CreateAssignmentDto, CreateEquipmentLoanDto, CreateEquipmentUnitDto } from "./dto/equipment.dto";
+import { CreateEquipmentItemDto, UpdateQuantityDto, UpdateUnitStatusDto, UpdateUnitSanitationDto, CreateAssignmentDto, CreateEquipmentLoanDto, CreateEquipmentUnitDto } from "./dto/equipment.dto";
 import { EquipmentUnitStatus, EquipmentLoanStatus } from "../generated/enums";
 import type { LedgerService } from "../ledger/ledger.service";
 
@@ -219,6 +219,18 @@ export class EquipmentService {
       detail: { ...(returnNote && { returnNote }) },
     }).catch(console.error);
     return result;
+  }
+
+  async updateUnitSanitation(unitId: number, dto: UpdateUnitSanitationDto) {
+    const unit = await this.repo.findUnitById(unitId);
+    if (!unit) throw new AppError(404, "EQUIPMENT_UNIT_NOT_FOUND");
+    return this.repo.updateUnit(unitId, {
+      ...(dto.lastSanitizedAt && { lastSanitizedAt: new Date(dto.lastSanitizedAt) }),
+      ...(dto.sanitationStatus !== undefined && { sanitationStatus: dto.sanitationStatus }),
+      ...(dto.lastInspectedAt && { lastInspectedAt: new Date(dto.lastInspectedAt) }),
+      ...(dto.inspectionIntervalDays !== undefined && { inspectionIntervalDays: dto.inspectionIntervalDays }),
+      ...(dto.nextInspectionDue && { nextInspectionDue: new Date(dto.nextInspectionDue) }),
+    });
   }
 
   listLoans(status?: EquipmentLoanStatus) {

@@ -15,6 +15,12 @@ const UNIT_SELECT = {
   id: true,
   status: true,
   equipmentItemId: true,
+  serialNumber: true,
+  lastInspectedAt: true,
+  inspectionIntervalDays: true,
+  nextInspectionDue: true,
+  lastSanitizedAt: true,
+  sanitationStatus: true,
   assignments: {
     where: { returnedAt: null },
     take: 1,
@@ -123,6 +129,20 @@ export class EquipmentRepository {
     return this.prisma.equipmentUnit.update({
       where: { id },
       data: { status },
+      select: UNIT_SELECT,
+    });
+  }
+
+  updateUnit(id: number, data: {
+    lastSanitizedAt?: Date;
+    sanitationStatus?: string;
+    lastInspectedAt?: Date;
+    inspectionIntervalDays?: number;
+    nextInspectionDue?: Date;
+  }) {
+    return this.prisma.equipmentUnit.update({
+      where: { id },
+      data,
       select: UNIT_SELECT,
     });
   }
