@@ -98,13 +98,21 @@ export class EquipmentService {
     if (!unit) throw new AppError(404, "EQUIPMENT_UNIT_NOT_FOUND");
     const allowed = VALID_UNIT_TRANSITIONS[unit.status as unknown as EquipmentUnitStatus];
     if (!allowed.includes(dto.status)) throw new AppError(409, "INVALID_STATUS_TRANSITION");
-    const updated = await this.repo.updateUnitStatus(unitId, dto.status);
+    if (dto.status === "RETIRED" || dto.status === "DISPOSED" as any) {
+      if (!dto.disposedById) throw new AppError(400, "DISPOSAL_ACTOR_REQUIRED");
+      dto.disposedAt = new Date();
+    }
+    const updated = await this.repo.updateUnitStatus(unitId, dto.status, {
+      disposedById: dto.disposedById,
+      disposedAt: dto.disposedAt,
+      disposalNote: dto.disposalNote,
+    });
     if (dto.status === "RETIRED") {
       void writeAuditLog({
         actorId: userId ?? 0,
         action: "EQUIPMENT_UNIT_RETIRED",
         targetId: unitId,
-        detail: { previousStatus: unit.status },
+        detail: { previousStatus: unit.status, disposedById: dto.disposedById },
       }).catch(console.error);
       const unitWithBook = await this.repo.findUnitWithDepreciation(unitId);
       if (unitWithBook?.bookValue) {
