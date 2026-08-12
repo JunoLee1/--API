@@ -24,7 +24,7 @@ export const requireRole = (...roles: Role[]) => (req: Request, _res: Response, 
 export const teamSwitchLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 20,
-  keyGenerator: (req) => req.user ? String(req.user.id) : ipKeyGenerator(req),
+  keyGenerator: (req) => req.user ? String(req.user.id) : ipKeyGenerator(req.ip ?? ''),
   message: { code: "TOO_MANY_REQUESTS" },
   standardHeaders: true,
   legacyHeaders: false,
