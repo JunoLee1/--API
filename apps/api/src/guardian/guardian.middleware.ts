@@ -13,14 +13,17 @@ export async function requireGuardianChild(req: Request, res: Response, next: Ne
     const guardianId = req.user?.id;
     if (!guardianId) return res.status(401).json({ code: "UNAUTHORIZED" });
 
+    const playerId = parseInt(req.params.playerId, 10);
+    if (isNaN(playerId)) return res.status(400).json({ code: "INVALID_PLAYER_ID" });
+
     const player = await getPrisma().player.findFirst({
-      where: { guardianId },
+      where: { id: String(playerId), guardianId },
       select: { id: true },
     });
 
     if (!player) return res.status(403).json({ code: "FORBIDDEN" });
 
-    req.childPlayerId = player.id;
+    req.childPlayerId = playerId;
     next();
   } catch (e) {
     next(e);

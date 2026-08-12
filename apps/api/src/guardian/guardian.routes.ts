@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { auth } from "../lib/authMiddleware";
-import { requireGuardian } from "./guardian.middleware";
+import { requireGuardian, requireGuardianChild } from "./guardian.middleware";
 import { GuardianController } from "./guardian.controller";
 import { GuardianService } from "./guardian.service";
 import { GuardianRepository } from "./guardian.repo";
@@ -18,8 +18,10 @@ router.post("/invite-code", auth, controller.issueInviteCode);
 router.post("/link/search", auth, requireGuardian, controller.linkBySearch);
 router.post("/link/code", auth, requireGuardian, controller.linkByCode);
 
-// 자녀 정보 조회 — auth + requireGuardian
-router.get("/me/child", auth, requireGuardian, controller.getChild);
-router.get("/me/dashboard", auth, requireGuardian, controller.getDashboard);
+// 자녀 목록 — auth + requireGuardian
+router.get("/me/children", auth, requireGuardian, controller.getChildren);
+
+// 특정 자녀 대시보드 — auth + requireGuardian + requireGuardianChild (소유권 검증)
+router.get("/me/children/:playerId/dashboard", auth, requireGuardian, requireGuardianChild, controller.getDashboard);
 
 export default router;
