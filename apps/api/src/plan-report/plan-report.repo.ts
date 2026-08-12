@@ -151,4 +151,19 @@ export class PlanReportRepository {
   getClubSettings() {
     return this.prisma.clubSettings.findUniqueOrThrow({ where: { id: 1 } })
   }
+
+  findByIdLight(id: number) {
+    return this.prisma.planReport.findUnique({
+      where: { id },
+      select: { id: true, status: true, templateType: true, departmentId: true, title: true, jobPosting: { select: { id: true } } },
+    })
+  }
+
+  findApprovedHrReports() {
+    return this.prisma.planReport.findMany({
+      where: { status: 'APPROVED', templateType: 'HR', jobPosting: null },
+      select: { id: true, title: true, departmentId: true, department: { select: { id: true, name: true } }, approvedAt: true },
+      orderBy: { approvedAt: 'desc' },
+    })
+  }
 }

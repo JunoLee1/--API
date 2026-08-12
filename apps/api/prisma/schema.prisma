@@ -2412,11 +2412,13 @@ model JobPosting {
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
   budget        Int?
+  planReportId  Int?             @unique
 
   department   Department?      @relation(fields: [departmentId], references: [id])
   createdBy    User             @relation("JobPostingCreator", fields: [createdById], references: [id])
   approvedBy   User?            @relation("JobPostingApprover", fields: [approvedById], references: [id])
   applications JobApplication[]
+  planReport   PlanReport?      @relation(fields: [planReportId], references: [id])
 }
 
 model JobApplication {
@@ -3027,6 +3029,7 @@ model PlanReport {
   createdBy   User        @relation("PlanReportCreatedBy", fields: [createdById], references: [id])
   approvedBy  User?       @relation("PlanReportApprovedBy", fields: [approvedById], references: [id])
   reviews     PlanReview[]
+  jobPosting  JobPosting?
 }
 
 // ─────────────────────────────────────────────

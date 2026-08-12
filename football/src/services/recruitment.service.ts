@@ -21,6 +21,7 @@ export const recruitmentApi = {
     description: string
     headcount?: number
     departmentId?: number
+    planReportId: number
   }): Promise<JobPosting> =>
     api.post('/recruitment/job-postings', data),
 

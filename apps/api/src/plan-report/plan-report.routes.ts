@@ -22,6 +22,7 @@ const upload = multer({
 })
 
 router.get('/', auth, controller.list)
+router.get('/approved-hr', auth, controller.listApprovedHr)
 router.get('/:id', auth, controller.getById)
 router.post('/', auth, controller.create)
 router.put('/:id', auth, controller.update)

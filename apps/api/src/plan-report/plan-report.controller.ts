@@ -47,6 +47,12 @@ export class PlanReportController {
     } catch (e) { next(e) }
   }
 
+  listApprovedHr = async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.json(await this.service.listApprovedHrReports())
+    } catch (e) { next(e) }
+  }
+
   submitResult = async (req: Request, res: Response, next: NextFunction) => {
     try {
       res.json(await this.service.submitResult(Number(req.params.id), req.user!.id, req.body.resultContent))

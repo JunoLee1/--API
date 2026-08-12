@@ -651,7 +651,11 @@
     "saveFailed": "Failed to save.",
     "requiredFields": "Please fill in all required fields.",
     "saving": "Saving...",
-    "save": "Save"
+    "save": "Save",
+    "planReport": "HR Plan Report",
+    "selectPlanReport": "Select plan report (required)",
+    "planReportRequired": "Please select an approved HR plan report.",
+    "noApprovedHrReports": "No approved HR plan reports available."
   },
   "financialReport": {
     "title": "Financial Report",

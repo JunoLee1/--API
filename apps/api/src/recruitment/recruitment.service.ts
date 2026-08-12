@@ -1,4 +1,5 @@
 import { RecruitmentRepository } from "./recruitment.repo";
+import { PlanReportRepository } from "../plan-report/plan-report.repo";
 import { AppError } from "../lib/appError";
 import { maskEmail, maskPhone } from "../lib/maskPii";
 import { getPrisma } from "../lib/prisma";
@@ -32,6 +33,7 @@ export class RecruitmentService {
   constructor(
     private repo: RecruitmentRepository,
     private notifRepo?: NotificationRepository,
+    private planReportRepo?: PlanReportRepository,
   ) {}
 
   // --- JobPosting ---
@@ -46,7 +48,13 @@ export class RecruitmentService {
     return posting;
   }
 
-  createPosting(dto: CreateJobPostingDto, createdById: number) {
+  async createPosting(dto: CreateJobPostingDto, createdById: number) {
+    if (!this.planReportRepo) throw new AppError(500, "INTERNAL_ERROR");
+    const planReport = await this.planReportRepo.findByIdLight(dto.planReportId);
+    if (!planReport) throw new AppError(404, "PLAN_REPORT_NOT_FOUND");
+    if (planReport.status !== "APPROVED") throw new AppError(409, "PLAN_REPORT_NOT_APPROVED");
+    if (planReport.templateType !== "HR") throw new AppError(409, "PLAN_REPORT_NOT_HR_TYPE");
+    if (planReport.jobPosting) throw new AppError(409, "PLAN_REPORT_ALREADY_LINKED");
     return this.repo.createPosting({ ...dto, createdById });
   }
 
