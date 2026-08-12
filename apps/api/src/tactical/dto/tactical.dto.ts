@@ -27,6 +27,9 @@ export interface UpdateAnalysisDto {
   opponentKeyThreat?: string;
   opponentWeakness?: string;
   opponentKeyPlayer?: string;
+  opponentPressureScore?: number | null;
+  opponentSetPieceScore?: number | null;
+  opponentCounterScore?: number | null;
   tacticalCompliance?: string;
   concededAnalysis?: string;
   momPlayerId?: string;

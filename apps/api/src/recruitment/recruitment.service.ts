@@ -1,4 +1,5 @@
 import { RecruitmentRepository } from "./recruitment.repo";
+import { PlanReportRepository } from "../plan-report/plan-report.repo";
 import { AppError } from "../lib/appError";
 import { maskEmail, maskPhone } from "../lib/maskPii";
 import { getPrisma } from "../lib/prisma";
@@ -32,6 +33,7 @@ export class RecruitmentService {
   constructor(
     private repo: RecruitmentRepository,
     private notifRepo?: NotificationRepository,
+    private planReportRepo?: PlanReportRepository,
   ) {}
 
   // --- JobPosting ---
@@ -46,7 +48,13 @@ export class RecruitmentService {
     return posting;
   }
 
-  createPosting(dto: CreateJobPostingDto, createdById: number) {
+  async createPosting(dto: CreateJobPostingDto, createdById: number) {
+    if (!this.planReportRepo) throw new AppError(500, "INTERNAL_ERROR");
+    const planReport = await this.planReportRepo.findByIdLight(dto.planReportId);
+    if (!planReport) throw new AppError(404, "PLAN_REPORT_NOT_FOUND");
+    if (planReport.status !== "APPROVED") throw new AppError(409, "PLAN_REPORT_NOT_APPROVED");
+    if (planReport.templateType !== "HR") throw new AppError(409, "PLAN_REPORT_NOT_HR_TYPE");
+    if (planReport.jobPosting) throw new AppError(409, "PLAN_REPORT_ALREADY_LINKED");
     return this.repo.createPosting({ ...dto, createdById });
   }
 
@@ -95,10 +103,10 @@ export class RecruitmentService {
     return this.repo.updateApplication(id, dto);
   }
 
-  async rejectApplication(id: number, actorId: number) {
+  async rejectApplication(id: number, actorId?: number) {
     const app = await this.getApplication(id);
     if (app.status === "REJECTED") throw new AppError(409, "APPLICATION_ALREADY_REJECTED");
-    const result = await this.repo.rejectApplication(id, actorId);
+    const result = await this.repo.rejectApplication(id, actorId as number);
     // SJ6: email applicant on rejection — fetch raw (unmasked) record for email address
     const rawApp = await this.repo.findApplicationById(id);
     if (rawApp?.email) {
@@ -128,13 +136,13 @@ export class RecruitmentService {
 
   // --- Interview ---
 
-  async scheduleInterview(applicationId: number, dto: CreateInterviewDto, actorId: number) {
+  async scheduleInterview(applicationId: number, dto: CreateInterviewDto, actorId?: number) {
     await this.getApplication(applicationId);
     const existing = await this.repo.findInterview(applicationId, dto.round);
     if (existing) throw new AppError(409, "INTERVIEW_ALREADY_EXISTS");
     const targetStatus: "INTERVIEW_1" | "INTERVIEW_2" =
       dto.round === "ROUND_1" ? "INTERVIEW_1" : "INTERVIEW_2";
-    await this.repo.setApplicationStatus(applicationId, targetStatus, actorId);
+    await this.repo.setApplicationStatus(applicationId, targetStatus);
     const interview = await this.repo.createInterview(applicationId, dto);
 
     // S3: notify assigned interviewers
@@ -161,7 +169,7 @@ export class RecruitmentService {
 
   // --- ReferenceCheck ---
 
-  async createReferenceCheck(applicationId: number, dto: CreateReferenceCheckDto, actorId: number) {
+  async createReferenceCheck(applicationId: number, dto: CreateReferenceCheckDto, actorId?: number) {
     const app = await this.getApplication(applicationId);
 
     // CL5: consent must not be explicitly declined
@@ -169,7 +177,7 @@ export class RecruitmentService {
       throw new AppError(409, "REFERENCE_CHECK_CONSENT_DECLINED");
     }
 
-    await this.repo.setApplicationStatus(applicationId, "REFERENCE_CHECK", actorId);
+    await this.repo.setApplicationStatus(applicationId, "REFERENCE_CHECK");
     return this.repo.createReferenceCheck(applicationId, dto);
   }
 

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { recruitmentApi } from '@/services/recruitment.service'
+import { planReportApi, type ApprovedHrReport } from '@/services/plan-report.service'
 import type { JobPosting, JobPostingStatus } from '@/types/recruitment'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
@@ -32,6 +33,8 @@ export function JobPostingListPage() {
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [approvedHrReports, setApprovedHrReports] = useState<ApprovedHrReport[]>([])
+  const [selectedReportId, setSelectedReportId] = useState<number | null>(null)
   const [form, setForm] = useState({ title: '', description: '', headcount: '1' })
 
   const canWrite =
@@ -51,20 +54,46 @@ export function JobPostingListPage() {
 
   useEffect(() => { void load() }, [])
 
+  const handleOpenDialog = async () => {
+    setOpen(true)
+    try {
+      setApprovedHrReports(await planReportApi.listApprovedHr())
+    } catch {
+      toast.error(t('recruitment.loadFailed'))
+    }
+  }
+
+  const handleSelectReport = (idStr: string) => {
+    const id = Number(idStr)
+    const report = approvedHrReports.find((r) => r.id === id) ?? null
+    setSelectedReportId(id || null)
+    if (report) {
+      setForm((p) => ({ ...p, title: report.title }))
+    }
+  }
+
   const handleCreate = async () => {
-    if (!form.title.trim() || !form.description.trim()) {
+    if (!selectedReportId) {
+      toast.error(t('recruitment.planReportRequired'))
+      return
+    }
+    if (!form.description.trim()) {
       toast.error(t('recruitment.requiredFields'))
       return
     }
     setSaving(true)
     try {
+      const report = approvedHrReports.find((r) => r.id === selectedReportId)!
       await recruitmentApi.createPosting({
-        title: form.title.trim(),
+        title: form.title.trim() || report.title,
         description: form.description.trim(),
         headcount: Number(form.headcount) || 1,
+        departmentId: report.departmentId,
+        planReportId: selectedReportId,
       })
       setOpen(false)
       setForm({ title: '', description: '', headcount: '1' })
+      setSelectedReportId(null)
       void load()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t('recruitment.saveFailed'))
@@ -86,7 +115,7 @@ export function JobPostingListPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">{t('recruitment.postingsTitle')}</h1>
         {canWrite && (
-          <Button onClick={() => setOpen(true)}>{t('recruitment.createPosting')}</Button>
+          <Button onClick={() => void handleOpenDialog()}>{t('recruitment.createPosting')}</Button>
         )}
       </div>
 
@@ -132,7 +161,25 @@ export function JobPostingListPage() {
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label>{t('recruitment.postingTitle')} *</Label>
+              <Label>{t('recruitment.planReport')} *</Label>
+              <select
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                value={selectedReportId ?? ''}
+                onChange={(e) => handleSelectReport(e.target.value)}
+              >
+                <option value="">{t('recruitment.selectPlanReport')}</option>
+                {approvedHrReports.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.title} ({r.department.name})
+                  </option>
+                ))}
+              </select>
+              {approvedHrReports.length === 0 && (
+                <p className="text-xs text-muted-foreground">{t('recruitment.noApprovedHrReports')}</p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t('recruitment.postingTitle')}</Label>
               <Input
                 value={form.title}
                 onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}

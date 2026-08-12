@@ -11,6 +11,7 @@ export interface CreateJobPostingDto {
   departmentId?: number;
   headcount?: number;
   description: string;
+  planReportId: number;
 }
 
 export interface UpdateJobPostingDto {

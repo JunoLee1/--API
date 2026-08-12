@@ -68,6 +68,15 @@ export interface CreateGrowthEvaluationPayload {
   physicalComment: string
 }
 
+export interface PositionAverage {
+  position: string
+  sampleCount: number
+  avgAttitudeScore: number | null
+  avgFundamentalsScore: number | null
+  avgSpatialScore: number | null
+  avgPhysicalScore: number | null
+}
+
 export interface AwardBadgePayload {
   playerId: string
   sessionId?: number

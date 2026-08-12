@@ -193,6 +193,7 @@ export function getDashboardConfig(user: UserDto, teamCtx: 'FIRST_TEAM' | 'YOUTH
           { label: 'dashboard.stat.injuredPlayerCount', getValue: (s) => (s as HeadCoachStats).injuredPlayerCount, unit: 'dashboard.stat.unit.person', highlight: true },
           { label: 'dashboard.stat.thisMonthSessionCount', getValue: (s) => (s as HeadCoachStats).thisMonthSessionCount, unit: 'dashboard.stat.unit.session' },
           { label: 'dashboard.stat.attendanceWarningPlayerCount', getValue: (s) => (s as HeadCoachStats).attendanceWarningPlayerCount, unit: 'dashboard.stat.unit.person', highlight: true },
+          { label: 'dashboard.stat.trainingEvalEntryRate', getValue: (s) => (s as HeadCoachStats).trainingEvalEntryRate, unit: 'dashboard.stat.unit.rate' },
         ],
         showActionQueue: true,
         showSchedule: !isYouth,

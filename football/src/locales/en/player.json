@@ -361,7 +361,10 @@
     "attitude": "Attitude",
     "fundamentals": "Fundamentals",
     "spatial": "Spatial Awareness",
-    "physical": "Physical"
+    "physical": "Physical",
+    "positionAvg": "Position Average",
+    "sampleInsufficient": "⚠ Insufficient sample (N={{count}})",
+    "comparedToPosition": "vs Position"
   },
   "jerseyTab": {
     "loadFailed": "Failed to load jersey info.",

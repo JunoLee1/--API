@@ -678,6 +678,10 @@
     "saveFailed": "저장에 실패했습니다.",
     "requiredFields": "필수 항목을 입력해주세요.",
     "saving": "저장 중...",
-    "save": "저장"
+    "save": "저장",
+    "planReport": "HR 계획보고서",
+    "selectPlanReport": "계획보고서 선택 (필수)",
+    "planReportRequired": "계획보고서를 선택해주세요.",
+    "noApprovedHrReports": "승인된 HR 계획보고서가 없습니다."
   }
 }

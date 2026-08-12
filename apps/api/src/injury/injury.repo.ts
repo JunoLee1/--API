@@ -30,6 +30,8 @@ const INJURY_REPORT_SELECT = {
   reinjuryRisk: true,
   medicalOpinion: true,
   securityLevel: true,
+  allowedActivities: true,
+  rehabLoadPercentage: true,
   createdById: true,
   updatedById: true,
   createdAt: true,
@@ -103,7 +105,7 @@ export class InjuryRepository {
       where: { playerId },
       select: {
         ...INJURY_SELECT,
-        report: { select: INJURY_REPORT_SELECT },
+        injuryReport: { select: INJURY_REPORT_SELECT },
       },
       orderBy: { occurredAt: "desc" },
     });
@@ -164,6 +166,8 @@ export class InjuryRepository {
       reinjuryRisk: dto.reinjuryRisk ?? null,
       medicalOpinion: dto.medicalOpinion ?? null,
       securityLevel: dto.securityLevel ?? "INTERNAL",
+      allowedActivities: dto.allowedActivities ?? null,
+      rehabLoadPercentage: dto.rehabLoadPercentage ?? null,
     };
     return this.prisma.injuryReport.upsert({
       where: { injuryId },

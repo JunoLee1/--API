@@ -28,4 +28,14 @@ describe("SafeguardRepository — suspendedAt", () => {
     expect(updateArgs.data.suspendedAt).toBeInstanceOf(Date);
     expect(updateArgs.data.suspendedAt.getTime()).toBeGreaterThanOrEqual(before.getTime());
   });
+
+  test("unsuspendUser clears suspendedAt", async () => {
+    (mockPrisma.user.update as jest.Mock).mockResolvedValue({ id: 1, isSuspended: false, suspendedAt: null });
+
+    await repo.unsuspendUser(1);
+
+    const updateArgs = (mockPrisma.user.update as jest.Mock).mock.calls[0][0];
+    expect(updateArgs.data.isSuspended).toBe(false);
+    expect(updateArgs.data.suspendedAt).toBeNull();
+  });
 });

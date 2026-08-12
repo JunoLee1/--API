@@ -46,6 +46,8 @@ export const injuryApi = {
     matchAvailable?: boolean
     reinjuryRisk?: RiskLevel
     medicalOpinion?: string
+    rehabLoadPercentage?: number
+    allowedActivities?: string
     securityLevel?: SecurityLevel
   }) => api.put<InjuryReport>(`/injuries/${injuryId}/report`, payload),
 

@@ -62,6 +62,10 @@ export class PlanReportService {
     return this.repo.reject(id, userId, reason)
   }
 
+  listApprovedHrReports() {
+    return this.repo.findApprovedHrReports()
+  }
+
   async submitResult(id: number, userId: number, resultContent: string) {
     if (!resultContent?.trim()) throw new AppError(400, 'RESULT_CONTENT_REQUIRED')
     const plan = await this.getById(id)

@@ -60,7 +60,9 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown): Pro
   try {
     let res = await doFetch(method, path, body)
 
-    if (res.status === 401) {
+    const skipRefresh = path.startsWith('/auth/login') || path.startsWith('/auth/refresh')
+
+    if (res.status === 401 && !skipRefresh) {
       try {
         if (!refreshingPromise) {
           refreshingPromise = tryRefresh().finally(() => {
@@ -75,7 +77,7 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown): Pro
       }
     }
 
-    if (res.status === 401) {
+    if (res.status === 401 && !skipRefresh) {
       forceLogout()
       throw new Error(i18n.t('common:loginPage.apiError.authExpired'))
     }
@@ -103,7 +105,8 @@ async function requestForm<T>(method: 'POST' | 'PATCH', path: string, form: Form
     const doForm = () =>
       fetch(`${BASE_URL}${path}`, { method, credentials: 'include', body: form, headers: getSuperAdminHeaders() })
     let res = await doForm()
-    if (res.status === 401) {
+    const skipRefresh = path.startsWith('/auth/login') || path.startsWith('/auth/refresh')
+    if (res.status === 401 && !skipRefresh) {
       try {
         if (!refreshingPromise) {
           refreshingPromise = tryRefresh().finally(() => { refreshingPromise = null })
@@ -115,7 +118,7 @@ async function requestForm<T>(method: 'POST' | 'PATCH', path: string, form: Form
         throw new Error(i18n.t('common:loginPage.apiError.authExpired'))
       }
     }
-    if (res.status === 401) { forceLogout(); throw new Error(i18n.t('common:loginPage.apiError.authExpired')) }
+    if (res.status === 401 && !skipRefresh) { forceLogout(); throw new Error(i18n.t('common:loginPage.apiError.authExpired')) }
     if (!res.ok) {
       const error = await res.json().catch(() => ({ message: i18n.t('common:loginPage.apiError.serverError') }))
       throw new Error((error as { message: string }).message)

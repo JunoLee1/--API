@@ -36,7 +36,7 @@ ALTER TABLE "DepartmentReviewerConfig" ADD CONSTRAINT "DepartmentReviewerConfig_
 ALTER TABLE "DepartmentReviewerConfig" ADD CONSTRAINT "DepartmentReviewerConfig_reviewerDepartmentId_fkey" FOREIGN KEY ("reviewerDepartmentId") REFERENCES "Department"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "PlanReview" ADD CONSTRAINT "PlanReview_planId_fkey" FOREIGN KEY ("planId") REFERENCES "DepartmentAnnualPlan"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "PlanReview" ADD CONSTRAINT "PlanReview_planId_fkey" FOREIGN KEY ("planId") REFERENCES "PlanReport"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "PlanReview" ADD CONSTRAINT "PlanReview_reviewerDeptId_fkey" FOREIGN KEY ("reviewerDeptId") REFERENCES "Department"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
