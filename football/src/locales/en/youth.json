@@ -121,6 +121,52 @@
       "LOCKED": "Suspended"
     }
   },
+  "guardianPortal": {
+    "loading": "Loading...",
+    "noChildren": "No linked children. Please request an invite code from the administrator.",
+    "selectChild": "Select Child",
+    "tabs": {
+      "overview": "Overview",
+      "attendance": "Attendance",
+      "injuries": "Injuries",
+      "fees": "Fees"
+    },
+    "overview": {
+      "suspension": "Participation Suspended",
+      "suspensionReason": {
+        "FEE_LOCK": "Suspended due to unpaid fees",
+        "SAFEGUARD": "Suspended due to conduct violation"
+      },
+      "attendance": "Attendance Summary",
+      "total": "Total",
+      "attended": "Attended",
+      "absent": "Absent",
+      "late": "Late",
+      "pendingFees": "Pending Fees",
+      "noFees": "No pending fees",
+      "activeInjuries": "Active Injuries",
+      "noInjuries": "No injuries"
+    },
+    "attendance": {
+      "noData": "No attendance records.",
+      "status": {
+        "PRESENT": "Present",
+        "ABSENT": "Absent",
+        "LATE": "Late",
+        "ABSENT_AUTHORIZED": "Excused"
+      }
+    },
+    "injury": {
+      "noData": "No injury records.",
+      "expectedReturn": "Expected return",
+      "noReturn": "TBD",
+      "status": {
+        "ACTIVE": "Active",
+        "RETURNING": "Returning",
+        "RETURNED": "Returned"
+      }
+    }
+  },
   "guardianFeeView": {
     "title": "Academy Fee History",
     "loading": "Loading...",

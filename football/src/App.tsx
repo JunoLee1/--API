@@ -59,6 +59,7 @@ import YouthRegistrationPage from '@/pages/youth/YouthRegistrationPage'
 import { GrowthReportsListPage } from '@/pages/players/GrowthReportsListPage'
 import IncidentReportPage from '@/pages/youth/IncidentReportPage'
 import AcademyFeePage from '@/pages/youth/AcademyFeePage'
+import GuardianPortalPage from '@/pages/youth/GuardianPortalPage'
 import { StaffRecordPage } from '@/pages/admin/StaffRecordPage'
 import { DepartmentPage } from '@/pages/admin/DepartmentPage'
 import { FinancialReportPage } from '@/pages/admin/FinancialReportPage'
@@ -129,6 +130,7 @@ function App() {
             <Route path="/contracts/:id" element={<ContractDetailPage />} />
             <Route path="/transfers" element={<TransfersPage />} />
             <Route path="/player-callups" element={<PlayerCallupPage />} />
+            <Route path="/guardian-portal" element={<GuardianPortalPage />} />
             <Route path="/youth-registrations" element={<YouthRegistrationPage />} />
             <Route path="/incident-reports" element={<IncidentReportPage />} />
             <Route path="/academy-fees" element={<AcademyFeePage />} />

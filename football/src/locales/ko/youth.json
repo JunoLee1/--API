@@ -121,6 +121,52 @@
       "LOCKED": "정지"
     }
   },
+  "guardianPortal": {
+    "loading": "불러오는 중...",
+    "noChildren": "연동된 자녀가 없습니다. 관리자에게 초대 코드를 요청하세요.",
+    "selectChild": "자녀 선택",
+    "tabs": {
+      "overview": "개요",
+      "attendance": "출결",
+      "injuries": "부상",
+      "fees": "학비"
+    },
+    "overview": {
+      "suspension": "참가 정지",
+      "suspensionReason": {
+        "FEE_LOCK": "학비 미납으로 정지됨",
+        "SAFEGUARD": "행동 규정 위반으로 정지됨"
+      },
+      "attendance": "출결 현황",
+      "total": "전체",
+      "attended": "출석",
+      "absent": "결석",
+      "late": "지각",
+      "pendingFees": "미납 학비",
+      "noFees": "미납 학비 없음",
+      "activeInjuries": "현재 부상",
+      "noInjuries": "부상 없음"
+    },
+    "attendance": {
+      "noData": "출결 기록이 없습니다.",
+      "status": {
+        "PRESENT": "출석",
+        "ABSENT": "결석",
+        "LATE": "지각",
+        "ABSENT_AUTHORIZED": "공결"
+      }
+    },
+    "injury": {
+      "noData": "부상 기록이 없습니다.",
+      "expectedReturn": "복귀 예정",
+      "noReturn": "미정",
+      "status": {
+        "ACTIVE": "치료 중",
+        "RETURNING": "복귀 준비",
+        "RETURNED": "복귀 완료"
+      }
+    }
+  },
   "guardianFeeView": {
     "title": "아카데미 회비 내역",
     "loading": "불러오는 중...",

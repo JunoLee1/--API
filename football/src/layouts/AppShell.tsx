@@ -128,6 +128,13 @@ const SUBSECTION_ICON: Record<NavSubSection, LucideIcon> = {
 const NAV_ITEMS: NavItem[] = [
   { to: '/dashboard', label: 'nav.item.dashboard', icon: BarChart3, end: true },
   {
+    to: '/guardian-portal',
+    label: 'nav.item.guardianPortal',
+    icon: Users2,
+    end: true,
+    roles: ['GUARDIAN'],
+  },
+  {
     to: '/coach-dashboard',
     label: 'nav.item.coachOverview',
     icon: LayoutDashboard,
@@ -667,7 +674,7 @@ export function AppShell() {
 
   const visibleNavItems = NAV_ITEMS.filter((item) => {
     if (item.liteBlocked && isLite) return false
-    if (item.teamCtx && item.teamCtx !== teamCtx) return false
+    if (item.teamCtx && item.teamCtx !== teamCtx && user?.role !== 'GUARDIAN') return false
     if (!item.roles) return true
     if (!user) return false
     if (user.role === 'SUPER_ADMIN' || user.role === 'GM') return true
