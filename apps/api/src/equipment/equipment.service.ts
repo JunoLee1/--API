@@ -98,7 +98,7 @@ export class EquipmentService {
     if (!unit) throw new AppError(404, "EQUIPMENT_UNIT_NOT_FOUND");
     const allowed = VALID_UNIT_TRANSITIONS[unit.status as unknown as EquipmentUnitStatus];
     if (!allowed.includes(dto.status)) throw new AppError(409, "INVALID_STATUS_TRANSITION");
-    if (dto.status === "RETIRED" || dto.status === "DISPOSED" as any) {
+    if (dto.status === "RETIRED") {
       if (!dto.disposedById) throw new AppError(400, "DISPOSAL_ACTOR_REQUIRED");
       dto.disposedAt = new Date();
     }
