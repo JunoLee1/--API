@@ -34,8 +34,8 @@ export async function runInspectionDueAlert(prisma: PrismaClient = getPrisma()) 
           data: {
             userId: mgr.id,
             type: 'EQUIPMENT_INSPECTION_DUE' as any,
-            message: `장비 점검 예정: ${unit.item.name} — ${unit.nextInspectionDue!.toLocaleDateString('ko-KR')}까지`,
-            message_en: `Equipment inspection due: ${unit.item.name} — by ${unit.nextInspectionDue!.toLocaleDateString('en-GB')}`,
+            title: `장비 점검 예정: ${unit.item.name}`,
+            body: `${unit.nextInspectionDue!.toLocaleDateString('ko-KR')}까지 점검이 필요합니다.`,
           },
         }).catch(console.error)
       )
