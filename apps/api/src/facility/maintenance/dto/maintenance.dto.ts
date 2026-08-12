@@ -6,6 +6,7 @@ export interface CreateMaintenanceDto {
   priority: MaintenancePriority;
   sourceInspectionId?: number;
   estimatedCost?: number;
+  partnerId?: number;
 }
 
 export interface UpdateMaintenanceDto {
