@@ -45,6 +45,8 @@ export class InspectionService {
   }
 
   async update(id: number, dto: UpdateInspectionDto) {
+    // TR9: Auto-update EquipmentUnit.nextInspectionDue on inspection completion
+    // is deferred until FacilityInspection gains an equipmentUnitId FK in the schema.
     await this.get(id);
     return this.repo.update(id, dto);
   }
