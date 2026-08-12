@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { useTeamContext } from '@/layouts/AppShell'
 import { dashboardApi } from '@/services/dashboard.service'
 import { notificationApi, type NotificationItem } from '@/services/notification.service'
 import { matchApi } from '@/services/match.service'
@@ -85,6 +86,7 @@ function toFeedItems(matches: Match[], tFn: (key: string) => string): FeedItem[]
 export function DashboardPage() {
   const { t } = useTranslation('common')
   const { user, loading: userLoading } = useCurrentUser()
+  const teamCtx = useTeamContext()
   const navigate = useNavigate()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [seasonTicketRevenue, setSeasonTicketRevenue] = useState<number | null>(null)
@@ -114,20 +116,29 @@ export function DashboardPage() {
     notificationApi.my()
       .then(setNotifications)
       .finally(() => setNotiLoading(false))
-    matchApi.list()
-      .then(setMatches)
-      .catch(() => null)
-      .finally(() => setMatchesLoading(false))
-    const config = getDashboardConfig(user)
+    if (teamCtx !== 'YOUTH') {
+      matchApi.list()
+        .then(setMatches)
+        .catch(() => null)
+        .finally(() => setMatchesLoading(false))
+    } else {
+      setMatchesLoading(false)
+    }
+    const config = getDashboardConfig(user, teamCtx)
     seasonApi.active()
       .then((season) => {
         if (!season) return
         setCurrentSeasonId(season.id)
-        const tasks: Promise<unknown>[] = [
-          analysisApi.getRankings({ seasonId: season.id, competitionType: 'LEAGUE' })
-            .then((rows) => setMyRanking(rows.find((r) => r.teamName === OUR_TEAM_NAME) ?? null))
-            .finally(() => setRankingLoading(false)),
-        ]
+        const tasks: Promise<unknown>[] = []
+        if (teamCtx !== 'YOUTH') {
+          tasks.push(
+            analysisApi.getRankings({ seasonId: season.id, competitionType: 'LEAGUE' })
+              .then((rows) => setMyRanking(rows.find((r) => r.teamName === OUR_TEAM_NAME) ?? null))
+              .finally(() => setRankingLoading(false))
+          )
+        } else {
+          setRankingLoading(false)
+        }
         if (config.recentFeedTitle === 'dashboard.recentFeed.recentOperatingExpenses') {
           setExpensesLoading(true)
           tasks.push(
@@ -166,14 +177,14 @@ export function DashboardPage() {
     if (config.showAcademyFinance) {
       dashboardApi.academyFinance().then(setAcademyFinance).catch(() => null)
     }
-  }, [user])
+  }, [user, teamCtx])
 
   if (userLoading) {
     return <div className="p-8 text-muted-foreground">{t('dashboard.loading')}</div>
   }
   if (!user) return null
 
-  const config = getDashboardConfig(user)
+  const config = getDashboardConfig(user, teamCtx)
 
   return (
     <div className="p-8 space-y-6">
