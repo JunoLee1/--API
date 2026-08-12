@@ -164,6 +164,17 @@ export class RecruitmentService {
   async updateInterview(applicationId: number, round: InterviewRound, dto: UpdateInterviewDto) {
     const existing = await this.repo.findInterview(applicationId, round);
     if (!existing) throw new AppError(404, "INTERVIEW_NOT_FOUND");
+
+    // SJ3: if confirming a final result, all three scores must be present
+    if (dto.result && dto.result !== "PENDING") {
+      const scoreSkill = dto.scoreSkill ?? existing.scoreSkill;
+      const scoreComm = dto.scoreComm ?? existing.scoreComm;
+      const scoreCulture = dto.scoreCulture ?? existing.scoreCulture;
+      if (scoreSkill == null || scoreComm == null || scoreCulture == null) {
+        throw new AppError(400, "INTERVIEW_SCORES_REQUIRED");
+      }
+    }
+
     return this.repo.updateInterview(applicationId, round, dto);
   }
 
