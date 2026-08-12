@@ -72,4 +72,42 @@ export class GrowthReportRepository {
       include: BADGE_INCLUDE,
     });
   }
+
+  async getPositionAverage(playerId: string) {
+    const player = await this.prisma.player.findFirst({
+      where: { id: playerId },
+      select: { position: true },
+    });
+    if (!player) return null;
+
+    const [agg, sampleCount] = await Promise.all([
+      this.prisma.growthEvaluation.aggregate({
+        where: {
+          isPublished: true,
+          player: { position: player.position },
+        },
+        _avg: {
+          attitudeScore: true,
+          fundamentalsScore: true,
+          spatialScore: true,
+          physicalScore: true,
+        },
+      }),
+      this.prisma.growthEvaluation.count({
+        where: {
+          isPublished: true,
+          player: { position: player.position },
+        },
+      }),
+    ]);
+
+    return {
+      position: player.position,
+      sampleCount,
+      avgAttitudeScore: agg._avg.attitudeScore ?? null,
+      avgFundamentalsScore: agg._avg.fundamentalsScore ?? null,
+      avgSpatialScore: agg._avg.spatialScore ?? null,
+      avgPhysicalScore: agg._avg.physicalScore ?? null,
+    };
+  }
 }

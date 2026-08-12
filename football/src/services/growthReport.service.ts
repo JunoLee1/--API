@@ -4,6 +4,7 @@ import type {
   PlayerBadge,
   CreateGrowthEvaluationPayload,
   AwardBadgePayload,
+  PositionAverage,
 } from '@/types/growth-report'
 
 export const growthReportApi = {
@@ -27,4 +28,7 @@ export const growthReportApi = {
 
   awardBadge: (payload: AwardBadgePayload) =>
     api.post<PlayerBadge>('/growth-reports/badges', payload),
+
+  getPositionAverage: (playerId: string): Promise<PositionAverage> =>
+    api.get('/growth-reports/position-average', { params: { playerId } }).then(r => r.data),
 }
