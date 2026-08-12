@@ -118,8 +118,9 @@ export class RecruitmentController {
 
   getApplication = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole, coachingRole } = requireUser(req);
-      if (!canRead(role, frontOfficeRole, coachingRole)) throw new AppError(403, "FORBIDDEN");
+      // SJ9: application records contain PII — restrict to HR_MANAGER / ADMIN / SUPER_ADMIN
+      const { role, frontOfficeRole, departmentCategories } = requireUser(req);
+      if (!canWriteHR(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.getApplication(Number(req.params["id"])));
     } catch (err) {
       next(err);
@@ -257,6 +258,16 @@ export class RecruitmentController {
       const { role, frontOfficeRole, coachingRole } = requireUser(req);
       if (!canRead(role, frontOfficeRole, coachingRole)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.getTimeToHireStats());
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getCostPerHire = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole, coachingRole } = requireUser(req);
+      if (!canRead(role, frontOfficeRole, coachingRole)) throw new AppError(403, "FORBIDDEN");
+      res.json(await this.service.getCostPerHire());
     } catch (err) {
       next(err);
     }
