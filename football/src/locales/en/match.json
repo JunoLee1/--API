@@ -294,7 +294,8 @@
     "changeReasonPlaceholder": "e.g., Injury response, protect lead",
     "submit": "Save",
     "cancel": "Cancel",
-    "by": "by"
+    "by": "by",
+    "submitError": "Failed to save."
   },
   "tactical": {
     "title": "Tactical Analysis",
