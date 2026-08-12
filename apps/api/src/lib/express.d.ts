@@ -13,7 +13,7 @@ declare global {
       isDemo?: boolean;
     }
     interface Request {
-      childPlayerId?: string;
+      childPlayerId?: number;
     }
   }
 }

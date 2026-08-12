@@ -9,7 +9,8 @@ const makeRepo = (overrides: Partial<GuardianRepository> = {}): GuardianReposito
     createInviteCode: jest.fn(),
     linkGuardianToPlayer: jest.fn().mockResolvedValue({}),
     markCodeUsed: jest.fn().mockResolvedValue({}),
-    findChildByGuardian: jest.fn().mockResolvedValue(null),
+    findChildById: jest.fn().mockResolvedValue(null),
+    findChildrenByGuardian: jest.fn().mockResolvedValue([]),
     findDashboard: jest.fn().mockResolvedValue([null, [], [], [], null, null, [], null, []]),
     ...overrides,
   } as unknown as GuardianRepository);
@@ -98,25 +99,29 @@ describe("GuardianService.issueInviteCode", () => {
   });
 });
 
-describe("GuardianService.getChild", () => {
-  it("자녀가 없으면 404", async () => {
+describe("GuardianService.getChildren", () => {
+  it("자녀가 없으면 빈 배열 반환", async () => {
     const svc = new GuardianService(makeRepo());
-    await expect(svc.getChild(1)).rejects.toMatchObject({ statusCode: 404, message: "CHILD_NOT_FOUND" });
+    const result = await svc.getChildren(1);
+    expect(result).toEqual([]);
   });
 
-  it("자녀가 있으면 반환", async () => {
-    const child = { id: "player-1", playerName: "김유소", position: "STRIKER", level: "YOUTH", teamId: 1, team: { name: "FC Seoul Youth" } };
-    const repo = makeRepo({ findChildByGuardian: jest.fn().mockResolvedValue(child) });
+  it("자녀가 있으면 배열 반환", async () => {
+    const children = [
+      { id: "player-1", playerName: "김유소", position: "STRIKER", level: "YOUTH", teamId: 1, team: { name: "FC Seoul Youth" } },
+      { id: "player-2", playerName: "김유이", position: "GK", level: "YOUTH", teamId: 1, team: { name: "FC Seoul Youth" } },
+    ];
+    const repo = makeRepo({ findChildrenByGuardian: jest.fn().mockResolvedValue(children) });
     const svc = new GuardianService(repo);
-    const result = await svc.getChild(1);
-    expect(result).toBe(child);
+    const result = await svc.getChildren(1);
+    expect(result).toHaveLength(2);
   });
 });
 
 describe("GuardianService.getDashboard", () => {
-  it("자녀가 없으면 404", async () => {
+  it("playerId에 해당하는 자녀가 없으면 404", async () => {
     const svc = new GuardianService(makeRepo());
-    await expect(svc.getDashboard(1)).rejects.toMatchObject({ statusCode: 404, message: "CHILD_NOT_FOUND" });
+    await expect(svc.getDashboard("player-999")).rejects.toMatchObject({ statusCode: 404, message: "CHILD_NOT_FOUND" });
   });
 
   it("부상 분류 — active vs history", async () => {
@@ -128,13 +133,13 @@ describe("GuardianService.getDashboard", () => {
     const attendanceGroups = [{ attendance: "ATTENDED", _count: { attendance: 5 } }];
     const child = { id: "player-1", teamId: 1 };
     const repo = makeRepo({
-      findChildByGuardian: jest.fn().mockResolvedValue(child),
+      findChildById: jest.fn().mockResolvedValue(child),
       findDashboard: jest.fn().mockResolvedValue([
         child, [], [], attendanceGroups, null, null, injuries, null, [],
       ]),
     });
     const svc = new GuardianService(repo);
-    const result = await svc.getDashboard(1);
+    const result = await svc.getDashboard("player-1");
     expect(result.injuries.active).toHaveLength(2);
     expect(result.injuries.history).toHaveLength(1);
     expect(result.attendance.total).toBe(5);
@@ -149,13 +154,13 @@ describe("GuardianService.getDashboard", () => {
     ];
     const child = { id: "player-1", teamId: null };
     const repo = makeRepo({
-      findChildByGuardian: jest.fn().mockResolvedValue(child),
+      findChildById: jest.fn().mockResolvedValue(child),
       findDashboard: jest.fn().mockResolvedValue([
         child, [], [], [], null, null, [], null, fees,
       ]),
     });
     const svc = new GuardianService(repo);
-    const result = await svc.getDashboard(1);
+    const result = await svc.getDashboard("player-1");
     expect(result.fees.pending).toHaveLength(2);
     expect(result.fees.overdue).toHaveLength(1);
   });

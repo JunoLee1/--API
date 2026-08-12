@@ -47,20 +47,18 @@ export class GuardianService {
     return this.repo.createInviteCode({ code, playerId: dto.playerId, issuedById, expiresAt });
   }
 
-  async getChild(guardianId: number) {
-    const child = await this.repo.findChildByGuardian(guardianId);
-    if (!child) throw new AppError(404, "CHILD_NOT_FOUND");
-    return child;
+  async getChildren(guardianId: number) {
+    return this.repo.findChildrenByGuardian(guardianId);
   }
 
-  async getDashboard(guardianId: number) {
-    const child = await this.repo.findChildByGuardian(guardianId);
+  async getDashboard(playerId: string) {
+    const child = await this.repo.findChildById(playerId);
     if (!child) throw new AppError(404, "CHILD_NOT_FOUND");
 
     const [
       childInfo, matches, sessions, attendanceGroups,
       latestEval, activePlan, injuries, lastMatchStats, fees,
-    ] = await this.repo.findDashboard(child.id, (child as any).teamId ?? null, new Date());
+    ] = await this.repo.findDashboard(child.id, child.teamId ?? null, new Date());
 
     const attendanceMap = Object.fromEntries(
       (attendanceGroups as any[]).map((g: any) => [g.attendance, g._count.attendance])

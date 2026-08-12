@@ -39,16 +39,17 @@ export class GuardianController {
     } catch (e) { next(e); }
   };
 
-  getChild = async (req: Request, res: Response, next: NextFunction) => {
+  getChildren = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await this.service.getChild(requireUser(req).id);
+      const result = await this.service.getChildren(requireUser(req).id);
       res.status(200).json(result);
     } catch (e) { next(e); }
   };
 
   getDashboard = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await this.service.getDashboard(requireUser(req).id);
+      const playerId = String(req.childPlayerId);
+      const result = await this.service.getDashboard(playerId);
       res.status(200).json(result);
     } catch (e) { next(e); }
   };
