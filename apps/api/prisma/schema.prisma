@@ -798,6 +798,7 @@ model User {
   approvedPlanReports        PlanReport[]              @relation("PlanReportApprovedBy")
   confirmedPlanReviews       PlanReview[]              @relation("PlanReviewConfirmer")
   confirmedReportReviews     ReportReview[]            @relation("ReportReviewConfirmer")
+  formationSnapshots         FormationSnapshot[]       @relation("FormationSnapshotCreatedBy")
 }
 
 model Season {
@@ -1210,14 +1211,15 @@ model Match {
   team             Team?              @relation(fields: [teamId], references: [id])
   playerMatchStats PlayerMatchStats[]
   teamMatchStats   TeamMatchStats?
-  tacticalAnalyses TacticalAnalysis[]
-  squadPlayers     MatchSquad[]
-  shotEvents       ShotEvent[]
-  matchLineup      MatchLineup?
-  incidentReports  IncidentReport[]
-  salesRecords     SalesRecord[]
-  fanPurchases     FanPurchase[]
-  seatZones        SeatZone[]
+  tacticalAnalyses   TacticalAnalysis[]
+  formationSnapshots FormationSnapshot[]
+  squadPlayers       MatchSquad[]
+  shotEvents         ShotEvent[]
+  matchLineup        MatchLineup?
+  incidentReports    IncidentReport[]
+  salesRecords       SalesRecord[]
+  fanPurchases       FanPurchase[]
+  seatZones          SeatZone[]
 }
 
 model PlayerMatchStats {
@@ -1438,6 +1440,19 @@ model TacticalMedia {
   tacticalAnalysisId Int
 
   tacticalAnalysis TacticalAnalysis @relation(fields: [tacticalAnalysisId], references: [id])
+}
+
+model FormationSnapshot {
+  id            Int      @id @default(autoincrement())
+  matchId       Int
+  minute        Int?
+  formation     String
+  changeReason  String?
+  createdById   Int
+  createdAt     DateTime @default(now())
+
+  match     Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  createdBy User  @relation("FormationSnapshotCreatedBy", fields: [createdById], references: [id])
 }
 
 model Notification {
