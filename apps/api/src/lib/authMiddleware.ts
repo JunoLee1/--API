@@ -1,6 +1,6 @@
 import passport from "passport";
 import { Request, Response, NextFunction } from "express";
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { getPrisma } from "./prisma";
 import { AppError } from "./appError";
 import { writeAuditLog } from "./auditLog";
@@ -24,7 +24,7 @@ export const requireRole = (...roles: Role[]) => (req: Request, _res: Response, 
 export const teamSwitchLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 20,
-  keyGenerator: (req) => String(req.user?.id ?? req.ip),
+  keyGenerator: (req) => req.user ? String(req.user.id) : ipKeyGenerator(req),
   message: { code: "TOO_MANY_REQUESTS" },
   standardHeaders: true,
   legacyHeaders: false,
