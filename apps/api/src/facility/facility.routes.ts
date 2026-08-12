@@ -18,7 +18,7 @@ const reservationCtrl = new ReservationController();
 
 const notificationService = new NotificationService(new NotificationRepository(getPrisma()));
 const maintenanceRepo = new MaintenanceRepository(getPrisma());
-const maintenanceService = new MaintenanceService(maintenanceRepo, notificationService, ledgerService);
+const maintenanceService = new MaintenanceService(maintenanceRepo, notificationService, ledgerService, getPrisma());
 const maintenanceController = new MaintenanceController(maintenanceService);
 
 const inspectionRepo = new InspectionRepository(getPrisma());

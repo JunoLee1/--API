@@ -131,9 +131,18 @@ describe("EquipmentService - transitionUnitStatus", () => {
     mockEquipmentRepo.findUnitById.mockResolvedValue({ id: 3, status: "MAINTENANCE", equipmentItemId: 1 });
     mockEquipmentRepo.updateUnitStatus.mockResolvedValue({ id: 3, status: "RETIRED", equipmentItemId: 1 });
 
-    const result = await service.transitionUnitStatus(3, { status: "RETIRED" });
+    const result = await service.transitionUnitStatus(3, { status: "RETIRED", disposedById: 99 });
 
     expect(result.status).toBe("RETIRED");
+  });
+
+  test("MAINTENANCE → RETIRED without disposedById → 400", async () => {
+    mockEquipmentRepo.findUnitById.mockResolvedValue({ id: 4, status: "MAINTENANCE", equipmentItemId: 1 });
+
+    await expect(service.transitionUnitStatus(4, { status: "RETIRED" })).rejects.toMatchObject({
+      statusCode: 400,
+      code: "DISPOSAL_ACTOR_REQUIRED",
+    });
   });
 });
 
