@@ -221,6 +221,7 @@ export function InjuryDetailPage() {
   const [rehabStage, setRehabStage] = useState<RehabStage | ''>('')
   const [trainingReturnDate, setTrainingReturnDate] = useState('')
   const [matchAvailable, setMatchAvailable] = useState<boolean | ''>('')
+  const [matchAvailableWarning, setMatchAvailableWarning] = useState(false)
   const [allowedActivities, setAllowedActivities] = useState<string>('')
   const [reinjuryRisk, setReinjuryRisk] = useState<RiskLevel | ''>('')
   const [medicalOpinion, setMedicalOpinion] = useState('')
@@ -235,6 +236,7 @@ export function InjuryDetailPage() {
     setRehabStage(r.rehabStage ?? '')
     setTrainingReturnDate(r.trainingReturnDate ? r.trainingReturnDate.slice(0, 10) : '')
     setMatchAvailable(r.matchAvailable ?? '')
+    setMatchAvailableWarning(r.matchAvailable === true && !r.medicalSignedAt)
     setAllowedActivities(r.allowedActivities ?? '')
     setReinjuryRisk(r.reinjuryRisk ?? '')
     setMedicalOpinion(r.medicalOpinion ?? '')
@@ -275,6 +277,7 @@ export function InjuryDetailPage() {
         securityLevel,
       })
       setReport(updated)
+      setMatchAvailableWarning((updated as any)._warning === 'MATCH_AVAILABLE_WITHOUT_MEDICAL_CLEARANCE')
       toast.success(t('detail.reportSaved'))
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : t('detail.saveFailed'))
@@ -454,6 +457,12 @@ export function InjuryDetailPage() {
                   </Select>
                 </div>
               </div>
+              {matchAvailableWarning && (
+                <div className="flex items-start gap-2 rounded-md border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-800">
+                  <span className="mt-0.5 shrink-0">⚠</span>
+                  <span>{t('detail.matchAvailableWarning')}</span>
+                </div>
+              )}
 
               <div className="space-y-1">
                 <Label>{t('detail.fieldAllowedActivities')}</Label>

@@ -104,6 +104,7 @@
     "fieldMatchNone": "Not set",
     "fieldMatchYes": "Available",
     "fieldMatchNo": "Unavailable",
+    "matchAvailableWarning": "Player marked as match-available without medical sign-off. Medical team review is recommended.",
     "fieldAllowedActivities": "Allowed Activities",
     "fieldAllowedActivitiesPlaceholder": "e.g. Pool rehab only, no full-contact training",
     "fieldAllowedActivitiesEmpty": "No activity restrictions specified",
