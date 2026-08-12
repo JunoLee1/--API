@@ -260,6 +260,10 @@ export class RecruitmentService {
     return this.repo.getTimeToHireStats();
   }
 
+  getCostPerHire() {
+    return this.repo.getCostPerHire();
+  }
+
   addInterviewerScore(interviewId: number, data: { interviewerId: number; scoreSkill?: number; scoreComm?: number; scoreCulture?: number; comment?: string }, actorId: number) {
     return this.repo.addInterviewerScore({ interviewId, ...data }, actorId);
   }

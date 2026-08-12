@@ -262,6 +262,16 @@ export class RecruitmentController {
     }
   };
 
+  getCostPerHire = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole, coachingRole } = requireUser(req);
+      if (!canRead(role, frontOfficeRole, coachingRole)) throw new AppError(403, "FORBIDDEN");
+      res.json(await this.service.getCostPerHire());
+    } catch (err) {
+      next(err);
+    }
+  };
+
   addInterviewerScore = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, frontOfficeRole, id: userId } = requireUser(req);

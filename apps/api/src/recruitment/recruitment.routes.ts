@@ -19,6 +19,7 @@ const controller = new RecruitmentController(service);
 // 분석 엔드포인트
 router.get("/headcount-progress", auth, controller.getHeadcountProgress);
 router.get("/time-to-hire", auth, controller.getTimeToHireStats);
+router.get("/cost-per-hire", auth, controller.getCostPerHire);
 
 // JobPosting
 router.get("/job-postings", auth, controller.listPostings);
