@@ -153,12 +153,12 @@ export class DashboardRepository {
       this.prisma.trainingResult.count({
         where: {
           performanceScore: { not: null },
-          session: { isApproved: true, date: { gte: START_OF_MONTH() } },
+          session: { isApproved: true, cancelledAt: null, date: { gte: START_OF_MONTH() } },
         },
       }),
       this.prisma.trainingParticipant.count({
         where: {
-          session: { isApproved: true, date: { gte: START_OF_MONTH() } },
+          session: { isApproved: true, cancelledAt: null, date: { gte: START_OF_MONTH() } },
         },
       }),
     ]);
