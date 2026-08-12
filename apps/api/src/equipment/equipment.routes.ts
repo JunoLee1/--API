@@ -28,6 +28,7 @@ router.post("/assignments", auth, controller.createAssignment);
 router.patch("/assignments/:assignmentId/return", auth, controller.returnAssignment);
 router.get("/assignments/player/:playerId", auth, controller.getUnreturnedByPlayer);
 router.patch("/units/:unitId/status", auth, controller.transitionUnit);
+router.patch("/units/:unitId/sanitation", auth, controller.updateUnitSanitation);
 
 router.get("/", auth, controller.listItems);
 router.post("/", auth, controller.createItem);
