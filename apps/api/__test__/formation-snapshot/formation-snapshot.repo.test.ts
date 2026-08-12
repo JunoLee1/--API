@@ -33,4 +33,13 @@ describe("FormationSnapshotRepository", () => {
     expect(call.where.matchId).toBe(5);
     expect(call.orderBy.minute).toBe("asc");
   });
+
+  test("create() omits minute and changeReason from data when not provided", async () => {
+    mockCreate.mockResolvedValue({ id: 2, matchId: 3, formation: "4-3-3" });
+    await repo.create({ matchId: 3, formation: "4-3-3" }, 2);
+    const call = mockCreate.mock.calls[0]![0] as any;
+    expect(call.data.minute).toBeUndefined();
+    expect(call.data.changeReason).toBeUndefined();
+    expect(call.data.formation).toBe("4-3-3");
+  });
 });
