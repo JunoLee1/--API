@@ -28,6 +28,13 @@ describe("TacticalRepository — threat scores", () => {
     expect(call.data.opponentSetPieceScore).toBe(0);
   });
 
+  test("update() passes 0 for opponentCounterScore when 0 is given", async () => {
+    mockUpdate.mockResolvedValue({ id: 1, opponentCounterScore: 0 });
+    await repo.update(1, { opponentCounterScore: 0 });
+    const call = mockUpdate.mock.calls[0]![0] as any;
+    expect(call.data.opponentCounterScore).toBe(0);
+  });
+
   test("update() omits threat score fields when not provided", async () => {
     mockUpdate.mockResolvedValue({ id: 1 });
     await repo.update(1, { formation: "4-3-3" });
