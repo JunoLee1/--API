@@ -127,3 +127,33 @@ describe("InjuryService — matchAvailable soft gate", () => {
     expect((result as any)._warning).toBeUndefined();
   });
 });
+
+describe("InjuryService — RETURNED notification", () => {
+  let service: InjuryService;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    service = new InjuryService(mockRepo as any, mockNotifRepo as any);
+    mockRepo.findById.mockResolvedValue({ id: 1, playerId: "p1", status: "READY_TO_RETURN" });
+    mockRepo.updateStatus.mockResolvedValue({ id: 1, status: "RETURNED" });
+    mockRepo.getPlayerWithGuardian.mockResolvedValue({ playerName: "Kim", guardianId: null });
+    mockRepo.countAvailableByZone.mockResolvedValue({ GK: 3, DEF: 5, MID: 4, FWD: 3 });
+    mockNotifRepo.createForCoachingStaff.mockResolvedValue(undefined);
+    mockNotifRepo.createForMedicalStaff.mockResolvedValue(undefined);
+  });
+
+  test("RETURNED status notifies both coaching staff and medical staff", async () => {
+    await service.updateStatus(1, { status: "RETURNED" });
+
+    expect(mockNotifRepo.createForCoachingStaff).toHaveBeenCalledWith(
+      "INJURY_RETURNED",
+      expect.any(Function),
+      1,
+    );
+    expect(mockNotifRepo.createForMedicalStaff).toHaveBeenCalledWith(
+      "INJURY_RETURNED",
+      expect.any(Function),
+      1,
+    );
+  });
+});

@@ -104,6 +104,7 @@ export class InjuryService {
         const title = "선수 부상 복귀";
         const body = `${playerName} 선수가 부상에서 복귀하여 훈련에 합류했습니다.`;
         await this.notifRepo.createForCoachingStaff("INJURY_RETURNED", () => ({ title, body }), id);
+        await this.notifRepo.createForMedicalStaff("INJURY_RETURNED", () => ({ title, body }), id);
         getIO().to("staff-room").emit("notification:injury", {
           type: "INJURY_RETURNED", title, body, createdAt: new Date().toISOString(),
         });
