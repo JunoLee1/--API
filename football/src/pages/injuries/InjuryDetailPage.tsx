@@ -65,17 +65,28 @@ function StatusTimeline({ current }: { current: InjuryDetail['status'] }) {
   )
 }
 
-function ReturnChecklist({ assessment }: { assessment: InjuryAssessment }) {
+function ReturnChecklist({
+  assessment,
+  rehabLoadPercentage,
+}: {
+  assessment: InjuryAssessment
+  rehabLoadPercentage: number | null | undefined
+}) {
   const { t } = useTranslation('medical')
   const avgFunctional = (assessment.strengthScore + assessment.sprintScore + assessment.jumpScore) / 3
-  const criteria: { label: string; met: boolean }[] = [
+  const criteria: { label: string; met: boolean; unknown?: boolean }[] = [
     { label: t('returnReadiness.painNormal'), met: assessment.painLevel <= 2 },
     { label: t('returnReadiness.swellingGone'), met: !assessment.hasSwelling },
     { label: t('returnReadiness.romRecovered'), met: assessment.romScore >= 80 },
     { label: t('returnReadiness.strengthRecovered'), met: avgFunctional >= 80 },
     { label: t('returnReadiness.psychReady'), met: assessment.psychScore <= 30 },
+    {
+      label: t('returnReadiness.loadRecovered'),
+      met: (rehabLoadPercentage ?? 0) >= 80,
+      unknown: rehabLoadPercentage == null,
+    },
   ]
-  const metCount = criteria.filter((c) => c.met).length
+  const metCount = criteria.filter((c) => c.met && !c.unknown).length
 
   return (
     <div className="space-y-2">
@@ -85,10 +96,13 @@ function ReturnChecklist({ assessment }: { assessment: InjuryAssessment }) {
       </div>
       {criteria.map((c) => (
         <div key={c.label} className="flex items-center gap-2">
-          <span className={`text-sm ${c.met ? 'text-green-600' : 'text-muted-foreground'}`}>
-            {c.met ? '✓' : '○'}
+          <span className={`text-sm ${c.unknown ? 'text-muted-foreground' : c.met ? 'text-green-600' : 'text-muted-foreground'}`}>
+            {c.unknown ? '?' : c.met ? '✓' : '○'}
           </span>
-          <span className={`text-sm ${c.met ? '' : 'text-muted-foreground'}`}>{c.label}</span>
+          <span className={`text-sm ${c.met && !c.unknown ? '' : 'text-muted-foreground'}`}>{c.label}</span>
+          {c.unknown && (
+            <span className="text-xs text-muted-foreground">{t('returnReadiness.notRecorded')}</span>
+          )}
         </div>
       ))}
     </div>
@@ -541,7 +555,7 @@ export function InjuryDetailPage() {
           {assessment && (
             <section className="border rounded-lg p-5">
               <h2 className="text-sm font-semibold mb-3">{t('detail.returnChecklist')}</h2>
-              <ReturnChecklist assessment={assessment} />
+              <ReturnChecklist assessment={assessment} rehabLoadPercentage={report?.rehabLoadPercentage ?? null} />
             </section>
           )}
 

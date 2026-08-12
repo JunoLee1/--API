@@ -161,7 +161,9 @@
     "swellingGone": "부종 해소",
     "romRecovered": "ROM 80% 이상 회복",
     "strengthRecovered": "근력·기능 80% 이상 회복",
-    "psychReady": "심리적 준비 (불안도 ≤ 30)"
+    "psychReady": "심리적 준비 (불안도 ≤ 30)",
+    "loadRecovered": "재활 부하 80% 이상 회복",
+    "notRecorded": "(미기록)"
   },
   "stats": {
     "title": "부상 통계",

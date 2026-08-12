@@ -161,7 +161,9 @@
     "swellingGone": "Swelling resolved",
     "romRecovered": "ROM ≥ 80% recovered",
     "strengthRecovered": "Strength/function ≥ 80% recovered",
-    "psychReady": "Psychologically ready (anxiety ≤ 30)"
+    "psychReady": "Psychologically ready (anxiety ≤ 30)",
+    "loadRecovered": "Rehab load ≥80% of baseline",
+    "notRecorded": "(not recorded)"
   },
   "stats": {
     "title": "Injury Statistics",
