@@ -314,6 +314,7 @@ enum NotificationType {
   FEE_ACCOUNT_LOCKED
   FACILITY_EMERGENCY
   FACILITY_MAINTENANCE_RESOLVED
+  EQUIPMENT_INSPECTION_DUE
   PAYROLL_CONFIRMED
   JOB_POSTING_DRAFT_CREATED
   PAYROLL_SECOND_APPROVED
@@ -798,6 +799,7 @@ model User {
   approvedPlanReports        PlanReport[]              @relation("PlanReportApprovedBy")
   confirmedPlanReviews       PlanReview[]              @relation("PlanReviewConfirmer")
   confirmedReportReviews     ReportReview[]            @relation("ReportReviewConfirmer")
+  disposedEquipmentUnits     EquipmentUnit[]           @relation("EquipmentDisposer")
   formationSnapshots         FormationSnapshot[]       @relation("FormationSnapshotCreatedBy")
 }
 
@@ -1055,9 +1057,10 @@ model Partner {
   phone     String?
   createdAt DateTime    @default(now())
 
-  injuries       Injury[]
-  equipmentItems EquipmentItem[]
-  contracts      PartnerContract[]
+  injuries             Injury[]
+  equipmentItems       EquipmentItem[]
+  contracts            PartnerContract[]
+  maintenanceRequests  MaintenanceRequest[] @relation("MaintenancePartner")
 }
 
 model PartnerContract {
@@ -1500,10 +1503,14 @@ model EquipmentUnit {
   nextInspectionDue     DateTime?
   lastSanitizedAt       DateTime?
   sanitationStatus      String?
+  disposedById          Int?
+  disposedAt            DateTime?
+  disposalNote          String?   @db.Text
 
   item        EquipmentItem         @relation(fields: [equipmentItemId], references: [id])
   assignments EquipmentAssignment[]
   loans       EquipmentLoan[]
+  disposedBy  User?                 @relation("EquipmentDisposer", fields: [disposedById], references: [id])
 }
 
 model EquipmentAssignment {
@@ -2230,8 +2237,9 @@ model ClubSettings {
   id                Int    @id @default(1)
   currency          String @default("KRW")
   ibiBeta           Float  @default(1.0)
-  planApprovalLimit Int    @default(10000000)
-  reviewerDeptMap   Json?
+  planApprovalLimit    Int    @default(10000000)
+  maintenanceCostLimit Int    @default(1000000)
+  reviewerDeptMap      Json?
 }
 
 model StaffRecord {
@@ -2635,6 +2643,7 @@ model MaintenanceRequest {
   isLocked            Boolean             @default(false)
   financeSubmittedAt  DateTime?
   createdById         Int
+  partnerId           Int?
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
 
@@ -2642,6 +2651,7 @@ model MaintenanceRequest {
   createdBy        User                @relation("MaintenanceRequestCreator", fields: [createdById], references: [id])
   approvedBy       User?               @relation("MaintenanceFMApprover", fields: [approvedById], references: [id])
   gmApprovedBy     User?               @relation("MaintenanceGMApprover", fields: [gmApprovedById], references: [id])
+  partner          Partner?            @relation("MaintenancePartner", fields: [partnerId], references: [id])
 }
 
 // ─────────────────────────────────────────────

@@ -32,6 +32,7 @@ import { startRejectedApplicantRetentionJob } from "./jobs/rejectedApplicantRete
 import { startContractClauseExecutionJob } from "./jobs/contractClauseExecution";
 import { startEquipmentOverdueReturnJob } from "./jobs/equipmentOverdueReturn";
 import { startSponsorshipExpiryAlertJob } from "./jobs/sponsorshipExpiryAlert";
+import { startInspectionDueCron } from "./jobs/inspectionDueAlert";
 
 const app = express();
 
@@ -89,3 +90,4 @@ startRejectedApplicantRetentionJob();
 startContractClauseExecutionJob();
 startEquipmentOverdueReturnJob();
 startSponsorshipExpiryAlertJob();
+startInspectionDueCron();
