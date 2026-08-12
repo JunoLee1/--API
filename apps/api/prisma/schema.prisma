@@ -1665,6 +1665,8 @@ model InjuryReport {
   reinjuryRisk       RiskLevel?
   medicalOpinion     String?       @db.Text
   securityLevel      SecurityLevel @default(INTERNAL)
+  allowedActivities   String?       @db.Text
+  rehabLoadPercentage Int?
 
   // 복귀 계획 3자 서명
   coachSignedAt     DateTime?
