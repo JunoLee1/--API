@@ -1,79 +1,79 @@
 import { describe, test, expect, jest, beforeEach } from "@jest/globals";
-import { Request, Response, NextFunction } from "express";
-import { AppError } from "../../src/lib/appError";
+import * as request from "supertest";
+import express, { Request, Response, NextFunction } from "express";
+import { errorHandler } from "../../src/middleWare/ErrorHandler";
+import { RecruitmentController } from "../../src/recruitment/recruitment.controller";
 
-// Inline role guard extracted from recruitment.routes.ts (SJ9)
-function applicationDetailRoleGuard(req: Request, _res: Response, next: NextFunction) {
-  const role = req.user!.role;
-  const foRole = (req.user as any).frontOfficeRole;
-  const allowed =
-    role === "ADMIN" ||
-    role === "SUPER_ADMIN" ||
-    (role === "FRONT_OFFICE" && foRole === "HR_MANAGER");
-  if (!allowed) return next(new AppError(403, "FORBIDDEN"));
-  next();
+// Mock the service — we only care about auth/RBAC, not business logic
+const mockService = {
+  getApplication: jest.fn(),
+} as any;
+
+const controller = new RecruitmentController(mockService);
+
+// Build a minimal express app that stubs auth and wires the controller
+function buildApp(user: Express.User) {
+  const app = express();
+  app.use(express.json());
+  // Stub auth: inject the provided user and call next
+  app.use((req: Request, _res: Response, next: NextFunction) => {
+    req.user = user;
+    next();
+  });
+  app.get("/applications/:id", controller.getApplication);
+  app.use(errorHandler);
+  return app;
 }
 
-const makeReq = (role: string, frontOfficeRole?: string | null): Request =>
-  ({ user: { id: 1, role, frontOfficeRole: frontOfficeRole ?? null } }) as any;
+beforeEach(() => {
+  jest.clearAllMocks();
+  // Default: service resolves with a dummy record (avoids 404 noise in 200 tests)
+  mockService.getApplication.mockResolvedValue({ id: 1 });
+});
 
-const mockRes = {} as Response;
-
-describe("GET /applications/:id — SJ9 role guard", () => {
-  let next: jest.MockedFunction<NextFunction>;
-
-  beforeEach(() => {
-    next = jest.fn() as any;
+describe("GET /applications/:id — SJ9 RBAC (controller)", () => {
+  test("HR_MANAGER (FRONT_OFFICE + frontOfficeRole=HR_MANAGER) gets 200", async () => {
+    const app = buildApp({ id: 1, role: "FRONT_OFFICE", frontOfficeRole: "HR_MANAGER", coachingRole: null } as any);
+    const res = await (request as any).default(app).get("/applications/1");
+    expect(res.status).not.toBe(403);
+    expect([200, 404]).toContain(res.status);
   });
 
-  test("HEAD_COACH (COACHING_STAFF) gets 403 FORBIDDEN", () => {
-    const req = makeReq("COACHING_STAFF", "HEAD_COACH");
-    applicationDetailRoleGuard(req, mockRes, next);
-    expect(next).toHaveBeenCalledWith(
-      expect.objectContaining({ statusCode: 403, code: "FORBIDDEN" }),
-    );
+  test("ADMIN gets 200 (or 404 if not found — not 403)", async () => {
+    const app = buildApp({ id: 2, role: "ADMIN", frontOfficeRole: null, coachingRole: null } as any);
+    const res = await (request as any).default(app).get("/applications/1");
+    expect(res.status).not.toBe(403);
+    expect([200, 404]).toContain(res.status);
   });
 
-  test("COACHING_STAFF without coachingRole gets 403 FORBIDDEN", () => {
-    const req = makeReq("COACHING_STAFF");
-    applicationDetailRoleGuard(req, mockRes, next);
-    expect(next).toHaveBeenCalledWith(
-      expect.objectContaining({ statusCode: 403, code: "FORBIDDEN" }),
-    );
+  test("SUPER_ADMIN gets 200 (or 404 if not found — not 403)", async () => {
+    const app = buildApp({ id: 3, role: "SUPER_ADMIN", frontOfficeRole: null, coachingRole: null } as any);
+    const res = await (request as any).default(app).get("/applications/1");
+    expect(res.status).not.toBe(403);
+    expect([200, 404]).toContain(res.status);
   });
 
-  test("PLAYER gets 403 FORBIDDEN", () => {
-    const req = makeReq("PLAYER");
-    applicationDetailRoleGuard(req, mockRes, next);
-    expect(next).toHaveBeenCalledWith(
-      expect.objectContaining({ statusCode: 403, code: "FORBIDDEN" }),
-    );
+  test("COACHING_STAFF (HEAD_COACH) gets 403 FORBIDDEN", async () => {
+    const app = buildApp({ id: 4, role: "COACHING_STAFF", frontOfficeRole: null, coachingRole: "HEAD_COACH" } as any);
+    const res = await (request as any).default(app).get("/applications/1");
+    expect(res.status).toBe(403);
   });
 
-  test("ADMIN gets 200 (next called without error)", () => {
-    const req = makeReq("ADMIN");
-    applicationDetailRoleGuard(req, mockRes, next);
-    expect(next).toHaveBeenCalledWith(/* no args */);
-    expect((next as any).mock.calls[0]).toHaveLength(0);
+  test("COACHING_STAFF without coachingRole gets 403 FORBIDDEN", async () => {
+    const app = buildApp({ id: 5, role: "COACHING_STAFF", frontOfficeRole: null, coachingRole: null } as any);
+    const res = await (request as any).default(app).get("/applications/1");
+    expect(res.status).toBe(403);
   });
 
-  test("SUPER_ADMIN gets 200 (next called without error)", () => {
-    const req = makeReq("SUPER_ADMIN");
-    applicationDetailRoleGuard(req, mockRes, next);
-    expect(next).toHaveBeenCalledWith();
+  test("PLAYER gets 403 FORBIDDEN", async () => {
+    const app = buildApp({ id: 6, role: "PLAYER", frontOfficeRole: null, coachingRole: null } as any);
+    const res = await (request as any).default(app).get("/applications/1");
+    expect(res.status).toBe(403);
   });
 
-  test("HR (FRONT_OFFICE + HR_MANAGER) gets 200 (next called without error)", () => {
-    const req = makeReq("FRONT_OFFICE", "HR_MANAGER");
-    applicationDetailRoleGuard(req, mockRes, next);
-    expect(next).toHaveBeenCalledWith();
-  });
-
-  test("FRONT_OFFICE non-HR role (e.g. TD) gets 403 FORBIDDEN", () => {
-    const req = makeReq("FRONT_OFFICE", "TD");
-    applicationDetailRoleGuard(req, mockRes, next);
-    expect(next).toHaveBeenCalledWith(
-      expect.objectContaining({ statusCode: 403, code: "FORBIDDEN" }),
-    );
+  test("FRONT_OFFICE non-HR role (TD) gets 403 FORBIDDEN", async () => {
+    const app = buildApp({ id: 7, role: "FRONT_OFFICE", frontOfficeRole: "TD", coachingRole: null } as any);
+    const res = await (request as any).default(app).get("/applications/1");
+    expect(res.status).toBe(403);
   });
 });

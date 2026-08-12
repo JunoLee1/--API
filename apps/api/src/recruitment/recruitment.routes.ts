@@ -1,6 +1,5 @@
 import { auth } from "../lib/authMiddleware";
-import { AppError } from "../lib/appError";
-import { Router, Request, Response, NextFunction } from "express";
+import { Router } from "express";
 import { RecruitmentRepository } from "./recruitment.repo";
 import { RecruitmentService } from "./recruitment.service";
 import { RecruitmentController } from "./recruitment.controller";
@@ -34,22 +33,8 @@ router.get("/job-postings/:postingId/applications", auth, controller.listApplica
 router.post("/job-postings/:postingId/applications", controller.apply);
 
 // Application actions
-// SJ9: PII in application record — restrict to HR/ADMIN/SUPER_ADMIN only
-router.get(
-  "/applications/:id",
-  auth,
-  (req: Request, res: Response, next: NextFunction) => {
-    const role = req.user!.role;
-    const foRole = (req.user as any).frontOfficeRole;
-    const allowed =
-      role === 'ADMIN' ||
-      role === 'SUPER_ADMIN' ||
-      (role === 'FRONT_OFFICE' && foRole === 'HR_MANAGER');
-    if (!allowed) return next(new AppError(403, 'FORBIDDEN'));
-    next();
-  },
-  controller.getApplication,
-);
+// SJ9: PII guard is enforced inside controller.getApplication via canWriteHR
+router.get("/applications/:id", auth, controller.getApplication);
 router.patch("/applications/:id", auth, controller.updateApplication);
 router.post("/applications/:id/reject", auth, controller.rejectApplication);
 router.post("/applications/:id/offer", auth, controller.offerApplication);

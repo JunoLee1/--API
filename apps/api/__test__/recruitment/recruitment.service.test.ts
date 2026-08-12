@@ -171,4 +171,43 @@ describe("updateInterviewRound", () => {
 
     expect(mockRepo.updateInterview).toHaveBeenCalledWith(1, "ROUND_1", { result: "PASS" });
   });
+
+  test("result=PENDING이고 점수가 null이어도 에러를 던지지 않는다", async () => {
+    mockRepo.findInterview.mockResolvedValue({
+      id: 1,
+      applicationId: 1,
+      round: "ROUND_1",
+      scoreSkill: null,
+      scoreComm: null,
+      scoreCulture: null,
+      result: "PENDING",
+    });
+    mockRepo.updateInterview.mockResolvedValue({ id: 1, result: "PENDING" });
+
+    await expect(
+      service.updateInterview(1, "ROUND_1", { result: "PENDING" }),
+    ).resolves.not.toThrow();
+
+    expect(mockRepo.updateInterview).toHaveBeenCalled();
+  });
+
+  test("dto에 result가 없고 점수가 null이어도 에러를 던지지 않는다", async () => {
+    mockRepo.findInterview.mockResolvedValue({
+      id: 1,
+      applicationId: 1,
+      round: "ROUND_1",
+      scoreSkill: null,
+      scoreComm: null,
+      scoreCulture: null,
+      result: "PENDING",
+    });
+    mockRepo.updateInterview.mockResolvedValue({ id: 1 });
+
+    // dto has no `result` field at all
+    await expect(
+      service.updateInterview(1, "ROUND_1", {}),
+    ).resolves.not.toThrow();
+
+    expect(mockRepo.updateInterview).toHaveBeenCalled();
+  });
 });
