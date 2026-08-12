@@ -53,4 +53,39 @@ export class GuardianController {
       res.status(200).json(result);
     } catch (e) { next(e); }
   };
+
+  getChildAttendance = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const playerId = String(req.childPlayerId);
+      const { from, to } = req.query as { from?: string; to?: string };
+      const result = await this.service.getChildAttendance(playerId, from, to);
+      res.status(200).json(result);
+    } catch (e) { next(e); }
+  };
+
+  getChildInjuries = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const playerId = String(req.childPlayerId);
+      const result = await this.service.getChildInjuries(playerId);
+      res.status(200).json(result);
+    } catch (e) { next(e); }
+  };
+
+  getChildFees = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const playerId = String(req.childPlayerId);
+      const result = await this.service.getChildFees(playerId);
+      res.status(200).json(result);
+    } catch (e) { next(e); }
+  };
+
+  submitFeeProof = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const feeId = parseInt(req.params.feeId, 10);
+      const { url } = req.body;
+      if (!url) throw new AppError(400, "MISSING_FIELDS");
+      const result = await this.service.submitFeeProof(feeId, url);
+      res.status(200).json(result);
+    } catch (e) { next(e); }
+  };
 }

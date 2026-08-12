@@ -2,10 +2,18 @@ import crypto from "crypto";
 import { AppError } from "../lib/appError";
 import { decrypt } from "../lib/crypto";
 import type { GuardianRepository } from "./guardian.repo";
+import type { TrainingRepository } from "../training/training.repo";
+import type { InjuryRepository } from "../injury/injury.repo";
+import type { AcademyFeeRepository } from "../academy-fee/academy-fee.repo";
 import type { LinkBySearchDto, LinkByCodeDto, IssueInviteCodeDto } from "./dto/guardian.dto";
 
 export class GuardianService {
-  constructor(private repo: GuardianRepository) {}
+  constructor(
+    private repo: GuardianRepository,
+    private trainingRepo: TrainingRepository,
+    private injuryRepo: InjuryRepository,
+    private feeRepo: AcademyFeeRepository,
+  ) {}
 
   async linkBySearch(dto: LinkBySearchDto, guardianId: number) {
     const player = await this.repo.findPlayerBySearch(
@@ -51,6 +59,22 @@ export class GuardianService {
     return this.repo.findChildrenByGuardian(guardianId);
   }
 
+  async getChildAttendance(playerId: string, from?: string, to?: string) {
+    return this.trainingRepo.findResults({ playerId, from, to });
+  }
+
+  async getChildInjuries(playerId: string) {
+    return this.injuryRepo.findByPlayerWithReport(playerId);
+  }
+
+  async getChildFees(playerId: string) {
+    return this.feeRepo.findByPlayer(playerId);
+  }
+
+  async submitFeeProof(feeId: number, url: string) {
+    return this.feeRepo.submitPaymentProof(feeId, url);
+  }
+
   async getDashboard(playerId: string) {
     const child = await this.repo.findChildById(playerId);
     if (!child) throw new AppError(404, "CHILD_NOT_FOUND");
@@ -71,8 +95,13 @@ export class GuardianService {
       ["RECOVERED", "RETURNED"].includes(i.status)
     );
 
+    let suspensionReason: "FEE_LOCK" | "SAFEGUARD" | null = null;
+    if ((child.status as string) === "SUSPENDED") suspensionReason = "FEE_LOCK";
+    else if (child.user?.isSuspended) suspensionReason = "SAFEGUARD";
+
     return {
       child: childInfo,
+      suspension: { reason: suspensionReason },
       upcoming: { matches, sessions },
       attendance: {
         total: (attendanceGroups as any[]).reduce((s: number, g: any) => s + g._count.attendance, 0),
