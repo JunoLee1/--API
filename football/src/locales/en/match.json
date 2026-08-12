@@ -284,6 +284,18 @@
     "goalDiff": "GD",
     "points": "Pts"
   },
+  "formationSnapshot": {
+    "title": "Formation Changes",
+    "empty": "No formation changes recorded.",
+    "addSnapshot": "Add Formation Change",
+    "minute": "min",
+    "formation": "Formation",
+    "changeReason": "Change Reason",
+    "changeReasonPlaceholder": "e.g., Injury response, protect lead",
+    "submit": "Save",
+    "cancel": "Cancel",
+    "by": "by"
+  },
   "tactical": {
     "title": "Tactical Analysis",
     "description": "Tactical analysis reports by match",
