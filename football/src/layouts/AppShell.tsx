@@ -126,7 +126,7 @@ const SUBSECTION_ICON: Record<NavSubSection, LucideIcon> = {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { to: '/dashboard', label: 'nav.item.dashboard', icon: BarChart3, end: true },
+  { to: '/dashboard', label: 'nav.item.dashboard', icon: BarChart3, end: true, roles: ['ADMIN', 'SUPER_ADMIN', 'GM', 'FRONT_OFFICE', 'COACHING_STAFF', 'PLAYER', 'AGENT'] },
   {
     to: '/guardian-portal',
     label: 'nav.item.guardianPortal',
