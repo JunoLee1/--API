@@ -1,9 +1,9 @@
-import { SalesService } from "./sales.service";
-import { AppError } from "../lib/appError";
-import type { SalesRepository } from "./sales.repo";
-import type { PrismaClient } from "../generated/client";
+import { SalesService } from "../../src/sales/sales.service";
+import { AppError } from "../../src/lib/appError";
+import type { SalesRepository } from "../../src/sales/sales.repo";
+import type { PrismaClient } from "../../src/generated/client";
 
-jest.mock("../lib/auditLog", () => ({ writeAuditLog: jest.fn() }));
+jest.mock("../../src/lib/auditLog", () => ({ writeAuditLog: jest.fn() }));
 
 const makeRepo = (overrides: Partial<SalesRepository> = {}): SalesRepository => ({
   create: jest.fn().mockImplementation(async (data) => ({ id: 1, ...data })),

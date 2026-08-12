@@ -2238,12 +2238,13 @@ model AcademyFee {
 }
 
 model ClubSettings {
-  id                Int    @id @default(1)
-  currency          String @default("KRW")
-  ibiBeta           Float  @default(1.0)
-  planApprovalLimit    Int    @default(10000000)
-  maintenanceCostLimit Int    @default(1000000)
-  reviewerDeptMap      Json?
+  id                       Int    @id @default(1)
+  currency                 String @default("KRW")
+  ibiBeta                  Float  @default(1.0)
+  planApprovalLimit        Int    @default(10000000)
+  maintenanceCostLimit     Int    @default(1000000)
+  complimentaryTicketLimit Int    @default(10)
+  reviewerDeptMap          Json?
 }
 
 model StaffRecord {
@@ -2848,11 +2849,14 @@ model SalesRecord {
   updatedAt          DateTime           @updatedAt
   updatedById        Int?
   ticketSerialNumber String?
+  refundedFromId     Int?
 
-  createdBy User      @relation("SalesRecordCreator", fields: [createdById], references: [id])
-  updatedBy User?     @relation("SalesRecordUpdater", fields: [updatedById], references: [id])
-  match     Match?    @relation(fields: [matchId], references: [id])
-  seatZone  SeatZone? @relation(fields: [seatZoneId], references: [id])
+  createdBy    User         @relation("SalesRecordCreator", fields: [createdById], references: [id])
+  updatedBy    User?        @relation("SalesRecordUpdater", fields: [updatedById], references: [id])
+  match        Match?       @relation(fields: [matchId], references: [id])
+  seatZone     SeatZone?    @relation(fields: [seatZoneId], references: [id])
+  refundedFrom SalesRecord? @relation("RefundChain", fields: [refundedFromId], references: [id])
+  refunds      SalesRecord[] @relation("RefundChain")
 }
 
 model FacilityInventoryItem {
@@ -2929,6 +2933,7 @@ model SeatZone {
   capacity  Int
   unitPrice Int?
   matchId   Int
+  soldCount Int    @default(0)
 
   match        Match        @relation(fields: [matchId], references: [id])
   salesRecords SalesRecord[]
