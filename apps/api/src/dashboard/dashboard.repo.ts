@@ -136,15 +136,33 @@ export class DashboardRepository {
   }
 
   async getHeadCoachStats() {
-    const [injuredPlayerCount, thisMonthSessionCount, attendanceWarningPlayerCount] =
+    const [injuredPlayerCount, thisMonthSessionCount, attendanceWarningPlayerCount, trainingEvalEntryRate] =
       await Promise.all([
         this.prisma.injury.count({ where: { status: { notIn: ["RETURNED"] } } }),
         this.prisma.trainingSession.count({ where: { date: { gte: START_OF_MONTH() } } }),
         this.prisma.notification.count({
           where: { type: "TRAINING_ATTENDANCE_WARNING", readAt: null },
         }),
+        this.getTrainingEvalEntryRate(),
       ]);
-    return { injuredPlayerCount, thisMonthSessionCount, attendanceWarningPlayerCount };
+    return { injuredPlayerCount, thisMonthSessionCount, attendanceWarningPlayerCount, trainingEvalEntryRate };
+  }
+
+  private async getTrainingEvalEntryRate(): Promise<number> {
+    const [scored, total] = await Promise.all([
+      this.prisma.trainingResult.count({
+        where: {
+          performanceScore: { not: null },
+          session: { isApproved: true, date: { gte: START_OF_MONTH() } },
+        },
+      }),
+      this.prisma.trainingParticipant.count({
+        where: {
+          session: { isApproved: true, date: { gte: START_OF_MONTH() } },
+        },
+      }),
+    ]);
+    return total === 0 ? 0 : Math.round((scored / total) * 100);
   }
 
   async getSpecialistCoachStats(coachingRole: CoachingRole, userId: number) {

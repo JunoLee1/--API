@@ -142,3 +142,24 @@ describe("DashboardService.getStats", () => {
     expect(mockRepo.getAgentStats).toHaveBeenCalledWith(15);
   });
 });
+
+describe("DashboardService — HEAD_COACH trainingEvalEntryRate", () => {
+  test("HEAD_COACH stats include trainingEvalEntryRate from repo", async () => {
+    mockRepo.getHeadCoachStats.mockResolvedValue({
+      injuredPlayerCount: 2,
+      thisMonthSessionCount: 5,
+      attendanceWarningPlayerCount: 1,
+      trainingEvalEntryRate: 72,
+    });
+    mockRepo.getMedicalDashboardStats.mockResolvedValue(mockMedicalDashboard);
+
+    const result = await service.getStats({
+      id: 10,
+      role: "COACHING_STAFF",
+      coachingRole: "HEAD_COACH",
+      frontOfficeRole: null,
+    }) as any;
+
+    expect(result.trainingEvalEntryRate).toBe(72);
+  });
+});
