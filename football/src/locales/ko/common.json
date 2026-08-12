@@ -85,7 +85,8 @@
       "hrReport": "HR 보고서",
       "recruitment": "채용 관리",
       "facilityMgmt": "시설 관리",
-      "leagueMgmt": "리그 관리"
+      "leagueMgmt": "리그 관리",
+      "guardianPortal": "내 자녀 정보"
     }
   },
   "action": {
