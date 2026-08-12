@@ -221,6 +221,7 @@ export function InjuryDetailPage() {
   const [rehabStage, setRehabStage] = useState<RehabStage | ''>('')
   const [trainingReturnDate, setTrainingReturnDate] = useState('')
   const [matchAvailable, setMatchAvailable] = useState<boolean | ''>('')
+  const [allowedActivities, setAllowedActivities] = useState<string>('')
   const [reinjuryRisk, setReinjuryRisk] = useState<RiskLevel | ''>('')
   const [medicalOpinion, setMedicalOpinion] = useState('')
   const [securityLevel, setSecurityLevel] = useState<SecurityLevel>('INTERNAL')
@@ -234,6 +235,7 @@ export function InjuryDetailPage() {
     setRehabStage(r.rehabStage ?? '')
     setTrainingReturnDate(r.trainingReturnDate ? r.trainingReturnDate.slice(0, 10) : '')
     setMatchAvailable(r.matchAvailable ?? '')
+    setAllowedActivities(r.allowedActivities ?? '')
     setReinjuryRisk(r.reinjuryRisk ?? '')
     setMedicalOpinion(r.medicalOpinion ?? '')
     setSecurityLevel(r.securityLevel)
@@ -267,6 +269,7 @@ export function InjuryDetailPage() {
         rehabStage: rehabStage || undefined,
         trainingReturnDate: trainingReturnDate || undefined,
         matchAvailable: matchAvailable === '' ? undefined : matchAvailable,
+        allowedActivities: allowedActivities || undefined,
         reinjuryRisk: reinjuryRisk || undefined,
         medicalOpinion: medicalOpinion || undefined,
         securityLevel,
@@ -450,6 +453,22 @@ export function InjuryDetailPage() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label>{t('detail.fieldAllowedActivities')}</Label>
+                {isMedical ? (
+                  <Textarea
+                    value={allowedActivities}
+                    onChange={(e) => setAllowedActivities(e.target.value)}
+                    placeholder={t('detail.fieldAllowedActivitiesPlaceholder')}
+                    rows={3}
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                    {allowedActivities || t('detail.fieldAllowedActivitiesEmpty')}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1.5">
