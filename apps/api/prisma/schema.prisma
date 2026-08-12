@@ -501,6 +501,10 @@ enum ApplicationSource {
   INDEED
   FACEBOOK
   DIRECT
+  AGENT
+  REFERRAL
+  PLATFORM
+  INTERNAL
 }
 
 enum LeagueLevel {
@@ -2460,7 +2464,7 @@ model JobApplication {
   offeredById   Int?
   createdAt     DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
-  source               ApplicationSource?
+  source               ApplicationSource @default(DIRECT)
   externalApplicantId  String?
 
   posting        JobPosting      @relation(fields: [postingId], references: [id])

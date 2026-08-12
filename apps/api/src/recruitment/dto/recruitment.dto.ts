@@ -4,6 +4,7 @@ import type {
   InterviewRound,
   InterviewResult,
   ReferenceCheckResult,
+  ApplicationSource,
 } from "../../generated/enums";
 
 export interface CreateJobPostingDto {
@@ -30,6 +31,7 @@ export interface CreateJobApplicationDto {
   email: string;
   phone?: string;
   resumeUrl?: string;
+  source: ApplicationSource;
 }
 
 export interface UpdateJobApplicationDto {
