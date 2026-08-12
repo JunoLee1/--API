@@ -98,6 +98,17 @@ export class InjuryRepository {
     });
   }
 
+  findByPlayerWithReport(playerId: string) {
+    return this.prisma.injury.findMany({
+      where: { playerId },
+      select: {
+        ...INJURY_SELECT,
+        report: { select: INJURY_REPORT_SELECT },
+      },
+      orderBy: { occurredAt: "desc" },
+    });
+  }
+
   findById(id: number) {
     return this.prisma.injury.findUnique({
       where: { id },

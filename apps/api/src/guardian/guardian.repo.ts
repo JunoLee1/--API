@@ -56,7 +56,9 @@ export class GuardianRepository {
         position: true,
         level: true,
         teamId: true,
+        status: true,
         team: { select: { name: true } },
+        user: { select: { isSuspended: true } },
       },
     });
   }

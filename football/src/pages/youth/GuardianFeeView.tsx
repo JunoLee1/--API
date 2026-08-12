@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { academyFeeApi } from '@/services/academyFee.service'
+import { guardianApi } from '@/services/guardian.service'
 import type { AcademyFee } from '@/types/academy-fee'
 
 const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
@@ -18,7 +18,7 @@ export function GuardianFeeView({ playerId }: Props) {
   const [submitting, setSubmitting] = useState<number | null>(null)
 
   useEffect(() => {
-    academyFeeApi.getByPlayer(playerId).then(setFees).finally(() => setLoading(false))
+    guardianApi.getFees(playerId).then(setFees).finally(() => setLoading(false))
   }, [playerId])
 
   const handleSubmitProof = async (feeId: number) => {
@@ -26,7 +26,7 @@ export function GuardianFeeView({ playerId }: Props) {
     if (!url) return
     setSubmitting(feeId)
     try {
-      const updated = await academyFeeApi.submitProof(feeId, url)
+      const updated = await guardianApi.submitFeeProof(playerId, feeId, url)
       setFees(prev => prev.map(f => f.id === feeId ? updated : f))
     } finally { setSubmitting(null) }
   }
