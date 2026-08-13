@@ -330,6 +330,10 @@ enum NotificationType {
   SPONSORSHIP_EXPIRY_90D
   SPONSORSHIP_EXPIRY_60D
   SPONSORSHIP_EXPIRY_30D
+  HIRING_SURVEY_OPEN
+  HIRING_SURVEY_DEADLINE_REMINDER
+  HIRING_SURVEY_CLOSED
+  HIRING_PLAN_APPROVED
 }
 
 enum DepreciationMethod {
@@ -803,6 +807,8 @@ model User {
   approvedPlanReports        PlanReport[]              @relation("PlanReportApprovedBy")
   confirmedPlanReviews       PlanReview[]              @relation("PlanReviewConfirmer")
   confirmedReportReviews     ReportReview[]            @relation("ReportReviewConfirmer")
+  createdSurveys             HiringNeedsSurvey[]       @relation("SurveyCreatedBy")
+  surveyResponses            SurveyResponse[]          @relation("SurveyResponseSubmitter")
   disposedEquipmentUnits     EquipmentUnit[]           @relation("EquipmentDisposer")
   formationSnapshots         FormationSnapshot[]       @relation("FormationSnapshotCreatedBy")
 }
@@ -2314,6 +2320,8 @@ model Department {
   planReviews      PlanReview[]               @relation("PlanReviewerDept")
   reportReviews    ReportReview[]             @relation("ReportReviewerDept")
   reports          Report[]
+  surveyTargets    SurveyTargetDept[]         @relation("SurveyTargetDept")
+  surveyResponses  SurveyResponse[]           @relation("SurveyResponse")
 }
 
 enum DeptRole {
@@ -2449,14 +2457,16 @@ model JobPosting {
   closedAt      DateTime?
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
-  budget        Int?
-  planReportId  Int?             @unique
+  budget           Int?
+  planReportId     Int?             @unique
+  hiringPlanItemId Int?
 
-  department   Department?      @relation(fields: [departmentId], references: [id])
-  createdBy    User             @relation("JobPostingCreator", fields: [createdById], references: [id])
-  approvedBy   User?            @relation("JobPostingApprover", fields: [approvedById], references: [id])
-  applications JobApplication[]
-  planReport   PlanReport?      @relation(fields: [planReportId], references: [id])
+  department     Department?      @relation(fields: [departmentId], references: [id])
+  createdBy      User             @relation("JobPostingCreator", fields: [createdById], references: [id])
+  approvedBy     User?            @relation("JobPostingApprover", fields: [approvedById], references: [id])
+  applications   JobApplication[]
+  planReport     PlanReport?      @relation(fields: [planReportId], references: [id])
+  hiringPlanItem HiringPlanItem?  @relation(fields: [hiringPlanItemId], references: [id], onDelete: SetNull)
 }
 
 model JobApplication {
@@ -3037,6 +3047,17 @@ enum PlanStatus {
   REJECTED
 }
 
+enum SurveyStatus {
+  OPEN
+  CLOSED
+}
+
+enum SurveyPriority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
 model PlanReport {
   id                    Int              @id @default(autoincrement())
   title                 String
@@ -3065,6 +3086,7 @@ model PlanReport {
   approvedAt            DateTime?
   rejectedAt            DateTime?
   vaultPath             String?
+  surveyId              Int?             @unique
   createdById           Int
   approvedById          Int?
   createdAt             DateTime         @default(now())
@@ -3073,8 +3095,75 @@ model PlanReport {
   department  Department  @relation(fields: [departmentId], references: [id])
   createdBy   User        @relation("PlanReportCreatedBy", fields: [createdById], references: [id])
   approvedBy  User?       @relation("PlanReportApprovedBy", fields: [approvedById], references: [id])
-  reviews     PlanReview[]
-  jobPosting  JobPosting?
+  reviews         PlanReview[]
+  jobPosting      JobPosting?
+  survey          HiringNeedsSurvey? @relation(fields: [surveyId], references: [id])
+  hiringPlanItems HiringPlanItem[]
+}
+
+model HiringNeedsSurvey {
+  id          Int          @id @default(autoincrement())
+  title       String
+  deadlineAt  DateTime
+  status      SurveyStatus @default(OPEN)
+  createdById Int
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  createdBy         User               @relation("SurveyCreatedBy", fields: [createdById], references: [id])
+  targetDepartments SurveyTargetDept[]
+  responses         SurveyResponse[]
+  planReport        PlanReport?
+}
+
+model SurveyTargetDept {
+  surveyId     Int
+  departmentId Int
+
+  survey     HiringNeedsSurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  department Department        @relation("SurveyTargetDept", fields: [departmentId], references: [id])
+
+  @@id([surveyId, departmentId])
+}
+
+model SurveyResponse {
+  id              Int            @id @default(autoincrement())
+  surveyId        Int
+  departmentId    Int
+  roleTitle       String
+  headcount       Int
+  quarter         Int?
+  priority        SurveyPriority
+  estimatedBudget Int?
+  reason          String
+  submittedById   Int
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  survey         HiringNeedsSurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  department     Department        @relation("SurveyResponse", fields: [departmentId], references: [id])
+  submittedBy    User              @relation("SurveyResponseSubmitter", fields: [submittedById], references: [id])
+  hiringPlanItem HiringPlanItem?
+
+  @@unique([surveyId, departmentId])
+  @@index([surveyId])
+}
+
+model HiringPlanItem {
+  id               Int            @id @default(autoincrement())
+  planReportId     Int
+  surveyResponseId Int?           @unique
+  roleTitle        String
+  headcount        Int
+  quarter          Int?
+  priority         SurveyPriority
+  estimatedBudget  Int?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  planReport     PlanReport      @relation(fields: [planReportId], references: [id], onDelete: Cascade)
+  surveyResponse SurveyResponse? @relation(fields: [surveyResponseId], references: [id])
+  jobPostings    JobPosting[]
 }
 
 // ─────────────────────────────────────────────

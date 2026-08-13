@@ -59,6 +59,7 @@ import attendanceAppealRouter from "./attendance-appeal/attendance-appeal.routes
 import planReportRouter from "./plan-report/plan-report.routes";
 import departmentReviewConfigRouter from "./department-review-config/department-review-config.routes";
 import planReviewRouter from "./plan-review/plan-review.routes";
+import hiringSurveyRouter from "./hiring-survey/hiring-survey.routes";
 import formationSnapshotRouter from "./formation-snapshot/formation-snapshot.routes";
 
 const apiRouter = Router();
@@ -123,6 +124,7 @@ apiRouter.use("/attendance-appeals", attendanceAppealRouter);
 apiRouter.use("/plan-reports", planReportRouter);
 apiRouter.use("/department-review-configs", departmentReviewConfigRouter);
 apiRouter.use("/plan-reviews", planReviewRouter);
+apiRouter.use("/hiring-surveys", hiringSurveyRouter);
 apiRouter.use("/formation-snapshots", formationSnapshotRouter);
 
 export default apiRouter;
