@@ -86,6 +86,22 @@ export class NotificationRepository {
     });
   }
 
+  createForHrManager(type: string, getMsg: MsgFactory, entityId?: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const hrManagers = await tx.user.findMany({
+        where: { role: 'FRONT_OFFICE', frontOfficeRole: 'HR_MANAGER', isDeleted: false },
+        select: { id: true, language: true },
+      })
+      if (hrManagers.length === 0) return
+      await tx.notification.createMany({
+        data: hrManagers.map((u) => {
+          const { title, body } = getMsg(u.language)
+          return { userId: u.id, type, title, body, entityId }
+        }) as any,
+      })
+    })
+  }
+
   createForTD(type: string, getMsg: MsgFactory, entityId?: number) {
     return this.prisma.$transaction(async (tx) => {
       const tdUsers = await tx.user.findMany({
