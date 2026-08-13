@@ -108,6 +108,7 @@ const SECTION_ORDER: Array<NavItem['section'] & string> = [
   'nav.section.matchAnalysis',
   'nav.section.youth',
   'nav.section.coachingStaff',
+  'nav.section.docApproval',
   'nav.section.management',
 ]
 
