@@ -12,6 +12,7 @@ export interface CreateJobPostingDto {
   headcount?: number;
   description: string;
   planReportId: number;
+  hiringPlanItemId?: number;
 }
 
 export interface UpdateJobPostingDto {
