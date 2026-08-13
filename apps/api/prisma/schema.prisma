@@ -2433,7 +2433,7 @@ model JobPosting {
   approvedBy     User?            @relation("JobPostingApprover", fields: [approvedById], references: [id])
   applications   JobApplication[]
   planReport     PlanReport?      @relation(fields: [planReportId], references: [id])
-  hiringPlanItem HiringPlanItem?  @relation(fields: [hiringPlanItemId], references: [id])
+  hiringPlanItem HiringPlanItem?  @relation(fields: [hiringPlanItemId], references: [id], onDelete: SetNull)
 }
 
 model JobApplication {
@@ -3107,6 +3107,7 @@ model SurveyResponse {
   hiringPlanItem HiringPlanItem?
 
   @@unique([surveyId, departmentId])
+  @@index([surveyId])
 }
 
 model HiringPlanItem {
