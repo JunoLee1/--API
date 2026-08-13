@@ -83,15 +83,26 @@ export class HiringSurveyService {
 
     if (responses.length > 0) {
       await this.planReportRepo.createHiringPlanItems(
-        responses.map((r) => ({
-          planReportId: planReport.id,
-          surveyResponseId: r.id,
-          roleTitle: r.roleTitle,
-          headcount: r.headcount,
-          quarter: r.quarter ?? undefined,
-          priority: r.priority as any,
-          estimatedBudget: r.estimatedBudget ?? undefined,
-        }))
+        responses.map((r) => {
+          const item: {
+            planReportId: number
+            surveyResponseId: number
+            roleTitle: string
+            headcount: number
+            quarter?: number
+            priority: any
+            estimatedBudget?: number
+          } = {
+            planReportId: planReport.id,
+            surveyResponseId: r.id,
+            roleTitle: r.roleTitle,
+            headcount: r.headcount,
+            priority: r.priority as any,
+          }
+          if (r.quarter != null) item.quarter = r.quarter
+          if (r.estimatedBudget != null) item.estimatedBudget = r.estimatedBudget
+          return item
+        })
       )
     }
 
