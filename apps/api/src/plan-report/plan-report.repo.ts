@@ -166,4 +166,83 @@ export class PlanReportRepository {
       orderBy: { approvedAt: 'desc' },
     })
   }
+
+  async createDraftForSurvey(data: {
+    surveyId: number
+    createdById: number
+    title: string
+  }) {
+    // Find HR department — look for a dept with name containing 'HR' or use the first dept as fallback
+    const hrDept = await this.prisma.department.findFirst({
+      where: { OR: [{ name: { contains: 'HR' } }, { name: { contains: '인사' } }] },
+    })
+    const departmentId = hrDept?.id ?? 1
+
+    return this.prisma.planReport.create({
+      data: {
+        title: data.title,
+        purpose: '',
+        startDate: new Date(),
+        endDate: new Date(new Date().getFullYear(), 11, 31),
+        budget: 0,
+        expectedEffect: '',
+        risks: '',
+        resultDueDate: new Date(new Date().getFullYear(), 11, 31),
+        templateType: 'HR',
+        isNewBusiness: true,
+        surveyId: data.surveyId,
+        createdById: data.createdById,
+        departmentId,
+      },
+    })
+  }
+
+  listHiringPlanItems(planReportId: number) {
+    return this.prisma.hiringPlanItem.findMany({
+      where: { planReportId },
+      include: { surveyResponse: { select: { id: true, departmentId: true } } },
+      orderBy: { createdAt: 'asc' },
+    })
+  }
+
+  createHiringPlanItem(planReportId: number, data: {
+    roleTitle: string
+    headcount: number
+    quarter?: number
+    priority: string
+    estimatedBudget?: number
+  }) {
+    return this.prisma.hiringPlanItem.create({
+      data: { planReportId, ...data } as any,
+    })
+  }
+
+  createHiringPlanItems(items: Array<{
+    planReportId: number
+    surveyResponseId: number
+    roleTitle: string
+    headcount: number
+    quarter?: number
+    priority: any
+    estimatedBudget?: number
+  }>) {
+    return this.prisma.hiringPlanItem.createMany({ data: items as any })
+  }
+
+  updateHiringPlanItem(id: number, planReportId: number, data: {
+    roleTitle?: string
+    headcount?: number
+    quarter?: number | null
+    priority?: string
+    estimatedBudget?: number | null
+  }) {
+    return this.prisma.hiringPlanItem.update({
+      where: { id, planReportId },
+      data: data as any,
+    })
+  }
+
+  deleteHiringPlanItem(id: number, planReportId: number) {
+    return this.prisma.hiringPlanItem.delete({ where: { id, planReportId } })
+  }
 }
