@@ -355,22 +355,23 @@ const NAV_ITEMS: NavItem[] = [
     coachingRoles: ['HEAD_COACH'],
   },
 
-  // 관리 — 소분류 없음 (단독 아이템)
+  // 문서·결재
   {
     to: '/reports',
     label: 'nav.item.reportApproval',
     icon: FileText,
-    section: 'nav.section.management',
+    section: 'nav.section.docApproval',
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
     frontOfficeRoles: ['TD', 'HR_MANAGER', 'HR_STAFF', 'FINANCE_MANAGER', 'FINANCE_STAFF', 'ASSET_MANAGER', 'ASSET_STAFF', 'SCOUT'],
     anyDeptCategory: true,
   },
   {
-    to: '/admin/review-rule-sets',
-    label: '보고서 결재 룰셋',
-    icon: ListChecks,
-    section: 'nav.section.management',
-    roles: ['ADMIN'],
+    to: '/finance/plan-reports',
+    label: 'nav.item.planReports',
+    icon: ClipboardList,
+    section: 'nav.section.docApproval',
+    roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
+    frontOfficeRoles: ['TD', 'HR_MANAGER', 'FINANCE_MANAGER', 'FINANCE_STAFF', 'ASSET_MANAGER'],
   },
 
   // 관리 > 인사
@@ -408,7 +409,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     to: '/admin/hr-report',
-    label: 'nav.item.hrReport',
+    label: 'nav.item.hrStats',
     icon: ClipboardList,
     section: 'nav.section.management',
     subSection: 'nav.subsection.hr',
@@ -436,7 +437,7 @@ const NAV_ITEMS: NavItem[] = [
   // 관리 > 재무
   {
     to: '/admin/financial-report',
-    label: 'nav.item.financialReport',
+    label: 'nav.item.financialStats',
     icon: TrendingUp,
     section: 'nav.section.management',
     subSection: 'nav.subsection.finance',
@@ -470,25 +471,6 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'FRONT_OFFICE'],
     frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF'],
   },
-  {
-    to: '/finance/department-plans',
-    label: 'nav.item.departmentPlans',
-    icon: ClipboardList,
-    section: 'nav.section.management',
-    subSection: 'nav.subsection.finance',
-    roles: ['ADMIN', 'FRONT_OFFICE'],
-    frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF', 'HR_MANAGER', 'HR_STAFF'],
-  },
-  {
-    to: '/finance/department-plans/budget-summary',
-    label: 'nav.item.departmentBudgetSummary',
-    icon: PieChart,
-    section: 'nav.section.management',
-    subSection: 'nav.subsection.finance',
-    roles: ['ADMIN', 'FRONT_OFFICE'],
-    frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF'],
-  },
-
   // 관리 > 시설·자산
   {
     to: '/equipment',
@@ -562,6 +544,14 @@ const NAV_ITEMS: NavItem[] = [
     to: '/safeguard-reports',
     label: 'nav.item.safeguardReports',
     icon: Shield,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.system',
+    roles: ['ADMIN'],
+  },
+  {
+    to: '/admin/review-rule-sets',
+    label: 'nav.item.reviewRuleSets',
+    icon: ListChecks,
     section: 'nav.section.management',
     subSection: 'nav.subsection.system',
     roles: ['ADMIN'],
