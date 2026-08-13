@@ -423,6 +423,15 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'FRONT_OFFICE'],
     frontOfficeRoles: ['HR_MANAGER'],
   },
+  {
+    to: '/admin/recruitment/surveys',
+    label: 'nav.item.hiringSurvey',
+    icon: ClipboardList,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.hr',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['HR_MANAGER'],
+  },
 
   // 관리 > 재무
   {

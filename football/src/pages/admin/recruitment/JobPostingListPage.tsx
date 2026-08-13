@@ -4,7 +4,10 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { recruitmentApi } from '@/services/recruitment.service'
 import { planReportApi, type ApprovedHrReport } from '@/services/plan-report.service'
+import { hiringSurveyApi } from '@/services/hiring-survey.service'
 import type { JobPosting, JobPostingStatus } from '@/types/recruitment'
+import type { HiringPlanItem } from '@/types/hiring-survey'
+import { PRIORITY_LABELS } from '@/types/hiring-survey'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -35,6 +38,8 @@ export function JobPostingListPage() {
   const [saving, setSaving] = useState(false)
   const [approvedHrReports, setApprovedHrReports] = useState<ApprovedHrReport[]>([])
   const [selectedReportId, setSelectedReportId] = useState<number | null>(null)
+  const [hiringItems, setHiringItems] = useState<HiringPlanItem[]>([])
+  const [selectedHiringItemId, setSelectedHiringItemId] = useState<number | undefined>(undefined)
   const [form, setForm] = useState({ title: '', description: '', headcount: '1' })
 
   const canWrite =
@@ -63,12 +68,21 @@ export function JobPostingListPage() {
     }
   }
 
-  const handleSelectReport = (idStr: string) => {
+  const handleSelectReport = async (idStr: string) => {
     const id = Number(idStr)
     const report = approvedHrReports.find((r) => r.id === id) ?? null
     setSelectedReportId(id || null)
+    setSelectedHiringItemId(undefined)
     if (report) {
       setForm((p) => ({ ...p, title: report.title }))
+      try {
+        const items = await hiringSurveyApi.listHiringItems(id)
+        setHiringItems(items)
+      } catch {
+        setHiringItems([])
+      }
+    } else {
+      setHiringItems([])
     }
   }
 
@@ -90,10 +104,13 @@ export function JobPostingListPage() {
         headcount: Number(form.headcount) || 1,
         departmentId: report.departmentId,
         planReportId: selectedReportId,
+        hiringPlanItemId: selectedHiringItemId,
       })
       setOpen(false)
       setForm({ title: '', description: '', headcount: '1' })
       setSelectedReportId(null)
+      setSelectedHiringItemId(undefined)
+      setHiringItems([])
       void load()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t('recruitment.saveFailed'))
@@ -165,7 +182,7 @@ export function JobPostingListPage() {
               <select
                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
                 value={selectedReportId ?? ''}
-                onChange={(e) => handleSelectReport(e.target.value)}
+                onChange={(e) => void handleSelectReport(e.target.value)}
               >
                 <option value="">{t('recruitment.selectPlanReport')}</option>
                 {approvedHrReports.map((r) => (
@@ -194,6 +211,23 @@ export function JobPostingListPage() {
                 rows={4}
               />
             </div>
+            {hiringItems.length > 0 && (
+              <div className="space-y-1.5">
+                <Label>채용 계획 항목 연결 (선택)</Label>
+                <select
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                  value={selectedHiringItemId ?? ''}
+                  onChange={(e) => setSelectedHiringItemId(e.target.value ? Number(e.target.value) : undefined)}
+                >
+                  <option value="">연결 안 함</option>
+                  {hiringItems.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.roleTitle} · {item.headcount}명 · {PRIORITY_LABELS[item.priority]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label>{t('recruitment.headcount')}</Label>
               <Input
