@@ -24,7 +24,8 @@
       "matchAnalysis": "Match & Analysis",
       "youth": "Youth",
       "coachingStaff": "Coaching Staff",
-      "management": "Management"
+      "management": "Management",
+      "docApproval": "Documents & Approvals"
     },
     "subsection": {
       "hr": "HR",
@@ -74,6 +75,7 @@
       "staffRecords": "Staff Records",
       "mealExpenses": "Meal Expenses",
       "financialReport": "Financial Report",
+      "financialStats": "Financial Stats",
       "ticketSales": "Ticket Sales",
       "departmentPlans": "Dept. Annual Plans",
       "departmentBudgetSummary": "Dept. Budget Summary",
@@ -83,6 +85,9 @@
       "budgetPlan": "Operating Budget",
       "operatingExpenses": "Operating Expenses",
       "hrReport": "HR Report",
+      "hrStats": "HR Stats",
+      "planReports": "Annual Plans",
+      "reviewRuleSets": "Approval Rule Sets",
       "recruitment": "Recruitment",
       "hiringSurvey": "Hiring Survey",
       "facilityMgmt": "Facility",

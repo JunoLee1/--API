@@ -24,7 +24,8 @@
       "matchAnalysis": "경기·분석",
       "youth": "유소년",
       "coachingStaff": "코칭스태프",
-      "management": "관리"
+      "management": "관리",
+      "docApproval": "문서·결재"
     },
     "subsection": {
       "hr": "인사",
@@ -74,6 +75,7 @@
       "staffRecords": "직원 기록",
       "mealExpenses": "식대 관리",
       "financialReport": "재무 보고서",
+      "financialStats": "재무 통계",
       "ticketSales": "티켓 판매",
       "departmentPlans": "부서 연간 계획",
       "departmentBudgetSummary": "부서 예산 요약",
@@ -83,6 +85,9 @@
       "budgetPlan": "운영비 예산",
       "operatingExpenses": "운영비 지출",
       "hrReport": "HR 보고서",
+      "hrStats": "HR 통계",
+      "planReports": "연간 계획서",
+      "reviewRuleSets": "결재 룰셋",
       "recruitment": "채용 관리",
       "hiringSurvey": "채용 수요 조사",
       "facilityMgmt": "시설 관리",
