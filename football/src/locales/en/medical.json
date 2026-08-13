@@ -104,6 +104,10 @@
     "fieldMatchNone": "Not set",
     "fieldMatchYes": "Available",
     "fieldMatchNo": "Unavailable",
+    "matchAvailableWarning": "Player marked as match-available without medical sign-off. Medical team review is recommended.",
+    "fieldAllowedActivities": "Allowed Activities",
+    "fieldAllowedActivitiesPlaceholder": "e.g. Pool rehab only, no full-contact training",
+    "fieldAllowedActivitiesEmpty": "No activity restrictions specified",
     "fieldReinjuryRisk": "Re-injury Risk",
     "fieldRiskNone": "Not set",
     "fieldOpinion": "Medical Opinion",
@@ -161,7 +165,9 @@
     "swellingGone": "Swelling resolved",
     "romRecovered": "ROM ≥ 80% recovered",
     "strengthRecovered": "Strength/function ≥ 80% recovered",
-    "psychReady": "Psychologically ready (anxiety ≤ 30)"
+    "psychReady": "Psychologically ready (anxiety ≤ 30)",
+    "loadRecovered": "Rehab load ≥80% of baseline",
+    "notRecorded": "(not recorded)"
   },
   "stats": {
     "title": "Injury Statistics",

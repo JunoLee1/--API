@@ -125,10 +125,15 @@ export class EquipmentRepository {
     return this.prisma.equipmentUnit.findUnique({ where: { id }, select: UNIT_SELECT });
   }
 
-  updateUnitStatus(id: number, status: EquipmentUnitStatus) {
+  updateUnitStatus(id: number, status: EquipmentUnitStatus, disposalData?: { disposedById?: number; disposedAt?: Date; disposalNote?: string }) {
     return this.prisma.equipmentUnit.update({
       where: { id },
-      data: { status },
+      data: {
+        status,
+        ...(disposalData?.disposedById !== undefined && { disposedById: disposalData.disposedById }),
+        ...(disposalData?.disposedAt !== undefined && { disposedAt: disposalData.disposedAt }),
+        ...(disposalData?.disposalNote !== undefined && { disposalNote: disposalData.disposalNote }),
+      },
       select: UNIT_SELECT,
     });
   }

@@ -93,6 +93,8 @@ export interface InjuryReport {
   matchAvailable: boolean | null
   reinjuryRisk: RiskLevel | null
   medicalOpinion: string | null
+  rehabLoadPercentage: number | null
+  allowedActivities: string | null
   securityLevel: SecurityLevel
   createdById: number
   updatedById: number | null

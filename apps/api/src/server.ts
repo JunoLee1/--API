@@ -33,6 +33,7 @@ import { startContractClauseExecutionJob } from "./jobs/contractClauseExecution"
 import { startEquipmentOverdueReturnJob } from "./jobs/equipmentOverdueReturn";
 import { startSponsorshipExpiryAlertJob } from "./jobs/sponsorshipExpiryAlert";
 import { startHiringSurveyReminderJob } from "./jobs/hiringSurveyReminder";
+import { startInspectionDueCron } from "./jobs/inspectionDueAlert";
 
 const app = express();
 
@@ -91,3 +92,4 @@ startContractClauseExecutionJob();
 startEquipmentOverdueReturnJob();
 startSponsorshipExpiryAlertJob();
 startHiringSurveyReminderJob();
+startInspectionDueCron();

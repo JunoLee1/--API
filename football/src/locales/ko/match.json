@@ -284,6 +284,19 @@
     "goalDiff": "득실",
     "points": "승점"
   },
+  "formationSnapshot": {
+    "title": "대형 변화 기록",
+    "empty": "기록된 대형 변화가 없습니다.",
+    "addSnapshot": "대형 변화 추가",
+    "minute": "분",
+    "formation": "대형",
+    "changeReason": "교체 사유",
+    "changeReasonPlaceholder": "예: 부상 대응, 리드 방어",
+    "submit": "저장",
+    "cancel": "취소",
+    "by": "작성",
+    "submitError": "저장에 실패했습니다."
+  },
   "tactical": {
     "title": "전술 분석",
     "description": "경기별 전술 분석 리포트",

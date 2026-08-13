@@ -56,6 +56,16 @@ export class GrowthReportController {
     } catch (e) { next(e); }
   };
 
+  getPositionAverage = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const playerId = req.query["playerId"] as string;
+      if (!playerId) throw new AppError(400, "PLAYER_ID_REQUIRED");
+      const result = await this.service.getPositionAverage(playerId);
+      if (!result) throw new AppError(404, "PLAYER_NOT_FOUND");
+      res.status(200).json(result);
+    } catch (err) { next(err); }
+  };
+
   getBadgesByPlayer = async (req: Request, res: Response, next: NextFunction) => {
     try {
       res.json(await this.service.getBadgesByPlayer(String(req.params["playerId"])));

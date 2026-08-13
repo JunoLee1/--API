@@ -18,6 +18,7 @@ const controller = new RecruitmentController(service);
 // 분석 엔드포인트
 router.get("/headcount-progress", auth, controller.getHeadcountProgress);
 router.get("/time-to-hire", auth, controller.getTimeToHireStats);
+router.get("/cost-per-hire", auth, controller.getCostPerHire);
 
 // JobPosting
 router.get("/job-postings", auth, controller.listPostings);
@@ -32,6 +33,7 @@ router.get("/job-postings/:postingId/applications", auth, controller.listApplica
 router.post("/job-postings/:postingId/applications", controller.apply);
 
 // Application actions
+// SJ9: PII guard is enforced inside controller.getApplication via canWriteHR
 router.get("/applications/:id", auth, controller.getApplication);
 router.patch("/applications/:id", auth, controller.updateApplication);
 router.post("/applications/:id/reject", auth, controller.rejectApplication);

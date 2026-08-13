@@ -23,7 +23,9 @@ export class SalesService {
 
   async create(dto: CreateSalesRecordDto, createdById: number) {
     if (dto.quantity <= 0) throw new AppError(400, "NEGATIVE_SALES_VALUE");
-    if (dto.unitPrice <= 0) throw new AppError(400, "NEGATIVE_SALES_VALUE");
+    if (dto.unitPrice < 0 || (dto.unitPrice === 0 && (dto.type as string) !== "COMPLIMENTARY")) {
+      throw new AppError(400, "NEGATIVE_SALES_VALUE");
+    }
 
     // JO6: COMPLIMENTARY tickets require a description explaining the reason
     if ((dto.type as string) === "COMPLIMENTARY" && !dto.description) {
@@ -61,6 +63,25 @@ export class SalesService {
           if (soldQty + dto.quantity > match.capacity) {
             throw new AppError(400, "MATCH_CAPACITY_EXCEEDED");
           }
+        }
+      }
+
+      // BS6: per-match complimentary ticket limit from ClubSettings
+      if (dto.type === "COMPLIMENTARY" && dto.matchId) {
+        const settings = await tx.clubSettings.findUnique({
+          where: { id: 1 },
+          select: { complimentaryTicketLimit: true },
+        });
+        const limit = settings?.complimentaryTicketLimit ?? 10;
+
+        const compsSold = await tx.salesRecord.aggregate({
+          where: { matchId: dto.matchId, type: "COMPLIMENTARY" as any, deletedAt: null } as any,
+          _sum: { quantity: true },
+        });
+        const totalComps = Number((compsSold._sum as any).quantity ?? 0);
+
+        if (totalComps + dto.quantity > limit) {
+          throw new AppError(400, "COMPLIMENTARY_LIMIT_EXCEEDED");
         }
       }
 
@@ -114,6 +135,31 @@ export class SalesService {
             relatedId: record.id,
             createdById,
           } as any,
+        });
+      } else if ((dto.type as string) === "UNIFORM" || (dto.type as string) === "OTHER") {
+        // JO7: Auto LedgerEntry for non-ticket merchandise sales
+        await tx.ledgerEntry.create({
+          data: {
+            type: "INCOME",
+            category: ((dto.type as string) === "UNIFORM" ? "UNIFORM_SALES" : "OTHER") as any,
+            amount: totalAmount,
+            currency: dto.currency ?? "KRW",
+            exchangeRate: 1,
+            amountKrw: totalAmount,
+            isRefund: false,
+            description: dto.description ?? ((dto.type as string) === "UNIFORM" ? "유니폼 판매" : "기타 판매"),
+            relatedModule: "SalesRecord",
+            relatedId: record.id,
+            createdById,
+          },
+        });
+      }
+
+      // BS10: increment SeatZone.soldCount when seatZoneId is set
+      if (dto.seatZoneId) {
+        await tx.seatZone.update({
+          where: { id: dto.seatZoneId },
+          data: { soldCount: { increment: dto.quantity } },
         });
       }
 
@@ -259,16 +305,33 @@ export class SalesService {
 
   async delete(id: number, deletedById: number) {
     await this.prisma.$transaction(async (tx) => {
+      // Fetch existing record for seatZoneId/quantity needed for BS10 decrement
+      const existing = await tx.salesRecord.findUnique({
+        where: { id },
+        select: { seatZoneId: true, quantity: true, deletedAt: true },
+      });
+
+      if (!existing) throw new AppError(404, "SALES_RECORD_NOT_FOUND");
+      if (existing.deletedAt !== null) throw new AppError(400, "ALREADY_CANCELLED");
+
       // BS1: roll back the ledger entry linked to this sales record
       await tx.ledgerEntry.deleteMany({
         where: { relatedModule: "SalesRecord", relatedId: id },
       });
 
-      // JO1: soft-delete instead of hard delete
+      // JO1: soft-delete instead of hard delete; BS8: mark REFUNDED for duplicate-refund prevention
       await tx.salesRecord.update({
         where: { id },
-        data: { deletedAt: new Date(), updatedById: deletedById, updatedAt: new Date() } as any,
+        data: { deletedAt: new Date(), updatedById: deletedById, updatedAt: new Date(), status: "REFUNDED" } as any,
       });
+
+      // BS10: decrement SeatZone.soldCount on cancel
+      if (existing?.seatZoneId) {
+        await tx.seatZone.update({
+          where: { id: existing.seatZoneId },
+          data: { soldCount: { decrement: existing.quantity } },
+        });
+      }
     });
 
     // JO8: audit trail for deletion

@@ -361,7 +361,10 @@
     "attitude": "태도",
     "fundamentals": "기본기",
     "spatial": "공간인식",
-    "physical": "체력"
+    "physical": "체력",
+    "positionAvg": "포지션 평균",
+    "sampleInsufficient": "⚠ 샘플 부족 (N={{count}})",
+    "comparedToPosition": "포지션 대비"
   },
   "jerseyTab": {
     "loadFailed": "등번호 조회 실패",

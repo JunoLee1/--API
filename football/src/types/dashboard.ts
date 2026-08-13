@@ -69,6 +69,7 @@ export interface HeadCoachStats {
   injuredPlayerCount: number
   thisMonthSessionCount: number
   attendanceWarningPlayerCount: number
+  trainingEvalEntryRate: number
   medicalDashboard?: MedicalDashboardStats
 }
 

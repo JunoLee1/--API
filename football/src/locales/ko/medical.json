@@ -104,6 +104,10 @@
     "fieldMatchNone": "선택 안 함",
     "fieldMatchYes": "가능",
     "fieldMatchNo": "불가",
+    "matchAvailableWarning": "의무팀 서명 없이 경기 출전 가능으로 표시되어 있습니다. 의무팀 확인을 권장합니다.",
+    "fieldAllowedActivities": "허용 재활 활동",
+    "fieldAllowedActivitiesPlaceholder": "예: 수중 재활만 허용, 풀콘택트 훈련 금지",
+    "fieldAllowedActivitiesEmpty": "지정된 활동 제한 없음",
     "fieldReinjuryRisk": "재부상 위험",
     "fieldRiskNone": "선택 안 함",
     "fieldOpinion": "의학적 소견",
@@ -161,7 +165,9 @@
     "swellingGone": "부종 해소",
     "romRecovered": "ROM 80% 이상 회복",
     "strengthRecovered": "근력·기능 80% 이상 회복",
-    "psychReady": "심리적 준비 (불안도 ≤ 30)"
+    "psychReady": "심리적 준비 (불안도 ≤ 30)",
+    "loadRecovered": "재활 부하 80% 이상 회복",
+    "notRecorded": "(미기록)"
   },
   "stats": {
     "title": "부상 통계",

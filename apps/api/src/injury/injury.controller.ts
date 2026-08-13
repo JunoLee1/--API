@@ -65,7 +65,10 @@ export class InjuryController {
     try {
       const user = requireUser(req);
       void writeAuditLog({ actorId: user.id, action: "MEDICAL_DATA_READ", targetId: String(req.params["id"]) }).catch(console.error);
-      const report = await this.service.getReport(Number(req.params["id"]));
+      const report = await this.service.getReport(
+        Number(req.params["id"]),
+        { role: user.role, coachingRole: user.coachingRole ?? null },
+      );
       res.status(200).json(report ?? null);
     } catch (err) { next(err); }
   };
@@ -75,7 +78,12 @@ export class InjuryController {
       const user = requireUser(req);
       if (!(MEDICAL_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(
-        await this.service.saveReport(Number(req.params["id"]), req.body, user.id)
+        await this.service.saveReport(
+          Number(req.params["id"]),
+          req.body,
+          user.id,
+          { role: user.role, coachingRole: user.coachingRole ?? null },
+        )
       );
     } catch (err) { next(err); }
   };

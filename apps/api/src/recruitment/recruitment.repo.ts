@@ -280,6 +280,26 @@ export class RecruitmentRepository {
     return { averageDaysToHire: avg, records: stats };
   }
 
+  // --- KPI ---
+
+  async getCostPerHire() {
+    const postings = await this.prisma.jobPosting.findMany({
+      select: {
+        id: true, title: true, budget: true,
+        applications: { select: { status: true } },
+      },
+    });
+    return postings.map(p => {
+      const hiredCount = p.applications.filter(a => a.status === 'ONBOARDED').length;
+      const budget = p.budget ?? 0;
+      return {
+        postingId: p.id, title: p.title, budget,
+        hiredCount,
+        costPerHire: hiredCount > 0 ? Math.round(budget / hiredCount) : 0,
+      };
+    });
+  }
+
   // --- InterviewerScore ---
 
   async addInterviewerScore(data: { interviewId: number; interviewerId: number; scoreSkill?: number; scoreComm?: number; scoreCulture?: number; comment?: string }, actorId: number) {

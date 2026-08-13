@@ -5,6 +5,7 @@ import { NotificationService } from "../../notification/notification.service";
 import type { MaintenanceRepository } from "./maintenance.repo";
 import type { CreateMaintenanceDto, UpdateMaintenanceDto, MaintenanceListQuery } from "./dto/maintenance.dto";
 import type { LedgerService } from "../../ledger/ledger.service";
+import type { PrismaClient } from "../../generated/client";
 
 const TERMINAL_STATUSES = ["RESOLVED", "REJECTED"] as const;
 
@@ -13,6 +14,7 @@ export class MaintenanceService {
     private repo: MaintenanceRepository,
     private notifications: NotificationService,
     private ledgerService: LedgerService,
+    private prisma: PrismaClient,
   ) {}
 
   list(query: MaintenanceListQuery) {
@@ -118,14 +120,19 @@ export class MaintenanceService {
   async submitToFinance(id: number, userId: number) {
     const existing = await this.repo.findById(id);
     if (!existing) throw new AppError(404, "MAINTENANCE_NOT_FOUND");
+
+    const settings = await this.prisma.clubSettings.findUnique({
+      where: { id: 1 },
+      select: { maintenanceCostLimit: true },
+    });
+    const limit = settings?.maintenanceCostLimit ?? 1000000;
+
     const cost = existing.estimatedCost ? Number(existing.estimatedCost) : 0;
-    if (cost < 1000000) throw new AppError(400, "COST_BELOW_THRESHOLD");
+    if (cost < limit) throw new AppError(400, "COST_BELOW_THRESHOLD");
     if (existing.financeSubmittedAt) throw new AppError(400, "ALREADY_SUBMITTED_TO_FINANCE");
 
     const result = await this.repo.submitToFinance(id);
-
     void this.notifications.notifyFacilityFinanceSubmit(existing.title, id, cost).catch(console.error);
-
     return result;
   }
 }

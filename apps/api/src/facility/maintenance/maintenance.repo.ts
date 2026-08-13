@@ -6,6 +6,7 @@ const INCLUDE = {
   sourceInspection: { select: { id: true, type: true, facilityZone: true } },
   approvedBy: { select: { id: true, username: true } },
   gmApprovedBy: { select: { id: true, username: true } },
+  partner: { select: { id: true, name: true } },
 } as const;
 
 export class MaintenanceRepository {
@@ -35,6 +36,7 @@ export class MaintenanceRepository {
         createdById: data.createdById,
         ...(data.sourceInspectionId && { sourceInspectionId: data.sourceInspectionId }),
         ...(data.estimatedCost !== undefined && { estimatedCost: data.estimatedCost }),
+        ...(data.partnerId !== undefined && { partnerId: data.partnerId }),
       },
       include: INCLUDE,
     });

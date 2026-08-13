@@ -104,6 +104,7 @@ export class InjuryService {
         const title = "선수 부상 복귀";
         const body = `${playerName} 선수가 부상에서 복귀하여 훈련에 합류했습니다.`;
         await this.notifRepo.createForCoachingStaff("INJURY_RETURNED", () => ({ title, body }), id);
+        await this.notifRepo.createForMedicalStaff("INJURY_RETURNED", () => ({ title, body }), id);
         getIO().to("staff-room").emit("notification:injury", {
           type: "INJURY_RETURNED", title, body, createdAt: new Date().toISOString(),
         });
@@ -134,16 +135,44 @@ export class InjuryService {
     });
   }
 
-  async getReport(injuryId: number) {
-    const injury = await this.repo.findById(injuryId);
-    if (!injury) throw new AppError(404, "INJURY_NOT_FOUND");
-    return this.repo.findReport(injuryId);
+  private isMedicalRole(role: string, coachingRole: string | null): boolean {
+    if (role === 'ADMIN' || role === 'SUPER_ADMIN') return true;
+    return role === 'COACHING_STAFF' &&
+      (coachingRole === 'MEDICAL' || coachingRole === 'MEDICAL_DIRECTOR');
   }
 
-  async saveReport(injuryId: number, dto: UpsertInjuryReportDto, userId: number) {
+  async getReport(injuryId: number, requester: { role: string; coachingRole: string | null }) {
     const injury = await this.repo.findById(injuryId);
     if (!injury) throw new AppError(404, "INJURY_NOT_FOUND");
-    return this.repo.upsertReport(injuryId, dto, userId);
+    const report = await this.repo.findReport(injuryId);
+    if (!report) return null;
+    if (report.securityLevel === 'PRIVATE' && !this.isMedicalRole(requester.role, requester.coachingRole)) {
+      throw new AppError(403, "FORBIDDEN");
+    }
+    return report;
+  }
+
+  async saveReport(
+    injuryId: number,
+    dto: UpsertInjuryReportDto,
+    userId: number,
+    requester: { role: string; coachingRole: string | null },
+  ) {
+    const injury = await this.repo.findById(injuryId);
+    if (!injury) throw new AppError(404, "INJURY_NOT_FOUND");
+
+    const safeDto: UpsertInjuryReportDto = this.isMedicalRole(requester.role, requester.coachingRole)
+      ? dto
+      : { ...dto, allowedActivities: undefined };
+
+    const report = await this.repo.upsertReport(injuryId, safeDto, userId);
+
+    const warning =
+      report.matchAvailable === true && !report.medicalSignedAt
+        ? "MATCH_AVAILABLE_WITHOUT_MEDICAL_CLEARANCE"
+        : undefined;
+
+    return warning ? { ...report, _warning: warning } : report;
   }
 
   async signReport(injuryId: number, role: 'COACH' | 'TRAINER' | 'MEDICAL', userId: number, signerTeamId?: number | null) {

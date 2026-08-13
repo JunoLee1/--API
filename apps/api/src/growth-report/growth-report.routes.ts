@@ -16,6 +16,7 @@ const service = new GrowthReportService(repo, notifRepo, planRepo);
 const controller = new GrowthReportController(service);
 
 
+router.get("/position-average", auth, controller.getPositionAverage);
 router.get("/player/:playerId", auth, controller.getEvaluationsByPlayer);
 router.get("/:id", auth, controller.getEvaluationById);
 router.post("/", auth, controller.createEvaluation);

@@ -65,17 +65,28 @@ function StatusTimeline({ current }: { current: InjuryDetail['status'] }) {
   )
 }
 
-function ReturnChecklist({ assessment }: { assessment: InjuryAssessment }) {
+function ReturnChecklist({
+  assessment,
+  rehabLoadPercentage,
+}: {
+  assessment: InjuryAssessment
+  rehabLoadPercentage: number | null | undefined
+}) {
   const { t } = useTranslation('medical')
   const avgFunctional = (assessment.strengthScore + assessment.sprintScore + assessment.jumpScore) / 3
-  const criteria: { label: string; met: boolean }[] = [
+  const criteria: { label: string; met: boolean; unknown?: boolean }[] = [
     { label: t('returnReadiness.painNormal'), met: assessment.painLevel <= 2 },
     { label: t('returnReadiness.swellingGone'), met: !assessment.hasSwelling },
     { label: t('returnReadiness.romRecovered'), met: assessment.romScore >= 80 },
     { label: t('returnReadiness.strengthRecovered'), met: avgFunctional >= 80 },
     { label: t('returnReadiness.psychReady'), met: assessment.psychScore <= 30 },
+    {
+      label: t('returnReadiness.loadRecovered'),
+      met: (rehabLoadPercentage ?? 0) >= 80,
+      unknown: rehabLoadPercentage == null,
+    },
   ]
-  const metCount = criteria.filter((c) => c.met).length
+  const metCount = criteria.filter((c) => c.met && !c.unknown).length
 
   return (
     <div className="space-y-2">
@@ -85,10 +96,13 @@ function ReturnChecklist({ assessment }: { assessment: InjuryAssessment }) {
       </div>
       {criteria.map((c) => (
         <div key={c.label} className="flex items-center gap-2">
-          <span className={`text-sm ${c.met ? 'text-green-600' : 'text-muted-foreground'}`}>
-            {c.met ? '✓' : '○'}
+          <span className={`text-sm ${c.unknown ? 'text-muted-foreground' : c.met ? 'text-green-600' : 'text-muted-foreground'}`}>
+            {c.unknown ? '?' : c.met ? '✓' : '○'}
           </span>
-          <span className={`text-sm ${c.met ? '' : 'text-muted-foreground'}`}>{c.label}</span>
+          <span className={`text-sm ${c.met && !c.unknown ? '' : 'text-muted-foreground'}`}>{c.label}</span>
+          {c.unknown && (
+            <span className="text-xs text-muted-foreground">{t('returnReadiness.notRecorded')}</span>
+          )}
         </div>
       ))}
     </div>
@@ -207,6 +221,8 @@ export function InjuryDetailPage() {
   const [rehabStage, setRehabStage] = useState<RehabStage | ''>('')
   const [trainingReturnDate, setTrainingReturnDate] = useState('')
   const [matchAvailable, setMatchAvailable] = useState<boolean | ''>('')
+  const [matchAvailableWarning, setMatchAvailableWarning] = useState(false)
+  const [allowedActivities, setAllowedActivities] = useState<string>('')
   const [reinjuryRisk, setReinjuryRisk] = useState<RiskLevel | ''>('')
   const [medicalOpinion, setMedicalOpinion] = useState('')
   const [securityLevel, setSecurityLevel] = useState<SecurityLevel>('INTERNAL')
@@ -220,6 +236,8 @@ export function InjuryDetailPage() {
     setRehabStage(r.rehabStage ?? '')
     setTrainingReturnDate(r.trainingReturnDate ? r.trainingReturnDate.slice(0, 10) : '')
     setMatchAvailable(r.matchAvailable ?? '')
+    setMatchAvailableWarning(r.matchAvailable === true && !r.medicalSignedAt)
+    setAllowedActivities(r.allowedActivities ?? '')
     setReinjuryRisk(r.reinjuryRisk ?? '')
     setMedicalOpinion(r.medicalOpinion ?? '')
     setSecurityLevel(r.securityLevel)
@@ -253,11 +271,13 @@ export function InjuryDetailPage() {
         rehabStage: rehabStage || undefined,
         trainingReturnDate: trainingReturnDate || undefined,
         matchAvailable: matchAvailable === '' ? undefined : matchAvailable,
+        allowedActivities: allowedActivities || undefined,
         reinjuryRisk: reinjuryRisk || undefined,
         medicalOpinion: medicalOpinion || undefined,
         securityLevel,
       })
       setReport(updated)
+      setMatchAvailableWarning((updated as any)._warning === 'MATCH_AVAILABLE_WITHOUT_MEDICAL_CLEARANCE')
       toast.success(t('detail.reportSaved'))
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : t('detail.saveFailed'))
@@ -437,6 +457,28 @@ export function InjuryDetailPage() {
                   </Select>
                 </div>
               </div>
+              {matchAvailableWarning && (
+                <div className="flex items-start gap-2 rounded-md border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-800">
+                  <span className="mt-0.5 shrink-0">⚠</span>
+                  <span>{t('detail.matchAvailableWarning')}</span>
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <Label>{t('detail.fieldAllowedActivities')}</Label>
+                {isMedical ? (
+                  <Textarea
+                    value={allowedActivities}
+                    onChange={(e) => setAllowedActivities(e.target.value)}
+                    placeholder={t('detail.fieldAllowedActivitiesPlaceholder')}
+                    rows={3}
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                    {allowedActivities || t('detail.fieldAllowedActivitiesEmpty')}
+                  </p>
+                )}
+              </div>
 
               <div className="space-y-1.5">
                 <Label>{t('detail.fieldReinjuryRisk')}</Label>
@@ -541,7 +583,7 @@ export function InjuryDetailPage() {
           {assessment && (
             <section className="border rounded-lg p-5">
               <h2 className="text-sm font-semibold mb-3">{t('detail.returnChecklist')}</h2>
-              <ReturnChecklist assessment={assessment} />
+              <ReturnChecklist assessment={assessment} rehabLoadPercentage={report?.rehabLoadPercentage ?? null} />
             </section>
           )}
 
