@@ -4,13 +4,15 @@ import path from 'path'
 import { PlanReportController } from './plan-report.controller'
 import { PlanReportService } from './plan-report.service'
 import { PlanReportRepository } from './plan-report.repo'
+import { NotificationRepository } from '../notification/notification.repo'
 import { auth } from '../lib/authMiddleware'
 import { getPrisma } from '../lib/prisma'
 
 const router = Router()
 const prisma = getPrisma()
 const repo = new PlanReportRepository(prisma)
-const service = new PlanReportService(repo)
+const notifRepo = new NotificationRepository(prisma)
+const service = new PlanReportService(repo, notifRepo)
 const controller = new PlanReportController(service)
 
 const upload = multer({

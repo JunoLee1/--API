@@ -3,9 +3,13 @@ import { canApprovePlan } from '../lib/permissions'
 import { PlanReportRepository, ReviewerDeptMap } from './plan-report.repo'
 import { CreatePlanReportDto, ListPlanReportQuery, UpdatePlanReportDto } from './dto/plan-report.dto'
 import { writeApprovalVaultNote, appendResultToVaultNote, VaultPlanData } from './vault'
+import { NotificationRepository } from '../notification/notification.repo'
 
 export class PlanReportService {
-  constructor(private repo: PlanReportRepository) {}
+  constructor(
+    private repo: PlanReportRepository,
+    private notifRepo?: NotificationRepository,
+  ) {}
 
   list(filters: ListPlanReportQuery) {
     return this.repo.findAll(filters)
@@ -36,7 +40,10 @@ export class PlanReportService {
     const deptMap = (settings.reviewerDeptMap ?? {}) as ReviewerDeptMap
 
     const reviewerDeptIds = resolveReviewerDeptIds(plan, deptMap)
-    const requiredApproverLevel = resolveApproverLevel(plan.budget, plan.isNewBusiness, settings.planApprovalLimit)
+    const requiredApproverLevel = resolveApproverLevel(
+      { templateType: plan.templateType, budget: plan.budget, isNewBusiness: plan.isNewBusiness },
+      settings.planApprovalLimit
+    )
 
     return this.repo.submit(id, reviewerDeptIds, requiredApproverLevel)
   }
@@ -51,7 +58,17 @@ export class PlanReportService {
 
     const vaultData = toVaultData(plan)
     const vaultPath = await writeApprovalVaultNote(vaultData)
-    return this.repo.approve(id, userId, vaultPath)
+    const result = await this.repo.approve(id, userId, vaultPath)
+
+    if (plan.templateType === 'HR' && this.notifRepo) {
+      void this.notifRepo.createForHrManager(
+        'HIRING_PLAN_APPROVED',
+        () => ({ title: '채용 계획서 승인 완료', body: `"${plan.title}" 채용 계획서가 승인됐습니다. 채용공고를 등록할 수 있습니다.` }),
+        id,
+      ).catch(console.error)
+    }
+
+    return result
   }
 
   async reject(id: number, userId: number, userRole: string, reason: string) {
@@ -85,9 +102,13 @@ export class PlanReportService {
   }
 }
 
-function resolveApproverLevel(budget: number, isNewBusiness: boolean, limit: number): string | null {
-  if (isNewBusiness) return 'ADMIN'
-  if (budget > limit) return 'GM'
+function resolveApproverLevel(
+  plan: { templateType: string; budget: number; isNewBusiness: boolean },
+  limit: number
+): string | null {
+  if (plan.templateType === 'HR') return 'ADMIN'
+  if (plan.isNewBusiness) return 'ADMIN'
+  if (plan.budget > limit) return 'GM'
   return null
 }
 
