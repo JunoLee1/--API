@@ -892,6 +892,8 @@ model Player {
   workPermitStatus WorkPermitStatus @default(NOT_REQUIRED)
   workPermitExpiry DateTime?
   teamId           Int?
+  promotedFromYouthAt  DateTime?
+  youthOriginTeamId    Int?
 
   nationality            Country                 @relation(fields: [nationalityId], references: [id])
   user                   User?                   @relation(fields: [userId], references: [id])

@@ -248,7 +248,19 @@
     "deleteDescription": "Permanently delete {{name}}. This action cannot be undone.",
     "deleteConfirm": "Delete",
     "deleted": "Player deleted.",
-    "deleteFailed": "Failed to delete."
+    "deleteFailed": "Failed to delete.",
+    "promoteBtn": "Promote to First Team",
+    "promoting": "Promoting...",
+    "promoteTitle": "Promote to First Team",
+    "promoteDescription": "Select the target team.",
+    "promoteTeamPlaceholder": "Select team",
+    "promoteConfirm": "Confirm Promotion",
+    "promoteSuccess": "Player promoted successfully.",
+    "promoteFailed": "Promotion failed.",
+    "promoteTeamRequired": "Please select a team.",
+    "youthHistoryTab": "Youth History",
+    "promotedAt": "Promoted On",
+    "youthOriginTeam": "Origin Youth Team ID"
   },
   "statusDialog": {
     "title": "Change Player Status",

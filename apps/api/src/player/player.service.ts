@@ -94,6 +94,22 @@ export class PlayerService {
     return result;
   }
 
+  async promotePlayer(id: string, targetTeamId: number, actorId: number) {
+    const player = await this.repo.findById(id);
+    if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
+    if (!player.team || player.team.type !== "YOUTH") {
+      throw new AppError(409, "PLAYER_NOT_ON_YOUTH_TEAM");
+    }
+    const result = await this.repo.promotePlayer(id, targetTeamId, player.teamId!);
+    await writeAuditLog({
+      actorId,
+      action: "PLAYER_PROMOTED_TO_FIRST_TEAM",
+      targetId: id,
+      detail: { fromTeamId: player.teamId, toTeamId: targetTeamId },
+    });
+    return result;
+  }
+
   async deletePlayer(id: string, actorId: number) {
     const player = await this.repo.findById(id);
     if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
