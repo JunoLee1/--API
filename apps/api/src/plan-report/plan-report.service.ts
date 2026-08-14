@@ -22,6 +22,18 @@ export class PlanReportService {
   }
 
   create(dto: CreatePlanReportDto, createdById: number) {
+    const required: (keyof CreatePlanReportDto)[] = [
+      'title', 'purpose', 'startDate', 'endDate', 'resultDueDate',
+      'expectedEffect', 'risks',
+    ]
+    for (const field of required) {
+      const v = dto[field]
+      if (v === undefined || v === null || (typeof v === 'string' && !v.trim())) {
+        throw new AppError(400, 'MISSING_REQUIRED_FIELD')
+      }
+    }
+    if (!dto.departmentId) throw new AppError(400, 'MISSING_REQUIRED_FIELD')
+    if (dto.budget == null || dto.budget < 0) throw new AppError(400, 'INVALID_BUDGET')
     return this.repo.create(dto, createdById)
   }
 
