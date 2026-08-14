@@ -161,9 +161,10 @@ export class InjuryService {
     const injury = await this.repo.findById(injuryId);
     if (!injury) throw new AppError(404, "INJURY_NOT_FOUND");
 
+    const { allowedActivities: _omit, ...dtoWithoutActivities } = dto;
     const safeDto: UpsertInjuryReportDto = this.isMedicalRole(requester.role, requester.coachingRole)
       ? dto
-      : { ...dto, allowedActivities: undefined };
+      : dtoWithoutActivities as UpsertInjuryReportDto;
 
     const report = await this.repo.upsertReport(injuryId, safeDto, userId);
 

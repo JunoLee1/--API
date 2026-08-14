@@ -103,9 +103,9 @@ export class EquipmentService {
       dto.disposedAt = new Date();
     }
     const updated = await this.repo.updateUnitStatus(unitId, dto.status, {
-      disposedById: dto.disposedById,
-      disposedAt: dto.disposedAt,
-      disposalNote: dto.disposalNote,
+      ...(dto.disposedById !== undefined && { disposedById: dto.disposedById }),
+      ...(dto.disposedAt !== undefined && { disposedAt: dto.disposedAt }),
+      ...(dto.disposalNote !== undefined && { disposalNote: dto.disposalNote }),
     });
     if (dto.status === "RETIRED") {
       void writeAuditLog({
