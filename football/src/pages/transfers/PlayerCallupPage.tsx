@@ -67,6 +67,14 @@ function CreateDialog({ open, onOpenChange, onSaved, userTeamId }: CreateDialogP
     () => allTeams.filter((t) => t.type !== 'YOUTH' && t.isActive && t.clubId !== fromTeamClubId),
     [allTeams, fromTeamClubId],
   )
+  const allSeniorTeamItems = useMemo(
+    () => [...sameClubTeams, ...otherSeniorTeams].map((t) => ({ value: String(t.id), label: t.name })),
+    [sameClubTeams, otherSeniorTeams],
+  )
+  const playerItems = useMemo(
+    () => youthPlayers.map((p) => ({ value: p.id, label: p.playerName })),
+    [youthPlayers],
+  )
 
   const handlePlayerSelect = (playerId: string) => {
     const player = youthPlayers.find((p) => p.id === playerId) as (Player & { teamId?: number }) | undefined
@@ -103,6 +111,7 @@ function CreateDialog({ open, onOpenChange, onSaved, userTeamId }: CreateDialogP
             <Select
               value={form.playerId ?? ''}
               onValueChange={handlePlayerSelect}
+              items={playerItems}
             >
               <SelectTrigger><SelectValue placeholder={t('callup.createDialog.playerPlaceholder')} /></SelectTrigger>
               <SelectContent>
@@ -117,6 +126,7 @@ function CreateDialog({ open, onOpenChange, onSaved, userTeamId }: CreateDialogP
             <Select
               value={form.toTeamId != null ? String(form.toTeamId) : ''}
               onValueChange={(v) => setForm((f) => ({ ...f, toTeamId: Number(v) }))}
+              items={allSeniorTeamItems}
             >
               <SelectTrigger>
                 <SelectValue placeholder={t('callup.createDialog.toTeamIdPlaceholder')} />
@@ -262,7 +272,14 @@ export function PlayerCallupPage() {
       </div>
 
       <div className="border-b px-6 py-3 flex items-center gap-3 shrink-0 bg-muted/30">
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select
+          value={statusFilter}
+          onValueChange={setStatusFilter}
+          items={STATUS_FILTER_KEYS.map((key) => ({
+            value: key,
+            label: key === 'ALL' ? t('callup.statusAll') : t(`callup.status.${key}`),
+          }))}
+        >
           <SelectTrigger className="w-32 h-8 text-sm bg-background">
             <SelectValue />
           </SelectTrigger>
