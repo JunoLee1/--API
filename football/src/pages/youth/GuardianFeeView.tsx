@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 import { guardianApi } from '@/services/guardian.service'
 import { academyFeeApi } from '@/services/academyFee.service'
 import { PaymentModal } from '@/components/youth/PaymentModal'
-import { useCurrentUser } from '@/hooks/useCurrentUser'
 import type { AcademyFee } from '@/types/academy-fee'
 
 const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
@@ -16,7 +15,6 @@ interface Props { playerId: string }
 
 export function GuardianFeeView({ playerId }: Props) {
   const { t } = useTranslation('youth')
-  const { user } = useCurrentUser()
   const [fees, setFees] = useState<AcademyFee[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedFee, setSelectedFee] = useState<AcademyFee | null>(null)
@@ -70,10 +68,10 @@ export function GuardianFeeView({ playerId }: Props) {
       ))}
       {fees.length === 0 && <p className="text-muted-foreground">{t('guardianFeeView.noData')}</p>}
 
-      {selectedFee && user && (
+      {selectedFee && (
         <PaymentModal
           fee={selectedFee}
-          userId={user.id}
+          userId={selectedFee.guardianId}
           open={!!selectedFee}
           onClose={() => setSelectedFee(null)}
           onPaid={handlePaid}

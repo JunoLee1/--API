@@ -1,5 +1,5 @@
 export interface CreateSalesRecordDto {
-  type: "TICKET" | "UNIFORM" | "OTHER" | "VIP_TICKET";
+  type: "TICKET" | "UNIFORM" | "OTHER" | "VIP_TICKET" | "COMPLIMENTARY";
   quantity: number;
   unitPrice: number;
   currency?: "KRW" | "USD" | "EUR" | "GBP";
