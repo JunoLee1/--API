@@ -2219,6 +2219,11 @@ model LineupSlot {
   @@index([lineupId])
 }
 
+enum PaymentMethod {
+  PG
+  BANK_TRANSFER
+}
+
 enum FeeStatus {
   PENDING
   SUBMITTED
@@ -2237,6 +2242,9 @@ model AcademyFee {
   paidAt              DateTime?
   paymentProofUrl     String?
   paymentSubmittedAt  DateTime?
+  paymentMethod       PaymentMethod?
+  pgTransactionId     String?
+  receiptIssuedAt     DateTime?
   year                Int
   month               Int
   createdAt           DateTime   @default(now())

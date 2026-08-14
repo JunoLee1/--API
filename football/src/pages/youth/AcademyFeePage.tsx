@@ -14,6 +14,7 @@ export default function AcademyFeePage() {
   const [fees, setFees] = useState<AcademyFee[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>('')
+  const [submitting, setSubmitting] = useState<number | null>(null)
 
   const load = () => {
     setLoading(true)
@@ -25,6 +26,16 @@ export default function AcademyFeePage() {
   const handleApprove = async (id: number) => {
     await academyFeeApi.approve(id)
     load()
+  }
+
+  const handleAdminSubmit = async (id: number) => {
+    setSubmitting(id)
+    try {
+      await academyFeeApi.adminSubmit(id)
+      load()
+    } finally {
+      setSubmitting(null)
+    }
   }
 
   return (
@@ -51,10 +62,35 @@ export default function AcademyFeePage() {
                 {fee.paymentProofUrl && (
                   <a href={fee.paymentProofUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 underline">{t('feePage.proofLink')}</a>
                 )}
+                {fee.paymentMethod && (
+                  <span className="text-xs text-muted-foreground">
+                    {fee.paymentMethod === 'PG' ? '카드/간편결제' : '계좌이체'}
+                  </span>
+                )}
               </div>
               <Badge variant={STATUS_VARIANT[fee.status]}>{t(`feePage.status.${fee.status}`)}</Badge>
               {fee.status === 'SUBMITTED' && (
                 <Button size="sm" onClick={() => handleApprove(fee.id)}>{t('feePage.approveButton')}</Button>
+              )}
+              {['PENDING', 'OVERDUE'].includes(fee.status) && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void handleAdminSubmit(fee.id)}
+                  disabled={submitting === fee.id}
+                >
+                  수동 접수
+                </Button>
+              )}
+              {fee.status === 'PAID' && fee.receiptIssuedAt && (
+                <a
+                  href={`/academy-fees/${fee.id}/receipt`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-500 underline whitespace-nowrap"
+                >
+                  영수증
+                </a>
               )}
             </div>
           ))}
