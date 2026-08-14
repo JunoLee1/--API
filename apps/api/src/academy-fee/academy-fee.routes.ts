@@ -7,8 +7,33 @@ import { NotificationRepository } from "../notification/notification.repo";
 import { getPrisma } from "../lib/prisma";
 import { AppError } from "../lib/appError";
 import { canReadHR, canWriteHR } from "../lib/permissions";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 
 const router = Router();
+
+const proofUploadDir = path.join(process.cwd(), "uploads", "academy-fee-proofs");
+if (!fs.existsSync(proofUploadDir)) fs.mkdirSync(proofUploadDir, { recursive: true });
+
+const proofStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, proofUploadDir),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
+  },
+});
+
+const uploadProof = multer({
+  storage: proofStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith("image/") || file.mimetype === "application/pdf")
+      cb(null, true);
+    else cb(new Error("이미지 또는 PDF만 업로드할 수 있습니다."));
+  },
+});
+
 const prisma = getPrisma();
 const service = new AcademyFeeService(new AcademyFeeRepository(prisma), new NotificationRepository(prisma));
 const controller = new AcademyFeeController(service);
@@ -48,5 +73,20 @@ router.patch("/:id/approve", auth, (req, res, next) => {
   if (!canWriteHR(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
   next();
 }, controller.approvePayment);
+
+// 학부모: 계좌이체 증빙 파일 업로드 → SUBMITTED
+router.post("/:id/upload-proof", auth, uploadProof.single("file"), async (req, res, next) => {
+  try {
+    const { role } = req.user!;
+    if (role !== "GUARDIAN") return next(new AppError(403, "FORBIDDEN"));
+    if (!req.file) return next(new AppError(400, "FILE_REQUIRED"));
+    const feeId = Number(req.params.id);
+    const fee = await service.getById(feeId);
+    if (fee.guardianId !== req.user!.id) return next(new AppError(403, "FORBIDDEN"));
+    const url = `/uploads/academy-fee-proofs/${req.file.filename}`;
+    const updated = await service.submitPaymentProof(feeId, { paymentProofUrl: url });
+    res.json(updated);
+  } catch (e) { next(e); }
+});
 
 export default router;
