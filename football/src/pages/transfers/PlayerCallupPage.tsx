@@ -35,9 +35,10 @@ interface CreateDialogProps {
   open: boolean
   onOpenChange: (v: boolean) => void
   onSaved: () => void
+  userTeamId?: number
 }
 
-function CreateDialog({ open, onOpenChange, onSaved }: CreateDialogProps) {
+function CreateDialog({ open, onOpenChange, onSaved, userTeamId }: CreateDialogProps) {
   const { t } = useTranslation('contract')
   const [youthPlayers, setYouthPlayers] = useState<Player[]>([])
   const [allTeams, setAllTeams] = useState<Team[]>([])
@@ -49,6 +50,14 @@ function CreateDialog({ open, onOpenChange, onSaved }: CreateDialogProps) {
     playerApi.list({ level: 'YOUTH' }).then(setYouthPlayers).catch(() => null)
     teamApi.list().then(setAllTeams).catch(() => null)
   }, [])
+
+  // 팀 목록 로드 후 세션 유저 팀을 기본값으로 설정
+  useEffect(() => {
+    if (!allTeams.length || !userTeamId) return
+    const userTeam = allTeams.find((t) => t.id === userTeamId)
+    setFromTeamClubId(userTeam?.clubId ?? null)
+    setForm((f) => ({ ...f, toTeamId: f.toTeamId ?? userTeamId }))
+  }, [allTeams, userTeamId])
 
   const sameClubTeams = useMemo(
     () => allTeams.filter((t) => t.type !== 'YOUTH' && t.isActive && t.clubId === fromTeamClubId),
@@ -371,6 +380,7 @@ export function PlayerCallupPage() {
         open={createOpen}
         onOpenChange={setCreateOpen}
         onSaved={() => { setCreateOpen(false); fetchCallups() }}
+        userTeamId={user?.teamId ?? undefined}
       />
 
       <Dialog open={rejectId !== null} onOpenChange={(v) => !v && setRejectId(null)}>
