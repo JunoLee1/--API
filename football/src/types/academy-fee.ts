@@ -35,7 +35,8 @@ export interface FeeReceipt {
   month: number
   amount: number
   paidAt: string
-  paymentMethod: PaymentMethod
+  paymentMethod: PaymentMethod | null
+  pgTransactionId: string | null
   receiptIssuedAt: string
   playerName: string
   guardianUsername: string
