@@ -49,6 +49,17 @@ export class AcademyFeeController {
     } catch (e) { next(e); }
   };
 
+  tossWebhook = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await this.service.tossWebhook(req.body);
+      res.json(result);
+    } catch (e) {
+      // webhook은 항상 200 반환해야 Toss가 재시도 안 함
+      console.error("Toss webhook error:", e);
+      res.json({ ok: false });
+    }
+  };
+
   getStats = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const now = new Date();

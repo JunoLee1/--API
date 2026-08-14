@@ -1,5 +1,6 @@
 import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
+import express from "express";
 import { AcademyFeeController } from "./academy-fee.controller";
 import { AcademyFeeService } from "./academy-fee.service";
 import { AcademyFeeRepository } from "./academy-fee.repo";
@@ -39,6 +40,9 @@ const uploadProof = multer({
 const prisma = getPrisma();
 const service = new AcademyFeeService(new AcademyFeeRepository(prisma), new NotificationRepository(prisma));
 const controller = new AcademyFeeController(service);
+
+// Toss webhook — auth 없음, Toss 서버가 직접 호출
+router.post("/toss-webhook", express.json(), controller.tossWebhook);
 
 router.get("/stats", auth, (req, res, next) => {
   const { role, frontOfficeRole } = req.user!;

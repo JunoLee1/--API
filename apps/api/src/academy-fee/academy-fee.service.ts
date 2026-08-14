@@ -230,6 +230,28 @@ export class AcademyFeeService {
     return paid;
   }
 
+  async tossWebhook(body: { status: string; paymentKey: string; orderId: string; totalAmount: number }) {
+    // Toss는 DONE 상태일 때만 처리
+    if (body.status !== "DONE") return { ok: true };
+
+    // orderId 형식: fee-{id}-{timestamp}
+    const parts = body.orderId.split("-");
+    const feeId = Number(parts[1]);
+    if (isNaN(feeId)) return { ok: true };
+
+    const fee = await this.repo.findById(feeId);
+    if (!fee) return { ok: true };
+    if ((fee.status as string) === "PAID") return { ok: true }; // 멱등성
+
+    await this.confirmTossPayment(feeId, {
+      paymentKey: body.paymentKey,
+      orderId: body.orderId,
+      amount: body.totalAmount,
+    });
+
+    return { ok: true };
+  }
+
   async getFinanceStats(year: number, month: number) {
     const rows = await this.repo.getFinanceStats(year, month);
     const total = rows.reduce((s, r) => s + (r._count.id ?? 0), 0);
