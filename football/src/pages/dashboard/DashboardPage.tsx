@@ -110,7 +110,7 @@ export function DashboardPage() {
 
   useEffect(() => {
     if (!user) return
-    dashboardApi.stats()
+    dashboardApi.stats(teamCtx)
       .then(setStats)
       .finally(() => setStatsLoading(false))
     notificationApi.my()

@@ -38,15 +38,16 @@ const ATTACKING_POSITIONS: Position[] = [
 export class DashboardRepository {
   constructor(private prisma: PrismaClient) {}
 
-  async getAdminStats() {
+  async getAdminStats(teamType?: "FIRST_TEAM" | "YOUTH") {
+    const teamFilter = teamType ? { team: { type: teamType } } : {};
     const [activePlayerCount, expiringContractCount, injuredPlayerCount, lowStockEquipmentCount] =
       await Promise.all([
-        this.prisma.player.count({ where: { status: "ACTIVE" } }),
+        this.prisma.player.count({ where: { status: "ACTIVE", ...teamFilter } }),
         this.prisma.contract.count({
           where: { status: "ACTIVE", endDate: { lte: IN_30_DAYS(), gte: NOW() } },
         }),
         this.prisma.injury.count({
-          where: { status: { notIn: ["RETURNED"] } },
+          where: { status: { notIn: ["RETURNED"] }, ...(teamType && { player: { team: { type: teamType } } }) },
         }),
         this.prisma.$queryRaw<{ count: bigint }[]>`
           SELECT COUNT(*) as count FROM "EquipmentItem"
