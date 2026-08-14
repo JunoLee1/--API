@@ -2481,6 +2481,7 @@ model JobApplication {
   status        JobApplicationStatus @default(APPLIED)
   rejectedAt      DateTime?
   rejectionReason String?
+  previousStatus  JobApplicationStatus?
   offeredAt       DateTime?
   offeredById   Int?
   createdAt     DateTime             @default(now())

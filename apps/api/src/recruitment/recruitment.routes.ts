@@ -37,6 +37,7 @@ router.post("/job-postings/:postingId/applications", controller.apply);
 router.get("/applications/:id", auth, controller.getApplication);
 router.patch("/applications/:id", auth, controller.updateApplication);
 router.post("/applications/:id/reject", auth, controller.rejectApplication);
+router.post("/applications/:id/reinstate", auth, controller.reinstateApplication);
 router.post("/applications/:id/offer", auth, controller.offerApplication);
 
 // Interviews

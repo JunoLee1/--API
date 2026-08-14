@@ -682,6 +682,10 @@
     "planReport": "HR 계획보고서",
     "selectPlanReport": "계획보고서 선택 (필수)",
     "planReportRequired": "계획보고서를 선택해주세요.",
-    "noApprovedHrReports": "승인된 HR 계획보고서가 없습니다."
+    "noApprovedHrReports": "승인된 HR 계획보고서가 없습니다.",
+    "reinstateSuccess": "지원자 상태가 복원됐습니다.",
+    "reinstateFailed": "복원에 실패했습니다.",
+    "reinstateBtn": "거절 취소",
+    "reinstating": "복원 중..."
   }
 }

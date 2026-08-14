@@ -655,7 +655,11 @@
     "planReport": "HR Plan Report",
     "selectPlanReport": "Select plan report (required)",
     "planReportRequired": "Please select an approved HR plan report.",
-    "noApprovedHrReports": "No approved HR plan reports available."
+    "noApprovedHrReports": "No approved HR plan reports available.",
+    "reinstateSuccess": "Applicant status restored.",
+    "reinstateFailed": "Failed to restore applicant status.",
+    "reinstateBtn": "Undo Rejection",
+    "reinstating": "Restoring..."
   },
   "financialReport": {
     "title": "Financial Report",

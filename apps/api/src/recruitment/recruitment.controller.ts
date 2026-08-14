@@ -148,6 +148,16 @@ export class RecruitmentController {
     }
   };
 
+  reinstateApplication = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole, id: actorId } = requireUser(req);
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      res.json(await this.service.reinstateApplication(Number(req.params["id"]), actorId));
+    } catch (err) {
+      next(err);
+    }
+  };
+
   offerApplication = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, frontOfficeRole, id: userId } = requireUser(req);

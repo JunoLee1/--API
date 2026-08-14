@@ -101,6 +101,10 @@ export class RecruitmentRepository {
   }
 
   async rejectApplication(id: number, actorId: number) {
+    const current = await this.prisma.jobApplication.findUnique({
+      where: { id },
+      select: { status: true },
+    });
     // CL6: set data retention deadline to 1 year from now
     const retentionDeadline = new Date();
     retentionDeadline.setFullYear(retentionDeadline.getFullYear() + 1);
@@ -109,6 +113,7 @@ export class RecruitmentRepository {
       where: { id },
       data: {
         status: "REJECTED",
+        previousStatus: current!.status,
         rejectedAt: new Date(),
         dataRetentionDeadline: retentionDeadline,
       } as any,
@@ -119,6 +124,31 @@ export class RecruitmentRepository {
       action: "JOB_APPLICATION_STATUS_CHANGED",
       targetId: id,
       detail: { newStatus: "REJECTED", dataRetentionDeadline: retentionDeadline.toISOString() },
+    }).catch(console.error);
+    return result;
+  }
+
+  async reinstateApplication(id: number, actorId: number) {
+    const app = await this.prisma.jobApplication.findUnique({
+      where: { id },
+      select: { previousStatus: true },
+    });
+    const result = await this.prisma.jobApplication.update({
+      where: { id },
+      data: {
+        status: app!.previousStatus as any,
+        previousStatus: null,
+        rejectedAt: null,
+        rejectionReason: null,
+        dataRetentionDeadline: null,
+      },
+      include: APPLICATION_INCLUDE,
+    });
+    void writeAuditLog({
+      actorId,
+      action: "JOB_APPLICATION_STATUS_CHANGED",
+      targetId: id,
+      detail: { newStatus: app!.previousStatus, reinstated: true },
     }).catch(console.error);
     return result;
   }
