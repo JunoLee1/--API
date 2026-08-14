@@ -33,7 +33,8 @@ export interface CoachDashboard {
 }
 
 export const dashboardApi = {
-  stats: () => api.get<DashboardStats>('/dashboard/stats'),
+  stats: (teamType?: 'FIRST_TEAM' | 'YOUTH') =>
+    api.get<DashboardStats>(`/dashboard/stats${teamType ? `?teamType=${teamType}` : ''}`),
   youthDevelopment: () =>
     api.get<YouthDevelopmentStats>('/dashboard/youth-development'),
   academyFinance: () =>

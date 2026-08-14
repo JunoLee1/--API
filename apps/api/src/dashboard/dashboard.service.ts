@@ -20,11 +20,11 @@ export class DashboardService {
     return this.repo.getAcademyFinanceStats(year, month);
   }
 
-  getStats(user: UserCtx) {
+  getStats(user: UserCtx, teamType?: "FIRST_TEAM" | "YOUTH") {
     switch (user.role) {
       case "ADMIN":
       case "SUPER_ADMIN":
-        return this.repo.getAdminStats();
+        return this.repo.getAdminStats(teamType);
       case "GM":
         return this.repo.getGmStats();
       case "FRONT_OFFICE":

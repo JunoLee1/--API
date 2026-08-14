@@ -33,19 +33,24 @@ export function getDashboardConfig(user: UserDto, teamCtx: 'FIRST_TEAM' | 'YOUTH
 
   if (role === 'ADMIN') {
     return {
-      statCards: [
-        { label: 'dashboard.stat.activePlayerCount', getValue: (s) => (s as AdminStats).activePlayerCount, unit: 'dashboard.stat.unit.person' },
-        { label: 'dashboard.stat.expiringContractCount', getValue: (s) => (s as AdminStats).expiringContractCount, unit: 'dashboard.stat.unit.case', highlight: true },
-        { label: 'dashboard.stat.injuredPlayerCount', getValue: (s) => (s as AdminStats).injuredPlayerCount, unit: 'dashboard.stat.unit.person', highlight: true },
-        { label: 'dashboard.stat.lowStockEquipmentCount', getValue: (s) => (s as AdminStats).lowStockEquipmentCount, unit: 'dashboard.stat.unit.item', highlight: true },
-      ],
+      statCards: isYouth
+        ? [
+            { label: 'dashboard.stat.activePlayerCount', getValue: (s) => (s as AdminStats).activePlayerCount, unit: 'dashboard.stat.unit.person' },
+            { label: 'dashboard.stat.injuredPlayerCount', getValue: (s) => (s as AdminStats).injuredPlayerCount, unit: 'dashboard.stat.unit.person', highlight: true },
+          ]
+        : [
+            { label: 'dashboard.stat.activePlayerCount', getValue: (s) => (s as AdminStats).activePlayerCount, unit: 'dashboard.stat.unit.person' },
+            { label: 'dashboard.stat.expiringContractCount', getValue: (s) => (s as AdminStats).expiringContractCount, unit: 'dashboard.stat.unit.case', highlight: true },
+            { label: 'dashboard.stat.injuredPlayerCount', getValue: (s) => (s as AdminStats).injuredPlayerCount, unit: 'dashboard.stat.unit.person', highlight: true },
+            { label: 'dashboard.stat.lowStockEquipmentCount', getValue: (s) => (s as AdminStats).lowStockEquipmentCount, unit: 'dashboard.stat.unit.item', highlight: true },
+          ],
       showActionQueue: true,
       showSchedule: !isYouth,
       showRanking: false,
       showMedicalSection: false,
-      showYouthDevelopment: true,
+      showYouthDevelopment: !isYouth,
       showAcademyFinance: true,
-      showOpsKpi: 'all',
+      showOpsKpi: isYouth ? undefined : 'all',
     }
   }
 

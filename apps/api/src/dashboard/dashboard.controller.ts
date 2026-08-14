@@ -8,7 +8,9 @@ export class DashboardController {
   getStats = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);
-      res.status(200).json(await this.service.getStats(user));
+      const teamType = req.query.teamType as "FIRST_TEAM" | "YOUTH" | undefined;
+      const validTeamType = teamType === "FIRST_TEAM" || teamType === "YOUTH" ? teamType : undefined;
+      res.status(200).json(await this.service.getStats(user, validTeamType));
     } catch (err) {
       next(err);
     }
