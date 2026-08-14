@@ -76,13 +76,18 @@ export class LedgerService {
   async lockPeriod(year: number, month: number, actorId: number) {
     const already = await this.repo.isPeriodLocked(year, month);
     if (already) throw new AppError(409, "PERIOD_ALREADY_LOCKED");
-    return this.repo.lockPeriod(year, month, actorId);
+    try {
+      return await this.repo.lockPeriod(year, month, actorId);
+    } catch (e: any) {
+      if (e?.code === "P2002") throw new AppError(409, "PERIOD_ALREADY_LOCKED");
+      throw e;
+    }
   }
 
   // Fire-and-forget helper for other modules
   async createAutoEntry(dto: CreateLedgerEntryDto, createdById: number) {
     this.validateExchangeRate(dto.exchangeRate);
-    // relatedModule/relatedId validation intentionally skipped — callers are internal trusted modules
+    // relatedModule/relatedId validation and period lock intentionally bypassed — callers are internal trusted modules (contract payments, etc.)
     const rate = dto.exchangeRate ?? 1;
     const amountKrw = dto.amountKrw ?? dto.amount * rate;
     return this.repo.create({ ...dto, exchangeRate: rate, amountKrw, createdById });

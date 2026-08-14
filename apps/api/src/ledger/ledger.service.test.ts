@@ -224,3 +224,34 @@ describe("LedgerService period lock", () => {
     expect(lockPeriod).toHaveBeenCalledWith(2025, 3, 1);
   });
 });
+
+describe("LedgerService period lock - createRefund", () => {
+  const lockedOriginal = {
+    id: 1, type: "EXPENSE", category: "SALARY",
+    amount: 100, currency: "KRW", exchangeRate: 1, amountKrw: 100,
+    relatedModule: null, relatedId: null, reversedById: null,
+  };
+
+  it("throws 409 PERIOD_LOCKED in createRefund when period is locked", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(lockedOriginal),
+      isPeriodLocked: jest.fn().mockResolvedValue(true),
+    });
+    const service = new LedgerService(repo);
+    await expect(service.createRefund(1, 42)).rejects.toThrow(new AppError(409, "PERIOD_LOCKED"));
+  });
+
+  it("allows refund when period is not locked", async () => {
+    const create = jest.fn().mockImplementation(async (data) => ({ id: 2, ...data }));
+    const markReversed = jest.fn().mockResolvedValue({});
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(lockedOriginal),
+      isPeriodLocked: jest.fn().mockResolvedValue(false),
+      create,
+      markReversed,
+    });
+    const service = new LedgerService(repo);
+    await service.createRefund(1, 42);
+    expect(create).toHaveBeenCalled();
+  });
+});
