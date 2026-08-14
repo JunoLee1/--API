@@ -3,7 +3,7 @@ import { getPrisma } from "../lib/prisma";
 import { formatLedgerDescription } from "../lib/ledger-formatter";
 import type { AcademyFeeRepository } from "./academy-fee.repo";
 import type { NotificationRepository } from "../notification/notification.repo";
-import type { FeeListQuery, SubmitPaymentProofDto } from "./dto/academy-fee.dto";
+import type { FeeListQuery, SubmitPaymentProofDto, TossConfirmDto, AdminSubmitDto } from "./dto/academy-fee.dto";
 
 function daysSince(date: Date): number {
   return Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
@@ -138,6 +138,82 @@ export class AcademyFeeService {
       () => ({
         title: "아카데미 회비 수납 확인",
         body: `${fee.player.playerName} 선수의 회비 납부가 확인됐습니다.`,
+      }),
+      id,
+    ).catch(console.error);
+
+    return paid;
+  }
+
+  async confirmTossPayment(id: number, dto: TossConfirmDto) {
+    const fee = await this.repo.findById(id);
+    if (!fee) throw new AppError(404, "FEE_NOT_FOUND");
+    if ((fee.status as string) === "PAID") return fee; // 멱등성
+
+    // Toss API 결제 승인
+    const authHeader = Buffer.from(`${process.env.TOSS_SECRET_KEY}:`).toString("base64");
+    const tossRes = await fetch("https://api.tosspayments.com/v1/payments/confirm", {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${authHeader}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        paymentKey: dto.paymentKey,
+        orderId: dto.orderId,
+        amount: dto.amount,
+      }),
+    });
+
+    if (!tossRes.ok) {
+      const err = await tossRes.json().catch(() => ({}));
+      throw new AppError(400, (err as any).code ?? "TOSS_CONFIRM_FAILED");
+    }
+
+    // 기간 마감 체크
+    const prisma = getPrisma();
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    const periodStart = new Date(year, month - 1, 1);
+    const periodEnd = new Date(year, month, 1);
+    const lockedEntry = await prisma.ledgerEntry.findFirst({
+      where: { periodLocked: true, createdAt: { gte: periodStart, lt: periodEnd } },
+      select: { id: true },
+    });
+    if (lockedEntry) throw new AppError(400, "PERIOD_LOCKED");
+
+    // PAID 전환
+    const paid = await this.repo.confirmTossPayment(id, dto.paymentKey);
+
+    // Ledger 생성
+    const amount = Number((fee as any).amount ?? 0);
+    await prisma.ledgerEntry.create({
+      data: {
+        type: "INCOME",
+        category: "ACADEMY_FEE",
+        amount,
+        currency: "KRW",
+        exchangeRate: 1,
+        amountKrw: amount,
+        isRefund: false,
+        description: formatLedgerDescription("academy_fee", "payment_approved", {
+          player: (fee as any).player?.playerName ?? String(fee.playerId),
+          period: `${(fee as any).year ?? year}년 ${(fee as any).month ?? month}월`,
+        }),
+        relatedModule: "AcademyFee",
+        relatedId: id,
+        createdById: fee.guardianId,
+      } as any,
+    });
+
+    // guardian 알림
+    void this.notifRepo.createForGuardian(
+      fee.guardianId,
+      "FEE_INVOICE_ISSUED",
+      () => ({
+        title: "아카데미 회비 납부 완료",
+        body: `${(fee as any).player?.playerName} 선수의 ${(fee as any).month}월 회비 결제가 완료됐습니다.`,
       }),
       id,
     ).catch(console.error);

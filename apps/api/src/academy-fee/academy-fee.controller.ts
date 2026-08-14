@@ -39,6 +39,14 @@ export class AcademyFeeController {
     catch (e) { next(e); }
   };
 
+  tossConfirm = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const id = Number(req.params.id);
+      const { paymentKey, orderId, amount } = req.body as import("./dto/academy-fee.dto").TossConfirmDto;
+      res.json(await this.service.confirmTossPayment(id, { paymentKey, orderId, amount }));
+    } catch (e) { next(e); }
+  };
+
   getStats = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const now = new Date();

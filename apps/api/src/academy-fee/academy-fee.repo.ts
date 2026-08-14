@@ -80,6 +80,21 @@ export class AcademyFeeRepository {
     })
   }
 
+  confirmTossPayment(id: number, pgTransactionId: string) {
+    const now = new Date()
+    return this.prisma.academyFee.update({
+      where: { id },
+      data: {
+        status: 'PAID',
+        paidAt: now,
+        paymentMethod: 'PG',
+        pgTransactionId,
+        receiptIssuedAt: now,
+      } as any,
+      include: INCLUDE,
+    })
+  }
+
   lockPlayer(playerId: string) {
     return this.prisma.player.update({
       where: { id: playerId },

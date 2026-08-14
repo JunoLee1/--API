@@ -76,6 +76,18 @@ router.patch("/:id/approve", auth, (req, res, next) => {
   next();
 }, controller.approvePayment);
 
+// 학부모: Toss 결제 확인
+router.post("/:id/toss-confirm", auth, async (req, res, next) => {
+  try {
+    const { role } = req.user!;
+    if (role !== "GUARDIAN") return next(new AppError(403, "FORBIDDEN"));
+    const feeId = Number(req.params.id);
+    const fee = await service.getById(feeId);
+    if (fee.guardianId !== req.user!.id) return next(new AppError(403, "FORBIDDEN"));
+    next();
+  } catch (e) { next(e); }
+}, controller.tossConfirm);
+
 // 학부모: 계좌이체 증빙 파일 업로드 → SUBMITTED
 router.post("/:id/upload-proof", auth, uploadProof.single("file"), async (req, res, next) => {
   const cleanup = () => { if (req.file) fs.unlink(req.file.path, () => {}); };
