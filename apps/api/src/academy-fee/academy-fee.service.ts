@@ -243,10 +243,14 @@ export class AcademyFeeService {
     if (!fee) return { ok: true };
     if ((fee.status as string) === "PAID") return { ok: true }; // 멱등성
 
+    const feeAmount = Number((fee as any).amount);
+    if (feeAmount !== body.totalAmount) {
+      console.warn(`Toss webhook amount mismatch: feeId=${feeId} db=${feeAmount} toss=${body.totalAmount}`);
+    }
     await this.confirmTossPayment(feeId, {
       paymentKey: body.paymentKey,
       orderId: body.orderId,
-      amount: body.totalAmount,
+      amount: feeAmount, // use DB amount to pass the AMOUNT_MISMATCH guard
     });
 
     return { ok: true };
