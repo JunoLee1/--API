@@ -110,31 +110,45 @@ export function DashboardPage() {
 
   useEffect(() => {
     if (!user) return
+    let cancelled = false
+
+    setStats(null)
+    setStatsLoading(true)
+    setMatches([])
+    setMatchesLoading(true)
+    setMyRanking(null)
+    setRankingLoading(true)
+    setOpsKpi(null)
+    setAcademyFinance(null)
+    setYouthDev(null)
+    setRecentExpenses([])
+    setSeasonTicketRevenue(null)
+
     dashboardApi.stats(teamCtx)
-      .then(setStats)
-      .finally(() => setStatsLoading(false))
+      .then((data) => { if (!cancelled) setStats(data) })
+      .finally(() => { if (!cancelled) setStatsLoading(false) })
     notificationApi.my()
-      .then(setNotifications)
-      .finally(() => setNotiLoading(false))
+      .then((data) => { if (!cancelled) setNotifications(data) })
+      .finally(() => { if (!cancelled) setNotiLoading(false) })
     if (teamCtx !== 'YOUTH') {
       matchApi.list()
-        .then(setMatches)
+        .then((data) => { if (!cancelled) setMatches(data) })
         .catch(() => null)
-        .finally(() => setMatchesLoading(false))
+        .finally(() => { if (!cancelled) setMatchesLoading(false) })
     } else {
       setMatchesLoading(false)
     }
     const config = getDashboardConfig(user, teamCtx)
     seasonApi.active()
       .then((season) => {
-        if (!season) return
+        if (!season || cancelled) return
         setCurrentSeasonId(season.id)
         const tasks: Promise<unknown>[] = []
         if (teamCtx !== 'YOUTH') {
           tasks.push(
             analysisApi.getRankings({ seasonId: season.id, competitionType: 'LEAGUE' })
-              .then((rows) => setMyRanking(rows.find((r) => r.teamName === OUR_TEAM_NAME) ?? null))
-              .finally(() => setRankingLoading(false))
+              .then((rows) => { if (!cancelled) setMyRanking(rows.find((r) => r.teamName === OUR_TEAM_NAME) ?? null) })
+              .finally(() => { if (!cancelled) setRankingLoading(false) })
           )
         } else {
           setRankingLoading(false)
@@ -143,9 +157,9 @@ export function DashboardPage() {
           setExpensesLoading(true)
           tasks.push(
             operatingExpenseApi.list(season.id)
-              .then(setRecentExpenses)
+              .then((data) => { if (!cancelled) setRecentExpenses(data) })
               .catch(() => null)
-              .finally(() => setExpensesLoading(false))
+              .finally(() => { if (!cancelled) setExpensesLoading(false) })
           )
         }
         if (config.showOpsKpi) {
@@ -156,27 +170,33 @@ export function DashboardPage() {
           setOpsKpiMonth(kpiMonth)
           tasks.push(
             opsReportApi.getOpsKpi(season.id, kpiYear, kpiMonth)
-              .then(setOpsKpi)
+              .then((data) => { if (!cancelled) setOpsKpi(data) })
               .catch(() => null)
           )
         }
         if (config.showTicketRevenue) {
           tasks.push(
             salesApi.seasonTicketTotal(season.id)
-              .then((r) => setSeasonTicketRevenue(r.total))
+              .then((r) => { if (!cancelled) setSeasonTicketRevenue(r.total) })
               .catch(() => null)
           )
         }
         return Promise.all(tasks)
       })
       .catch(() => null)
-      .finally(() => setRankingLoading(false))
+      .finally(() => { if (!cancelled) setRankingLoading(false) })
     if (showYouthDev) {
-      dashboardApi.youthDevelopment().then(setYouthDev).catch(() => null)
+      dashboardApi.youthDevelopment()
+        .then((data) => { if (!cancelled) setYouthDev(data) })
+        .catch(() => null)
     }
     if (config.showAcademyFinance) {
-      dashboardApi.academyFinance().then(setAcademyFinance).catch(() => null)
+      dashboardApi.academyFinance()
+        .then((data) => { if (!cancelled) setAcademyFinance(data) })
+        .catch(() => null)
     }
+
+    return () => { cancelled = true }
   }, [user, teamCtx])
 
   if (userLoading) {
