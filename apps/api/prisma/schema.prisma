@@ -290,6 +290,7 @@ enum NotificationType {
   VIDEO_ASSIGNED
   VIDEO_ASSIGNMENT_OVERDUE
   WORK_PERMIT_EXPIRY_SOON
+  WORK_PERMIT_EXPIRY_SOON_60D
   CALLUP_REQUESTED
   CALLUP_APPROVED
   CALLUP_REJECTED
@@ -914,6 +915,7 @@ model Player {
   improvementAnalyses    TacticalAnalysis[]      @relation("ImprovementPlayer")
   videoAssignments       VideoAssignment[]
   callups                PlayerCallup[]
+  workPermitAlerts       WorkPermitAlertLog[]
   playStyle              String?
   allergies              String[]
   foodPreferences        String?
@@ -2838,6 +2840,17 @@ model LedgerEntry {
   createdBy  User         @relation("LedgerEntryCreator", fields: [createdById], references: [id])
   reversedBy LedgerEntry? @relation("LedgerReversal", fields: [reversedById], references: [id])
   reversal   LedgerEntry? @relation("LedgerReversal")
+}
+
+model WorkPermitAlertLog {
+  id        Int      @id @default(autoincrement())
+  playerId  String
+  window    String   // "30D" | "60D"
+  sentAt    DateTime @default(now())
+
+  player Player @relation(fields: [playerId], references: [id])
+
+  @@unique([playerId, window])
 }
 
 model SalesRecord {
