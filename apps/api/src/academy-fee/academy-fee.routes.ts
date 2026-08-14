@@ -1,5 +1,5 @@
 import { auth } from "../lib/authMiddleware";
-import { Router } from "express";
+import { Router, type Request, type Response, type NextFunction } from "express";
 import express from "express";
 import { AcademyFeeController } from "./academy-fee.controller";
 import { AcademyFeeService } from "./academy-fee.service";
@@ -41,6 +41,22 @@ const prisma = getPrisma();
 const service = new AcademyFeeService(new AcademyFeeRepository(prisma), new NotificationRepository(prisma));
 const controller = new AcademyFeeController(service);
 
+const requireFinanceOrGuardian = (req: Request, res: Response, next: NextFunction) => {
+  const { role, frontOfficeRole } = req.user!;
+  const isFinance = role === "ADMIN" || role === "SUPER_ADMIN" || role === "GM" ||
+    (role === "FRONT_OFFICE" && (frontOfficeRole === "FINANCE_MANAGER" || frontOfficeRole === "TD"));
+  if (role !== "GUARDIAN" && !isFinance) return next(new AppError(403, "FORBIDDEN"));
+  next();
+};
+
+const requireFinance = (req: Request, res: Response, next: NextFunction) => {
+  const { role, frontOfficeRole } = req.user!;
+  const isFinance = role === "ADMIN" || role === "SUPER_ADMIN" || role === "GM" ||
+    (role === "FRONT_OFFICE" && (frontOfficeRole === "FINANCE_MANAGER" || frontOfficeRole === "TD"));
+  if (!isFinance) return next(new AppError(403, "FORBIDDEN"));
+  next();
+};
+
 // Toss webhook — auth 없음, Toss 서버가 직접 호출
 router.post("/toss-webhook", express.json(), controller.tossWebhook);
 
@@ -81,22 +97,10 @@ router.patch("/:id/approve", auth, (req, res, next) => {
 }, controller.approvePayment);
 
 // Receipt — Guardian (own only) or finance team/admin
-router.get("/:id/receipt", auth, async (req, res, next) => {
-  const { role, frontOfficeRole } = req.user!;
-  const isFinance = role === "ADMIN" || role === "SUPER_ADMIN" || role === "GM" ||
-    (role === "FRONT_OFFICE" && (frontOfficeRole === "FINANCE_MANAGER" || frontOfficeRole === "TD"));
-  if (role !== "GUARDIAN" && !isFinance) return next(new AppError(403, "FORBIDDEN"));
-  next();
-}, controller.getReceipt);
+router.get("/:id/receipt", auth, requireFinanceOrGuardian, controller.getReceipt);
 
 // Admin manual submit (finance team marks external-channel proof as SUBMITTED)
-router.patch("/:id/admin-submit", auth, (req, res, next) => {
-  const { role, frontOfficeRole } = req.user!;
-  const isFinance = role === "ADMIN" || role === "SUPER_ADMIN" || role === "GM" ||
-    (role === "FRONT_OFFICE" && (frontOfficeRole === "FINANCE_MANAGER" || frontOfficeRole === "TD"));
-  if (!isFinance) return next(new AppError(403, "FORBIDDEN"));
-  next();
-}, controller.adminSubmit);
+router.patch("/:id/admin-submit", auth, requireFinance, controller.adminSubmit);
 
 // 학부모: Toss 결제 확인
 router.post("/:id/toss-confirm", auth, async (req, res, next) => {

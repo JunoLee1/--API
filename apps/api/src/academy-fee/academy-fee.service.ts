@@ -260,26 +260,24 @@ export class AcademyFeeService {
     const fee = await this.repo.findById(id);
     if (!fee) throw new AppError(404, "FEE_NOT_FOUND");
     if ((fee.status as string) !== "PAID") throw new AppError(404, "RECEIPT_NOT_AVAILABLE");
+    if (!fee.paidAt || !(fee as any).receiptIssuedAt) throw new AppError(404, "RECEIPT_NOT_AVAILABLE");
 
     // GUARDIAN may only access their own child's fee
     if (requesterRole === "GUARDIAN" && fee.guardianId !== requesterId) {
       throw new AppError(403, "FORBIDDEN");
     }
 
-    const data = await this.repo.getReceipt(id);
-    if (!data || !data.paidAt || !data.receiptIssuedAt) throw new AppError(404, "RECEIPT_NOT_AVAILABLE");
-
     return {
-      id: data.id,
-      year: data.year,
-      month: data.month,
-      amount: data.amount,
-      paidAt: data.paidAt,
-      paymentMethod: data.paymentMethod,
-      pgTransactionId: (data as any).pgTransactionId ?? null,
-      receiptIssuedAt: data.receiptIssuedAt,
-      playerName: data.player.playerName,
-      guardianUsername: data.guardian.username,
+      id: fee.id,
+      year: (fee as any).year,
+      month: (fee as any).month,
+      amount: Number(fee.amount),
+      paidAt: fee.paidAt,
+      paymentMethod: (fee as any).paymentMethod ?? null,
+      pgTransactionId: (fee as any).pgTransactionId ?? null,
+      receiptIssuedAt: (fee as any).receiptIssuedAt,
+      playerName: (fee as any).player?.playerName ?? "",
+      guardianUsername: (fee as any).guardian?.username ?? "",
     };
   }
 
