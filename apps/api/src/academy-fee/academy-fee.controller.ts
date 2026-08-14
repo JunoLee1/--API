@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
+import { AppError } from "../lib/appError";
 import type { AcademyFeeService } from "./academy-fee.service";
 
 export class AcademyFeeController {
@@ -37,6 +38,39 @@ export class AcademyFeeController {
   approvePayment = async (req: Request, res: Response, next: NextFunction) => {
     try { res.json(await this.service.approvePayment(Number(req.params.id), req.user!.id)); }
     catch (e) { next(e); }
+  };
+
+  tossConfirm = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const id = Number(req.params.id);
+      const { paymentKey, orderId, amount } = req.body as import("./dto/academy-fee.dto").TossConfirmDto;
+      if (!paymentKey || !orderId || !amount) return next(new AppError(400, "INVALID_PAYMENT_DATA"));
+      res.json(await this.service.confirmTossPayment(id, { paymentKey, orderId, amount }));
+    } catch (e) { next(e); }
+  };
+
+  tossWebhook = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await this.service.tossWebhook(req.body);
+      res.json(result);
+    } catch (e) {
+      // webhook은 항상 200 반환해야 Toss가 재시도 안 함
+      console.error("Toss webhook error:", e);
+      res.json({ ok: false });
+    }
+  };
+
+  getReceipt = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id: requesterId, role, frontOfficeRole } = req.user!;
+      res.json(await this.service.getReceipt(Number(req.params.id), requesterId, role, frontOfficeRole));
+    } catch (e) { next(e); }
+  };
+
+  adminSubmit = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.json(await this.service.adminSubmitProof(Number(req.params.id), req.body));
+    } catch (e) { next(e); }
   };
 
   getStats = async (req: Request, res: Response, next: NextFunction) => {

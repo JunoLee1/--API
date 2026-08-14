@@ -17,3 +17,13 @@ export interface FeeListQuery {
   year?: number
   month?: number
 }
+
+export interface TossConfirmDto {
+  paymentKey: string
+  orderId: string
+  amount: number
+}
+
+export interface AdminSubmitDto {
+  paymentProofUrl?: string
+}

@@ -60,6 +60,7 @@ import { GrowthReportsListPage } from '@/pages/players/GrowthReportsListPage'
 import IncidentReportPage from '@/pages/youth/IncidentReportPage'
 import AcademyFeePage from '@/pages/youth/AcademyFeePage'
 import GuardianPortalPage from '@/pages/youth/GuardianPortalPage'
+import TossCallbackPage from '@/pages/youth/TossCallbackPage'
 import { StaffRecordPage } from '@/pages/admin/StaffRecordPage'
 import { DepartmentPage } from '@/pages/admin/DepartmentPage'
 import { FinancialReportPage } from '@/pages/admin/FinancialReportPage'
@@ -107,6 +108,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/invite/:token" element={<InviteAcceptPage />} />
+          <Route path="/toss-callback" element={<TossCallbackPage />} />
 
           <Route
             path="/team-select"

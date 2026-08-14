@@ -3,7 +3,7 @@ import { formatLedgerDescription } from "../lib/ledger-formatter";
 import type { LedgerRepository } from "./ledger.repo";
 import type { CreateLedgerEntryDto, LedgerListQuery } from "./dto/ledger.dto";
 
-export const ALLOWED_MODULES = ["SalesRecord", "facility", "sponsorship", "equipment", "payroll"] as const;
+export const ALLOWED_MODULES = ["SalesRecord", "facility", "sponsorship", "equipment", "payroll", "AcademyFee"] as const;
 const MAX_EXCHANGE_RATE = 10_000;
 
 export class LedgerService {

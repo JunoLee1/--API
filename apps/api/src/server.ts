@@ -6,6 +6,7 @@ import cors from "cors";
 import passport from "./lib/strategy";
 import apiRouter from "./apiRouter";
 import { AppError } from "./lib/appError";
+import { MulterError } from "multer";
 import { Request, Response, NextFunction } from "express";
 import { auth } from "./lib/authMiddleware";
 import { initIO } from "./lib/io";
@@ -57,6 +58,11 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   }
   if (typeof err === "object" && err !== null && "type" in err && (err as { type: string }).type === "entity.parse.failed") {
     res.status(400).json({ code: "INVALID_REQUEST" });
+    return;
+  }
+  if (err instanceof MulterError) {
+    const code = err.code === "LIMIT_FILE_SIZE" ? "FILE_TOO_LARGE" : "UPLOAD_ERROR";
+    res.status(413).json({ code });
     return;
   }
   console.error(err);
