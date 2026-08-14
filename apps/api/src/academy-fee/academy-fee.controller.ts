@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
+import { AppError } from "../lib/appError";
 import type { AcademyFeeService } from "./academy-fee.service";
 
 export class AcademyFeeController {
@@ -43,6 +44,7 @@ export class AcademyFeeController {
     try {
       const id = Number(req.params.id);
       const { paymentKey, orderId, amount } = req.body as import("./dto/academy-fee.dto").TossConfirmDto;
+      if (!paymentKey || !orderId || !amount) return next(new AppError(400, "INVALID_PAYMENT_DATA"));
       res.json(await this.service.confirmTossPayment(id, { paymentKey, orderId, amount }));
     } catch (e) { next(e); }
   };

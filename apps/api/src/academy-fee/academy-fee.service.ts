@@ -149,8 +149,30 @@ export class AcademyFeeService {
     const fee = await this.repo.findById(id);
     if (!fee) throw new AppError(404, "FEE_NOT_FOUND");
     if ((fee.status as string) === "PAID") return fee; // 멱등성
+    if (["LOCKED", "SUBMITTED"].includes(fee.status as string)) {
+      throw new AppError(409, "INVALID_STATUS_FOR_PG_PAYMENT");
+    }
+
+    // 금액 검증 (클라이언트 변조 방지)
+    if (Number(dto.amount) !== Number((fee as any).amount)) {
+      throw new AppError(400, "AMOUNT_MISMATCH");
+    }
+
+    // 기간 마감 체크 — Toss 호출 전에 확인
+    const prisma = getPrisma();
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    const periodStart = new Date(year, month - 1, 1);
+    const periodEnd = new Date(year, month, 1);
+    const lockedEntry = await prisma.ledgerEntry.findFirst({
+      where: { periodLocked: true, createdAt: { gte: periodStart, lt: periodEnd } },
+      select: { id: true },
+    });
+    if (lockedEntry) throw new AppError(400, "PERIOD_LOCKED");
 
     // Toss API 결제 승인
+    if (!process.env.TOSS_SECRET_KEY) throw new AppError(500, "TOSS_NOT_CONFIGURED");
     const authHeader = Buffer.from(`${process.env.TOSS_SECRET_KEY}:`).toString("base64");
     const tossRes = await fetch("https://api.tosspayments.com/v1/payments/confirm", {
       method: "POST",
@@ -170,20 +192,7 @@ export class AcademyFeeService {
       throw new AppError(400, (err as any).code ?? "TOSS_CONFIRM_FAILED");
     }
 
-    // 기간 마감 체크
-    const prisma = getPrisma();
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
-    const periodStart = new Date(year, month - 1, 1);
-    const periodEnd = new Date(year, month, 1);
-    const lockedEntry = await prisma.ledgerEntry.findFirst({
-      where: { periodLocked: true, createdAt: { gte: periodStart, lt: periodEnd } },
-      select: { id: true },
-    });
-    if (lockedEntry) throw new AppError(400, "PERIOD_LOCKED");
-
-    // PAID 전환
+    // PAID 전환 (조건부 업데이트로 race condition 방지)
     const paid = await this.repo.confirmTossPayment(id, dto.paymentKey);
 
     // Ledger 생성

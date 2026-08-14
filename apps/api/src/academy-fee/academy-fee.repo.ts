@@ -83,14 +83,14 @@ export class AcademyFeeRepository {
   confirmTossPayment(id: number, pgTransactionId: string) {
     const now = new Date()
     return this.prisma.academyFee.update({
-      where: { id },
+      where: { id, status: { not: 'PAID' as any } },
       data: {
-        status: 'PAID',
+        status: 'PAID' as any,
         paidAt: now,
-        paymentMethod: 'PG',
+        paymentMethod: 'PG' as any,
         pgTransactionId,
         receiptIssuedAt: now,
-      } as any,
+      },
       include: INCLUDE,
     })
   }
