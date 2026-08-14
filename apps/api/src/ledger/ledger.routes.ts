@@ -24,8 +24,18 @@ const checkWriteFinance = (req: Request, res: Response, next: NextFunction) => {
   next();
 };
 
+const checkFinanceManager = (req: Request, res: Response, next: NextFunction) => {
+  const { role, frontOfficeRole } = req.user!;
+  if (role !== "ADMIN" && role !== "SUPER_ADMIN" && role !== "GM" &&
+      !(role === "FRONT_OFFICE" && frontOfficeRole === "FINANCE_MANAGER")) {
+    return next(new AppError(403, "FORBIDDEN"));
+  }
+  next();
+};
+
 router.get("/", auth, checkReadFinance, ctrl.list);
 router.post("/", auth, checkWriteFinance, ctrl.create);
+router.post("/lock", auth, checkFinanceManager, ctrl.lockPeriod);
 router.get("/:id", auth, checkReadFinance, ctrl.get);
 router.post("/:id/refund", auth, checkWriteFinance, ctrl.refund);
 

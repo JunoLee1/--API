@@ -50,6 +50,9 @@ export const recruitmentApi = {
   rejectApplication: (id: number): Promise<JobApplication> =>
     api.post(`/recruitment/applications/${id}/reject`, {}),
 
+  reinstateApplication: (id: number): Promise<JobApplication> =>
+    api.post(`/recruitment/applications/${id}/reinstate`, {}),
+
   offerApplication: (id: number): Promise<JobApplication> =>
     api.post(`/recruitment/applications/${id}/offer`, {}),
 

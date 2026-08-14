@@ -115,6 +115,13 @@ export class RecruitmentService {
     return result;
   }
 
+  async reinstateApplication(id: number, actorId: number) {
+    const app = await this.getApplication(id);
+    if (app.status !== "REJECTED") throw new AppError(409, "APPLICATION_NOT_REJECTED");
+    if (!(app as any).previousStatus) throw new AppError(409, "NO_PREVIOUS_STATUS");
+    return this.repo.reinstateApplication(id, actorId);
+  }
+
   async offerApplication(id: number, offeredById: number) {
     const app = await this.getApplication(id);
     if (app.status !== "REFERENCE_CHECK") throw new AppError(409, "APPLICATION_NOT_IN_REFERENCE_CHECK");

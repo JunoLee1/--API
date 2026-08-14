@@ -57,6 +57,7 @@ export function ApplicationDetailPage() {
   const [refResult, setRefResult] = useState<ReferenceCheckResult>('PENDING')
 
   const [saving, setSaving] = useState(false)
+  const [reinstating, setReinstating] = useState(false)
 
   const appId = Number(id)
 
@@ -85,6 +86,20 @@ export function ApplicationDetailPage() {
       toast.error(err instanceof Error ? err.message : t('recruitment.saveFailed'))
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleReinstate = async () => {
+    if (!app) return
+    setReinstating(true)
+    try {
+      await recruitmentApi.reinstateApplication(app.id)
+      toast.success(t('recruitment.reinstateSuccess'))
+      await load()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('recruitment.reinstateFailed'))
+    } finally {
+      setReinstating(false)
     }
   }
 
@@ -261,6 +276,18 @@ export function ApplicationDetailPage() {
           )}
           <Button variant="destructive" onClick={() => void handleReject()} disabled={saving}>
             {t('recruitment.rejectApplication')}
+          </Button>
+        </div>
+      )}
+      {app.status === 'REJECTED' && canWrite && (
+        <div className="flex gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={reinstating}
+            onClick={() => void handleReinstate()}
+          >
+            {reinstating ? t('recruitment.reinstating') : t('recruitment.reinstateBtn')}
           </Button>
         </div>
       )}

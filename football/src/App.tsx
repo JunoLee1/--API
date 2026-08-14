@@ -76,6 +76,7 @@ import { PlanReportHiringItemsPage } from '@/pages/finance/PlanReportHiringItems
 import { TeamSelectPage } from '@/pages/team-select/TeamSelectPage'
 import { LeaguePage } from '@/pages/admin/LeaguePage'
 import { TicketSalesPage } from '@/pages/finance/TicketSalesPage'
+import { LedgerPage } from '@/pages/finance/LedgerPage'
 import { PlanReportListPage } from '@/pages/finance/PlanReportListPage'
 import { PlanReportFormPage } from '@/pages/finance/PlanReportFormPage'
 import { PlanReportDetailPage } from '@/pages/finance/PlanReportDetailPage'
@@ -199,6 +200,7 @@ function App() {
             <Route path="/finance/plan-reports/:id/hiring-items" element={<PlanReportHiringItemsPage />} />
             <Route path="/admin/leagues" element={<LeaguePage />} />
             <Route path="/finance/ticket-sales" element={<TicketSalesPage />} />
+            <Route path="/finance/ledger" element={<LedgerPage />} />
             <Route path="/admin/department-review-configs" element={<DepartmentReviewConfigPage />} />
             <Route path="/admin/review-rule-sets" element={<ReviewRuleSetPage />} />
             <Route path="/finance/plan-reports" element={<PlanReportListPage />} />

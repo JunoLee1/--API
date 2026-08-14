@@ -290,6 +290,7 @@ enum NotificationType {
   VIDEO_ASSIGNED
   VIDEO_ASSIGNMENT_OVERDUE
   WORK_PERMIT_EXPIRY_SOON
+  WORK_PERMIT_EXPIRY_SOON_60D
   CALLUP_REQUESTED
   CALLUP_APPROVED
   CALLUP_REJECTED
@@ -811,6 +812,7 @@ model User {
   surveyResponses            SurveyResponse[]          @relation("SurveyResponseSubmitter")
   disposedEquipmentUnits     EquipmentUnit[]           @relation("EquipmentDisposer")
   formationSnapshots         FormationSnapshot[]       @relation("FormationSnapshotCreatedBy")
+  periodLocks        LedgerPeriodLock[] @relation("PeriodLockCreator")
 }
 
 model Season {
@@ -891,6 +893,8 @@ model Player {
   workPermitStatus WorkPermitStatus @default(NOT_REQUIRED)
   workPermitExpiry DateTime?
   teamId           Int?
+  promotedFromYouthAt  DateTime?
+  youthOriginTeamId    Int?
 
   nationality            Country                 @relation(fields: [nationalityId], references: [id])
   user                   User?                   @relation(fields: [userId], references: [id])
@@ -914,6 +918,7 @@ model Player {
   improvementAnalyses    TacticalAnalysis[]      @relation("ImprovementPlayer")
   videoAssignments       VideoAssignment[]
   callups                PlayerCallup[]
+  workPermitAlerts       WorkPermitAlertLog[]
   playStyle              String?
   allergies              String[]
   foodPreferences        String?
@@ -2479,6 +2484,7 @@ model JobApplication {
   status        JobApplicationStatus @default(APPLIED)
   rejectedAt      DateTime?
   rejectionReason String?
+  previousStatus  JobApplicationStatus?
   offeredAt       DateTime?
   offeredById   Int?
   createdAt     DateTime             @default(now())
@@ -2838,6 +2844,29 @@ model LedgerEntry {
   createdBy  User         @relation("LedgerEntryCreator", fields: [createdById], references: [id])
   reversedBy LedgerEntry? @relation("LedgerReversal", fields: [reversedById], references: [id])
   reversal   LedgerEntry? @relation("LedgerReversal")
+}
+
+model LedgerPeriodLock {
+  id          Int      @id @default(autoincrement())
+  year        Int
+  month       Int
+  lockedById  Int
+  lockedAt    DateTime @default(now())
+
+  lockedBy User @relation("PeriodLockCreator", fields: [lockedById], references: [id])
+
+  @@unique([year, month])
+}
+
+model WorkPermitAlertLog {
+  id        Int      @id @default(autoincrement())
+  playerId  String
+  window    String   // "30D" | "60D"
+  sentAt    DateTime @default(now())
+
+  player Player @relation(fields: [playerId], references: [id])
+
+  @@unique([playerId, window])
 }
 
 model SalesRecord {

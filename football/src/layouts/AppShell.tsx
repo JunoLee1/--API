@@ -64,6 +64,7 @@ import {
   Wallet,
   Warehouse,
   Wrench,
+  Lock,
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -471,6 +472,15 @@ const NAV_ITEMS: NavItem[] = [
     subSection: 'nav.subsection.finance',
     roles: ['ADMIN', 'FRONT_OFFICE'],
     frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF'],
+  },
+  {
+    to: '/finance/ledger',
+    label: 'nav.item.ledger',
+    icon: Lock,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.finance',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'GM', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['FINANCE_MANAGER'],
   },
   // 관리 > 시설·자산
   {

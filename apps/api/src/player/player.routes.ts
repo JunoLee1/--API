@@ -41,6 +41,9 @@ router.patch("/:id", auth, controller.updatePlayer);
 // 선수 상태 변경 (ADMIN)
 router.patch("/:id/status", auth, controller.updatePlayerStatus);
 
+// 유소년 → 1군 승격 (ADMIN)
+router.post("/:id/promote", auth, controller.promotePlayer);
+
 // 선수 삭제 (ADMIN)
 router.delete("/:id", auth, controller.deletePlayer);
 

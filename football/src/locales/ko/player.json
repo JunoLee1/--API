@@ -248,7 +248,19 @@
     "deleteDescription": "{{name}} 선수를 완전히 삭제합니다. 이 작업은 되돌릴 수 없습니다.",
     "deleteConfirm": "삭제",
     "deleted": "선수가 삭제됐습니다.",
-    "deleteFailed": "삭제에 실패했습니다."
+    "deleteFailed": "삭제에 실패했습니다.",
+    "promoteBtn": "1군 승격",
+    "promoting": "승격 중...",
+    "promoteTitle": "1군 승격",
+    "promoteDescription": "이동할 팀을 선택하세요.",
+    "promoteTeamPlaceholder": "팀 선택",
+    "promoteConfirm": "승격 확정",
+    "promoteSuccess": "1군 승격이 완료됐습니다.",
+    "promoteFailed": "승격에 실패했습니다.",
+    "promoteTeamRequired": "팀을 선택해주세요.",
+    "youthHistoryTab": "유소년 이력",
+    "promotedAt": "1군 승격일",
+    "youthOriginTeam": "출신 유소년팀 ID"
   },
   "statusDialog": {
     "title": "선수 상태 변경",

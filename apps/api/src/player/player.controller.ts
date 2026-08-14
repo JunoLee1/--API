@@ -132,6 +132,23 @@ export class PlayerController {
     }
   };
 
+  promotePlayer = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const user = requireUser(req);
+      if (!isAdminLike(user.role)) {
+        res.status(403).json({ code: "FORBIDDEN" }); return;
+      }
+      const { targetTeamId } = req.body as { targetTeamId: number };
+      if (!targetTeamId || typeof targetTeamId !== 'number' || targetTeamId <= 0) {
+        res.status(400).json({ code: "TARGET_TEAM_REQUIRED" }); return;
+      }
+      const result = await this.service.promotePlayer(String(req.params["id"]), targetTeamId, user.id);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
+
   deletePlayer = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);

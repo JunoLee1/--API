@@ -174,6 +174,23 @@ export class PlayerRepository {
     });
   }
 
+  promotePlayer(id: string, targetTeamId: number, youthOriginTeamId: number) {
+    return this.prisma.player.update({
+      where: { id },
+      data: {
+        teamId: targetTeamId,
+        promotedFromYouthAt: new Date(),
+        youthOriginTeamId,
+      },
+      select: {
+        ...PLAYER_SELECT,
+        promotedFromYouthAt: true,
+        youthOriginTeamId: true,
+        team: { select: { id: true, type: true } },
+      },
+    });
+  }
+
   async delete(id: string): Promise<void> {
     await this.prisma.player.delete({ where: { id } });
   }

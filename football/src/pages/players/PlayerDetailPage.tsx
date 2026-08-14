@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { getCountryName } from '@/lib/countryName'
 import { playerApi } from '@/services/player.service'
+import { teamApi } from '@/services/team.service'
 import type { PlayerDetail, PlayerStatus, PositionZone, MarketValueEntry } from '@/types/player'
 import {
   POSITION_ABBR,
@@ -18,6 +19,21 @@ import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { ArrowLeft, Pencil, ShieldAlert, Trash2, TrendingUp } from 'lucide-react'
 import { useConfirm } from '@/lib/confirm-dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PlayerFormDialog } from './PlayerFormDialog'
 import { PlayerStatusDialog } from './PlayerStatusDialog'
@@ -111,10 +127,15 @@ export function PlayerDetailPage() {
   const [mvInput, setMvInput] = useState('')
   const [mvSaving, setMvSaving] = useState(false)
   const [pdiData, setPdiData] = useState<PositionDiversityEntry[]>([])
+  const [promoteOpen, setPromoteOpen] = useState(false)
+  const [promoteTeamId, setPromoteTeamId] = useState('')
+  const [promoting, setPromoting] = useState(false)
+  const [availableTeams, setAvailableTeams] = useState<Array<{id: number; name: string}>>([])
 
   const confirm = useConfirm()
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
   const canChangeStatus = user?.role === 'ADMIN'
+  const canPromote = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || (user?.role as string) === 'GM'
   const isOwnProfile = user?.role === 'PLAYER' && player?.userId === user?.id
   const canSeeMarketValue =
     user?.role === 'ADMIN' ||
@@ -126,6 +147,7 @@ export function PlayerDetailPage() {
     user?.role === 'GM' ||
     (user?.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'TD')
   const isYouthPlayer = player?.team?.type === 'YOUTH'
+  const hasYouthHistory = !!(player?.promotedFromYouthAt || player?.youthOriginTeamId)
   const canCoachGrowth =
     user?.role === 'ADMIN' ||
     user?.role === 'COACHING_STAFF'
@@ -177,6 +199,13 @@ export function PlayerDetailPage() {
     playerPdiApi.get(player.id).then(setPdiData).catch(() => setPdiData([]))
   }, [player])
 
+  useEffect(() => {
+    if (!promoteOpen) return
+    teamApi.list().then((teams) => {
+      setAvailableTeams(teams.filter((t: any) => t.type !== 'YOUTH'))
+    }).catch(() => null)
+  }, [promoteOpen])
+
   const handleMvUpdate = async () => {
     if (!id || !mvInput) return
     const val = Number(mvInput.replace(/[^0-9]/g, ''))
@@ -192,6 +221,24 @@ export function PlayerDetailPage() {
       toast.error(err instanceof Error ? err.message : t('detailPage.mvUpdateFailed'))
     } finally {
       setMvSaving(false)
+    }
+  }
+
+  const handlePromote = async () => {
+    if (!player) return
+    if (!promoteTeamId) { toast.error(t('detailPage.promoteTeamRequired')); return }
+    const teamId = Number(promoteTeamId)
+    setPromoting(true)
+    try {
+      await playerApi.promote(player.id, teamId)
+      toast.success(t('detailPage.promoteSuccess'))
+      setPromoteOpen(false)
+      setPromoteTeamId('')
+      fetchPlayer()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('detailPage.promoteFailed'))
+    } finally {
+      setPromoting(false)
     }
   }
 
@@ -245,6 +292,11 @@ export function PlayerDetailPage() {
             {t('detailPage.statusBtn')}
           </Button>
         )}
+        {isYouthPlayer && canPromote && (
+          <Button variant="outline" size="sm" onClick={() => setPromoteOpen(true)}>
+            {t('detailPage.promoteBtn')}
+          </Button>
+        )}
         {user?.role === 'ADMIN' && (
           <Button variant="destructive" size="sm" onClick={() => void handleDelete()}>
             <Trash2 className="h-3.5 w-3.5 mr-1.5" />
@@ -262,6 +314,9 @@ export function PlayerDetailPage() {
               {isOwnProfile && <TabsTrigger value="motivation">{t('detailPage.tabMotivation')}</TabsTrigger>}
               <TabsTrigger value="pdp">{t('detailPage.tabPdp')}</TabsTrigger>
               {isYouthPlayer && <TabsTrigger value="growth">{t('detailPage.tabGrowth')}</TabsTrigger>}
+              {hasYouthHistory && (
+                <TabsTrigger value="youth-history">{t('detailPage.youthHistoryTab')}</TabsTrigger>
+              )}
             </TabsList>
           </div>
           <TabsContent value="info" className="flex-1 overflow-auto p-6 mt-0">
@@ -539,6 +594,25 @@ export function PlayerDetailPage() {
               <GrowthReportTab playerId={player.id} canCoach={canCoachGrowth} />
             </TabsContent>
           )}
+          {hasYouthHistory && (
+            <TabsContent value="youth-history" className="flex-1 overflow-auto p-6 mt-0">
+              <div className="max-w-3xl mx-auto space-y-4">
+                <div className="rounded-lg border bg-card p-5">
+                  <h3 className="text-sm font-semibold mb-3">{t('detailPage.youthHistoryTab')}</h3>
+                  <Separator className="mb-3" />
+                  {player.promotedFromYouthAt && (
+                    <>
+                      <StatRow label={t('detailPage.promotedAt')} value={formatDate(player.promotedFromYouthAt)} />
+                      <Separator />
+                    </>
+                  )}
+                  {player.youthOriginTeamId && (
+                    <StatRow label={t('detailPage.youthOriginTeam')} value={String(player.youthOriginTeamId)} />
+                  )}
+                </div>
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 
@@ -564,6 +638,37 @@ export function PlayerDetailPage() {
           }}
         />
       )}
+      <Dialog open={promoteOpen} onOpenChange={(open) => {
+        setPromoteOpen(open)
+        if (!open) setPromoteTeamId('')
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('detailPage.promoteTitle')}</DialogTitle>
+            <DialogDescription>{t('detailPage.promoteDescription')}</DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Select value={promoteTeamId} onValueChange={setPromoteTeamId}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('detailPage.promoteTeamPlaceholder')} />
+              </SelectTrigger>
+              <SelectContent>
+                {availableTeams.map((team) => (
+                  <SelectItem key={team.id} value={String(team.id)}>
+                    {team.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setPromoteOpen(false); setPromoteTeamId('') }}>{t('form.cancel')}</Button>
+            <Button disabled={promoting} onClick={() => void handlePromote()}>
+              {promoting ? t('detailPage.promoting') : t('detailPage.promoteConfirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

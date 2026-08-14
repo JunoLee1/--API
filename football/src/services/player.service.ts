@@ -40,6 +40,9 @@ export const playerApi = {
   updateStatus: (id: string, status: PlayerStatus) =>
     api.patch<{ id: string; status: PlayerStatus }>(`/players/${id}/status`, { status }),
 
+  promote: (id: string, targetTeamId: number) =>
+    api.post<PlayerDetail>(`/players/${id}/promote`, { targetTeamId }),
+
   delete: (id: string) =>
     api.delete<void>(`/players/${id}`),
 

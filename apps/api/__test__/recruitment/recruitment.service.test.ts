@@ -115,6 +115,49 @@ describe("approvePosting", () => {
   });
 });
 
+describe("reinstateApplication", () => {
+  test("REJECTED 지원자를 이전 상태로 복원한다", async () => {
+    mockRepo.findApplicationById.mockResolvedValue({
+      id: 5, status: "REJECTED", email: null, phone: null,
+      previousStatus: "INTERVIEW_2",
+    });
+    mockRepo.reinstateApplication = jest.fn().mockResolvedValue({
+      id: 5, status: "INTERVIEW_2", previousStatus: null,
+    });
+
+    const svc = new RecruitmentService(mockRepo);
+    const result = await svc.reinstateApplication(5, 99);
+    expect(mockRepo.reinstateApplication).toHaveBeenCalledWith(5, 99);
+    expect(result.status).toBe("INTERVIEW_2");
+  });
+
+  test("REJECTED가 아닌 지원자는 409 APPLICATION_NOT_REJECTED를 던진다", async () => {
+    mockRepo.findApplicationById.mockResolvedValue({
+      id: 6, status: "INTERVIEW_1", email: null, phone: null,
+      previousStatus: null,
+    });
+
+    const svc = new RecruitmentService(mockRepo);
+    await expect(svc.reinstateApplication(6, 99)).rejects.toMatchObject({
+      statusCode: 409,
+      code: "APPLICATION_NOT_REJECTED",
+    });
+  });
+
+  test("previousStatus가 없으면 409 NO_PREVIOUS_STATUS를 던진다", async () => {
+    mockRepo.findApplicationById.mockResolvedValue({
+      id: 7, status: "REJECTED", email: null, phone: null,
+      previousStatus: null,
+    });
+
+    const svc = new RecruitmentService(mockRepo);
+    await expect(svc.reinstateApplication(7, 99)).rejects.toMatchObject({
+      statusCode: 409,
+      code: "NO_PREVIOUS_STATUS",
+    });
+  });
+});
+
 describe("updateApplication", () => {
   test("SCREENING으로 status 변경이 허용된다", async () => {
     mockRepo.findApplicationById.mockResolvedValue({ id: 1, status: "APPLIED" });

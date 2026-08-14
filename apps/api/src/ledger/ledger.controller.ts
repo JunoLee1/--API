@@ -17,4 +17,18 @@ export class LedgerController {
   refund = async (req: Request, res: Response, next: NextFunction) => {
     try { res.status(201).json(await this.service.createRefund(Number(req.params.id), requireUser(req).id)); } catch (e) { next(e); }
   };
+
+  lockPeriod = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { year, month } = req.query as { year?: string; month?: string };
+      if (!year || !month) { res.status(400).json({ code: "YEAR_MONTH_REQUIRED" }); return; }
+      const y = Number(year), m = Number(month);
+      if (!Number.isInteger(y) || !Number.isInteger(m) || m < 1 || m > 12 || y < 2000 || y > 2100) {
+        res.status(400).json({ code: "INVALID_YEAR_MONTH" }); return;
+      }
+      res.status(201).json(await this.service.lockPeriod(y, m, req.user!.id));
+    } catch (err) {
+      next(err);
+    }
+  };
 }

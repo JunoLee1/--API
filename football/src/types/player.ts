@@ -70,6 +70,8 @@ export interface PlayerDetail extends Player {
   team: { id: number; type: 'FIRST_TEAM' | 'YOUTH' } | null
   contracts: PlayerContract[]
   transfers: PlayerTransfer[]
+  promotedFromYouthAt?: string | null
+  youthOriginTeamId?: number | null
 }
 
 export interface PlayerListQuery {
