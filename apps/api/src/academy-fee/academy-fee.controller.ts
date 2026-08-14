@@ -60,6 +60,19 @@ export class AcademyFeeController {
     }
   };
 
+  getReceipt = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id: requesterId, role, frontOfficeRole } = req.user!;
+      res.json(await this.service.getReceipt(Number(req.params.id), requesterId, role, frontOfficeRole));
+    } catch (e) { next(e); }
+  };
+
+  adminSubmit = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.json(await this.service.adminSubmitProof(Number(req.params.id), req.body));
+    } catch (e) { next(e); }
+  };
+
   getStats = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const now = new Date();

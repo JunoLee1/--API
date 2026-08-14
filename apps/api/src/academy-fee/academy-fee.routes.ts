@@ -80,6 +80,24 @@ router.patch("/:id/approve", auth, (req, res, next) => {
   next();
 }, controller.approvePayment);
 
+// Receipt — Guardian (own only) or finance team/admin
+router.get("/:id/receipt", auth, async (req, res, next) => {
+  const { role, frontOfficeRole } = req.user!;
+  const isFinance = role === "ADMIN" || role === "SUPER_ADMIN" || role === "GM" ||
+    (role === "FRONT_OFFICE" && (frontOfficeRole === "FINANCE_MANAGER" || frontOfficeRole === "TD"));
+  if (role !== "GUARDIAN" && !isFinance) return next(new AppError(403, "FORBIDDEN"));
+  next();
+}, controller.getReceipt);
+
+// Admin manual submit (finance team marks external-channel proof as SUBMITTED)
+router.patch("/:id/admin-submit", auth, (req, res, next) => {
+  const { role, frontOfficeRole } = req.user!;
+  const isFinance = role === "ADMIN" || role === "SUPER_ADMIN" || role === "GM" ||
+    (role === "FRONT_OFFICE" && (frontOfficeRole === "FINANCE_MANAGER" || frontOfficeRole === "TD"));
+  if (!isFinance) return next(new AppError(403, "FORBIDDEN"));
+  next();
+}, controller.adminSubmit);
+
 // 학부모: Toss 결제 확인
 router.post("/:id/toss-confirm", auth, async (req, res, next) => {
   try {

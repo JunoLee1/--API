@@ -95,6 +95,37 @@ export class AcademyFeeRepository {
     })
   }
 
+  getReceipt(id: number) {
+    return this.prisma.academyFee.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        year: true,
+        month: true,
+        amount: true,
+        paidAt: true,
+        paymentMethod: true,
+        pgTransactionId: true,
+        receiptIssuedAt: true,
+        player: { select: { playerName: true } },
+        guardian: { select: { username: true } },
+      },
+    });
+  }
+
+  adminSubmitProof(id: number, paymentProofUrl?: string) {
+    return this.prisma.academyFee.update({
+      where: { id },
+      data: {
+        status: 'SUBMITTED' as any,
+        paymentMethod: 'BANK_TRANSFER' as any,
+        paymentSubmittedAt: new Date(),
+        ...(paymentProofUrl && { paymentProofUrl }),
+      },
+      include: INCLUDE,
+    });
+  }
+
   lockPlayer(playerId: string) {
     return this.prisma.player.update({
       where: { id: playerId },

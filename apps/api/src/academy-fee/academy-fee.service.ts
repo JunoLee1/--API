@@ -256,6 +256,52 @@ export class AcademyFeeService {
     return { ok: true };
   }
 
+  async getReceipt(id: number, requesterId: number, requesterRole: string, requesterFoRole?: string | null) {
+    const fee = await this.repo.findById(id);
+    if (!fee) throw new AppError(404, "FEE_NOT_FOUND");
+    if ((fee.status as string) !== "PAID") throw new AppError(404, "RECEIPT_NOT_AVAILABLE");
+
+    // GUARDIAN may only access their own child's fee
+    if (requesterRole === "GUARDIAN" && fee.guardianId !== requesterId) {
+      throw new AppError(403, "FORBIDDEN");
+    }
+
+    const data = await this.repo.getReceipt(id);
+    if (!data || !data.paidAt || !data.receiptIssuedAt) throw new AppError(404, "RECEIPT_NOT_AVAILABLE");
+
+    return {
+      id: data.id,
+      year: data.year,
+      month: data.month,
+      amount: data.amount,
+      paidAt: data.paidAt,
+      paymentMethod: data.paymentMethod,
+      pgTransactionId: (data as any).pgTransactionId ?? null,
+      receiptIssuedAt: data.receiptIssuedAt,
+      playerName: data.player.playerName,
+      guardianUsername: data.guardian.username,
+    };
+  }
+
+  async adminSubmitProof(id: number, dto: AdminSubmitDto) {
+    const fee = await this.repo.findById(id);
+    if (!fee) throw new AppError(404, "FEE_NOT_FOUND");
+    if (!["PENDING", "OVERDUE"].includes(fee.status as string)) {
+      throw new AppError(409, "INVALID_STATUS");
+    }
+    const updated = await this.repo.adminSubmitProof(id, dto.paymentProofUrl);
+    void this.notifRepo.createForGuardian(
+      fee.guardianId,
+      "FEE_INVOICE_ISSUED",
+      () => ({
+        title: "회비 증빙이 접수됐습니다",
+        body: `${(fee as any).player?.playerName} 선수의 ${(fee as any).month}월 회비 증빙이 재무팀에 접수됐습니다.`,
+      }),
+      id,
+    ).catch(console.error);
+    return updated;
+  }
+
   async getFinanceStats(year: number, month: number) {
     const rows = await this.repo.getFinanceStats(year, month);
     const total = rows.reduce((s, r) => s + (r._count.id ?? 0), 0);
