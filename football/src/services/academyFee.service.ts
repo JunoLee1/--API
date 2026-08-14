@@ -1,5 +1,5 @@
 import { api } from './api'
-import type { AcademyFee, AcademyFinanceStats } from '@/types/academy-fee'
+import type { AcademyFee, AcademyFinanceStats, FeeReceipt } from '@/types/academy-fee'
 
 export const academyFeeApi = {
   getAll: (params?: { status?: string; teamId?: number; year?: number; month?: number }) => {
@@ -26,4 +26,15 @@ export const academyFeeApi = {
     const q = qs.toString()
     return api.get<AcademyFinanceStats>(`/academy-fees/stats${q ? `?${q}` : ''}`)
   },
+  uploadProof: (id: number, file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.postForm<AcademyFee>(`/academy-fees/${id}/upload-proof`, formData)
+  },
+  tossConfirm: (id: number, paymentKey: string, orderId: string, amount: number) =>
+    api.post<AcademyFee>(`/academy-fees/${id}/toss-confirm`, { paymentKey, orderId, amount }),
+  getReceipt: (id: number) =>
+    api.get<FeeReceipt>(`/academy-fees/${id}/receipt`),
+  adminSubmit: (id: number, paymentProofUrl?: string) =>
+    api.patch<AcademyFee>(`/academy-fees/${id}/admin-submit`, { paymentProofUrl }),
 }
