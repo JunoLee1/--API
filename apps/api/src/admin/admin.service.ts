@@ -12,8 +12,9 @@ function applyUserMask<T extends { email: string; username: string }>(user: T): 
 export class AdminService {
   constructor(private repo: AdminRepository) {}
 
-  async listUsers(filters: ListUsersQuery) {
+  async listUsers(filters: ListUsersQuery, isDemo: boolean = false) {
     const users = await this.repo.listUsers(filters);
+    if (!isDemo) return users;
     return users.map(applyUserMask);
   }
 
@@ -21,9 +22,10 @@ export class AdminService {
     return this.repo.findPlayersWithoutAccounts(nameFilter);
   }
 
-  async getUserById(id: number) {
+  async getUserById(id: number, isDemo: boolean = false) {
     const user = await this.repo.findById(id);
     if (!user) throw new AppError(404, "USER_NOT_FOUND");
+    if (!isDemo) return user;
     return applyUserMask(user);
   }
 

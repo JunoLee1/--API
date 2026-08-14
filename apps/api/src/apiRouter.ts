@@ -64,6 +64,8 @@ import formationSnapshotRouter from "./formation-snapshot/formation-snapshot.rou
 
 const apiRouter = Router();
 
+apiRouter.get("/", (_req, res) => res.status(200).json({ status: "ok" }));
+
 apiRouter.use("/admin", adminRouter);
 apiRouter.use("/analysis", analysisRouter);
 apiRouter.use("/auth", authRouter);

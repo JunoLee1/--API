@@ -13,28 +13,25 @@ const activeProspect = {
   createdAt: new Date(),
 };
 
+const signedProspect = {
+  ...activeProspect,
+  status: "SIGNED" as const,
+  convertedPlayerId: "player-uuid",
+};
+
 const mockRepo = {
   findAll: jest.fn<() => Promise<any[]>>().mockResolvedValue([activeProspect]),
   findById: jest.fn<() => Promise<any>>().mockResolvedValue(activeProspect),
   create: jest.fn<() => Promise<any>>().mockResolvedValue(activeProspect),
   update: jest.fn<() => Promise<any>>().mockResolvedValue(activeProspect),
-  updateStatus: jest.fn<() => Promise<any>>().mockResolvedValue({ ...activeProspect, status: "SIGNED", convertedPlayerId: "player-uuid" }),
+  updateStatus: jest.fn<() => Promise<any>>().mockResolvedValue({ ...activeProspect, status: "ARCHIVED" }),
+  sign: jest.fn<() => Promise<any>>().mockResolvedValue(signedProspect),
 } as any;
 
 const service = new ProspectService(mockRepo);
 
 describe("ProspectService - updateStatus", () => {
   beforeEach(() => jest.clearAllMocks());
-
-  test("ACTIVE → SIGNED with convertedPlayerId succeeds", async () => {
-    mockRepo.findById.mockResolvedValue(activeProspect);
-    mockRepo.updateStatus.mockResolvedValue({ ...activeProspect, status: "SIGNED", convertedPlayerId: "player-uuid" });
-
-    const result = await service.updateStatus(1, { status: "SIGNED", convertedPlayerId: "player-uuid" });
-
-    expect(result.status).toBe("SIGNED");
-    expect(result.convertedPlayerId).toBe("player-uuid");
-  });
 
   test("ACTIVE → ARCHIVED succeeds", async () => {
     mockRepo.findById.mockResolvedValue(activeProspect);
@@ -45,39 +42,60 @@ describe("ProspectService - updateStatus", () => {
     expect(result.status).toBe("ARCHIVED");
   });
 
-  test("ACTIVE → SIGNED without convertedPlayerId → 400", async () => {
-    mockRepo.findById.mockResolvedValue(activeProspect);
-
-    await expect(service.updateStatus(1, { status: "SIGNED" })).rejects.toMatchObject({
+  test("SIGNED status via updateStatus → 400 USE_SIGN_ENDPOINT", async () => {
+    await expect(async () => service.updateStatus(1, { status: "SIGNED" })).rejects.toMatchObject({
       statusCode: 400,
-      code: "SIGNED_REQUIRES_CONVERTED_PLAYER_ID",
+      code: "USE_SIGN_ENDPOINT",
     });
   });
 
-  test("ARCHIVED → ACTIVE is invalid → 409", async () => {
-    mockRepo.findById.mockResolvedValue({ ...activeProspect, status: "ARCHIVED" });
-
-    await expect(service.updateStatus(1, { status: "ACTIVE" })).rejects.toMatchObject({
-      statusCode: 409,
-      code: "INVALID_STATUS_TRANSITION",
-    });
-  });
-
-  test("SIGNED → ACTIVE is invalid → 409", async () => {
-    mockRepo.findById.mockResolvedValue({ ...activeProspect, status: "SIGNED" });
-
-    await expect(service.updateStatus(1, { status: "ACTIVE" })).rejects.toMatchObject({
-      statusCode: 409,
-      code: "INVALID_STATUS_TRANSITION",
-    });
-  });
-
-  test("non-existent prospect → 404", async () => {
+  test("non-existent prospect via getById → 404", async () => {
     mockRepo.findById.mockResolvedValue(null);
 
-    await expect(service.updateStatus(99, { status: "ARCHIVED" })).rejects.toMatchObject({
+    await expect(service.getById(99)).rejects.toMatchObject({
       statusCode: 404,
       code: "PROSPECT_NOT_FOUND",
+    });
+  });
+});
+
+describe("ProspectService - sign", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  const signDto = {
+    dateOfBirth: "1995-06-15",
+    height: 180,
+    weight: 75,
+    nationalityId: 1,
+    contractStartDate: "2024-07-01",
+    contractEndDate: "2026-06-30",
+    salary: 5000000,
+  };
+
+  test("sign succeeds and returns signed prospect", async () => {
+    mockRepo.sign.mockResolvedValue(signedProspect);
+
+    const result = await service.sign(1, signDto);
+
+    expect(result.status).toBe("SIGNED");
+    expect(mockRepo.sign).toHaveBeenCalledWith(1, signDto);
+  });
+
+  test("sign on non-existent prospect → repo propagates 404", async () => {
+    mockRepo.sign.mockRejectedValue({ statusCode: 404, code: "PROSPECT_NOT_FOUND" });
+
+    await expect(service.sign(99, signDto)).rejects.toMatchObject({
+      statusCode: 404,
+      code: "PROSPECT_NOT_FOUND",
+    });
+  });
+
+  test("sign on non-CONTRACT_PENDING prospect → repo propagates 409", async () => {
+    mockRepo.sign.mockRejectedValue({ statusCode: 409, code: "INVALID_STATUS_TRANSITION" });
+
+    await expect(service.sign(1, signDto)).rejects.toMatchObject({
+      statusCode: 409,
+      code: "INVALID_STATUS_TRANSITION",
     });
   });
 });

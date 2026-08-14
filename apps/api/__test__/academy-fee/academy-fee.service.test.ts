@@ -59,7 +59,7 @@ describe("AcademyFeeService - processOverdue", () => {
     ]);
     await service.processOverdue();
     expect(mockNotifRepo.createForGuardian).toHaveBeenCalledWith(
-      10, "FEE_REMINDER", expect.any(String), expect.any(String), 1,
+      10, "FEE_REMINDER", expect.any(Function), 1,
     );
     expect(mockRepo.lockPlayer).not.toHaveBeenCalled();
   });
@@ -74,7 +74,7 @@ describe("AcademyFeeService - processOverdue", () => {
     expect(mockRepo.updateStatus).toHaveBeenCalledWith(2, "LOCKED");
     expect(mockRepo.lockPlayer).toHaveBeenCalledWith("p2");
     expect(mockNotifRepo.createForGuardian).toHaveBeenCalledWith(
-      11, "FEE_ACCOUNT_LOCKED", expect.any(String), expect.any(String), 2,
+      11, "FEE_ACCOUNT_LOCKED", expect.any(Function), 2,
     );
   });
 });

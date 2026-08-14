@@ -23,7 +23,7 @@ beforeAll(async () => {
   headCoachUserId = headCoach.id;
 
   const gm = await prisma.user.findFirst({
-    where: { role: 'FRONT_OFFICE', frontOfficeRole: 'GM' },
+    where: { role: 'GM' },
     select: { id: true },
   });
   if (!gm) throw new Error('GM user 없음');

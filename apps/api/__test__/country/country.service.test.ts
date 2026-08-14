@@ -66,33 +66,37 @@ describe("복수 국가 조회 테스트", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
-  test("DB 와 외부 API 둘다 데이터가 없는 경우, invalid country 던지기", async () => {
+  test("DB 와 외부 API 둘다 데이터가 없는 경우, 빈 배열 반환", async () => {
     mockRepo.getCountries.mockResolvedValue([]);
     mockCountryApiClient.getAllCountries.mockResolvedValue([]);
 
-    await expect(
-      service.getCountries({ name: "South Korea", code: "KR", region: "Asia" }),
-    ).rejects.toThrow("Invalid Countries");
+    const result = await service.getCountries({ name: "South Korea", code: "KR", region: "Asia" });
+    expect(result).toEqual([]);
   });
-  test("DB엔 데이터가 없지만 외부 API 에 있는경우, 외부 API 값 던지기", async () => {
-    const contries = [
+  test("DB엔 데이터가 없지만 외부 API 에 있는경우, 등록 후 repo 결과 반환", async () => {
+    const countries = [
       {
         name: "South Korea",
         code: "KR",
         region: "Asia",
       },
       {
-        name:"Japan",
-        code:"JP",
-        region:"Asia"
-      }
+        name: "Japan",
+        code: "JP",
+        region: "Asia",
+      },
     ];
-    mockRepo.getCountries.mockResolvedValue([])
-    mockCountryApiClient.getAllCountries.mockResolvedValue(contries);
+    mockRepo.getCountries
+      .mockResolvedValueOnce([])      // first call: total count check
+      .mockResolvedValueOnce(countries); // second call: filtered result
+    mockRepo.saveCountries = jest.fn().mockResolvedValue(undefined);
+    mockCountryApiClient.getAllCountries.mockResolvedValue(
+      countries.map((c) => ({ cca2: c.code, name: { common: c.name }, region: c.region }))
+    );
 
-    const result = await service.getCountries({region:"Asia"})
+    const result = await service.getCountries({ region: "Asia" });
 
-    expect(result).toEqual(contries)
+    expect(result).toEqual(countries);
   });
   //test("DB 데이터 있는 경우, 결과값 던지기", async () => {})
 });

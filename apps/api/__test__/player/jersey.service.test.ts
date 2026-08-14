@@ -80,8 +80,7 @@ describe("JerseyService - assignToPlayer with notification", () => {
     await new Promise((r) => setTimeout(r, 10));
     expect(mockNotifRepo.createForUser).toHaveBeenCalledWith(
       99, "JERSEY_NUMBER_CONFLICT",
-      "등번호 7번 선택 불가",
-      expect.stringContaining("이미 다른 선수"),
+      expect.any(Function),
     );
   });
 

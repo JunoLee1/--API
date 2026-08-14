@@ -4,10 +4,12 @@ import { PartnerService } from "../../src/partner/partner.service";
 const mockRepo = {
   findAll: jest.fn(),
   findById: jest.fn(),
+  findByName: jest.fn(),
   create: jest.fn<() => Promise<any>>().mockResolvedValue({ id: 1, type: "HOSPITAL", name: "서울대병원" }),
   update: jest.fn(),
   createContract: jest.fn<() => Promise<any>>().mockResolvedValue({ id: 1 }),
   updateContract: jest.fn(),
+  findContractById: jest.fn(),
   findExpiringContracts: jest.fn(),
 } as any;
 

@@ -31,7 +31,7 @@ export const teamSwitchLimiter = rateLimit({
 });
 
 export const auth = (req: Request, res: Response, next: NextFunction) => {
-  passport.authenticate(
+  return passport.authenticate(
     "accessToken",
     { session: false },
     async (err: unknown, user: Express.User | false) => {

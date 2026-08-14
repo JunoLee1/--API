@@ -1,4 +1,4 @@
-import * as request from "supertest";
+import request from "supertest";
 import app from "../src/app";
 
 describe("라우팅 테스트", () => {

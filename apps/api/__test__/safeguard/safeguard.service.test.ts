@@ -1,6 +1,10 @@
 import { describe, test, jest, expect, beforeEach } from '@jest/globals'
 import { SafeguardService } from '../../src/safeguard/safeguard.service'
 
+jest.mock('../../src/lib/auditLog', () => ({
+  writeAuditLog: jest.fn().mockResolvedValue(undefined),
+}))
+
 const mockRepo = {
   create: jest.fn(),
   findAll: jest.fn<() => Promise<any[]>>().mockResolvedValue([]),
@@ -48,7 +52,7 @@ describe('SafeguardService - submit', () => {
     expect(mockRepo.findEmergencyRecipients).toHaveBeenCalled()
     expect(mockNotifRepo.createForUser).toHaveBeenCalledTimes(2)
     expect(mockNotifRepo.createForUser).toHaveBeenCalledWith(
-      1, 'SAFEGUARD_EMERGENCY', expect.stringContaining('긴급'), expect.any(String), 4,
+      1, 'SAFEGUARD_EMERGENCY', expect.any(Function), 4,
     )
   })
 

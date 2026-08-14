@@ -5,7 +5,7 @@ describe("isWeeklyOverload", () => {
     expect(isWeeklyOverload(499)).toBe(false);
   });
   it("임계값 정확히 500이면 true", () => {
-    expect(isWeeklyOverload(WEEKLY_LOAD_THRESHOLD)).toBe(true);
+    expect(isWeeklyOverload(WEEKLY_LOAD_THRESHOLD["DEFAULT"]!)).toBe(true);
   });
   it("임계값 초과이면 true", () => {
     expect(isWeeklyOverload(600)).toBe(true);

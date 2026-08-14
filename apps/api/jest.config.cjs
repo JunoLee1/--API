@@ -5,7 +5,8 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   verbose: true,
-  testPathIgnorePatterns: ['/node_modules/', '/.claude/(?!worktrees/)'],
+  maxWorkers: 1,
+  testPathIgnorePatterns: ['/node_modules/', '/.claude/(?!worktrees/)', '<rootDir>/dist/'],
   ...(compilerOptions.paths
     ? { moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, { prefix: '<rootDir>/src' }) }
     : {}),
