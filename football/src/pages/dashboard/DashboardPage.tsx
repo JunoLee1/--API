@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useTeamContext } from '@/layouts/AppShell'
+import type { UserDto } from '@/types/auth'
 import { dashboardApi } from '@/services/dashboard.service'
 import { notificationApi, type NotificationItem } from '@/services/notification.service'
 import { matchApi } from '@/services/match.service'
@@ -87,6 +88,15 @@ export function DashboardPage() {
   const { t } = useTranslation('common')
   const { user, loading: userLoading } = useCurrentUser()
   const teamCtx = useTeamContext()
+  if (userLoading) return <div className="p-8 text-muted-foreground">{t('dashboard.loading')}</div>
+  if (!user) return null
+  return <DashboardInner key={teamCtx} user={user} teamCtx={teamCtx} />
+}
+
+type TeamCtx = 'FIRST_TEAM' | 'YOUTH'
+
+function DashboardInner({ user, teamCtx }: { user: UserDto; teamCtx: TeamCtx }) {
+  const { t } = useTranslation('common')
   const navigate = useNavigate()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [seasonTicketRevenue, setSeasonTicketRevenue] = useState<number | null>(null)
@@ -106,23 +116,10 @@ export function DashboardPage() {
   const [expensesLoading, setExpensesLoading] = useState(false)
   const [currentSeasonId, setCurrentSeasonId] = useState<number | undefined>(undefined)
 
-  const showYouthDev = user?.role === 'ADMIN' || (user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'TD')
+  const showYouthDev = user.role === 'ADMIN' || (user.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'TD')
 
   useEffect(() => {
-    if (!user) return
     let cancelled = false
-
-    setStats(null)
-    setStatsLoading(true)
-    setMatches([])
-    setMatchesLoading(true)
-    setMyRanking(null)
-    setRankingLoading(true)
-    setOpsKpi(null)
-    setAcademyFinance(null)
-    setYouthDev(null)
-    setRecentExpenses([])
-    setSeasonTicketRevenue(null)
 
     dashboardApi.stats(teamCtx)
       .then((data) => { if (!cancelled) setStats(data) })
@@ -197,12 +194,8 @@ export function DashboardPage() {
     }
 
     return () => { cancelled = true }
-  }, [user, teamCtx])
-
-  if (userLoading) {
-    return <div className="p-8 text-muted-foreground">{t('dashboard.loading')}</div>
-  }
-  if (!user) return null
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const config = getDashboardConfig(user, teamCtx)
 
