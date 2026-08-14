@@ -36,6 +36,18 @@ export class LedgerRepository {
     });
   }
 
+  isPeriodLocked(year: number, month: number): Promise<boolean> {
+    return this.prisma.ledgerPeriodLock
+      .findUnique({ where: { year_month: { year, month } } })
+      .then((r) => r !== null);
+  }
+
+  lockPeriod(year: number, month: number, lockedById: number) {
+    return this.prisma.ledgerPeriodLock.create({
+      data: { year, month, lockedById },
+    });
+  }
+
   create(data: CreateLedgerEntryDto & { createdById: number; amountKrw: number }) {
     return this.prisma.ledgerEntry.create({
       data: {

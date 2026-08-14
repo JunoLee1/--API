@@ -812,6 +812,7 @@ model User {
   surveyResponses            SurveyResponse[]          @relation("SurveyResponseSubmitter")
   disposedEquipmentUnits     EquipmentUnit[]           @relation("EquipmentDisposer")
   formationSnapshots         FormationSnapshot[]       @relation("FormationSnapshotCreatedBy")
+  periodLocks        LedgerPeriodLock[] @relation("PeriodLockCreator")
 }
 
 model Season {
@@ -2843,6 +2844,18 @@ model LedgerEntry {
   createdBy  User         @relation("LedgerEntryCreator", fields: [createdById], references: [id])
   reversedBy LedgerEntry? @relation("LedgerReversal", fields: [reversedById], references: [id])
   reversal   LedgerEntry? @relation("LedgerReversal")
+}
+
+model LedgerPeriodLock {
+  id          Int      @id @default(autoincrement())
+  year        Int
+  month       Int
+  lockedById  Int
+  lockedAt    DateTime @default(now())
+
+  lockedBy User @relation("PeriodLockCreator", fields: [lockedById], references: [id])
+
+  @@unique([year, month])
 }
 
 model WorkPermitAlertLog {

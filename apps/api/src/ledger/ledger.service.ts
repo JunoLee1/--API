@@ -29,6 +29,10 @@ export class LedgerService {
       throw new AppError(400, "INVALID_RELATED_ID");
     }
 
+    const now = new Date();
+    const locked = await this.repo.isPeriodLocked(now.getFullYear(), now.getMonth() + 1);
+    if (locked) throw new AppError(409, "PERIOD_LOCKED");
+
     const rate = dto.exchangeRate ?? 1;
     const amountKrw = dto.amountKrw ?? dto.amount * rate;
     return this.repo.create({ ...dto, exchangeRate: rate, amountKrw, createdById });
@@ -38,6 +42,11 @@ export class LedgerService {
     const original = await this.repo.findById(originalId);
     if (!original) throw new AppError(404, "LEDGER_ENTRY_NOT_FOUND");
     if (original.reversedById != null) throw new AppError(400, "ALREADY_REVERSED");
+
+    const now = new Date();
+    const locked = await this.repo.isPeriodLocked(now.getFullYear(), now.getMonth() + 1);
+    if (locked) throw new AppError(409, "PERIOD_LOCKED");
+
     // JO4: link refund entry back to original via reversalOfId
     const refund = await this.repo.create({
       type: original.type as any,       // Prisma $Enums.LedgerType → DTO "INCOME"|"EXPENSE" string literal union
@@ -62,6 +71,12 @@ export class LedgerService {
     }
 
     return refund;
+  }
+
+  async lockPeriod(year: number, month: number, actorId: number) {
+    const already = await this.repo.isPeriodLocked(year, month);
+    if (already) throw new AppError(409, "PERIOD_ALREADY_LOCKED");
+    return this.repo.lockPeriod(year, month, actorId);
   }
 
   // Fire-and-forget helper for other modules

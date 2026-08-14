@@ -6,6 +6,8 @@ const makeRepo = (overrides: Partial<LedgerRepository> = {}): LedgerRepository =
   findById: jest.fn().mockResolvedValue(null),
   create: jest.fn().mockImplementation(async (data) => ({ id: 1, ...data })),
   findAll: jest.fn().mockResolvedValue([]),
+  isPeriodLocked: jest.fn().mockResolvedValue(false),
+  lockPeriod: jest.fn().mockResolvedValue(null),
   ...overrides,
 } as unknown as LedgerRepository);
 
@@ -175,5 +177,50 @@ describe("LedgerService", () => {
       await expect(service.createAutoEntry({ type: "EXPENSE", category: "OTHER", amount: 100, exchangeRate: 20000 } as any, 1))
         .rejects.toThrow(new AppError(400, "INVALID_EXCHANGE_RATE"));
     });
+  });
+});
+
+describe("LedgerService period lock", () => {
+  it("throws 409 PERIOD_LOCKED when period is locked", async () => {
+    const repo = makeRepo({
+      isPeriodLocked: jest.fn().mockResolvedValue(true),
+    });
+    const service = new LedgerService(repo);
+    await expect(
+      service.create({ type: "EXPENSE", category: "OTHER", amount: 100 } as any, 1)
+    ).rejects.toThrow(new AppError(409, "PERIOD_LOCKED"));
+  });
+
+  it("allows entry when period is not locked", async () => {
+    const create = jest.fn().mockImplementation(async (data) => ({ id: 1, ...data }));
+    const repo = makeRepo({
+      isPeriodLocked: jest.fn().mockResolvedValue(false),
+      create,
+    });
+    const service = new LedgerService(repo);
+    await service.create({ type: "EXPENSE", category: "OTHER", amount: 100 } as any, 1);
+    expect(create).toHaveBeenCalled();
+  });
+
+  it("lockPeriod throws 409 when already locked", async () => {
+    const repo = makeRepo({
+      isPeriodLocked: jest.fn().mockResolvedValue(true),
+      lockPeriod: jest.fn(),
+    });
+    const service = new LedgerService(repo);
+    await expect(service.lockPeriod(2025, 3, 1)).rejects.toThrow(
+      new AppError(409, "PERIOD_ALREADY_LOCKED")
+    );
+  });
+
+  it("lockPeriod succeeds when not locked", async () => {
+    const lockPeriod = jest.fn().mockResolvedValue({ id: 1, year: 2025, month: 3 });
+    const repo = makeRepo({
+      isPeriodLocked: jest.fn().mockResolvedValue(false),
+      lockPeriod,
+    });
+    const service = new LedgerService(repo);
+    await service.lockPeriod(2025, 3, 1);
+    expect(lockPeriod).toHaveBeenCalledWith(2025, 3, 1);
   });
 });
