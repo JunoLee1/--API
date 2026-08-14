@@ -26,6 +26,7 @@
     "@radix-ui/react-switch": "^1.3.2",
     "@radix-ui/react-tabs": "^1.1.16",
     "@tanstack/react-query": "^5.101.4",
+    "@tosspayments/tosspayments-sdk": "^2.7.1",
     "@types/papaparse": "^5.5.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

@@ -38,4 +38,18 @@ export interface AcademyFinanceStats {
   totalRevenue: number
   overdueCount: number
   lockedPlayerCount: number
+  lockedAmount: number
+}
+
+export interface FeeReceipt {
+  id: number
+  year: number
+  month: number
+  amount: number
+  paidAt: string
+  paymentMethod: PaymentMethod | null
+  pgTransactionId: string | null
+  receiptIssuedAt: string
+  playerName: string
+  guardianUsername: string
 }

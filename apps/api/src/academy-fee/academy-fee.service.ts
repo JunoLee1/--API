@@ -3,7 +3,7 @@ import { getPrisma } from "../lib/prisma";
 import { formatLedgerDescription } from "../lib/ledger-formatter";
 import type { AcademyFeeRepository } from "./academy-fee.repo";
 import type { NotificationRepository } from "../notification/notification.repo";
-import type { FeeListQuery, SubmitPaymentProofDto } from "./dto/academy-fee.dto";
+import type { FeeListQuery, SubmitPaymentProofDto, TossConfirmDto, AdminSubmitDto } from "./dto/academy-fee.dto";
 
 function daysSince(date: Date): number {
   return Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
@@ -143,6 +143,161 @@ export class AcademyFeeService {
     ).catch(console.error);
 
     return paid;
+  }
+
+  async confirmTossPayment(id: number, dto: TossConfirmDto) {
+    const fee = await this.repo.findById(id);
+    if (!fee) throw new AppError(404, "FEE_NOT_FOUND");
+    if ((fee.status as string) === "PAID") return fee; // 멱등성
+    if (["LOCKED", "SUBMITTED"].includes(fee.status as string)) {
+      throw new AppError(409, "INVALID_STATUS_FOR_PG_PAYMENT");
+    }
+
+    // 금액 검증 (클라이언트 변조 방지)
+    if (Number(dto.amount) !== Number((fee as any).amount)) {
+      throw new AppError(400, "AMOUNT_MISMATCH");
+    }
+
+    // 기간 마감 체크 — Toss 호출 전에 확인
+    const prisma = getPrisma();
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    const periodStart = new Date(year, month - 1, 1);
+    const periodEnd = new Date(year, month, 1);
+    const lockedEntry = await prisma.ledgerEntry.findFirst({
+      where: { periodLocked: true, createdAt: { gte: periodStart, lt: periodEnd } },
+      select: { id: true },
+    });
+    if (lockedEntry) throw new AppError(400, "PERIOD_LOCKED");
+
+    // Toss API 결제 승인
+    if (!process.env.TOSS_SECRET_KEY) throw new AppError(500, "TOSS_NOT_CONFIGURED");
+    const authHeader = Buffer.from(`${process.env.TOSS_SECRET_KEY}:`).toString("base64");
+    const tossRes = await fetch("https://api.tosspayments.com/v1/payments/confirm", {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${authHeader}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        paymentKey: dto.paymentKey,
+        orderId: dto.orderId,
+        amount: dto.amount,
+      }),
+    });
+
+    if (!tossRes.ok) {
+      const err = await tossRes.json().catch(() => ({}));
+      throw new AppError(400, (err as any).code ?? "TOSS_CONFIRM_FAILED");
+    }
+
+    // PAID 전환 (조건부 업데이트로 race condition 방지)
+    const paid = await this.repo.confirmTossPayment(id, dto.paymentKey);
+
+    // Ledger 생성
+    const amount = Number((fee as any).amount ?? 0);
+    await prisma.ledgerEntry.create({
+      data: {
+        type: "INCOME",
+        category: "ACADEMY_FEE",
+        amount,
+        currency: "KRW",
+        exchangeRate: 1,
+        amountKrw: amount,
+        isRefund: false,
+        description: formatLedgerDescription("academy_fee", "payment_approved", {
+          player: (fee as any).player?.playerName ?? String(fee.playerId),
+          period: `${(fee as any).year ?? year}년 ${(fee as any).month ?? month}월`,
+        }),
+        relatedModule: "AcademyFee",
+        relatedId: id,
+        createdById: fee.guardianId,
+      } as any,
+    });
+
+    // guardian 알림
+    void this.notifRepo.createForGuardian(
+      fee.guardianId,
+      "FEE_INVOICE_ISSUED",
+      () => ({
+        title: "아카데미 회비 납부 완료",
+        body: `${(fee as any).player?.playerName} 선수의 ${(fee as any).month}월 회비 결제가 완료됐습니다.`,
+      }),
+      id,
+    ).catch(console.error);
+
+    return paid;
+  }
+
+  async tossWebhook(body: { status: string; paymentKey: string; orderId: string; totalAmount: number }) {
+    // Toss는 DONE 상태일 때만 처리
+    if (body.status !== "DONE") return { ok: true };
+
+    // orderId 형식: fee-{id}-{timestamp}
+    const parts = body.orderId.split("-");
+    const feeId = Number(parts[1]);
+    if (isNaN(feeId)) return { ok: true };
+
+    const fee = await this.repo.findById(feeId);
+    if (!fee) return { ok: true };
+    if ((fee.status as string) === "PAID") return { ok: true }; // 멱등성
+
+    const feeAmount = Number((fee as any).amount);
+    if (feeAmount !== body.totalAmount) {
+      console.warn(`Toss webhook amount mismatch: feeId=${feeId} db=${feeAmount} toss=${body.totalAmount}`);
+    }
+    await this.confirmTossPayment(feeId, {
+      paymentKey: body.paymentKey,
+      orderId: body.orderId,
+      amount: feeAmount, // use DB amount to pass the AMOUNT_MISMATCH guard
+    });
+
+    return { ok: true };
+  }
+
+  async getReceipt(id: number, requesterId: number, requesterRole: string, requesterFoRole?: string | null) {
+    const fee = await this.repo.findById(id);
+    if (!fee) throw new AppError(404, "FEE_NOT_FOUND");
+    if ((fee.status as string) !== "PAID") throw new AppError(404, "RECEIPT_NOT_AVAILABLE");
+    if (!fee.paidAt || !(fee as any).receiptIssuedAt) throw new AppError(404, "RECEIPT_NOT_AVAILABLE");
+
+    // GUARDIAN may only access their own child's fee
+    if (requesterRole === "GUARDIAN" && fee.guardianId !== requesterId) {
+      throw new AppError(403, "FORBIDDEN");
+    }
+
+    return {
+      id: fee.id,
+      year: (fee as any).year,
+      month: (fee as any).month,
+      amount: Number(fee.amount),
+      paidAt: fee.paidAt,
+      paymentMethod: (fee as any).paymentMethod ?? null,
+      pgTransactionId: (fee as any).pgTransactionId ?? null,
+      receiptIssuedAt: (fee as any).receiptIssuedAt,
+      playerName: (fee as any).player?.playerName ?? "",
+      guardianUsername: (fee as any).guardian?.username ?? "",
+    };
+  }
+
+  async adminSubmitProof(id: number, dto: AdminSubmitDto) {
+    const fee = await this.repo.findById(id);
+    if (!fee) throw new AppError(404, "FEE_NOT_FOUND");
+    if (!["PENDING", "OVERDUE"].includes(fee.status as string)) {
+      throw new AppError(409, "INVALID_STATUS");
+    }
+    const updated = await this.repo.adminSubmitProof(id, dto.paymentProofUrl);
+    void this.notifRepo.createForGuardian(
+      fee.guardianId,
+      "FEE_INVOICE_ISSUED",
+      () => ({
+        title: "회비 증빙이 접수됐습니다",
+        body: `${(fee as any).player?.playerName} 선수의 ${(fee as any).month}월 회비 증빙이 재무팀에 접수됐습니다.`,
+      }),
+      id,
+    ).catch(console.error);
+    return updated;
   }
 
   async getFinanceStats(year: number, month: number) {

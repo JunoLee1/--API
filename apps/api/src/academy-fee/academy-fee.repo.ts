@@ -75,9 +75,55 @@ export class AcademyFeeRepository {
   approvePayment(id: number) {
     return this.prisma.academyFee.update({
       where: { id },
-      data: { status: 'PAID', paidAt: new Date() },
+      data: { status: 'PAID', paidAt: new Date(), receiptIssuedAt: new Date() },
       include: INCLUDE,
     })
+  }
+
+  confirmTossPayment(id: number, pgTransactionId: string) {
+    const now = new Date()
+    return this.prisma.academyFee.update({
+      where: { id, status: { not: 'PAID' as any } },
+      data: {
+        status: 'PAID' as any,
+        paidAt: now,
+        paymentMethod: 'PG' as any,
+        pgTransactionId,
+        receiptIssuedAt: now,
+      },
+      include: INCLUDE,
+    })
+  }
+
+  getReceipt(id: number) {
+    return this.prisma.academyFee.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        year: true,
+        month: true,
+        amount: true,
+        paidAt: true,
+        paymentMethod: true,
+        pgTransactionId: true,
+        receiptIssuedAt: true,
+        player: { select: { playerName: true } },
+        guardian: { select: { username: true } },
+      },
+    });
+  }
+
+  adminSubmitProof(id: number, paymentProofUrl?: string) {
+    return this.prisma.academyFee.update({
+      where: { id },
+      data: {
+        status: 'SUBMITTED' as any,
+        paymentMethod: 'BANK_TRANSFER' as any,
+        paymentSubmittedAt: new Date(),
+        ...(paymentProofUrl && { paymentProofUrl }),
+      },
+      include: INCLUDE,
+    });
   }
 
   lockPlayer(playerId: string) {
