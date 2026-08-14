@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { callupApi } from '@/services/player-callup.service'
@@ -7,13 +7,15 @@ import { CALLUP_STATUS_STYLE } from '@/types/player-callup'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { playerApi } from '@/services/player.service'
 import type { Player } from '@/types/player'
+import { teamApi } from '@/services/team.service'
+import type { Team } from '@/types/team'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -33,21 +35,53 @@ interface CreateDialogProps {
   open: boolean
   onOpenChange: (v: boolean) => void
   onSaved: () => void
+  userTeamId?: number
 }
 
-function CreateDialog({ open, onOpenChange, onSaved }: CreateDialogProps) {
+function CreateDialog({ open, onOpenChange, onSaved, userTeamId }: CreateDialogProps) {
   const { t } = useTranslation('contract')
   const [youthPlayers, setYouthPlayers] = useState<Player[]>([])
+  const [allTeams, setAllTeams] = useState<Team[]>([])
+  const [fromTeamClubId, setFromTeamClubId] = useState<number | null>(null)
   const [form, setForm] = useState<Partial<CreateCallupDto>>({})
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     playerApi.list({ level: 'YOUTH' }).then(setYouthPlayers).catch(() => null)
+    teamApi.list().then(setAllTeams).catch(() => null)
   }, [])
 
+  // 팀 목록 로드 후 세션 유저 팀을 기본값으로 설정
+  useEffect(() => {
+    if (!allTeams.length || !userTeamId) return
+    const userTeam = allTeams.find((t) => t.id === userTeamId)
+    setFromTeamClubId(userTeam?.clubId ?? null)
+    setForm((f) => ({ ...f, toTeamId: f.toTeamId ?? userTeamId }))
+  }, [allTeams, userTeamId])
+
+  const sameClubTeams = useMemo(
+    () => allTeams.filter((t) => t.type !== 'YOUTH' && t.isActive && t.clubId === fromTeamClubId),
+    [allTeams, fromTeamClubId],
+  )
+  const otherSeniorTeams = useMemo(
+    () => allTeams.filter((t) => t.type !== 'YOUTH' && t.isActive && t.clubId !== fromTeamClubId),
+    [allTeams, fromTeamClubId],
+  )
+  const allSeniorTeamItems = useMemo(
+    () => [...sameClubTeams, ...otherSeniorTeams].map((t) => ({ value: String(t.id), label: t.name })),
+    [sameClubTeams, otherSeniorTeams],
+  )
+  const playerItems = useMemo(
+    () => youthPlayers.map((p) => ({ value: p.id, label: p.playerName })),
+    [youthPlayers],
+  )
+
   const handlePlayerSelect = (playerId: string) => {
-    const player = youthPlayers.find((p) => p.id === playerId)
-    setForm((f) => ({ ...f, playerId, fromTeamId: player?.teamId ?? undefined }))
+    const player = youthPlayers.find((p) => p.id === playerId) as (Player & { teamId?: number }) | undefined
+    const fromTeamId = player?.teamId
+    const clubId = allTeams.find((t) => t.id === fromTeamId)?.clubId ?? null
+    setFromTeamClubId(clubId)
+    setForm((f) => ({ ...f, playerId, fromTeamId }))
   }
 
   const handleSave = async () => {
@@ -77,23 +111,36 @@ function CreateDialog({ open, onOpenChange, onSaved }: CreateDialogProps) {
             <Select
               value={form.playerId ?? ''}
               onValueChange={handlePlayerSelect}
+              items={playerItems}
             >
               <SelectTrigger><SelectValue placeholder={t('callup.createDialog.playerPlaceholder')} /></SelectTrigger>
               <SelectContent>
                 {youthPlayers.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.playerName}</SelectItem>
+                  <SelectItem key={p.id} value={p.id} label={p.playerName}>{p.playerName}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
             <Label>{t('callup.createDialog.toTeamId')}</Label>
-            <Input
-              type="number"
-              placeholder={t('callup.createDialog.toTeamIdPlaceholder')}
-              value={form.toTeamId ?? ''}
-              onChange={(e) => setForm((f) => ({ ...f, toTeamId: Number(e.target.value) }))}
-            />
+            <Select
+              value={form.toTeamId != null ? String(form.toTeamId) : ''}
+              onValueChange={(v) => setForm((f) => ({ ...f, toTeamId: Number(v) }))}
+              items={allSeniorTeamItems}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t('callup.createDialog.toTeamIdPlaceholder')} />
+              </SelectTrigger>
+              <SelectContent>
+                {sameClubTeams.map((team) => (
+                  <SelectItem key={team.id} value={String(team.id)} label={team.name}>{team.name}</SelectItem>
+                ))}
+                {sameClubTeams.length > 0 && otherSeniorTeams.length > 0 && <SelectSeparator />}
+                {otherSeniorTeams.map((team) => (
+                  <SelectItem key={team.id} value={String(team.id)} label={team.name}>{team.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1.5">
             <Label>{t('callup.createDialog.reason')}</Label>
@@ -225,16 +272,22 @@ export function PlayerCallupPage() {
       </div>
 
       <div className="border-b px-6 py-3 flex items-center gap-3 shrink-0 bg-muted/30">
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select
+          value={statusFilter}
+          onValueChange={setStatusFilter}
+          items={STATUS_FILTER_KEYS.map((key) => ({
+            value: key,
+            label: key === 'ALL' ? t('callup.statusAll') : t(`callup.status.${key}`),
+          }))}
+        >
           <SelectTrigger className="w-32 h-8 text-sm bg-background">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {STATUS_FILTER_KEYS.map((key) => (
-              <SelectItem key={key} value={key}>
-                {key === 'ALL' ? t('callup.statusAll') : t(`callup.status.${key}`)}
-              </SelectItem>
-            ))}
+            {STATUS_FILTER_KEYS.map((key) => {
+              const label = key === 'ALL' ? t('callup.statusAll') : t(`callup.status.${key}`)
+              return <SelectItem key={key} value={key} label={label}>{label}</SelectItem>
+            })}
           </SelectContent>
         </Select>
       </div>
@@ -331,6 +384,7 @@ export function PlayerCallupPage() {
         open={createOpen}
         onOpenChange={setCreateOpen}
         onSaved={() => { setCreateOpen(false); fetchCallups() }}
+        userTeamId={user?.teamId ?? undefined}
       />
 
       <Dialog open={rejectId !== null} onOpenChange={(v) => !v && setRejectId(null)}>

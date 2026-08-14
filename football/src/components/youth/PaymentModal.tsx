@@ -37,7 +37,7 @@ export function PaymentModal({ fee, userId, open, onClose, onPaid }: Props) {
         successUrl: `${window.location.origin}/toss-callback`,
         failUrl: `${window.location.origin}/toss-fail`,
       })
-      // successUrl redirect happens — code below won't run
+      // successUrl 리다이렉트 발생 — 이하 코드 실행 안 됨
     } catch (e: unknown) {
       const err = e as { code?: string }
       if (err.code !== 'USER_CANCEL') setError('결제 중 오류가 발생했습니다.')

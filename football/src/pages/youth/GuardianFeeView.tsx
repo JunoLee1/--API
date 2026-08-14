@@ -38,7 +38,7 @@ export function GuardianFeeView({ playerId }: Props) {
         `결제일: ${new Date(receipt.paidAt).toLocaleDateString('ko-KR')}\n` +
         `결제방법: ${receipt.paymentMethod === 'PG' ? '카드/간편결제' : '계좌이체'}`
       )
-    } catch { /* not ready */ }
+    } catch { /* 영수증 미발급 상태 */ }
   }
 
   if (loading) return <p className="text-muted-foreground">{t('guardianFeeView.loading')}</p>
@@ -57,15 +57,11 @@ export function GuardianFeeView({ playerId }: Props) {
             <Badge variant={STATUS_VARIANT[fee.status]}>{t(`guardianFeeView.status.${fee.status}`)}</Badge>
             {(fee.status === 'PENDING' || fee.status === 'OVERDUE') && (
               <Button size="sm" onClick={() => setSelectedFee(fee)}>
-                납부하기
+                {t('guardianFeeView.submitProof')}
               </Button>
             )}
             {fee.status === 'PAID' && fee.receiptIssuedAt && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => void handleViewReceipt(fee.id)}
-              >
+              <Button size="sm" variant="outline" onClick={() => void handleViewReceipt(fee.id)}>
                 영수증
               </Button>
             )}

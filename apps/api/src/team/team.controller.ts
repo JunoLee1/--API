@@ -11,16 +11,14 @@ export class TeamController {
 
   getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role } = requireUser(req);
-      if (!isSuperAdmin(role) && !isAdminOrGM(role)) throw new AppError(403, "FORBIDDEN");
+      requireUser(req);
       res.json(await this.service.getAll());
     } catch (err) { next(err); }
   };
 
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role } = requireUser(req);
-      if (!isSuperAdmin(role) && !isAdminOrGM(role)) throw new AppError(403, "FORBIDDEN");
+      requireUser(req);
       res.json(await this.service.getById(Number(req.params["id"])));
     } catch (err) { next(err); }
   };

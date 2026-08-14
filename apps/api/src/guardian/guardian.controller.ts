@@ -48,7 +48,7 @@ export class GuardianController {
 
   getDashboard = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const playerId = String(req.childPlayerId);
+      const playerId = req.childPlayerId!;
       const result = await this.service.getDashboard(playerId);
       res.status(200).json(result);
     } catch (e) { next(e); }
@@ -56,7 +56,7 @@ export class GuardianController {
 
   getChildAttendance = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const playerId = String(req.childPlayerId);
+      const playerId = req.childPlayerId!;
       const { from, to } = req.query as { from?: string; to?: string };
       const result = await this.service.getChildAttendance(playerId, from, to);
       res.status(200).json(result);
@@ -65,7 +65,7 @@ export class GuardianController {
 
   getChildInjuries = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const playerId = String(req.childPlayerId);
+      const playerId = req.childPlayerId!;
       const result = await this.service.getChildInjuries(playerId);
       res.status(200).json(result);
     } catch (e) { next(e); }
@@ -73,7 +73,7 @@ export class GuardianController {
 
   getChildFees = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const playerId = String(req.childPlayerId);
+      const playerId = req.childPlayerId!;
       const result = await this.service.getChildFees(playerId);
       res.status(200).json(result);
     } catch (e) { next(e); }
