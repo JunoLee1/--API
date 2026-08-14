@@ -75,7 +75,7 @@ export class AcademyFeeRepository {
   approvePayment(id: number) {
     return this.prisma.academyFee.update({
       where: { id },
-      data: { status: 'PAID', paidAt: new Date() },
+      data: { status: 'PAID', paidAt: new Date(), receiptIssuedAt: new Date() },
       include: INCLUDE,
     })
   }
