@@ -27,7 +27,8 @@ export interface FeeReceipt {
   month: number
   amount: number
   paidAt: string
-  paymentMethod: PaymentMethod
+  paymentMethod: PaymentMethod | null
+  pgTransactionId: string | null
   receiptIssuedAt: string
   playerName: string
   guardianUsername: string
@@ -39,17 +40,4 @@ export interface AcademyFinanceStats {
   overdueCount: number
   lockedPlayerCount: number
   lockedAmount: number
-}
-
-export interface FeeReceipt {
-  id: number
-  year: number
-  month: number
-  amount: number
-  paidAt: string
-  paymentMethod: PaymentMethod | null
-  pgTransactionId: string | null
-  receiptIssuedAt: string
-  playerName: string
-  guardianUsername: string
 }
