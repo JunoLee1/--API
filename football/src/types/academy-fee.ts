@@ -21,6 +21,18 @@ export interface AcademyFee {
   createdAt: string
 }
 
+export interface FeeReceipt {
+  id: number
+  year: number
+  month: number
+  amount: number
+  paidAt: string
+  paymentMethod: PaymentMethod
+  receiptIssuedAt: string
+  playerName: string
+  guardianUsername: string
+}
+
 export interface AcademyFinanceStats {
   monthlyCollectionRate: number
   totalRevenue: number

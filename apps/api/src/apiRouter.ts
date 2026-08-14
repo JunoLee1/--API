@@ -110,7 +110,7 @@ apiRouter.use("/facility", facilityRouter);
 apiRouter.use("/payroll", payrollRouter);
 apiRouter.use("/hiring-automation", hiringAutomationRouter);
 apiRouter.use("/leagues", leagueRouter);
-apiRouter.use("/guardian", guardianRouter);
+apiRouter.use("/guardians", guardianRouter);
 apiRouter.use("/hr", hrRouter);
 apiRouter.use("/software-licenses", softwareLicenseRouter);
 apiRouter.use("/ledger", ledgerRouter);
