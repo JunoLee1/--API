@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { callupApi } from '@/services/player-callup.service'
@@ -7,13 +7,15 @@ import { CALLUP_STATUS_STYLE } from '@/types/player-callup'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { playerApi } from '@/services/player.service'
 import type { Player } from '@/types/player'
+import { teamApi } from '@/services/team.service'
+import type { Team } from '@/types/team'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -38,16 +40,31 @@ interface CreateDialogProps {
 function CreateDialog({ open, onOpenChange, onSaved }: CreateDialogProps) {
   const { t } = useTranslation('contract')
   const [youthPlayers, setYouthPlayers] = useState<Player[]>([])
+  const [allTeams, setAllTeams] = useState<Team[]>([])
+  const [fromTeamClubId, setFromTeamClubId] = useState<number | null>(null)
   const [form, setForm] = useState<Partial<CreateCallupDto>>({})
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     playerApi.list({ level: 'YOUTH' }).then(setYouthPlayers).catch(() => null)
+    teamApi.list().then(setAllTeams).catch(() => null)
   }, [])
 
+  const sameClubTeams = useMemo(
+    () => allTeams.filter((t) => t.type !== 'YOUTH' && t.isActive && t.clubId === fromTeamClubId),
+    [allTeams, fromTeamClubId],
+  )
+  const otherSeniorTeams = useMemo(
+    () => allTeams.filter((t) => t.type !== 'YOUTH' && t.isActive && t.clubId !== fromTeamClubId),
+    [allTeams, fromTeamClubId],
+  )
+
   const handlePlayerSelect = (playerId: string) => {
-    const player = youthPlayers.find((p) => p.id === playerId)
-    setForm((f) => ({ ...f, playerId, fromTeamId: player?.teamId ?? undefined }))
+    const player = youthPlayers.find((p) => p.id === playerId) as (Player & { teamId?: number }) | undefined
+    const fromTeamId = player?.teamId
+    const clubId = allTeams.find((t) => t.id === fromTeamId)?.clubId ?? null
+    setFromTeamClubId(clubId)
+    setForm((f) => ({ ...f, playerId, fromTeamId }))
   }
 
   const handleSave = async () => {
@@ -88,12 +105,35 @@ function CreateDialog({ open, onOpenChange, onSaved }: CreateDialogProps) {
           </div>
           <div className="space-y-1.5">
             <Label>{t('callup.createDialog.toTeamId')}</Label>
-            <Input
-              type="number"
-              placeholder={t('callup.createDialog.toTeamIdPlaceholder')}
-              value={form.toTeamId ?? ''}
-              onChange={(e) => setForm((f) => ({ ...f, toTeamId: Number(e.target.value) }))}
-            />
+            <Select
+              value={form.toTeamId != null ? String(form.toTeamId) : ''}
+              onValueChange={(v) => setForm((f) => ({ ...f, toTeamId: Number(v) }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t('callup.createDialog.toTeamIdPlaceholder')} />
+              </SelectTrigger>
+              <SelectContent>
+                {sameClubTeams.length > 0 && (
+                  <SelectGroup>
+                    <SelectLabel>{t('callup.createDialog.sameClubTeams')}</SelectLabel>
+                    {sameClubTeams.map((team) => (
+                      <SelectItem key={team.id} value={String(team.id)}>{team.name}</SelectItem>
+                    ))}
+                  </SelectGroup>
+                )}
+                {sameClubTeams.length > 0 && otherSeniorTeams.length > 0 && <SelectSeparator />}
+                {otherSeniorTeams.length > 0 && (
+                  <SelectGroup>
+                    {sameClubTeams.length > 0 && (
+                      <SelectLabel>{t('callup.createDialog.otherTeams')}</SelectLabel>
+                    )}
+                    {otherSeniorTeams.map((team) => (
+                      <SelectItem key={team.id} value={String(team.id)}>{team.name}</SelectItem>
+                    ))}
+                  </SelectGroup>
+                )}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1.5">
             <Label>{t('callup.createDialog.reason')}</Label>
