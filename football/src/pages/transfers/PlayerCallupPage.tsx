@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
-  Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue,
+  Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -107,7 +107,7 @@ function CreateDialog({ open, onOpenChange, onSaved, userTeamId }: CreateDialogP
               <SelectTrigger><SelectValue placeholder={t('callup.createDialog.playerPlaceholder')} /></SelectTrigger>
               <SelectContent>
                 {youthPlayers.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.playerName}</SelectItem>
+                  <SelectItem key={p.id} value={p.id} label={p.playerName}>{p.playerName}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -122,25 +122,13 @@ function CreateDialog({ open, onOpenChange, onSaved, userTeamId }: CreateDialogP
                 <SelectValue placeholder={t('callup.createDialog.toTeamIdPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                {sameClubTeams.length > 0 && (
-                  <SelectGroup>
-                    <SelectLabel>{t('callup.createDialog.sameClubTeams')}</SelectLabel>
-                    {sameClubTeams.map((team) => (
-                      <SelectItem key={team.id} value={String(team.id)}>{team.name}</SelectItem>
-                    ))}
-                  </SelectGroup>
-                )}
+                {sameClubTeams.map((team) => (
+                  <SelectItem key={team.id} value={String(team.id)} label={team.name}>{team.name}</SelectItem>
+                ))}
                 {sameClubTeams.length > 0 && otherSeniorTeams.length > 0 && <SelectSeparator />}
-                {otherSeniorTeams.length > 0 && (
-                  <SelectGroup>
-                    {sameClubTeams.length > 0 && (
-                      <SelectLabel>{t('callup.createDialog.otherTeams')}</SelectLabel>
-                    )}
-                    {otherSeniorTeams.map((team) => (
-                      <SelectItem key={team.id} value={String(team.id)}>{team.name}</SelectItem>
-                    ))}
-                  </SelectGroup>
-                )}
+                {otherSeniorTeams.map((team) => (
+                  <SelectItem key={team.id} value={String(team.id)} label={team.name}>{team.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -279,11 +267,10 @@ export function PlayerCallupPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {STATUS_FILTER_KEYS.map((key) => (
-              <SelectItem key={key} value={key}>
-                {key === 'ALL' ? t('callup.statusAll') : t(`callup.status.${key}`)}
-              </SelectItem>
-            ))}
+            {STATUS_FILTER_KEYS.map((key) => {
+              const label = key === 'ALL' ? t('callup.statusAll') : t(`callup.status.${key}`)
+              return <SelectItem key={key} value={key} label={label}>{label}</SelectItem>
+            })}
           </SelectContent>
         </Select>
       </div>
