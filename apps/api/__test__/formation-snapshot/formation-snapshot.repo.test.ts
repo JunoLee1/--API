@@ -3,8 +3,9 @@ import { FormationSnapshotRepository } from "../../src/formation-snapshot/format
 
 const mockCreate = jest.fn();
 const mockFindMany = jest.fn();
+const mockDelete = jest.fn();
 const mockPrisma = {
-  formationSnapshot: { create: mockCreate, findMany: mockFindMany },
+  formationSnapshot: { create: mockCreate, findMany: mockFindMany, delete: mockDelete },
 } as any;
 
 describe("FormationSnapshotRepository", () => {
@@ -41,5 +42,12 @@ describe("FormationSnapshotRepository", () => {
     expect(call.data.minute).toBeUndefined();
     expect(call.data.changeReason).toBeUndefined();
     expect(call.data.formation).toBe("4-3-3");
+  });
+
+  test("remove() calls delete with correct id", async () => {
+    mockDelete.mockResolvedValue({ id: 3 });
+    await repo.remove(3);
+    const call = mockDelete.mock.calls[0]![0] as any;
+    expect(call.where.id).toBe(3);
   });
 });

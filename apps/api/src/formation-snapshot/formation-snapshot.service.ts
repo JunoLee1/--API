@@ -11,4 +11,8 @@ export class FormationSnapshotService {
   findByMatch(matchId: number) {
     return this.repo.findByMatch(matchId);
   }
+
+  remove(id: number) {
+    return this.repo.remove(id);
+  }
 }
