@@ -80,12 +80,11 @@ export class GrowthReportRepository {
     });
     if (!player) return null;
 
+    const peerFilter = { isPublished: true, player: { position: player.position }, playerId: { not: playerId } };
+
     const [agg, sampleCount] = await Promise.all([
       this.prisma.growthEvaluation.aggregate({
-        where: {
-          isPublished: true,
-          player: { position: player.position },
-        },
+        where: peerFilter,
         _avg: {
           attitudeScore: true,
           fundamentalsScore: true,
@@ -93,13 +92,9 @@ export class GrowthReportRepository {
           physicalScore: true,
         },
       }),
-      this.prisma.growthEvaluation.count({
-        where: {
-          isPublished: true,
-          player: { position: player.position },
-        },
-      }),
+      this.prisma.growthEvaluation.count({ where: peerFilter }),
     ]);
+    // playerId excluded from peerFilter so the player is not compared against themselves.
 
     return {
       position: player.position,
