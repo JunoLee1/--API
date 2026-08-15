@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import DaumPostcode from 'react-daum-postcode'
 import {
   Dialog,
@@ -13,20 +14,23 @@ interface DaumPostcodeDialogProps {
 }
 
 export function DaumPostcodeDialog({ open, onOpenChange, onComplete }: DaumPostcodeDialogProps) {
+  const { t } = useTranslation('sponsorship')
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm p-0">
-        <DialogHeader className="p-4 pb-0">
-          <DialogTitle>주소 검색</DialogTitle>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>{t('form.addressSearch')}</DialogTitle>
         </DialogHeader>
-        <DaumPostcode
-          autoClose={false}
-          onComplete={(data) => {
-            onComplete(data.zonecode, data.roadAddress)
-            onOpenChange(false)
-          }}
-          style={{ height: 400 }}
-        />
+        <div className="overflow-hidden">
+          <DaumPostcode
+            autoClose={false}
+            onComplete={(data) => {
+              onComplete(data.zonecode, data.roadAddress)
+              onOpenChange(false)
+            }}
+            style={{ height: 400 }}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   )
