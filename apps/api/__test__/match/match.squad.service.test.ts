@@ -9,7 +9,16 @@ const mockRepo = {
   findConfirmedWithPlayers: jest.fn<() => Promise<any[]>>().mockResolvedValue([]),
 } as any;
 
-const service = new MatchSquadService(mockRepo);
+const mockPrisma = {
+  player: {
+    findUnique: jest.fn<() => Promise<any>>().mockResolvedValue({
+      team: { type: "FIRST_TEAM" },
+      contracts: [{ id: 1 }],
+    }),
+  },
+} as any;
+
+const service = new MatchSquadService(mockRepo, mockPrisma);
 
 describe("MatchSquadService - addPlayer", () => {
   beforeEach(() => jest.clearAllMocks());

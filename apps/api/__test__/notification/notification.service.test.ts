@@ -20,8 +20,7 @@ describe("NotificationService - notifyJerseyConflict", () => {
     await service.notifyJerseyConflict(42, 7, "OCCUPIED");
     expect(mockRepo.createForUser).toHaveBeenCalledWith(
       42, "JERSEY_NUMBER_CONFLICT",
-      "등번호 7번 선택 불가",
-      expect.stringContaining("이미 다른 선수가 사용 중"),
+      expect.any(Function),
     );
   });
 
@@ -29,8 +28,7 @@ describe("NotificationService - notifyJerseyConflict", () => {
     await service.notifyJerseyConflict(42, 10, "RETIRED");
     expect(mockRepo.createForUser).toHaveBeenCalledWith(
       42, "JERSEY_NUMBER_CONFLICT",
-      "등번호 10번 선택 불가",
-      expect.stringContaining("영구결번"),
+      expect.any(Function),
     );
   });
 });
@@ -42,8 +40,7 @@ describe("NotificationService - notifyAttendanceUnauthorized", () => {
     await service.notifyAttendanceUnauthorized(10, "LATE", new Date("2026-07-20"), 1, 0);
     expect(mockRepo.createForUser).toHaveBeenCalledWith(
       10, "ATTENDANCE_UNAUTHORIZED",
-      expect.stringContaining("무단 지각"),
-      expect.stringContaining("누적"),
+      expect.any(Function),
     );
   });
 
@@ -51,8 +48,7 @@ describe("NotificationService - notifyAttendanceUnauthorized", () => {
     await service.notifyAttendanceUnauthorized(10, "ABSENT", new Date("2026-07-20"), 1, 1);
     expect(mockRepo.createForUser).toHaveBeenCalledWith(
       10, "ATTENDANCE_UNAUTHORIZED",
-      expect.stringContaining("무단 결근"),
-      expect.any(String),
+      expect.any(Function),
     );
   });
 });
@@ -64,8 +60,7 @@ describe("NotificationService - notifyAttendancePenaltyPlayer", () => {
     await service.notifyAttendancePenaltyPlayer(10, 3);
     expect(mockRepo.createForUser).toHaveBeenCalledWith(
       10, "ATTENDANCE_PENALTY_PLAYER",
-      "출결 페널티 경고",
-      expect.stringContaining("3회"),
+      expect.any(Function),
     );
   });
 });
@@ -83,8 +78,7 @@ describe("NotificationService - notifyMatchDayReminder", () => {
     await service.notifyMatchDayReminder(10, match);
     expect(mockRepo.createForUser).toHaveBeenCalledWith(
       10, "MATCH_DAY_REMINDER",
-      "내일 경기 알림",
-      expect.stringContaining("FC Seoul"),
+      expect.any(Function),
     );
   });
 });

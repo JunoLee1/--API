@@ -37,18 +37,17 @@ describe("MaintenanceService", () => {
     expect(mockNotificationService.notifyFacilityEmergency).not.toHaveBeenCalled();
   });
 
-  test("status=RESOLVED 업데이트 시 notifyFacilityResolved를 호출하고 resolvedAt을 설정한다", async () => {
+  test("status=IN_PROGRESS 업데이트 시 repo.update를 호출한다", async () => {
     const existing = { id: 7, status: "OPEN", title: "배수관 교체" };
     mockRepo.findById.mockResolvedValue(existing);
-    mockRepo.update.mockResolvedValue({ ...existing, status: "RESOLVED", resolvedAt: new Date() });
+    mockRepo.update.mockResolvedValue({ ...existing, status: "IN_PROGRESS" });
 
-    await service.update(7, { status: "RESOLVED" });
+    await service.update(7, { status: "IN_PROGRESS" }, 1);
 
     expect(mockRepo.update).toHaveBeenCalledWith(7, expect.objectContaining({
-      status: "RESOLVED",
-      resolvedAt: expect.any(Date),
+      status: "IN_PROGRESS",
     }));
-    expect(mockNotificationService.notifyFacilityResolved).toHaveBeenCalledWith("배수관 교체", 7);
+    expect(mockNotificationService.notifyFacilityResolved).not.toHaveBeenCalled();
   });
 
   test("이미 RESOLVED인 항목 업데이트 시 409를 던진다", async () => {

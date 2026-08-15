@@ -44,7 +44,7 @@ export const canReadFinance = (role: string, foRole?: string | null, deptCategor
 
 export const canWriteFinance = (role: string, foRole?: string | null, deptCategories?: string[]): boolean =>
   isAdminLike(role) ||
-  (role === 'FRONT_OFFICE' && (foRole === 'FINANCE_MANAGER' || foRole === 'FINANCE_STAFF')) ||
+  (role === 'FRONT_OFFICE' && foRole === 'FINANCE_MANAGER') ||
   (deptCategories?.includes('FINANCE') ?? false)
 
 export const canReadHR = (role: string, foRole?: string | null, deptCategories?: string[]): boolean =>

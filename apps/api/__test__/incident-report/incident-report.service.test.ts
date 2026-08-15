@@ -34,7 +34,7 @@ describe("IncidentReportService - submit", () => {
     await service.submit(1);
 
     expect(mockNotifRepo.createForGuardian).toHaveBeenCalledWith(
-      10, "INCIDENT_REPORT_SUBMITTED", expect.any(String), expect.any(String), 1,
+      10, "INCIDENT_REPORT_SUBMITTED", expect.any(Function), 1,
     );
   });
 

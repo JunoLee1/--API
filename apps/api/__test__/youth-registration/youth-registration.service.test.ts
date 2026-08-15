@@ -94,8 +94,7 @@ describe("YouthRegistrationService - contract", () => {
     expect(mockNotifRepo.createForGuardian).toHaveBeenCalledWith(
       10,
       "YOUTH_REGISTRATION_STATUS_CHANGED",
-      expect.any(String),
-      expect.any(String),
+      expect.any(Function),
       1,
     );
   });

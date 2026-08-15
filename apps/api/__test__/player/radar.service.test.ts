@@ -9,9 +9,9 @@ const fwdStats = {
 };
 
 describe("computeRadarScores - FWD", () => {
-  test("공격수 6축 점수 반환 (0-100 범위)", () => {
+  test("공격수 7축 점수 반환 (0-100 범위)", () => {
     const scores = computeRadarScores("STRIKER", fwdStats as any, null);
-    expect(Object.keys(scores)).toHaveLength(6);
+    expect(Object.keys(scores)).toHaveLength(7);
     Object.values(scores).forEach((v) => {
       expect(v).toBeGreaterThanOrEqual(0);
       expect(v).toBeLessThanOrEqual(100);
@@ -36,6 +36,6 @@ describe("computeTags", () => {
 describe("POSITION_GROUP", () => {
   test("STRIKER → FWD", () => expect(POSITION_GROUP["STRIKER"]).toBe("FWD"));
   test("CENTRAL_DEFENSIVE_MIDFIELDER → MID", () => expect(POSITION_GROUP["CENTRAL_DEFENSIVE_MIDFIELDER"]).toBe("MID"));
-  test("CENTER_BACK → DEF", () => expect(POSITION_GROUP["CENTER_BACK"]).toBe("DEF"));
+  test("CENTER_BACK → CB", () => expect(POSITION_GROUP["CENTER_BACK"]).toBe("CB"));
   test("GOALKEEPER → GK", () => expect(POSITION_GROUP["GOALKEEPER"]).toBe("GK"));
 });

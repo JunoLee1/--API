@@ -40,6 +40,7 @@ describe("generatePaymentDates", () => {
 const mockRepo = {
   findAll: jest.fn(),
   findById: jest.fn(),
+  findBySponsorName: jest.fn(),
   create: jest.fn(),
   createPayments: jest.fn(),
   update: jest.fn(),
@@ -48,7 +49,11 @@ const mockRepo = {
   updatePayment: jest.fn(),
 } as any;
 
-const service = new SponsorshipService(mockRepo);
+const mockLedgerService = {
+  createAutoEntry: jest.fn(),
+} as any;
+
+const service = new SponsorshipService(mockRepo, mockLedgerService);
 
 beforeEach(() => jest.clearAllMocks());
 

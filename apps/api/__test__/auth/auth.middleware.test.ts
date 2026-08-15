@@ -2,9 +2,15 @@ import { describe, test, jest, expect, beforeEach } from "@jest/globals";
 import { Request, Response, NextFunction } from "express";
 
 const mockFindUnique = jest.fn();
+const mockTeamFindUnique = jest.fn();
+const mockAuditLogCreate = jest.fn();
 
 jest.mock("../../src/lib/prisma", () => ({
-  getPrisma: () => ({ user: { findUnique: mockFindUnique } }),
+  getPrisma: () => ({
+    user: { findUnique: mockFindUnique },
+    team: { findUnique: mockTeamFindUnique },
+    auditLog: { create: mockAuditLogCreate },
+  }),
 }));
 
 jest.mock("passport", () => ({
@@ -89,6 +95,7 @@ describe("authMiddleware", () => {
     const user = { id: 1, role: "SUPER_ADMIN" };
     mockPassportUser(user);
     mockFindUnique.mockResolvedValue({ isDeleted: false });
+    mockTeamFindUnique.mockResolvedValue({ id: 5 });
 
     const req = { cookies: {}, headers: { "x-team-id": "5" } } as unknown as Request;
     await auth(req, makeRes(), next);
