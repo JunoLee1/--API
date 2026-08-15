@@ -140,6 +140,18 @@ export class OpsReportController {
     } catch (err) { next(err); }
   };
 
+  getPenaltyStatus = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole, teamId } = requireUser(req);
+      if (!(role === "FRONT_OFFICE" && frontOfficeRole === "HR_MANAGER")) {
+        throw new AppError(403, "FORBIDDEN");
+      }
+      if (!teamId) throw new AppError(400, "TEAM_CONTEXT_REQUIRED");
+      const data = await this.service.getPenaltyStatus(teamId);
+      res.json(data);
+    } catch (err) { next(err); }
+  };
+
   getSponsorshipVsBudget = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, frontOfficeRole } = requireUser(req);

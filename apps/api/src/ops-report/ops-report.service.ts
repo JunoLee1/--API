@@ -20,6 +20,13 @@ export interface AttendanceDrillRow {
   effectiveAbsences: number;
 }
 
+export interface PenaltyStatusRow {
+  playerId: string;
+  playerName: string;
+  effectiveAbsences: number;
+  status: "TRIGGERED" | "WARNING" | "NORMAL";
+}
+
 export class OpsReportService {
   constructor(
     private repo: OpsReportRepository,
@@ -364,6 +371,53 @@ export class OpsReportService {
       totalContracts: p._count.contracts,
       activeContractValue: contractsByPartner.get(p.id) ?? 0,
     }));
+  }
+
+  async getPenaltyStatus(teamId: number): Promise<PenaltyStatusRow[]> {
+    const sessions = await this.prisma.trainingSession.findMany({
+      where: { isApproved: true },
+      select: { id: true },
+    });
+    if (sessions.length === 0) return [];
+
+    const sessionIds = sessions.map((s) => s.id);
+    const results = await this.prisma.trainingResult.findMany({
+      where: { sessionId: { in: sessionIds } },
+      select: {
+        playerId: true,
+        attendance: true,
+        player: {
+          select: {
+            playerName: true,
+            team: { select: { id: true } },
+          },
+        },
+      },
+    });
+
+    const agg = new Map<string, { playerName: string; absentUnauth: number; lateUnauth: number }>();
+    for (const r of results) {
+      if (r.player.team?.id !== teamId) continue;
+      if (!agg.has(r.playerId)) {
+        agg.set(r.playerId, { playerName: r.player.playerName, absentUnauth: 0, lateUnauth: 0 });
+      }
+      const a = agg.get(r.playerId)!;
+      if (r.attendance === "ABSENT_UNAUTHORIZED") a.absentUnauth++;
+      else if (r.attendance === "LATE_UNAUTHORIZED") a.lateUnauth++;
+    }
+
+    const rows: PenaltyStatusRow[] = [];
+    for (const [playerId, a] of agg) {
+      const effectiveAbsences = a.absentUnauth + Math.floor(a.lateUnauth / 3);
+      if (effectiveAbsences === 0) continue;
+      const status: PenaltyStatusRow["status"] =
+        effectiveAbsences % 3 === 0 ? "TRIGGERED" :
+        effectiveAbsences % 3 === 2 ? "WARNING" : "NORMAL";
+      rows.push({ playerId, playerName: a.playerName, effectiveAbsences, status });
+    }
+
+    rows.sort((a, b) => b.effectiveAbsences - a.effectiveAbsences);
+    return rows;
   }
 
   async getSponsorshipVsBudget(seasonId: number) {

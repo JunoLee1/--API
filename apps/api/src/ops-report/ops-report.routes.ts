@@ -20,6 +20,7 @@ router.get("/drill/attendance",              auth, controller.getDrillAttendance
 router.get("/drill/attendance-corrections",  auth, controller.drillAttendanceCorrections);
 router.get("/drill/salary-distribution",     auth, controller.getDrillSalaryDistribution);
 router.get("/drill/unregistered-attendance", auth, controller.getDrillUnregisteredAttendance);
+router.get("/penalty-status",                auth, controller.getPenaltyStatus);
 router.get("/partner-kpi",                   auth, controller.getPartnerKpi);
 router.get("/sponsorship-vs-budget",         auth, controller.getSponsorshipVsBudget);
 
