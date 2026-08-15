@@ -659,7 +659,8 @@
     "reinstateSuccess": "Applicant status restored.",
     "reinstateFailed": "Failed to restore applicant status.",
     "reinstateBtn": "Undo Rejection",
-    "reinstating": "Restoring..."
+    "reinstating": "Restoring...",
+    "fillRate": "Fill Rate"
   },
   "financialReport": {
     "title": "Financial Report",

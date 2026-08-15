@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { recruitmentApi } from '@/services/recruitment.service'
+import { recruitmentApi, type HeadcountProgressItem } from '@/services/recruitment.service'
 import { planReportApi, type ApprovedHrReport } from '@/services/plan-report.service'
 import { hiringSurveyApi } from '@/services/hiring-survey.service'
 import type { JobPosting, JobPostingStatus } from '@/types/recruitment'
@@ -20,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { Progress } from '@/components/ui/progress'
 
 const STATUS_COLORS: Record<JobPostingStatus, 'default' | 'secondary' | 'outline'> = {
   DRAFT: 'outline',
@@ -41,6 +42,7 @@ export function JobPostingListPage() {
   const [hiringItems, setHiringItems] = useState<HiringPlanItem[]>([])
   const [selectedHiringItemId, setSelectedHiringItemId] = useState<number | undefined>(undefined)
   const [form, setForm] = useState({ title: '', description: '', headcount: '1' })
+  const [progressMap, setProgressMap] = useState<Map<number, HeadcountProgressItem>>(new Map())
 
   const canWrite =
     user?.role === 'ADMIN' ||
@@ -58,6 +60,12 @@ export function JobPostingListPage() {
   }
 
   useEffect(() => { void load() }, [])
+
+  useEffect(() => {
+    recruitmentApi.headcountProgress()
+      .then(items => setProgressMap(new Map(items.map(i => [i.postingId, i]))))
+      .catch(() => {})
+  }, [])
 
   const handleOpenDialog = async () => {
     setOpen(true)
@@ -153,6 +161,19 @@ export function JobPostingListPage() {
                     {t('recruitment.headcount')}: {p.headcount}명
                     {p.department && ` · ${p.department.name}`}
                   </p>
+                  {(() => {
+                    const prog = progressMap.get(p.id)
+                    if (!prog || prog.targetHeadcount === 0) return null
+                    return (
+                      <div className="mt-2 space-y-1">
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>{t('recruitment.fillRate')}</span>
+                          <span>{prog.hiredCount}/{prog.targetHeadcount}명</span>
+                        </div>
+                        <Progress value={prog.fillRate} className="h-1.5" />
+                      </div>
+                    )
+                  })()}
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant={STATUS_COLORS[p.status]}>{STATUS_LABEL[p.status]}</Badge>

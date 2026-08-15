@@ -686,6 +686,7 @@
     "reinstateSuccess": "지원자 상태가 복원됐습니다.",
     "reinstateFailed": "복원에 실패했습니다.",
     "reinstateBtn": "거절 취소",
-    "reinstating": "복원 중..."
+    "reinstating": "복원 중...",
+    "fillRate": "충원 현황"
   }
 }

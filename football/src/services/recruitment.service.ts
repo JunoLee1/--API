@@ -8,6 +8,15 @@ import type {
   ReferenceCheckResult,
 } from '@/types/recruitment'
 
+export interface HeadcountProgressItem {
+  postingId: number
+  title: string
+  targetHeadcount: number
+  hiredCount: number
+  fillRate: number          // 0-100
+  status: string
+}
+
 export const recruitmentApi = {
   // JobPostings
   listPostings: (status?: JobPostingStatus): Promise<JobPosting[]> =>
@@ -97,4 +106,7 @@ export const recruitmentApi = {
 
   completeMfa: (appId: number): Promise<JobApplication> =>
     api.post(`/recruitment/applications/${appId}/onboarding/complete-mfa`, {}),
+
+  headcountProgress: (): Promise<HeadcountProgressItem[]> =>
+    api.get('/recruitment/headcount-progress'),
 }
