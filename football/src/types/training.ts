@@ -98,6 +98,7 @@ export interface TrainingResultRow {
   performanceScore: number | null
   playerId: string
   sessionId: number
+  hasCorrectionHistory: boolean
   session: {
     id: number
     date: string

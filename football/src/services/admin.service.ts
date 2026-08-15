@@ -37,6 +37,7 @@ export const auditLogApi = {
     const params = new URLSearchParams()
     if (filters.actorId) params.set('actorId', String(filters.actorId))
     if (filters.action) params.set('action', filters.action)
+    if (filters.targetId !== undefined) params.set('targetId', String(filters.targetId))
     if (filters.from) params.set('from', filters.from)
     if (filters.to) params.set('to', filters.to)
     if (filters.page) params.set('page', String(filters.page))

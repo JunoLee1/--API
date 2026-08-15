@@ -171,7 +171,12 @@
       "ABSENT_UNAUTHORIZED": "Unauth. Absence",
       "LATE_AUTHORIZED": "Auth. Late",
       "LATE_UNAUTHORIZED": "Unauth. Late"
-    }
+    },
+    "corrected": "Edited ↕",
+    "correctionHistory": "Correction History",
+    "noHistory": "No correction history",
+    "reason": "Reason",
+    "noEntry": "Not entered"
   },
   "videoPage": {
     "title": "Training Videos",
