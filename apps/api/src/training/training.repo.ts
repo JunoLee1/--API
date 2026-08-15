@@ -199,7 +199,7 @@ export class TrainingRepository {
       select: { targetId: true },
       distinct: ['targetId'],
     })
-    const correctedSet = new Set(corrected.map(c => c.targetId))
+    const correctedSet = new Set(corrected.map(c => c.targetId).filter((id): id is string => id !== null))
 
     return results.map(r => ({
       ...r,
