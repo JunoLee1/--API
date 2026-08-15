@@ -58,7 +58,14 @@ export class TrainingService {
     const session = await this.repo.findById(id);
     if (!session) throw new AppError(404, "SESSION_NOT_FOUND");
     if (session.isApproved) throw new AppError(409, "ALREADY_APPROVED");
-    return this.repo.approve(id, approvedById);
+
+    const presentResults = (session.results ?? []).filter((r: any) => r.attendance !== "ABSENT");
+    const missingCount = presentResults.filter((r: any) => r.performanceScore == null).length;
+
+    const approved = await this.repo.approve(id, approvedById);
+
+    if (missingCount === 0) return approved;
+    return { ...approved, evalWarning: { missing: missingCount, total: presentResults.length } };
   }
 
   async addContent(sessionId: number, dto: AddContentDto) {
