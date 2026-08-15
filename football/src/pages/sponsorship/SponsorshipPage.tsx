@@ -111,6 +111,7 @@ function CreateSponsorshipDialog({ open, onOpenChange, onSaved }: CreateSponsors
     setUkSortCode('')
     setUkAccountNumber('')
     setUkSwiftBic('')
+    setShowPostcode(false)
   }
 
   const handleSave = async () => {
