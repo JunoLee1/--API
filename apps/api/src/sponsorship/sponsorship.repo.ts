@@ -69,6 +69,13 @@ export class SponsorshipRepository {
         ...(data.ukSortCode && { ukSortCode: data.ukSortCode }),
         ...(data.ukAccountNumber && { ukAccountNumber: data.ukAccountNumber }),
         ...(data.ukSwiftBic && { ukSwiftBic: data.ukSwiftBic }),
+        isOverseas: data.isOverseas ?? false,
+        ...(data.businessRegNumber && { businessRegNumber: data.businessRegNumber }),
+        ...(data.postalCode && { postalCode: data.postalCode }),
+        ...(data.address && { address: data.address }),
+        ...(data.addressDetail && { addressDetail: data.addressDetail }),
+        ...(data.taxId && { taxId: data.taxId }),
+        ...(data.overseasAddress && { overseasAddress: data.overseasAddress }),
       },
     });
   }
