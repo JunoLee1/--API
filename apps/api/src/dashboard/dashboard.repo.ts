@@ -151,17 +151,18 @@ export class DashboardRepository {
 
   private async getTrainingEvalEntryRate(): Promise<number> {
     const sessionFilter = { isApproved: true, cancelledAt: null, date: { gte: START_OF_MONTH() } };
+    const absentFilter = { notIn: ["ABSENT_AUTHORIZED" as const, "ABSENT_UNAUTHORIZED" as const] };
     const [scored, total] = await Promise.all([
       this.prisma.trainingResult.count({
         where: {
-          attendance: { not: "ABSENT" },
+          attendance: absentFilter,
           performanceScore: { not: null },
           session: sessionFilter,
         },
       }),
       this.prisma.trainingResult.count({
         where: {
-          attendance: { not: "ABSENT" },
+          attendance: absentFilter,
           session: sessionFilter,
         },
       }),
