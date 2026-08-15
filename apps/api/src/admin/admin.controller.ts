@@ -140,6 +140,7 @@ export class AdminController {
       const filters: Parameters<typeof this.service.getAuditLogs>[0] = {};
       if (req.query["actorId"]) filters.actorId = Number(req.query["actorId"]);
       if (req.query["action"]) filters.action = req.query["action"] as string;
+      if (req.query["targetId"]) filters.targetId = req.query["targetId"] as string;
       if (req.query["from"]) filters.from = req.query["from"] as string;
       if (req.query["to"]) filters.to = req.query["to"] as string;
       if (req.query["page"]) filters.page = Number(req.query["page"]);

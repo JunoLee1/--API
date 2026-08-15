@@ -95,7 +95,7 @@ export class AdminService {
   }
 
   async getAuditLogs(
-    filters: { actorId?: number; action?: string; from?: string; to?: string; page?: number; limit?: number },
+    filters: { actorId?: number; action?: string; targetId?: string; from?: string; to?: string; page?: number; limit?: number },
     isDemo: boolean = false,
   ) {
     const [logs, total] = await Promise.all([
