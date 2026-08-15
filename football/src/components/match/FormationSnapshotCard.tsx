@@ -6,22 +6,36 @@ import type { FormationSnapshot } from '@/types/formation-snapshot'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Plus } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 
 interface Props {
   matchId: number
   snapshots: FormationSnapshot[]
   canEdit: boolean
   onAdded: (s: FormationSnapshot) => void
+  onRemoved: (id: number) => void
 }
 
-export function FormationSnapshotCard({ matchId, snapshots, canEdit, onAdded }: Props) {
+export function FormationSnapshotCard({ matchId, snapshots, canEdit, onAdded, onRemoved }: Props) {
   const { t } = useTranslation('match')
   const [adding, setAdding] = useState(false)
   const [minute, setMinute] = useState('')
   const [formation, setFormation] = useState('')
   const [changeReason, setChangeReason] = useState('')
   const [saving, setSaving] = useState(false)
+  const [removingId, setRemovingId] = useState<number | null>(null)
+
+  const handleRemove = async (id: number) => {
+    setRemovingId(id)
+    try {
+      await formationSnapshotApi.remove(id)
+      onRemoved(id)
+    } catch {
+      toast.error(t('formationSnapshot.removeError', 'Failed to delete'))
+    } finally {
+      setRemovingId(null)
+    }
+  }
 
   const handleSubmit = async () => {
     if (!formation.trim()) return
@@ -105,7 +119,7 @@ export function FormationSnapshotCard({ matchId, snapshots, canEdit, onAdded }: 
       ) : (
         <div className="space-y-1">
           {snapshots.map(s => (
-            <div key={s.id} className="flex items-start gap-3 text-sm py-1 border-b last:border-0">
+            <div key={s.id} className="flex items-center gap-3 text-sm py-1 border-b last:border-0">
               <span className="w-12 text-muted-foreground text-xs shrink-0">
                 {s.minute != null ? `${s.minute}${t('formationSnapshot.minute')}` : '—'}
               </span>
@@ -116,6 +130,16 @@ export function FormationSnapshotCard({ matchId, snapshots, canEdit, onAdded }: 
               <span className="text-xs text-muted-foreground shrink-0">
                 {t('formationSnapshot.by')} {s.createdBy.nickname}
               </span>
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={() => handleRemove(s.id)}
+                  disabled={removingId === s.id}
+                  className="ml-auto text-muted-foreground hover:text-destructive disabled:opacity-40"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
           ))}
         </div>
