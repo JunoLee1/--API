@@ -32,6 +32,9 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { ArrowLeft } from 'lucide-react'
+import { Textarea } from '@/components/ui/textarea'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { DaumPostcodeDialog } from '@/components/DaumPostcodeDialog'
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' })
@@ -51,28 +54,40 @@ interface BankEditDialogProps {
 
 function BankEditDialog({ open, onOpenChange, sponsorship, onSaved }: BankEditDialogProps) {
   const { t } = useTranslation('sponsorship')
-  const [form, setForm] = useState({
-    domesticBankName: sponsorship.domesticBankName ?? '',
-    domesticAccountNumber: sponsorship.domesticAccountNumber ?? '',
-    domesticAccountHolder: sponsorship.domesticAccountHolder ?? '',
-    ukBankName: sponsorship.ukBankName ?? '',
-    ukSortCode: sponsorship.ukSortCode ?? '',
-    ukAccountNumber: sponsorship.ukAccountNumber ?? '',
-    ukSwiftBic: sponsorship.ukSwiftBic ?? '',
-  })
+  const [isOverseas, setIsOverseas] = useState(sponsorship.isOverseas)
+  const [businessRegNumber, setBusinessRegNumber] = useState(sponsorship.businessRegNumber ?? '')
+  const [postalCode, setPostalCode] = useState(sponsorship.postalCode ?? '')
+  const [address, setAddress] = useState(sponsorship.address ?? '')
+  const [addressDetail, setAddressDetail] = useState(sponsorship.addressDetail ?? '')
+  const [taxId, setTaxId] = useState(sponsorship.taxId ?? '')
+  const [overseasAddress, setOverseasAddress] = useState(sponsorship.overseasAddress ?? '')
+  const [domesticBankName, setDomesticBankName] = useState(sponsorship.domesticBankName ?? '')
+  const [domesticAccountNumber, setDomesticAccountNumber] = useState(sponsorship.domesticAccountNumber ?? '')
+  const [domesticAccountHolder, setDomesticAccountHolder] = useState(sponsorship.domesticAccountHolder ?? '')
+  const [ukBankName, setUkBankName] = useState(sponsorship.ukBankName ?? '')
+  const [ukSortCode, setUkSortCode] = useState(sponsorship.ukSortCode ?? '')
+  const [ukAccountNumber, setUkAccountNumber] = useState(sponsorship.ukAccountNumber ?? '')
+  const [ukSwiftBic, setUkSwiftBic] = useState(sponsorship.ukSwiftBic ?? '')
+  const [showPostcode, setShowPostcode] = useState(false)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (open) {
-      setForm({
-        domesticBankName: sponsorship.domesticBankName ?? '',
-        domesticAccountNumber: sponsorship.domesticAccountNumber ?? '',
-        domesticAccountHolder: sponsorship.domesticAccountHolder ?? '',
-        ukBankName: sponsorship.ukBankName ?? '',
-        ukSortCode: sponsorship.ukSortCode ?? '',
-        ukAccountNumber: sponsorship.ukAccountNumber ?? '',
-        ukSwiftBic: sponsorship.ukSwiftBic ?? '',
-      })
+      setIsOverseas(sponsorship.isOverseas)
+      setBusinessRegNumber(sponsorship.businessRegNumber ?? '')
+      setPostalCode(sponsorship.postalCode ?? '')
+      setAddress(sponsorship.address ?? '')
+      setAddressDetail(sponsorship.addressDetail ?? '')
+      setTaxId(sponsorship.taxId ?? '')
+      setOverseasAddress(sponsorship.overseasAddress ?? '')
+      setDomesticBankName(sponsorship.domesticBankName ?? '')
+      setDomesticAccountNumber(sponsorship.domesticAccountNumber ?? '')
+      setDomesticAccountHolder(sponsorship.domesticAccountHolder ?? '')
+      setUkBankName(sponsorship.ukBankName ?? '')
+      setUkSortCode(sponsorship.ukSortCode ?? '')
+      setUkAccountNumber(sponsorship.ukAccountNumber ?? '')
+      setUkSwiftBic(sponsorship.ukSwiftBic ?? '')
+      setShowPostcode(false)
     }
   }, [open, sponsorship])
 
@@ -80,13 +95,20 @@ function BankEditDialog({ open, onOpenChange, sponsorship, onSaved }: BankEditDi
     setSaving(true)
     try {
       const updated = await sponsorshipApi.update(sponsorship.id, {
-        domesticBankName: form.domesticBankName || undefined,
-        domesticAccountNumber: form.domesticAccountNumber || undefined,
-        domesticAccountHolder: form.domesticAccountHolder || undefined,
-        ukBankName: form.ukBankName || undefined,
-        ukSortCode: form.ukSortCode || undefined,
-        ukAccountNumber: form.ukAccountNumber || undefined,
-        ukSwiftBic: form.ukSwiftBic || undefined,
+        isOverseas,
+        ...(!isOverseas && businessRegNumber ? { businessRegNumber } : { businessRegNumber: undefined }),
+        ...(!isOverseas && postalCode ? { postalCode } : { postalCode: undefined }),
+        ...(!isOverseas && address ? { address } : { address: undefined }),
+        ...(!isOverseas && addressDetail ? { addressDetail } : { addressDetail: undefined }),
+        ...(!isOverseas && domesticBankName ? { domesticBankName } : { domesticBankName: undefined }),
+        ...(!isOverseas && domesticAccountNumber ? { domesticAccountNumber } : { domesticAccountNumber: undefined }),
+        ...(!isOverseas && domesticAccountHolder ? { domesticAccountHolder } : { domesticAccountHolder: undefined }),
+        ...(isOverseas && taxId ? { taxId } : { taxId: undefined }),
+        ...(isOverseas && overseasAddress ? { overseasAddress } : { overseasAddress: undefined }),
+        ...(isOverseas && ukBankName ? { ukBankName } : { ukBankName: undefined }),
+        ...(isOverseas && ukSortCode ? { ukSortCode } : { ukSortCode: undefined }),
+        ...(isOverseas && ukAccountNumber ? { ukAccountNumber } : { ukAccountNumber: undefined }),
+        ...(isOverseas && ukSwiftBic ? { ukSwiftBic } : { ukSwiftBic: undefined }),
       })
       toast.success(t('bank.saved'))
       onSaved(updated)
@@ -98,38 +120,121 @@ function BankEditDialog({ open, onOpenChange, sponsorship, onSaved }: BankEditDi
     }
   }
 
-  const field = (label: string, key: keyof typeof form) => (
-    <div className="space-y-1">
-      <Label className="text-xs text-muted-foreground">{label}</Label>
-      <Input value={form[key]} onChange={(e) => setForm((p) => ({ ...p, [key]: e.target.value }))} />
-    </div>
-  )
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{t('bank.editTitle')}</DialogTitle></DialogHeader>
         <div className="space-y-4 py-1">
-          <div>
-            <p className="text-xs font-medium mb-2">{t('bank.domestic')}</p>
-            <div className="space-y-2">
-              {field(t('bank.bankName'), 'domesticBankName')}
-              {field(t('bank.accountNumber'), 'domesticAccountNumber')}
-              {field(t('bank.accountHolder'), 'domesticAccountHolder')}
-            </div>
-          </div>
-          <div>
-            <p className="text-xs font-medium mb-2">{t('bank.uk')}</p>
-            <div className="space-y-2">
-              {field(t('bank.bankName'), 'ukBankName')}
-              <div className="grid grid-cols-2 gap-2">
-                {field(t('bank.sortCode'), 'ukSortCode')}
-                {field(t('bank.accountNumber'), 'ukAccountNumber')}
+          {/* 국내/해외 구분 */}
+          <div className="space-y-1.5">
+            <Label>{t('form.origin')}</Label>
+            <RadioGroup
+              value={isOverseas ? 'overseas' : 'domestic'}
+              onValueChange={(v) => setIsOverseas(v === 'overseas')}
+            >
+              <div className="flex gap-6">
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <RadioGroupItem value="domestic" />
+                  {t('form.domestic')}
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <RadioGroupItem value="overseas" />
+                  {t('form.overseas')}
+                </label>
               </div>
-              {field(t('bank.swiftBic'), 'ukSwiftBic')}
-            </div>
+            </RadioGroup>
           </div>
+
+          {/* 국내 전용 */}
+          {!isOverseas && (
+            <>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">{t('form.businessRegNumber')}</Label>
+                <Input placeholder="000-00-00000" value={businessRegNumber} onChange={(e) => setBusinessRegNumber(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">{t('form.address')}</Label>
+                <div className="flex gap-2">
+                  <Input readOnly placeholder={t('form.postalCode')} value={postalCode} className="w-28" />
+                  <Button type="button" variant="outline" size="sm" onClick={() => setShowPostcode(true)}>
+                    {t('form.addressSearch')}
+                  </Button>
+                </div>
+                <Input readOnly value={address} />
+                <Input placeholder={t('form.addressDetail')} value={addressDetail} onChange={(e) => setAddressDetail(e.target.value)} />
+              </div>
+              <div>
+                <p className="text-xs font-medium mb-2">{t('bank.domestic')}</p>
+                <div className="space-y-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">{t('bank.bankName')}</Label>
+                    <Input value={domesticBankName} onChange={(e) => setDomesticBankName(e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">{t('bank.accountNumber')}</Label>
+                    <Input value={domesticAccountNumber} onChange={(e) => setDomesticAccountNumber(e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">{t('bank.accountHolder')}</Label>
+                    <Input value={domesticAccountHolder} onChange={(e) => setDomesticAccountHolder(e.target.value)} />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* 해외 전용 */}
+          {isOverseas && (
+            <>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">{t('form.taxId')}</Label>
+                <Input placeholder="GB123456789" value={taxId} onChange={(e) => setTaxId(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">{t('form.overseasAddress')}</Label>
+                <Textarea
+                  placeholder="10 Downing Street, London, UK"
+                  value={overseasAddress}
+                  onChange={(e) => setOverseasAddress(e.target.value)}
+                  rows={3}
+                />
+              </div>
+              <div>
+                <p className="text-xs font-medium mb-2">{t('bank.uk')}</p>
+                <div className="space-y-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">{t('bank.bankName')}</Label>
+                    <Input value={ukBankName} onChange={(e) => setUkBankName(e.target.value)} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">{t('bank.sortCode')}</Label>
+                      <Input value={ukSortCode} onChange={(e) => setUkSortCode(e.target.value)} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">{t('bank.accountNumber')}</Label>
+                      <Input value={ukAccountNumber} onChange={(e) => setUkAccountNumber(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">{t('bank.swiftBic')}</Label>
+                    <Input value={ukSwiftBic} onChange={(e) => setUkSwiftBic(e.target.value)} />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
+
+        <DaumPostcodeDialog
+          open={showPostcode}
+          onOpenChange={setShowPostcode}
+          onComplete={(pc, addr) => {
+            setPostalCode(pc)
+            setAddress(addr)
+          }}
+        />
+
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>
           <Button onClick={() => void handleSave()} disabled={saving}>
