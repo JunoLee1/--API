@@ -66,6 +66,8 @@
     "editTitle": "Edit Sponsor Info",
     "noInfo": "No bank accounts registered.",
     "saved": "Sponsor info saved.",
-    "saveFailed": "Failed to save."
+    "saveFailed": "Failed to save.",
+    "cancel": "Cancel",
+    "saving": "Saving..."
   }
 }

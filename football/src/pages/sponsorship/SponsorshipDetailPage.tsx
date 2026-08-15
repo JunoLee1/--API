@@ -255,9 +255,9 @@ function SponsorInfoEditDialog({ open, onOpenChange, sponsorship, onSaved }: Spo
         />
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t('bank.cancel')}</Button>
           <Button onClick={() => void handleSave()} disabled={saving}>
-            {saving ? '저장 중...' : t('bank.editButton')}
+            {saving ? t('bank.saving') : t('bank.editButton')}
           </Button>
         </DialogFooter>
       </DialogContent>
