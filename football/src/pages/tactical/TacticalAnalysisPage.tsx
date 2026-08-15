@@ -582,7 +582,14 @@ export function TacticalAnalysisPage() {
                   onClick={() => handleRowClick(a)}
                 >
                   <TableCell>
-                    <div className="text-sm">{a.match.homeTeamName} vs {a.match.awayTeamName}</div>
+                    <div className="text-sm">
+                      {a.match.homeTeamName} vs {a.match.awayTeamName}
+                      {a.match.homeScore != null && a.match.awayScore != null && (
+                        <span className="ml-2 font-mono text-muted-foreground text-xs">
+                          {a.match.homeScore}–{a.match.awayScore}
+                        </span>
+                      )}
+                    </div>
                     <div className="text-xs text-muted-foreground tabular-nums">{formatDate(a.match.date)}</div>
                   </TableCell>
                   <TableCell>
