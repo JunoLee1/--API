@@ -28,5 +28,5 @@ export const opsReportApi = {
     api.get<AttendanceDrillItem[]>(`/ops-reports/drill/attendance?year=${year}&month=${month}`),
 
   getPenaltyStatus: (): Promise<PenaltyStatusRow[]> =>
-    api.get('/ops-reports/penalty-status'),
+    api.get<PenaltyStatusRow[]>('/ops-reports/penalty-status'),
 }
