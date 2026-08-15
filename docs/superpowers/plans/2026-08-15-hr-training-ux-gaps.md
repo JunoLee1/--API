@@ -1,6 +1,6 @@
 # HR·훈련 UX 공백 보완 구현 계획
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 채용 충원률 표시(S2), 출결 정정 이력 모달(Y2), HR 보고서 페널티 섹션(Y5) 3개 미구현 항목을 완성한다.
 
@@ -43,7 +43,7 @@
 
 ---
 
-- [ ] **Step 1: FE 서비스에 타입 + 함수 추가**
+- [x] **Step 1: FE 서비스에 타입 + 함수 추가**
 
 `football/src/services/recruitment.service.ts` 상단 인터페이스 블록에 추가:
 
@@ -67,7 +67,7 @@ headcountProgress: (): Promise<HeadcountProgressItem[]> =>
 
 ---
 
-- [ ] **Step 2: JobPostingListPage에 진행률 상태 + 데이터 패칭 추가**
+- [x] **Step 2: JobPostingListPage에 진행률 상태 + 데이터 패칭 추가**
 
 `JobPostingListPage.tsx`에서 기존 state 선언 블록에 추가:
 
@@ -87,7 +87,7 @@ useEffect(() => {
 
 ---
 
-- [ ] **Step 3: 카드에 Progress UI 렌더링**
+- [x] **Step 3: 카드에 Progress UI 렌더링**
 
 각 공고 카드 (`{t('recruitment.headcount')}: {p.headcount}명` 이 있는 `<p>` 바로 아래)에 추가:
 
@@ -120,7 +120,7 @@ i18n 키 추가 (ko.json, en.json):
 
 ---
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add football/src/services/recruitment.service.ts \
@@ -141,7 +141,7 @@ git commit -m "feat(s2): 채용 공고 충원률 Progress UI 추가"
 
 ---
 
-- [ ] **Step 1: admin.repo.ts — `listAuditLogs`에 `targetId` 필터 추가**
+- [x] **Step 1: admin.repo.ts — `listAuditLogs`에 `targetId` 필터 추가**
 
 `listAuditLogs` 함수 시그니처 변경:
 
@@ -172,7 +172,7 @@ async listAuditLogs(
 
 ---
 
-- [ ] **Step 2: admin.controller.ts — `listAuditLogs`에서 `targetId` 쿼리 파라미터 읽기**
+- [x] **Step 2: admin.controller.ts — `listAuditLogs`에서 `targetId` 쿼리 파라미터 읽기**
 
 기존 `listAuditLogs` 컨트롤러에서 쿼리 파라미터를 읽는 부분에 `targetId` 추가:
 
@@ -192,7 +192,7 @@ const filters = {
 
 ---
 
-- [ ] **Step 3: training.repo.ts — `findResults`에 `hasCorrectionHistory` 병합**
+- [x] **Step 3: training.repo.ts — `findResults`에 `hasCorrectionHistory` 병합**
 
 `findResults` 함수 마지막 부분 (results 반환 직전)에 추가:
 
@@ -220,7 +220,7 @@ return results.map(r => ({
 
 ---
 
-- [ ] **Step 4: 동작 확인 (수동)**
+- [x] **Step 4: 동작 확인 (수동)**
 
 ```bash
 cd /Users/juno/work/football
@@ -232,7 +232,7 @@ Expected: 에러 없음
 
 ---
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add apps/api/src/admin/admin.repo.ts \
@@ -251,7 +251,7 @@ git commit -m "feat(y2): audit-log targetId 필터 + training hasCorrectionHisto
 
 ---
 
-- [ ] **Step 1: FE admin.service — `auditLogApi.list`에 `targetId` 추가**
+- [x] **Step 1: FE admin.service — `auditLogApi.list`에 `targetId` 추가**
 
 `football/src/services/admin.service.ts`의 `auditLogApi.list` 함수가 받는 params 타입에 `targetId?: number` 추가:
 
@@ -289,7 +289,7 @@ export interface AuditLogEntry {
 
 ---
 
-- [ ] **Step 2: TrainingResultsPage — 정정 이력 상태 추가**
+- [x] **Step 2: TrainingResultsPage — 정정 이력 상태 추가**
 
 기존 state 블록에 추가:
 
@@ -323,7 +323,7 @@ const handleOpenHistory = async (row: { id: number; player: { playerName: string
 
 ---
 
-- [ ] **Step 3: 테이블 행에 배지 추가**
+- [x] **Step 3: 테이블 행에 배지 추가**
 
 각 행 렌더링에서, 기존 출결 상태 표시 옆에 조건부 배지 추가:
 
@@ -349,7 +349,7 @@ i18n 키:
 
 ---
 
-- [ ] **Step 4: 정정 이력 Dialog 추가**
+- [x] **Step 4: 정정 이력 Dialog 추가**
 
 기존 정정 Dialog 아래(또는 별도)에 이력 Dialog 추가:
 
@@ -407,7 +407,7 @@ i18n 키:
 
 ---
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add football/src/services/admin.service.ts \
@@ -429,7 +429,7 @@ git commit -m "feat(y2): 출결 정정 이력 모달"
 
 ---
 
-- [ ] **Step 1: 테스트 먼저 작성**
+- [x] **Step 1: 테스트 먼저 작성**
 
 `ops-report.service.test.ts`에 `getPenaltyStatus` describe 블록 추가:
 
@@ -494,7 +494,7 @@ describe('getPenaltyStatus', () => {
 
 ---
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 ```bash
 cd /Users/juno/work/football
@@ -505,7 +505,7 @@ Expected: `getPenaltyStatus is not a function` 또는 유사한 오류로 FAIL
 
 ---
 
-- [ ] **Step 3: ops-report.service.ts에 getPenaltyStatus 구현**
+- [x] **Step 3: ops-report.service.ts에 getPenaltyStatus 구현**
 
 `ops-report.service.ts` 파일에 타입 + 메서드 추가:
 
@@ -567,7 +567,7 @@ async getPenaltyStatus(teamId: number): Promise<PenaltyStatusRow[]> {
 
 ---
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 ```bash
 cd /Users/juno/work/football
@@ -578,7 +578,7 @@ Expected: 5개 테스트 모두 PASS
 
 ---
 
-- [ ] **Step 5: 컨트롤러 + 라우트 추가**
+- [x] **Step 5: 컨트롤러 + 라우트 추가**
 
 `ops-report.controller.ts`에 메서드 추가:
 
@@ -602,7 +602,7 @@ router.get('/penalty-status', auth, controller.getPenaltyStatus)
 
 ---
 
-- [ ] **Step 6: 전체 테스트 확인**
+- [x] **Step 6: 전체 테스트 확인**
 
 ```bash
 cd /Users/juno/work/football
@@ -613,7 +613,7 @@ Expected: 전체 PASS
 
 ---
 
-- [ ] **Step 7: 커밋**
+- [x] **Step 7: 커밋**
 
 ```bash
 git add apps/api/src/ops-report/ops-report.service.ts \
@@ -633,7 +633,7 @@ git commit -m "feat(y5): getPenaltyStatus 집계 엔드포인트"
 
 ---
 
-- [ ] **Step 1: FE 서비스에 타입 + 함수 추가**
+- [x] **Step 1: FE 서비스에 타입 + 함수 추가**
 
 `football/src/services/ops-report.service.ts`에 추가:
 
@@ -652,7 +652,7 @@ getPenaltyStatus: (): Promise<PenaltyStatusRow[]> =>
 
 ---
 
-- [ ] **Step 2: HrReportPage에 페널티 상태 추가**
+- [x] **Step 2: HrReportPage에 페널티 상태 추가**
 
 기존 state 블록에 추가:
 
@@ -674,7 +674,7 @@ opsReportApi.getPenaltyStatus()
 
 ---
 
-- [ ] **Step 3: 페널티 섹션 UI 렌더링**
+- [x] **Step 3: 페널티 섹션 UI 렌더링**
 
 기존 출석 섹션 (`출석률` KPI 카드) 아래에 추가:
 
@@ -741,7 +741,7 @@ i18n 키:
 
 ---
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add football/src/services/ops-report.service.ts \
@@ -753,8 +753,8 @@ git commit -m "feat(y5): HR 보고서 페널티 섹션"
 
 ## 완료 기준
 
-- [ ] S2: `JobPostingListPage`에서 각 공고 카드에 Progress 바 + "N/M명" 표시
-- [ ] Y2: `TrainingResultsPage`에서 정정된 행에 "수정됨 ↕" 배지, 클릭 시 정정 이력 Dialog
-- [ ] Y5: `HrReportPage` 출석 섹션 아래 "실효 결석 누적 현황" 테이블 (TRIGGERED/WARNING/NORMAL 배지)
-- [ ] `npx jest apps/api/src/ops-report/ops-report.service.test.ts --no-coverage` → 전체 PASS
-- [ ] `npx tsc --project apps/api/tsconfig.json --noEmit` → 에러 없음
+- [x] S2: `JobPostingListPage`에서 각 공고 카드에 Progress 바 + "N/M명" 표시
+- [x] Y2: `TrainingResultsPage`에서 정정된 행에 "수정됨 ↕" 배지, 클릭 시 정정 이력 Dialog
+- [x] Y5: `HrReportPage` 출석 섹션 아래 "실효 결석 누적 현황" 테이블 (TRIGGERED/WARNING/NORMAL 배지)
+- [x] `npx jest apps/api/src/ops-report/ops-report.service.test.ts --no-coverage` → 전체 PASS
+- [x] `npx tsc --project apps/api/tsconfig.json --noEmit` → 에러 없음
