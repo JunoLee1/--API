@@ -1896,13 +1896,21 @@ model CoachAvailability {
   createdBy User @relation("CoachAvailabilityCreatedBy", fields: [createdById], references: [id])
 }
 
+enum LoadUnit {
+  KG
+  MINUTES
+  DISTANCE_M
+  SETS
+}
+
 model TrainingLoad {
-  id           Int    @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   playerId     String
   sessionId    Int
   rpe          Int
   load         Int?
-  version      Int    @default(1)
+  loadUnit     LoadUnit?
+  version      Int       @default(1)
   previousRpe  Int?
   previousLoad Int?
 
