@@ -161,6 +161,9 @@ function AnalysisFormDialog({
   const [opponentKeyThreat, setOpponentKeyThreat] = useState(initial?.opponentKeyThreat ?? '')
   const [opponentWeakness, setOpponentWeakness] = useState(initial?.opponentWeakness ?? '')
   const [opponentKeyPlayer, setOpponentKeyPlayer] = useState(initial?.opponentKeyPlayer ?? '')
+  const [opponentPressureScore, setOpponentPressureScore] = useState<number | null>(initial?.opponentPressureScore ?? null)
+  const [opponentSetPieceScore, setOpponentSetPieceScore] = useState<number | null>(initial?.opponentSetPieceScore ?? null)
+  const [opponentCounterScore, setOpponentCounterScore] = useState<number | null>(initial?.opponentCounterScore ?? null)
   // ── POST_MATCH ──
   const [tacticalCompliance, setTacticalCompliance] = useState(initial?.tacticalCompliance ?? '')
   const [concededAnalysis, setConcededAnalysis] = useState(initial?.concededAnalysis ?? '')
@@ -182,6 +185,9 @@ function AnalysisFormDialog({
     setOpponentKeyThreat('')
     setOpponentWeakness('')
     setOpponentKeyPlayer('')
+    setOpponentPressureScore(null)
+    setOpponentSetPieceScore(null)
+    setOpponentCounterScore(null)
     setOpponentAnalysis('')
     setTacticalCompliance('')
     setConcededAnalysis('')
@@ -220,6 +226,9 @@ function AnalysisFormDialog({
     opponentKeyThreat: opponentKeyThreat || undefined,
     opponentWeakness: opponentWeakness || undefined,
     opponentKeyPlayer: opponentKeyPlayer || undefined,
+    ...(opponentPressureScore !== null && { opponentPressureScore }),
+    ...(opponentSetPieceScore !== null && { opponentSetPieceScore }),
+    ...(opponentCounterScore !== null && { opponentCounterScore }),
     opponentAnalysis: opponentAnalysis || undefined,
   })
 
@@ -255,6 +264,9 @@ function AnalysisFormDialog({
               opponentKeyThreat,
               opponentWeakness,
               opponentKeyPlayer,
+              ...(opponentPressureScore !== null && { opponentPressureScore }),
+              ...(opponentSetPieceScore !== null && { opponentSetPieceScore }),
+              ...(opponentCounterScore !== null && { opponentCounterScore }),
               opponentAnalysis,
             }
           : {
@@ -359,6 +371,39 @@ function AnalysisFormDialog({
                   onChange={(e) => setOpponentKeyPlayer(e.target.value)}
                 />
               </div>
+              {/* Threat score sliders */}
+              {[
+                { label: t('tactical.form.opponentPressureScoreLabel'), value: opponentPressureScore, set: setOpponentPressureScore },
+                { label: t('tactical.form.opponentSetPieceScoreLabel'), value: opponentSetPieceScore, set: setOpponentSetPieceScore },
+                { label: t('tactical.form.opponentCounterScoreLabel'), value: opponentCounterScore, set: setOpponentCounterScore },
+              ].map(({ label, value, set }) => (
+                <div key={label} className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label>{label}</Label>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {value !== null ? value : t('tactical.form.scoreNone')}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={1}
+                    max={10}
+                    step={1}
+                    value={value ?? 5}
+                    onChange={(e) => set(Number(e.target.value))}
+                    className="w-full accent-primary"
+                  />
+                  {value !== null && (
+                    <button
+                      type="button"
+                      onClick={() => set(null)}
+                      className="text-xs text-muted-foreground underline"
+                    >
+                      {t('tactical.form.scoreNone')}
+                    </button>
+                  )}
+                </div>
+              ))}
               <div className="space-y-1.5">
                 <Label>{t('tactical.form.opponentAnalysisLabel')}</Label>
                 <Textarea
