@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { format } from 'date-fns'
 import { trainingApi } from '@/services/training.service'
+import { auditLogApi } from '@/services/admin.service'
 import type { TrainingResultRow, SessionType, TrainingResultFilters } from '@/types/training'
+import type { AuditLogEntry } from '@/types/auditLog'
 import { SESSION_TYPE_LABEL } from '@/types/training'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
@@ -43,6 +46,14 @@ export function TrainingResultsPage() {
   const [correctAttendance, setCorrectAttendance] = useState('')
   const [correctReason, setCorrectReason] = useState('')
   const [correcting, setCorrecting] = useState(false)
+  const [historyTarget, setHistoryTarget] = useState<{
+    id: number
+    playerName: string
+    sessionDate: string
+  } | null>(null)
+  const [historyLogs, setHistoryLogs] = useState<AuditLogEntry[]>([])
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyError, setHistoryError] = useState(false)
 
   const handleCorrect = async () => {
     if (!correctTarget || !correctAttendance || !correctReason.trim()) return
@@ -58,6 +69,21 @@ export function TrainingResultsPage() {
       toast.error(t('resultsPage.correctFailed'))
     } finally {
       setCorrecting(false)
+    }
+  }
+
+  const handleOpenHistory = async (row: TrainingResultRow) => {
+    setHistoryTarget({ id: row.id, playerName: row.player.playerName, sessionDate: row.session.date })
+    setHistoryLoading(true)
+    setHistoryLogs([])
+    setHistoryError(false)
+    try {
+      const res = await auditLogApi.list({ targetId: row.id, action: 'ATTENDANCE_CORRECTED', limit: 50 })
+      setHistoryLogs(res.logs)
+    } catch {
+      setHistoryError(true)
+    } finally {
+      setHistoryLoading(false)
     }
   }
 
@@ -189,7 +215,17 @@ export function TrainingResultsPage() {
                 <TableCell>{t(`sessionType.${r.session.sessionType}`) || r.session.sessionType}</TableCell>
                 <TableCell className="font-medium">{r.player.playerName}</TableCell>
                 <TableCell>{r.player.position}</TableCell>
-                <TableCell>{t(`resultsPage.attendanceLabel.${r.attendance}`) || r.attendance}</TableCell>
+                <TableCell>
+                  {t(`resultsPage.attendanceLabel.${r.attendance}`) || r.attendance}
+                  {r.hasCorrectionHistory && (
+                    <button
+                      onClick={() => handleOpenHistory(r)}
+                      className="ml-1 text-xs text-muted-foreground underline hover:text-foreground cursor-pointer"
+                    >
+                      {t('resultsPage.corrected')}
+                    </button>
+                  )}
+                </TableCell>
                 <TableCell className="text-right tabular-nums">{r.performanceScore ?? '—'}</TableCell>
                 {isAdmin && (
                   <TableCell>
@@ -215,6 +251,46 @@ export function TrainingResultsPage() {
         pageSize={PAGE_SIZE}
         onPageChange={setPage}
       />
+
+      <Dialog open={historyTarget !== null} onOpenChange={open => { if (!open) setHistoryTarget(null) }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {historyTarget?.playerName} — {historyTarget ? format(new Date(historyTarget.sessionDate), 'yyyy-MM-dd') : ''} {t('resultsPage.correctionHistory')}
+            </DialogTitle>
+          </DialogHeader>
+          {historyLoading ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">{t('resultsPage.loading')}</p>
+          ) : historyError ? (
+            <p className="text-sm text-destructive py-4 text-center">{t('resultsPage.historyLoadError')}</p>
+          ) : historyLogs.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">{t('resultsPage.noHistory')}</p>
+          ) : (
+            <ul className="space-y-3 max-h-96 overflow-y-auto">
+              {historyLogs.map(log => {
+                let detail: { before: string | null; after: string; reason?: string } | null = null
+                try { if (log.detail) detail = JSON.parse(log.detail) } catch { /* ignore */ }
+                return (
+                  <li key={log.id} className="border rounded p-3 text-sm space-y-0.5">
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>{log.actor.nickname ?? log.actor.username}</span>
+                      <span>{format(new Date(log.createdAt), 'yyyy-MM-dd HH:mm')}</span>
+                    </div>
+                    {detail && (
+                      <p className="font-medium">
+                        {detail.before ?? t('resultsPage.noEntry')} → {detail.after}
+                      </p>
+                    )}
+                    {detail?.reason && (
+                      <p className="text-muted-foreground">{t('resultsPage.reason')}: {detail.reason}</p>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!correctTarget} onOpenChange={(v) => !v && setCorrectTarget(null)}>
         <DialogContent className="max-w-xs">

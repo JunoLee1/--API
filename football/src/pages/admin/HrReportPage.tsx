@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { hrReportApi } from "@/services/hr-report.service"
 import type { HrMonthlyReport, HrAnnualReport } from "@/types/hr-report"
+import { opsReportApi } from "@/services/ops-report.service"
+import type { PenaltyStatusRow } from "@/services/ops-report.service"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,6 +19,14 @@ import {
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { FileBarChart2, FilePlus } from "lucide-react"
 
 function EmptyState({ message }: { message: string }) {
@@ -272,6 +282,12 @@ function AnnualReport({ data }: { data: HrAnnualReport }) {
 
 export default function HrReportPage() {
   const { t } = useTranslation("admin")
+
+  const PENALTY_BADGE: Record<PenaltyStatusRow['status'], { label: string; className: string }> = {
+    TRIGGERED: { label: t('hrReport.penaltyTriggered'), className: 'bg-destructive text-destructive-foreground' },
+    WARNING:   { label: t('hrReport.penaltyWarning'),   className: 'bg-amber-500 text-white' },
+    NORMAL:    { label: t('hrReport.penaltyNormal'),     className: 'bg-secondary text-secondary-foreground' },
+  }
   const navigate = useNavigate()
   const { user } = useCurrentUser()
   const canCreate =
@@ -285,6 +301,9 @@ export default function HrReportPage() {
   const [monthly, setMonthly] = useState<HrMonthlyReport | null>(null)
   const [annual, setAnnual] = useState<HrAnnualReport | null>(null)
   const [loading, setLoading] = useState(false)
+  const [penaltyRows, setPenaltyRows] = useState<PenaltyStatusRow[]>([])
+  const [penaltyLoading, setPenaltyLoading] = useState(false)
+  const [penaltyError, setPenaltyError] = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -302,6 +321,14 @@ export default function HrReportPage() {
   }
 
   useEffect(() => { void load() }, [tab, year, month])
+
+  useEffect(() => {
+    setPenaltyLoading(true)
+    opsReportApi.getPenaltyStatus()
+      .then(setPenaltyRows)
+      .catch(() => setPenaltyError(true))
+      .finally(() => setPenaltyLoading(false))
+  }, [])
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-4">
@@ -358,6 +385,41 @@ export default function HrReportPage() {
           }
         </TabsContent>
       </Tabs>
+
+      <section className="space-y-3">
+        <h3 className="text-base font-semibold">{t('hrReport.penaltyStatus')}</h3>
+        {penaltyLoading ? (
+          <p className="text-sm text-muted-foreground">{t('hrReport.loading')}</p>
+        ) : penaltyError ? (
+          <p className="text-sm text-destructive">{t('hrReport.loadError')}</p>
+        ) : penaltyRows.length === 0 ? (
+          <p className="text-sm text-muted-foreground">{t('hrReport.noPenalty')}</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('hrReport.player')}</TableHead>
+                <TableHead>{t('hrReport.effectiveAbsences')}</TableHead>
+                <TableHead>{t('hrReport.status')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {penaltyRows.map(row => {
+                const badge = PENALTY_BADGE[row.status]
+                return (
+                  <TableRow key={row.playerId}>
+                    <TableCell className="font-medium">{row.playerName}</TableCell>
+                    <TableCell>{row.effectiveAbsences}{t('hrReport.times')}</TableCell>
+                    <TableCell>
+                      <Badge className={badge.className}>{badge.label}</Badge>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        )}
+      </section>
     </div>
   )
 }

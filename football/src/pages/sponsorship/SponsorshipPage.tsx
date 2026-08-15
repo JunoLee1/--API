@@ -43,6 +43,9 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Plus, TrendingUp, TrendingDown } from 'lucide-react'
+import { Textarea } from '@/components/ui/textarea'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { DaumPostcodeDialog } from '@/components/DaumPostcodeDialog'
 
 const SPONSOR_TYPES: SponsorType[] = ['TITLE', 'KIT', 'STADIUM_NAMING', 'DIGITAL', 'OTHER']
 const PAYMENT_SCHEDULES: PaymentSchedule[] = ['MONTHLY', 'QUARTERLY', 'ANNUAL']
@@ -77,6 +80,14 @@ function CreateSponsorshipDialog({ open, onOpenChange, onSaved }: CreateSponsors
   const [ukSortCode, setUkSortCode] = useState('')
   const [ukAccountNumber, setUkAccountNumber] = useState('')
   const [ukSwiftBic, setUkSwiftBic] = useState('')
+  const [isOverseas, setIsOverseas] = useState(false)
+  const [businessRegNumber, setBusinessRegNumber] = useState('')
+  const [postalCode, setPostalCode] = useState('')
+  const [address, setAddress] = useState('')
+  const [addressDetail, setAddressDetail] = useState('')
+  const [taxId, setTaxId] = useState('')
+  const [overseasAddress, setOverseasAddress] = useState('')
+  const [showPostcode, setShowPostcode] = useState(false)
   const [saving, setSaving] = useState(false)
 
   const reset = () => {
@@ -86,13 +97,21 @@ function CreateSponsorshipDialog({ open, onOpenChange, onSaved }: CreateSponsors
     setContractStart('')
     setContractEnd('')
     setPaymentSchedule('ANNUAL')
+    setIsOverseas(false)
+    setBusinessRegNumber('')
+    setPostalCode('')
+    setAddress('')
+    setAddressDetail('')
     setDomesticBankName('')
     setDomesticAccountNumber('')
     setDomesticAccountHolder('')
+    setTaxId('')
+    setOverseasAddress('')
     setUkBankName('')
     setUkSortCode('')
     setUkAccountNumber('')
     setUkSwiftBic('')
+    setShowPostcode(false)
   }
 
   const handleSave = async () => {
@@ -111,13 +130,20 @@ function CreateSponsorshipDialog({ open, onOpenChange, onSaved }: CreateSponsors
         contractStart,
         contractEnd,
         paymentSchedule,
-        ...(domesticBankName && { domesticBankName }),
-        ...(domesticAccountNumber && { domesticAccountNumber }),
-        ...(domesticAccountHolder && { domesticAccountHolder }),
-        ...(ukBankName && { ukBankName }),
-        ...(ukSortCode && { ukSortCode }),
-        ...(ukAccountNumber && { ukAccountNumber }),
-        ...(ukSwiftBic && { ukSwiftBic }),
+        isOverseas,
+        ...(!isOverseas && businessRegNumber && { businessRegNumber }),
+        ...(!isOverseas && postalCode && { postalCode }),
+        ...(!isOverseas && address && { address }),
+        ...(!isOverseas && addressDetail && { addressDetail }),
+        ...(!isOverseas && domesticBankName && { domesticBankName }),
+        ...(!isOverseas && domesticAccountNumber && { domesticAccountNumber }),
+        ...(!isOverseas && domesticAccountHolder && { domesticAccountHolder }),
+        ...(isOverseas && taxId && { taxId }),
+        ...(isOverseas && overseasAddress && { overseasAddress }),
+        ...(isOverseas && ukBankName && { ukBankName }),
+        ...(isOverseas && ukSortCode && { ukSortCode }),
+        ...(isOverseas && ukAccountNumber && { ukAccountNumber }),
+        ...(isOverseas && ukSwiftBic && { ukSwiftBic }),
       }
       await sponsorshipApi.create(dto)
       toast.success(t('created'))
@@ -133,11 +159,32 @@ function CreateSponsorshipDialog({ open, onOpenChange, onSaved }: CreateSponsors
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset() }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('form.title')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          {/* 국내/해외 구분 */}
+          <div className="space-y-1.5">
+            <Label>{t('form.origin')}</Label>
+            <RadioGroup
+              value={isOverseas ? 'overseas' : 'domestic'}
+              onValueChange={(v) => setIsOverseas(v === 'overseas')}
+            >
+              <div className="flex gap-6">
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <RadioGroupItem value="domestic" />
+                  {t('form.domestic')}
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <RadioGroupItem value="overseas" />
+                  {t('form.overseas')}
+                </label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          {/* 공통 필드 */}
           <div className="space-y-1.5">
             <Label>{t('form.sponsorName')}</Label>
             <Input
@@ -196,29 +243,95 @@ function CreateSponsorshipDialog({ open, onOpenChange, onSaved }: CreateSponsors
             </Select>
           </div>
 
-          {/* 국내 계좌 */}
-          <div className="pt-1">
-            <p className="text-xs font-medium text-muted-foreground mb-2">{t('form.bankSection.domestic')}</p>
-            <div className="space-y-2">
-              <Input placeholder={t('form.bank.bankName')} value={domesticBankName} onChange={(e) => setDomesticBankName(e.target.value)} />
-              <Input placeholder={t('form.bank.accountNumber')} value={domesticAccountNumber} onChange={(e) => setDomesticAccountNumber(e.target.value)} />
-              <Input placeholder={t('form.bank.accountHolder')} value={domesticAccountHolder} onChange={(e) => setDomesticAccountHolder(e.target.value)} />
-            </div>
-          </div>
-
-          {/* 영국 계좌 */}
-          <div className="pt-1">
-            <p className="text-xs font-medium text-muted-foreground mb-2">{t('form.bankSection.uk')}</p>
-            <div className="space-y-2">
-              <Input placeholder={t('form.bank.bankName')} value={ukBankName} onChange={(e) => setUkBankName(e.target.value)} />
-              <div className="grid grid-cols-2 gap-2">
-                <Input placeholder={t('form.bank.sortCode')} value={ukSortCode} onChange={(e) => setUkSortCode(e.target.value)} />
-                <Input placeholder={t('form.bank.accountNumber')} value={ukAccountNumber} onChange={(e) => setUkAccountNumber(e.target.value)} />
+          {/* 국내 전용 필드 */}
+          {!isOverseas && (
+            <>
+              <div className="space-y-1.5">
+                <Label>{t('form.businessRegNumber')}</Label>
+                <Input
+                  placeholder="000-00-00000"
+                  value={businessRegNumber}
+                  onChange={(e) => setBusinessRegNumber(e.target.value)}
+                />
               </div>
-              <Input placeholder={t('form.bank.swiftBic')} value={ukSwiftBic} onChange={(e) => setUkSwiftBic(e.target.value)} />
-            </div>
-          </div>
+              <div className="space-y-1.5">
+                <Label>{t('form.address')}</Label>
+                <div className="flex gap-2">
+                  <Input
+                    readOnly
+                    placeholder={t('form.postalCode')}
+                    value={postalCode}
+                    className="w-28"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowPostcode(true)}
+                  >
+                    {t('form.addressSearch')}
+                  </Button>
+                </div>
+                <Input readOnly placeholder={t('form.address')} value={address} />
+                <Input
+                  placeholder={t('form.addressDetail')}
+                  value={addressDetail}
+                  onChange={(e) => setAddressDetail(e.target.value)}
+                />
+              </div>
+              <div className="pt-1">
+                <p className="text-xs font-medium text-muted-foreground mb-2">{t('form.bankSection.domestic')}</p>
+                <div className="space-y-2">
+                  <Input placeholder={t('form.bank.bankName')} value={domesticBankName} onChange={(e) => setDomesticBankName(e.target.value)} />
+                  <Input placeholder={t('form.bank.accountNumber')} value={domesticAccountNumber} onChange={(e) => setDomesticAccountNumber(e.target.value)} />
+                  <Input placeholder={t('form.bank.accountHolder')} value={domesticAccountHolder} onChange={(e) => setDomesticAccountHolder(e.target.value)} />
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* 해외 전용 필드 */}
+          {isOverseas && (
+            <>
+              <div className="space-y-1.5">
+                <Label>{t('form.taxId')}</Label>
+                <Input
+                  placeholder="GB123456789"
+                  value={taxId}
+                  onChange={(e) => setTaxId(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>{t('form.overseasAddress')}</Label>
+                <Textarea
+                  placeholder="10 Downing Street, London, UK"
+                  value={overseasAddress}
+                  onChange={(e) => setOverseasAddress(e.target.value)}
+                  rows={3}
+                />
+              </div>
+              <div className="pt-1">
+                <p className="text-xs font-medium text-muted-foreground mb-2">{t('form.bankSection.uk')}</p>
+                <div className="space-y-2">
+                  <Input placeholder={t('form.bank.bankName')} value={ukBankName} onChange={(e) => setUkBankName(e.target.value)} />
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input placeholder={t('form.bank.sortCode')} value={ukSortCode} onChange={(e) => setUkSortCode(e.target.value)} />
+                    <Input placeholder={t('form.bank.accountNumber')} value={ukAccountNumber} onChange={(e) => setUkAccountNumber(e.target.value)} />
+                  </div>
+                  <Input placeholder={t('form.bank.swiftBic')} value={ukSwiftBic} onChange={(e) => setUkSwiftBic(e.target.value)} />
+                </div>
+              </div>
+            </>
+          )}
         </div>
+        <DaumPostcodeDialog
+          open={showPostcode}
+          onOpenChange={setShowPostcode}
+          onComplete={(pc, addr) => {
+            setPostalCode(pc)
+            setAddress(addr)
+          }}
+        />
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             취소

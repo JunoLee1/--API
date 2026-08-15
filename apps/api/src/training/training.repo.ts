@@ -147,7 +147,7 @@ export class TrainingRepository {
     return this.prisma.player.findUnique({ where: { id: playerId }, select: { playerName: true } });
   }
 
-  findResults(filters: {
+  async findResults(filters: {
     from?: string
     to?: string
     sessionType?: string
@@ -180,7 +180,7 @@ export class TrainingRepository {
       where.attendance = null
     }
 
-    return this.prisma.trainingResult.findMany({
+    const results = await this.prisma.trainingResult.findMany({
       where: where as any,
       include: {
         session: { select: { id: true, date: true, sessionType: true, goal: true } },
@@ -188,6 +188,23 @@ export class TrainingRepository {
       },
       orderBy: { session: { date: 'desc' } },
     })
+
+    if (results.length === 0) return []
+
+    const corrected = await this.prisma.auditLog.findMany({
+      where: {
+        action: 'ATTENDANCE_CORRECTED',
+        targetId: { in: results.map(r => String(r.id)) },
+      },
+      select: { targetId: true },
+      distinct: ['targetId'],
+    })
+    const correctedSet = new Set(corrected.map(c => c.targetId).filter((id): id is string => id !== null))
+
+    return results.map(r => ({
+      ...r,
+      hasCorrectionHistory: correctedSet.has(String(r.id)),
+    }))
   }
 
   findResultById(id: number) {

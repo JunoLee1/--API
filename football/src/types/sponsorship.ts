@@ -36,6 +36,16 @@ export interface Sponsorship {
   ukSortCode: string | null
   ukAccountNumber: string | null
   ukSwiftBic: string | null
+  // 국내/해외 구분
+  isOverseas: boolean
+  // 국내 전용
+  businessRegNumber: string | null
+  postalCode: string | null
+  address: string | null
+  addressDetail: string | null
+  // 해외 전용
+  taxId: string | null
+  overseasAddress: string | null
 }
 
 export interface SponsorshipListResponse {
@@ -84,6 +94,13 @@ export interface CreateSponsorshipDto {
   ukSortCode?: string
   ukAccountNumber?: string
   ukSwiftBic?: string
+  isOverseas?: boolean
+  businessRegNumber?: string
+  postalCode?: string
+  address?: string
+  addressDetail?: string
+  taxId?: string
+  overseasAddress?: string
 }
 
 export interface UpdateSponsorshipDto {
@@ -93,13 +110,20 @@ export interface UpdateSponsorshipDto {
   contractStart?: string
   contractEnd?: string
   paymentSchedule?: PaymentSchedule
-  domesticBankName?: string
-  domesticAccountNumber?: string
-  domesticAccountHolder?: string
-  ukBankName?: string
-  ukSortCode?: string
-  ukAccountNumber?: string
-  ukSwiftBic?: string
+  domesticBankName?: string | null
+  domesticAccountNumber?: string | null
+  domesticAccountHolder?: string | null
+  ukBankName?: string | null
+  ukSortCode?: string | null
+  ukAccountNumber?: string | null
+  ukSwiftBic?: string | null
+  isOverseas?: boolean
+  businessRegNumber?: string | null
+  postalCode?: string | null
+  address?: string | null
+  addressDetail?: string | null
+  taxId?: string | null
+  overseasAddress?: string | null
 }
 
 export const SPONSOR_TYPE_LABEL: Record<SponsorType, string> = {

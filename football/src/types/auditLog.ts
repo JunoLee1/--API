@@ -22,6 +22,7 @@ export interface AuditLogListResponse {
 export interface AuditLogFilters {
   actorId?: number
   action?: string
+  targetId?: number
   from?: string
   to?: string
   page?: number

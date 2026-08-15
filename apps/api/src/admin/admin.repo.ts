@@ -115,6 +115,7 @@ export class AdminRepository {
   listAuditLogs(filters: {
     actorId?: number;
     action?: string;
+    targetId?: string;
     from?: string;
     to?: string;
     page?: number;
@@ -125,6 +126,7 @@ export class AdminRepository {
     const where: Record<string, unknown> = {};
     if (filters.actorId) where["actorId"] = filters.actorId;
     if (filters.action) where["action"] = filters.action;
+    if (filters.targetId !== undefined) where["targetId"] = filters.targetId;
     if (filters.from || filters.to) {
       const createdAt: Record<string, Date> = {};
       if (filters.from) createdAt["gte"] = new Date(filters.from);
@@ -147,10 +149,11 @@ export class AdminRepository {
     });
   }
 
-  countAuditLogs(filters: { actorId?: number; action?: string; from?: string; to?: string }) {
+  countAuditLogs(filters: { actorId?: number; action?: string; targetId?: string; from?: string; to?: string }) {
     const where: Record<string, unknown> = {};
     if (filters.actorId) where["actorId"] = filters.actorId;
     if (filters.action) where["action"] = filters.action;
+    if (filters.targetId !== undefined) where["targetId"] = filters.targetId;
     if (filters.from || filters.to) {
       const createdAt: Record<string, Date> = {};
       if (filters.from) createdAt["gte"] = new Date(filters.from);

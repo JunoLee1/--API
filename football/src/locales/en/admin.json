@@ -589,7 +589,18 @@
     "peakMonth": "Peak Departure Month",
     "worstMonth": "Worst Attendance Month",
     "totalAbsences": "Annual Unauthorized Absences",
-    "noData": "No data"
+    "noData": "No data",
+    "penaltyStatus": "Effective Absence Tracker",
+    "noPenalty": "No penalty accumulations",
+    "effectiveAbsences": "Effective Absences",
+    "times": "",
+    "penaltyTriggered": "Penalty Triggered",
+    "penaltyWarning": "Warning",
+    "penaltyNormal": "1 Accumulated",
+    "player": "Player",
+    "status": "Status",
+    "loading": "Loading...",
+    "loadError": "Failed to load"
   },
   "recruitment": {
     "postingsTitle": "Job Posting Management",
@@ -659,7 +670,8 @@
     "reinstateSuccess": "Applicant status restored.",
     "reinstateFailed": "Failed to restore applicant status.",
     "reinstateBtn": "Undo Rejection",
-    "reinstating": "Restoring..."
+    "reinstating": "Restoring...",
+    "fillRate": "Fill Rate"
   },
   "financialReport": {
     "title": "Financial Report",

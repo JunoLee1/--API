@@ -616,7 +616,18 @@
     "peakMonth": "이직 집중 월",
     "worstMonth": "출석 최저 월",
     "totalAbsences": "연간 무단 결석·지각",
-    "noData": "데이터가 없습니다"
+    "noData": "데이터가 없습니다",
+    "penaltyStatus": "실효 결석 누적 현황",
+    "noPenalty": "페널티 누적 선수 없음",
+    "effectiveAbsences": "실효 결석",
+    "times": "회",
+    "penaltyTriggered": "페널티 발동",
+    "penaltyWarning": "경고 (임박)",
+    "penaltyNormal": "1회 누적",
+    "player": "선수",
+    "status": "상태",
+    "loading": "불러오는 중...",
+    "loadError": "불러오기 실패"
   },
   "recruitment": {
     "postingsTitle": "채용 공고 관리",
@@ -686,6 +697,7 @@
     "reinstateSuccess": "지원자 상태가 복원됐습니다.",
     "reinstateFailed": "복원에 실패했습니다.",
     "reinstateBtn": "거절 취소",
-    "reinstating": "복원 중..."
+    "reinstating": "복원 중...",
+    "fillRate": "충원 현황"
   }
 }

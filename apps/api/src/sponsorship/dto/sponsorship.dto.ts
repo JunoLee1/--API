@@ -17,6 +17,16 @@ export interface CreateSponsorshipDto {
   ukSortCode?: string;
   ukAccountNumber?: string;
   ukSwiftBic?: string;
+  // 국내/해외 구분
+  isOverseas?: boolean;
+  // 국내 전용
+  businessRegNumber?: string;
+  postalCode?: string;
+  address?: string;
+  addressDetail?: string;
+  // 해외 전용
+  taxId?: string;
+  overseasAddress?: string;
 }
 
 export interface UpdateSponsorshipDto {
@@ -28,14 +38,24 @@ export interface UpdateSponsorshipDto {
   paymentSchedule?: PaymentSchedule;
   attachedContractId?: number;
   // 국내 계좌
-  domesticBankName?: string;
-  domesticAccountNumber?: string;
-  domesticAccountHolder?: string;
+  domesticBankName?: string | null;
+  domesticAccountNumber?: string | null;
+  domesticAccountHolder?: string | null;
   // 영국 계좌
-  ukBankName?: string;
-  ukSortCode?: string;
-  ukAccountNumber?: string;
-  ukSwiftBic?: string;
+  ukBankName?: string | null;
+  ukSortCode?: string | null;
+  ukAccountNumber?: string | null;
+  ukSwiftBic?: string | null;
+  // 국내/해외 구분
+  isOverseas?: boolean;
+  // 국내 전용
+  businessRegNumber?: string | null;
+  postalCode?: string | null;
+  address?: string | null;
+  addressDetail?: string | null;
+  // 해외 전용
+  taxId?: string | null;
+  overseasAddress?: string | null;
 }
 
 export interface SponsorshipListQuery {

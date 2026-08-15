@@ -40,7 +40,17 @@
     "bank.accountNumber": "Account Number",
     "bank.accountHolder": "Account Holder",
     "bank.sortCode": "Sort Code",
-    "bank.swiftBic": "SWIFT / BIC"
+    "bank.swiftBic": "SWIFT / BIC",
+    "origin": "Sponsor Type",
+    "domestic": "Domestic Sponsor",
+    "overseas": "Overseas Sponsor",
+    "businessRegNumber": "Business Registration No.",
+    "postalCode": "Postal Code",
+    "address": "Street Address",
+    "addressDetail": "Detail Address",
+    "addressSearch": "Search Address",
+    "taxId": "TAX ID / VAT Number",
+    "overseasAddress": "Overseas Address"
   },
   "filterAll": "All",
   "bank": {
@@ -53,9 +63,11 @@
     "sortCode": "Sort Code",
     "swiftBic": "SWIFT / BIC",
     "editButton": "Edit",
-    "editTitle": "Edit Bank Accounts",
+    "editTitle": "Edit Sponsor Info",
     "noInfo": "No bank accounts registered.",
-    "saved": "Bank accounts saved.",
-    "saveFailed": "Failed to save."
+    "saved": "Sponsor info saved.",
+    "saveFailed": "Failed to save.",
+    "cancel": "Cancel",
+    "saving": "Saving..."
   }
 }
