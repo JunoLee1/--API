@@ -175,6 +175,7 @@
     "corrected": "수정됨 ↕",
     "correctionHistory": "정정 이력",
     "noHistory": "정정 이력이 없습니다",
+    "historyLoadError": "이력을 불러올 수 없습니다",
     "reason": "사유",
     "noEntry": "미입력"
   },

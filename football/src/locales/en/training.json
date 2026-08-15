@@ -175,6 +175,7 @@
     "corrected": "Edited ↕",
     "correctionHistory": "Correction History",
     "noHistory": "No correction history",
+    "historyLoadError": "Could not load history",
     "reason": "Reason",
     "noEntry": "Not entered"
   },

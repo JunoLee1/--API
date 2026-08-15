@@ -53,6 +53,7 @@ export function TrainingResultsPage() {
   } | null>(null)
   const [historyLogs, setHistoryLogs] = useState<AuditLogEntry[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyError, setHistoryError] = useState(false)
 
   const handleCorrect = async () => {
     if (!correctTarget || !correctAttendance || !correctReason.trim()) return
@@ -75,11 +76,12 @@ export function TrainingResultsPage() {
     setHistoryTarget({ id: row.id, playerName: row.player.playerName, sessionDate: row.session.date })
     setHistoryLoading(true)
     setHistoryLogs([])
+    setHistoryError(false)
     try {
       const res = await auditLogApi.list({ targetId: row.id, action: 'ATTENDANCE_CORRECTED', limit: 50 })
       setHistoryLogs(res.logs)
     } catch {
-      // error handled in Dialog
+      setHistoryError(true)
     } finally {
       setHistoryLoading(false)
     }
@@ -259,6 +261,8 @@ export function TrainingResultsPage() {
           </DialogHeader>
           {historyLoading ? (
             <p className="text-sm text-muted-foreground py-4 text-center">{t('resultsPage.loading')}</p>
+          ) : historyError ? (
+            <p className="text-sm text-destructive py-4 text-center">{t('resultsPage.historyLoadError')}</p>
           ) : historyLogs.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4 text-center">{t('resultsPage.noHistory')}</p>
           ) : (
