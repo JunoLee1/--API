@@ -45,14 +45,14 @@ function formatCurrency(n: number) {
 }
 
 // ── Bank Edit Dialog ──────────────────────────────────────────────────────────
-interface BankEditDialogProps {
+interface SponsorInfoEditDialogProps {
   open: boolean
   onOpenChange: (v: boolean) => void
   sponsorship: Sponsorship
   onSaved: (updated: Sponsorship) => void
 }
 
-function BankEditDialog({ open, onOpenChange, sponsorship, onSaved }: BankEditDialogProps) {
+function SponsorInfoEditDialog({ open, onOpenChange, sponsorship, onSaved }: SponsorInfoEditDialogProps) {
   const { t } = useTranslation('sponsorship')
   const [isOverseas, setIsOverseas] = useState(sponsorship.isOverseas)
   const [businessRegNumber, setBusinessRegNumber] = useState(sponsorship.businessRegNumber ?? '')
@@ -130,7 +130,26 @@ function BankEditDialog({ open, onOpenChange, sponsorship, onSaved }: BankEditDi
             <Label>{t('form.origin')}</Label>
             <RadioGroup
               value={isOverseas ? 'overseas' : 'domestic'}
-              onValueChange={(v) => setIsOverseas(v === 'overseas')}
+              onValueChange={(v) => {
+                const switchToOverseas = v === 'overseas'
+                setIsOverseas(switchToOverseas)
+                if (switchToOverseas) {
+                  setBusinessRegNumber('')
+                  setPostalCode('')
+                  setAddress('')
+                  setAddressDetail('')
+                  setDomesticBankName('')
+                  setDomesticAccountNumber('')
+                  setDomesticAccountHolder('')
+                } else {
+                  setTaxId('')
+                  setOverseasAddress('')
+                  setUkBankName('')
+                  setUkSortCode('')
+                  setUkAccountNumber('')
+                  setUkSwiftBic('')
+                }
+              }}
             >
               <div className="flex gap-6">
                 <label className="flex items-center gap-2 cursor-pointer text-sm">
@@ -435,7 +454,7 @@ export function SponsorshipDetailPage() {
       )}
 
       {sponsorship && (
-        <BankEditDialog
+        <SponsorInfoEditDialog
           open={bankEditOpen}
           onOpenChange={setBankEditOpen}
           sponsorship={sponsorship}
