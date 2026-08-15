@@ -2713,6 +2713,17 @@ model Sponsorship {
   ukAccountNumber       String?
   ukSwiftBic            String?
 
+  // 국내/해외 구분
+  isOverseas            Boolean @default(false)
+  // 국내 전용
+  businessRegNumber     String?
+  postalCode            String?
+  address               String?
+  addressDetail         String?
+  // 해외 전용
+  taxId                 String?
+  overseasAddress       String?
+
   attachedContract PartnerContract?     @relation(fields: [attachedContractId], references: [id])
   createdBy        User                 @relation("SponsorshipCreator", fields: [createdById], references: [id])
   payments         SponsorshipPayment[]
