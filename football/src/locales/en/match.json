@@ -295,7 +295,8 @@
     "submit": "Save",
     "cancel": "Cancel",
     "by": "by",
-    "submitError": "Failed to save."
+    "submitError": "Failed to save.",
+    "removeError": "Failed to delete."
   },
   "tactical": {
     "title": "Tactical Analysis",

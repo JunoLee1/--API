@@ -373,11 +373,11 @@ function AnalysisFormDialog({
               </div>
               {/* Threat score sliders */}
               {[
-                { label: t('tactical.form.opponentPressureScoreLabel'), value: opponentPressureScore, set: setOpponentPressureScore },
-                { label: t('tactical.form.opponentSetPieceScoreLabel'), value: opponentSetPieceScore, set: setOpponentSetPieceScore },
-                { label: t('tactical.form.opponentCounterScoreLabel'), value: opponentCounterScore, set: setOpponentCounterScore },
-              ].map(({ label, value, set }) => (
-                <div key={label} className="space-y-1.5">
+                { key: 'pressure', label: t('tactical.form.opponentPressureScoreLabel'), value: opponentPressureScore, set: setOpponentPressureScore },
+                { key: 'setpiece', label: t('tactical.form.opponentSetPieceScoreLabel'), value: opponentSetPieceScore, set: setOpponentSetPieceScore },
+                { key: 'counter', label: t('tactical.form.opponentCounterScoreLabel'), value: opponentCounterScore, set: setOpponentCounterScore },
+              ].map(({ key, label, value, set }) => (
+                <div key={key} className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <Label>{label}</Label>
                     <span className="text-xs text-muted-foreground tabular-nums">
