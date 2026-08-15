@@ -40,7 +40,17 @@
     "bank.accountNumber": "계좌번호",
     "bank.accountHolder": "예금주",
     "bank.sortCode": "Sort Code",
-    "bank.swiftBic": "SWIFT/BIC"
+    "bank.swiftBic": "SWIFT/BIC",
+    "origin": "스폰서 구분",
+    "domestic": "국내 스폰서",
+    "overseas": "해외 스폰서",
+    "businessRegNumber": "사업자등록번호",
+    "postalCode": "우편번호",
+    "address": "도로명 주소",
+    "addressDetail": "상세주소",
+    "addressSearch": "주소 검색",
+    "taxId": "TAX ID / VAT Number",
+    "overseasAddress": "해외 주소"
   },
   "filterAll": "전체",
   "bank": {
@@ -53,9 +63,9 @@
     "sortCode": "Sort Code",
     "swiftBic": "SWIFT/BIC",
     "editButton": "수정",
-    "editTitle": "계좌 정보 수정",
+    "editTitle": "스폰서 정보 수정",
     "noInfo": "등록된 계좌 정보가 없습니다.",
-    "saved": "계좌 정보가 저장되었습니다.",
+    "saved": "스폰서 정보가 저장되었습니다.",
     "saveFailed": "저장에 실패했습니다."
   }
 }
