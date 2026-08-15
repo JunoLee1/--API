@@ -92,6 +92,10 @@ export class SponsorshipRepository {
         ...(data.contractStart && { contractStart: new Date(data.contractStart) }),
         ...(data.contractEnd && { contractEnd: new Date(data.contractEnd) }),
       },
+      include: {
+        ...INCLUDE,
+        payments: { orderBy: { dueDate: 'asc' } },
+      },
     });
   }
 
