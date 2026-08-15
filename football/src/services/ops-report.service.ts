@@ -1,6 +1,13 @@
 import { api } from './api'
 import type { OpsSnapshotData, BudgetSnapshotData, AnnualOpsEntry, NoticeUnreadDrillItem, AttendanceDrillItem } from '@/types/ops-report'
 
+export interface PenaltyStatusRow {
+  playerId: string
+  playerName: string
+  effectiveAbsences: number
+  status: 'TRIGGERED' | 'WARNING' | 'NORMAL'
+}
+
 export const opsReportApi = {
   getOpsKpi: (seasonId: number, year: number, month: number) =>
     api.get<OpsSnapshotData>(`/ops-reports/ops/kpi?seasonId=${seasonId}&year=${year}&month=${month}`),
@@ -19,4 +26,7 @@ export const opsReportApi = {
 
   getDrillAttendance: (year: number, month: number) =>
     api.get<AttendanceDrillItem[]>(`/ops-reports/drill/attendance?year=${year}&month=${month}`),
+
+  getPenaltyStatus: (): Promise<PenaltyStatusRow[]> =>
+    api.get('/ops-reports/penalty-status'),
 }
