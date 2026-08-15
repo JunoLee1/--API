@@ -96,19 +96,19 @@ function BankEditDialog({ open, onOpenChange, sponsorship, onSaved }: BankEditDi
     try {
       const updated = await sponsorshipApi.update(sponsorship.id, {
         isOverseas,
-        ...(!isOverseas && businessRegNumber ? { businessRegNumber } : { businessRegNumber: undefined }),
-        ...(!isOverseas && postalCode ? { postalCode } : { postalCode: undefined }),
-        ...(!isOverseas && address ? { address } : { address: undefined }),
-        ...(!isOverseas && addressDetail ? { addressDetail } : { addressDetail: undefined }),
-        ...(!isOverseas && domesticBankName ? { domesticBankName } : { domesticBankName: undefined }),
-        ...(!isOverseas && domesticAccountNumber ? { domesticAccountNumber } : { domesticAccountNumber: undefined }),
-        ...(!isOverseas && domesticAccountHolder ? { domesticAccountHolder } : { domesticAccountHolder: undefined }),
-        ...(isOverseas && taxId ? { taxId } : { taxId: undefined }),
-        ...(isOverseas && overseasAddress ? { overseasAddress } : { overseasAddress: undefined }),
-        ...(isOverseas && ukBankName ? { ukBankName } : { ukBankName: undefined }),
-        ...(isOverseas && ukSortCode ? { ukSortCode } : { ukSortCode: undefined }),
-        ...(isOverseas && ukAccountNumber ? { ukAccountNumber } : { ukAccountNumber: undefined }),
-        ...(isOverseas && ukSwiftBic ? { ukSwiftBic } : { ukSwiftBic: undefined }),
+        ...(!isOverseas && businessRegNumber ? { businessRegNumber } : { businessRegNumber: null }),
+        ...(!isOverseas && postalCode ? { postalCode } : { postalCode: null }),
+        ...(!isOverseas && address ? { address } : { address: null }),
+        ...(!isOverseas && addressDetail ? { addressDetail } : { addressDetail: null }),
+        ...(!isOverseas && domesticBankName ? { domesticBankName } : { domesticBankName: null }),
+        ...(!isOverseas && domesticAccountNumber ? { domesticAccountNumber } : { domesticAccountNumber: null }),
+        ...(!isOverseas && domesticAccountHolder ? { domesticAccountHolder } : { domesticAccountHolder: null }),
+        ...(isOverseas && taxId ? { taxId } : { taxId: null }),
+        ...(isOverseas && overseasAddress ? { overseasAddress } : { overseasAddress: null }),
+        ...(isOverseas && ukBankName ? { ukBankName } : { ukBankName: null }),
+        ...(isOverseas && ukSortCode ? { ukSortCode } : { ukSortCode: null }),
+        ...(isOverseas && ukAccountNumber ? { ukAccountNumber } : { ukAccountNumber: null }),
+        ...(isOverseas && ukSwiftBic ? { ukSwiftBic } : { ukSwiftBic: null }),
       })
       toast.success(t('bank.saved'))
       onSaved(updated)
