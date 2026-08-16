@@ -14,6 +14,9 @@ import { ReservationController } from "./reservation/reservation.controller";
 import { PreventiveScheduleRepository } from "./preventive-schedule/preventive-schedule.repo";
 import { PreventiveScheduleService } from "./preventive-schedule/preventive-schedule.service";
 import { PreventiveScheduleController } from "./preventive-schedule/preventive-schedule.controller";
+import { AccessLogRepository } from "./access-log/access-log.repo";
+import { AccessLogService } from "./access-log/access-log.service";
+import { AccessLogController } from "./access-log/access-log.controller";
 
 const router = Router();
 
@@ -31,6 +34,10 @@ const inspectionController = new InspectionController(inspectionService);
 const preventiveScheduleRepo = new PreventiveScheduleRepository(getPrisma());
 const preventiveScheduleService = new PreventiveScheduleService(preventiveScheduleRepo);
 const preventiveScheduleController = new PreventiveScheduleController(preventiveScheduleService);
+
+const accessLogRepo = new AccessLogRepository(getPrisma());
+const accessLogService = new AccessLogService(accessLogRepo);
+const accessLogController = new AccessLogController(accessLogService);
 
 router.get("/reservations", auth, reservationCtrl.list);
 router.post("/reservations", auth, reservationCtrl.create);
@@ -65,5 +72,8 @@ router.post("/preventive-schedules", auth, preventiveScheduleController.create);
 router.get("/preventive-schedules/:id", auth, preventiveScheduleController.get);
 router.patch("/preventive-schedules/:id", auth, preventiveScheduleController.update);
 router.post("/preventive-schedules/:id/deactivate", auth, preventiveScheduleController.deactivate);
+
+router.get("/access-logs", auth, accessLogController.list);
+router.post("/access-logs", auth, accessLogController.logAccess);
 
 export default router;
