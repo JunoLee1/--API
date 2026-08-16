@@ -58,6 +58,19 @@ describe("TrainingLoadService — allowedActivities in response", () => {
     expect((result as any).allowedActivities).toBeUndefined();
   });
 
+  test("rehabLoadPercentage 0이면 과부하 알림 없음 (threshold=0 guard)", async () => {
+    mockRepo.findActiveInjuryWithReport.mockResolvedValue({
+      status: "REHABILITATING",
+      report: { rehabLoadPercentage: 0, allowedActivities: null },
+    });
+    mockRepo.getWeeklyLoadTotal.mockResolvedValue(100);
+    await service.upsert(
+      { playerId: "p1", sessionId: 1, load: 100 },
+      "p1", "COACHING_STAFF", "PHYSICAL_COACH"
+    );
+    expect(mockNotifRepo.createForPhysicalCoach).not.toHaveBeenCalled();
+  });
+
   test("rehabLoadPercentage 60 → 임계치 300으로 낮아져 500 부하 시 overload 알림", async () => {
     mockRepo.findActiveInjuryWithReport.mockResolvedValue({
       status: "REHABILITATING",

@@ -79,7 +79,7 @@ export class TrainingLoadService {
       const playerName = player?.playerName ?? dto.playerId;
       // KN3: use position-based threshold for overload check; KN6: scale by rehabLoadPercentage
       const threshold = getEffectiveThreshold(player?.position, rehabLoadPercentage);
-      if (total >= threshold) {
+      if (threshold > 0 && total >= threshold) {
         try {
           await Promise.all([
             this.notifRepo.createForPhysicalCoach(

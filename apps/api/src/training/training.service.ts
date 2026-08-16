@@ -85,22 +85,24 @@ export class TrainingService {
         )
         .catch(console.error);
 
-      for (const r of highPerfResults) {
-        const player = await this.repo.findPlayerUserId(r.playerId);
-        if (player?.userId) {
-          await this.notifRepo
-            .createForUser(
-              player.userId,
-              "TRAINING_HIGH_PERFORMANCE_SELF",
-              () => ({
-                title: "훌륭한 훈련이었습니다",
-                body: `오늘 훈련 평가 점수: ${r.performanceScore}점`,
-              }),
-              id,
-            )
-            .catch(console.error);
-        }
-      }
+      await Promise.all(
+        highPerfResults.map(async (r: any) => {
+          const player = await this.repo.findPlayerUserId(r.playerId);
+          if (player?.userId) {
+            await this.notifRepo!
+              .createForUser(
+                player.userId,
+                "TRAINING_HIGH_PERFORMANCE_SELF",
+                () => ({
+                  title: "훌륭한 훈련이었습니다",
+                  body: `오늘 훈련 평가 점수: ${r.performanceScore}점`,
+                }),
+                id,
+              )
+              .catch(console.error);
+          }
+        })
+      );
     }
 
     if (missingCount === 0) return approved;
