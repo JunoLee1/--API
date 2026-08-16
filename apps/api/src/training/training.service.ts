@@ -66,6 +66,43 @@ export class TrainingService {
 
     const approved = await this.repo.approve(id, approvedById);
 
+    // BH8: 고퍼포먼스 선수(score ≥ 80) 일괄 알림
+    const HIGH_PERF_THRESHOLD = 80;
+    const highPerfResults = presentResults.filter(
+      (r: any) => r.performanceScore != null && r.performanceScore >= HIGH_PERF_THRESHOLD
+    );
+
+    if (highPerfResults.length > 0 && this.notifRepo) {
+      const names = highPerfResults.map((r: any) => r.player?.playerName ?? r.playerId).join(", ");
+      await this.notifRepo
+        .createForHeadCoach(
+          "TRAINING_HIGH_PERFORMANCE_PLAYER",
+          () => ({
+            title: "고퍼포먼스 선수",
+            body: `${names} 선수가 이번 세션에서 ${HIGH_PERF_THRESHOLD}점 이상을 기록했습니다.`,
+          }),
+          id,
+        )
+        .catch(console.error);
+
+      for (const r of highPerfResults) {
+        const player = await this.repo.findPlayerUserId(r.playerId);
+        if (player?.userId) {
+          await this.notifRepo
+            .createForUser(
+              player.userId,
+              "TRAINING_HIGH_PERFORMANCE_SELF",
+              () => ({
+                title: "훌륭한 훈련이었습니다",
+                body: `오늘 훈련 평가 점수: ${r.performanceScore}점`,
+              }),
+              id,
+            )
+            .catch(console.error);
+        }
+      }
+    }
+
     if (missingCount === 0) return approved;
     return { ...approved, evalWarning: { missing: missingCount, total: presentResults.length } };
   }
