@@ -576,6 +576,51 @@ enum MaintenancePriority {
   NORMAL
 }
 
+enum CertificationType {
+  PLAYER_REGISTRATION
+  PLAYER_CONTRACT
+  PLAYER_HEALTH_CHECK
+  PLAYER_HEALTH_INSURANCE
+  PLAYER_FIFA_ID
+  COACH_UEFA_LICENSE
+  COACH_YOUTH_LICENSE
+  COACH_REFEREE_TRAINING
+  STAFF_DOCTOR_LICENSE
+  STAFF_MEDICAL_COORDINATOR
+  STAFF_PHYSIOTHERAPIST
+  STAFF_SAFETY_OFFICER
+  FACILITY_STADIUM_SAFETY
+  FACILITY_STRUCTURAL
+  FACILITY_LIGHTING
+  FACILITY_MEDICAL_EQUIPMENT
+  FACILITY_FIRE_ELECTRICAL
+  CLUB_LICENSE
+  CLUB_CORPORATE_REGISTRATION
+  CLUB_FINANCIAL_AUDIT
+  CLUB_LIABILITY_INSURANCE
+  CLUB_YOUTH_PROGRAM
+}
+
+enum CertEntityType {
+  PLAYER
+  COACH
+  STAFF
+  FACILITY
+  CLUB
+}
+
+enum CertStatus {
+  DRAFT
+  PENDING_REVIEW
+  FM_APPROVED
+  VALID
+  EXPIRING_SOON
+  EXPIRED
+  REJECTED
+  SUSPENDED
+  CANCELLED
+}
+
 enum MaintenanceStatus {
   OPEN
   IN_PROGRESS
@@ -813,6 +858,9 @@ model User {
   disposedEquipmentUnits     EquipmentUnit[]           @relation("EquipmentDisposer")
   formationSnapshots         FormationSnapshot[]       @relation("FormationSnapshotCreatedBy")
   periodLocks        LedgerPeriodLock[] @relation("PeriodLockCreator")
+  certifications        Certification[]    @relation("CertOwner")
+  certFirstApprovals    Certification[]    @relation("CertFirstApprover")
+  certSecondApprovals   Certification[]    @relation("CertSecondApprover")
 }
 
 model Season {
@@ -938,6 +986,7 @@ model Player {
   studentCode            String?                   @unique
   guardianInviteCodes    GuardianInviteCode[]
   transferRequests       TransferRequest[]
+  certifications         Certification[]    @relation("PlayerCertifications")
 }
 
 model Contract {
@@ -1773,6 +1822,7 @@ model Coach {
   attackingCoachEval  AttackingCoachEvaluation?
   goalkeeperCoachEval GoalkeeperCoachEvaluation?
   tier2Eval           CoachTier2Evaluation?
+  certifications      Certification[]            @relation("CoachCertifications")
 }
 
 model HeadCoachEvaluation {
@@ -2294,6 +2344,7 @@ model StaffRecord {
   staffSalaries StaffSalary[]
   employmentStartDate  DateTime?
   employmentEndDate    DateTime?
+  certifications       Certification[]   @relation("StaffCertifications")
 }
 
 model FinancialReport {
@@ -2689,6 +2740,65 @@ model MaintenanceRequest {
   approvedBy       User?               @relation("MaintenanceFMApprover", fields: [approvedById], references: [id])
   gmApprovedBy     User?               @relation("MaintenanceGMApprover", fields: [gmApprovedById], references: [id])
   partner          Partner?            @relation("MaintenancePartner", fields: [partnerId], references: [id])
+}
+
+// ─────────────────────────────────────────────
+// 인증 관리 (Certification)
+// ─────────────────────────────────────────────
+
+model Certification {
+  id              Int               @id @default(autoincrement())
+  certType        CertificationType
+  entityType      CertEntityType
+  issuingBody     String
+  issuedAt        DateTime
+  expiresAt       DateTime
+  status          CertStatus        @default(DRAFT)
+  isLocked        Boolean           @default(false)
+  documentUrl     String?
+  reminderDays    Int[]             @default([90, 60, 30])
+  notes           String?
+  rejectionReason String?
+
+  ownerId         Int
+  approvedById    Int?
+  approvedAt      DateTime?
+  gmApprovedById  Int?
+  gmApprovedAt    DateTime?
+
+  playerId        String?
+  coachId         Int?
+  staffId         Int?
+  facilityZone    FacilityZone?
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  owner           User              @relation("CertOwner",          fields: [ownerId],        references: [id])
+  approvedBy      User?             @relation("CertFirstApprover",  fields: [approvedById],   references: [id])
+  gmApprovedBy    User?             @relation("CertSecondApprover", fields: [gmApprovedById], references: [id])
+  player          Player?           @relation("PlayerCertifications", fields: [playerId],      references: [id])
+  coach           Coach?            @relation("CoachCertifications",  fields: [coachId],       references: [id])
+  staff           StaffRecord?      @relation("StaffCertifications",  fields: [staffId],       references: [id])
+  reminders       CertificationReminderLog[]
+
+  @@index([expiresAt])
+  @@index([status])
+  @@index([entityType])
+  @@index([playerId])
+  @@index([coachId])
+  @@index([staffId])
+}
+
+model CertificationReminderLog {
+  id              Int           @id @default(autoincrement())
+  certificationId Int
+  daysThreshold   Int
+  sentAt          DateTime      @default(now())
+
+  certification   Certification @relation(fields: [certificationId], references: [id], onDelete: Cascade)
+
+  @@unique([certificationId, daysThreshold])
 }
 
 // ─────────────────────────────────────────────
