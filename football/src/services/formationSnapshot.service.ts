@@ -7,4 +7,7 @@ export const formationSnapshotApi = {
 
   listByMatch: (matchId: number): Promise<FormationSnapshot[]> =>
     api.get(`/formation-snapshots/match/${matchId}`),
+
+  remove: (id: number): Promise<void> =>
+    api.delete(`/formation-snapshots/${id}`).then(() => undefined),
 }

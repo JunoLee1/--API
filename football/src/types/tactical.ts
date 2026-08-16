@@ -23,6 +23,9 @@ export interface TacticalAnalysis {
   opponentKeyThreat: string | null
   opponentWeakness: string | null
   opponentKeyPlayer: string | null
+  opponentPressureScore: number | null
+  opponentSetPieceScore: number | null
+  opponentCounterScore: number | null
   // POST_MATCH
   tacticalCompliance: string | null
   concededAnalysis: string | null
@@ -52,6 +55,9 @@ export interface CreateTacticalDto {
   opponentKeyThreat?: string
   opponentWeakness?: string
   opponentKeyPlayer?: string
+  opponentPressureScore?: number | null
+  opponentSetPieceScore?: number | null
+  opponentCounterScore?: number | null
   tacticalCompliance?: string
   concededAnalysis?: string
   momPlayerId?: string
@@ -67,6 +73,9 @@ export interface UpdateTacticalDto {
   opponentKeyThreat?: string
   opponentWeakness?: string
   opponentKeyPlayer?: string
+  opponentPressureScore?: number | null
+  opponentSetPieceScore?: number | null
+  opponentCounterScore?: number | null
   tacticalCompliance?: string
   concededAnalysis?: string
   momPlayerId?: string

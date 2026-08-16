@@ -30,6 +30,10 @@ describe("GrowthReportRepository.getPositionAverage", () => {
     expect(result!.sampleCount).toBe(4);
     expect(result!.avgAttitudeScore).toBe(7.5);
     expect(result!.avgFundamentalsScore).toBe(6.8);
+
+    // Verify the player is excluded from their own peer comparison
+    const aggregateWhere = (mockAggregate as jest.Mock).mock.calls[0][0].where;
+    expect(aggregateWhere.playerId).toEqual({ not: "player-id-1" });
   });
 
   test("returns null when player not found", async () => {

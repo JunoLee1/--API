@@ -34,4 +34,8 @@ export class FormationSnapshotRepository {
       orderBy: { minute: "asc" },
     });
   }
+
+  remove(id: number) {
+    return this.prisma.formationSnapshot.delete({ where: { id } });
+  }
 }
