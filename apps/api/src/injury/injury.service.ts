@@ -31,6 +31,7 @@ export class InjuryService {
   constructor(
     private repo: InjuryRepository,
     private notifRepo: NotificationRepository,
+    private loadRepo?: { getWeeklyLoadTotal: (playerId: string, weekStart: Date) => Promise<number> },
   ) {}
 
   getByPlayer(playerId: string) {
@@ -45,6 +46,13 @@ export class InjuryService {
 
   async createInjury(dto: CreateInjuryDto) {
     const result = await this.repo.create(dto);
+    // BH4: 부상 시점 직전 7일 훈련 부하 스냅샷 (fire-and-forget)
+    if (this.loadRepo) {
+      const weekStart = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      void this.loadRepo.getWeeklyLoadTotal(dto.playerId, weekStart)
+        .then(load => { if (load > 0) return this.repo.updatePriorWeeklyLoad(result.id, load); })
+        .catch(console.error);
+    }
     try {
       const player = await this.repo.getPlayerWithGuardian(dto.playerId);
       const playerName = player?.playerName ?? "선수";
