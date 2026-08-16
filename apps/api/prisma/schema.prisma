@@ -191,6 +191,8 @@ enum HospitalType {
 enum PartnerType {
   MANUFACTURER
   HOSPITAL
+  MAINTENANCE_VENDOR
+  EQUIPMENT_SUPPLIER
 }
 
 enum PartnerContractStatus {
@@ -861,6 +863,9 @@ model User {
   certifications        Certification[]    @relation("CertOwner")
   certFirstApprovals    Certification[]    @relation("CertFirstApprover")
   certSecondApprovals   Certification[]    @relation("CertSecondApprover")
+  facilityAccessLogs       FacilityAccessLog[]
+  disposalRequests         EquipmentDisposalVerification[] @relation("DisposalRequestedBy")
+  disposalVerifications    EquipmentDisposalVerification[] @relation("DisposalVerifiedBy")
 }
 
 model Season {
@@ -1125,6 +1130,7 @@ model Partner {
   equipmentItems       EquipmentItem[]
   contracts            PartnerContract[]
   maintenanceRequests  MaintenanceRequest[] @relation("MaintenancePartner")
+  preventiveSchedules  PreventiveSchedule[]
 }
 
 model PartnerContract {
@@ -1136,6 +1142,9 @@ model PartnerContract {
   sponsorshipFee Float?
   discountRate   Float?
   notes          String?
+  responseHours  Int?
+  resolutionDays Int?
+  penaltyPerDay  Decimal?              @db.Decimal(12, 2)
   createdAt      DateTime              @default(now())
 
   partner      Partner       @relation(fields: [partnerId], references: [id])
@@ -1575,6 +1584,7 @@ model EquipmentUnit {
   assignments EquipmentAssignment[]
   loans       EquipmentLoan[]
   disposedBy  User?                 @relation("EquipmentDisposer", fields: [disposedById], references: [id])
+  disposalVerification EquipmentDisposalVerification?
 }
 
 model EquipmentAssignment {
@@ -2732,6 +2742,7 @@ model MaintenanceRequest {
   financeSubmittedAt  DateTime?
   createdById         Int
   partnerId           Int?
+  sourceScheduleId    Int?
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
 
@@ -2740,6 +2751,7 @@ model MaintenanceRequest {
   approvedBy       User?               @relation("MaintenanceFMApprover", fields: [approvedById], references: [id])
   gmApprovedBy     User?               @relation("MaintenanceGMApprover", fields: [gmApprovedById], references: [id])
   partner          Partner?            @relation("MaintenancePartner", fields: [partnerId], references: [id])
+  sourceSchedule   PreventiveSchedule? @relation(fields: [sourceScheduleId], references: [id])
 }
 
 // ─────────────────────────────────────────────
@@ -3411,4 +3423,49 @@ model ReviewRuleSet {
   createdAt        DateTime           @default(now())
 
   @@unique([reportType, reviewerCategory])
+}
+
+model PreventiveSchedule {
+  id              Int                 @id @default(autoincrement())
+  facilityZone    FacilityZone
+  title           String
+  description     String?             @db.Text
+  intervalDays    Int
+  priority        MaintenancePriority
+  partnerId       Int?
+  lastGeneratedAt DateTime?
+  isActive        Boolean             @default(true)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  partner             Partner?           @relation(fields: [partnerId], references: [id])
+  maintenanceRequests MaintenanceRequest[]
+}
+
+model FacilityAccessLog {
+  id        Int          @id @default(autoincrement())
+  userId    Int
+  zone      FacilityZone
+  action    String
+  reason    String?
+  createdAt DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model EquipmentDisposalVerification {
+  id            Int       @id @default(autoincrement())
+  equipmentId   Int       @unique
+  requestedById Int
+  verifiedById  Int?
+  verifiedAt    DateTime?
+  photoUrl      String?
+  checklistOk   Boolean   @default(false)
+  notes         String?   @db.Text
+  status        String    @default("PENDING")
+  createdAt     DateTime  @default(now())
+
+  equipment   EquipmentUnit @relation(fields: [equipmentId], references: [id])
+  requestedBy User          @relation("DisposalRequestedBy", fields: [requestedById], references: [id])
+  verifiedBy  User?         @relation("DisposalVerifiedBy", fields: [verifiedById], references: [id])
 }
