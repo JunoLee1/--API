@@ -163,6 +163,13 @@ export class InjuryRepository {
     });
   }
 
+  getReport(injuryId: number) {
+    return this.prisma.injuryReport.findUnique({
+      where: { injuryId },
+      select: { rehabLoadPercentage: true, allowedActivities: true },
+    });
+  }
+
   upsertReport(injuryId: number, dto: UpsertInjuryReportDto, userId: number) {
     const data = {
       diagnosisName: dto.diagnosisName ?? null,
