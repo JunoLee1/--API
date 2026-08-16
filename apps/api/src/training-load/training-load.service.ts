@@ -28,7 +28,7 @@ export function isWeeklyOverload(weeklyTotal: number, position?: string | null):
 
 export function getEffectiveThreshold(position?: string | null, rehabLoadPercentage?: number | null): number {
   const base = getLoadThreshold(position);
-  if (!rehabLoadPercentage) return base;
+  if (rehabLoadPercentage == null) return base;
   return Math.round(base * (rehabLoadPercentage / 100));
 }
 
@@ -62,17 +62,17 @@ export class TrainingLoadService {
       if (!isPhysicalCoach && !isHeadCoach && !isAdmin) throw new AppError(403, "LOAD_COACH_ONLY");
     }
 
-    const activeInjury = await this.repo.findActiveInjuryWithReport(dto.playerId);
-    const rehabLoadPercentage = activeInjury?.report?.rehabLoadPercentage ?? null;
-    const allowedActivities = activeInjury?.report?.allowedActivities ?? null;
-
-    if (activeInjury) {
-      console.warn(`[TrainingLoad] Player ${dto.playerId} has active injury (${activeInjury.status})`);
-    }
-
     const result = await this.repo.upsert(dto);
 
     if (dto.load !== undefined) {
+      const activeInjury = await this.repo.findActiveInjuryWithReport(dto.playerId);
+      const rehabLoadPercentage = activeInjury?.report?.rehabLoadPercentage ?? null;
+      const allowedActivities = activeInjury?.report?.allowedActivities ?? null;
+
+      if (activeInjury) {
+        console.warn(`[TrainingLoad] Player ${dto.playerId} has active injury (${activeInjury.status})`);
+      }
+
       const weekStart = this.getWeekStart(new Date());
       const total = await this.repo.getWeeklyLoadTotal(dto.playerId, weekStart);
       const player = await this.repo.getPlayerName(dto.playerId);
@@ -111,10 +111,13 @@ export class TrainingLoadService {
           console.error("[TrainingLoad:overload-notify]", err);
         }
       }
+
+      if (allowedActivities != null) {
+        return { ...result, allowedActivities };
+      }
     }
 
-    const response = allowedActivities ? { ...result, allowedActivities } : result;
-    return response;
+    return result;
   }
 
   async getWeeklySummary(query: WeeklySummaryQuery) {

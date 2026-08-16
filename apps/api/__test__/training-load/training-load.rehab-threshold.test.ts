@@ -14,6 +14,10 @@ describe("getEffectiveThreshold", () => {
   test("rehabLoadPercentage 100이면 임계치 그대로", () => {
     expect(getEffectiveThreshold("GK", 100)).toBe(400);
   });
+
+  test("rehabLoadPercentage 0이면 임계치 0 반환", () => {
+    expect(getEffectiveThreshold("CB", 0)).toBe(0);
+  });
 });
 
 // upsert 응답에 allowedActivities 포함 테스트
