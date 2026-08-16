@@ -141,7 +141,7 @@ export class InjuryRepository {
   updatePriorWeeklyLoad(injuryId: number, load: number) {
     return this.prisma.injury.update({
       where: { id: injuryId },
-      data: { priorWeeklyLoad: load } as any,
+      data: { priorWeeklyLoad: load },
     });
   }
 
