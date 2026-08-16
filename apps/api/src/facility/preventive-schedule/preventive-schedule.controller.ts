@@ -8,7 +8,6 @@ import type { CreatePreventiveScheduleDto, UpdatePreventiveScheduleDto, Preventi
 const isFacilityManager = (req: Request) => {
   const user = requireUser(req);
   return isAdminLike(user.role) ||
-    user.role === "GM" ||
     (user.role === "FRONT_OFFICE" && user.frontOfficeRole === "FACILITY_MANAGER");
 };
 

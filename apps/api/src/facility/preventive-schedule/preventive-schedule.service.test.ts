@@ -20,7 +20,7 @@ const makeRepo = (overrides: Partial<PreventiveScheduleRepository> = {}): Preven
   create:     jest.fn(),
   update:     jest.fn(),
   deactivate: jest.fn(),
-  findDueSchedules: jest.fn().mockResolvedValue([]),
+  findAllActive: jest.fn().mockResolvedValue([]),
   updateLastGeneratedAt: jest.fn(),
   ...overrides,
 } as unknown as PreventiveScheduleRepository);

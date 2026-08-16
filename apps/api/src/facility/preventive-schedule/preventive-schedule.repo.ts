@@ -59,15 +59,9 @@ export class PreventiveScheduleRepository {
     });
   }
 
-  findDueSchedules(today: Date) {
+  findAllActive() {
     return this.prisma.preventiveSchedule.findMany({
-      where: {
-        isActive: true,
-        OR: [
-          { lastGeneratedAt: null },
-          { lastGeneratedAt: { lte: new Date(today.getTime() - 0) } },
-        ],
-      },
+      where: { isActive: true },
       include: INCLUDE,
     });
   }
