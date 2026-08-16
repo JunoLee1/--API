@@ -63,6 +63,7 @@ import hiringSurveyRouter from "./hiring-survey/hiring-survey.routes";
 import formationSnapshotRouter from "./formation-snapshot/formation-snapshot.routes";
 import certificationRouter from "./certification/certification.routes";
 import { startCertStatusSyncJob } from "./jobs/certStatusSync";
+import { startPreventiveScheduleGenJob } from "./jobs/preventiveScheduleGen";
 
 const apiRouter = Router();
 
@@ -133,5 +134,6 @@ apiRouter.use("/formation-snapshots", formationSnapshotRouter);
 apiRouter.use("/certification", certificationRouter);
 
 startCertStatusSyncJob();
+startPreventiveScheduleGenJob();
 
 export default apiRouter;
