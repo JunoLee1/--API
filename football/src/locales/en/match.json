@@ -295,7 +295,8 @@
     "submit": "Save",
     "cancel": "Cancel",
     "by": "by",
-    "submitError": "Failed to save."
+    "submitError": "Failed to save.",
+    "removeError": "Failed to delete."
   },
   "tactical": {
     "title": "Tactical Analysis",
@@ -341,6 +342,10 @@
       "opponentKeyThreatLabel": "Key Threat",
       "opponentWeaknessLabel": "Weakness",
       "opponentKeyPlayerLabel": "Key Player",
+      "opponentPressureScoreLabel": "Pressure Threat",
+      "opponentSetPieceScoreLabel": "Set Piece Threat",
+      "opponentCounterScoreLabel": "Counter Threat",
+      "scoreNone": "Not rated",
       "tacticalComplianceLabel": "Tactical Compliance",
       "concededAnalysisLabel": "Conceded Analysis",
       "momLabel": "MOM",

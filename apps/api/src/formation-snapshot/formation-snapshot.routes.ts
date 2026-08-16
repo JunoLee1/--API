@@ -13,5 +13,6 @@ const controller = new FormationSnapshotController(service);
 
 router.post("/", auth, controller.create);
 router.get("/match/:matchId", auth, controller.findByMatch);
+router.delete("/:id", auth, controller.remove);
 
 export default router;

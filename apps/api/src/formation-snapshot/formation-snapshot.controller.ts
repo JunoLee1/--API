@@ -17,8 +17,16 @@ export class FormationSnapshotController {
 
   findByMatch = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      requireUser(req);
       res.status(200).json(await this.service.findByMatch(Number(req.params["matchId"])));
+    } catch (err) { next(err); }
+  };
+
+  remove = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role } = requireUser(req);
+      if (!isAdminLike(role) && role !== "COACHING_STAFF") throw new AppError(403, "FORBIDDEN");
+      await this.service.remove(Number(req.params["id"]));
+      res.status(204).send();
     } catch (err) { next(err); }
   };
 }

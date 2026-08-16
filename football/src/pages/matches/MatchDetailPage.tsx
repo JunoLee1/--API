@@ -1252,6 +1252,7 @@ export function MatchDetailPage() {
             snapshots={snapshots}
             canEdit={canEditSnapshot}
             onAdded={(s) => setSnapshots(prev => [...prev, s])}
+            onRemoved={(id) => setSnapshots(prev => prev.filter(s => s.id !== id))}
           />
 
           {/* 티켓 판매 */}

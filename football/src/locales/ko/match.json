@@ -295,7 +295,8 @@
     "submit": "저장",
     "cancel": "취소",
     "by": "작성",
-    "submitError": "저장에 실패했습니다."
+    "submitError": "저장에 실패했습니다.",
+    "removeError": "삭제에 실패했습니다."
   },
   "tactical": {
     "title": "전술 분석",
@@ -341,6 +342,10 @@
       "opponentKeyThreatLabel": "상대 주요 위협",
       "opponentWeaknessLabel": "상대 약점",
       "opponentKeyPlayerLabel": "상대 핵심 선수",
+      "opponentPressureScoreLabel": "압박 위협도",
+      "opponentSetPieceScoreLabel": "세트피스 위협도",
+      "opponentCounterScoreLabel": "역습 위협도",
+      "scoreNone": "미평가",
       "tacticalComplianceLabel": "전술 이행도",
       "concededAnalysisLabel": "실점 분석",
       "momLabel": "MOM",

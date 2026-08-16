@@ -1509,3 +1509,85 @@ GM 인수인계서에 항목만 존재하고 내용이 공란. 담당자 확인 
 | FINANCE_MANAGER (급여) | 이번 달 미확정 PayrollRun 수 / 이번 달 총 인건비(netPay 합산) / 연체 스폰서십 납입 건수 |
 
 상세 조회는 각 전용 페이지(HrReportPage, FinancialReportPage 등)로 이동. 메인 대시보드는 요약만 표시.
+
+---
+
+## 운영비 예산 관리 (Operating Budget)
+
+시즌 단위로 GM이 운영비를 카테고리별로 배분·관리하는 계획 도구. `FinancialReport`에 통합되며 Knapsack 최적화로 재량 예산을 배분한다.
+
+**예산 구조:**
+- **의무 지출 (Mandatory):** 카테고리별 최소 보장금액. Knapsack 대상 외.
+- **재량 지출 (Discretionary):** 총 운영예산 − Σ(의무 최소치) − 예비비. Knapsack이 최적 배분.
+- **예비비 (Contingency):** 긴급지출 흡수용 고정 버퍼 (통상 10-15%).
+
+**운영비 카테고리 (OperatingCategory):**
+MEDICAL | MEAL | TRAVEL | EQUIPMENT | SCOUTING | YOUTH
+
+**BudgetCategoryPlan:** 카테고리별 계획 단위. `mandatoryMinimum`(의무 최소치)과 `knapsackAllocated`(최적화 결과)를 보관. 신규 시즌 생성 시 직전 시즌 플랜 자동 복사.
+
+**BudgetTier:** 카테고리 내 선택 가능한 지출 수준(Basic / Standard / Premium). 각 티어는 `cost`(비용)와 `value`(GM 설정 가치점수)를 가진다. Knapsack은 재량 예산 안에서 최대 가치합이 되는 티어 조합을 선택.
+
+**OperatingExpense:** TRAVEL·EQUIPMENT·SCOUTING·YOUTH 카테고리의 실제 지출 기록. 결재 워크플로우 없음. 등록 즉시 확정. `MedicalExpense`·`MealExpense`와 함께 카테고리별 실적 집계(Pull 방식) 대상.
+
+**BudgetOverrideLog:** 긴급지출로 예비비 초과 시 GM이 카테고리 예산을 수동 조정한 기록. 감사 추적 목적.
+
+**잔여예산 계산:** 조회 시점에 시즌 내 지출 합산(Pull). `knapsackAllocated − Σ(실제지출)`.
+
+**쓰기 권한 (Knapsack 실행·플랜 저장):** GM, FINANCE_MANAGER
+**읽기 권한 (잔여예산 대시보드):** GM, FINANCE_MANAGER, TD
+
+---
+
+## 구단 장비 자산 관리 (Equipment Asset Management)
+
+구단 보유 훈련 장비(GPS 조끼, 심박계, 볼 등)에 고유 자산 번호를 부여하고 대여·반납·점검·수리 이력을 관리한다. 현재 ERP에 별도 모델 없음 — 향후 `EquipmentAsset` 모델로 구현 예정.
+
+**핵심 업무 흐름:**
+- 대여: 사용자·대여 품목·기간·목적을 기재한 대여 신청 → 반납 시 파손/분실 체크
+- 정기 점검: 장비별 사용 수명 및 배터리 주기 관리, 캘리브레이션(Calibration) 일정
+- 파손·수리: 즉시 보고 → 수리/교체 프로세스 기록 + 증빙 자료 확보
+
+**구장 운영 조율:**
+- 그라운드 매니지먼트: 훈련·경기 전 잔디 상태(패인 곳, 배수) 사전 체크 및 시설공단 보수 요청
+- 테크니컬 서포트: 구장 시설(전광판, 음향, 냉난방) 이상 시 관리소 조율
+- 대관 계약: 외부 구장 임차 시 청소·환경미화 의무 범위 사전 확인
+
+---
+
+## 스폰서십 계약 (Sponsorship)
+
+나이키·아디다스와 같은 브랜드와 체결하는 장비/유니폼 후원 계약. 수익 다각화의 핵심 항목. 현재 ERP에 별도 모델 없음 — `FinancialReport.sponsorshipRevenue` 필드로 집계만 관리.
+
+---
+
+## 수익 다각화 및 비용 통제 (Revenue & Cost Control)
+
+**수익 항목 (Revenue Streams):**
+| 항목 | 설명 |
+|------|------|
+| 티켓 (멤버십/스카이박스) | 홈경기 입장 수익, 정산 후 분기 보고 |
+| 스폰서십 (Naming Rights 포함) | 나이키·아디다스 등 장비/브랜딩 후원, 구장명칭권 |
+| 중계권료 | K리그 연맹 배분 TV 중계권 수익 |
+| MD 상품 | 구단 굿즈·유니폼 판매 수익 |
+
+→ `FinancialReport` 모델의 `ticketRevenue`, `sponsorshipRevenue`, `broadcastingRevenue`, `merchandiseRevenue` 필드에 수동 입력 또는 CSV 업로드로 기록.
+
+**비용 통제 (Cost Control):** K리그 재정 건전성 제도 준수 — 아래 샐러리캡 제도 참조.
+
+---
+
+## 샐러리캡 제도 (Salary Cap Regime)
+
+클럽 선수단 인건비 상한 규제. K리그는 **비율형**, 영국 하부리그는 **금액형**을 채택.
+
+| 구분 | 영국 하부리그 (리그 1·2) | 한국 K리그 1·2 |
+|------|--------------------------|----------------|
+| 도입 | 2020년 8월 (코로나19 재정난) | 2023년 비율형 전환 |
+| 상한 방식 | 금액형: 리그1 연 250만 파운드, 리그2 연 150만 파운드 | 비율형: 구단 총수입의 일정 비율 이하 |
+| 포함 항목 | 임금·보너스·세금·초상권·대리인 수수료 (승격·우승 보너스 제외) | 선수단 인건비 (승리수당 포함) |
+| 위반 제재 | 5% 초과 시 1파운드당 벌금, 징계 가능 | 초과비율에 따른 '사치세' 부과 후 구단 재분배 |
+| 로스터 제한 | — | 2023: 32명 → 2024: 30명 → 2025: 28명 단계 축소 |
+| 승리수당 상한 | — | K리그1: 100만원, K리그2: 50만원 |
+
+**ERP 연동:** `Season.wageCapType` (FIXED \| RATIO) + `Season.wageCapValue` 필드로 관리. `WageCapService.check()`가 계약 생성 시 실시간 체크 — 0~10% 초과 시 경고, 10% 초과 시 차단.
