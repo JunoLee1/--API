@@ -209,6 +209,13 @@ enum EquipmentLoanStatus {
   RETURNED
 }
 
+enum DisposalVerificationStatus {
+  PENDING
+  FM_VERIFIED
+  GM_APPROVED
+  REJECTED
+}
+
 enum SessionType {
   INDIVIDUAL_SKILL
   TACTICAL_DEFENSIVE
@@ -3462,7 +3469,7 @@ model EquipmentDisposalVerification {
   photoUrl      String?
   checklistOk   Boolean   @default(false)
   notes         String?   @db.Text
-  status        String    @default("PENDING")
+  status        DisposalVerificationStatus @default(PENDING)
   createdAt     DateTime  @default(now())
 
   equipment   EquipmentUnit @relation(fields: [equipmentId], references: [id])
