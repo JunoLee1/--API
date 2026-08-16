@@ -21,6 +21,14 @@ describe("MatchLineupRepository — BH9 matchAvailable bypass", () => {
     ]);
     const result = await repo.findActiveInjuredPlayerIds(["p1", "p2"]);
     expect(result.map(r => r.playerId)).toEqual(["p1"]);
+    // Verify the WHERE clause actually includes the NOT condition
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          NOT: { injuryReport: { matchAvailable: true, medicalSignedAt: { not: null } } },
+        }),
+      })
+    );
   });
 
   test("matchAvailable=true 지만 medicalSignedAt=null이면 여전히 블록", async () => {
