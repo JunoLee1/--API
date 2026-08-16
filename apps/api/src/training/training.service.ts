@@ -59,7 +59,9 @@ export class TrainingService {
     if (!session) throw new AppError(404, "SESSION_NOT_FOUND");
     if (session.isApproved) throw new AppError(409, "ALREADY_APPROVED");
 
-    const presentResults = (session.results ?? []).filter((r: any) => r.attendance !== "ABSENT");
+    const presentResults = (session.results ?? []).filter(
+      (r: any) => r.attendance !== "ABSENT_AUTHORIZED" && r.attendance !== "ABSENT_UNAUTHORIZED"
+    );
     const missingCount = presentResults.filter((r: any) => r.performanceScore == null).length;
 
     const approved = await this.repo.approve(id, approvedById);
