@@ -36,7 +36,7 @@ describe("TrainingService.approveSession — eval warning", () => {
       results: [
         { attendance: "PRESENT", performanceScore: 8 },
         { attendance: "PRESENT", performanceScore: null },
-        { attendance: "ABSENT",  performanceScore: null },
+        { attendance: "ABSENT_AUTHORIZED",  performanceScore: null },
       ],
     });
     mockRepo.approve.mockResolvedValue({ id: 1, isApproved: true, approvedById: 99 });
@@ -50,7 +50,7 @@ describe("TrainingService.approveSession — eval warning", () => {
       id: 1, isApproved: false,
       results: [
         { attendance: "PRESENT", performanceScore: 7 },
-        { attendance: "ABSENT",  performanceScore: null },
+        { attendance: "ABSENT_AUTHORIZED",  performanceScore: null },
       ],
     });
     mockRepo.approve.mockResolvedValue({ id: 1, isApproved: true, approvedById: 99 });
