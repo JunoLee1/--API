@@ -61,6 +61,8 @@ import departmentReviewConfigRouter from "./department-review-config/department-
 import planReviewRouter from "./plan-review/plan-review.routes";
 import hiringSurveyRouter from "./hiring-survey/hiring-survey.routes";
 import formationSnapshotRouter from "./formation-snapshot/formation-snapshot.routes";
+import certificationRouter from "./certification/certification.routes";
+import { startCertStatusSyncJob } from "./jobs/certStatusSync";
 
 const apiRouter = Router();
 
@@ -128,5 +130,8 @@ apiRouter.use("/department-review-configs", departmentReviewConfigRouter);
 apiRouter.use("/plan-reviews", planReviewRouter);
 apiRouter.use("/hiring-surveys", hiringSurveyRouter);
 apiRouter.use("/formation-snapshots", formationSnapshotRouter);
+apiRouter.use("/certification", certificationRouter);
+
+startCertStatusSyncJob();
 
 export default apiRouter;

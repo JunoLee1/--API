@@ -1,4 +1,4 @@
-import type { CertificationType, CertEntityType, CertStatus, FacilityZone } from "../../../generated/enums";
+import type { CertificationType, CertEntityType, CertStatus, FacilityZone } from "../../generated/enums";
 
 export interface CreateCertificationDto {
   certType: CertificationType;
