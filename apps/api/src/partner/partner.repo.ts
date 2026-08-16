@@ -9,7 +9,8 @@ const PARTNER_SELECT = {
 
 const CONTRACT_SELECT = {
   id: true, partnerId: true, status: true, startDate: true,
-  endDate: true, sponsorshipFee: true, discountRate: true, notes: true, createdAt: true,
+  endDate: true, sponsorshipFee: true, discountRate: true, notes: true,
+  responseHours: true, resolutionDays: true, penaltyPerDay: true, createdAt: true,
 } as const;
 
 export class PartnerRepository {
@@ -81,6 +82,9 @@ export class PartnerRepository {
         ...(dto.sponsorshipFee !== undefined && { sponsorshipFee: dto.sponsorshipFee }),
         ...(dto.discountRate !== undefined && { discountRate: dto.discountRate }),
         ...(dto.notes !== undefined && { notes: dto.notes }),
+        ...(dto.responseHours !== undefined && { responseHours: dto.responseHours }),
+        ...(dto.resolutionDays !== undefined && { resolutionDays: dto.resolutionDays }),
+        ...(dto.penaltyPerDay !== undefined && { penaltyPerDay: dto.penaltyPerDay }),
       },
       select: CONTRACT_SELECT,
     });
@@ -95,6 +99,9 @@ export class PartnerRepository {
         ...(dto.sponsorshipFee !== undefined && { sponsorshipFee: dto.sponsorshipFee }),
         ...(dto.discountRate !== undefined && { discountRate: dto.discountRate }),
         ...(dto.notes !== undefined && { notes: dto.notes }),
+        ...(dto.responseHours !== undefined && { responseHours: dto.responseHours }),
+        ...(dto.resolutionDays !== undefined && { resolutionDays: dto.resolutionDays }),
+        ...(dto.penaltyPerDay !== undefined && { penaltyPerDay: dto.penaltyPerDay }),
       },
       select: CONTRACT_SELECT,
     });
