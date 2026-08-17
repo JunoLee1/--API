@@ -125,19 +125,15 @@ export class SponsorshipService {
     if (payment.status === "PAID") throw new AppError(409, "ALREADY_PAID");
     const payAmount = dto.adjustedAmount ?? Number(payment.amount);
     if (payAmount <= 0) throw new AppError(400, "INVALID_PAYMENT_AMOUNT");
-    const updated = await this.repo.updatePayment(paymentId, {
-      status: "PAID",
-      paidAt: new Date(),
-      ...(dto.adjustedAmount !== undefined && { adjustedAmount: dto.adjustedAmount }),
-      ...(dto.adjustmentReason !== undefined && { adjustmentReason: dto.adjustmentReason }),
-      ...(dto.appliedClauseId !== undefined && { appliedClauseId: dto.appliedClauseId }),
-    });
+
+    // Resolve exchange rate before any DB write to avoid partial state
     const sponsorshipCurrency = (sponsorship as any).currency ?? "KRW";
     let rate = 1;
     let amountKrw = payAmount;
 
     if (sponsorshipCurrency !== "KRW") {
       if (dto.exchangeRate !== undefined) {
+        if (dto.exchangeRate <= 0) throw new AppError(400, "INVALID_EXCHANGE_RATE");
         rate = dto.exchangeRate;
       } else {
         const fetched = await fetchKrwRate(sponsorshipCurrency as "USD" | "EUR" | "GBP");
@@ -147,6 +143,14 @@ export class SponsorshipService {
       amountKrw = parseFloat((payAmount * rate).toFixed(2));
     }
 
+    // Only mark PAID after exchange rate is confirmed valid
+    const updated = await this.repo.updatePayment(paymentId, {
+      status: "PAID",
+      paidAt: new Date(),
+      ...(dto.adjustedAmount !== undefined && { adjustedAmount: dto.adjustedAmount }),
+      ...(dto.adjustmentReason !== undefined && { adjustmentReason: dto.adjustmentReason }),
+      ...(dto.appliedClauseId !== undefined && { appliedClauseId: dto.appliedClauseId }),
+    });
     await this.ledgerService.createAutoEntry({
       type: "INCOME",
       category: "SPONSORSHIP",
