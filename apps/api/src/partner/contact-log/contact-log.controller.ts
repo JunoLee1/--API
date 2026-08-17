@@ -1,22 +1,36 @@
 import { Request, Response, NextFunction } from "express";
+import { AppError } from "../../lib/appError";
+import { isAdminLike } from "../../lib/permissions";
 import { requireUser } from "../../lib/authMiddleware";
 import type { ContactLogService } from "./contact-log.service";
 import type { CreateContactLogDto } from "./dto/contact-log.dto";
+
+const isAssetManager = (role: string, frontOfficeRole: string | null | undefined) =>
+  isAdminLike(role) || (role === "FRONT_OFFICE" && frontOfficeRole === "ASSET_MANAGER");
+
+const canManage = (role: string, frontOfficeRole: string | null | undefined) =>
+  isAssetManager(role, frontOfficeRole) || (role === "FRONT_OFFICE" && frontOfficeRole === "EQUIPMENT_MANAGER");
+
+const canRead = (role: string) =>
+  isAdminLike(role) || role === "FRONT_OFFICE" || role === "COACHING_STAFF";
 
 export class ContactLogController {
   constructor(private service: ContactLogService) {}
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const { role } = requireUser(req);
+      if (!canRead(role)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.list(Number(req.params["partnerId"])));
     } catch (err) { next(err); }
   };
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = requireUser(req);
+      const { role, frontOfficeRole, id: userId } = requireUser(req);
+      if (!canManage(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(
-        await this.service.create(Number(req.params["partnerId"]), req.body as CreateContactLogDto, user.id),
+        await this.service.create(Number(req.params["partnerId"]), req.body as CreateContactLogDto, userId),
       );
     } catch (err) { next(err); }
   };
