@@ -77,7 +77,7 @@ export class SponsorshipController {
           Number(req.params["id"]),
           Number(req.params["paymentId"]),
           userId,
-          req.body,
+          req.body as MarkPaidDto,
         ),
       );
     } catch (err) { next(err); }

@@ -19,13 +19,13 @@ export class ClauseController {
 
   apply = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      res.json(await this.service.applyClause(Number(req.params["clauseId"])));
+      res.json(await this.service.applyClause(Number(req.params["clauseId"]), Number(req.params["id"])));
     } catch (err) { next(err); }
   };
 
   waive = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      res.json(await this.service.waiveClause(Number(req.params["clauseId"])));
+      res.json(await this.service.waiveClause(Number(req.params["clauseId"]), Number(req.params["id"])));
     } catch (err) { next(err); }
   };
 }

@@ -10,21 +10,21 @@ export class ClauseService {
   }
 
   create(sponsorshipId: number, dto: CreateClauseDto) {
-    if (!dto.rate && !dto.fixedAmount) throw new AppError(400, "CLAUSE_AMOUNT_REQUIRED");
+    if (dto.rate === undefined && dto.fixedAmount === undefined) throw new AppError(400, "CLAUSE_AMOUNT_REQUIRED");
     return this.repo.create(sponsorshipId, dto);
   }
 
-  async applyClause(id: number) {
+  async applyClause(id: number, sponsorshipId: number) {
     const clause = await this.repo.findById(id);
-    if (!clause) throw new AppError(404, "CLAUSE_NOT_FOUND");
+    if (!clause || clause.sponsorshipId !== sponsorshipId) throw new AppError(404, "CLAUSE_NOT_FOUND");
     if (clause.status !== "PENDING") throw new AppError(400, "CLAUSE_ALREADY_APPLIED");
-    return this.repo.updateStatus(id, "APPLIED" as any);
+    return this.repo.updateStatus(id, "APPLIED");
   }
 
-  async waiveClause(id: number) {
+  async waiveClause(id: number, sponsorshipId: number) {
     const clause = await this.repo.findById(id);
-    if (!clause) throw new AppError(404, "CLAUSE_NOT_FOUND");
+    if (!clause || clause.sponsorshipId !== sponsorshipId) throw new AppError(404, "CLAUSE_NOT_FOUND");
     if (clause.status !== "PENDING") throw new AppError(400, "CLAUSE_NOT_PENDING");
-    return this.repo.updateStatus(id, "WAIVED" as any);
+    return this.repo.updateStatus(id, "WAIVED");
   }
 }
