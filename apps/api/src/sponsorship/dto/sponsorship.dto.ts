@@ -8,6 +8,9 @@ export interface CreateSponsorshipDto {
   contractEnd: string;
   paymentSchedule: PaymentSchedule;
   currency?: CurrencyCode;
+  targetExposureCount?: number;
+  targetFanReach?: number;
+  targetMediaValue?: number;
   attachedContractId?: number;
   // 국내 계좌
   domesticBankName?: string;
@@ -57,6 +60,9 @@ export interface UpdateSponsorshipDto {
   // 해외 전용
   taxId?: string | null;
   overseasAddress?: string | null;
+  targetExposureCount?: number | null;
+  targetFanReach?: number | null;
+  targetMediaValue?: number | null;
 }
 
 export interface SponsorshipListQuery {

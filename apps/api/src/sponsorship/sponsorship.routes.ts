@@ -10,6 +10,9 @@ import { AppError } from "../lib/appError";
 import { ClauseRepository } from "./clause/clause.repo";
 import { ClauseService } from "./clause/clause.service";
 import { ClauseController } from "./clause/clause.controller";
+import { ExposureRepository } from "./exposure/exposure.repo";
+import { ExposureService } from "./exposure/exposure.service";
+import { ExposureController } from "./exposure/exposure.controller";
 
 const router = Router();
 
@@ -20,6 +23,10 @@ const controller = new SponsorshipController(service);
 const clauseRepo = new ClauseRepository(getPrisma());
 const clauseService = new ClauseService(clauseRepo);
 const clauseController = new ClauseController(clauseService);
+
+const exposureRepo = new ExposureRepository(getPrisma());
+const exposureService = new ExposureService(exposureRepo);
+const exposureController = new ExposureController(exposureService);
 
 const checkReadFinance = (req: Request, res: Response, next: NextFunction) => {
   const { role, frontOfficeRole } = req.user!;
@@ -47,5 +54,8 @@ router.get("/:id/clauses",                   auth, checkReadFinance, clauseContr
 router.post("/:id/clauses",                  auth, checkWriteFinance, clauseController.create);
 router.post("/:id/clauses/:clauseId/apply",  auth, checkWriteFinance, clauseController.apply);
 router.post("/:id/clauses/:clauseId/waive",  auth, checkWriteFinance, clauseController.waive);
+
+router.get("/:id/exposure-events",  auth, checkReadFinance, exposureController.list);
+router.post("/:id/exposure-events", auth, checkWriteFinance, exposureController.create);
 
 export default router;
