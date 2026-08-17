@@ -2892,7 +2892,7 @@ model SponsorshipPayment {
   appliedClauseId  Int?
 
   sponsorship   Sponsorship        @relation(fields: [sponsorshipId], references: [id], onDelete: Cascade)
-  appliedClause SponsorshipClause? @relation(fields: [appliedClauseId], references: [id])
+  appliedClause SponsorshipClause? @relation(fields: [appliedClauseId], references: [id], onDelete: SetNull)
 }
 
 // ─────────────────────────────────────────────
@@ -3535,9 +3535,12 @@ model SponsorshipClause {
   fixedAmount   Decimal?     @db.Decimal(14, 2)
   status        ClauseStatus @default(PENDING)
   createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
-  sponsorship     Sponsorship           @relation(fields: [sponsorshipId], references: [id])
+  sponsorship     Sponsorship           @relation(fields: [sponsorshipId], references: [id], onDelete: Cascade)
   appliedPayments SponsorshipPayment[]
+
+  @@index([sponsorshipId])
 }
 
 model SponsorshipExposureEvent {
@@ -3552,8 +3555,11 @@ model SponsorshipExposureEvent {
   createdById   Int
   createdAt     DateTime        @default(now())
 
-  sponsorship Sponsorship @relation(fields: [sponsorshipId], references: [id])
+  sponsorship Sponsorship @relation(fields: [sponsorshipId], references: [id], onDelete: Cascade)
   createdBy   User        @relation("ExposureEventCreator", fields: [createdById], references: [id])
+
+  @@index([sponsorshipId])
+  @@index([createdById])
 }
 
 model PartnerContactLog {
@@ -3569,4 +3575,7 @@ model PartnerContactLog {
 
   partner Partner @relation(fields: [partnerId], references: [id])
   actor   User    @relation("ContactLogActor", fields: [actorId], references: [id])
+
+  @@index([partnerId])
+  @@index([actorId])
 }
