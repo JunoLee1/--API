@@ -873,6 +873,8 @@ model User {
   facilityAccessLogs       FacilityAccessLog[]
   disposalRequests         EquipmentDisposalVerification[] @relation("DisposalRequestedBy")
   disposalVerifications    EquipmentDisposalVerification[] @relation("DisposalVerifiedBy")
+  sponsorshipExposureEvents SponsorshipExposureEvent[] @relation("ExposureEventCreator")
+  partnerContactLogs        PartnerContactLog[]         @relation("ContactLogActor")
 }
 
 model Season {
@@ -1132,12 +1134,15 @@ model Partner {
   address   String?
   phone     String?
   createdAt DateTime    @default(now())
+  tier       PartnerTier?
+  tierReason String?
 
   injuries             Injury[]
   equipmentItems       EquipmentItem[]
   contracts            PartnerContract[]
   maintenanceRequests  MaintenanceRequest[] @relation("MaintenancePartner")
   preventiveSchedules  PreventiveSchedule[]
+  contactLogs          PartnerContactLog[]
 }
 
 model PartnerContract {
@@ -2839,6 +2844,10 @@ model Sponsorship {
   exposureCount Int?
   mediaValue    Decimal? @db.Decimal(15, 2)
   fanReach      Int?
+  currency               CurrencyCode @default(KRW)
+  targetExposureCount    Int?
+  targetFanReach         Int?
+  targetMediaValue       Decimal?     @db.Decimal(15, 2)
 
   // 국내 계좌
   domesticBankName      String?
@@ -2864,6 +2873,8 @@ model Sponsorship {
   attachedContract PartnerContract?     @relation(fields: [attachedContractId], references: [id])
   createdBy        User                 @relation("SponsorshipCreator", fields: [createdById], references: [id])
   payments         SponsorshipPayment[]
+  clauses          SponsorshipClause[]
+  exposureEvents   SponsorshipExposureEvent[]
   deletedAt        DateTime?
 }
 
@@ -2876,8 +2887,12 @@ model SponsorshipPayment {
   status        SponsorshipPaymentStatus @default(PENDING)
   createdAt     DateTime                 @default(now())
   updatedAt     DateTime                 @updatedAt
+  adjustedAmount   Decimal?  @db.Decimal(14, 2)
+  adjustmentReason String?
+  appliedClauseId  Int?
 
-  sponsorship Sponsorship @relation(fields: [sponsorshipId], references: [id], onDelete: Cascade)
+  sponsorship   Sponsorship        @relation(fields: [sponsorshipId], references: [id], onDelete: Cascade)
+  appliedClause SponsorshipClause? @relation(fields: [appliedClauseId], references: [id])
 }
 
 // ─────────────────────────────────────────────
@@ -3377,6 +3392,40 @@ enum ApproverLevel {
   ADMIN
 }
 
+enum PartnerTier {
+  TITLE
+  GOLD
+  SILVER
+  BRONZE
+}
+
+enum ClauseType {
+  DISCOUNT
+  REFUND
+}
+
+enum ClauseStatus {
+  PENDING
+  APPLIED
+  WAIVED
+}
+
+enum ContactChannel {
+  CALL
+  EMAIL
+  MEETING
+  OTHER
+}
+
+enum ExposureChannel {
+  TV
+  SNS
+  STADIUM
+  PRINT
+  DIGITAL
+  OTHER
+}
+
 model DepartmentReviewerConfig {
   id                   Int        @id @default(autoincrement())
   subjectDepartmentId  Int
@@ -3475,4 +3524,49 @@ model EquipmentDisposalVerification {
   equipment   EquipmentUnit @relation(fields: [equipmentId], references: [id])
   requestedBy User          @relation("DisposalRequestedBy", fields: [requestedById], references: [id])
   verifiedBy  User?         @relation("DisposalVerifiedBy", fields: [verifiedById], references: [id])
+}
+
+model SponsorshipClause {
+  id            Int          @id @default(autoincrement())
+  sponsorshipId Int
+  type          ClauseType
+  condition     String       @db.Text
+  rate          Decimal?     @db.Decimal(5, 4)
+  fixedAmount   Decimal?     @db.Decimal(14, 2)
+  status        ClauseStatus @default(PENDING)
+  createdAt     DateTime     @default(now())
+
+  sponsorship     Sponsorship           @relation(fields: [sponsorshipId], references: [id])
+  appliedPayments SponsorshipPayment[]
+}
+
+model SponsorshipExposureEvent {
+  id            Int             @id @default(autoincrement())
+  sponsorshipId Int
+  channel       ExposureChannel
+  occurredAt    DateTime
+  exposureCount Int?
+  fanReach      Int?
+  mediaValue    Decimal?        @db.Decimal(15, 2)
+  notes         String?         @db.Text
+  createdById   Int
+  createdAt     DateTime        @default(now())
+
+  sponsorship Sponsorship @relation(fields: [sponsorshipId], references: [id])
+  createdBy   User        @relation("ExposureEventCreator", fields: [createdById], references: [id])
+}
+
+model PartnerContactLog {
+  id             Int            @id @default(autoincrement())
+  partnerId      Int
+  channel        ContactChannel
+  contactedAt    DateTime
+  actorId        Int
+  summary        String         @db.Text
+  nextActionDate DateTime?
+  nextActionNote String?        @db.Text
+  createdAt      DateTime       @default(now())
+
+  partner Partner @relation(fields: [partnerId], references: [id])
+  actor   User    @relation("ContactLogActor", fields: [actorId], references: [id])
 }
