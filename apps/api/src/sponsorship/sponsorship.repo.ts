@@ -60,6 +60,7 @@ export class SponsorshipRepository {
         contractStart: new Date(data.contractStart),
         contractEnd: new Date(data.contractEnd),
         paymentSchedule: data.paymentSchedule,
+        currency: (data.currency ?? "KRW") as any,
         createdById: data.createdById,
         ...(data.attachedContractId && { attachedContractId: data.attachedContractId }),
         ...(data.domesticBankName && { domesticBankName: data.domesticBankName }),

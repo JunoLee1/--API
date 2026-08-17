@@ -1,4 +1,5 @@
 import { AppError } from "../lib/appError";
+import { fetchKrwRate } from "../lib/exchangeRate";
 import { writeAuditLog } from "../lib/auditLog";
 import { divideEvenly } from "../lib/money";
 import { formatLedgerDescription } from "../lib/ledger-formatter";
@@ -131,13 +132,28 @@ export class SponsorshipService {
       ...(dto.adjustmentReason !== undefined && { adjustmentReason: dto.adjustmentReason }),
       ...(dto.appliedClauseId !== undefined && { appliedClauseId: dto.appliedClauseId }),
     });
+    const sponsorshipCurrency = (sponsorship as any).currency ?? "KRW";
+    let rate = 1;
+    let amountKrw = payAmount;
+
+    if (sponsorshipCurrency !== "KRW") {
+      if (dto.exchangeRate !== undefined) {
+        rate = dto.exchangeRate;
+      } else {
+        const fetched = await fetchKrwRate(sponsorshipCurrency as "USD" | "EUR" | "GBP");
+        if (fetched === null) throw new AppError(502, "EXCHANGE_RATE_UNAVAILABLE");
+        rate = fetched;
+      }
+      amountKrw = parseFloat((payAmount * rate).toFixed(2));
+    }
+
     await this.ledgerService.createAutoEntry({
       type: "INCOME",
       category: "SPONSORSHIP",
       amount: payAmount,
-      currency: "KRW",
-      exchangeRate: 1,
-      amountKrw: payAmount,
+      currency: sponsorshipCurrency,
+      exchangeRate: rate,
+      amountKrw,
       description: formatLedgerDescription("sponsorship", "payment_received", { sponsorName: sponsorship.sponsorName, paymentId }),
       relatedModule: "sponsorship",
       relatedId: sponsorshipId,

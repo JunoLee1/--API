@@ -1,4 +1,4 @@
-import type { SponsorType, PaymentSchedule } from "../../generated/enums";
+import type { SponsorType, PaymentSchedule, CurrencyCode } from "../../generated/enums";
 
 export interface CreateSponsorshipDto {
   sponsorName: string;
@@ -7,6 +7,7 @@ export interface CreateSponsorshipDto {
   contractStart: string;
   contractEnd: string;
   paymentSchedule: PaymentSchedule;
+  currency?: CurrencyCode;
   attachedContractId?: number;
   // 국내 계좌
   domesticBankName?: string;
@@ -67,4 +68,5 @@ export interface MarkPaidDto {
   adjustedAmount?: number;
   adjustmentReason?: string;
   appliedClauseId?: number;
+  exchangeRate?: number;
 }
