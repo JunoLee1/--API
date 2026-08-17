@@ -29,6 +29,13 @@ describe("ExposureService.create", () => {
     await makeService(repo).create(10, { channel: "SNS", occurredAt: "2026-08-17", exposureCount: 5000 }, 5);
     expect(repo.create).toHaveBeenCalledWith(10, expect.objectContaining({ channel: "SNS", createdById: 5 }));
   });
+
+  it("does not throw when exposureCount is 0", async () => {
+    const repo = makeRepo({ create: jest.fn().mockResolvedValue(makeEvent({ exposureCount: 0 })) });
+    await expect(
+      makeService(repo).create(10, { channel: "SNS", occurredAt: "2026-08-17", exposureCount: 0 }, 5),
+    ).resolves.toBeDefined();
+  });
 });
 
 describe("ExposureService.list", () => {
