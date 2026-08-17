@@ -62,3 +62,9 @@ export interface SponsorshipListQuery {
   type?: SponsorType;
   page?: string;
 }
+
+export interface MarkPaidDto {
+  adjustedAmount?: number;
+  adjustmentReason?: string;
+  appliedClauseId?: number;
+}

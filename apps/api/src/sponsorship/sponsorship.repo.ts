@@ -110,10 +110,16 @@ export class SponsorshipRepository {
     return this.prisma.sponsorshipPayment.findUnique({ where: { id } });
   }
 
-  updatePayment(id: number, data: { status: "PAID"; paidAt: Date }) {
+  updatePayment(id: number, data: { status: "PAID"; paidAt: Date; adjustedAmount?: number; adjustmentReason?: string; appliedClauseId?: number }) {
     return this.prisma.sponsorshipPayment.update({
       where: { id },
-      data,
+      data: {
+        status: data.status,
+        paidAt: data.paidAt,
+        ...(data.adjustedAmount !== undefined && { adjustedAmount: data.adjustedAmount }),
+        ...(data.adjustmentReason !== undefined && { adjustmentReason: data.adjustmentReason }),
+        ...(data.appliedClauseId !== undefined && { appliedClauseId: data.appliedClauseId }),
+      },
     });
   }
 

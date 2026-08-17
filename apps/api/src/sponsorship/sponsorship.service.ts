@@ -3,7 +3,7 @@ import { writeAuditLog } from "../lib/auditLog";
 import { divideEvenly } from "../lib/money";
 import { formatLedgerDescription } from "../lib/ledger-formatter";
 import type { SponsorshipRepository } from "./sponsorship.repo";
-import type { CreateSponsorshipDto, UpdateSponsorshipDto, SponsorshipListQuery } from "./dto/sponsorship.dto";
+import type { CreateSponsorshipDto, UpdateSponsorshipDto, SponsorshipListQuery, MarkPaidDto } from "./dto/sponsorship.dto";
 import type { PaymentSchedule } from "../generated/enums";
 import type { LedgerService } from "../ledger/ledger.service";
 
@@ -115,22 +115,29 @@ export class SponsorshipService {
     return this.applyOverdue(payments);
   }
 
-  async markPaid(sponsorshipId: number, paymentId: number, userId: number) {
+  async markPaid(sponsorshipId: number, paymentId: number, userId: number, dto: MarkPaidDto = {}) {
     const sponsorship = await this.get(sponsorshipId);
     const payment = await this.repo.findPaymentById(paymentId);
     if (!payment || payment.sponsorshipId !== sponsorshipId) {
       throw new AppError(404, "SPONSORSHIP_PAYMENT_NOT_FOUND");
     }
     if (payment.status === "PAID") throw new AppError(409, "ALREADY_PAID");
-    if (Number(payment.amount) <= 0) throw new AppError(400, "INVALID_PAYMENT_AMOUNT");
-    const updated = await this.repo.updatePayment(paymentId, { status: "PAID", paidAt: new Date() });
+    const payAmount = dto.adjustedAmount ?? Number(payment.amount);
+    if (payAmount <= 0) throw new AppError(400, "INVALID_PAYMENT_AMOUNT");
+    const updated = await this.repo.updatePayment(paymentId, {
+      status: "PAID",
+      paidAt: new Date(),
+      ...(dto.adjustedAmount !== undefined && { adjustedAmount: dto.adjustedAmount }),
+      ...(dto.adjustmentReason !== undefined && { adjustmentReason: dto.adjustmentReason }),
+      ...(dto.appliedClauseId !== undefined && { appliedClauseId: dto.appliedClauseId }),
+    });
     await this.ledgerService.createAutoEntry({
       type: "INCOME",
       category: "SPONSORSHIP",
-      amount: Number(payment.amount),
+      amount: payAmount,
       currency: "KRW",
       exchangeRate: 1,
-      amountKrw: Number(payment.amount),
+      amountKrw: payAmount,
       description: formatLedgerDescription("sponsorship", "payment_received", { sponsorName: sponsorship.sponsorName, paymentId }),
       relatedModule: "sponsorship",
       relatedId: sponsorshipId,

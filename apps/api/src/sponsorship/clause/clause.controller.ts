@@ -1,0 +1,31 @@
+import { Request, Response, NextFunction } from "express";
+import type { ClauseService } from "./clause.service";
+import type { CreateClauseDto } from "./dto/clause.dto";
+
+export class ClauseController {
+  constructor(private service: ClauseService) {}
+
+  list = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.json(await this.service.list(Number(req.params["id"])));
+    } catch (err) { next(err); }
+  };
+
+  create = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.status(201).json(await this.service.create(Number(req.params["id"]), req.body as CreateClauseDto));
+    } catch (err) { next(err); }
+  };
+
+  apply = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.json(await this.service.applyClause(Number(req.params["clauseId"])));
+    } catch (err) { next(err); }
+  };
+
+  waive = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.json(await this.service.waiveClause(Number(req.params["clauseId"])));
+    } catch (err) { next(err); }
+  };
+}

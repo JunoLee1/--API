@@ -3,7 +3,7 @@ import { AppError } from "../lib/appError";
 import { isAdminLike, canWriteFinance } from "../lib/permissions";
 import { requireUser } from "../lib/authMiddleware";
 import type { SponsorshipService } from "./sponsorship.service";
-import type { CreateSponsorshipDto, UpdateSponsorshipDto, SponsorshipListQuery } from "./dto/sponsorship.dto";
+import type { CreateSponsorshipDto, UpdateSponsorshipDto, SponsorshipListQuery, MarkPaidDto } from "./dto/sponsorship.dto";
 
 const canRead = (role: string) =>
   isAdminLike(role) || role === "FRONT_OFFICE";
@@ -73,7 +73,12 @@ export class SponsorshipController {
       const { role, frontOfficeRole, id: userId } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.json(
-        await this.service.markPaid(Number(req.params["id"]), Number(req.params["paymentId"]), userId),
+        await this.service.markPaid(
+          Number(req.params["id"]),
+          Number(req.params["paymentId"]),
+          userId,
+          req.body,
+        ),
       );
     } catch (err) { next(err); }
   };
