@@ -60,7 +60,11 @@ export class SponsorshipRepository {
         contractStart: new Date(data.contractStart),
         contractEnd: new Date(data.contractEnd),
         paymentSchedule: data.paymentSchedule,
+        currency: (data.currency ?? "KRW") as any,
         createdById: data.createdById,
+        ...(data.targetExposureCount !== undefined && { targetExposureCount: data.targetExposureCount }),
+        ...(data.targetFanReach !== undefined && { targetFanReach: data.targetFanReach }),
+        ...(data.targetMediaValue !== undefined && { targetMediaValue: data.targetMediaValue }),
         ...(data.attachedContractId && { attachedContractId: data.attachedContractId }),
         ...(data.domesticBankName && { domesticBankName: data.domesticBankName }),
         ...(data.domesticAccountNumber && { domesticAccountNumber: data.domesticAccountNumber }),
@@ -91,6 +95,9 @@ export class SponsorshipRepository {
         ...data,
         ...(data.contractStart && { contractStart: new Date(data.contractStart) }),
         ...(data.contractEnd && { contractEnd: new Date(data.contractEnd) }),
+        ...(data.targetExposureCount !== undefined && { targetExposureCount: data.targetExposureCount }),
+        ...(data.targetFanReach !== undefined && { targetFanReach: data.targetFanReach }),
+        ...(data.targetMediaValue !== undefined && { targetMediaValue: data.targetMediaValue }),
       },
       include: {
         ...INCLUDE,
@@ -110,10 +117,16 @@ export class SponsorshipRepository {
     return this.prisma.sponsorshipPayment.findUnique({ where: { id } });
   }
 
-  updatePayment(id: number, data: { status: "PAID"; paidAt: Date }) {
+  updatePayment(id: number, data: { status: "PAID"; paidAt: Date; adjustedAmount?: number; adjustmentReason?: string; appliedClauseId?: number }) {
     return this.prisma.sponsorshipPayment.update({
       where: { id },
-      data,
+      data: {
+        status: data.status,
+        paidAt: data.paidAt,
+        ...(data.adjustedAmount !== undefined && { adjustedAmount: data.adjustedAmount }),
+        ...(data.adjustmentReason !== undefined && { adjustmentReason: data.adjustmentReason }),
+        ...(data.appliedClauseId !== undefined && { appliedClauseId: data.appliedClauseId }),
+      },
     });
   }
 

@@ -1,4 +1,4 @@
-import type { SponsorType, PaymentSchedule } from "../../generated/enums";
+import type { SponsorType, PaymentSchedule, CurrencyCode } from "../../generated/enums";
 
 export interface CreateSponsorshipDto {
   sponsorName: string;
@@ -7,6 +7,10 @@ export interface CreateSponsorshipDto {
   contractStart: string;
   contractEnd: string;
   paymentSchedule: PaymentSchedule;
+  currency?: CurrencyCode;
+  targetExposureCount?: number;
+  targetFanReach?: number;
+  targetMediaValue?: number;
   attachedContractId?: number;
   // 국내 계좌
   domesticBankName?: string;
@@ -56,9 +60,19 @@ export interface UpdateSponsorshipDto {
   // 해외 전용
   taxId?: string | null;
   overseasAddress?: string | null;
+  targetExposureCount?: number | null;
+  targetFanReach?: number | null;
+  targetMediaValue?: number | null;
 }
 
 export interface SponsorshipListQuery {
   type?: SponsorType;
   page?: string;
+}
+
+export interface MarkPaidDto {
+  adjustedAmount?: number;
+  adjustmentReason?: string;
+  appliedClauseId?: number;
+  exchangeRate?: number;
 }

@@ -19,10 +19,11 @@ export class ClubSettingsController {
     try {
       const user = requireUser(req);
       if (!isAdminLike(user.role)) throw new AppError(403, "FORBIDDEN");
-      const body = req.body as { currency?: string; ibiBeta?: number };
-      const data: { currency?: string; ibiBeta?: number } = {};
+      const body = req.body as { currency?: string; ibiBeta?: number; maintenanceCostLimit?: number };
+      const data: { currency?: string; ibiBeta?: number; maintenanceCostLimit?: number } = {};
       if (body.currency !== undefined) data.currency = body.currency;
-      if (body.ibiBeta !== undefined) data.ibiBeta = body.ibiBeta;
+      if (body.ibiBeta !== undefined) data.ibiBeta = Number(body.ibiBeta);
+      if (body.maintenanceCostLimit !== undefined) data.maintenanceCostLimit = Number(body.maintenanceCostLimit);
       res.json(await this.service.update(data));
     } catch (err) {
       next(err);

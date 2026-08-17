@@ -28,6 +28,9 @@ export class PartnerService {
     if (dto.name !== undefined && !dto.name.trim()) throw new AppError(400, "PARTNER_NAME_REQUIRED");
     const trimmed = dto.name !== undefined ? dto.name.trim() : undefined;
     if (trimmed && await this.repo.findByName(trimmed, id)) throw new AppError(409, "PARTNER_NAME_DUPLICATE");
+    if (dto.tier === null && dto.tierReason !== undefined && dto.tierReason !== null) {
+      throw new AppError(400, "TIER_REQUIRED_FOR_TIER_REASON");
+    }
     return this.repo.update(id, { ...dto, ...(trimmed !== undefined && { name: trimmed }) });
   }
 

@@ -64,6 +64,7 @@ import formationSnapshotRouter from "./formation-snapshot/formation-snapshot.rou
 import certificationRouter from "./certification/certification.routes";
 import { startCertStatusSyncJob } from "./jobs/certStatusSync";
 import { startPreventiveScheduleGenJob } from "./jobs/preventiveScheduleGen";
+import { startContactFollowUpNotifierJob } from "./jobs/contactFollowUpNotifier";
 
 const apiRouter = Router();
 
@@ -135,5 +136,6 @@ apiRouter.use("/certification", certificationRouter);
 
 startCertStatusSyncJob();
 startPreventiveScheduleGenJob();
+startContactFollowUpNotifierJob();
 
 export default apiRouter;
