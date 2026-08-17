@@ -127,7 +127,7 @@ export class SponsorshipService {
     if (payAmount <= 0) throw new AppError(400, "INVALID_PAYMENT_AMOUNT");
 
     // Resolve exchange rate before any DB write to avoid partial state
-    const sponsorshipCurrency = (sponsorship as any).currency ?? "KRW";
+    const sponsorshipCurrency = sponsorship.currency ?? "KRW";
     let rate = 1;
     let amountKrw = payAmount;
 

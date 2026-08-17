@@ -9,7 +9,7 @@ const isAssetManager = (role: string, frontOfficeRole: string | null | undefined
   isAdminLike(role) || (role === "FRONT_OFFICE" && frontOfficeRole === "ASSET_MANAGER");
 
 const canManage = (role: string, frontOfficeRole: string | null | undefined) =>
-  isAssetManager(role, frontOfficeRole) || (role === "FRONT_OFFICE" && frontOfficeRole === "EQUIPMENT_MANAGER");
+  isAssetManager(role, frontOfficeRole);
 
 const canRead = (role: string) =>
   isAdminLike(role) || role === "FRONT_OFFICE" || role === "COACHING_STAFF";
