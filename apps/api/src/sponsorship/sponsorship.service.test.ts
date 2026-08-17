@@ -1,4 +1,9 @@
 import { SponsorshipService } from "./sponsorship.service";
+import { fetchKrwRate } from "../lib/exchangeRate";
+
+jest.mock("../lib/exchangeRate", () => ({
+  fetchKrwRate: jest.fn(),
+}));
 
 const makeRepo = () => ({
   findBySponsorName: jest.fn().mockResolvedValue(null),
@@ -10,6 +15,18 @@ const makeRepo = () => ({
     isOverseas: false,
     payments: [],
   }),
+});
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const makeMarkPaidRepo = (overrides: Record<string, any> = {}) => ({
+  ...makeRepo(),
+  findPaymentById: jest.fn(),
+  updatePayment: jest.fn(),
+  ...overrides,
+});
+
+const makeMarkPaidLedger = () => ({
+  createAutoEntry: jest.fn().mockResolvedValue(undefined),
 });
 
 const makeLedger = () => ({} as any);
@@ -69,5 +86,132 @@ describe("SponsorshipService.create — region fields", () => {
         overseasAddress: "10 Downing Street, London",
       }),
     );
+  });
+});
+
+describe("SponsorshipService.markPaid — PA4/PA6 paths", () => {
+  const SPONSORSHIP_ID = 10;
+  const PAYMENT_ID = 20;
+  const USER_ID = 1;
+
+  const makeKrwSponsorship = () => ({
+    id: SPONSORSHIP_ID,
+    sponsorName: "Test Sponsor",
+    isOverseas: false,
+    currency: "KRW",
+    payments: [],
+  });
+
+  const makeUsdSponsorship = () => ({
+    id: SPONSORSHIP_ID,
+    sponsorName: "Global Sponsor",
+    isOverseas: true,
+    currency: "USD",
+    payments: [],
+  });
+
+  const makePendingPayment = (amount: number = 1_000_000) => ({
+    id: PAYMENT_ID,
+    sponsorshipId: SPONSORSHIP_ID,
+    amount,
+    status: "PENDING",
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("uses dto.adjustedAmount for ledger when provided", async () => {
+    const repo = makeMarkPaidRepo({
+      findById: jest.fn().mockResolvedValue(makeKrwSponsorship()),
+      findPaymentById: jest.fn().mockResolvedValue(makePendingPayment(1_000_000)),
+      updatePayment: jest.fn().mockResolvedValue({ id: PAYMENT_ID, status: "PAID" }),
+    });
+    const ledger = makeMarkPaidLedger();
+    const service = new SponsorshipService(repo as any, ledger as any);
+
+    await service.markPaid(SPONSORSHIP_ID, PAYMENT_ID, USER_ID, { adjustedAmount: 800_000 });
+
+    expect(ledger.createAutoEntry).toHaveBeenCalledWith(
+      expect.objectContaining({ amount: 800_000 }),
+      USER_ID,
+    );
+  });
+
+  it("throws 400 INVALID_PAYMENT_AMOUNT when dto.adjustedAmount <= 0", async () => {
+    const repo = makeMarkPaidRepo({
+      findById: jest.fn().mockResolvedValue(makeKrwSponsorship()),
+      findPaymentById: jest.fn().mockResolvedValue(makePendingPayment(1_000_000)),
+    });
+    const ledger = makeMarkPaidLedger();
+    const service = new SponsorshipService(repo as any, ledger as any);
+
+    await expect(
+      service.markPaid(SPONSORSHIP_ID, PAYMENT_ID, USER_ID, { adjustedAmount: 0 }),
+    ).rejects.toMatchObject({ statusCode: 400, code: "INVALID_PAYMENT_AMOUNT" });
+  });
+
+  it("uses dto.exchangeRate without fetching when provided for non-KRW sponsorship", async () => {
+    const repo = makeMarkPaidRepo({
+      findById: jest.fn().mockResolvedValue(makeUsdSponsorship()),
+      findPaymentById: jest.fn().mockResolvedValue(makePendingPayment(100)),
+      updatePayment: jest.fn().mockResolvedValue({ id: PAYMENT_ID, status: "PAID" }),
+    });
+    const ledger = makeMarkPaidLedger();
+    const service = new SponsorshipService(repo as any, ledger as any);
+
+    await service.markPaid(SPONSORSHIP_ID, PAYMENT_ID, USER_ID, { exchangeRate: 1350 });
+
+    expect(fetchKrwRate).not.toHaveBeenCalled();
+    expect(ledger.createAutoEntry).toHaveBeenCalledWith(
+      expect.objectContaining({ exchangeRate: 1350, amountKrw: 135000 }),
+      USER_ID,
+    );
+  });
+
+  it("throws 400 INVALID_EXCHANGE_RATE when dto.exchangeRate <= 0", async () => {
+    const repo = makeMarkPaidRepo({
+      findById: jest.fn().mockResolvedValue(makeUsdSponsorship()),
+      findPaymentById: jest.fn().mockResolvedValue(makePendingPayment(100)),
+    });
+    const ledger = makeMarkPaidLedger();
+    const service = new SponsorshipService(repo as any, ledger as any);
+
+    await expect(
+      service.markPaid(SPONSORSHIP_ID, PAYMENT_ID, USER_ID, { exchangeRate: 0 }),
+    ).rejects.toMatchObject({ statusCode: 400, code: "INVALID_EXCHANGE_RATE" });
+  });
+
+  it("fetches live rate when non-KRW and no dto.exchangeRate", async () => {
+    (fetchKrwRate as jest.Mock).mockResolvedValue(1380);
+    const repo = makeMarkPaidRepo({
+      findById: jest.fn().mockResolvedValue(makeUsdSponsorship()),
+      findPaymentById: jest.fn().mockResolvedValue(makePendingPayment(100)),
+      updatePayment: jest.fn().mockResolvedValue({ id: PAYMENT_ID, status: "PAID" }),
+    });
+    const ledger = makeMarkPaidLedger();
+    const service = new SponsorshipService(repo as any, ledger as any);
+
+    await service.markPaid(SPONSORSHIP_ID, PAYMENT_ID, USER_ID, {});
+
+    expect(fetchKrwRate).toHaveBeenCalledWith("USD");
+    expect(ledger.createAutoEntry).toHaveBeenCalledWith(
+      expect.objectContaining({ exchangeRate: 1380, amountKrw: 138000 }),
+      USER_ID,
+    );
+  });
+
+  it("throws 502 EXCHANGE_RATE_UNAVAILABLE when fetch returns null", async () => {
+    (fetchKrwRate as jest.Mock).mockResolvedValue(null);
+    const repo = makeMarkPaidRepo({
+      findById: jest.fn().mockResolvedValue(makeUsdSponsorship()),
+      findPaymentById: jest.fn().mockResolvedValue(makePendingPayment(100)),
+    });
+    const ledger = makeMarkPaidLedger();
+    const service = new SponsorshipService(repo as any, ledger as any);
+
+    await expect(
+      service.markPaid(SPONSORSHIP_ID, PAYMENT_ID, USER_ID, {}),
+    ).rejects.toMatchObject({ statusCode: 502, code: "EXCHANGE_RATE_UNAVAILABLE" });
   });
 });

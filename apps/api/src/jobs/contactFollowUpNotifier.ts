@@ -2,24 +2,14 @@ import cron from "node-cron";
 import { getPrisma } from "../lib/prisma";
 import { NotificationService } from "../notification/notification.service";
 import { NotificationRepository } from "../notification/notification.repo";
+import { ContactLogRepository } from "../partner/contact-log/contact-log.repo";
 
 async function runContactFollowUpNotifier() {
   const prisma = getPrisma();
   const notificationService = new NotificationService(new NotificationRepository(prisma));
+  const contactLogRepo = new ContactLogRepository(prisma);
 
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);
-  const dayAfter = new Date(tomorrow);
-  dayAfter.setDate(dayAfter.getDate() + 1);
-
-  const dueLogs = await prisma.partnerContactLog.findMany({
-    where: { nextActionDate: { gte: tomorrow, lt: dayAfter } },
-    include: {
-      partner: { select: { name: true } },
-      actor: { select: { id: true } },
-    },
-  });
+  const dueLogs = await contactLogRepo.findDueTomorrow();
 
   for (const log of dueLogs) {
     await notificationService
