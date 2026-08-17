@@ -104,4 +104,17 @@ describe("DisposalService.fmVerify", () => {
     expect(repo.fmVerify).toHaveBeenCalled();
     expect(repo.updateUnitDisposed).toHaveBeenCalledWith(1, 5);
   });
+
+  it("does NOT call updateUnitDisposed for high-value equipment (awaits GM)", async () => {
+    const repo = makeRepo({
+      findVerification: jest.fn().mockResolvedValue(
+        makeVerification({ status: "PENDING", equipment: makeUnit({ isHighValue: true }) })
+      ),
+      fmVerify:           jest.fn().mockResolvedValue(makeVerification({ status: "FM_VERIFIED" })),
+      updateUnitDisposed: jest.fn(),
+    });
+    await makeService(repo).fmVerify(1, 5, { photoUrl: "https://example.com/photo.jpg" });
+    expect(repo.fmVerify).toHaveBeenCalled();
+    expect(repo.updateUnitDisposed).not.toHaveBeenCalled();
+  });
 });

@@ -12,6 +12,15 @@ async function runPreventiveScheduleGen() {
 
   let generated = 0;
 
+  const adminUser = await prisma.user.findFirst({
+    where: { role: "ADMIN" as any },
+    select: { id: true },
+  });
+  if (!adminUser) {
+    console.error("[preventiveScheduleGen] no ADMIN user found, skipping");
+    return;
+  }
+
   for (const schedule of schedules) {
     // Per-row interval check (Prisma can't filter by intervalDays in a where clause)
     if (schedule.lastGeneratedAt) {
@@ -37,7 +46,7 @@ async function runPreventiveScheduleGen() {
         priority: schedule.priority as any,
         status: "OPEN" as any,
         sourceScheduleId: schedule.id,
-        createdById: 1,
+        createdById: adminUser.id,
         ...(schedule.partnerId && { partnerId: schedule.partnerId }),
       },
     });
