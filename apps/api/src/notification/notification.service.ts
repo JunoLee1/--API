@@ -199,6 +199,15 @@ export class NotificationService {
     });
   }
 
+  async notifyContactFollowUp(partnerName: string, contactLogId: number, actorId: number) {
+    const title = "파트너 팔로업 일정";
+    const body = `'${partnerName}' 파트너 접촉 팔로업이 내일 예정되어 있습니다.`;
+    await this.repo.create({ userId: actorId, type: "PARTNER_CONTACT_FOLLOWUP", title, body, entityId: contactLogId });
+    getIO().to("staff-room").emit("notification:partner", {
+      type: "PARTNER_CONTACT_FOLLOWUP", title, body, entityId: contactLogId, createdAt: new Date().toISOString(),
+    });
+  }
+
   async getPartnerAlerts() {
     const contracts = await this.repo.findExpiringContracts(30);
     return contracts.map((c) => {
