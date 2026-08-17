@@ -23,6 +23,9 @@ export interface CreatePartnerContractDto {
   sponsorshipFee?: number;
   discountRate?: number;
   notes?: string;
+  responseHours?: number;
+  resolutionDays?: number;
+  penaltyPerDay?: number;
 }
 
 export interface UpdatePartnerContractDto {
@@ -31,4 +34,7 @@ export interface UpdatePartnerContractDto {
   sponsorshipFee?: number;
   discountRate?: number;
   notes?: string;
+  responseHours?: number;
+  resolutionDays?: number;
+  penaltyPerDay?: number;
 }

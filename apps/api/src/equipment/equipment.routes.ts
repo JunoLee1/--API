@@ -4,6 +4,10 @@ import { EquipmentController } from "./equipment.controller";
 import { EquipmentService } from "./equipment.service";
 import { EquipmentRepository } from "./equipment.repo";
 import { NotificationRepository } from "../notification/notification.repo";
+import { NotificationService } from "../notification/notification.service";
+import { DisposalRepository } from "./disposal/disposal.repo";
+import { DisposalService } from "./disposal/disposal.service";
+import { DisposalController } from "./disposal/disposal.controller";
 import { getPrisma } from "../lib/prisma";
 import { ledgerService } from "../ledger/ledger.routes";
 
@@ -12,6 +16,10 @@ const equipmentRepo = new EquipmentRepository(getPrisma());
 const notificationRepo = new NotificationRepository(getPrisma());
 const service = new EquipmentService(equipmentRepo, notificationRepo, ledgerService);
 const controller = new EquipmentController(service);
+const notificationService = new NotificationService(notificationRepo);
+const disposalRepo = new DisposalRepository(getPrisma());
+const disposalService = new DisposalService(disposalRepo);
+const disposalController = new DisposalController(disposalService, notificationService);
 
 
 // Loan routes (static paths first)
@@ -35,5 +43,11 @@ router.post("/", auth, controller.createItem);
 router.get("/:id", auth, controller.getItem);
 router.patch("/:id/quantity", auth, controller.adjustQuantity);
 router.post("/:id/units", auth, controller.addUnit);
+
+router.get("/units/:unitId/disposal", auth, disposalController.getVerification);
+router.post("/units/:unitId/disposal", auth, disposalController.requestDisposal);
+router.post("/units/:unitId/disposal/fm-verify", auth, disposalController.fmVerify);
+router.post("/units/:unitId/disposal/gm-approve", auth, disposalController.gmApprove);
+router.post("/units/:unitId/disposal/reject", auth, disposalController.rejectVerification);
 
 export default router;
