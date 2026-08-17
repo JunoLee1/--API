@@ -11,7 +11,7 @@ export class ClubSettingsRepository {
     });
   }
 
-  async update(data: { currency?: string; ibiBeta?: number }) {
+  async update(data: { currency?: string; ibiBeta?: number; maintenanceCostLimit?: number }) {
     return this.prisma.clubSettings.upsert({
       where: { id: 1 },
       create: { id: 1, currency: "KRW", ibiBeta: 1.0, ...data },

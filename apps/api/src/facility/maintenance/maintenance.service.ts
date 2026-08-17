@@ -121,11 +121,13 @@ export class MaintenanceService {
     const existing = await this.repo.findById(id);
     if (!existing) throw new AppError(404, "MAINTENANCE_NOT_FOUND");
 
-    const settings = await this.prisma.clubSettings.findUnique({
+    const settings = await this.prisma.clubSettings.upsert({
       where: { id: 1 },
+      create: { id: 1 },
+      update: {},
       select: { maintenanceCostLimit: true },
     });
-    const limit = settings?.maintenanceCostLimit ?? 1000000;
+    const limit = settings.maintenanceCostLimit;
 
     const cost = existing.estimatedCost ? Number(existing.estimatedCost) : 0;
     if (cost < limit) throw new AppError(400, "COST_BELOW_THRESHOLD");
