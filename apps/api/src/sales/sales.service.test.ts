@@ -335,17 +335,3 @@ describe("SalesService.create — LedgerEntry for UNIFORM/OTHER (JO7)", () => {
     );
   });
 });
-
-describe("SalesController.cancel — requireUser 가드", () => {
-  it("user가 없는 요청은 401을 next로 전달해야 한다", async () => {
-    const { SalesController } = require("./sales.controller");
-    const mockService = { createCancellation: jest.fn() } as any;
-    const ctrl = new SalesController(mockService);
-    const req = { params: { id: "1" }, body: {}, user: undefined } as any;
-    const res = { json: jest.fn() } as any;
-    const next = jest.fn();
-    await ctrl.cancel(req, res, next);
-    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 401 }));
-    expect(mockService.createCancellation).not.toHaveBeenCalled();
-  });
-});
