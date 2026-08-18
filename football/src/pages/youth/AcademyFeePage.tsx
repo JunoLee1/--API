@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { academyFeeApi } from '@/services/academyFee.service'
 import type { AcademyFee } from '@/types/academy-fee'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 
 const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
   PENDING: 'outline', SUBMITTED: 'secondary', PAID: 'default', OVERDUE: 'destructive', LOCKED: 'destructive'
@@ -11,10 +12,17 @@ const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'outline' | 'dest
 
 export default function AcademyFeePage() {
   const { t } = useTranslation('youth')
+  const { user } = useCurrentUser()
   const [fees, setFees] = useState<AcademyFee[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>('')
   const [submitting, setSubmitting] = useState<number | null>(null)
+
+  const canApprove =
+    user?.role === 'ADMIN' ||
+    user?.role === 'SUPER_ADMIN' ||
+    user?.role === 'GM' ||
+    (user?.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'HR_MANAGER')
 
   const load = () => {
     setLoading(true)
@@ -69,7 +77,7 @@ export default function AcademyFeePage() {
                 )}
               </div>
               <Badge variant={STATUS_VARIANT[fee.status]}>{t(`feePage.status.${fee.status}`)}</Badge>
-              {fee.status === 'SUBMITTED' && (
+              {fee.status === 'SUBMITTED' && canApprove && (
                 <Button size="sm" onClick={() => handleApprove(fee.id)}>{t('feePage.approveButton')}</Button>
               )}
               {['PENDING', 'OVERDUE'].includes(fee.status) && (
