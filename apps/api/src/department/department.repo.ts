@@ -40,6 +40,10 @@ export class DepartmentRepository {
     });
   }
 
+  countActiveStaff(departmentId: number) {
+    return this.prisma.staffRecord.count({ where: { departmentId, isActive: true } });
+  }
+
   delete(id: number) {
     return this.prisma.department.delete({ where: { id } });
   }

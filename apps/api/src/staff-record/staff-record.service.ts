@@ -59,8 +59,11 @@ export class StaffRecordService {
     return result;
   }
 
-  async delete(id: number) {
+  async delete(id: number, actorId: number) {
     await this.get(id);
+    const linkedSalaryCount = await this.repo.countLinkedSalaries(id);
+    if (linkedSalaryCount > 0) throw new AppError(409, "STAFF_RECORD_HAS_SALARY_HISTORY");
+    await writeAuditLog({ actorId, action: "STAFF_RECORD_DELETED", targetId: id });
     return this.repo.delete(id);
   }
 

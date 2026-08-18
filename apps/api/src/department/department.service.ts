@@ -33,8 +33,16 @@ export class DepartmentService {
       if (existing && existing.id !== id) throw new AppError(409, "DEPARTMENT_NAME_CONFLICT");
     }
     if (data.parentId !== undefined && data.parentId !== null) {
+      if (data.parentId === id) throw new AppError(400, "DEPARTMENT_CIRCULAR_REFERENCE");
       const parent = await this.repo.findById(data.parentId);
       if (!parent) throw new AppError(404, "PARENT_DEPARTMENT_NOT_FOUND");
+      // Walk ancestor chain to detect cycles (Y3)
+      let cursor: number | null = parent.parentId ?? null;
+      while (cursor !== null) {
+        if (cursor === id) throw new AppError(400, "DEPARTMENT_CIRCULAR_REFERENCE");
+        const ancestor = await this.repo.findById(cursor);
+        cursor = ancestor?.parentId ?? null;
+      }
     }
     const result = await this.repo.update(id, data);
     if (actorId != null) {
@@ -47,6 +55,8 @@ export class DepartmentService {
     const dept = await this.get(id);
     if (dept.children && dept.children.length > 0)
       throw new AppError(409, "DEPARTMENT_HAS_CHILDREN");
+    const activeStaffCount = await this.repo.countActiveStaff(id);
+    if (activeStaffCount > 0) throw new AppError(409, "DEPARTMENT_HAS_ACTIVE_STAFF");
     return this.repo.delete(id);
   }
 }

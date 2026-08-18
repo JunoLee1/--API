@@ -41,3 +41,30 @@ describe("computeStaffTurnoverRate", () => {
     expect(computeStaffTurnoverRate(0, 0)).toBe(0);
   });
 });
+
+// Pure circular-reference detection logic mirroring department.service.ts (Y3)
+function detectsCycle(id: number, parentId: number, ancestors: { id: number; parentId: number | null }[]): boolean {
+  if (parentId === id) return true;
+  let cursor: number | null = ancestors.find((a) => a.id === parentId)?.parentId ?? null;
+  while (cursor !== null) {
+    if (cursor === id) return true;
+    cursor = ancestors.find((a) => a.id === cursor)?.parentId ?? null;
+  }
+  return false;
+}
+
+describe("department circular reference detection", () => {
+  test("direct self-parent is a cycle", () => {
+    expect(detectsCycle(1, 1, [])).toBe(true);
+  });
+
+  test("ancestor chain cycle detected", () => {
+    const ancestors = [{ id: 3, parentId: 2 }, { id: 2, parentId: 1 }, { id: 1, parentId: null }];
+    expect(detectsCycle(1, 3, ancestors)).toBe(true);
+  });
+
+  test("valid parent is not a cycle", () => {
+    const ancestors = [{ id: 2, parentId: null }];
+    expect(detectsCycle(3, 2, ancestors)).toBe(false);
+  });
+});

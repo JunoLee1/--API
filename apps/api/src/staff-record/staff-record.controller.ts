@@ -61,9 +61,9 @@ export class StaffRecordController {
 
   delete = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
+      const { role, frontOfficeRole, id: actorId } = requireUser(req);
       if (!canWriteHR(role, frontOfficeRole ?? null)) throw new AppError(403, "FORBIDDEN");
-      await this.service.delete(Number(req.params["id"]));
+      await this.service.delete(Number(req.params["id"]), actorId);
       res.status(204).send();
     } catch (err) {
       next(err);

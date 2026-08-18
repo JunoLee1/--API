@@ -50,6 +50,10 @@ export class StaffRecordRepository {
     });
   }
 
+  countLinkedSalaries(staffRecordId: number) {
+    return this.prisma.staffSalary.count({ where: { staffRecordId } });
+  }
+
   async delete(id: number) {
     return this.prisma.staffRecord.delete({ where: { id } });
   }
