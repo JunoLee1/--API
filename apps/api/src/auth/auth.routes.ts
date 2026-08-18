@@ -1,5 +1,6 @@
 import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
+import { rateLimit } from "express-rate-limit";
 import passport from "passport";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
@@ -13,8 +14,16 @@ const controller = new AuthController(service, repo);
 
 const refreshAuth = passport.authenticate("refreshToken", { session: false });
 
+const loginLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5분
+  limit: 10,                // 최대 10회
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { message: "TOO_MANY_REQUESTS" },
+});
+
 // 공개
-router.post("/login", controller.login);
+router.post("/login", loginLimiter, controller.login);
 
 // refresh token으로 재발급
 router.post("/refresh", refreshAuth, controller.refresh);
