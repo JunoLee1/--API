@@ -5,6 +5,18 @@ import type { AcademyFeeService } from "./academy-fee.service";
 export class AcademyFeeController {
   constructor(private service: AcademyFeeService) {}
 
+  getById = async (req: Request, res: Response, next: NextFunction) => {
+    try { res.json(await this.service.getById(Number(req.params.id))); }
+    catch (e) { next(e); }
+  };
+
+  create = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const dto = req.body as import("./dto/academy-fee.dto").CreateSingleFeeDto;
+      res.status(201).json(await this.service.createSingle(dto));
+    } catch (e) { next(e); }
+  };
+
   getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { status, teamId, year, month } = req.query;

@@ -3,7 +3,7 @@ import { getPrisma } from "../lib/prisma";
 import { formatLedgerDescription } from "../lib/ledger-formatter";
 import type { AcademyFeeRepository } from "./academy-fee.repo";
 import type { NotificationRepository } from "../notification/notification.repo";
-import type { FeeListQuery, SubmitPaymentProofDto, TossConfirmDto, AdminSubmitDto } from "./dto/academy-fee.dto";
+import type { FeeListQuery, SubmitPaymentProofDto, TossConfirmDto, AdminSubmitDto, CreateSingleFeeDto } from "./dto/academy-fee.dto";
 
 function daysSince(date: Date): number {
   return Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
@@ -17,6 +17,25 @@ export class AcademyFeeService {
 
   getAll(query: FeeListQuery) { return this.repo.findAll(query); }
   getByPlayer(playerId: string) { return this.repo.findByPlayer(playerId); }
+
+  async createSingle(dto: CreateSingleFeeDto) {
+    const prisma = getPrisma();
+    const player = await prisma.player.findUnique({
+      where: { id: dto.playerId },
+      select: { guardianId: true, playerName: true },
+    });
+    if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
+    if (!player.guardianId) throw new AppError(400, "PLAYER_HAS_NO_GUARDIAN");
+
+    return this.repo.create({
+      playerId: dto.playerId,
+      guardianId: player.guardianId,
+      amount: dto.amount,
+      dueDate: new Date(dto.dueDate),
+      year: dto.year,
+      month: dto.month,
+    });
+  }
 
   async getById(id: number) {
     const fee = await this.repo.findById(id);
