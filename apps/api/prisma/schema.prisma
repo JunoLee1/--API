@@ -239,6 +239,7 @@ enum AttendanceStatus {
   ABSENT_UNAUTHORIZED
   LATE_UNAUTHORIZED
   ABSENT_AUTHORIZED
+  LATE_AUTHORIZED
 }
 
 enum TacticalPhase {
@@ -2927,6 +2928,7 @@ model StaffSalary {
   baseSalary    Decimal        @db.Decimal(12, 2)
   country       PayrollCountry
   effectiveFrom DateTime
+  effectiveTo   DateTime?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
