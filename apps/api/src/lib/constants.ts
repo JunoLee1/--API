@@ -22,5 +22,15 @@ export const JWT_ACCESS_TOKEN_SECRET = jwtAccessSecret;
 export const JWT_REFRESH_TOKEN_SECRET = jwtRefreshSecret;
 export const ACCESS_TOKEN_COOKIE_NAME = "access-token";
 export const REFRESH_TOKEN_COOKIE_NAME = "refresh-token";
-export const ACCESS_TOKEN_COOKIE_OPTIONS = { httpOnly: true, sameSite: "strict" as const, maxAge: 60 * 60 * 1000 };
-export const REFRESH_TOKEN_COOKIE_OPTIONS = { httpOnly: true, sameSite: "strict" as const, maxAge: 7 * 24 * 60 * 60 * 1000 };
+export const ACCESS_TOKEN_COOKIE_OPTIONS = {
+  httpOnly: true,
+  sameSite: "strict" as const,
+  maxAge: 60 * 60 * 1000,
+  secure: process.env.NODE_ENV === "production",
+};
+export const REFRESH_TOKEN_COOKIE_OPTIONS = {
+  httpOnly: true,
+  sameSite: "strict" as const,
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+  secure: process.env.NODE_ENV === "production",
+};
