@@ -42,7 +42,7 @@ describe("RecruitmentService.startOnboarding", () => {
   it("otpCode는 bcrypt 해시로 저장된다 (평문 6자리가 아님)", async () => {
     const repo = makeRepo();
     const svc = new RecruitmentService(repo);
-    const result = await svc.startOnboarding(1, 42);
+    await svc.startOnboarding(1, 42);
 
     const storedHash = (repo.createOnboarding as jest.Mock).mock.calls[0][2] as string;
     expect(storedHash).toMatch(/^\$2b\$/);
@@ -55,7 +55,7 @@ describe("RecruitmentService.startOnboarding", () => {
     expect(result.otpCode).toMatch(/^\d{6}$/);
   });
 
-  it("Math.random 대신 crypto.randomInt를 사용 — 같은 OTP가 연속 생성되지 않는다", async () => {
+  it("두 결과 모두 6자리 형식이다", async () => {
     const svc = makeSvc();
     const r1 = await svc.startOnboarding(1, 42);
     const r2 = await svc.startOnboarding(1, 42);

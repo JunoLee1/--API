@@ -224,9 +224,9 @@ export class RecruitmentService {
     const onboarding = await this.repo.findOnboardingByApplication(applicationId);
     if (!onboarding) throw new AppError(404, "ONBOARDING_NOT_FOUND");
     if (onboarding.emailVerifiedAt) throw new AppError(409, "EMAIL_ALREADY_VERIFIED");
+    if (onboarding.otpExpiresAt < new Date()) throw new AppError(400, "OTP_EXPIRED");
     const isValid = await bcrypt.compare(otp, onboarding.otpCode);
     if (!isValid) throw new AppError(400, "INVALID_OTP");
-    if (onboarding.otpExpiresAt < new Date()) throw new AppError(400, "OTP_EXPIRED");
     return this.repo.markEmailVerified(applicationId);
   }
 
