@@ -711,6 +711,7 @@ model Team {
   type             TeamType
   ageGroup         String?
   isActive         Boolean  @default(true)
+  isLite           Boolean  @default(false)
   trackStats       Boolean  @default(true)
   requiresContract Boolean  @default(true)
   clubId           Int?

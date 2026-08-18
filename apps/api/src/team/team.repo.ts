@@ -71,4 +71,8 @@ export class TeamRepository {
       include: { club: { select: { id: true, name: true, isLite: true } } },
     });
   }
+
+  updateLiteFlag(id: number, isLite: boolean) {
+    return this.prisma.team.update({ where: { id }, data: { isLite } });
+  }
 }
