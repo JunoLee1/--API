@@ -272,10 +272,9 @@ export function SponsorshipDetailPage() {
   const { user } = useCurrentUser()
   const canWrite =
     user?.role === 'ADMIN' ||
-    (user?.role === 'FRONT_OFFICE' &&
-      (user.frontOfficeRole === 'FINANCE_MANAGER' ||
-        user.frontOfficeRole === 'FINANCE_STAFF' ||
-        user.frontOfficeRole === 'GM'))
+    user?.role === 'SUPER_ADMIN' ||
+    user?.role === 'GM' ||
+    (user?.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'FINANCE_MANAGER')
 
   const [sponsorship, setSponsorship] = useState<Sponsorship | null>(null)
   const [payments, setPayments] = useState<SponsorshipPayment[]>([])

@@ -11,5 +11,5 @@ export async function runDelinquencyCheck() {
 }
 
 export function startAcademyFeeDelinquencyJob() {
-  cron.schedule("0 9 * * *", () => { runDelinquencyCheck().catch(console.error); });
+  cron.schedule("0 9 * * *", () => { runDelinquencyCheck().catch(console.error); }, { timezone: "Asia/Seoul" });
 }
