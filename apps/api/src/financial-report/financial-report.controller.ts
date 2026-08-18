@@ -114,6 +114,16 @@ export class FinancialReportController {
     } catch (err) { next(err); }
   };
 
+  autoFillRevenue = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = requireUser(req);
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const seasonId = Number(req.params["seasonId"]);
+      const report = await this.service.autoFillRevenueFromPrevSeason(seasonId);
+      res.status(200).json(report);
+    } catch (err) { next(err); }
+  };
+
   autoGenerateBudget = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, frontOfficeRole } = requireUser(req);

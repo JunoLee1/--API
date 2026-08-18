@@ -21,6 +21,7 @@ export function FinancialReportPage() {
   const [note, setNote] = useState('')
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
+  const [autoFilling, setAutoFilling] = useState(false)
 
   const fetchAll = async () => {
     try {
@@ -57,6 +58,26 @@ export function FinancialReportPage() {
       toast.error(err instanceof Error ? err.message : t('financialReport.saveFailed'))
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleAutoFill = async () => {
+    if (!activeSeason) return
+    setAutoFilling(true)
+    try {
+      const report = await financialReportApi.autoFillRevenue(activeSeason.id)
+      setRevenue(report.totalRevenue.toString())
+      toast.success(t('financialReport.autoFilled'))
+      void fetchAll()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : ''
+      if (msg.includes('PREV_SEASON_NOT_FOUND')) {
+        toast.error(t('financialReport.noPrevSeason'))
+      } else {
+        toast.error(t('financialReport.autoFillFailed'))
+      }
+    } finally {
+      setAutoFilling(false)
     }
   }
 
@@ -103,6 +124,19 @@ export function FinancialReportPage() {
           ))}
         </div>
       )}
+
+      <div className="space-y-3 border rounded-lg p-4">
+        <h2 className="text-sm font-semibold">{t('financialReport.autoFillTitle')}</h2>
+        <p className="text-xs text-muted-foreground">{t('financialReport.autoFillHint')}</p>
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => void handleAutoFill()}
+          disabled={autoFilling || saving}
+        >
+          {autoFilling ? t('financialReport.autoFilling') : t('financialReport.autoFill')}
+        </Button>
+      </div>
 
       <div className="space-y-3 border rounded-lg p-4">
         <h2 className="text-sm font-semibold">{t('financialReport.manualEntry')}</h2>
