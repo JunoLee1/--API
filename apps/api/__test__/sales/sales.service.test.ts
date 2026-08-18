@@ -175,7 +175,7 @@ describe("SalesService.delete — SeatZone soldCount (BS10)", () => {
   it("decrements seatZone.soldCount when existing record has seatZoneId", async () => {
     const existingRecord = { id: 10, seatZoneId: 3, quantity: 2, deletedAt: null };
     const mockTx = {
-      ledgerEntry: { deleteMany: jest.fn() },
+      ledgerEntry: { findFirst: jest.fn().mockResolvedValue(null), create: jest.fn(), update: jest.fn() },
       salesRecord: {
         findUnique: jest.fn().mockResolvedValue(existingRecord),
         update: jest.fn(),
@@ -198,7 +198,7 @@ describe("SalesService.delete — SeatZone soldCount (BS10)", () => {
   it("does NOT call seatZone.update when existing record has no seatZoneId", async () => {
     const existingRecord = { id: 11, seatZoneId: null, quantity: 1, deletedAt: null };
     const mockTx = {
-      ledgerEntry: { deleteMany: jest.fn() },
+      ledgerEntry: { findFirst: jest.fn().mockResolvedValue(null), create: jest.fn(), update: jest.fn() },
       salesRecord: {
         findUnique: jest.fn().mockResolvedValue(existingRecord),
         update: jest.fn(),
@@ -219,7 +219,7 @@ describe("SalesService.delete — REFUNDED status (BS8)", () => {
   it("sets status=REFUNDED when soft-deleting a sales record", async () => {
     const existingRecord = { id: 20, seatZoneId: null, quantity: 3, deletedAt: null };
     const mockTx = {
-      ledgerEntry: { deleteMany: jest.fn() },
+      ledgerEntry: { findFirst: jest.fn().mockResolvedValue(null), create: jest.fn(), update: jest.fn() },
       salesRecord: {
         findUnique: jest.fn().mockResolvedValue(existingRecord),
         update: jest.fn(),
@@ -245,7 +245,7 @@ describe("SalesService.delete — double-cancel protection", () => {
   it("throws ALREADY_CANCELLED when record is already soft-deleted", async () => {
     const alreadyDeleted = { id: 50, seatZoneId: null, quantity: 1, deletedAt: new Date("2026-08-01") };
     const mockTx = {
-      ledgerEntry: { deleteMany: jest.fn() },
+      ledgerEntry: { findFirst: jest.fn().mockResolvedValue(null), create: jest.fn(), update: jest.fn() },
       salesRecord: {
         findUnique: jest.fn().mockResolvedValue(alreadyDeleted),
         update: jest.fn(),
@@ -264,7 +264,7 @@ describe("SalesService.delete — double-cancel protection", () => {
 
   it("throws SALES_RECORD_NOT_FOUND when record does not exist", async () => {
     const mockTx = {
-      ledgerEntry: { deleteMany: jest.fn() },
+      ledgerEntry: { findFirst: jest.fn().mockResolvedValue(null), create: jest.fn(), update: jest.fn() },
       salesRecord: {
         findUnique: jest.fn().mockResolvedValue(null),
         update: jest.fn(),
