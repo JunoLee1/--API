@@ -71,7 +71,10 @@ export class GuardianService {
     return this.feeRepo.findByPlayer(playerId);
   }
 
-  async submitFeeProof(feeId: number, url: string) {
+  async submitFeeProof(feeId: number, url: string, playerId: string) {
+    const fee = await this.feeRepo.findById(feeId);
+    if (!fee) throw new AppError(404, "ACADEMY_FEE_NOT_FOUND");
+    if (fee.playerId !== playerId) throw new AppError(403, "FORBIDDEN");
     return this.feeRepo.submitPaymentProof(feeId, url);
   }
 

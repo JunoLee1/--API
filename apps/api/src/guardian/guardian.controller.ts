@@ -82,9 +82,10 @@ export class GuardianController {
   submitFeeProof = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const feeId = parseInt(req.params['feeId'] as string, 10);
+      const playerId = req.childPlayerId!;
       const { url } = req.body;
       if (!url) throw new AppError(400, "MISSING_FIELDS");
-      const result = await this.service.submitFeeProof(feeId, url);
+      const result = await this.service.submitFeeProof(feeId, url, playerId);
       res.status(200).json(result);
     } catch (e) { next(e); }
   };
