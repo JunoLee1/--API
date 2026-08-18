@@ -28,4 +28,10 @@ export class ClauseController {
       res.json(await this.service.waiveClause(Number(req.params["clauseId"]), Number(req.params["id"])));
     } catch (err) { next(err); }
   };
+
+  copyFrom = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.json(await this.service.copyFrom(Number(req.params["id"]), Number(req.params["sourceId"])));
+    } catch (err) { next(err); }
+  };
 }

@@ -27,4 +27,10 @@ export class ClauseService {
     if (clause.status !== "PENDING") throw new AppError(400, "CLAUSE_NOT_PENDING");
     return this.repo.updateStatus(id, "WAIVED");
   }
+
+  async copyFrom(targetSponsorshipId: number, sourceSponsorshipId: number) {
+    if (sourceSponsorshipId === targetSponsorshipId) throw new AppError(400, "SAME_SPONSORSHIP");
+    const copied = await this.repo.copyPendingFrom(sourceSponsorshipId, targetSponsorshipId);
+    return { copied };
+  }
 }

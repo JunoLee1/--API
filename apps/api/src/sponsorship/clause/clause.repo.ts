@@ -34,4 +34,22 @@ export class ClauseRepository {
       data: { status: status as any },
     });
   }
+
+  async copyPendingFrom(sourceSponsorshipId: number, targetSponsorshipId: number) {
+    const pending = await this.prisma.sponsorshipClause.findMany({
+      where: { sponsorshipId: sourceSponsorshipId, status: "PENDING" },
+    });
+    if (pending.length === 0) return 0;
+    await this.prisma.sponsorshipClause.createMany({
+      data: pending.map(({ type, condition, rate, fixedAmount }) => ({
+        sponsorshipId: targetSponsorshipId,
+        type,
+        condition,
+        rate,
+        fixedAmount,
+        status: "PENDING",
+      })),
+    });
+    return pending.length;
+  }
 }
