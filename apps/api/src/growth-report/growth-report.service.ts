@@ -10,7 +10,7 @@ export class GrowthReportService {
     private repo: GrowthReportRepository,
     private notifRepo: NotificationRepository,
     private planRepo: DevelopmentPlanRepository,
-    private guardianRepo?: GuardianRepository,
+    private guardianRepo: GuardianRepository,
   ) {}
 
   getEvaluationsByPlayer(playerId: string) {
@@ -18,9 +18,9 @@ export class GrowthReportService {
   }
 
   async getEvaluationsByPlayerForGuardian(playerId: string, guardianId: number) {
-    const child = await this.guardianRepo!.findChildByIdAndGuardian(playerId, guardianId);
+    const child = await this.guardianRepo.findChildByIdAndGuardian(playerId, guardianId);
     if (!child) throw new AppError(403, "FORBIDDEN");
-    return this.repo.findEvaluationsByPlayer(playerId);
+    return this.repo.findPublishedEvaluationsByPlayer(playerId);
   }
 
   async getEvaluationById(id: number) {
