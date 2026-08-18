@@ -5,8 +5,8 @@ import type { DepartmentCategory } from "../generated/enums";
 export class DepartmentService {
   constructor(private repo: DepartmentRepository) {}
 
-  list() {
-    return this.repo.findAll();
+  list(clubId?: number | null) {
+    return this.repo.findAll(clubId);
   }
 
   async get(id: number) {
@@ -15,8 +15,8 @@ export class DepartmentService {
     return dept;
   }
 
-  async create(data: { name: string; parentId?: number; category?: DepartmentCategory | null }) {
-    const existing = await this.repo.findByName(data.name);
+  async create(data: { name: string; parentId?: number; category?: DepartmentCategory | null; clubId?: number | null }) {
+    const existing = await this.repo.findByName(data.name, data.clubId);
     if (existing) throw new AppError(409, "DEPARTMENT_NAME_CONFLICT");
     if (data.parentId !== undefined) {
       const parent = await this.repo.findById(data.parentId);
@@ -25,10 +25,10 @@ export class DepartmentService {
     return this.repo.create(data);
   }
 
-  async update(id: number, data: { name?: string; isActive?: boolean; parentId?: number | null; category?: DepartmentCategory | null }) {
-    await this.get(id);
+  async update(id: number, data: { name?: string; isActive?: boolean; parentId?: number | null; category?: DepartmentCategory | null }, clubId?: number | null) {
+    const dept = await this.get(id);
     if (data.name !== undefined) {
-      const existing = await this.repo.findByName(data.name);
+      const existing = await this.repo.findByName(data.name, dept.clubId);
       if (existing && existing.id !== id) throw new AppError(409, "DEPARTMENT_NAME_CONFLICT");
     }
     if (data.parentId !== undefined && data.parentId !== null) {

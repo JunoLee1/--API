@@ -4,9 +4,9 @@ import type { DepartmentCategory } from "../generated/enums";
 export class DepartmentRepository {
   constructor(private prisma: PrismaClient) {}
 
-  findAll() {
+  findAll(clubId?: number | null) {
     return this.prisma.department.findMany({
-      where: { parentId: null },
+      where: { parentId: null, ...(clubId != null && { clubId }) },
       orderBy: { name: "asc" },
       include: { children: { orderBy: { name: "asc" } } },
     });
@@ -19,11 +19,13 @@ export class DepartmentRepository {
     });
   }
 
-  findByName(name: string) {
-    return this.prisma.department.findUnique({ where: { name } });
+  findByName(name: string, clubId?: number | null) {
+    return this.prisma.department.findUnique({
+      where: { name_clubId: { name, clubId: clubId ?? (null as unknown as number) } },
+    });
   }
 
-  create(data: { name: string; parentId?: number; category?: DepartmentCategory | null }) {
+  create(data: { name: string; parentId?: number; category?: DepartmentCategory | null; clubId?: number | null }) {
     return this.prisma.department.create({
       data,
       include: { children: { orderBy: { name: "asc" } }, parent: true },

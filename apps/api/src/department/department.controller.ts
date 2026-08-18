@@ -18,7 +18,8 @@ export class DepartmentController {
     try {
       const user = requireUser(req);
       if (!canRead(user.role)) throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.list());
+      const scopedClubId = user.role === "ADMIN" ? user.clubId : null;
+      res.json(await this.service.list(scopedClubId));
     } catch (err) {
       next(err);
     }
@@ -36,20 +37,21 @@ export class DepartmentController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, id: userId } = requireUser(req);
+      const { role, id: userId, clubId } = requireUser(req);
       const { name, parentId, category } = req.body as { name: string; parentId?: number; category?: string };
       if (typeof name !== "string" || !name.trim()) throw new AppError(400, "NAME_REQUIRED");
 
       if (!canManage(role)) {
-        // 부서장만 자신 부서의 팀(하위 노드) 생성 가능
         if (parentId === undefined) throw new AppError(403, "FORBIDDEN");
         const parent = await this.service.get(parentId);
         if (parent.headId !== userId) throw new AppError(403, "FORBIDDEN");
       }
 
+      const scopedClubId = role === "SUPER_ADMIN" ? null : (clubId ?? null);
       res.status(201).json(
         await this.service.create({
           name: name.trim(),
+          clubId: scopedClubId,
           ...(parentId !== undefined && { parentId }),
           ...(category !== undefined && { category: category as DepartmentCategory }),
         })
