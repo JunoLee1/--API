@@ -2487,17 +2487,19 @@ model BudgetOverrideLog {
 }
 
 model OperatingExpense {
-  id          Int               @id @default(autoincrement())
-  seasonId    Int
-  category    OperatingCategory
-  amount      Int
-  date        DateTime
-  note        String?
-  createdById Int
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  season      Season            @relation(fields: [seasonId], references: [id])
-  createdBy   User              @relation("OperatingExpenseCreator", fields: [createdById], references: [id])
+  id              Int               @id @default(autoincrement())
+  seasonId        Int
+  category        OperatingCategory
+  amount          Int
+  date            DateTime
+  note            String?
+  createdById     Int
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  deletedAt       DateTime?
+  deletionReason  String?
+  season          Season            @relation(fields: [seasonId], references: [id])
+  createdBy       User              @relation("OperatingExpenseCreator", fields: [createdById], references: [id])
 }
 
 // ─────────────────────────────────────────────

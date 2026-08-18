@@ -62,12 +62,17 @@ export class OperatingExpenseService {
     return expense;
   }
 
-  async delete(id: number, requesterId: number, requesterRole: string) {
+  async delete(id: number, requesterId: number, requesterRole: string, reason: string) {
     const expense = await this.repo.findById(id);
     if (!expense) throw new AppError(404, "NOT_FOUND");
+    if (expense.deletedAt) throw new AppError(404, "NOT_FOUND");
     if (expense.createdById !== requesterId && requesterRole !== "ADMIN") {
       throw new AppError(403, "FORBIDDEN");
     }
-    return this.repo.delete(id);
+    return this.repo.softDelete(id, reason);
+  }
+
+  purgeExpired() {
+    return this.repo.purgeExpired();
   }
 }
