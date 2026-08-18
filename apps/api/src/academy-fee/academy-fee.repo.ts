@@ -43,7 +43,7 @@ export class AcademyFeeRepository {
 
   findAllActiveYouthPlayers() {
     return this.prisma.player.findMany({
-      where: { team: { type: 'YOUTH' }, guardianId: { not: null } },
+      where: { team: { type: 'YOUTH', isLite: false }, guardianId: { not: null } },
       select: { id: true, playerName: true, teamId: true, guardianId: true },
     })
   }
