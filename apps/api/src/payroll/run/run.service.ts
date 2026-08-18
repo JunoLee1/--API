@@ -4,7 +4,7 @@ import type { RunRepository } from "./run.repo";
 import type { SalaryRepository } from "../salary/salary.repo";
 import type { ConfigRepository } from "../config/config.repo";
 import type { CreateRunDto } from "./dto/run.dto";
-import type { LedgerService } from "../../ledger/ledger.service";
+import type { PrismaClient } from "../../generated/client";
 
 export function computePayroll(
   baseSalary: number,
@@ -28,7 +28,7 @@ export class RunService {
     private runRepo: RunRepository,
     private salaryRepo: SalaryRepository,
     private configRepo: ConfigRepository,
-    private ledgerService: LedgerService,
+    private prisma: PrismaClient,
   ) {}
 
   async list(salaryId: number) {
@@ -78,19 +78,29 @@ export class RunService {
     if (run.confirmedById === userId) {
       throw new AppError(403, "CANNOT_SECOND_APPROVE_OWN_CONFIRMATION");
     }
-    const updated = await this.runRepo.secondApprove(runId, userId);
-    void this.ledgerService.createAutoEntry({
-      type: "EXPENSE",
-      category: "SALARY",
-      amount: Number(updated.netPay),
-      currency: "KRW",
-      exchangeRate: 1,
-      amountKrw: Number(updated.netPay),
-      description: formatLedgerDescription("payroll", "salary_disbursed", { salaryId, runId }),
-      relatedModule: "payroll",
-      relatedId: runId,
-    }, userId).catch(err => console.error("[LedgerAutoEntry:payroll]", err));
-    return updated;
+
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.payrollRun.update({
+        where: { id: runId },
+        data: { secondApprovedById: userId, secondApprovedAt: new Date(), isLocked: true },
+      });
+      await tx.ledgerEntry.create({
+        data: {
+          type: "EXPENSE",
+          category: "SALARY",
+          amount: Number(updated.grossPay),
+          currency: "KRW",
+          exchangeRate: 1,
+          amountKrw: Number(updated.grossPay),
+          isRefund: false,
+          description: formatLedgerDescription("payroll", "salary_disbursed", { salaryId, runId }),
+          relatedModule: "payroll",
+          relatedId: runId,
+          createdById: userId,
+        },
+      });
+      return updated;
+    });
   }
 
   async confirmRun(salaryId: number, runId: number, userId: number) {
