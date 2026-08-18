@@ -145,6 +145,22 @@ export class FinancialReportService {
     return { totalOperatingBudget, contingencyReserve, categories, zeroCategories };
   }
 
+  async autoFillRevenueFromPrevSeason(seasonId: number) {
+    const prisma = getPrisma();
+    const currentSeason = await prisma.season.findUnique({
+      where: { id: seasonId },
+      select: { endDate: true },
+    });
+    if (!currentSeason) throw new AppError(404, "SEASON_NOT_FOUND");
+    const prevSeason = await prisma.season.findFirst({
+      where: { endDate: { lt: currentSeason.endDate } },
+      orderBy: { endDate: "desc" },
+      select: { id: true },
+    });
+    if (!prevSeason) throw new AppError(404, "PREV_SEASON_NOT_FOUND");
+    return this.setFromPrevSeasonActuals(prevSeason.id, seasonId);
+  }
+
   async setFromPrevSeasonActuals(prevSeasonId: number, newSeasonId: number) {
     const prisma = getPrisma();
 

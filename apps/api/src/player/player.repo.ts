@@ -24,15 +24,16 @@ const PLAYER_SELECT = {
 export class PlayerRepository {
   constructor(private prisma: PrismaClient) {}
 
-  findAll(query: PlayerListQuery) {
+  findAll(query: PlayerListQuery, clubId?: number | null) {
     return this.prisma.player.findMany({
       where: {
+        ...(clubId != null && { team: { clubId } }),
         ...(query.status && { status: query.status }),
         ...(query.position && { position: query.position }),
         ...(query.level && { level: query.level }),
         ...(query.nationalityId && { nationalityId: query.nationalityId }),
         ...(query.excludeYouth && { NOT: { team: { type: 'YOUTH' } } }),
-        ...(query.teamType && { team: { type: query.teamType } }),
+        ...(query.teamType && { team: { ...(clubId != null && { clubId }), type: query.teamType } }),
       },
       select: PLAYER_SELECT,
       orderBy: { playerName: "asc" },

@@ -60,6 +60,12 @@ const requireFinance = (req: Request, res: Response, next: NextFunction) => {
 // Toss webhook — auth 없음, Toss 서버가 직접 호출
 router.post("/toss-webhook", express.json(), controller.tossWebhook);
 
+// 단건 조회
+router.get("/:id", auth, requireFinanceOrGuardian, controller.getById);
+
+// 재무팀 단건 수동 생성 (B안: 청구서 먼저 발행 → 보호자 납부 → 승인)
+router.post("/", auth, requireFinance, controller.create);
+
 router.get("/stats", auth, (req, res, next) => {
   const { role, frontOfficeRole } = req.user!;
   if (!canReadHR(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));

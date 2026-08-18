@@ -26,4 +26,20 @@ router.post("/:planId/confirm", auth, async (req: Request, res: Response, next: 
   } catch (err) { next(err); }
 });
 
+// PATCH /plan-reviews/:planId/reviewer/:reviewerDeptId/reject — 검토 거절 (Y5)
+router.patch("/:planId/reviewer/:reviewerDeptId/reject", auth, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { reason } = req.body as { reason?: string };
+    if (!reason?.trim()) return res.status(400).json({ code: "REASON_REQUIRED" });
+    res.json(
+      await service.reject(
+        Number(req.params["planId"]),
+        Number(req.params["reviewerDeptId"]),
+        req.user!.id,
+        reason,
+      )
+    );
+  } catch (err) { next(err); }
+});
+
 export default router;

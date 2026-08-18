@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { requireUser } from "../lib/authMiddleware";
+import { assertClubAccess } from "../lib/permissions";
 import { TeamService } from "./team.service";
 
 const isSuperAdmin = (role: string) => role === "SUPER_ADMIN";
@@ -11,15 +12,18 @@ export class TeamController {
 
   getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      requireUser(req);
-      res.json(await this.service.getAll());
+      const { role, clubId } = requireUser(req);
+      const scopedClubId = role === "ADMIN" ? clubId : null;
+      res.json(await this.service.getAll(scopedClubId));
     } catch (err) { next(err); }
   };
 
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       requireUser(req);
-      res.json(await this.service.getById(Number(req.params["id"])));
+      const team = await this.service.getById(Number(req.params["id"]));
+      assertClubAccess(req, team.club?.id ?? null);
+      res.json(team);
     } catch (err) { next(err); }
   };
 

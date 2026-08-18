@@ -73,6 +73,22 @@ export const canReadInjuryReport = (role: string, coachingRole?: string | null):
 export const isHeadCoach = (role: string, coachingRole?: string | null): boolean =>
   role === 'COACHING_STAFF' && coachingRole === 'HEAD_COACH'
 
+/**
+ * ADMIN은 자신의 클럽 데이터만 접근 가능.
+ * SUPER_ADMIN은 클럽 무관 전체 접근.
+ * targetClubId가 null이면 클럽 미배정 리소스 — ADMIN 접근 불가.
+ */
+export function assertClubAccess(req: Request, targetClubId: number | null | undefined): void {
+  const user = req.user;
+  if (!user) throw new AppError(401, 'UNAUTHORIZED');
+  if (user.role === 'SUPER_ADMIN') return;
+  if (user.role === 'ADMIN') {
+    if (targetClubId == null || user.clubId !== targetClubId) {
+      throw new AppError(403, 'FORBIDDEN');
+    }
+  }
+}
+
 export function canApprovePlan(userRole: string, requiredLevel: string | null): boolean {
   switch (requiredLevel ?? 'HEAD') {
     case 'HEAD':

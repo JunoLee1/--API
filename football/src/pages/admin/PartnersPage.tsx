@@ -141,7 +141,7 @@ function AddContractDialog({ partner, open, onOpenChange, onSaved }: {
             <div><Label>{t('partnersPage.contractDialog.startDateLabel')}</Label><Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div>
             <div><Label>{t('partnersPage.contractDialog.endDateLabel')}</Label><Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} /></div>
           </div>
-          <div><Label>{t('partnersPage.contractDialog.sponsorshipLabel')}</Label><Input type="number" value={sponsorshipFee} onChange={(e) => setSponsorshipFee(e.target.value)} /></div>
+          <div><Label>{t('partnersPage.contractDialog.sponsorshipLabel')}</Label><Input type="text" inputMode="numeric" value={sponsorshipFee ? Number(sponsorshipFee).toLocaleString('ko-KR') : ''} onChange={(e) => setSponsorshipFee(e.target.value.replace(/[^0-9]/g, ''))} /></div>
           <div><Label>{t('partnersPage.contractDialog.discountLabel')}</Label><Input type="number" value={discountRate} onChange={(e) => setDiscountRate(e.target.value)} /></div>
           <div><Label>{t('partnersPage.contractDialog.notesLabel')}</Label><Input value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
         </div>

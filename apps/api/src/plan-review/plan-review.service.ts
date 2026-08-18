@@ -28,4 +28,12 @@ export class PlanReviewService {
 
     return this.repo.confirm(planId, review.reviewerDeptId, userId, comment);
   }
+
+  async reject(planId: number, reviewerDeptId: number, rejectedById: number, reason: string) {
+    const reviews = await this.repo.findByPlan(planId);
+    const review = reviews.find((r) => r.reviewerDeptId === reviewerDeptId);
+    if (!review) throw new AppError(404, "REVIEW_NOT_FOUND");
+    if (review.status === "CONFIRMED") throw new AppError(409, "REVIEW_ALREADY_CONFIRMED");
+    return this.repo.reject(planId, reviewerDeptId, rejectedById, reason);
+  }
 }

@@ -12,8 +12,8 @@ function applyUserMask<T extends { email: string; username: string }>(user: T): 
 export class AdminService {
   constructor(private repo: AdminRepository) {}
 
-  async listUsers(filters: ListUsersQuery, isDemo: boolean = false) {
-    const users = await this.repo.listUsers(filters);
+  async listUsers(filters: ListUsersQuery, isDemo: boolean = false, clubId?: number | null) {
+    const users = await this.repo.listUsers(filters, clubId);
     if (!isDemo) return users;
     return users.map(applyUserMask);
   }

@@ -37,9 +37,10 @@ const LINKED_COUNT_SELECT = {
 export class AdminRepository {
   constructor(private prisma: PrismaClient) {}
 
-  listUsers(filters: ListUsersQuery) {
+  listUsers(filters: ListUsersQuery, clubId?: number | null) {
     return this.prisma.user.findMany({
       where: {
+        ...(clubId != null && { clubId }),
         ...(filters.username && {
           username: { contains: filters.username, mode: "insensitive" },
         }),
