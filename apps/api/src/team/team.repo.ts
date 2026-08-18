@@ -21,8 +21,9 @@ export interface UpdateTeamDto {
 export class TeamRepository {
   constructor(private prisma: PrismaClient) {}
 
-  findAll() {
+  findAll(clubId?: number | null) {
     return this.prisma.team.findMany({
+      ...(clubId != null && { where: { clubId } }),
       include: { club: { select: { id: true, name: true, isLite: true } } },
       orderBy: [{ type: "asc" }, { name: "asc" }],
     });
