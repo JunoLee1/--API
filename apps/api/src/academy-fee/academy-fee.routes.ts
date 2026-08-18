@@ -7,7 +7,7 @@ import { AcademyFeeRepository } from "./academy-fee.repo";
 import { NotificationRepository } from "../notification/notification.repo";
 import { getPrisma } from "../lib/prisma";
 import { AppError } from "../lib/appError";
-import { canReadHR, canWriteHR } from "../lib/permissions";
+import { canReadHR, canWriteHR, canReadFinance } from "../lib/permissions";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -68,19 +68,19 @@ router.post("/", auth, requireFinance, controller.create);
 
 router.get("/stats", auth, (req, res, next) => {
   const { role, frontOfficeRole } = req.user!;
-  if (!canReadHR(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
+  if (!canReadHR(role, frontOfficeRole) && !canReadFinance(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
   next();
 }, controller.getStats);
 
 router.get("/", auth, (req, res, next) => {
   const { role, frontOfficeRole } = req.user!;
-  if (!canReadHR(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
+  if (!canReadHR(role, frontOfficeRole) && !canReadFinance(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
   next();
 }, controller.getAll);
 
 router.get("/player/:playerId", auth, (req, res, next) => {
   const { role, frontOfficeRole } = req.user!;
-  if (!canReadHR(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
+  if (!canReadHR(role, frontOfficeRole) && !canReadFinance(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
   next();
 }, controller.getByPlayer);
 

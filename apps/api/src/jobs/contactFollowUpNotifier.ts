@@ -23,6 +23,6 @@ async function runContactFollowUpNotifier() {
 export function startContactFollowUpNotifierJob() {
   cron.schedule("0 8 * * *", () => {
     runContactFollowUpNotifier().catch(console.error);
-  });
-  console.log("[contactFollowUpNotifier] scheduled at 08:00 daily");
+  }, { timezone: "Asia/Seoul" });
+  console.log("[contactFollowUpNotifier] scheduled at 08:00 KST daily");
 }
