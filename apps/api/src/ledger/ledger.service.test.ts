@@ -255,3 +255,13 @@ describe("LedgerService period lock - createRefund", () => {
     expect(create).toHaveBeenCalled();
   });
 });
+
+describe("LedgerService createAutoEntry - period lock", () => {
+  it("throws 409 PERIOD_LOCKED when period is locked", async () => {
+    const repo = makeRepo({ isPeriodLocked: jest.fn().mockResolvedValue(true) });
+    const service = new LedgerService(repo);
+    await expect(
+      service.createAutoEntry({ type: "EXPENSE", category: "SALARY", amount: 1000 } as any, 1)
+    ).rejects.toThrow(new AppError(409, "PERIOD_LOCKED"));
+  });
+});
