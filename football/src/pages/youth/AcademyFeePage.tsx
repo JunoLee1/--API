@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -94,12 +94,24 @@ export default function AcademyFeePage() {
   const [filter, setFilter] = useState<string>('')
   const [submitting, setSubmitting] = useState<number | null>(null)
   const [issueOpen, setIssueOpen] = useState(false)
+  const [staffUploadId, setStaffUploadId] = useState<number | null>(null)
+  const [staffUploading, setStaffUploading] = useState(false)
+  const staffFileInputRef = useRef<HTMLInputElement>(null)
 
   const canApprove =
     user?.role === 'ADMIN' ||
     user?.role === 'SUPER_ADMIN' ||
     user?.role === 'GM' ||
     (user?.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'HR_MANAGER')
+
+  const canFinanceUpload =
+    user?.role === 'ADMIN' ||
+    user?.role === 'SUPER_ADMIN' ||
+    user?.role === 'GM' ||
+    (user?.role === 'FRONT_OFFICE' &&
+      (user.frontOfficeRole === 'FINANCE_STAFF' ||
+        user.frontOfficeRole === 'FINANCE_MANAGER' ||
+        user.frontOfficeRole === 'TD'))
 
   const load = () => {
     setLoading(true)
@@ -120,6 +132,20 @@ export default function AcademyFeePage() {
       load()
     } finally {
       setSubmitting(null)
+    }
+  }
+
+  const handleStaffUpload = async (id: number, file: File) => {
+    setStaffUploading(true)
+    try {
+      await academyFeeApi.staffUploadProof(id, file)
+      toast.success('영수증이 접수됐습니다.')
+      load()
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : '업로드에 실패했습니다.')
+    } finally {
+      setStaffUploading(false)
+      setStaffUploadId(null)
     }
   }
 
@@ -166,14 +192,17 @@ export default function AcademyFeePage() {
               {fee.status === 'SUBMITTED' && canApprove && (
                 <Button size="sm" onClick={() => handleApprove(fee.id)}>{t('feePage.approveButton')}</Button>
               )}
-              {['PENDING', 'OVERDUE'].includes(fee.status) && (
+              {['PENDING', 'OVERDUE'].includes(fee.status) && canFinanceUpload && (
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => void handleAdminSubmit(fee.id)}
-                  disabled={submitting === fee.id}
+                  disabled={staffUploading && staffUploadId === fee.id}
+                  onClick={() => {
+                    setStaffUploadId(fee.id)
+                    staffFileInputRef.current?.click()
+                  }}
                 >
-                  수동 접수
+                  영수증 업로드
                 </Button>
               )}
               {fee.status === 'PAID' && fee.receiptIssuedAt && (
@@ -199,6 +228,18 @@ export default function AcademyFeePage() {
           onIssued={load}
         />
       )}
+
+      <input
+        ref={staffFileInputRef}
+        type="file"
+        accept="image/*,application/pdf"
+        className="hidden"
+        onChange={e => {
+          const file = e.target.files?.[0]
+          if (file && staffUploadId !== null) void handleStaffUpload(staffUploadId, file)
+          e.target.value = ''
+        }}
+      />
     </div>
   )
 }

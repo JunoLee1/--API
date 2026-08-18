@@ -402,10 +402,9 @@ export function SponsorshipPage() {
   const { user } = useCurrentUser()
   const canWrite =
     user?.role === 'ADMIN' ||
-    (user?.role === 'FRONT_OFFICE' &&
-      (user.frontOfficeRole === 'FINANCE_MANAGER' ||
-        user.frontOfficeRole === 'FINANCE_STAFF' ||
-        user.frontOfficeRole === 'GM'))
+    user?.role === 'SUPER_ADMIN' ||
+    user?.role === 'GM' ||
+    (user?.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'FINANCE_MANAGER')
 
   const [sponsorships, setSponsorships] = useState<Sponsorship[]>([])
   const [roiSummary, setRoiSummary] = useState<SponsorshipRoiSummary | null>(null)
