@@ -1,5 +1,6 @@
 import { GuardianService } from "./guardian.service";
 import type { GuardianRepository } from "./guardian.repo";
+import type { AcademyFeeRepository } from "../academy-fee/academy-fee.repo";
 
 const makeRepo = (overrides: Partial<GuardianRepository> = {}): GuardianRepository =>
   ({
@@ -164,5 +165,39 @@ describe("GuardianService.getDashboard", () => {
     const result = await svc.getDashboard("player-1");
     expect(result.fees.pending).toHaveLength(2);
     expect(result.fees.overdue).toHaveLength(1);
+  });
+});
+
+describe("GuardianService.submitFeeProof — IDOR 방지", () => {
+  const makeFeeRepo = (overrides: Partial<AcademyFeeRepository> = {}): AcademyFeeRepository =>
+    ({
+      findById: jest.fn().mockResolvedValue(null),
+      submitPaymentProof: jest.fn().mockResolvedValue({ id: 10, status: "SUBMITTED" }),
+      ...overrides,
+    } as unknown as AcademyFeeRepository);
+
+  it("fee가 존재하지 않으면 404", async () => {
+    const feeRepo = makeFeeRepo({ findById: jest.fn().mockResolvedValue(null) });
+    const svc = new GuardianService(makeRepo(), {} as any, {} as any, feeRepo);
+    await expect(svc.submitFeeProof(999, "http://proof.url", "player-1"))
+      .rejects.toMatchObject({ statusCode: 404, message: "ACADEMY_FEE_NOT_FOUND" });
+  });
+
+  it("feeId가 다른 선수 것이면 403", async () => {
+    const feeRepo = makeFeeRepo({
+      findById: jest.fn().mockResolvedValue({ id: 10, playerId: "player-OTHER" }),
+    });
+    const svc = new GuardianService(makeRepo(), {} as any, {} as any, feeRepo);
+    await expect(svc.submitFeeProof(10, "http://proof.url", "player-1"))
+      .rejects.toMatchObject({ statusCode: 403, message: "FORBIDDEN" });
+  });
+
+  it("feeId가 자녀 것이면 정상 처리", async () => {
+    const feeRepo = makeFeeRepo({
+      findById: jest.fn().mockResolvedValue({ id: 10, playerId: "player-1" }),
+    });
+    const svc = new GuardianService(makeRepo(), {} as any, {} as any, feeRepo);
+    await svc.submitFeeProof(10, "http://proof.url", "player-1");
+    expect(feeRepo.submitPaymentProof).toHaveBeenCalledWith(10, "http://proof.url");
   });
 });

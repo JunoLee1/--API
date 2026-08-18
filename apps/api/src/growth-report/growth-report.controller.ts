@@ -12,7 +12,12 @@ export class GrowthReportController {
 
   getEvaluationsByPlayer = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      res.json(await this.service.getEvaluationsByPlayer(String(req.params["playerId"])));
+      const user = requireUser(req);
+      const playerId = String(req.params["playerId"]);
+      if (user.role === "GUARDIAN") {
+        return res.json(await this.service.getEvaluationsByPlayerForGuardian(playerId, user.id));
+      }
+      res.json(await this.service.getEvaluationsByPlayer(playerId));
     } catch (e) { next(e); }
   };
 

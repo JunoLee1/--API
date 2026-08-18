@@ -119,8 +119,10 @@ export class SalesController {
 
   cancel = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const { role, frontOfficeRole, id: userId } = requireUser(req);
+      if (!canWriteFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const id = Number(req.params["id"]);
-      const record = await this.service.createCancellation(id, req.body, req.user!.id);
+      const record = await this.service.createCancellation(id, req.body, userId);
       res.json(record);
     } catch (err) {
       next(err);
