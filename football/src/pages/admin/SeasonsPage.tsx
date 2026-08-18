@@ -154,15 +154,26 @@ function WageCapConfigDialog({ open, onOpenChange, season, onSaved }: WageCapCon
                   ? t('seasonsPage.wageCapDialog.valueFixed')
                   : t('seasonsPage.wageCapDialog.valueRatio')}
               </Label>
-              <Input
-                type="number"
-                step={capType === 'RATIO' ? '0.01' : '1000000'}
-                min={0}
-                max={capType === 'RATIO' ? 1 : undefined}
-                value={capValue}
-                onChange={e => setCapValue(e.target.value)}
-                placeholder={capType === 'RATIO' ? '0.5' : '1000000000'}
-              />
+              {capType === 'RATIO' ? (
+                <Input
+                  type="number"
+                  step="0.01"
+                  min={0}
+                  max={1}
+                  value={capValue}
+                  onChange={e => setCapValue(e.target.value)}
+                  placeholder="0.5"
+                />
+              ) : (
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  min={0}
+                  value={capValue ? Number(capValue).toLocaleString('ko-KR') : ''}
+                  onChange={e => setCapValue(e.target.value.replace(/[^0-9]/g, ''))}
+                  placeholder="1,000,000,000"
+                />
+              )}
               {capType === 'RATIO' && (
                 <p className="text-xs text-muted-foreground">{t('seasonsPage.wageCapDialog.ratioHint')}</p>
               )}

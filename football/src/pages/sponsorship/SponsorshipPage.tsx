@@ -207,10 +207,11 @@ function CreateSponsorshipDialog({ open, onOpenChange, onSaved }: CreateSponsors
           <div className="space-y-1.5">
             <Label>{t('form.totalFee')}</Label>
             <Input
-              type="number"
+              type="text"
+              inputMode="numeric"
               placeholder="0"
-              value={totalFee}
-              onChange={(e) => setTotalFee(e.target.value)}
+              value={totalFee ? Number(totalFee).toLocaleString('ko-KR') : ''}
+              onChange={(e) => setTotalFee(e.target.value.replace(/[^0-9]/g, ''))}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">

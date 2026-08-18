@@ -106,10 +106,11 @@ function CreateContractDialog({ open, onOpenChange, playerId, onSaved }: CreateC
           <div className="space-y-1.5">
             <Label>{t('contracts.createDialog.salary')}</Label>
             <Input
-              type="number"
+              type="text"
+              inputMode="numeric"
               placeholder={t('contracts.createDialog.salaryPlaceholder')}
-              value={salary}
-              onChange={(e) => setSalary(e.target.value)}
+              value={salary ? Number(salary).toLocaleString('ko-KR') : ''}
+              onChange={(e) => setSalary(e.target.value.replace(/[^0-9]/g, ''))}
             />
           </div>
         </div>
