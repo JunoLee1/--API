@@ -12,6 +12,7 @@ const makeRepo = (overrides: Partial<ClauseRepository> = {}): ClauseRepository =
   findAll: jest.fn().mockResolvedValue([]),
   findById: jest.fn().mockResolvedValue(null),
   updateStatus: jest.fn(),
+  copyPendingFrom: jest.fn().mockResolvedValue(0),
   ...overrides,
 } as unknown as ClauseRepository);
 
@@ -62,5 +63,23 @@ describe("ClauseService.waiveClause", () => {
     });
     await makeService(repo).waiveClause(1, 10);
     expect(repo.updateStatus).toHaveBeenCalledWith(1, "WAIVED");
+  });
+});
+
+describe("ClauseService.copyFrom", () => {
+  it("throws 400 when source and target are the same", async () => {
+    await expect(makeService(makeRepo()).copyFrom(10, 10)).rejects.toThrow(new AppError(400, "SAME_SPONSORSHIP"));
+  });
+
+  it("returns copied count of 0 when source has no pending clauses", async () => {
+    const result = await makeService(makeRepo()).copyFrom(10, 20);
+    expect(result).toEqual({ copied: 0 });
+  });
+
+  it("calls copyPendingFrom and returns count", async () => {
+    const repo = makeRepo({ copyPendingFrom: jest.fn().mockResolvedValue(3) });
+    const result = await makeService(repo).copyFrom(10, 20);
+    expect(repo.copyPendingFrom).toHaveBeenCalledWith(20, 10);
+    expect(result).toEqual({ copied: 3 });
   });
 });

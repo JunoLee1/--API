@@ -94,6 +94,8 @@ export class RecruitmentService {
   async apply(postingId: number, dto: CreateJobApplicationDto) {
     const posting = await this.getPosting(postingId);
     if (posting.status !== "OPEN") throw new AppError(409, "JOB_POSTING_NOT_OPEN");
+    const existing = await this.repo.findApplicationByEmail(postingId, dto.email);
+    if (existing) throw new AppError(409, "APPLICATION_DUPLICATE");
     return this.repo.createApplication(postingId, dto);
   }
 

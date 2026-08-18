@@ -85,6 +85,12 @@ export class RecruitmentRepository {
     return this.prisma.jobApplication.findUnique({ where: { id }, include: APPLICATION_INCLUDE });
   }
 
+  findApplicationByEmail(postingId: number, email: string) {
+    return this.prisma.jobApplication.findUnique({
+      where: { postingId_email: { postingId, email } },
+    });
+  }
+
   createApplication(postingId: number, data: CreateJobApplicationDto) {
     return this.prisma.jobApplication.create({
       data: { ...data, postingId },

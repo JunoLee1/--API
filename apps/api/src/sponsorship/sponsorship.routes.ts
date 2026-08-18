@@ -50,10 +50,11 @@ router.delete("/:id",    auth, checkWriteFinance, controller.delete);
 router.get("/:id/payments", auth, checkReadFinance, controller.getPayments);
 router.patch("/:id/payments/:paymentId", auth, checkWriteFinance, controller.markPaid);
 
-router.get("/:id/clauses",                   auth, checkReadFinance, clauseController.list);
-router.post("/:id/clauses",                  auth, checkWriteFinance, clauseController.create);
-router.post("/:id/clauses/:clauseId/apply",  auth, checkWriteFinance, clauseController.apply);
-router.post("/:id/clauses/:clauseId/waive",  auth, checkWriteFinance, clauseController.waive);
+router.get("/:id/clauses",                            auth, checkReadFinance,  clauseController.list);
+router.post("/:id/clauses",                           auth, checkWriteFinance, clauseController.create);
+router.post("/:id/clauses/copy-from/:sourceId",       auth, checkWriteFinance, clauseController.copyFrom);
+router.post("/:id/clauses/:clauseId/apply",           auth, checkWriteFinance, clauseController.apply);
+router.post("/:id/clauses/:clauseId/waive",           auth, checkWriteFinance, clauseController.waive);
 
 router.get("/:id/exposure-events",  auth, checkReadFinance, exposureController.list);
 router.post("/:id/exposure-events", auth, checkWriteFinance, exposureController.create);

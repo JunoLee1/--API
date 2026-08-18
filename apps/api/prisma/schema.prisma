@@ -2602,6 +2602,7 @@ model JobApplication {
   dataRetentionFlaggedAt     DateTime?
 
   @@unique([postingId, externalApplicantId])
+  @@unique([postingId, email])
 }
 
 model Interview {
