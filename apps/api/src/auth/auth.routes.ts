@@ -17,9 +17,9 @@ const refreshAuth = passport.authenticate("refreshToken", { session: false });
 const loginLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5분
   limit: 10,                // 최대 10회
-  standardHeaders: "draft-7",
+  standardHeaders: true,
   legacyHeaders: false,
-  message: { message: "TOO_MANY_REQUESTS" },
+  message: { code: "TOO_MANY_REQUESTS" },
 });
 
 // 공개
