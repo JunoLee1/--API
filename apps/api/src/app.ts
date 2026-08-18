@@ -1,5 +1,6 @@
 import express  = require("express")
 import cookieParser = require("cookie-parser")
+import helmet from "helmet"
 import APIRouter from "./apiRouter"
 import cors  = require("cors")
 import * as dotenv from "dotenv";
@@ -9,6 +10,7 @@ import webhookRouter from "./webhook/webhook.routes";
 dotenv.config()
 const PORT = process.env.PORT || '5000';
 const app = express()
+app.use(helmet({ contentSecurityPolicy: false }))
 app.use(cookieParser())
 app.use(
     cors({
