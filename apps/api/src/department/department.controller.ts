@@ -71,7 +71,7 @@ export class DepartmentController {
         if (!dept.parentId || dept.parent?.headId !== userId) throw new AppError(403, "FORBIDDEN");
       }
 
-      res.json(await this.service.update(Number(req.params["id"]), data));
+      res.json(await this.service.update(Number(req.params["id"]), data, userId));
     } catch (err) {
       next(err);
     }

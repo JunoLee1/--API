@@ -51,9 +51,9 @@ export class StaffRecordController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
+      const { role, frontOfficeRole, id: actorId } = requireUser(req);
       if (!canWriteHR(role, frontOfficeRole ?? null)) throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.update(Number(req.params["id"]), req.body));
+      res.json(await this.service.update(Number(req.params["id"]), req.body, actorId));
     } catch (err) {
       next(err);
     }

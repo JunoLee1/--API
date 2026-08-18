@@ -1,5 +1,6 @@
 import { DepartmentRepository } from "./department.repo";
 import { AppError } from "../lib/appError";
+import { writeAuditLog } from "../lib/auditLog";
 import type { DepartmentCategory } from "../generated/enums";
 
 export class DepartmentService {
@@ -25,7 +26,7 @@ export class DepartmentService {
     return this.repo.create(data);
   }
 
-  async update(id: number, data: { name?: string; isActive?: boolean; parentId?: number | null; category?: DepartmentCategory | null }, clubId?: number | null) {
+  async update(id: number, data: { name?: string; isActive?: boolean; parentId?: number | null; category?: DepartmentCategory | null }, actorId?: number, clubId?: number | null) {
     const dept = await this.get(id);
     if (data.name !== undefined) {
       const existing = await this.repo.findByName(data.name, dept.clubId);
@@ -35,7 +36,11 @@ export class DepartmentService {
       const parent = await this.repo.findById(data.parentId);
       if (!parent) throw new AppError(404, "PARENT_DEPARTMENT_NOT_FOUND");
     }
-    return this.repo.update(id, data);
+    const result = await this.repo.update(id, data);
+    if (actorId != null) {
+      await writeAuditLog({ actorId, action: "DEPARTMENT_UPDATED", targetId: id });
+    }
+    return result;
   }
 
   async delete(id: number) {
