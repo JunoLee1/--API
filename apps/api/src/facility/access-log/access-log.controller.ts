@@ -20,7 +20,7 @@ export class AccessLogController {
   logAccess = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);
-      await this.service.logAccess(user.id, user.role, req.body as LogAccessDto);
+      await this.service.logAccess(user.id, user.role, req.body as LogAccessDto, user.frontOfficeRole);
       res.status(201).json({ ok: true });
     } catch (err) { next(err); }
   };
