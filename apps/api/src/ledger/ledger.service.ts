@@ -87,6 +87,7 @@ export class LedgerService {
   }
 
   // Auto-entry helper for internal trusted modules (payroll, contracts, etc.)
+  // relatedModule/relatedId validation bypassed — callers are trusted internal modules
   async createAutoEntry(dto: CreateLedgerEntryDto, createdById: number) {
     this.validateExchangeRate(dto.exchangeRate);
     await this.assertPeriodNotLocked();
