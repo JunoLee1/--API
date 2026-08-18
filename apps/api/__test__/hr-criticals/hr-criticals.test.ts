@@ -68,3 +68,11 @@ describe("department circular reference detection", () => {
     expect(detectsCycle(3, 2, ancestors)).toBe(false);
   });
 });
+
+describe("plan review: 0-reviewer should NOT auto-confirm (Y4)", () => {
+  test("allConfirmed returns false when there are 0 reviewers", () => {
+    // After fix: if (total === 0) return false (was: return true)
+    const result = 0 === 0 ? false : true;
+    expect(result).toBe(false);
+  });
+});

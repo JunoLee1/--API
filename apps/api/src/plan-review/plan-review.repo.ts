@@ -38,10 +38,22 @@ export class PlanReviewRepository {
   // 모든 검토 완료 여부
   async allConfirmed(planId: number): Promise<boolean> {
     const total = await this.prisma.planReview.count({ where: { planId } });
-    if (total === 0) return true; // 검토자 없으면 바로 통과
+    if (total === 0) return false; // FIX(Y4): 검토자 없으면 검토 단계 통과 불가
     const confirmed = await this.prisma.planReview.count({
       where: { planId, status: "CONFIRMED" },
     });
     return total === confirmed;
+  }
+
+  reject(planId: number, reviewerDeptId: number, rejectedById: number, reason: string) {
+    return this.prisma.planReview.update({
+      where: { planId_reviewerDeptId: { planId, reviewerDeptId } },
+      data: {
+        status: "REJECTED",
+        comment: reason,
+        confirmedById: rejectedById,
+        confirmedAt: new Date(),
+      },
+    });
   }
 }
