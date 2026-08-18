@@ -45,7 +45,6 @@ export class OperatingExpenseController {
         ...(note !== undefined && { note }),
         ...(overrideReason !== undefined && { overrideReason }),
         createdById: userId,
-        requesterRole: role,
       });
       res.status(201).json(expense);
     } catch (err) { next(err); }
