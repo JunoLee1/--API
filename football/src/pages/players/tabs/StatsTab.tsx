@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { playerApi } from '@/services/player.service'
+import { trainingLoadApi } from '@/services/training-load.service'
 import type { MatchStat, TrainingResultEntry, RadarData } from '@/types/player'
+import type { AcwrResult } from '@/types/training-load'
 import { PlayerRadarChart } from '@/components/player/RadarChart'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -25,6 +27,7 @@ export function StatsTab({ playerId }: Props) {
   const [matchStats, setMatchStats] = useState<MatchStat[]>([])
   const [trainingResults, setTrainingResults] = useState<TrainingResultEntry[]>([])
   const [radar, setRadar] = useState<RadarData | null>(null)
+  const [acwr, setAcwr] = useState<AcwrResult | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -33,11 +36,13 @@ export function StatsTab({ playerId }: Props) {
       playerApi.getMatchStats(playerId),
       playerApi.getTrainingResults(playerId),
       playerApi.getRadar(playerId),
+      trainingLoadApi.acwr(playerId).catch(() => null),
     ])
-      .then(([ms, tr, rd]) => {
+      .then(([ms, tr, rd, acwrResult]) => {
         setMatchStats(ms)
         setTrainingResults(tr)
         setRadar(rd)
+        setAcwr(acwrResult)
       })
       .finally(() => setLoading(false))
   }, [playerId])
@@ -60,6 +65,41 @@ export function StatsTab({ playerId }: Props) {
           <PlayerRadarChart data={radar} />
         ) : (
           <p className="text-sm text-muted-foreground">{t('statsTab.radarError')}</p>
+        )}
+      </section>
+
+      <Separator />
+
+      {/* ACWR 카드 */}
+      <section>
+        <h3 className="text-sm font-semibold mb-3">급성:만성 훈련부하비 (ACWR)</h3>
+        {acwr === null ? (
+          <p className="text-sm text-muted-foreground">불러오는 중...</p>
+        ) : acwr.acuteChronicRatio === null ? (
+          <div className="rounded-md border px-4 py-3">
+            <p className="text-sm text-muted-foreground">데이터 부족 (최근 28일 기록 없음)</p>
+          </div>
+        ) : (
+          <div className="rounded-md border px-4 py-3 space-y-2">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl font-bold">{acwr.acuteChronicRatio.toFixed(2)}</span>
+              <Badge
+                variant={acwr.riskLevel === 'OPTIMAL' ? 'default' : acwr.riskLevel === 'UNKNOWN' ? 'secondary' : 'destructive'}
+                className={acwr.riskLevel === 'UNDERTRAINED' ? 'bg-orange-500 hover:bg-orange-600' : undefined}
+              >
+                {acwr.riskLevel === 'UNDERTRAINED'
+                  ? '훈련 부족'
+                  : acwr.riskLevel === 'OPTIMAL'
+                    ? '정상'
+                    : acwr.riskLevel === 'HIGH_RISK'
+                      ? '위험'
+                      : '알 수 없음'}
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              급성 {acwr.acuteLoad} AU · 만성 평균 {acwr.chronicWeeklyAvg} AU/주 · 적정 0.8 – 1.3
+            </p>
+          </div>
         )}
       </section>
 

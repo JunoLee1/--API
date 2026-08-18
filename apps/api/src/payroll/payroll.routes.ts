@@ -14,7 +14,6 @@ import { AllowanceController } from "./allowance/allowance.controller";
 import { RunRepository } from "./run/run.repo";
 import { RunService } from "./run/run.service";
 import { RunController } from "./run/run.controller";
-import { ledgerService } from "../ledger/ledger.routes";
 
 const router = Router();
 
@@ -28,7 +27,7 @@ const runRepo = new RunRepository(prisma);
 const configService = new ConfigService(configRepo);
 const salaryService = new SalaryService(salaryRepo);
 const allowanceService = new AllowanceService(allowanceRepo, salaryRepo);
-const runService = new RunService(runRepo, salaryRepo, configRepo, ledgerService);
+const runService = new RunService(runRepo, salaryRepo, configRepo, prisma);
 
 const configController = new ConfigController(configService);
 const salaryController = new SalaryController(salaryService);

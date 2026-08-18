@@ -18,6 +18,12 @@ export class LedgerService {
     }
   }
 
+  private async assertPeriodNotLocked(): Promise<void> {
+    const now = new Date();
+    const locked = await this.repo.isPeriodLocked(now.getFullYear(), now.getMonth() + 1);
+    if (locked) throw new AppError(409, "PERIOD_LOCKED");
+  }
+
   async create(dto: CreateLedgerEntryDto, createdById: number) {
     if (dto.amount <= 0) throw new AppError(400, "INVALID_AMOUNT");
     this.validateExchangeRate(dto.exchangeRate);
@@ -29,9 +35,7 @@ export class LedgerService {
       throw new AppError(400, "INVALID_RELATED_ID");
     }
 
-    const now = new Date();
-    const locked = await this.repo.isPeriodLocked(now.getFullYear(), now.getMonth() + 1);
-    if (locked) throw new AppError(409, "PERIOD_LOCKED");
+    await this.assertPeriodNotLocked();
 
     const rate = dto.exchangeRate ?? 1;
     const amountKrw = dto.amountKrw ?? dto.amount * rate;
@@ -43,23 +47,21 @@ export class LedgerService {
     if (!original) throw new AppError(404, "LEDGER_ENTRY_NOT_FOUND");
     if (original.reversedById != null) throw new AppError(400, "ALREADY_REVERSED");
 
-    const now = new Date();
-    const locked = await this.repo.isPeriodLocked(now.getFullYear(), now.getMonth() + 1);
-    if (locked) throw new AppError(409, "PERIOD_LOCKED");
+    await this.assertPeriodNotLocked();
 
     // JO4: link refund entry back to original via reversalOfId
     const refund = await this.repo.create({
-      type: original.type as any,       // Prisma $Enums.LedgerType → DTO "INCOME"|"EXPENSE" string literal union
+      type: original.type as any,
       category: "REFUND",
       amount: -Number(original.amount),
-      currency: original.currency as any, // Prisma $Enums.Currency → DTO "KRW"|"USD"|... string literal union
+      currency: original.currency as any,
       exchangeRate: Number(original.exchangeRate),
       amountKrw: -Number(original.amountKrw),
       isRefund: true,
       description: formatLedgerDescription("ledger", "refund", { entryId: original.id }),
       ...(original.relatedModule != null && { relatedModule: original.relatedModule }),
       ...(original.relatedId != null && { relatedId: original.relatedId }),
-      reversalOfId: original.id, // JO4: bidirectional — refund points to original
+      reversalOfId: original.id,
       createdById,
     } as any);
     // JO4: mark original as reversed (reversedById already in schema)
@@ -84,10 +86,11 @@ export class LedgerService {
     }
   }
 
-  // Fire-and-forget helper for other modules
+  // Auto-entry helper for internal trusted modules (payroll, contracts, etc.)
+  // relatedModule/relatedId validation bypassed — callers are trusted internal modules
   async createAutoEntry(dto: CreateLedgerEntryDto, createdById: number) {
     this.validateExchangeRate(dto.exchangeRate);
-    // relatedModule/relatedId validation and period lock intentionally bypassed — callers are internal trusted modules (contract payments, etc.)
+    await this.assertPeriodNotLocked();
     const rate = dto.exchangeRate ?? 1;
     const amountKrw = dto.amountKrw ?? dto.amount * rate;
     return this.repo.create({ ...dto, exchangeRate: rate, amountKrw, createdById });

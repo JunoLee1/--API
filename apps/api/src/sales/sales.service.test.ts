@@ -175,7 +175,7 @@ describe("SalesService.delete — SeatZone soldCount (BS10)", () => {
   it("decrements seatZone.soldCount when existing record has seatZoneId", async () => {
     const existingRecord = { id: 10, seatZoneId: 3, quantity: 2, deletedAt: null };
     const mockTx = {
-      ledgerEntry: { deleteMany: jest.fn() },
+      ledgerEntry: { findFirst: jest.fn().mockResolvedValue(null), create: jest.fn(), update: jest.fn() },
       salesRecord: {
         findUnique: jest.fn().mockResolvedValue(existingRecord),
         update: jest.fn(),
@@ -198,7 +198,7 @@ describe("SalesService.delete — SeatZone soldCount (BS10)", () => {
   it("does NOT call seatZone.update when existing record has no seatZoneId", async () => {
     const existingRecord = { id: 11, seatZoneId: null, quantity: 1, deletedAt: null };
     const mockTx = {
-      ledgerEntry: { deleteMany: jest.fn() },
+      ledgerEntry: { findFirst: jest.fn().mockResolvedValue(null), create: jest.fn(), update: jest.fn() },
       salesRecord: {
         findUnique: jest.fn().mockResolvedValue(existingRecord),
         update: jest.fn(),
@@ -219,7 +219,7 @@ describe("SalesService.delete — REFUNDED status (BS8)", () => {
   it("sets status=REFUNDED when soft-deleting a sales record", async () => {
     const existingRecord = { id: 20, seatZoneId: null, quantity: 3, deletedAt: null };
     const mockTx = {
-      ledgerEntry: { deleteMany: jest.fn() },
+      ledgerEntry: { findFirst: jest.fn().mockResolvedValue(null), create: jest.fn(), update: jest.fn() },
       salesRecord: {
         findUnique: jest.fn().mockResolvedValue(existingRecord),
         update: jest.fn(),
@@ -245,7 +245,7 @@ describe("SalesService.delete — double-cancel protection", () => {
   it("throws ALREADY_CANCELLED when record is already soft-deleted", async () => {
     const alreadyDeleted = { id: 50, seatZoneId: null, quantity: 1, deletedAt: new Date("2026-08-01") };
     const mockTx = {
-      ledgerEntry: { deleteMany: jest.fn() },
+      ledgerEntry: { findFirst: jest.fn().mockResolvedValue(null), create: jest.fn(), update: jest.fn() },
       salesRecord: {
         findUnique: jest.fn().mockResolvedValue(alreadyDeleted),
         update: jest.fn(),
@@ -264,7 +264,7 @@ describe("SalesService.delete — double-cancel protection", () => {
 
   it("throws SALES_RECORD_NOT_FOUND when record does not exist", async () => {
     const mockTx = {
-      ledgerEntry: { deleteMany: jest.fn() },
+      ledgerEntry: { findFirst: jest.fn().mockResolvedValue(null), create: jest.fn(), update: jest.fn() },
       salesRecord: {
         findUnique: jest.fn().mockResolvedValue(null),
         update: jest.fn(),
@@ -276,6 +276,73 @@ describe("SalesService.delete — double-cancel protection", () => {
     } as any);
     const service = new SalesService(makeRepo(), prisma);
     await expect(service.delete(999, 1)).rejects.toThrow(new AppError(404, "SALES_RECORD_NOT_FOUND"));
+  });
+});
+
+describe("SalesService.delete — reversal ledger entry (L1)", () => {
+  it("creates a reversal entry when a linked ledger entry exists", async () => {
+    const existingEntry = {
+      id: 5, type: "INCOME", category: "TICKET_SALE",
+      amount: 30000, currency: "KRW", exchangeRate: 1, amountKrw: 30000,
+      reversedById: null,
+    };
+    const ledgerCreate = jest.fn().mockResolvedValue({ id: 6 });
+    const ledgerUpdate = jest.fn();
+    const mockTx = {
+      ledgerEntry: {
+        findFirst: jest.fn().mockResolvedValue(existingEntry),
+        create: ledgerCreate,
+        update: ledgerUpdate,
+      },
+      salesRecord: {
+        findUnique: jest.fn().mockResolvedValue({ id: 10, seatZoneId: null, quantity: 1, deletedAt: null }),
+        update: jest.fn(),
+      },
+      seatZone: { update: jest.fn() },
+    };
+    const prisma = makePrisma({
+      $transaction: jest.fn().mockImplementation((fn: any) => fn(mockTx)),
+    } as any);
+    const service = new SalesService(makeRepo(), prisma);
+    await service.delete(10, 1);
+    expect(ledgerCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          category: "REFUND",
+          amount: -30000,
+          amountKrw: -30000,
+          isRefund: true,
+        }),
+      }),
+    );
+    expect(ledgerUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 5 },
+        data: { reversedById: 6 },
+      }),
+    );
+  });
+
+  it("skips reversal when no linked ledger entry exists", async () => {
+    const ledgerCreate = jest.fn();
+    const mockTx = {
+      ledgerEntry: {
+        findFirst: jest.fn().mockResolvedValue(null),
+        create: ledgerCreate,
+        update: jest.fn(),
+      },
+      salesRecord: {
+        findUnique: jest.fn().mockResolvedValue({ id: 20, seatZoneId: null, quantity: 1, deletedAt: null }),
+        update: jest.fn(),
+      },
+      seatZone: { update: jest.fn() },
+    };
+    const prisma = makePrisma({
+      $transaction: jest.fn().mockImplementation((fn: any) => fn(mockTx)),
+    } as any);
+    const service = new SalesService(makeRepo(), prisma);
+    await service.delete(20, 1);
+    expect(ledgerCreate).not.toHaveBeenCalled();
   });
 });
 
