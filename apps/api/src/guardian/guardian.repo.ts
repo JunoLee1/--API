@@ -47,6 +47,13 @@ export class GuardianRepository {
     });
   }
 
+  findChildByIdAndGuardian(playerId: string, guardianId: number) {
+    return this.prisma.player.findFirst({
+      where: { id: playerId, guardianId },
+      select: { id: true },
+    });
+  }
+
   findChildById(playerId: string) {
     return this.prisma.player.findFirst({
       where: { id: playerId },

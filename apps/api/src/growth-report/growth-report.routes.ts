@@ -5,6 +5,7 @@ import { GrowthReportService } from "./growth-report.service";
 import { GrowthReportRepository } from "./growth-report.repo";
 import { DevelopmentPlanRepository } from "../development-plan/development-plan.repo";
 import { NotificationRepository } from "../notification/notification.repo";
+import { GuardianRepository } from "../guardian/guardian.repo";
 import { getPrisma } from "../lib/prisma";
 
 const router = Router();
@@ -12,7 +13,8 @@ const prisma = getPrisma();
 const repo = new GrowthReportRepository(prisma);
 const notifRepo = new NotificationRepository(prisma);
 const planRepo = new DevelopmentPlanRepository(prisma);
-const service = new GrowthReportService(repo, notifRepo, planRepo);
+const guardianRepo = new GuardianRepository(prisma);
+const service = new GrowthReportService(repo, notifRepo, planRepo, guardianRepo);
 const controller = new GrowthReportController(service);
 
 

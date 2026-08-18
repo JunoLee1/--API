@@ -168,3 +168,30 @@ describe("GrowthReportService", () => {
     });
   });
 });
+
+describe("GrowthReportService.getEvaluationsByPlayerForGuardian — IDOR 방지", () => {
+  const makeGuardianRepo = (child: { id: string } | null) => ({
+    findChildByIdAndGuardian: jest.fn().mockResolvedValue(child),
+  });
+
+  it("자녀가 아니면 403", async () => {
+    const guardianRepo = makeGuardianRepo(null);
+    const service = new GrowthReportService(
+      makeRepo(),
+      makeNotifRepo(),
+      makePlanRepo(),
+      guardianRepo as any,
+    );
+    await expect(service.getEvaluationsByPlayerForGuardian("player-uuid-1", 99))
+      .rejects.toMatchObject({ statusCode: 403, message: "FORBIDDEN" });
+  });
+
+  it("자녀이면 evaluations 반환", async () => {
+    const guardianRepo = makeGuardianRepo({ id: "player-uuid-1" });
+    const evals = [{ id: 1, playerId: "player-uuid-1" }];
+    const repo = makeRepo({ findEvaluationsByPlayer: jest.fn().mockResolvedValue(evals) });
+    const service = new GrowthReportService(repo, makeNotifRepo(), makePlanRepo(), guardianRepo as any);
+    const result = await service.getEvaluationsByPlayerForGuardian("player-uuid-1", 99);
+    expect(result).toBe(evals);
+  });
+});
