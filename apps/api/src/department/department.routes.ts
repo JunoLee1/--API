@@ -12,6 +12,7 @@ const controller = new DepartmentController(service);
 
 router.get("/", auth, controller.list);
 router.post("/", auth, controller.create);
+router.get("/:id/headcount", auth, controller.getHeadcount);
 router.get("/:id", auth, controller.get);
 router.patch("/:id", auth, controller.update);
 router.delete("/:id", auth, controller.delete);

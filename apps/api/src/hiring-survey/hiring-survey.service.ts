@@ -118,6 +118,25 @@ export class HiringSurveyService {
     return planReport
   }
 
+  async getParticipationRate(surveyId: number) {
+    const survey = await this.getById(surveyId);
+    const targetCount = survey.targetDepartments.length;
+    const respondedIds = new Set(survey.responses.map((r) => r.departmentId));
+    const respondedCount = respondedIds.size;
+    const unrespondedDepts = survey.targetDepartments
+      .filter((t) => !respondedIds.has(t.departmentId))
+      .map((t) => ({ departmentId: t.departmentId, departmentName: t.department.name }));
+
+    return {
+      surveyId,
+      status: survey.status,
+      targetCount,
+      respondedCount,
+      participationRate: targetCount > 0 ? Math.round((respondedCount / targetCount) * 1000) / 10 : 0,
+      unrespondedDepts,
+    };
+  }
+
   async autoCloseExpired(systemUserId: number) {
     const expired = await this.repo.findOpenPastDeadline()
     for (const survey of expired) {

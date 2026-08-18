@@ -44,6 +44,14 @@ export class DepartmentRepository {
     return this.prisma.staffRecord.count({ where: { departmentId, isActive: true } });
   }
 
+  async getHeadcount(departmentId: number) {
+    const [activeStaff, totalStaff] = await Promise.all([
+      this.prisma.staffRecord.count({ where: { departmentId, isActive: true } }),
+      this.prisma.staffRecord.count({ where: { departmentId } }),
+    ]);
+    return { activeStaff, totalStaff, inactive: totalStaff - activeStaff };
+  }
+
   delete(id: number) {
     return this.prisma.department.delete({ where: { id } });
   }

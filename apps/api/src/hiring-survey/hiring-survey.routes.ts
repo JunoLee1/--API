@@ -26,6 +26,7 @@ const controller = new HiringSurveyController(service)
 
 router.get('/', auth, controller.list)
 router.post('/', auth, requireHR, controller.create)
+router.get('/:id/participation-rate', auth, requireHR, controller.getParticipationRate)
 router.get('/:id', auth, controller.get)
 router.post('/:id/respond', auth, controller.submitResponse)
 router.post('/:id/close', auth, requireHR, controller.close)

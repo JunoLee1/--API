@@ -51,6 +51,12 @@ export class DepartmentService {
     return result;
   }
 
+  async getHeadcount(id: number) {
+    const dept = await this.repo.findById(id);
+    if (!dept) throw new AppError(404, "DEPARTMENT_NOT_FOUND");
+    return this.repo.getHeadcount(id);
+  }
+
   async delete(id: number) {
     const dept = await this.get(id);
     if (dept.children && dept.children.length > 0)

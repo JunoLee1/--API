@@ -31,4 +31,8 @@ export class HiringSurveyController {
     const planReport = await this.service.close(Number(req.params.id), userId)
     res.json(planReport)
   }
+
+  getParticipationRate = async (req: Request, res: Response) => {
+    res.json(await this.service.getParticipationRate(Number(req.params.id)))
+  }
 }

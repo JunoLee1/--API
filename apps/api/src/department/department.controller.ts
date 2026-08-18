@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
-import { isAdminLike } from "../lib/permissions";
+import { isAdminLike, canReadHR } from "../lib/permissions";
 import { requireUser } from "../lib/authMiddleware";
 import { DepartmentCategory } from "../generated/enums";
 import { DepartmentService } from "./department.service";
@@ -75,6 +75,14 @@ export class DepartmentController {
     } catch (err) {
       next(err);
     }
+  };
+
+  getHeadcount = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = requireUser(req);
+      if (!canReadHR(role, frontOfficeRole ?? null)) throw new AppError(403, "FORBIDDEN");
+      res.json(await this.service.getHeadcount(Number(req.params["id"])));
+    } catch (err) { next(err); }
   };
 
   delete = async (req: Request, res: Response, next: NextFunction) => {
