@@ -724,5 +724,39 @@
     "reinstateBtn": "거절 취소",
     "reinstating": "복원 중...",
     "fillRate": "충원 현황"
+  },
+  "payroll": {
+    "title": "급여 관리",
+    "tabs": { "config": "설정", "salaries": "급여 목록", "runs": "급여 실행" },
+    "config": {
+      "title": "보험료율 설정",
+      "empty": "설정 없음",
+      "country": "국가",
+      "insuranceType": "보험 종류",
+      "employeeRate": "직원 요율",
+      "employerRate": "회사 요율",
+      "effectiveFrom": "적용일"
+    },
+    "salary": {
+      "empty": "급여 기록 없음",
+      "base": "기본급",
+      "active": "적용중",
+      "closed": "종료",
+      "from": "적용 시작"
+    },
+    "run": {
+      "selectSalary": "급여 목록에서 항목을 선택하세요.",
+      "empty": "실행 이력 없음",
+      "gross": "총 지급액",
+      "deductions": "공제액",
+      "net": "실지급액",
+      "confirm": "확정",
+      "confirmed": "급여가 확정됐습니다.",
+      "confirmFailed": "확정에 실패했습니다.",
+      "secondApprove": "최종 승인",
+      "secondApproved": "최종 승인됐습니다.",
+      "secondApproveFailed": "최종 승인에 실패했습니다.",
+      "status": { "PENDING": "대기", "CONFIRMED": "확정", "LOCKED": "잠김" }
+    }
   }
 }
