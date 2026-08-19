@@ -1,5 +1,6 @@
 import { AppError } from "../lib/appError";
 import { formatLedgerDescription } from "../lib/ledger-formatter";
+import { writeAuditLog } from "../lib/auditLog";
 import type { LedgerRepository } from "./ledger.repo";
 import type { CreateLedgerEntryDto, LedgerListQuery } from "./dto/ledger.dto";
 
@@ -39,7 +40,9 @@ export class LedgerService {
 
     const rate = dto.exchangeRate ?? 1;
     const amountKrw = dto.amountKrw ?? dto.amount * rate;
-    return this.repo.create({ ...dto, exchangeRate: rate, amountKrw, createdById });
+    const entry = await this.repo.create({ ...dto, exchangeRate: rate, amountKrw, createdById });
+    await writeAuditLog({ actorId: createdById, action: "LEDGER_ENTRY_CREATED", targetId: entry.id });
+    return entry;
   }
 
   async createRefund(originalId: number, createdById: number) {
@@ -72,6 +75,7 @@ export class LedgerService {
       await this.repo.markSalesRecordRefunded(original.relatedId);
     }
 
+    await writeAuditLog({ actorId: createdById, action: "LEDGER_REFUND_CREATED", targetId: refund.id, detail: { originalId } });
     return refund;
   }
 
@@ -79,7 +83,9 @@ export class LedgerService {
     const already = await this.repo.isPeriodLocked(year, month);
     if (already) throw new AppError(409, "PERIOD_ALREADY_LOCKED");
     try {
-      return await this.repo.lockPeriod(year, month, actorId);
+      const result = await this.repo.lockPeriod(year, month, actorId);
+      await writeAuditLog({ actorId, action: "LEDGER_PERIOD_LOCKED", targetId: result.id, detail: { year, month } });
+      return result;
     } catch (e: any) {
       if (e?.code === "P2002") throw new AppError(409, "PERIOD_ALREADY_LOCKED");
       throw e;
