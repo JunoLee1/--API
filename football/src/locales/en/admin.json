@@ -722,5 +722,39 @@
       "percentUsed": "Utilization",
       "remaining": "Remaining"
     }
+  },
+  "payroll": {
+    "title": "Payroll Management",
+    "tabs": { "config": "Settings", "salaries": "Salary List", "runs": "Payroll Runs" },
+    "config": {
+      "title": "Insurance Rate Settings",
+      "empty": "No settings found",
+      "country": "Country",
+      "insuranceType": "Insurance Type",
+      "employeeRate": "Employee Rate",
+      "employerRate": "Employer Rate",
+      "effectiveFrom": "Effective From"
+    },
+    "salary": {
+      "empty": "No salary records",
+      "base": "Base Salary",
+      "active": "Active",
+      "closed": "Closed",
+      "from": "Effective From"
+    },
+    "run": {
+      "selectSalary": "Select a salary record from the list.",
+      "empty": "No run history",
+      "gross": "Gross Pay",
+      "deductions": "Deductions",
+      "net": "Net Pay",
+      "confirm": "Confirm",
+      "confirmed": "Payroll confirmed.",
+      "confirmFailed": "Failed to confirm payroll.",
+      "secondApprove": "Final Approve",
+      "secondApproved": "Final approval completed.",
+      "secondApproveFailed": "Final approval failed.",
+      "status": { "PENDING": "Pending", "CONFIRMED": "Confirmed", "LOCKED": "Locked" }
+    }
   }
 }
