@@ -103,6 +103,7 @@ export interface UpdatePlayerPayload {
   level?: PlayerLevel
   nationalityId?: number
   externalId?: string
+  allergies?: string[]
 }
 
 export const POSITION_ABBR: Record<Position, string> = {

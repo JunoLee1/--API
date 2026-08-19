@@ -131,6 +131,9 @@ export function PlayerDetailPage() {
   const [promoteTeamId, setPromoteTeamId] = useState('')
   const [promoting, setPromoting] = useState(false)
   const [availableTeams, setAvailableTeams] = useState<Array<{id: number; name: string}>>([])
+  const [allergyEditMode, setAllergyEditMode] = useState(false)
+  const [allergyInput, setAllergyInput] = useState('')
+  const [allergySaving, setAllergySaving] = useState(false)
 
   const confirm = useConfirm()
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
@@ -157,6 +160,10 @@ export function PlayerDetailPage() {
     user?.role === 'GM' ||
     (user?.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'TD')
   const canReactivateJersey = user?.role === 'ADMIN'
+  const canEditAllergies =
+    user?.role === 'ADMIN' ||
+    (user?.role === 'COACHING_STAFF' &&
+      (user?.coachingRole === 'MEDICAL' || user?.coachingRole === 'MEDICAL_DIRECTOR'))
 
   const handleDelete = async () => {
     if (!player) return
@@ -542,19 +549,81 @@ export function PlayerDetailPage() {
               )}
 
               {/* 알레르기 / 식이 정보 */}
-              {(user?.role === 'FRONT_OFFICE' || user?.role === 'ADMIN') && (
+              {(user?.role === 'FRONT_OFFICE' || user?.role === 'ADMIN' ||
+                (user?.role === 'COACHING_STAFF' &&
+                  (user?.coachingRole === 'MEDICAL' || user?.coachingRole === 'MEDICAL_DIRECTOR'))) && (
                 <div className="rounded-lg border bg-card p-5 space-y-3">
-                  <h3 className="text-sm font-semibold text-foreground">{t('allergySection')}</h3>
-                  <div className="flex flex-wrap gap-1.5">
-                    {player.allergies.map((a) => (
-                      <Badge key={a} variant="outline">{a}</Badge>
-                    ))}
-                    {player.allergies.length === 0 && (
-                      <span className="text-sm text-muted-foreground">{t('noAllergies')}</span>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-foreground">{t('allergySection')}</h3>
+                    {canEditAllergies && !allergyEditMode && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setAllergyInput(player.allergies.join(', '))
+                          setAllergyEditMode(true)
+                        }}
+                      >
+                        <Pencil className="w-3.5 h-3.5 mr-1" />
+                        {t('allergyEdit')}
+                      </Button>
                     )}
                   </div>
-                  {player.foodPreferences && (
-                    <p className="text-sm text-muted-foreground">{player.foodPreferences}</p>
+                  {allergyEditMode ? (
+                    <div className="space-y-2">
+                      <Input
+                        value={allergyInput}
+                        onChange={e => setAllergyInput(e.target.value)}
+                        placeholder={t('allergyPlaceholder')}
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          disabled={allergySaving}
+                          onClick={async () => {
+                            if (!player) return
+                            setAllergySaving(true)
+                            try {
+                              const parsed = allergyInput
+                                .split(',')
+                                .map(s => s.trim())
+                                .filter(s => s.length > 0)
+                              await playerApi.update(player.id, { allergies: parsed })
+                              setPlayer(prev => prev ? { ...prev, allergies: parsed } : prev)
+                              setAllergyEditMode(false)
+                              toast.success(t('allergySaved'))
+                            } catch {
+                              toast.error(t('allergySaveFailed'))
+                            } finally {
+                              setAllergySaving(false)
+                            }
+                          }}
+                        >
+                          {allergySaving ? t('form.saving') : t('form.submitEdit')}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setAllergyEditMode(false)}
+                        >
+                          {t('form.cancel')}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex flex-wrap gap-1.5">
+                        {player.allergies.map((a) => (
+                          <Badge key={a} variant="outline">{a}</Badge>
+                        ))}
+                        {player.allergies.length === 0 && (
+                          <span className="text-sm text-muted-foreground">{t('noAllergies')}</span>
+                        )}
+                      </div>
+                      {player.foodPreferences && (
+                        <p className="text-sm text-muted-foreground">{player.foodPreferences}</p>
+                      )}
+                    </>
                   )}
                 </div>
               )}
