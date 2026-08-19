@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { toast } from 'sonner'
 import { api } from '@/services/api'
 import { adminApi } from '@/services/admin.service'
@@ -48,6 +49,7 @@ import { MoreHorizontal, UserPlus, ChevronDown, Mail } from 'lucide-react'
 import { useConfirm } from '@/lib/confirm-dialog'
 
 const ALL_ROLES: Role[] = ['FRONT_OFFICE', 'COACHING_STAFF', 'PLAYER', 'AGENT']
+const SUPER_ADMIN_ROLES: Role[] = ['GM', 'ADMIN', ...ALL_ROLES]
 const COACHING_ROLES: CoachingRole[] = [
   'HEAD_COACH', 'ASSISTANT_COACH', 'DEFENSIVE_COACH', 'ATTACKING_COACH',
   'PHYSICAL_COACH', 'SET_PIECE_COACH', 'GOALKEEPER_COACH', 'MEDICAL', 'MEDICAL_DIRECTOR',
@@ -65,6 +67,8 @@ function subRoleLabel(user: AdminUserDto): string {
 export function UsersPage() {
   const { t } = useTranslation('admin')
   const confirm = useConfirm()
+  const { user: currentUser } = useCurrentUser()
+  const availableRoles = currentUser?.role === 'SUPER_ADMIN' ? SUPER_ADMIN_ROLES : ALL_ROLES
 
   const [users, setUsers] = useState<AdminUserDto[]>([])
   const [playersWithoutAccounts, setPlayersWithoutAccounts] = useState<PlayerWithoutAccountDto[]>([])
@@ -402,7 +406,7 @@ export function UsersPage() {
                     <Select value={iRole} onValueChange={(v) => { setIRole(v as Role); setICoachingRole(''); setIFrontOfficeRole('') }}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {ALL_ROLES.map((r) => <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>)}
+                        {availableRoles.map((r) => <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -480,7 +484,7 @@ export function UsersPage() {
                     <Select value={cRole} onValueChange={(v) => { setCRole(v as Role); setCCoachingRole(''); setCFrontOfficeRole('') }}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {ALL_ROLES.map((r) => <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>)}
+                        {availableRoles.map((r) => <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -527,7 +531,7 @@ export function UsersPage() {
               <Select value={editRole} onValueChange={(v) => { setEditRole(v as Role); setEditCoachingRole(''); setEditFrontOfficeRole('') }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {ALL_ROLES.map((r) => <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>)}
+                  {availableRoles.map((r) => <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
