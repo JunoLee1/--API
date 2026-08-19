@@ -489,7 +489,7 @@ const NAV_ITEMS: NavItem[] = [
     section: 'nav.section.management',
     subSection: 'nav.subsection.finance',
     roles: ['ADMIN', 'SUPER_ADMIN', 'GM', 'FRONT_OFFICE'],
-    frontOfficeRoles: ['FINANCE_MANAGER'],
+    frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF'],
   },
   // 관리 > 시설·자산
   {

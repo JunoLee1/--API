@@ -101,7 +101,8 @@ export class BudgetControlService {
   async requestAdjustment(headerId: number, dto: CreateAdjustmentDto, createdById: number) {
     const header = await this.repo.findById(headerId);
     if (!header) throw new AppError(404, "BUDGET_NOT_FOUND");
-    if (header.status === "DRAFT") throw new AppError(400, "BUDGET_NOT_APPROVED");
+    if (header.status !== "APPROVED" && header.status !== "LOCKED")
+      throw new AppError(400, "BUDGET_NOT_APPROVED");
     if (dto.amount <= 0) throw new AppError(400, "INVALID_ADJUSTMENT_AMOUNT");
     return this.repo.createAdjustment(headerId, dto, createdById);
   }
