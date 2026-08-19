@@ -57,7 +57,7 @@ router.get("/coach", auth, async (req, res, next) => {
 });
 
 // ── Finance dashboard ──────────────────────────────────────────────────────
-router.get("/finance", async (req, res, next) => {
+router.get("/finance", auth, async (req, res, next) => {
   try {
     const { role, frontOfficeRole } = requireUser(req);
     if (!canReadFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
@@ -168,7 +168,7 @@ router.get("/finance", async (req, res, next) => {
           where: { seasonId, deletedAt: null },
           _sum: { amount: true },
         });
-        const totalBudget = fr.budgetCategoryPlans.reduce((acc, p) => acc + p.mandatoryMinimum, 0);
+        const totalBudget = fr.budgetCategoryPlans.reduce((acc, p) => acc + p.mandatoryMinimum + (p.knapsackAllocated ?? 0), 0);
         budgetConsumption = {
           spent: Number(opexSum._sum.amount ?? 0),
           approved: totalBudget,

@@ -67,7 +67,8 @@ export class MonthlySettlementService {
       pnl: { totalRevenue, totalExpense, netIncome },
     };
 
-    return this.repo.upsertDraft({
+    // Upsert the draft first so we have a report.id for adjustment lookup
+    const report = await this.repo.upsertDraft({
       seasonId,
       year,
       month,
@@ -77,6 +78,27 @@ export class MonthlySettlementService {
       snapshotJson,
       createdById,
     });
+
+    // Apply any existing RevenueAdjustments for this report
+    const adjustmentSum = await this.prisma.revenueAdjustment.aggregate({
+      where: { monthlyReportId: report.id },
+      _sum: { delta: true },
+    });
+    const adjTotal = adjustmentSum._sum.delta ? Number(adjustmentSum._sum.delta.toString()) : 0;
+
+    if (adjTotal !== 0) {
+      const adjustedRevenue = totalRevenue + adjTotal;
+      const adjustedNetIncome = adjustedRevenue - totalExpense;
+      return this.prisma.monthlySettlementReport.update({
+        where: { id: report.id },
+        data: {
+          totalRevenue: adjustedRevenue,
+          netIncome: adjustedNetIncome,
+        },
+      });
+    }
+
+    return report;
   }
 
   async submitFirst(id: number, userId: number) {

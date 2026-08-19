@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { auth } from "../lib/authMiddleware";
-import { canReadFinance } from "../lib/permissions";
+import { canReadFinance, isAdminLike } from "../lib/permissions";
 import { getPrisma } from "../lib/prisma";
 import { AppError } from "../lib/appError";
 import { AccountCodeRepository } from "./account-code.repo";
@@ -17,7 +17,7 @@ const checkReadFinance = (req: Request, res: Response, next: NextFunction) => {
 
 const checkAdminOnly = (req: Request, res: Response, next: NextFunction) => {
   const { role } = req.user!;
-  if (role !== "ADMIN" && role !== "SUPER_ADMIN") return next(new AppError(403, "FORBIDDEN"));
+  if (!isAdminLike(role)) return next(new AppError(403, "FORBIDDEN"));
   next();
 };
 

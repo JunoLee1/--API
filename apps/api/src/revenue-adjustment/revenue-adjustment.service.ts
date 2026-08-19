@@ -71,6 +71,7 @@ export class RevenueAdjustmentService {
         type: "INCOME",
         createdAt: { gte: startDate, lt: endDate },
         isRefund: false,
+        isAdjustment: false,
       },
       orderBy: { createdAt: "desc" },
     });
