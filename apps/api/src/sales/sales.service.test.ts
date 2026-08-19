@@ -312,6 +312,7 @@ describe("SalesService.delete — reversal ledger entry (L1)", () => {
           amount: -30000,
           amountKrw: -30000,
           isRefund: true,
+          reversalOfId: 5,
         }),
       }),
     );
