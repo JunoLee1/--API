@@ -1,6 +1,6 @@
 # 유소년 콜업 서류 확인 워크플로우 구현 플랜
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 유소년 콜업 워크플로우에 유소년 감독 + 의무팀 서류 확인 단계를 추가한다.
 
@@ -36,7 +36,7 @@
 - Modify: `apps/api/prisma/schema.prisma`
 - Create: `apps/api/prisma/migrations/20260723000001_callup_docs_workflow/migration.sql`
 
-- [ ] **Step 1: schema.prisma — PlayerCallupStatus에 DOCS_SUBMITTED 추가**
+- [x] **Step 1: schema.prisma — PlayerCallupStatus에 DOCS_SUBMITTED 추가**
 
 `enum PlayerCallupStatus` 블록을 찾아 아래처럼 수정:
 
@@ -50,7 +50,7 @@ enum PlayerCallupStatus {
 }
 ```
 
-- [ ] **Step 2: schema.prisma — NotificationType에 CALLUP_DOCS_READY 추가**
+- [x] **Step 2: schema.prisma — NotificationType에 CALLUP_DOCS_READY 추가**
 
 `enum NotificationType` 블록 안 `CALLUP_REJECTED` 바로 아래에 추가:
 
@@ -58,7 +58,7 @@ enum PlayerCallupStatus {
   CALLUP_DOCS_READY
 ```
 
-- [ ] **Step 3: schema.prisma — PlayerCallup 모델에 boolean 필드 추가**
+- [x] **Step 3: schema.prisma — PlayerCallup 모델에 boolean 필드 추가**
 
 `model PlayerCallup` 안 `status` 필드 바로 아래에 추가:
 
@@ -67,7 +67,7 @@ enum PlayerCallupStatus {
   medicalConfirmed    Boolean            @default(false)
 ```
 
-- [ ] **Step 4: Migration 파일 작성**
+- [x] **Step 4: Migration 파일 작성**
 
 `apps/api/prisma/migrations/20260723000001_callup_docs_workflow/migration.sql` 파일 생성:
 
@@ -83,7 +83,7 @@ ALTER TABLE "PlayerCallup" ADD COLUMN "youthCoachConfirmed" BOOLEAN NOT NULL DEF
 ALTER TABLE "PlayerCallup" ADD COLUMN "medicalConfirmed" BOOLEAN NOT NULL DEFAULT false;
 ```
 
-- [ ] **Step 5: Migration 적용 및 클라이언트 재생성**
+- [x] **Step 5: Migration 적용 및 클라이언트 재생성**
 
 ```bash
 cd apps/api
@@ -93,7 +93,7 @@ npx prisma generate
 
 Expected: `Applied 1 migration`, 에러 없음.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/20260723000001_callup_docs_workflow/
@@ -107,7 +107,7 @@ git commit -m "feat(callup): schema — DOCS_SUBMITTED 상태 및 서류 확인 
 **Files:**
 - Modify: `apps/api/src/notification/notification.repo.ts`
 
-- [ ] **Step 1: createForYouthHeadCoach 헬퍼 추가**
+- [x] **Step 1: createForYouthHeadCoach 헬퍼 추가**
 
 `createForHeadCoach` 메서드 아래에 추가:
 
@@ -126,7 +126,7 @@ createForYouthHeadCoach(fromTeamId: number, type: string, title: string, body: s
 }
 ```
 
-- [ ] **Step 2: createForMedicalStaff 헬퍼 추가**
+- [x] **Step 2: createForMedicalStaff 헬퍼 추가**
 
 `createForYouthHeadCoach` 아래에 추가:
 
@@ -145,7 +145,7 @@ createForMedicalStaff(type: string, title: string, body: string, entityId?: numb
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/notification/notification.repo.ts
@@ -159,7 +159,7 @@ git commit -m "feat(callup): notification repo — 유소년 감독/의무팀 �
 **Files:**
 - Modify: `apps/api/src/player-callup/player-callup.repo.ts`
 
-- [ ] **Step 1: SELECT에 새 필드 추가**
+- [x] **Step 1: SELECT에 새 필드 추가**
 
 파일 상단 `const SELECT` 객체에 `youthCoachConfirmed`와 `medicalConfirmed` 추가:
 
@@ -181,7 +181,7 @@ const SELECT = {
 } as const;
 ```
 
-- [ ] **Step 2: confirmYouth 메서드 추가**
+- [x] **Step 2: confirmYouth 메서드 추가**
 
 `complete` 메서드 아래에 추가:
 
@@ -195,7 +195,7 @@ confirmYouth(id: number) {
 }
 ```
 
-- [ ] **Step 3: confirmMedical 메서드 추가**
+- [x] **Step 3: confirmMedical 메서드 추가**
 
 `confirmYouth` 아래에 추가:
 
@@ -209,7 +209,7 @@ confirmMedical(id: number) {
 }
 ```
 
-- [ ] **Step 4: submitDocs 메서드 추가**
+- [x] **Step 4: submitDocs 메서드 추가**
 
 `confirmMedical` 아래에 추가:
 
@@ -223,7 +223,7 @@ submitDocs(id: number) {
 }
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/player-callup/player-callup.repo.ts
@@ -237,7 +237,7 @@ git commit -m "feat(callup): repo — SELECT 확장, confirmYouth/Medical/submit
 **Files:**
 - Modify: `apps/api/src/player-callup/player-callup.service.ts`
 
-- [ ] **Step 1: create() — 알림 수신자 변경**
+- [x] **Step 1: create() — 알림 수신자 변경**
 
 기존 `create()` 메서드의 `void this.notifRepo.createForGM(...)` 호출을 제거하고 아래로 교체:
 
@@ -281,7 +281,7 @@ async create(dto: CreateCallupDto, requestedById: number) {
 }
 ```
 
-- [ ] **Step 2: approve() — 상태 체크 조건 변경**
+- [x] **Step 2: approve() — 상태 체크 조건 변경**
 
 `approve()` 메서드 안의 체크를 변경:
 
@@ -311,7 +311,7 @@ async approve(id: number, approvedById: number) {
 
 Note: 기존 `createForHeadCoach` 대신 `createForUser(callup.requestedBy.id, ...)` — 신청자 본인에게만 알림.
 
-- [ ] **Step 3: reject() — 상태 체크 조건 변경**
+- [x] **Step 3: reject() — 상태 체크 조건 변경**
 
 `reject()` 메서드 안의 체크를 변경:
 
@@ -339,7 +339,7 @@ async reject(id: number, approvedById: number, dto: RejectCallupDto) {
 }
 ```
 
-- [ ] **Step 4: confirmYouth() 메서드 추가**
+- [x] **Step 4: confirmYouth() 메서드 추가**
 
 `reject()` 아래에 추가:
 
@@ -363,7 +363,7 @@ async confirmYouth(id: number, actorId: number, actorTeamId: number | null) {
 }
 ```
 
-- [ ] **Step 5: confirmMedical() 메서드 추가**
+- [x] **Step 5: confirmMedical() 메서드 추가**
 
 `confirmYouth()` 아래에 추가:
 
@@ -386,7 +386,7 @@ async confirmMedical(id: number, actorId: number) {
 }
 ```
 
-- [ ] **Step 6: TypeScript 빌드 확인**
+- [x] **Step 6: TypeScript 빌드 확인**
 
 ```bash
 cd apps/api
@@ -395,7 +395,7 @@ npx tsc --noEmit
 
 Expected: 에러 없음.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add apps/api/src/player-callup/player-callup.service.ts
@@ -410,7 +410,7 @@ git commit -m "feat(callup): service — 서류 확인 흐름 구현, approve/re
 - Modify: `apps/api/src/player-callup/player-callup.controller.ts`
 - Modify: `apps/api/src/player-callup/player-callup.routes.ts`
 
-- [ ] **Step 1: controller — confirmYouth 핸들러 추가**
+- [x] **Step 1: controller — confirmYouth 핸들러 추가**
 
 `complete` 핸들러 아래에 추가:
 
@@ -426,7 +426,7 @@ confirmYouth = async (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 2: controller — confirmMedical 핸들러 추가**
+- [x] **Step 2: controller — confirmMedical 핸들러 추가**
 
 `confirmYouth` 핸들러 아래에 추가:
 
@@ -442,7 +442,7 @@ confirmMedical = async (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 3: routes — 새 라우트 등록**
+- [x] **Step 3: routes — 새 라우트 등록**
 
 `router.patch("/:id/complete", ...)` 아래에 추가:
 
@@ -451,7 +451,7 @@ router.patch("/:id/confirm-youth", auth, controller.confirmYouth);
 router.patch("/:id/confirm-medical", auth, controller.confirmMedical);
 ```
 
-- [ ] **Step 4: TypeScript 빌드 확인**
+- [x] **Step 4: TypeScript 빌드 확인**
 
 ```bash
 cd apps/api
@@ -462,7 +462,7 @@ Expected: 에러 없음. `req.user!.teamId` 관련 타입 오류가 나면 Task 
 
 Note: `req.user`의 타입에 `teamId`가 없을 경우 `apps/api/src/@types/express/index.d.ts` 또는 passport strategy 파일에서 User 타입 확인 후 `teamId?: number | null` 추가.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/player-callup/player-callup.controller.ts apps/api/src/player-callup/player-callup.routes.ts
@@ -476,7 +476,7 @@ git commit -m "feat(callup): controller/routes — confirm-youth, confirm-medica
 **Files:**
 - Modify: `apps/api/src/auth/auth.repo.ts`
 
-- [ ] **Step 1: auth.repo.ts — findById SELECT에 teamId 추가**
+- [x] **Step 1: auth.repo.ts — findById SELECT에 teamId 추가**
 
 line 38 근처 `findById` 메서드의 select 객체에 `teamId: true` 추가:
 
@@ -498,7 +498,7 @@ findById(id: number) {
 }
 ```
 
-- [ ] **Step 2: req.user 타입에 teamId 추가**
+- [x] **Step 2: req.user 타입에 teamId 추가**
 
 `apps/api/src/@types/express/index.d.ts` 파일(없으면 해당 경로에 생성) 또는 passport strategy가 `User` 타입을 선언하는 곳을 찾아 `teamId?: number | null` 추가.
 
@@ -510,7 +510,7 @@ grep -rn "declare global\|Express.User\|req.user" apps/api/src --include="*.ts" 
 
 찾은 파일에서 `User` 인터페이스에 `teamId?: number | null` 추가.
 
-- [ ] **Step 3: TypeScript 빌드 확인**
+- [x] **Step 3: TypeScript 빌드 확인**
 
 ```bash
 cd apps/api
@@ -519,7 +519,7 @@ npx tsc --noEmit
 
 Expected: 에러 없음.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/src/auth/auth.repo.ts
@@ -533,7 +533,7 @@ git commit -m "feat(callup): auth repo — /me에 teamId 포함"
 **Files:**
 - Modify: `apps/api/__test__/player-callup/player-callup.service.test.ts`
 
-- [ ] **Step 1: 기존 'approve 처리' 테스트 수정**
+- [x] **Step 1: 기존 'approve 처리' 테스트 수정**
 
 현재 테스트는 `REQUESTED` 상태에서 바로 `approve`를 호출하는데, 이제 `DOCS_SUBMITTED` 상태여야 한다. 아래처럼 수정:
 
@@ -562,7 +562,7 @@ it('승인 처리 (DOCS_SUBMITTED → APPROVED)', async () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행**
+- [x] **Step 2: 테스트 실행**
 
 ```bash
 cd apps/api
@@ -571,7 +571,7 @@ npx jest __test__/player-callup --runInBand
 
 Expected: 전체 PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/__test__/player-callup/player-callup.service.test.ts
@@ -587,7 +587,7 @@ git commit -m "test(callup): 서류 확인 흐름 테스트 업데이트"
 - Modify: `football/src/types/player-callup.ts`
 - Modify: `football/src/services/player-callup.service.ts`
 
-- [ ] **Step 1: UserDto에 teamId 추가**
+- [x] **Step 1: UserDto에 teamId 추가**
 
 `football/src/types/auth.ts`의 `UserDto` 인터페이스에 추가:
 
@@ -605,7 +605,7 @@ export interface UserDto {
 }
 ```
 
-- [ ] **Step 2: PlayerCallupStatus에 DOCS_SUBMITTED 추가**
+- [x] **Step 2: PlayerCallupStatus에 DOCS_SUBMITTED 추가**
 
 `football/src/types/player-callup.ts` 전체 교체:
 
@@ -654,7 +654,7 @@ export interface CreateCallupDto {
 }
 ```
 
-- [ ] **Step 3: callupApi에 confirmYouth/confirmMedical 추가**
+- [x] **Step 3: callupApi에 confirmYouth/confirmMedical 추가**
 
 `football/src/services/player-callup.service.ts`에 추가:
 
@@ -666,7 +666,7 @@ confirmMedical: (id: number) =>
   api.patch<PlayerCallup>(`/player-callups/${id}/confirm-medical`, {}),
 ```
 
-- [ ] **Step 4: TypeScript 빌드 확인**
+- [x] **Step 4: TypeScript 빌드 확인**
 
 ```bash
 cd football
@@ -675,7 +675,7 @@ npx tsc --noEmit
 
 Expected: 에러 없음.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/types/auth.ts football/src/types/player-callup.ts football/src/services/player-callup.service.ts
@@ -689,7 +689,7 @@ git commit -m "feat(callup): FE 타입/서비스 — DOCS_SUBMITTED, confirmYout
 **Files:**
 - Modify: `football/src/pages/transfers/PlayerCallupPage.tsx`
 
-- [ ] **Step 1: STATUS_OPTIONS에 DOCS_SUBMITTED 추가**
+- [x] **Step 1: STATUS_OPTIONS에 DOCS_SUBMITTED 추가**
 
 ```typescript
 const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
@@ -702,7 +702,7 @@ const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
 ]
 ```
 
-- [ ] **Step 2: isMedical 변수 추가**
+- [x] **Step 2: isMedical 변수 추가**
 
 `PlayerCallupPage` 컴포넌트 안 `isHeadCoach`/`isGM` 선언 아래에 추가:
 
@@ -711,7 +711,7 @@ const isMedical = user?.coachingRole === 'MEDICAL'
 const isYouthHeadCoach = user?.coachingRole === 'HEAD_COACH'
 ```
 
-- [ ] **Step 3: handleConfirmYouth / handleConfirmMedical 핸들러 추가**
+- [x] **Step 3: handleConfirmYouth / handleConfirmMedical 핸들러 추가**
 
 `handleComplete` 아래에 추가:
 
@@ -737,13 +737,13 @@ const handleConfirmMedical = async (id: number) => {
 }
 ```
 
-- [ ] **Step 4: showActions 조건 확장**
+- [x] **Step 4: showActions 조건 확장**
 
 ```typescript
 const showActions = isGM || isHeadCoach || isMedical
 ```
 
-- [ ] **Step 5: 테이블 액션 컬럼 업데이트**
+- [x] **Step 5: 테이블 액션 컬럼 업데이트**
 
 기존 `{showActions && (...)}` 블록의 내용을 아래로 교체:
 
@@ -809,7 +809,7 @@ const showActions = isGM || isHeadCoach || isMedical
 )}
 ```
 
-- [ ] **Step 6: TypeScript 빌드 확인**
+- [x] **Step 6: TypeScript 빌드 확인**
 
 ```bash
 cd football
@@ -818,7 +818,7 @@ npx tsc --noEmit
 
 Expected: 에러 없음.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add football/src/pages/transfers/PlayerCallupPage.tsx

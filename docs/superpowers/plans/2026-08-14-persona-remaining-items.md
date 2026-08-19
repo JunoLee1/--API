@@ -1,6 +1,6 @@
 # Persona Remaining Items Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Implement 4 remaining persona items: visa/work-permit expiry dedup cron, application reinstate, youth-to-senior promotion history, and ledger period lock.
 
@@ -59,9 +59,9 @@ And add `WORK_PERMIT_EXPIRY_SOON_60D` to `NotificationType` enum (add after `WOR
   WORK_PERMIT_EXPIRY_SOON_60D
 ```
 
-- [ ] **Step 1.1: Edit schema.prisma** — add `WorkPermitAlertLog` model, the relation on `Player`, and `WORK_PERMIT_EXPIRY_SOON_60D` enum value as described above.
+- [x] **Step 1.1: Edit schema.prisma** — add `WorkPermitAlertLog` model, the relation on `Player`, and `WORK_PERMIT_EXPIRY_SOON_60D` enum value as described above.
 
-- [ ] **Step 1.2: Run migration**
+- [x] **Step 1.2: Run migration**
 
 ```bash
 cd apps/api
@@ -70,7 +70,7 @@ npx prisma migrate dev --name add_work_permit_alert_log
 
 Expected: `Migration 20260814000001_add_work_permit_alert_log applied`.
 
-- [ ] **Step 1.3: Rewrite `workPermitExpiryCheck.ts`**
+- [x] **Step 1.3: Rewrite `workPermitExpiryCheck.ts`**
 
 Full replacement of `apps/api/src/jobs/workPermitExpiryCheck.ts`:
 
@@ -134,7 +134,7 @@ export function startWorkPermitExpiryCheckJob() {
 }
 ```
 
-- [ ] **Step 1.4: Run BE tests**
+- [x] **Step 1.4: Run BE tests**
 
 ```bash
 cd apps/api
@@ -143,7 +143,7 @@ npx jest --testPathPattern="workPermit|ledger|recruitment" --passWithNoTests
 
 Expected: all pass (no test file for this cron yet — `--passWithNoTests` covers that).
 
-- [ ] **Step 1.5: Commit**
+- [x] **Step 1.5: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations apps/api/src/jobs/workPermitExpiryCheck.ts
@@ -215,9 +215,9 @@ describe("reinstateApplication", () => {
 });
 ```
 
-- [ ] **Step 2.1: Write the tests above.**
+- [x] **Step 2.1: Write the tests above.**
 
-- [ ] **Step 2.2: Run tests to verify they fail**
+- [x] **Step 2.2: Run tests to verify they fail**
 
 ```bash
 cd apps/api
@@ -226,7 +226,7 @@ npx jest --testPathPattern="recruitment.service" 2>&1 | tail -20
 
 Expected: FAIL — `svc.reinstateApplication is not a function`.
 
-- [ ] **Step 2.3: Add `previousStatus` to schema**
+- [x] **Step 2.3: Add `previousStatus` to schema**
 
 In `apps/api/prisma/schema.prisma`, in `model JobApplication`, after `rejectionReason String?`, add:
 
@@ -234,7 +234,7 @@ In `apps/api/prisma/schema.prisma`, in `model JobApplication`, after `rejectionR
   previousStatus  JobApplicationStatus?
 ```
 
-- [ ] **Step 2.4: Run migration**
+- [x] **Step 2.4: Run migration**
 
 ```bash
 cd apps/api
@@ -243,7 +243,7 @@ npx prisma migrate dev --name add_job_application_previous_status
 
 Expected: migration applied.
 
-- [ ] **Step 2.5: Add `reinstateApplication` to repo**
+- [x] **Step 2.5: Add `reinstateApplication` to repo**
 
 In `apps/api/src/recruitment/recruitment.repo.ts`, add after `rejectApplication`:
 
@@ -305,9 +305,9 @@ async rejectApplication(id: number, actorId: number) {
 }
 ```
 
-- [ ] **Step 2.5: Apply both repo changes.**
+- [x] **Step 2.5: Apply both repo changes.**
 
-- [ ] **Step 2.6: Add `reinstateApplication` to service**
+- [x] **Step 2.6: Add `reinstateApplication` to service**
 
 In `apps/api/src/recruitment/recruitment.service.ts`, add after `rejectApplication`:
 
@@ -321,7 +321,7 @@ async reinstateApplication(id: number, actorId: number) {
 }
 ```
 
-- [ ] **Step 2.7: Run tests to verify they pass**
+- [x] **Step 2.7: Run tests to verify they pass**
 
 ```bash
 cd apps/api
@@ -330,7 +330,7 @@ npx jest --testPathPattern="recruitment.service" 2>&1 | tail -20
 
 Expected: all tests in the describe blocks PASS.
 
-- [ ] **Step 2.8: Add controller method**
+- [x] **Step 2.8: Add controller method**
 
 In `apps/api/src/recruitment/recruitment.controller.ts`, add after `rejectApplication`:
 
@@ -346,7 +346,7 @@ reinstateApplication = async (req: Request, res: Response, next: NextFunction) =
 };
 ```
 
-- [ ] **Step 2.9: Add route**
+- [x] **Step 2.9: Add route**
 
 In `apps/api/src/recruitment/recruitment.routes.ts`, after the reject route:
 
@@ -354,7 +354,7 @@ In `apps/api/src/recruitment/recruitment.routes.ts`, after the reject route:
 router.post("/applications/:id/reinstate", auth, controller.reinstateApplication);
 ```
 
-- [ ] **Step 2.10: Add FE service call**
+- [x] **Step 2.10: Add FE service call**
 
 In `football/src/services/recruitment.service.ts` (FE), find the file and add inside the `recruitmentApi` object (or wherever `rejectApplication` is defined):
 
@@ -363,7 +363,7 @@ reinstateApplication: (id: number) =>
   api.post(`/recruitment/applications/${id}/reinstate`),
 ```
 
-- [ ] **Step 2.11: Add reinstate button to ApplicationDetailPage**
+- [x] **Step 2.11: Add reinstate button to ApplicationDetailPage**
 
 In `football/src/pages/admin/recruitment/ApplicationDetailPage.tsx`, find the reject button section (`app.status !== 'REJECTED' && app.status !== 'HIRED'`) and add a reinstate button immediately after it:
 
@@ -400,7 +400,7 @@ const handleReinstate = async () => {
 }
 ```
 
-- [ ] **Step 2.12: Run full BE test suite**
+- [x] **Step 2.12: Run full BE test suite**
 
 ```bash
 cd apps/api
@@ -409,7 +409,7 @@ npx jest 2>&1 | tail -10
 
 Expected: all pass.
 
-- [ ] **Step 2.13: Commit**
+- [x] **Step 2.13: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations \
@@ -445,9 +445,9 @@ In `apps/api/prisma/schema.prisma`, in `model Player`, after `teamId  Int?`, add
 
 No new relation needed (team is already resolved via `teamId`).
 
-- [ ] **Step 3.1: Edit schema.prisma as above.**
+- [x] **Step 3.1: Edit schema.prisma as above.**
 
-- [ ] **Step 3.2: Run migration**
+- [x] **Step 3.2: Run migration**
 
 ```bash
 cd apps/api
@@ -456,7 +456,7 @@ npx prisma migrate dev --name add_player_youth_promotion_fields
 
 Expected: migration applied.
 
-- [ ] **Step 3.3: Add `promotePlayer` to service**
+- [x] **Step 3.3: Add `promotePlayer` to service**
 
 In `apps/api/src/player/player.service.ts`, add after `updatePlayerStatus`:
 
@@ -478,7 +478,7 @@ async promotePlayer(id: string, targetTeamId: number, actorId: number) {
 }
 ```
 
-- [ ] **Step 3.4: Add `promotePlayer` to repo**
+- [x] **Step 3.4: Add `promotePlayer` to repo**
 
 In `apps/api/src/player/player.repo.ts`, add a method after `updateStatus`:
 
@@ -500,7 +500,7 @@ promotePlayer(id: string, targetTeamId: number, youthOriginTeamId: number) {
 }
 ```
 
-- [ ] **Step 3.5: Add controller method**
+- [x] **Step 3.5: Add controller method**
 
 In `apps/api/src/player/player.controller.ts`, add after `updatePlayerStatus`:
 
@@ -523,7 +523,7 @@ promotePlayer = async (req: Request, res: Response, next: NextFunction): Promise
 
 Import `requireUser` from `../lib/authMiddleware` if not already imported — check existing imports at the top of the controller and add if missing.
 
-- [ ] **Step 3.6: Add route**
+- [x] **Step 3.6: Add route**
 
 In `apps/api/src/player/player.routes.ts`, add after the `patch("/:id/status")` route:
 
@@ -531,7 +531,7 @@ In `apps/api/src/player/player.routes.ts`, add after the `patch("/:id/status")` 
 router.post("/:id/promote", auth, controller.promotePlayer);
 ```
 
-- [ ] **Step 3.7: Add `promote` to FE service**
+- [x] **Step 3.7: Add `promote` to FE service**
 
 In `football/src/services/player.service.ts`, inside `playerApi`, add:
 
@@ -540,7 +540,7 @@ promote: (id: string, targetTeamId: number) =>
   api.post<PlayerDetail>(`/players/${id}/promote`, { targetTeamId }),
 ```
 
-- [ ] **Step 3.8: Update FE types**
+- [x] **Step 3.8: Update FE types**
 
 In `football/src/types/player.ts`, find `PlayerDetail` (or the detail interface) and add:
 
@@ -549,7 +549,7 @@ promotedFromYouthAt?: string | null
 youthOriginTeamId?: number | null
 ```
 
-- [ ] **Step 3.9: Add Youth History tab to PlayerDetailPage**
+- [x] **Step 3.9: Add Youth History tab to PlayerDetailPage**
 
 In `football/src/pages/players/PlayerDetailPage.tsx`:
 
@@ -609,7 +609,7 @@ Also add a promote button to the header action bar (visible only when `isYouthPl
 
 Add state: `const [promoteOpen, setPromoteOpen] = useState(false)` and a simple dialog that asks for `targetTeamId` and calls `playerApi.promote`. Keep it minimal — an `<Input type="number">` for team ID with a confirm button is fine for now.
 
-- [ ] **Step 3.10: Run BE tests**
+- [x] **Step 3.10: Run BE tests**
 
 ```bash
 cd apps/api
@@ -618,7 +618,7 @@ npx jest 2>&1 | tail -10
 
 Expected: all pass.
 
-- [ ] **Step 3.11: Commit**
+- [x] **Step 3.11: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations \
@@ -695,9 +695,9 @@ describe("LedgerService period lock", () => {
 });
 ```
 
-- [ ] **Step 4.1: Write the tests above.**
+- [x] **Step 4.1: Write the tests above.**
 
-- [ ] **Step 4.2: Run tests to verify they fail**
+- [x] **Step 4.2: Run tests to verify they fail**
 
 ```bash
 cd apps/api
@@ -706,7 +706,7 @@ npx jest --testPathPattern="ledger.service" 2>&1 | tail -20
 
 Expected: FAIL — `service.lockPeriod is not a function` and `isPeriodLocked` not on repo.
 
-- [ ] **Step 4.3: Add `LedgerPeriodLock` to schema**
+- [x] **Step 4.3: Add `LedgerPeriodLock` to schema**
 
 In `apps/api/prisma/schema.prisma`, after `model LedgerEntry`, add:
 
@@ -729,9 +729,9 @@ Also add the relation on `User` model. Find `model User` in the schema and add:
   periodLocks        LedgerPeriodLock[] @relation("PeriodLockCreator")
 ```
 
-- [ ] **Step 4.3: Edit schema.prisma as above.**
+- [x] **Step 4.3: Edit schema.prisma as above.**
 
-- [ ] **Step 4.4: Run migration**
+- [x] **Step 4.4: Run migration**
 
 ```bash
 cd apps/api
@@ -740,7 +740,7 @@ npx prisma migrate dev --name add_ledger_period_lock
 
 Expected: migration applied.
 
-- [ ] **Step 4.5: Add `isPeriodLocked` and `lockPeriod` to repo**
+- [x] **Step 4.5: Add `isPeriodLocked` and `lockPeriod` to repo**
 
 In `apps/api/src/ledger/ledger.repo.ts`, add after `create`:
 
@@ -758,7 +758,7 @@ lockPeriod(year: number, month: number, lockedById: number) {
 }
 ```
 
-- [ ] **Step 4.6: Add period lock check and `lockPeriod` to service**
+- [x] **Step 4.6: Add period lock check and `lockPeriod` to service**
 
 In `apps/api/src/ledger/ledger.service.ts`:
 
@@ -833,7 +833,7 @@ async lockPeriod(year: number, month: number, actorId: number) {
 }
 ```
 
-- [ ] **Step 4.7: Run tests to verify they pass**
+- [x] **Step 4.7: Run tests to verify they pass**
 
 ```bash
 cd apps/api
@@ -842,7 +842,7 @@ npx jest --testPathPattern="ledger.service" 2>&1 | tail -20
 
 Expected: all tests PASS, including new period lock tests.
 
-- [ ] **Step 4.8: Add controller method**
+- [x] **Step 4.8: Add controller method**
 
 In `apps/api/src/ledger/ledger.controller.ts`, add after the `refund` method:
 
@@ -863,7 +863,7 @@ lockPeriod = async (req: Request, res: Response, next: NextFunction): Promise<vo
 };
 ```
 
-- [ ] **Step 4.9: Add route**
+- [x] **Step 4.9: Add route**
 
 In `apps/api/src/ledger/ledger.routes.ts`, add a FINANCE_MANAGER-only lock route. First add a helper:
 
@@ -884,7 +884,7 @@ Then add the route:
 router.post("/lock", auth, checkFinanceManager, ctrl.lockPeriod);
 ```
 
-- [ ] **Step 4.10: Add FE lock button**
+- [x] **Step 4.10: Add FE lock button**
 
 First, find the ledger FE page:
 
@@ -908,7 +908,7 @@ lockPeriod: (year: number, month: number) =>
   api.post(`/ledger/lock?year=${year}&month=${month}`),
 ```
 
-- [ ] **Step 4.11: Run full BE test suite**
+- [x] **Step 4.11: Run full BE test suite**
 
 ```bash
 cd apps/api
@@ -917,7 +917,7 @@ npx jest 2>&1 | tail -10
 
 Expected: all pass.
 
-- [ ] **Step 4.12: Commit**
+- [x] **Step 4.12: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations \

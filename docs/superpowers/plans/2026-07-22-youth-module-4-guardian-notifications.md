@@ -1,6 +1,6 @@
 # 유소년 모듈 Plan 4: GUARDIAN 알림 (주간 일정 + 이벤트 알림)
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 학부모(GUARDIAN)에게 주간 훈련·경기 일정 요약(월요일 cron)과 세션 변경·취소 즉시 알림을 구현한다. MATCH_DAY_REMINDER와 CALLUP_REQUESTED도 GUARDIAN 수신자에 확장한다.
 
@@ -34,7 +34,7 @@
 - Create: `apps/api/src/jobs/youthWeeklySchedule.ts`
 - Create: `apps/api/__test__/jobs/youthWeeklySchedule.test.ts`
 
-- [ ] **Step 1: failing test 작성**
+- [x] **Step 1: failing test 작성**
 
 `apps/api/__test__/jobs/youthWeeklySchedule.test.ts`:
 
@@ -90,7 +90,7 @@ describe("collectWeeklyScheduleByGuardian", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 → 실패 확인**
+- [x] **Step 2: 테스트 실행 → 실패 확인**
 
 ```bash
 cd apps/api && npx jest __test__/jobs/youthWeeklySchedule.test.ts --no-coverage
@@ -98,7 +98,7 @@ cd apps/api && npx jest __test__/jobs/youthWeeklySchedule.test.ts --no-coverage
 
 Expected: FAIL
 
-- [ ] **Step 3: cron job 구현**
+- [x] **Step 3: cron job 구현**
 
 `apps/api/src/jobs/youthWeeklySchedule.ts`:
 
@@ -199,7 +199,7 @@ export function startYouthWeeklyScheduleJob() {
 }
 ```
 
-- [ ] **Step 4: 테스트 실행 → 통과 확인**
+- [x] **Step 4: 테스트 실행 → 통과 확인**
 
 ```bash
 cd apps/api && npx jest __test__/jobs/youthWeeklySchedule.test.ts --no-coverage
@@ -207,7 +207,7 @@ cd apps/api && npx jest __test__/jobs/youthWeeklySchedule.test.ts --no-coverage
 
 Expected: PASS (2 tests)
 
-- [ ] **Step 5: server.ts에 cron 등록**
+- [x] **Step 5: server.ts에 cron 등록**
 
 `apps/api/src/server.ts`에 추가:
 
@@ -217,7 +217,7 @@ import { startYouthWeeklyScheduleJob } from "./jobs/youthWeeklySchedule";
 startYouthWeeklyScheduleJob();
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/jobs/youthWeeklySchedule.ts apps/api/__test__/jobs/ apps/api/src/server.ts
@@ -233,7 +233,7 @@ git commit -m "feat(youth): 주간 일정 cron - GUARDIAN에게 매주 월요일
 - Modify: `apps/api/src/training/training.service.ts`
 - Create: `apps/api/__test__/training/training.session.guardian.test.ts`
 
-- [ ] **Step 1: training.repo.ts에 GUARDIAN 조회 메서드 추가**
+- [x] **Step 1: training.repo.ts에 GUARDIAN 조회 메서드 추가**
 
 `apps/api/src/training/training.repo.ts`에 추가:
 
@@ -248,7 +248,7 @@ findGuardiansByTeam(teamId: number): Promise<number[]> {
 }
 ```
 
-- [ ] **Step 2: failing test 작성**
+- [x] **Step 2: failing test 작성**
 
 `apps/api/__test__/training/training.session.guardian.test.ts`:
 
@@ -308,7 +308,7 @@ describe("TrainingService - YOUTH 세션 변경 시 GUARDIAN 알림", () => {
 });
 ```
 
-- [ ] **Step 3: 테스트 실행 → 확인**
+- [x] **Step 3: 테스트 실행 → 확인**
 
 ```bash
 cd apps/api && npx jest __test__/training/training.session.guardian.test.ts --no-coverage
@@ -316,7 +316,7 @@ cd apps/api && npx jest __test__/training/training.session.guardian.test.ts --no
 
 테스트가 실패하면 `training.service.ts`의 `updateSession`(또는 해당 세션 수정 메서드) 시그니처를 확인하여 mock 조정.
 
-- [ ] **Step 4: training.service.ts에 GUARDIAN 알림 추가**
+- [x] **Step 4: training.service.ts에 GUARDIAN 알림 추가**
 
 `training.service.ts`의 세션 수정 메서드(날짜·시간 변경, 취소 처리)에 YOUTH 팀 분기 추가:
 
@@ -340,7 +340,7 @@ if (session.team?.type === "YOUTH") {
 
 취소 처리 메서드에도 동일 패턴 적용 (body만 "훈련이 취소됐습니다"로 변경).
 
-- [ ] **Step 5: 테스트 실행 → 통과 확인**
+- [x] **Step 5: 테스트 실행 → 통과 확인**
 
 ```bash
 cd apps/api && npx jest __test__/training/training.session.guardian.test.ts --no-coverage
@@ -348,7 +348,7 @@ cd apps/api && npx jest __test__/training/training.session.guardian.test.ts --no
 
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/training/ apps/api/__test__/training/training.session.guardian.test.ts
@@ -363,7 +363,7 @@ git commit -m "feat(youth): YOUTH 세션 변경·취소 시 GUARDIAN 즉시 알�
 - Modify: `apps/api/src/jobs/matchDayNotification.ts`
 - Modify: `apps/api/src/player-callup/player-callup.service.ts`
 
-- [ ] **Step 1: matchDayNotification.ts — GUARDIAN 포함**
+- [x] **Step 1: matchDayNotification.ts — GUARDIAN 포함**
 
 `matchDayNotification.ts`에서 경기 스쿼드 기반 알림 루프 내, 기존 선수 알림 발송 후 GUARDIAN 알림 추가:
 
@@ -404,7 +404,7 @@ async notifyGuardianMatchDayReminder(guardianUserId: number, match: { date: Date
 player: { select: { userId: true, guardianId: true } }
 ```
 
-- [ ] **Step 2: player-callup.service.ts — GUARDIAN 알림 추가**
+- [x] **Step 2: player-callup.service.ts — GUARDIAN 알림 추가**
 
 `player-callup.service.ts`의 `create` 메서드 내 기존 GM 알림 발송 후:
 
@@ -431,13 +431,13 @@ if (player.guardianId) {
 player: { select: { id: true, playerName: true, guardianId: true } }
 ```
 
-- [ ] **Step 3: TypeScript 확인**
+- [x] **Step 3: TypeScript 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | head -20
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/src/jobs/matchDayNotification.ts apps/api/src/player-callup/ apps/api/src/notification/
@@ -448,7 +448,7 @@ git commit -m "feat(youth): MATCH_DAY_REMINDER + CALLUP_REQUESTED GUARDIAN 수�
 
 ## Task 4: 전체 테스트
 
-- [ ] **Step 1: 전체 테스트 실행**
+- [x] **Step 1: 전체 테스트 실행**
 
 ```bash
 cd apps/api && npx jest --no-coverage
@@ -456,13 +456,13 @@ cd apps/api && npx jest --no-coverage
 
 Expected: 기존 + 신규 전체 PASS
 
-- [ ] **Step 2: TypeScript 최종 확인**
+- [x] **Step 2: TypeScript 최종 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add -A && git commit -m "feat(youth): Plan 4 완료 - GUARDIAN 알림 시스템"

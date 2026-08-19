@@ -1,6 +1,6 @@
 # 유소년 모듈 Plan 1: 기반 인프라 (GUARDIAN + YouthRegistration)
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** GUARDIAN 역할을 시스템에 추가하고, 유소년 선수 입단 신청(YouthRegistration) 워크플로우를 BE+FE 양쪽에 구현한다.
 
@@ -43,7 +43,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: Role enum에 GUARDIAN 추가**
+- [x] **Step 1: Role enum에 GUARDIAN 추가**
 
 `apps/api/prisma/schema.prisma`의 Role enum을 다음으로 수정:
 
@@ -58,7 +58,7 @@ enum Role {
 }
 ```
 
-- [ ] **Step 2: YouthRegistrationStatus enum 추가**
+- [x] **Step 2: YouthRegistrationStatus enum 추가**
 
 schema.prisma에 다음 enum을 추가 (Role enum 아래 적절한 위치):
 
@@ -71,7 +71,7 @@ enum YouthRegistrationStatus {
 }
 ```
 
-- [ ] **Step 3: Player 모델에 guardianId FK 추가**
+- [x] **Step 3: Player 모델에 guardianId FK 추가**
 
 Player 모델 내 `agentId Int?` 줄 바로 아래에 추가:
 
@@ -85,7 +85,7 @@ Player 모델의 relations 블록 내 `agent User? @relation(...)` 아래에 추
   guardian               User?                   @relation("GuardianPlayers", fields: [guardianId], references: [id])
 ```
 
-- [ ] **Step 4: YouthRegistration 모델 추가**
+- [x] **Step 4: YouthRegistration 모델 추가**
 
 schema.prisma에 PlayerCallup 모델 바로 위에 추가:
 
@@ -109,7 +109,7 @@ model YouthRegistration {
 }
 ```
 
-- [ ] **Step 5: User 모델에 역관계 추가**
+- [x] **Step 5: User 모델에 역관계 추가**
 
 User 모델의 relations 블록 내 `callups PlayerCallup[]` 아래에 추가:
 
@@ -119,7 +119,7 @@ User 모델의 relations 블록 내 `callups PlayerCallup[]` 아래에 추가:
   youthRegistrations     YouthRegistration[]     @relation("YouthRegistrationRequester")
 ```
 
-- [ ] **Step 6: Team 모델에 역관계 추가**
+- [x] **Step 6: Team 모델에 역관계 추가**
 
 Team 모델의 relations 블록에 추가:
 
@@ -127,7 +127,7 @@ Team 모델의 relations 블록에 추가:
   youthRegistrations YouthRegistration[]
 ```
 
-- [ ] **Step 7: NotificationType enum에 항목 추가**
+- [x] **Step 7: NotificationType enum에 항목 추가**
 
 schema.prisma의 NotificationType enum 마지막 항목(`ATTENDANCE_PENALTY_PLAYER`) 아래에 추가:
 
@@ -138,7 +138,7 @@ schema.prisma의 NotificationType enum 마지막 항목(`ATTENDANCE_PENALTY_PLAY
   INCIDENT_REPORT_SUBMITTED
 ```
 
-- [ ] **Step 8: 마이그레이션 실행**
+- [x] **Step 8: 마이그레이션 실행**
 
 ```bash
 cd apps/api
@@ -147,7 +147,7 @@ npx prisma migrate dev --name add-guardian-youth-registration
 
 Expected: 마이그레이션 파일 생성 + DB 적용 성공 출력
 
-- [ ] **Step 9: Prisma client 재생성**
+- [x] **Step 9: Prisma client 재생성**
 
 ```bash
 npx prisma generate
@@ -155,7 +155,7 @@ npx prisma generate
 
 Expected: `Generated Prisma Client` 성공 메시지
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/
@@ -169,7 +169,7 @@ git commit -m "feat(youth): schema - GUARDIAN role, YouthRegistration, Player.gu
 **Files:**
 - Modify: `apps/api/src/lib/permissions.ts`
 
-- [ ] **Step 1: failing test 작성**
+- [x] **Step 1: failing test 작성**
 
 `apps/api/__test__/lib/permissions.test.ts` 생성:
 
@@ -191,7 +191,7 @@ describe("GUARDIAN permissions", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 → 실패 확인**
+- [x] **Step 2: 테스트 실행 → 실패 확인**
 
 ```bash
 cd apps/api && npx jest __test__/lib/permissions.test.ts --no-coverage
@@ -199,7 +199,7 @@ cd apps/api && npx jest __test__/lib/permissions.test.ts --no-coverage
 
 Expected: FAIL — `GUARDIAN` is not assignable to type `Role` (TypeScript 에러 또는 런타임 undefined)
 
-- [ ] **Step 3: permissions.ts에 GUARDIAN 추가**
+- [x] **Step 3: permissions.ts에 GUARDIAN 추가**
 
 `apps/api/src/lib/permissions.ts`의 `ROLE_PERMISSIONS` 객체에 GUARDIAN 항목 추가:
 
@@ -214,7 +214,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
 }
 ```
 
-- [ ] **Step 4: 테스트 실행 → 통과 확인**
+- [x] **Step 4: 테스트 실행 → 통과 확인**
 
 ```bash
 cd apps/api && npx jest __test__/lib/permissions.test.ts --no-coverage
@@ -222,7 +222,7 @@ cd apps/api && npx jest __test__/lib/permissions.test.ts --no-coverage
 
 Expected: PASS (3 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/lib/permissions.ts apps/api/__test__/lib/permissions.test.ts
@@ -236,7 +236,7 @@ git commit -m "feat(youth): add GUARDIAN to role permissions"
 **Files:**
 - Modify: `apps/api/src/notification/notification.repo.ts`
 
-- [ ] **Step 1: failing test 작성**
+- [x] **Step 1: failing test 작성**
 
 `apps/api/__test__/notification/notification.repo.guardian.test.ts` 생성:
 
@@ -280,7 +280,7 @@ describe("NotificationRepository - createForGuardian", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 → 실패 확인**
+- [x] **Step 2: 테스트 실행 → 실패 확인**
 
 ```bash
 cd apps/api && npx jest __test__/notification/notification.repo.guardian.test.ts --no-coverage
@@ -288,7 +288,7 @@ cd apps/api && npx jest __test__/notification/notification.repo.guardian.test.ts
 
 Expected: FAIL — `createForGuardian is not a function`
 
-- [ ] **Step 3: notification.repo.ts에 메서드 추가**
+- [x] **Step 3: notification.repo.ts에 메서드 추가**
 
 `apps/api/src/notification/notification.repo.ts`의 `createForUser` 메서드 바로 아래에 추가:
 
@@ -300,7 +300,7 @@ Expected: FAIL — `createForGuardian is not a function`
   }
 ```
 
-- [ ] **Step 4: 테스트 실행 → 통과 확인**
+- [x] **Step 4: 테스트 실행 → 통과 확인**
 
 ```bash
 cd apps/api && npx jest __test__/notification/notification.repo.guardian.test.ts --no-coverage
@@ -308,7 +308,7 @@ cd apps/api && npx jest __test__/notification/notification.repo.guardian.test.ts
 
 Expected: PASS (1 test)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/notification/notification.repo.ts apps/api/__test__/notification/notification.repo.guardian.test.ts
@@ -323,7 +323,7 @@ git commit -m "feat(youth): add createForGuardian to NotificationRepository"
 - Create: `apps/api/src/youth-registration/dto/youth-registration.dto.ts`
 - Create: `apps/api/src/youth-registration/youth-registration.repo.ts`
 
-- [ ] **Step 1: DTO 파일 작성**
+- [x] **Step 1: DTO 파일 작성**
 
 `apps/api/src/youth-registration/dto/youth-registration.dto.ts` 생성:
 
@@ -352,7 +352,7 @@ export type RejectYouthRegistrationDto = z.infer<typeof RejectYouthRegistrationS
 export type YouthRegistrationListQuery = z.infer<typeof YouthRegistrationListQuerySchema>;
 ```
 
-- [ ] **Step 2: Repository 작성**
+- [x] **Step 2: Repository 작성**
 
 `apps/api/src/youth-registration/youth-registration.repo.ts` 생성:
 
@@ -434,7 +434,7 @@ export class YouthRegistrationRepository {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/youth-registration/
@@ -449,7 +449,7 @@ git commit -m "feat(youth): YouthRegistration DTO and Repository"
 - Create: `apps/api/src/youth-registration/youth-registration.service.ts`
 - Create: `apps/api/__test__/youth-registration/youth-registration.service.test.ts`
 
-- [ ] **Step 1: failing test 작성**
+- [x] **Step 1: failing test 작성**
 
 `apps/api/__test__/youth-registration/youth-registration.service.test.ts` 생성:
 
@@ -559,7 +559,7 @@ describe("YouthRegistrationService - contract", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 → 실패 확인**
+- [x] **Step 2: 테스트 실행 → 실패 확인**
 
 ```bash
 cd apps/api && npx jest __test__/youth-registration/youth-registration.service.test.ts --no-coverage
@@ -567,7 +567,7 @@ cd apps/api && npx jest __test__/youth-registration/youth-registration.service.t
 
 Expected: FAIL — `YouthRegistrationService` not found
 
-- [ ] **Step 3: Service 구현**
+- [x] **Step 3: Service 구현**
 
 `apps/api/src/youth-registration/youth-registration.service.ts` 생성:
 
@@ -650,7 +650,7 @@ export class YouthRegistrationService {
 }
 ```
 
-- [ ] **Step 4: 테스트 실행 → 통과 확인**
+- [x] **Step 4: 테스트 실행 → 통과 확인**
 
 ```bash
 cd apps/api && npx jest __test__/youth-registration/youth-registration.service.test.ts --no-coverage
@@ -658,7 +658,7 @@ cd apps/api && npx jest __test__/youth-registration/youth-registration.service.t
 
 Expected: PASS (6 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/youth-registration/youth-registration.service.ts apps/api/__test__/youth-registration/
@@ -674,7 +674,7 @@ git commit -m "feat(youth): YouthRegistrationService with TDD"
 - Create: `apps/api/src/youth-registration/youth-registration.routes.ts`
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: Controller 작성**
+- [x] **Step 1: Controller 작성**
 
 `apps/api/src/youth-registration/youth-registration.controller.ts` 생성:
 
@@ -735,7 +735,7 @@ export class YouthRegistrationController {
 }
 ```
 
-- [ ] **Step 2: Routes 작성**
+- [x] **Step 2: Routes 작성**
 
 `apps/api/src/youth-registration/youth-registration.routes.ts` 생성:
 
@@ -774,7 +774,7 @@ router.patch("/:id/guardian-approve", auth, controller.guardianApprove);
 export default router;
 ```
 
-- [ ] **Step 3: apiRouter.ts에 라우트 등록**
+- [x] **Step 3: apiRouter.ts에 라우트 등록**
 
 `apps/api/src/apiRouter.ts`에 import 추가:
 
@@ -788,7 +788,7 @@ import youthRegistrationRouter from "./youth-registration/youth-registration.rou
 apiRouter.use("/youth-registrations", youthRegistrationRouter);
 ```
 
-- [ ] **Step 4: 서버 기동 확인**
+- [x] **Step 4: 서버 기동 확인**
 
 ```bash
 cd apps/api && npm run dev
@@ -803,7 +803,7 @@ curl -s http://localhost:4000/api/youth-registrations -H "Authorization: Bearer 
 
 Expected: `[]` (빈 배열) 또는 인증 에러 (서버 기동 확인용)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/youth-registration/ apps/api/src/apiRouter.ts
@@ -817,13 +817,13 @@ git commit -m "feat(youth): YouthRegistration controller, routes, API registrati
 **Files:**
 - Modify: `apps/api/src/auth/auth.service.ts` (필요 시)
 
-- [ ] **Step 1: 기존 inviteUser가 GUARDIAN를 수용하는지 확인**
+- [x] **Step 1: 기존 inviteUser가 GUARDIAN를 수용하는지 확인**
 
 ```bash
 grep -n "inviteUser\|role.*valid\|allowedRole\|AGENT" apps/api/src/auth/auth.service.ts | head -20
 ```
 
-- [ ] **Step 2: GUARDIAN 역할 허용 여부 체크**
+- [x] **Step 2: GUARDIAN 역할 허용 여부 체크**
 
 `inviteUser` 또는 역할 검증 로직에서 허용 역할 목록을 하드코딩한 경우 GUARDIAN 추가. 예시 패턴:
 
@@ -836,7 +836,7 @@ const INVITABLE_ROLES = ["ADMIN", "FRONT_OFFICE", "COACHING_STAFF", "PLAYER", "A
 
 실제 코드 구조에 따라 적용. 없으면 스킵.
 
-- [ ] **Step 3: Commit (변경 있는 경우)**
+- [x] **Step 3: Commit (변경 있는 경우)**
 
 ```bash
 git add apps/api/src/auth/auth.service.ts
@@ -851,7 +851,7 @@ git commit -m "feat(youth): allow GUARDIAN role in invite flow"
 - Create: `football/src/types/youth-registration.ts`
 - Create: `football/src/services/youthRegistration.service.ts`
 
-- [ ] **Step 1: 타입 정의**
+- [x] **Step 1: 타입 정의**
 
 `football/src/types/youth-registration.ts` 생성:
 
@@ -882,7 +882,7 @@ export interface CreateYouthRegistrationPayload {
 }
 ```
 
-- [ ] **Step 2: API 서비스 작성**
+- [x] **Step 2: API 서비스 작성**
 
 `football/src/services/youthRegistration.service.ts` 생성:
 
@@ -911,7 +911,7 @@ export const youthRegistrationApi = {
 };
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/types/youth-registration.ts football/src/services/youthRegistration.service.ts
@@ -927,7 +927,7 @@ git commit -m "feat(youth): FE types and API service for YouthRegistration"
 - Create: `football/src/pages/youth/YouthRegistrationPage.tsx`
 - Modify: `football/src/App.tsx`
 
-- [ ] **Step 1: 생성 다이얼로그 작성**
+- [x] **Step 1: 생성 다이얼로그 작성**
 
 `football/src/pages/youth/YouthRegistrationFormDialog.tsx` 생성:
 
@@ -1016,7 +1016,7 @@ export function YouthRegistrationFormDialog({ open, onClose, onCreated, teams }:
 }
 ```
 
-- [ ] **Step 2: 목록 페이지 작성**
+- [x] **Step 2: 목록 페이지 작성**
 
 `football/src/pages/youth/YouthRegistrationPage.tsx` 생성:
 
@@ -1108,7 +1108,7 @@ export default function YouthRegistrationPage() {
 }
 ```
 
-- [ ] **Step 3: App.tsx에 라우트 추가**
+- [x] **Step 3: App.tsx에 라우트 추가**
 
 `football/src/App.tsx`에 import 추가:
 
@@ -1122,7 +1122,7 @@ Routes 블록에 추가 (`/player-callups` 라우트 아래):
 <Route path="/youth-registrations" element={<YouthRegistrationPage />} />
 ```
 
-- [ ] **Step 4: 브라우저에서 동작 확인**
+- [x] **Step 4: 브라우저에서 동작 확인**
 
 ```bash
 cd football && npm run dev
@@ -1133,7 +1133,7 @@ cd football && npm run dev
 - "+ 신청 등록" 버튼 클릭 → 다이얼로그 열림 확인
 - 폼 입력 후 제출 → ADMIN 토큰으로 정상 등록 확인
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/pages/youth/ football/src/App.tsx football/src/types/youth-registration.ts football/src/services/youthRegistration.service.ts
@@ -1144,7 +1144,7 @@ git commit -m "feat(youth): YouthRegistration FE - 목록 페이지 + 생성 다
 
 ## Task 10: 전체 테스트 + 최종 점검
 
-- [ ] **Step 1: 전체 BE 테스트 실행**
+- [x] **Step 1: 전체 BE 테스트 실행**
 
 ```bash
 cd apps/api && npx jest --no-coverage
@@ -1152,7 +1152,7 @@ cd apps/api && npx jest --no-coverage
 
 Expected: 기존 테스트 전부 PASS, 신규 테스트 PASS
 
-- [ ] **Step 2: TypeScript 컴파일 확인**
+- [x] **Step 2: TypeScript 컴파일 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit
@@ -1161,7 +1161,7 @@ cd football && npx tsc --noEmit
 
 Expected: 에러 없음
 
-- [ ] **Step 3: 시나리오 체크**
+- [x] **Step 3: 시나리오 체크**
 
 다음 흐름을 수동으로 확인:
 1. ADMIN이 입단 신청 생성 → `PENDING` 상태 확인
@@ -1169,7 +1169,7 @@ Expected: 에러 없음
 3. ADMIN이 `/youth-registrations/:id/contract` PATCH (nationalityId 포함) → Player 레코드 생성 확인
 4. 다른 GUARDIAN가 승인 시도 → 403 반환 확인
 
-- [ ] **Step 4: 최종 Commit**
+- [x] **Step 4: 최종 Commit**
 
 ```bash
 git add -A

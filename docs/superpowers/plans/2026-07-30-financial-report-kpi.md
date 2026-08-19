@@ -8,6 +8,10 @@
 
 **Tech Stack:** Prisma (PostgreSQL), Express + TypeScript + multer (BE), React + TypeScript + sonner + react-i18next (FE), Jest (BE unit test)
 
+## ✅ 구현 완료 (2026-08-19 확인)
+
+`FinancialReport` 모델 + BE API + FE `FinancialReportPage.tsx` + AppShell nav 등록 모두 완료. RATIO 임금상한 계산 `wage-cap.service.ts`에 반영. 잔여 구현 없음.
+
 ---
 
 ## 파일 맵

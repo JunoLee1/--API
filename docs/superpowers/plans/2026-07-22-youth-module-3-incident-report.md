@@ -1,6 +1,6 @@
 # 유소년 모듈 Plan 3: 사고 보고서 (IncidentReport + ExternalReport 수정)
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 유소년 전용 사고 보고서(IncidentReport) 엔티티를 구현하고, 학부모 알림 발송 및 공기관 외부 보고서 연계까지 완성한다. ExternalReport의 injuryId를 optional로 전환해 IncidentReport에서도 생성 가능하게 한다.
 
@@ -42,7 +42,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: IncidentReportType enum 추가**
+- [x] **Step 1: IncidentReportType enum 추가**
 
 schema.prisma에 추가:
 
@@ -59,7 +59,7 @@ enum IncidentType {
 }
 ```
 
-- [ ] **Step 2: IncidentReport 모델 추가**
+- [x] **Step 2: IncidentReport 모델 추가**
 
 YouthRegistration 모델 아래에 추가:
 
@@ -90,7 +90,7 @@ model IncidentReport {
 }
 ```
 
-- [ ] **Step 3: ExternalReport 수정 — injuryId optional + incidentReportId 추가**
+- [x] **Step 3: ExternalReport 수정 — injuryId optional + incidentReportId 추가**
 
 `model ExternalReport` 내:
 ```prisma
@@ -114,7 +114,7 @@ incidentReport  IncidentReport?  @relation(fields: [incidentReportId], reference
 @@unique([incidentReportId, target])
 ```
 
-- [ ] **Step 4: 역관계 추가**
+- [x] **Step 4: 역관계 추가**
 
 Player 모델에:
 ```prisma
@@ -147,7 +147,7 @@ incidentReports    IncidentReport[]
 externalReports    ExternalReport[]  // 이미 있는지 확인 후 없으면 추가
 ```
 
-- [ ] **Step 5: 마이그레이션 실행**
+- [x] **Step 5: 마이그레이션 실행**
 
 ```bash
 cd apps/api
@@ -156,13 +156,13 @@ npx prisma migrate dev --name add-incident-report-external-report-update
 
 Expected: 마이그레이션 성공. `injuryId nullable` 경고가 뜰 수 있으나 정상.
 
-- [ ] **Step 6: Prisma generate**
+- [x] **Step 6: Prisma generate**
 
 ```bash
 npx prisma generate
 ```
 
-- [ ] **Step 7: 기존 ExternalReport 쿼리 TypeScript 확인**
+- [x] **Step 7: 기존 ExternalReport 쿼리 TypeScript 확인**
 
 ```bash
 npx tsc --noEmit 2>&1 | grep -i "externalReport\|injuryId" | head -10
@@ -170,7 +170,7 @@ npx tsc --noEmit 2>&1 | grep -i "externalReport\|injuryId" | head -10
 
 `injuryId`가 optional이 됐으므로 기존 injury.service.ts의 `injuryId` 사용 부분에서 타입 에러가 나면 `injuryId: injuryId` 형태로 명시적 전달하도록 수정.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/
@@ -185,7 +185,7 @@ git commit -m "feat(youth): IncidentReport 모델 + ExternalReport injuryId opti
 - Create: `apps/api/src/incident-report/dto/incident-report.dto.ts`
 - Create: `apps/api/src/incident-report/incident-report.repo.ts`
 
-- [ ] **Step 1: DTO 작성**
+- [x] **Step 1: DTO 작성**
 
 `apps/api/src/incident-report/dto/incident-report.dto.ts`:
 
@@ -220,7 +220,7 @@ export type SignIncidentReportDto = z.infer<typeof SignIncidentReportSchema>;
 export type IncidentReportListQuery = z.infer<typeof IncidentReportListQuerySchema>;
 ```
 
-- [ ] **Step 2: Repository 작성**
+- [x] **Step 2: Repository 작성**
 
 `apps/api/src/incident-report/incident-report.repo.ts`:
 
@@ -299,7 +299,7 @@ export class IncidentReportRepository {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/incident-report/dto/ apps/api/src/incident-report/incident-report.repo.ts
@@ -314,7 +314,7 @@ git commit -m "feat(youth): IncidentReport DTO and Repository"
 - Create: `apps/api/src/incident-report/incident-report.service.ts`
 - Create: `apps/api/__test__/incident-report/incident-report.service.test.ts`
 
-- [ ] **Step 1: failing test 작성**
+- [x] **Step 1: failing test 작성**
 
 `apps/api/__test__/incident-report/incident-report.service.test.ts`:
 
@@ -411,7 +411,7 @@ describe("IncidentReportService - sign", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 → 실패 확인**
+- [x] **Step 2: 테스트 실행 → 실패 확인**
 
 ```bash
 cd apps/api && npx jest __test__/incident-report/incident-report.service.test.ts --no-coverage
@@ -419,7 +419,7 @@ cd apps/api && npx jest __test__/incident-report/incident-report.service.test.ts
 
 Expected: FAIL
 
-- [ ] **Step 3: Service 구현**
+- [x] **Step 3: Service 구현**
 
 `apps/api/src/incident-report/incident-report.service.ts`:
 
@@ -511,7 +511,7 @@ export class IncidentReportService {
 }
 ```
 
-- [ ] **Step 4: 테스트 실행 → 통과 확인**
+- [x] **Step 4: 테스트 실행 → 통과 확인**
 
 ```bash
 cd apps/api && npx jest __test__/incident-report/incident-report.service.test.ts --no-coverage
@@ -519,7 +519,7 @@ cd apps/api && npx jest __test__/incident-report/incident-report.service.test.ts
 
 Expected: PASS (6 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/incident-report/ apps/api/__test__/incident-report/
@@ -535,7 +535,7 @@ git commit -m "feat(youth): IncidentReportService TDD"
 - Create: `apps/api/src/incident-report/incident-report.routes.ts`
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: Controller 작성**
+- [x] **Step 1: Controller 작성**
 
 `apps/api/src/incident-report/incident-report.controller.ts`:
 
@@ -586,7 +586,7 @@ export class IncidentReportController {
 }
 ```
 
-- [ ] **Step 2: Routes 작성**
+- [x] **Step 2: Routes 작성**
 
 `apps/api/src/incident-report/incident-report.routes.ts`:
 
@@ -617,7 +617,7 @@ router.patch("/:id/sign", auth, controller.sign);
 export default router;
 ```
 
-- [ ] **Step 3: apiRouter.ts에 등록**
+- [x] **Step 3: apiRouter.ts에 등록**
 
 ```typescript
 import incidentReportRouter from "./incident-report/incident-report.routes";
@@ -625,7 +625,7 @@ import incidentReportRouter from "./incident-report/incident-report.routes";
 apiRouter.use("/incident-reports", incidentReportRouter);
 ```
 
-- [ ] **Step 4: 서버 기동 확인**
+- [x] **Step 4: 서버 기동 확인**
 
 ```bash
 cd apps/api && npm run dev
@@ -633,7 +633,7 @@ cd apps/api && npm run dev
 
 Expected: 에러 없이 시작
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/incident-report/ apps/api/src/apiRouter.ts
@@ -651,7 +651,7 @@ git commit -m "feat(youth): IncidentReport controller, routes, API 등록"
 - Create: `football/src/pages/youth/IncidentReportPage.tsx`
 - Modify: `football/src/App.tsx`
 
-- [ ] **Step 1: 타입 정의**
+- [x] **Step 1: 타입 정의**
 
 `football/src/types/incident-report.ts`:
 
@@ -688,7 +688,7 @@ export interface CreateIncidentReportPayload {
 }
 ```
 
-- [ ] **Step 2: API 서비스**
+- [x] **Step 2: API 서비스**
 
 `football/src/services/incidentReport.service.ts`:
 
@@ -714,7 +714,7 @@ export const incidentReportApi = {
 }
 ```
 
-- [ ] **Step 3: 생성 다이얼로그**
+- [x] **Step 3: 생성 다이얼로그**
 
 `football/src/pages/youth/IncidentReportFormDialog.tsx`:
 
@@ -810,7 +810,7 @@ export function IncidentReportFormDialog({ open, onClose, onCreated, players }: 
 }
 ```
 
-- [ ] **Step 4: 목록 페이지**
+- [x] **Step 4: 목록 페이지**
 
 `football/src/pages/youth/IncidentReportPage.tsx`:
 
@@ -902,7 +902,7 @@ export default function IncidentReportPage() {
 }
 ```
 
-- [ ] **Step 5: App.tsx에 라우트 추가**
+- [x] **Step 5: App.tsx에 라우트 추가**
 
 ```typescript
 import IncidentReportPage from './pages/youth/IncidentReportPage'
@@ -910,21 +910,21 @@ import IncidentReportPage from './pages/youth/IncidentReportPage'
 <Route path="/incident-reports" element={<IncidentReportPage />} />
 ```
 
-- [ ] **Step 6: 브라우저 확인**
+- [x] **Step 6: 브라우저 확인**
 
 `/incident-reports` 페이지에서:
 1. 보고서 초안 작성 → DRAFT 상태 확인
 2. 제출 버튼 → SUBMITTED 전환 + GUARDIAN 알림 발송 확인
 3. 감독 서명 + 의무팀 서명 → SIGNED 전환 + ExternalReport 생성 확인
 
-- [ ] **Step 7: 전체 테스트**
+- [x] **Step 7: 전체 테스트**
 
 ```bash
 cd apps/api && npx jest --no-coverage && npx tsc --noEmit
 cd ../football && npx tsc --noEmit
 ```
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add -A

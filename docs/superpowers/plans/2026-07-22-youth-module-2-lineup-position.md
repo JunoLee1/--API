@@ -1,6 +1,6 @@
 # 유소년 모듈 Plan 2: 라인업 포지션 기능 (Mismatch 경고 + PDI)
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** FIRST_TEAM 라인업에 포지션 Mismatch 비차단 경고 배지를 추가하고, 유소년 선수 상세 페이지에 Position Diversity Index 시각화를 구현한다.
 
@@ -39,13 +39,13 @@
 **Files:**
 - Modify: `apps/api/src/match/match.lineup.repo.ts:59-65`
 
-- [ ] **Step 1: 현재 findMatchInfo 확인**
+- [x] **Step 1: 현재 findMatchInfo 확인**
 
 ```bash
 grep -n "findMatchInfo\|homeTeamName\|teamId\|team" apps/api/src/match/match.lineup.repo.ts
 ```
 
-- [ ] **Step 2: findMatchInfo 수정**
+- [x] **Step 2: findMatchInfo 수정**
 
 `findMatchInfo` 메서드의 `select`에 `team` 포함:
 
@@ -64,7 +64,7 @@ findMatchInfo(matchId: number) {
 }
 ```
 
-- [ ] **Step 3: match.lineup.service.ts에서 matchInfo 사용 확인**
+- [x] **Step 3: match.lineup.service.ts에서 matchInfo 사용 확인**
 
 `confirmLineup` 메서드가 `matchInfo`를 알림 발송에 쓰고 있으므로 타입 변경 확인:
 
@@ -74,7 +74,7 @@ grep -n "matchInfo\." apps/api/src/match/match.lineup.service.ts
 
 타입 에러 없으면 통과. 에러 있으면 `matchInfo.team?.type` 패턴으로 optional 처리.
 
-- [ ] **Step 4: MatchLineup GET API 응답에 teamType 포함**
+- [x] **Step 4: MatchLineup GET API 응답에 teamType 포함**
 
 `apps/api/src/match/match.lineup.service.ts`의 `getLineup` 메서드를 수정해 team.type을 응답에 포함:
 
@@ -104,7 +104,7 @@ async getLineup(matchId: number) {
 }
 ```
 
-- [ ] **Step 5: TypeScript 확인**
+- [x] **Step 5: TypeScript 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | head -20
@@ -112,7 +112,7 @@ cd apps/api && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 에러 없음
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/match/match.lineup.repo.ts apps/api/src/match/match.lineup.service.ts
@@ -127,7 +127,7 @@ git commit -m "feat(youth): lineup API에 teamType 포함"
 - Modify: `football/src/types/lineup.ts`
 - Modify: `football/src/pages/matches/MatchLineupPage.tsx`
 
-- [ ] **Step 1: lineup.ts에 teamType 추가**
+- [x] **Step 1: lineup.ts에 teamType 추가**
 
 `football/src/types/lineup.ts`의 `MatchLineup` 인터페이스에 필드 추가:
 
@@ -142,7 +142,7 @@ export interface MatchLineup {
 }
 ```
 
-- [ ] **Step 2: SlotCard 컴포넌트에 Mismatch 배지 추가**
+- [x] **Step 2: SlotCard 컴포넌트에 Mismatch 배지 추가**
 
 `MatchLineupPage.tsx`의 `SlotCard` 컴포넌트 props에 `showMismatch` 추가 후 배지 렌더링:
 
@@ -177,7 +177,7 @@ function SlotCard({ player, slotDef, onDrop, onRemove, showMismatch }: SlotCardP
 }
 ```
 
-- [ ] **Step 3: MatchLineupPage에서 showMismatch 결정**
+- [x] **Step 3: MatchLineupPage에서 showMismatch 결정**
 
 `MatchLineupPage` 컴포넌트 내부에서 `lineup.teamType`으로 분기:
 
@@ -196,7 +196,7 @@ const showMismatch = lineup?.teamType === 'FIRST_TEAM'
 />
 ```
 
-- [ ] **Step 4: 브라우저 확인**
+- [x] **Step 4: 브라우저 확인**
 
 ```bash
 cd football && npm run dev
@@ -206,7 +206,7 @@ cd football && npm run dev
 2. YOUTH 팀 경기 라인업 → 배지 없음 확인
 3. 저장은 양쪽 다 정상 동작 확인 (비차단)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/types/lineup.ts football/src/pages/matches/MatchLineupPage.tsx
@@ -223,7 +223,7 @@ git commit -m "feat(youth): FIRST_TEAM 라인업 포지션 Mismatch 비차단 �
 - Modify: `apps/api/src/player/player.routes.ts`
 - Create: `apps/api/__test__/player/player.pdi.test.ts`
 
-- [ ] **Step 1: failing test 작성**
+- [x] **Step 1: failing test 작성**
 
 `apps/api/__test__/player/player.pdi.test.ts` 생성:
 
@@ -284,7 +284,7 @@ describe("PlayerService - getPositionDiversity", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 → 실패 확인**
+- [x] **Step 2: 테스트 실행 → 실패 확인**
 
 ```bash
 cd apps/api && npx jest __test__/player/player.pdi.test.ts --no-coverage
@@ -292,7 +292,7 @@ cd apps/api && npx jest __test__/player/player.pdi.test.ts --no-coverage
 
 Expected: FAIL — `getPositionDiversity is not a function`
 
-- [ ] **Step 3: player.repo.ts에 getPositionDiversity 추가**
+- [x] **Step 3: player.repo.ts에 getPositionDiversity 추가**
 
 `apps/api/src/player/player.repo.ts`에 메서드 추가:
 
@@ -322,7 +322,7 @@ async getPositionDiversity(playerId: string): Promise<{ position: string; totalM
 
 > **Note:** slotKey(예: "GK", "CB1", "LW")를 Position enum 값으로 변환하는 매핑은 FE의 formation-layouts.ts와 동일한 로직이 필요하나, PDI 집계는 slotKey 자체를 그룹 키로 써도 의미가 통하므로 FE에서 매핑해서 표시한다.
 
-- [ ] **Step 4: player.service.ts에 getPositionDiversity 추가**
+- [x] **Step 4: player.service.ts에 getPositionDiversity 추가**
 
 ```typescript
 async getPositionDiversity(playerId: string) {
@@ -344,7 +344,7 @@ async getPositionDiversity(playerId: string) {
 }
 ```
 
-- [ ] **Step 5: 테스트 실행 → 통과 확인**
+- [x] **Step 5: 테스트 실행 → 통과 확인**
 
 ```bash
 cd apps/api && npx jest __test__/player/player.pdi.test.ts --no-coverage
@@ -352,7 +352,7 @@ cd apps/api && npx jest __test__/player/player.pdi.test.ts --no-coverage
 
 Expected: PASS (4 tests)
 
-- [ ] **Step 6: player.routes.ts에 엔드포인트 등록**
+- [x] **Step 6: player.routes.ts에 엔드포인트 등록**
 
 `apps/api/src/player/player.routes.ts`에 추가 (기존 `router.get("/:id", ...)` 아래):
 
@@ -371,7 +371,7 @@ getPositionDiversity = async (req: Request, res: Response, next: NextFunction) =
 };
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add apps/api/src/player/ apps/api/__test__/player/player.pdi.test.ts
@@ -387,7 +387,7 @@ git commit -m "feat(youth): Position Diversity Index API (GET /players/:id/posit
 - Create: `football/src/components/players/PositionDiversityChart.tsx`
 - Modify: `football/src/pages/players/PlayerDetailPage.tsx`
 
-- [ ] **Step 1: PDI API 서비스**
+- [x] **Step 1: PDI API 서비스**
 
 `football/src/services/playerPdi.service.ts` 생성:
 
@@ -406,7 +406,7 @@ export const playerPdiApi = {
 }
 ```
 
-- [ ] **Step 2: 파이차트 컴포넌트 작성**
+- [x] **Step 2: 파이차트 컴포넌트 작성**
 
 `football/src/components/players/PositionDiversityChart.tsx` 생성:
 
@@ -468,7 +468,7 @@ export function PositionDiversityChart({ data }: Props) {
 }
 ```
 
-- [ ] **Step 3: PlayerDetailPage에 PDI 섹션 추가**
+- [x] **Step 3: PlayerDetailPage에 PDI 섹션 추가**
 
 `football/src/pages/players/PlayerDetailPage.tsx`에서:
 
@@ -502,7 +502,7 @@ if (playerData.team?.type === 'YOUTH') {
 )}
 ```
 
-- [ ] **Step 4: 브라우저 확인**
+- [x] **Step 4: 브라우저 확인**
 
 유소년 선수 상세 페이지:
 - PDI 섹션 렌더링 확인
@@ -511,7 +511,7 @@ if (playerData.team?.type === 'YOUTH') {
 성인 선수 상세 페이지:
 - PDI 섹션 미표시 확인
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/services/playerPdi.service.ts football/src/components/players/PositionDiversityChart.tsx football/src/pages/players/PlayerDetailPage.tsx
@@ -522,7 +522,7 @@ git commit -m "feat(youth): Position Diversity Index FE - 파이차트 시각화
 
 ## Task 5: 전체 테스트
 
-- [ ] **Step 1: BE 테스트**
+- [x] **Step 1: BE 테스트**
 
 ```bash
 cd apps/api && npx jest --no-coverage
@@ -530,7 +530,7 @@ cd apps/api && npx jest --no-coverage
 
 Expected: 기존 + 신규 전체 PASS
 
-- [ ] **Step 2: TypeScript 확인**
+- [x] **Step 2: TypeScript 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit && cd ../football && npx tsc --noEmit
@@ -538,7 +538,7 @@ cd apps/api && npx tsc --noEmit && cd ../football && npx tsc --noEmit
 
 Expected: 에러 없음
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add -A && git commit -m "feat(youth): Plan 2 완료 - Mismatch 경고 + PDI"

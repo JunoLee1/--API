@@ -1,6 +1,6 @@
 # 유소년 모듈 Plan 8: 아카데미 회비 관리 (Academy Fee Management)
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 유소년 아카데미 회비 청구·수납·미납 관리 전 과정을 자동화하고, GM 재무 KPI 대시보드와 라이트 모드 수동 수납을 지원한다.
 
@@ -52,7 +52,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: FeeStatus enum 추가**
+- [x] **Step 1: FeeStatus enum 추가**
 
 ```prisma
 enum FeeStatus {
@@ -64,7 +64,7 @@ enum FeeStatus {
 }
 ```
 
-- [ ] **Step 2: NotificationType에 회비 관련 타입 추가**
+- [x] **Step 2: NotificationType에 회비 관련 타입 추가**
 
 `enum NotificationType` 블록에 추가:
 ```prisma
@@ -74,7 +74,7 @@ enum FeeStatus {
   FEE_ACCOUNT_LOCKED
 ```
 
-- [ ] **Step 3: AcademyFee 모델 추가** (YouthRegistration 아래)
+- [x] **Step 3: AcademyFee 모델 추가** (YouthRegistration 아래)
 
 ```prisma
 model AcademyFee {
@@ -99,7 +99,7 @@ model AcademyFee {
 }
 ```
 
-- [ ] **Step 4: 역관계 추가**
+- [x] **Step 4: 역관계 추가**
 
 Player 모델에:
 ```prisma
@@ -111,7 +111,7 @@ User 모델에:
 guardianFees AcademyFee[] @relation("GuardianFees")
 ```
 
-- [ ] **Step 5: 마이그레이션 실행**
+- [x] **Step 5: 마이그레이션 실행**
 
 ```bash
 cd apps/api && npx prisma migrate dev --name add-academy-fee
@@ -126,19 +126,19 @@ echo "-- Applied via db push" > prisma/migrations/${TIMESTAMP}_add_academy_fee/m
 npx prisma migrate resolve --applied ${TIMESTAMP}_add_academy_fee
 ```
 
-- [ ] **Step 6: Generate**
+- [x] **Step 6: Generate**
 
 ```bash
 npx prisma generate
 ```
 
-- [ ] **Step 7: TypeScript 확인**
+- [x] **Step 7: TypeScript 확인**
 
 ```bash
 npx tsc --noEmit 2>&1 | grep -v "country.repo\|monthlyAttendance" | head -20
 ```
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add apps/api/prisma/
@@ -153,7 +153,7 @@ git commit -m "feat(youth): AcademyFee 모델 + FeeStatus enum + 회비 알림 �
 - Create: `apps/api/src/academy-fee/dto/academy-fee.dto.ts`
 - Create: `apps/api/src/academy-fee/academy-fee.repo.ts`
 
-- [ ] **Step 1: DTO 작성**
+- [x] **Step 1: DTO 작성**
 
 ```typescript
 // apps/api/src/academy-fee/dto/academy-fee.dto.ts
@@ -178,7 +178,7 @@ export interface FeeListQuery {
 }
 ```
 
-- [ ] **Step 2: Repository 작성**
+- [x] **Step 2: Repository 작성**
 
 ```typescript
 // apps/api/src/academy-fee/academy-fee.repo.ts
@@ -282,7 +282,7 @@ export class AcademyFeeRepository {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/academy-fee/
@@ -297,7 +297,7 @@ git commit -m "feat(youth): AcademyFee DTO and Repository"
 - Create: `apps/api/src/academy-fee/academy-fee.service.ts`
 - Create: `apps/api/__test__/academy-fee/academy-fee.service.test.ts`
 
-- [ ] **Step 1: failing test 작성**
+- [x] **Step 1: failing test 작성**
 
 ```typescript
 // apps/api/__test__/academy-fee/academy-fee.service.test.ts
@@ -392,13 +392,13 @@ describe("AcademyFeeService - processOverdue", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 → 실패 확인**
+- [x] **Step 2: 테스트 실행 → 실패 확인**
 
 ```bash
 cd apps/api && npx jest __test__/academy-fee/academy-fee.service.test.ts --no-coverage 2>&1 | tail -10
 ```
 
-- [ ] **Step 3: Service 구현**
+- [x] **Step 3: Service 구현**
 
 ```typescript
 // apps/api/src/academy-fee/academy-fee.service.ts
@@ -555,7 +555,7 @@ export class AcademyFeeService {
 }
 ```
 
-- [ ] **Step 4: 테스트 실행 → 통과 확인**
+- [x] **Step 4: 테스트 실행 → 통과 확인**
 
 ```bash
 cd apps/api && npx jest __test__/academy-fee/academy-fee.service.test.ts --no-coverage
@@ -563,7 +563,7 @@ cd apps/api && npx jest __test__/academy-fee/academy-fee.service.test.ts --no-co
 
 Expected: 4 tests PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/academy-fee/ apps/api/__test__/academy-fee/
@@ -579,7 +579,7 @@ git commit -m "feat(youth): AcademyFeeService TDD - 청구 발행, 미납 처리
 - Create: `apps/api/src/jobs/academyFeeDelinquency.ts`
 - Create: `apps/api/__test__/jobs/academyFeeDelinquency.test.ts`
 
-- [ ] **Step 1: Billing cron 작성**
+- [x] **Step 1: Billing cron 작성**
 
 ```typescript
 // apps/api/src/jobs/academyFeeBilling.ts
@@ -606,7 +606,7 @@ export function startAcademyFeeBillingJob() {
 }
 ```
 
-- [ ] **Step 2: failing test 작성**
+- [x] **Step 2: failing test 작성**
 
 ```typescript
 // apps/api/__test__/jobs/academyFeeDelinquency.test.ts
@@ -639,13 +639,13 @@ describe("academyFeeDelinquency job", () => {
 });
 ```
 
-- [ ] **Step 3: 테스트 실행 → 실패 확인**
+- [x] **Step 3: 테스트 실행 → 실패 확인**
 
 ```bash
 cd apps/api && npx jest __test__/jobs/academyFeeDelinquency.test.ts --no-coverage 2>&1 | tail -5
 ```
 
-- [ ] **Step 4: Delinquency cron 작성**
+- [x] **Step 4: Delinquency cron 작성**
 
 ```typescript
 // apps/api/src/jobs/academyFeeDelinquency.ts
@@ -671,7 +671,7 @@ export function startAcademyFeeDelinquencyJob() {
 }
 ```
 
-- [ ] **Step 5: 테스트 실행 → 통과 확인**
+- [x] **Step 5: 테스트 실행 → 통과 확인**
 
 ```bash
 cd apps/api && npx jest __test__/jobs/academyFeeDelinquency.test.ts --no-coverage
@@ -679,7 +679,7 @@ cd apps/api && npx jest __test__/jobs/academyFeeDelinquency.test.ts --no-coverag
 
 Expected: PASS
 
-- [ ] **Step 6: server.ts에 cron 등록**
+- [x] **Step 6: server.ts에 cron 등록**
 
 `apps/api/src/server.ts`에 추가:
 ```typescript
@@ -690,7 +690,7 @@ startAcademyFeeBillingJob();
 startAcademyFeeDelinquencyJob();
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add apps/api/src/jobs/academyFee*.ts apps/api/__test__/jobs/academyFeeDelinquency.test.ts apps/api/src/server.ts
@@ -706,7 +706,7 @@ git commit -m "feat(youth): 회비 청구 cron (월 25일) + 미납 처리 cron 
 - Create: `apps/api/src/academy-fee/academy-fee.routes.ts`
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: Controller 작성**
+- [x] **Step 1: Controller 작성**
 
 ```typescript
 // apps/api/src/academy-fee/academy-fee.controller.ts
@@ -765,7 +765,7 @@ export class AcademyFeeController {
 }
 ```
 
-- [ ] **Step 2: Routes 작성** (기존 auth 패턴 참고)
+- [x] **Step 2: Routes 작성** (기존 auth 패턴 참고)
 
 ```typescript
 // apps/api/src/academy-fee/academy-fee.routes.ts
@@ -796,7 +796,7 @@ router.get("/stats", auth, controller.getFinanceStats);           // GM/ADMIN
 export default router;
 ```
 
-- [ ] **Step 3: apiRouter.ts에 등록**
+- [x] **Step 3: apiRouter.ts에 등록**
 
 ```typescript
 import academyFeeRouter from "./academy-fee/academy-fee.routes";
@@ -804,13 +804,13 @@ import academyFeeRouter from "./academy-fee/academy-fee.routes";
 apiRouter.use("/academy-fees", academyFeeRouter);
 ```
 
-- [ ] **Step 4: TypeScript 확인**
+- [x] **Step 4: TypeScript 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | grep -v "country.repo\|monthlyAttendance" | head -20
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/academy-fee/ apps/api/src/apiRouter.ts
@@ -826,7 +826,7 @@ git commit -m "feat(youth): AcademyFee controller, routes, API 등록"
 - Modify: `apps/api/src/dashboard/dashboard.service.ts`
 - Modify: `apps/api/src/dashboard/dashboard.routes.ts`
 
-- [ ] **Step 1: dashboard.repo.ts에 getAcademyFinanceStats 추가**
+- [x] **Step 1: dashboard.repo.ts에 getAcademyFinanceStats 추가**
 
 ```typescript
 async getAcademyFinanceStats(year: number, month: number) {
@@ -854,7 +854,7 @@ async getAcademyFinanceStats(year: number, month: number) {
 }
 ```
 
-- [ ] **Step 2: dashboard.service.ts에 위임 메서드 추가**
+- [x] **Step 2: dashboard.service.ts에 위임 메서드 추가**
 
 ```typescript
 getAcademyFinanceStats(year: number, month: number) {
@@ -862,7 +862,7 @@ getAcademyFinanceStats(year: number, month: number) {
 }
 ```
 
-- [ ] **Step 3: dashboard.routes.ts에 엔드포인트 추가** (기존 패턴 따라)
+- [x] **Step 3: dashboard.routes.ts에 엔드포인트 추가** (기존 패턴 따라)
 
 ```typescript
 router.get("/academy-finance", auth, async (req, res, next) => {
@@ -879,13 +879,13 @@ router.get("/academy-finance", auth, async (req, res, next) => {
 });
 ```
 
-- [ ] **Step 4: TypeScript 확인**
+- [x] **Step 4: TypeScript 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | grep -v "country.repo\|monthlyAttendance" | head -10
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/dashboard/
@@ -900,7 +900,7 @@ git commit -m "feat(dashboard): GET /academy-finance KPI 엔드포인트"
 - Create: `football/src/types/academy-fee.ts`
 - Create: `football/src/services/academyFee.service.ts`
 
-- [ ] **Step 1: 타입 정의**
+- [x] **Step 1: 타입 정의**
 
 ```typescript
 // football/src/types/academy-fee.ts
@@ -931,7 +931,7 @@ export interface AcademyFinanceStats {
 }
 ```
 
-- [ ] **Step 2: API 서비스**
+- [x] **Step 2: API 서비스**
 
 ```typescript
 // football/src/services/academyFee.service.ts
@@ -959,7 +959,7 @@ export const academyFeeApi = {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/types/academy-fee.ts football/src/services/academyFee.service.ts
@@ -975,7 +975,7 @@ git commit -m "feat(youth): AcademyFee FE 타입 + API 서비스"
 - Create: `football/src/pages/youth/AcademyFeePage.tsx`
 - Modify: `football/src/App.tsx`
 
-- [ ] **Step 1: 학부모 납부 뷰 작성**
+- [x] **Step 1: 학부모 납부 뷰 작성**
 
 ```typescript
 // football/src/pages/youth/GuardianFeeView.tsx
@@ -1041,7 +1041,7 @@ export function GuardianFeeView({ playerId }: Props) {
 }
 ```
 
-- [ ] **Step 2: 어드민 관리 뷰 작성**
+- [x] **Step 2: 어드민 관리 뷰 작성**
 
 ```typescript
 // football/src/pages/youth/AcademyFeePage.tsx
@@ -1115,7 +1115,7 @@ export default function AcademyFeePage() {
 }
 ```
 
-- [ ] **Step 3: App.tsx에 라우트 추가**
+- [x] **Step 3: App.tsx에 라우트 추가**
 
 ```typescript
 import AcademyFeePage from './pages/youth/AcademyFeePage'
@@ -1123,13 +1123,13 @@ import AcademyFeePage from './pages/youth/AcademyFeePage'
 <Route path="/academy-fees" element={<AcademyFeePage />} />
 ```
 
-- [ ] **Step 4: TypeScript 확인**
+- [x] **Step 4: TypeScript 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -20
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/
@@ -1147,7 +1147,7 @@ git commit -m "feat(youth): 아카데미 회비 FE - 학부모 납부 뷰 + 어�
 - Modify: `football/src/pages/dashboard/dashboardConfig.ts`
 - Modify: `football/src/pages/dashboard/DashboardPage.tsx`
 
-- [ ] **Step 1: AcademyFinanceSection 컴포넌트**
+- [x] **Step 1: AcademyFinanceSection 컴포넌트**
 
 ```typescript
 // football/src/components/dashboard/AcademyFinanceSection.tsx
@@ -1182,7 +1182,7 @@ export function AcademyFinanceSection({ data }: Props) {
 }
 ```
 
-- [ ] **Step 2: dashboard.ts에 타입 추가**
+- [x] **Step 2: dashboard.ts에 타입 추가**
 
 기존 파일에 추가:
 ```typescript
@@ -1194,7 +1194,7 @@ export interface AcademyFinanceStats {
 }
 ```
 
-- [ ] **Step 3: dashboard.service.ts에 academyFinance 메서드 추가**
+- [x] **Step 3: dashboard.service.ts에 academyFinance 메서드 추가**
 
 기존 패턴 따라:
 ```typescript
@@ -1202,11 +1202,11 @@ academyFinance: (year?: number, month?: number): Promise<AcademyFinanceStats> =>
   api.get('/dashboard/academy-finance', { params: { year, month } }).then(r => r.data),
 ```
 
-- [ ] **Step 4: dashboardConfig.ts에 `showAcademyFinance: boolean` 추가**
+- [x] **Step 4: dashboardConfig.ts에 `showAcademyFinance: boolean` 추가**
 
 `DashboardConfig` 인터페이스에 추가 후, GM/ADMIN 블록에 `showAcademyFinance: true`, 나머지 role에 `showAcademyFinance: false` 설정.
 
-- [ ] **Step 5: DashboardPage.tsx에 AcademyFinanceSection 추가**
+- [x] **Step 5: DashboardPage.tsx에 AcademyFinanceSection 추가**
 
 ```typescript
 import { AcademyFinanceSection } from '@/components/dashboard/AcademyFinanceSection'
@@ -1223,14 +1223,14 @@ if (config.showAcademyFinance) {
 {config.showAcademyFinance && academyFinance && <AcademyFinanceSection data={academyFinance} />}
 ```
 
-- [ ] **Step 6: TypeScript 최종 확인**
+- [x] **Step 6: TypeScript 최종 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -20
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | grep -v "country.repo\|monthlyAttendance" | head -10
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add football/src/

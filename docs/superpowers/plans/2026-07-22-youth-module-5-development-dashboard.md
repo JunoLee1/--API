@@ -1,6 +1,6 @@
 # 유소년 모듈 Plan 5: 육성 모니터링 대시보드
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** TD/ADMIN 대시보드에 유소년 팀별 Position Diversity Index(PDI) 현황 섹션을 추가한다. 팀별 평균 PDI를 조회하고, 단일 포지션 출전 비율이 80% 이상인 선수를 편중 경보로 표시한다.
 
@@ -38,14 +38,14 @@
 **Files:**
 - Modify: `apps/api/src/dashboard/dashboard.repo.ts`
 
-- [ ] **Step 1: 현재 dashboard.repo.ts 임포트/구조 확인**
+- [x] **Step 1: 현재 dashboard.repo.ts 임포트/구조 확인**
 
 ```bash
 head -20 apps/api/src/dashboard/dashboard.repo.ts
 grep -n "import\|constructor\|prisma" apps/api/src/dashboard/dashboard.repo.ts | head -10
 ```
 
-- [ ] **Step 2: `getYouthDevelopmentStats` 메서드 추가**
+- [x] **Step 2: `getYouthDevelopmentStats` 메서드 추가**
 
 `dashboard.repo.ts`의 마지막 메서드 뒤에 추가:
 
@@ -169,13 +169,13 @@ async getYouthDevelopmentStats() {
 }
 ```
 
-- [ ] **Step 3: 타입스크립트 오류 없음 확인**
+- [x] **Step 3: 타입스크립트 오류 없음 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | grep -A2 "dashboard.repo" | head -20
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/src/dashboard/dashboard.repo.ts
@@ -190,13 +190,13 @@ git commit -m "feat(dashboard): YOUTH 팀별 PDI 집계 쿼리 추가"
 - Modify: `apps/api/src/dashboard/dashboard.service.ts`
 - Modify: `apps/api/src/dashboard/dashboard.routes.ts`
 
-- [ ] **Step 1: dashboard.service.ts 현재 구조 확인**
+- [x] **Step 1: dashboard.service.ts 현재 구조 확인**
 
 ```bash
 grep -n "getStats\|case\|TD\|ADMIN\|getTd\|getAdmin" apps/api/src/dashboard/dashboard.service.ts
 ```
 
-- [ ] **Step 2: dashboard.service.ts에 `getYouthDevelopmentStats` 위임 메서드 추가**
+- [x] **Step 2: dashboard.service.ts에 `getYouthDevelopmentStats` 위임 메서드 추가**
 
 `DashboardService` 클래스에 메서드 추가:
 
@@ -206,13 +206,13 @@ getYouthDevelopmentStats() {
 }
 ```
 
-- [ ] **Step 3: dashboard.routes.ts 현재 구조 확인**
+- [x] **Step 3: dashboard.routes.ts 현재 구조 확인**
 
 ```bash
 cat apps/api/src/dashboard/dashboard.routes.ts
 ```
 
-- [ ] **Step 4: dashboard.routes.ts에 엔드포인트 추가**
+- [x] **Step 4: dashboard.routes.ts에 엔드포인트 추가**
 
 기존 라우트 파일에서 `/stats` 라우트 패턴을 따라 추가. 아래는 일반적인 패턴:
 
@@ -233,13 +233,13 @@ cat apps/api/src/dashboard/dashboard.routes.ts
 
 실제 미들웨어 이름과 `c.get('user')` 패턴은 기존 라우트 파일 참고.
 
-- [ ] **Step 5: 타입스크립트 오류 없음 확인**
+- [x] **Step 5: 타입스크립트 오류 없음 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | grep -A2 "dashboard" | head -20
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/dashboard/dashboard.service.ts apps/api/src/dashboard/dashboard.routes.ts
@@ -253,13 +253,13 @@ git commit -m "feat(dashboard): youth-development 엔드포인트 추가 (TD/ADM
 **Files:**
 - Create: `apps/api/__test__/dashboard/dashboard.youth.test.ts`
 
-- [ ] **Step 1: 기존 dashboard 테스트 패턴 확인**
+- [x] **Step 1: 기존 dashboard 테스트 패턴 확인**
 
 ```bash
 ls apps/api/__test__/dashboard/ 2>/dev/null || ls apps/api/__test__/ | head -10
 ```
 
-- [ ] **Step 2: 테스트 파일 작성**
+- [x] **Step 2: 테스트 파일 작성**
 
 ```typescript
 // apps/api/__test__/dashboard/dashboard.youth.test.ts
@@ -368,7 +368,7 @@ describe('DashboardRepository.getYouthDevelopmentStats', () => {
 })
 ```
 
-- [ ] **Step 3: 테스트 실행**
+- [x] **Step 3: 테스트 실행**
 
 ```bash
 cd apps/api && npx vitest run __test__/dashboard/dashboard.youth.test.ts 2>&1
@@ -376,7 +376,7 @@ cd apps/api && npx vitest run __test__/dashboard/dashboard.youth.test.ts 2>&1
 
 Expected: 4 tests PASS
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/__test__/dashboard/dashboard.youth.test.ts
@@ -391,13 +391,13 @@ git commit -m "test(dashboard): YOUTH PDI 집계 통합 테스트"
 - Modify: `football/src/types/dashboard.ts`
 - Modify: `football/src/services/dashboard.service.ts`
 
-- [ ] **Step 1: 현재 dashboard.service.ts(FE) 확인**
+- [x] **Step 1: 현재 dashboard.service.ts(FE) 확인**
 
 ```bash
 cat football/src/services/dashboard.service.ts
 ```
 
-- [ ] **Step 2: `football/src/types/dashboard.ts`에 타입 추가**
+- [x] **Step 2: `football/src/types/dashboard.ts`에 타입 추가**
 
 기존 파일 맨 아래에 추가:
 
@@ -427,7 +427,7 @@ export interface YouthDevelopmentStats {
 }
 ```
 
-- [ ] **Step 3: TdStats, AdminStats에 `youthDevelopment` 선택 필드 추가**
+- [x] **Step 3: TdStats, AdminStats에 `youthDevelopment` 선택 필드 추가**
 
 기존 `TdStats` 인터페이스에 필드 추가:
 
@@ -451,7 +451,7 @@ export interface TdStats {
 grep -n "AdminStats" football/src/types/dashboard.ts | head -5
 ```
 
-- [ ] **Step 4: `football/src/services/dashboard.service.ts`에 `youthDevelopment()` 메서드 추가**
+- [x] **Step 4: `football/src/services/dashboard.service.ts`에 `youthDevelopment()` 메서드 추가**
 
 ```typescript
 youthDevelopment(): Promise<YouthDevelopmentStats> {
@@ -461,13 +461,13 @@ youthDevelopment(): Promise<YouthDevelopmentStats> {
 
 `apiClient` import와 반환 패턴은 기존 `stats()` 메서드를 참고.
 
-- [ ] **Step 5: 타입스크립트 체크**
+- [x] **Step 5: 타입스크립트 체크**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | grep -A2 "dashboard" | head -20
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add football/src/types/dashboard.ts football/src/services/dashboard.service.ts
@@ -481,14 +481,14 @@ git commit -m "feat(dashboard): YouthDevelopmentStats FE 타입 + API 서비스"
 **Files:**
 - Create: `football/src/components/dashboard/YouthDevelopmentSection.tsx`
 
-- [ ] **Step 1: 기존 대시보드 컴포넌트 구조 참고**
+- [x] **Step 1: 기존 대시보드 컴포넌트 구조 참고**
 
 ```bash
 ls football/src/components/dashboard/
 cat football/src/components/dashboard/MedicalSection.tsx | head -40
 ```
 
-- [ ] **Step 2: 컴포넌트 작성**
+- [x] **Step 2: 컴포넌트 작성**
 
 ```typescript
 // football/src/components/dashboard/YouthDevelopmentSection.tsx
@@ -563,13 +563,13 @@ export function YouthDevelopmentSection({ data }: Props) {
 }
 ```
 
-- [ ] **Step 3: 타입스크립트 체크**
+- [x] **Step 3: 타입스크립트 체크**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | grep -A2 "YouthDevelopment" | head -20
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/components/dashboard/YouthDevelopmentSection.tsx
@@ -584,7 +584,7 @@ git commit -m "feat(dashboard): YouthDevelopmentSection 컴포넌트 추가"
 - Modify: `football/src/pages/dashboard/dashboardConfig.ts`
 - Modify: `football/src/pages/dashboard/DashboardPage.tsx`
 
-- [ ] **Step 1: dashboardConfig.ts에 `showYouthDevelopment` 추가**
+- [x] **Step 1: dashboardConfig.ts에 `showYouthDevelopment` 추가**
 
 `DashboardConfig` 인터페이스에 필드 추가:
 
@@ -633,7 +633,7 @@ if (role === 'ADMIN') {
 
 나머지 모든 role 블록에 `showYouthDevelopment: false` 추가 (각 return 객체에 삽입).
 
-- [ ] **Step 2: DashboardPage.tsx 수정**
+- [x] **Step 2: DashboardPage.tsx 수정**
 
 import 추가:
 
@@ -690,7 +690,7 @@ if (showYouthDev) {
 )}
 ```
 
-- [ ] **Step 3: 타입스크립트 체크**
+- [x] **Step 3: 타입스크립트 체크**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | head -30
@@ -698,7 +698,7 @@ cd football && npx tsc --noEmit 2>&1 | head -30
 
 Expected: 오류 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/pages/dashboard/dashboardConfig.ts football/src/pages/dashboard/DashboardPage.tsx
@@ -711,7 +711,7 @@ git commit -m "feat(dashboard): TD/ADMIN 대시보드에 유소년 포지션 편
 
 **Files:** 없음 (검증만)
 
-- [ ] **Step 1: BE 전체 타입스크립트 체크**
+- [x] **Step 1: BE 전체 타입스크립트 체크**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | head -30
@@ -719,7 +719,7 @@ cd apps/api && npx tsc --noEmit 2>&1 | head -30
 
 Expected: 오류 없음
 
-- [ ] **Step 2: FE 전체 타입스크립트 체크**
+- [x] **Step 2: FE 전체 타입스크립트 체크**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | head -30
@@ -727,7 +727,7 @@ cd football && npx tsc --noEmit 2>&1 | head -30
 
 Expected: 오류 없음
 
-- [ ] **Step 3: 테스트 실행**
+- [x] **Step 3: 테스트 실행**
 
 ```bash
 cd apps/api && npx vitest run __test__/dashboard/ 2>&1 | tail -20
@@ -735,6 +735,6 @@ cd apps/api && npx vitest run __test__/dashboard/ 2>&1 | tail -20
 
 Expected: 전체 PASS
 
-- [ ] **Step 4: Commit (변경사항 없으면 skip)**
+- [x] **Step 4: Commit (변경사항 없으면 skip)**
 
 모든 검증 통과 확인.

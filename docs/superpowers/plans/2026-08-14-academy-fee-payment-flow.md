@@ -1,6 +1,6 @@
 # Academy Fee Payment Flow Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 학부모가 아카데미 회비를 PG(Toss Payments) 또는 계좌이체 증빙 업로드로 납부하면 재무팀 확인 후 PAID 처리되고 인앱 영수증이 발급된다.
 
@@ -38,7 +38,7 @@
 - Modify: `apps/api/prisma/schema.prisma`
 - Modify: `football/src/types/academy-fee.ts`
 
-- [ ] **Step 1: `PaymentMethod` enum + `AcademyFee` 3개 필드 추가**
+- [x] **Step 1: `PaymentMethod` enum + `AcademyFee` 3개 필드 추가**
 
 `apps/api/prisma/schema.prisma`에서 `FeeStatus` enum 바로 위에 추가:
 
@@ -77,7 +77,7 @@ model AcademyFee {
 }
 ```
 
-- [ ] **Step 2: 마이그레이션 실행**
+- [x] **Step 2: 마이그레이션 실행**
 
 ```bash
 cd apps/api && npx prisma migrate dev --name add_payment_method_to_academy_fee
@@ -89,7 +89,7 @@ cd apps/api && npx prisma migrate dev --name add_payment_method_to_academy_fee
 Your database is now in sync with your schema.
 ```
 
-- [ ] **Step 3: FE 타입 업데이트**
+- [x] **Step 3: FE 타입 업데이트**
 
 `football/src/types/academy-fee.ts`에서 `AcademyFee` 인터페이스에 필드 추가:
 
@@ -138,7 +138,7 @@ export interface FeeReceipt {
 }
 ```
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/ football/src/types/academy-fee.ts
@@ -155,7 +155,7 @@ git commit -m "feat(academy-fee): add paymentMethod, pgTransactionId, receiptIss
 
 현재 `submitPaymentProof` 서비스 메서드(`repo.submitPaymentProof(id, url)`)는 그대로 재사용. 라우트만 추가.
 
-- [ ] **Step 1: `academy-fee.routes.ts`에 multer 설정 추가**
+- [x] **Step 1: `academy-fee.routes.ts`에 multer 설정 추가**
 
 파일 상단 import 추가:
 
@@ -190,7 +190,7 @@ const uploadProof = multer({
 });
 ```
 
-- [ ] **Step 2: 업로드 라우트 추가**
+- [x] **Step 2: 업로드 라우트 추가**
 
 `academy-fee.routes.ts`의 기존 라우트들 아래에 추가:
 
@@ -211,7 +211,7 @@ router.post("/:id/upload-proof", auth, uploadProof.single("file"), async (req, r
 });
 ```
 
-- [ ] **Step 3: 동작 확인**
+- [x] **Step 3: 동작 확인**
 
 서버 실행 후 테스트:
 ```bash
@@ -222,7 +222,7 @@ curl -X POST http://localhost:3001/academy-fees/1/upload-proof \
 
 예상 응답: fee 객체에 `status: "SUBMITTED"`, `paymentProofUrl: "/uploads/academy-fee-proofs/..."` 포함
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add apps/api/src/academy-fee/academy-fee.routes.ts
@@ -241,7 +241,7 @@ git commit -m "feat(academy-fee): add multer proof file upload endpoint"
 - Modify: `apps/api/src/academy-fee/academy-fee.controller.ts`
 - Modify: `apps/api/src/academy-fee/academy-fee.routes.ts`
 
-- [ ] **Step 1: `.env`에 Toss 키 추가**
+- [x] **Step 1: `.env`에 Toss 키 추가**
 
 `apps/api/.env` 하단에 추가:
 
@@ -252,7 +252,7 @@ TOSS_CLIENT_KEY=test_ck_...         # Toss 대시보드에서 테스트 클라�
 
 > Toss 테스트 키 발급: https://developers.tosspayments.com — 회원가입 후 대시보드 > 개발자 센터 > 연동 키
 
-- [ ] **Step 2: DTO 추가**
+- [x] **Step 2: DTO 추가**
 
 `apps/api/src/academy-fee/dto/academy-fee.dto.ts` 전체 교체:
 
@@ -288,7 +288,7 @@ export interface AdminSubmitDto {
 }
 ```
 
-- [ ] **Step 3: repo에 `confirmTossPayment` 추가**
+- [x] **Step 3: repo에 `confirmTossPayment` 추가**
 
 `apps/api/src/academy-fee/academy-fee.repo.ts`에서 `approvePayment` 메서드 아래에 추가:
 
@@ -309,7 +309,7 @@ confirmTossPayment(id: number, pgTransactionId: string) {
 }
 ```
 
-- [ ] **Step 4: service에 `confirmTossPayment` 추가**
+- [x] **Step 4: service에 `confirmTossPayment` 추가**
 
 `apps/api/src/academy-fee/academy-fee.service.ts`에서 `approvePayment` 메서드 아래에 추가:
 
@@ -397,7 +397,7 @@ service 파일 상단 import에 `TossConfirmDto` 추가:
 import type { FeeListQuery, SubmitPaymentProofDto, TossConfirmDto, AdminSubmitDto } from "./dto/academy-fee.dto";
 ```
 
-- [ ] **Step 5: controller에 `tossConfirm` 핸들러 추가**
+- [x] **Step 5: controller에 `tossConfirm` 핸들러 추가**
 
 `apps/api/src/academy-fee/academy-fee.controller.ts`에 추가:
 
@@ -411,7 +411,7 @@ tossConfirm = async (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 6: 라우트 추가**
+- [x] **Step 6: 라우트 추가**
 
 `academy-fee.routes.ts`에 추가:
 
@@ -429,7 +429,7 @@ router.post("/:id/toss-confirm", auth, async (req, res, next) => {
 }, controller.tossConfirm);
 ```
 
-- [ ] **Step 7: 동작 확인 (Toss 테스트 환경)**
+- [x] **Step 7: 동작 확인 (Toss 테스트 환경)**
 
 서버 실행 후:
 ```bash
@@ -441,7 +441,7 @@ curl -X POST http://localhost:3001/academy-fees/1/toss-confirm \
 
 테스트 키 환경에서는 Toss가 승인 응답 반환. fee status가 PAID, receiptIssuedAt이 세팅됨.
 
-- [ ] **Step 8: 커밋**
+- [x] **Step 8: 커밋**
 
 ```bash
 git add apps/api/src/academy-fee/ apps/api/.env
@@ -459,7 +459,7 @@ git commit -m "feat(academy-fee): add Toss payment confirm endpoint with ledger 
 
 Toss는 결제 완료 후 서버로 webhook을 보낸다. FE confirm이 성공했더라도 네트워크 단절 등으로 BE가 처리 못한 경우의 보조 안전망.
 
-- [ ] **Step 1: service에 `tossWebhook` 추가**
+- [x] **Step 1: service에 `tossWebhook` 추가**
 
 `academy-fee.service.ts`에서 `confirmTossPayment` 아래에 추가:
 
@@ -487,7 +487,7 @@ async tossWebhook(body: { status: string; paymentKey: string; orderId: string; t
 }
 ```
 
-- [ ] **Step 2: controller에 `tossWebhook` 핸들러 추가**
+- [x] **Step 2: controller에 `tossWebhook` 핸들러 추가**
 
 ```typescript
 tossWebhook = async (req: Request, res: Response, next: NextFunction) => {
@@ -502,7 +502,7 @@ tossWebhook = async (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 3: 라우트 추가 (auth 없음 — Toss 서버가 호출)**
+- [x] **Step 3: 라우트 추가 (auth 없음 — Toss 서버가 호출)**
 
 `academy-fee.routes.ts`에서 `router.get("/stats"...` 위에 추가 (파라미터 라우트보다 먼저 선언해야 함):
 
@@ -513,7 +513,7 @@ router.post("/toss-webhook", express.json(), controller.tossWebhook);
 
 파일 상단에 `import express from "express";` 추가 (없으면).
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add apps/api/src/academy-fee/
@@ -530,7 +530,7 @@ git commit -m "feat(academy-fee): add Toss webhook fallback handler"
 - Modify: `apps/api/src/academy-fee/academy-fee.controller.ts`
 - Modify: `apps/api/src/academy-fee/academy-fee.routes.ts`
 
-- [ ] **Step 1: repo에 `getReceipt`, `adminSubmitProof` 추가**
+- [x] **Step 1: repo에 `getReceipt`, `adminSubmitProof` 추가**
 
 ```typescript
 getReceipt(id: number) {
@@ -564,7 +564,7 @@ adminSubmitProof(id: number, paymentProofUrl?: string) {
 }
 ```
 
-- [ ] **Step 2: service에 `getReceipt`, `adminSubmitProof` 추가**
+- [x] **Step 2: service에 `getReceipt`, `adminSubmitProof` 추가**
 
 ```typescript
 async getReceipt(id: number, requesterId: number, requesterRole: string, requesterFoRole?: string | null) {
@@ -613,7 +613,7 @@ async adminSubmitProof(id: number, dto: AdminSubmitDto) {
 }
 ```
 
-- [ ] **Step 3: controller에 `getReceipt`, `adminSubmit` 추가**
+- [x] **Step 3: controller에 `getReceipt`, `adminSubmit` 추가**
 
 ```typescript
 getReceipt = async (req: Request, res: Response, next: NextFunction) => {
@@ -630,7 +630,7 @@ adminSubmit = async (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 4: 라우트 추가**
+- [x] **Step 4: 라우트 추가**
 
 ```typescript
 // 영수증 조회 — Guardian(본인) 또는 재무팀/관리자
@@ -649,7 +649,7 @@ router.patch("/:id/admin-submit", auth, (req, res, next) => {
 }, controller.adminSubmit);
 ```
 
-- [ ] **Step 5: 동작 확인**
+- [x] **Step 5: 동작 확인**
 
 ```bash
 # 영수증 조회 (PAID 상태의 fee)
@@ -665,7 +665,7 @@ curl -X PATCH http://localhost:3001/academy-fees/2/admin-submit \
 # 예상: fee 객체 status: "SUBMITTED"
 ```
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add apps/api/src/academy-fee/
@@ -680,13 +680,13 @@ git commit -m "feat(academy-fee): add receipt endpoint and admin manual submit"
 - Modify: `football/package.json` (npm install)
 - Modify: `football/src/services/academyFee.service.ts`
 
-- [ ] **Step 1: Toss SDK 설치**
+- [x] **Step 1: Toss SDK 설치**
 
 ```bash
 cd football && npm install @tosspayments/tosspayments-js
 ```
 
-- [ ] **Step 2: `academyFee.service.ts` 전체 업데이트**
+- [x] **Step 2: `academyFee.service.ts` 전체 업데이트**
 
 ```typescript
 import { api } from './api'
@@ -731,7 +731,7 @@ export const academyFeeApi = {
 }
 ```
 
-- [ ] **Step 3: `api` 래퍼에 `postFormData` 메서드 확인 및 추가**
+- [x] **Step 3: `api` 래퍼에 `postFormData` 메서드 확인 및 추가**
 
 `football/src/services/api.ts`에 `postFormData`가 없으면 추가:
 
@@ -746,7 +746,7 @@ postFormData: <T>(url: string, formData: FormData): Promise<T> =>
 
 > `BASE_URL`, `getToken`, `handleResponse`는 기존 `api.ts` 패턴 참고
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add football/package.json football/package-lock.json football/src/services/
@@ -762,7 +762,7 @@ git commit -m "feat(academy-fee): add uploadProof, tossConfirm, getReceipt API m
 
 이 컴포넌트는 학부모가 "납부하기" 버튼 클릭 시 나타나는 모달이다. "카드/간편결제" 탭과 "계좌이체" 탭으로 구분된다.
 
-- [ ] **Step 1: `PaymentModal.tsx` 생성**
+- [x] **Step 1: `PaymentModal.tsx` 생성**
 
 ```typescript
 import { useState, useRef } from 'react'
@@ -873,7 +873,7 @@ export function PaymentModal({ fee, userId, open, onClose, onPaid }: Props) {
 }
 ```
 
-- [ ] **Step 2: `VITE_TOSS_CLIENT_KEY` 환경변수 추가**
+- [x] **Step 2: `VITE_TOSS_CLIENT_KEY` 환경변수 추가**
 
 `football/.env` (없으면 생성):
 
@@ -881,7 +881,7 @@ export function PaymentModal({ fee, userId, open, onClose, onPaid }: Props) {
 VITE_TOSS_CLIENT_KEY=test_ck_...
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add football/src/components/youth/PaymentModal.tsx football/.env
@@ -898,7 +898,7 @@ git commit -m "feat(academy-fee): add PaymentModal with PG and bank transfer tab
 
 Toss 결제 성공 시 `${origin}/toss-callback?paymentKey=X&orderId=fee-{id}-{ts}&amount=Y`로 리다이렉트됨.
 
-- [ ] **Step 1: `TossCallbackPage.tsx` 생성**
+- [x] **Step 1: `TossCallbackPage.tsx` 생성**
 
 ```typescript
 import { useEffect, useState } from 'react'
@@ -976,7 +976,7 @@ export default function TossCallbackPage() {
 }
 ```
 
-- [ ] **Step 2: `App.tsx`에 라우트 추가**
+- [x] **Step 2: `App.tsx`에 라우트 추가**
 
 `App.tsx`에서 기존 라우트들을 찾아 `/toss-callback` 라우트 추가. 이 페이지는 AppShell 밖에 있어야 한다 (auth 레이아웃 불필요):
 
@@ -987,7 +987,7 @@ import TossCallbackPage from '@/pages/youth/TossCallbackPage'
 <Route path="/toss-callback" element={<TossCallbackPage />} />
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add football/src/pages/youth/TossCallbackPage.tsx football/src/App.tsx
@@ -1002,7 +1002,7 @@ git commit -m "feat(academy-fee): add Toss payment callback page with confirm fl
 - Modify: `football/src/pages/youth/GuardianFeeView.tsx`
 - Modify: `football/src/pages/youth/AcademyFeePage.tsx`
 
-- [ ] **Step 1: `GuardianFeeView.tsx` 업데이트**
+- [x] **Step 1: `GuardianFeeView.tsx` 업데이트**
 
 `window.prompt` 방식을 제거하고 `PaymentModal`로 교체:
 
@@ -1097,7 +1097,7 @@ export function GuardianFeeView({ playerId }: Props) {
 }
 ```
 
-- [ ] **Step 2: `AcademyFeePage.tsx` 업데이트**
+- [x] **Step 2: `AcademyFeePage.tsx` 업데이트**
 
 기존 코드에 "수동 접수" 버튼과 영수증 링크 추가:
 
@@ -1209,7 +1209,7 @@ export default function AcademyFeePage() {
 }
 ```
 
-- [ ] **Step 3: TypeScript 빌드 확인**
+- [x] **Step 3: TypeScript 빌드 확인**
 
 ```bash
 cd football && npx tsc --noEmit
@@ -1217,7 +1217,7 @@ cd football && npx tsc --noEmit
 
 에러 없이 통과해야 함.
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add football/src/pages/youth/ football/src/components/youth/
@@ -1230,8 +1230,8 @@ git commit -m "feat(academy-fee): wire up PaymentModal in GuardianFeeView, add a
 
 로컬 서버(`apps/api` + `football`) 실행 후:
 
-- [ ] **계좌이체 플로우**: 학부모 로그인 → 유소년 포털 → 미납 회비의 "납부하기" → "계좌이체" 탭 → 파일 업로드 → SUBMITTED 상태로 변경됨
-- [ ] **재무팀 승인**: 재무팀 로그인 → 아카데미 회비 페이지 → SUBMITTED 필터 → "승인" → PAID + 영수증 링크 노출
-- [ ] **재무팀 수동 접수**: PENDING 항목에 "수동 접수" 버튼 클릭 → SUBMITTED 전환
-- [ ] **PG 플로우**: 학부모 로그인 → "납부하기" → "카드/간편결제" → Toss 팝업 오픈 (테스트 키 환경에서 카드 입력) → `/toss-callback`으로 리다이렉트 → PAID 처리 → `/youth/guardian`으로 이동
-- [ ] **영수증**: PAID 상태 fee에 "영수증" 버튼 노출, 클릭 시 납부 정보 표시
+- [x] **계좌이체 플로우**: 학부모 로그인 → 유소년 포털 → 미납 회비의 "납부하기" → "계좌이체" 탭 → 파일 업로드 → SUBMITTED 상태로 변경됨
+- [x] **재무팀 승인**: 재무팀 로그인 → 아카데미 회비 페이지 → SUBMITTED 필터 → "승인" → PAID + 영수증 링크 노출
+- [x] **재무팀 수동 접수**: PENDING 항목에 "수동 접수" 버튼 클릭 → SUBMITTED 전환
+- [x] **PG 플로우**: 학부모 로그인 → "납부하기" → "카드/간편결제" → Toss 팝업 오픈 (테스트 키 환경에서 카드 입력) → `/toss-callback`으로 리다이렉트 → PAID 처리 → `/youth/guardian`으로 이동
+- [x] **영수증**: PAID 상태 fee에 "영수증" 버튼 노출, 클릭 시 납부 정보 표시

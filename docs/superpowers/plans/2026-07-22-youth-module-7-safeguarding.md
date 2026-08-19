@@ -1,6 +1,6 @@
 # 유소년 모듈 Plan 7: 유소년 보호 (Safeguarding) 프로토콜
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 유소년 학대·가혹 행위 의심 신고를 익명으로 접수하고, 피의자 접근 차단 → 긴급 알림 → 외부 기관 보고서 자동 생성까지 즉시 수행하는 비상 대응 시스템을 구현한다.
 
@@ -43,7 +43,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: SafeguardReportStatus enum 추가**
+- [x] **Step 1: SafeguardReportStatus enum 추가**
 
 ```prisma
 enum SafeguardReportStatus {
@@ -53,7 +53,7 @@ enum SafeguardReportStatus {
 }
 ```
 
-- [ ] **Step 2: SafeguardReport 모델 추가** (IncidentReport 모델 아래에 추가)
+- [x] **Step 2: SafeguardReport 모델 추가** (IncidentReport 모델 아래에 추가)
 
 ```prisma
 model SafeguardReport {
@@ -70,7 +70,7 @@ model SafeguardReport {
 }
 ```
 
-- [ ] **Step 3: User 모델에 역관계 + isSuspended 추가**
+- [x] **Step 3: User 모델에 역관계 + isSuspended 추가**
 
 `model User` 필드 블록에:
 ```prisma
@@ -78,7 +78,7 @@ isSuspended              Boolean                 @default(false)
 safeguardReportsAccused  SafeguardReport[]       @relation("SafeguardAccused")
 ```
 
-- [ ] **Step 4: NotificationType에 SAFEGUARD_EMERGENCY 추가**
+- [x] **Step 4: NotificationType에 SAFEGUARD_EMERGENCY 추가**
 
 ```prisma
 enum NotificationType {
@@ -87,7 +87,7 @@ enum NotificationType {
 }
 ```
 
-- [ ] **Step 5: ExternalReportTarget에 경찰·아동보호·협회 추가**
+- [x] **Step 5: ExternalReportTarget에 경찰·아동보호·협회 추가**
 
 ```prisma
 enum ExternalReportTarget {
@@ -102,7 +102,7 @@ enum ExternalReportTarget {
 }
 ```
 
-- [ ] **Step 6: 마이그레이션 실행**
+- [x] **Step 6: 마이그레이션 실행**
 
 ```bash
 cd apps/api
@@ -119,13 +119,13 @@ echo "-- Applied via db push" > prisma/migrations/${TIMESTAMP}_${NAME}/migration
 npx prisma migrate resolve --applied ${TIMESTAMP}_${NAME}
 ```
 
-- [ ] **Step 7: Prisma generate**
+- [x] **Step 7: Prisma generate**
 
 ```bash
 npx prisma generate
 ```
 
-- [ ] **Step 8: 타입 오류 확인**
+- [x] **Step 8: 타입 오류 확인**
 
 ```bash
 npx tsc --noEmit 2>&1 | grep -v "country.repo\|monthlyAttendance" | head -20
@@ -133,7 +133,7 @@ npx tsc --noEmit 2>&1 | grep -v "country.repo\|monthlyAttendance" | head -20
 
 `isSuspended` 참조 부분에 오류 없으면 통과.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add apps/api/prisma/
@@ -148,7 +148,7 @@ git commit -m "feat(safeguard): SafeguardReport 모델 + User.isSuspended + Noti
 - Create: `apps/api/src/safeguard/dto/safeguard.dto.ts`
 - Create: `apps/api/src/safeguard/safeguard.repo.ts`
 
-- [ ] **Step 1: DTO 작성**
+- [x] **Step 1: DTO 작성**
 
 `apps/api/src/safeguard/dto/safeguard.dto.ts`:
 
@@ -189,7 +189,7 @@ export function validateUpdateSafeguardStatus(body: unknown): UpdateSafeguardSta
 }
 ```
 
-- [ ] **Step 2: Repository 작성**
+- [x] **Step 2: Repository 작성**
 
 `apps/api/src/safeguard/safeguard.repo.ts`:
 
@@ -275,7 +275,7 @@ export class SafeguardRepository {
 
 > **Note:** ExternalReport 모델에 `safeguardReportId Int?` 필드가 없으면 Task 1 schema에 추가: `safeguardReportId Int?` + `safeguardReport SafeguardReport? @relation(...)`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/safeguard/
@@ -290,7 +290,7 @@ git commit -m "feat(safeguard): SafeguardReport DTO + Repository"
 - Create: `apps/api/src/safeguard/safeguard.service.ts`
 - Create: `apps/api/__test__/safeguard/safeguard.service.test.ts`
 
-- [ ] **Step 1: Failing test 작성**
+- [x] **Step 1: Failing test 작성**
 
 `apps/api/__test__/safeguard/safeguard.service.test.ts`:
 
@@ -381,7 +381,7 @@ describe("SafeguardService - updateStatus", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 → FAIL 확인**
+- [x] **Step 2: 테스트 실행 → FAIL 확인**
 
 ```bash
 cd apps/api && npx jest __test__/safeguard/safeguard.service.test.ts --no-coverage 2>&1 | tail -10
@@ -389,7 +389,7 @@ cd apps/api && npx jest __test__/safeguard/safeguard.service.test.ts --no-covera
 
 Expected: FAIL — `SafeguardService is not a function`
 
-- [ ] **Step 3: Service 구현**
+- [x] **Step 3: Service 구현**
 
 `apps/api/src/safeguard/safeguard.service.ts`:
 
@@ -456,7 +456,7 @@ export class SafeguardService {
 }
 ```
 
-- [ ] **Step 4: 테스트 실행 → PASS 확인**
+- [x] **Step 4: 테스트 실행 → PASS 확인**
 
 ```bash
 cd apps/api && npx jest __test__/safeguard/safeguard.service.test.ts --no-coverage
@@ -464,7 +464,7 @@ cd apps/api && npx jest __test__/safeguard/safeguard.service.test.ts --no-covera
 
 Expected: PASS (8 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/safeguard/ apps/api/__test__/safeguard/
@@ -480,7 +480,7 @@ git commit -m "feat(safeguard): SafeguardService TDD - 익명 신고, 계정 정
 - Create: `apps/api/src/safeguard/safeguard.routes.ts`
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: Controller 작성**
+- [x] **Step 1: Controller 작성**
 
 `apps/api/src/safeguard/safeguard.controller.ts`:
 
@@ -522,7 +522,7 @@ export class SafeguardController {
 }
 ```
 
-- [ ] **Step 2: Routes 작성**
+- [x] **Step 2: Routes 작성**
 
 `apps/api/src/safeguard/safeguard.routes.ts`:
 
@@ -561,7 +561,7 @@ router.patch("/:id/status", auth, adminOnly, controller.updateStatus);
 export default router;
 ```
 
-- [ ] **Step 3: apiRouter.ts에 등록**
+- [x] **Step 3: apiRouter.ts에 등록**
 
 ```bash
 grep -n "incident-reports\|import" apps/api/src/apiRouter.ts | tail -5
@@ -573,13 +573,13 @@ import safeguardRouter from "./safeguard/safeguard.routes";
 apiRouter.use("/safeguard-reports", safeguardRouter);
 ```
 
-- [ ] **Step 4: TypeScript 확인**
+- [x] **Step 4: TypeScript 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | grep -v "country.repo\|monthlyAttendance" | head -20
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/safeguard/ apps/api/src/apiRouter.ts
@@ -595,7 +595,7 @@ git commit -m "feat(safeguard): SafeguardReport controller, routes, API 등록"
 - Create: `football/src/services/safeguard.service.ts`
 - Create: `football/src/components/layout/SafeguardButton.tsx`
 
-- [ ] **Step 1: 타입 정의**
+- [x] **Step 1: 타입 정의**
 
 `football/src/types/safeguard.ts`:
 
@@ -619,7 +619,7 @@ export interface CreateSafeguardReportPayload {
 }
 ```
 
-- [ ] **Step 2: API 서비스**
+- [x] **Step 2: API 서비스**
 
 `football/src/services/safeguard.service.ts`:
 
@@ -639,7 +639,7 @@ export const safeguardApi = {
 }
 ```
 
-- [ ] **Step 3: SafeguardButton 컴포넌트 (앱 전체 고정 버튼)**
+- [x] **Step 3: SafeguardButton 컴포넌트 (앱 전체 고정 버튼)**
 
 `football/src/components/layout/SafeguardButton.tsx`:
 
@@ -760,7 +760,7 @@ export function SafeguardButton() {
 }
 ```
 
-- [ ] **Step 4: AppShell에 SafeguardButton 삽입**
+- [x] **Step 4: AppShell에 SafeguardButton 삽입**
 
 루트 레이아웃 파일 확인:
 ```bash
@@ -775,13 +775,13 @@ import { SafeguardButton } from '@/components/layout/SafeguardButton'
 <SafeguardButton />
 ```
 
-- [ ] **Step 5: TypeScript 확인**
+- [x] **Step 5: TypeScript 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -20
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -797,7 +797,7 @@ git commit -m "feat(safeguard): 익명 신고 버튼 + 폼 (앱 전체 고정)"
 - Create: `football/src/pages/admin/SafeguardReportPage.tsx`
 - Modify: `football/src/App.tsx` — `/safeguard-reports` 라우트 추가
 
-- [ ] **Step 1: 관리자 목록 페이지**
+- [x] **Step 1: 관리자 목록 페이지**
 
 `football/src/pages/admin/SafeguardReportPage.tsx`:
 
@@ -889,7 +889,7 @@ export default function SafeguardReportPage() {
 }
 ```
 
-- [ ] **Step 2: App.tsx에 라우트 추가**
+- [x] **Step 2: App.tsx에 라우트 추가**
 
 ```typescript
 import SafeguardReportPage from './pages/admin/SafeguardReportPage'
@@ -897,14 +897,14 @@ import SafeguardReportPage from './pages/admin/SafeguardReportPage'
 <Route path="/safeguard-reports" element={<SafeguardReportPage />} />
 ```
 
-- [ ] **Step 3: 전체 TypeScript 확인**
+- [x] **Step 3: 전체 TypeScript 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -20
 cd /Users/juno/work/football/apps/api && npx jest --no-coverage 2>&1 | tail -10
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 cd /Users/juno/work/football

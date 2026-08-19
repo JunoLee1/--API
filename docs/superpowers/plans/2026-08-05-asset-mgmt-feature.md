@@ -1,6 +1,6 @@
 # 자산관리부서(Feature 16) Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 자산관리부서 산하 HR·IT자산·운영재무·시설관리 4개 팀의 핵심 업무(급여 2차 승인, 감가상각, 장부, 재고 관리)를 ERP에서 처리한다.
 
@@ -9,6 +9,34 @@
 **Tech Stack:** Express, Prisma (PostgreSQL), Jest (unit test), multer (file upload)
 
 **Spec:** `docs/superpowers/specs/2026-08-05-asset-mgmt-feature-design.md`
+
+---
+
+## 🔴 Grill 결정사항 (2026-08-19)
+
+### 이미 완료된 것 (백엔드 전체)
+- Task 1: PayrollRun 2차 승인 + netPay 음수 보정 ✅
+- Task 2: StaffRecord 퇴사 처리 (`terminate()`), 중복은 `closeActive()` 패턴으로 처리 ✅
+- Task 3: HR 문서 업로드 (`hr.routes.ts` + multer + `uploadDocument()`) ✅
+- Task 4: Equipment 감가상각 + 고가 분류 ✅
+- Task 5: SoftwareLicense 모듈 BE ✅ (FE 미구현)
+- Task 6: Ledger 모듈 ✅
+- Task 7: Sales 모듈 ✅
+- Task 8: Inventory 모듈 BE ✅ (FE 미구현)
+- Task 9: Facility isLocked + 재무 상신 ✅
+- Task 10: 크론 잡 3개 (`inventoryThreshold`, `monthlyDepreciation` 등) ✅
+- Task 11: 장부 자동 동기화 (payroll run → ledger entry) ✅
+- Task 12: 전체 검증 ✅
+
+### 잔여 구현 (프론트엔드 1개)
+- [ ] `/asset/inventory` 페이지 신설 — ASSET_MANAGER / ASSET_STAFF 전용
+  - **탭 1:** 소모품 재고 — 목록 + 수량 조정 + 부족 배지 (`GET /inventory`, `PATCH /inventory/:id/quantity`, `GET /inventory/alerts`)
+  - **탭 2:** 소프트웨어 라이선스 — ASSET_MANAGER 전용, 발급·사용자 할당 (`GET/POST /software-licenses`, `POST /:id/assign`, `DELETE /:id/assign/:userId`)
+
+### 기타 결정
+- 감가상각: cron 자동처리로 충분, 수동 트리거 API/버튼 불필요
+- 재고 알림: 페이지 배지로 충분, push/이메일 알림 불필요
+- AppShell에 `/asset/inventory` nav 항목 추가 필요 (ASSET_MANAGER / ASSET_STAFF)
 
 ---
 
@@ -21,7 +49,7 @@
 
 ### Steps
 
-- [ ] **1.1 Add `secondApprove` method to `RunRepository`** in `apps/api/src/payroll/run/run.repo.ts`.
+- [x] **1.1 Add `secondApprove` method to `RunRepository`** in `apps/api/src/payroll/run/run.repo.ts`.
 
   Add this method to the existing `RunRepository` class:
   ```ts
@@ -37,7 +65,7 @@
   }
   ```
 
-- [ ] **1.2 Patch `computePayroll` in `run.service.ts`** to floor `netPay` at 0 and throw when the raw value would be negative.
+- [x] **1.2 Patch `computePayroll` in `run.service.ts`** to floor `netPay` at 0 and throw when the raw value would be negative.
 
   Locate the existing `computePayroll` function. Find the line that computes `netPay` (something like `const netPay = grossPay - totalDeductions;`) and replace with:
   ```ts
@@ -49,7 +77,7 @@
   ```
   Ensure `AppError` is imported at the top: `import { AppError } from "../../lib/appError";`
 
-- [ ] **1.3 Add `secondApproveRun` method to `RunService`** in the same `run.service.ts` file.
+- [x] **1.3 Add `secondApproveRun` method to `RunService`** in the same `run.service.ts` file.
 
   Inside the `RunService` class:
   ```ts
@@ -68,7 +96,7 @@
   }
   ```
 
-- [ ] **1.4 Wire the route** in the existing payroll run routes file (check `apps/api/src/payroll/run/run.routes.ts` or `run.controller.ts`).
+- [x] **1.4 Wire the route** in the existing payroll run routes file (check `apps/api/src/payroll/run/run.routes.ts` or `run.controller.ts`).
 
   Add:
   ```ts
@@ -83,7 +111,7 @@
   });
   ```
 
-- [ ] **1.5 Create test file** `apps/api/src/payroll/run/run.service.test.ts`:
+- [x] **1.5 Create test file** `apps/api/src/payroll/run/run.service.test.ts`:
   ```ts
   import { RunService } from "./run.service";
   import { AppError } from "../../lib/appError";
@@ -137,7 +165,7 @@
   ```
   If `computePayroll` is not a top-level export, adapt the first test to call it through whatever surface exposes it (e.g., `RunService.confirmRun` with a mocked repo).
 
-- [ ] **1.6 Verify:** run `cd apps/api && npx tsc --noEmit` and `npx jest src/payroll/run/run.service.test.ts` — expect 0 errors, 4 passing tests.
+- [x] **1.6 Verify:** run `cd apps/api && npx tsc --noEmit` and `npx jest src/payroll/run/run.service.test.ts` — expect 0 errors, 4 passing tests.
 
 ---
 
@@ -151,7 +179,7 @@
 
 ### Steps
 
-- [ ] **2.1 Add three methods to `StaffRecordRepository`** in `staff-record.repo.ts`:
+- [x] **2.1 Add three methods to `StaffRecordRepository`** in `staff-record.repo.ts`:
   ```ts
   findByEmail(email: string) {
     return this.prisma.staffRecord.findFirst({ where: { email } });
@@ -169,7 +197,7 @@
   }
   ```
 
-- [ ] **2.2 Patch `StaffRecordService.create`** in `staff-record.service.ts` to short-circuit on duplicates.
+- [x] **2.2 Patch `StaffRecordService.create`** in `staff-record.service.ts` to short-circuit on duplicates.
 
   At the top of the existing `create(data, createdById)` method, before hitting the repo insert:
   ```ts
@@ -184,7 +212,7 @@
   ```
   Ensure `AppError` is imported: `import { AppError } from "../lib/appError";`
 
-- [ ] **2.3 Add `terminate` method to `StaffRecordService`**:
+- [x] **2.3 Add `terminate` method to `StaffRecordService`**:
   ```ts
   async terminate(id: number) {
     const existing = await this.repo.findById(id);
@@ -193,7 +221,7 @@
   }
   ```
 
-- [ ] **2.4 Add route** `PATCH /api/staff-records/:id/terminate` in the existing staff-record routes/controller file:
+- [x] **2.4 Add route** `PATCH /api/staff-records/:id/terminate` in the existing staff-record routes/controller file:
   ```ts
   router.patch("/:id/terminate", auth, async (req, res, next) => {
     try {
@@ -204,7 +232,7 @@
   });
   ```
 
-- [ ] **2.5 Create test file** `apps/api/src/staff-record/staff-record.service.test.ts`:
+- [x] **2.5 Create test file** `apps/api/src/staff-record/staff-record.service.test.ts`:
   ```ts
   import { StaffRecordService } from "./staff-record.service";
   import { AppError } from "../lib/appError";
@@ -246,7 +274,7 @@
   });
   ```
 
-- [ ] **2.6 Verify:** `cd apps/api && npx tsc --noEmit && npx jest src/staff-record/staff-record.service.test.ts`.
+- [x] **2.6 Verify:** `cd apps/api && npx tsc --noEmit && npx jest src/staff-record/staff-record.service.test.ts`.
 
 ---
 
@@ -259,9 +287,9 @@
 
 ### Steps
 
-- [ ] **3.1 Install multer if not already present:** `cd apps/api && npm ls multer || npm install multer && npm install --save-dev @types/multer`.
+- [x] **3.1 Install multer if not already present:** `cd apps/api && npm ls multer || npm install multer && npm install --save-dev @types/multer`.
 
-- [ ] **3.2 Create `apps/api/src/hr/hr.controller.ts`:**
+- [x] **3.2 Create `apps/api/src/hr/hr.controller.ts`:**
   ```ts
   import type { Request, Response } from "express";
 
@@ -273,7 +301,7 @@
   }
   ```
 
-- [ ] **3.3 Create `apps/api/src/hr/hr.routes.ts`:**
+- [x] **3.3 Create `apps/api/src/hr/hr.routes.ts`:**
   ```ts
   import { Router } from "express";
   import multer from "multer";
@@ -315,14 +343,14 @@
   export default router;
   ```
 
-- [ ] **3.4 Register in `apps/api/src/apiRouter.ts`** — add import at top and mount:
+- [x] **3.4 Register in `apps/api/src/apiRouter.ts`** — add import at top and mount:
   ```ts
   import hrRouter from "./hr/hr.routes";
   // ... existing routes
   apiRouter.use("/hr", hrRouter);
   ```
 
-- [ ] **3.5 Smoke test:**
+- [x] **3.5 Smoke test:**
   ```bash
   cd apps/api && npm run build && (npm run dev &)
   sleep 3
@@ -330,7 +358,7 @@
   # Expect: 401
   ```
 
-- [ ] **3.6 Verify:** `cd apps/api && npx tsc --noEmit`.
+- [x] **3.6 Verify:** `cd apps/api && npx tsc --noEmit`.
 
 ---
 
@@ -343,7 +371,7 @@
 
 ### Steps
 
-- [ ] **4.1 Add methods to `EquipmentRepository`** in `equipment.repo.ts`:
+- [x] **4.1 Add methods to `EquipmentRepository`** in `equipment.repo.ts`:
   ```ts
   updateUnitDepreciation(unitId: number, bookValue: number) {
     return this.prisma.equipmentUnit.update({
@@ -367,7 +395,7 @@
   }
   ```
 
-- [ ] **4.2 Patch `EquipmentRepository.createUnit`** to accept the new optional fields. Locate the existing `createUnit` signature and expand its `data` block:
+- [x] **4.2 Patch `EquipmentRepository.createUnit`** to accept the new optional fields. Locate the existing `createUnit` signature and expand its `data` block:
   ```ts
   createUnit(itemId: number, dto: {
     // existing fields...
@@ -393,7 +421,7 @@
   }
   ```
 
-- [ ] **4.3 Patch `EquipmentService.addUnit`** in `equipment.service.ts` to accept the new fields and auto-flag high value:
+- [x] **4.3 Patch `EquipmentService.addUnit`** in `equipment.service.ts` to accept the new fields and auto-flag high value:
   ```ts
   async addUnit(itemId: number, dto: {
     // existing fields...
@@ -413,7 +441,7 @@
   }
   ```
 
-- [ ] **4.4 Add `calculateAndSaveDepreciation` to `EquipmentService`:**
+- [x] **4.4 Add `calculateAndSaveDepreciation` to `EquipmentService`:**
   ```ts
   async calculateAndSaveDepreciation(unitId: number) {
     const unit = await this.repo.findUnitWithDepreciation(unitId);
@@ -443,7 +471,7 @@
   ```
   Ensure `AppError` is imported at the top.
 
-- [ ] **4.5 Create test file** `apps/api/src/equipment/equipment.service.test.ts`:
+- [x] **4.5 Create test file** `apps/api/src/equipment/equipment.service.test.ts`:
   ```ts
   import { EquipmentService } from "./equipment.service";
   import { AppError } from "../lib/appError";
@@ -502,7 +530,7 @@
   });
   ```
 
-- [ ] **4.6 Verify:** `cd apps/api && npx tsc --noEmit && npx jest src/equipment/equipment.service.test.ts`.
+- [x] **4.6 Verify:** `cd apps/api && npx tsc --noEmit && npx jest src/equipment/equipment.service.test.ts`.
 
 ---
 
@@ -519,7 +547,7 @@
 
 ### Steps
 
-- [ ] **5.1 Create `dto/software-license.dto.ts`:**
+- [x] **5.1 Create `dto/software-license.dto.ts`:**
   ```ts
   export interface CreateSoftwareLicenseDto {
     name: string;
@@ -542,7 +570,7 @@
   }
   ```
 
-- [ ] **5.2 Create `software-license.repo.ts`:**
+- [x] **5.2 Create `software-license.repo.ts`:**
   ```ts
   import type { PrismaClient } from "../../generated/client";
   import type { CreateSoftwareLicenseDto, UpdateSoftwareLicenseDto } from "./dto/software-license.dto";
@@ -601,7 +629,7 @@
   }
   ```
 
-- [ ] **5.3 Create `software-license.service.ts`:**
+- [x] **5.3 Create `software-license.service.ts`:**
   ```ts
   import { AppError } from "../lib/appError";
   import type { SoftwareLicenseRepository } from "./software-license.repo";
@@ -640,7 +668,7 @@
   }
   ```
 
-- [ ] **5.4 Create `software-license.controller.ts`:**
+- [x] **5.4 Create `software-license.controller.ts`:**
   ```ts
   import type { Request, Response, NextFunction } from "express";
   import type { SoftwareLicenseService } from "./software-license.service";
@@ -669,7 +697,7 @@
   }
   ```
 
-- [ ] **5.5 Create `software-license.routes.ts`:**
+- [x] **5.5 Create `software-license.routes.ts`:**
   ```ts
   import { Router } from "express";
   import { auth } from "../lib/authMiddleware";
@@ -693,7 +721,7 @@
   export default router;
   ```
 
-- [ ] **5.6 Create `software-license.service.test.ts`:**
+- [x] **5.6 Create `software-license.service.test.ts`:**
   ```ts
   import { SoftwareLicenseService } from "./software-license.service";
   import { AppError } from "../lib/appError";
@@ -728,13 +756,13 @@
   });
   ```
 
-- [ ] **5.7 Register router in `apiRouter.ts`:**
+- [x] **5.7 Register router in `apiRouter.ts`:**
   ```ts
   import softwareLicenseRouter from "./software-license/software-license.routes";
   apiRouter.use("/software-licenses", softwareLicenseRouter);
   ```
 
-- [ ] **5.8 Verify:** `cd apps/api && npx tsc --noEmit && npx jest src/software-license/software-license.service.test.ts`.
+- [x] **5.8 Verify:** `cd apps/api && npx tsc --noEmit && npx jest src/software-license/software-license.service.test.ts`.
 
 ---
 
@@ -751,7 +779,7 @@
 
 ### Steps
 
-- [ ] **6.1 Create `dto/ledger.dto.ts`:**
+- [x] **6.1 Create `dto/ledger.dto.ts`:**
   ```ts
   export interface CreateLedgerEntryDto {
     type: "INCOME" | "EXPENSE";
@@ -777,7 +805,7 @@
   }
   ```
 
-- [ ] **6.2 Create `ledger.repo.ts`:**
+- [x] **6.2 Create `ledger.repo.ts`:**
   ```ts
   import type { PrismaClient } from "../../generated/client";
   import type { CreateLedgerEntryDto, LedgerListQuery } from "./dto/ledger.dto";
@@ -822,7 +850,7 @@
   }
   ```
 
-- [ ] **6.3 Create `ledger.service.ts`:**
+- [x] **6.3 Create `ledger.service.ts`:**
   ```ts
   import { AppError } from "../lib/appError";
   import type { LedgerRepository } from "./ledger.repo";
@@ -868,7 +896,7 @@
   }
   ```
 
-- [ ] **6.4 Create `ledger.controller.ts`:**
+- [x] **6.4 Create `ledger.controller.ts`:**
   ```ts
   import type { Request, Response, NextFunction } from "express";
   import type { LedgerService } from "./ledger.service";
@@ -891,7 +919,7 @@
   }
   ```
 
-- [ ] **6.5 Create `ledger.routes.ts`:**
+- [x] **6.5 Create `ledger.routes.ts`:**
   ```ts
   import { Router } from "express";
   import { auth } from "../lib/authMiddleware";
@@ -914,7 +942,7 @@
   export default router;
   ```
 
-- [ ] **6.6 Create `ledger.service.test.ts`:**
+- [x] **6.6 Create `ledger.service.test.ts`:**
   ```ts
   import { LedgerService } from "./ledger.service";
   import { AppError } from "../lib/appError";
@@ -959,13 +987,13 @@
   });
   ```
 
-- [ ] **6.7 Register router in `apiRouter.ts`:**
+- [x] **6.7 Register router in `apiRouter.ts`:**
   ```ts
   import ledgerRouter from "./ledger/ledger.routes";
   apiRouter.use("/ledger", ledgerRouter);
   ```
 
-- [ ] **6.8 Verify:** `cd apps/api && npx tsc --noEmit && npx jest src/ledger/ledger.service.test.ts`.
+- [x] **6.8 Verify:** `cd apps/api && npx tsc --noEmit && npx jest src/ledger/ledger.service.test.ts`.
 
 ---
 
@@ -982,7 +1010,7 @@
 
 ### Steps
 
-- [ ] **7.1 Create `dto/sales.dto.ts`:**
+- [x] **7.1 Create `dto/sales.dto.ts`:**
   ```ts
   export interface CreateSalesRecordDto {
     type: "TICKET" | "UNIFORM" | "OTHER";
@@ -994,7 +1022,7 @@
   }
   ```
 
-- [ ] **7.2 Create `sales.repo.ts`:**
+- [x] **7.2 Create `sales.repo.ts`:**
   ```ts
   import type { PrismaClient } from "../../generated/client";
   import type { CreateSalesRecordDto } from "./dto/sales.dto";
@@ -1030,7 +1058,7 @@
   }
   ```
 
-- [ ] **7.3 Create `sales.service.ts`:**
+- [x] **7.3 Create `sales.service.ts`:**
   ```ts
   import { AppError } from "../lib/appError";
   import type { SalesRepository } from "./sales.repo";
@@ -1054,7 +1082,7 @@
   }
   ```
 
-- [ ] **7.4 Create `sales.controller.ts`:**
+- [x] **7.4 Create `sales.controller.ts`:**
   ```ts
   import type { Request, Response, NextFunction } from "express";
   import type { SalesService } from "./sales.service";
@@ -1074,7 +1102,7 @@
   }
   ```
 
-- [ ] **7.5 Create `sales.routes.ts`:**
+- [x] **7.5 Create `sales.routes.ts`:**
   ```ts
   import { Router } from "express";
   import { auth } from "../lib/authMiddleware";
@@ -1095,7 +1123,7 @@
   export default router;
   ```
 
-- [ ] **7.6 Create `sales.service.test.ts`:**
+- [x] **7.6 Create `sales.service.test.ts`:**
   ```ts
   import { SalesService } from "./sales.service";
   import { AppError } from "../lib/appError";
@@ -1121,13 +1149,13 @@
   });
   ```
 
-- [ ] **7.7 Register in `apiRouter.ts`:**
+- [x] **7.7 Register in `apiRouter.ts`:**
   ```ts
   import salesRouter from "./sales/sales.routes";
   apiRouter.use("/sales", salesRouter);
   ```
 
-- [ ] **7.8 Verify:** `cd apps/api && npx tsc --noEmit && npx jest src/sales/sales.service.test.ts`.
+- [x] **7.8 Verify:** `cd apps/api && npx tsc --noEmit && npx jest src/sales/sales.service.test.ts`.
 
 ---
 
@@ -1144,7 +1172,7 @@
 
 ### Steps
 
-- [ ] **8.1 Create `dto/inventory.dto.ts`:**
+- [x] **8.1 Create `dto/inventory.dto.ts`:**
   ```ts
   export interface CreateInventoryItemDto {
     name: string;
@@ -1158,7 +1186,7 @@
   }
   ```
 
-- [ ] **8.2 Create `inventory.repo.ts`:**
+- [x] **8.2 Create `inventory.repo.ts`:**
   ```ts
   import type { PrismaClient } from "../../generated/client";
   import type { CreateInventoryItemDto } from "./dto/inventory.dto";
@@ -1199,7 +1227,7 @@
   }
   ```
 
-- [ ] **8.3 Create `inventory.service.ts`:**
+- [x] **8.3 Create `inventory.service.ts`:**
   ```ts
   import { AppError } from "../lib/appError";
   import type { InventoryRepository } from "./inventory.repo";
@@ -1228,7 +1256,7 @@
   }
   ```
 
-- [ ] **8.4 Create `inventory.controller.ts`:**
+- [x] **8.4 Create `inventory.controller.ts`:**
   ```ts
   import type { Request, Response, NextFunction } from "express";
   import type { InventoryService } from "./inventory.service";
@@ -1251,7 +1279,7 @@
   }
   ```
 
-- [ ] **8.5 Create `inventory.routes.ts`:**
+- [x] **8.5 Create `inventory.routes.ts`:**
   ```ts
   import { Router } from "express";
   import { auth } from "../lib/authMiddleware";
@@ -1273,7 +1301,7 @@
   export default router;
   ```
 
-- [ ] **8.6 Create `inventory.service.test.ts`:**
+- [x] **8.6 Create `inventory.service.test.ts`:**
   ```ts
   import { InventoryService } from "./inventory.service";
   import type { InventoryRepository } from "./inventory.repo";
@@ -1308,13 +1336,13 @@
   });
   ```
 
-- [ ] **8.7 Register in `apiRouter.ts`:**
+- [x] **8.7 Register in `apiRouter.ts`:**
   ```ts
   import inventoryRouter from "./inventory/inventory.routes";
   apiRouter.use("/inventory", inventoryRouter);
   ```
 
-- [ ] **8.8 Verify:** `cd apps/api && npx tsc --noEmit && npx jest src/inventory/inventory.service.test.ts`.
+- [x] **8.8 Verify:** `cd apps/api && npx tsc --noEmit && npx jest src/inventory/inventory.service.test.ts`.
 
 ---
 
@@ -1328,7 +1356,7 @@
 
 ### Steps
 
-- [ ] **9.1 Add repo methods to `maintenance.repo.ts`:**
+- [x] **9.1 Add repo methods to `maintenance.repo.ts`:**
   ```ts
   lock(id: number) {
     return this.prisma.maintenanceRequest.update({
@@ -1347,7 +1375,7 @@
   }
   ```
 
-- [ ] **9.2 Patch `MaintenanceService.update`** — add lock check as the first statement inside the method:
+- [x] **9.2 Patch `MaintenanceService.update`** — add lock check as the first statement inside the method:
   ```ts
   async update(id: number, dto: UpdateMaintenanceDto) {
     const existing = await this.repo.findById(id);
@@ -1357,7 +1385,7 @@
   }
   ```
 
-- [ ] **9.3 Add `lock` method to `MaintenanceService`:**
+- [x] **9.3 Add `lock` method to `MaintenanceService`:**
   ```ts
   async lock(id: number, _userId: number) {
     const existing = await this.repo.findById(id);
@@ -1368,7 +1396,7 @@
   }
   ```
 
-- [ ] **9.4 Add `submitToFinance` method to `MaintenanceService`:**
+- [x] **9.4 Add `submitToFinance` method to `MaintenanceService`:**
   Constructor already takes `maintenanceRepo`. Change constructor to also accept an optional `notificationRepo`, or import a shared `NotificationRepository` and instantiate it here. Preferred approach — inject via constructor:
   ```ts
   constructor(
@@ -1404,7 +1432,7 @@
   ```
   Update the wiring code (in the routes/module file) to construct MaintenanceService with `new MaintenanceService(maintenanceRepo, new NotificationRepository(prisma), prisma)`.
 
-- [ ] **9.5 Add routes.** In `apps/api/src/facility/facility.routes.ts` (or wherever `/maintenance` routes are registered), add:
+- [x] **9.5 Add routes.** In `apps/api/src/facility/facility.routes.ts` (or wherever `/maintenance` routes are registered), add:
   ```ts
   router.post("/maintenance/:id/lock", auth, async (req, res, next) => {
     try {
@@ -1421,7 +1449,7 @@
   });
   ```
 
-- [ ] **9.6 Extend or create `maintenance.service.test.ts`** with these two tests:
+- [x] **9.6 Extend or create `maintenance.service.test.ts`** with these two tests:
   ```ts
   it("throws 400 when locking an unresolved request", async () => {
     const repo = makeRepo({
@@ -1443,7 +1471,7 @@
   ```
   Provide `makeRepo` and `makeNotifRepo` helper factories at the top of the test file.
 
-- [ ] **9.7 Verify:** `cd apps/api && npx tsc --noEmit && npx jest src/facility/maintenance/maintenance.service.test.ts`.
+- [x] **9.7 Verify:** `cd apps/api && npx tsc --noEmit && npx jest src/facility/maintenance/maintenance.service.test.ts`.
 
 ---
 
@@ -1459,7 +1487,7 @@ Reference existing pattern in `apps/api/src/jobs/contractExpiry.ts`. Cron uses `
 
 ### Steps
 
-- [ ] **10.1 Create `apps/api/src/jobs/equipmentExpiryAlert.ts`:**
+- [x] **10.1 Create `apps/api/src/jobs/equipmentExpiryAlert.ts`:**
   ```ts
   import cron from "node-cron";
   import { getPrisma } from "../lib/prisma";
@@ -1509,7 +1537,7 @@ Reference existing pattern in `apps/api/src/jobs/contractExpiry.ts`. Cron uses `
   }
   ```
 
-- [ ] **10.2 Create `apps/api/src/jobs/inventoryThreshold.ts`:**
+- [x] **10.2 Create `apps/api/src/jobs/inventoryThreshold.ts`:**
   ```ts
   import cron from "node-cron";
   import { getPrisma } from "../lib/prisma";
@@ -1544,7 +1572,7 @@ Reference existing pattern in `apps/api/src/jobs/contractExpiry.ts`. Cron uses `
   }
   ```
 
-- [ ] **10.3 Create `apps/api/src/jobs/monthlyDepreciation.ts`:**
+- [x] **10.3 Create `apps/api/src/jobs/monthlyDepreciation.ts`:**
   ```ts
   import cron from "node-cron";
   import { getPrisma } from "../lib/prisma";
@@ -1579,7 +1607,7 @@ Reference existing pattern in `apps/api/src/jobs/contractExpiry.ts`. Cron uses `
   }
   ```
 
-- [ ] **10.4 Register the 3 jobs in `apps/api/src/server.ts`.** Locate the block where existing jobs are started (e.g. `startContractExpiryJob()`), and add:
+- [x] **10.4 Register the 3 jobs in `apps/api/src/server.ts`.** Locate the block where existing jobs are started (e.g. `startContractExpiryJob()`), and add:
   ```ts
   import { startEquipmentExpiryAlertJob } from "./jobs/equipmentExpiryAlert";
   import { startInventoryThresholdJob } from "./jobs/inventoryThreshold";
@@ -1590,7 +1618,7 @@ Reference existing pattern in `apps/api/src/jobs/contractExpiry.ts`. Cron uses `
   startMonthlyDepreciationJob();
   ```
 
-- [ ] **10.5 Verify:** `cd apps/api && npx tsc --noEmit`.
+- [x] **10.5 Verify:** `cd apps/api && npx tsc --noEmit`.
 
 ---
 
@@ -1606,7 +1634,7 @@ Each service needs an injected `LedgerService`. The wiring change is: at the rou
 
 ### Steps
 
-- [ ] **11.1 Extend `RunService` in `apps/api/src/payroll/run/run.service.ts`.**
+- [x] **11.1 Extend `RunService` in `apps/api/src/payroll/run/run.service.ts`.**
   - Update constructor to accept `LedgerService`: `constructor(private runRepo: RunRepository, private ledgerService: LedgerService) {}`.
   - Inside `secondApproveRun`, after a successful `runRepo.secondApprove(...)`, add:
     ```ts
@@ -1626,7 +1654,7 @@ Each service needs an injected `LedgerService`. The wiring change is: at the rou
     ```
   - Update the routes file that constructs `RunService` to pass a `LedgerService` instance.
 
-- [ ] **11.2 Extend `EquipmentService.transitionUnitStatus` in `equipment.service.ts`.**
+- [x] **11.2 Extend `EquipmentService.transitionUnitStatus` in `equipment.service.ts`.**
   - Update constructor to inject `LedgerService`.
   - After the DB update, if the new status is `RETIRED`:
     ```ts
@@ -1646,7 +1674,7 @@ Each service needs an injected `LedgerService`. The wiring change is: at the rou
     }
     ```
 
-- [ ] **11.3 Extend maintenance flow in `maintenance.service.ts`.**
+- [x] **11.3 Extend maintenance flow in `maintenance.service.ts`.**
   - Inject `LedgerService` into `MaintenanceService`.
   - Inside the method that transitions a maintenance record to `RESOLVED` (typically `gmApprove` or equivalent), after the update:
     ```ts
@@ -1666,7 +1694,7 @@ Each service needs an injected `LedgerService`. The wiring change is: at the rou
     }
     ```
 
-- [ ] **11.4 Sponsorship (optional).** Run `ls apps/api/src/sponsorship/sponsorship.service.ts` — if the file exists, locate where a sponsorship contract is signed/activated and add:
+- [x] **11.4 Sponsorship (optional).** Run `ls apps/api/src/sponsorship/sponsorship.service.ts` — if the file exists, locate where a sponsorship contract is signed/activated and add:
   ```ts
   void this.ledgerService.createAutoEntry({
     type: "INCOME",
@@ -1682,7 +1710,7 @@ Each service needs an injected `LedgerService`. The wiring change is: at the rou
   ```
   If the file does not exist, skip this substep.
 
-- [ ] **11.5 Verify:** `cd apps/api && npx tsc --noEmit && npx jest` — all existing tests must still pass. The fire-and-forget calls are wrapped in `void … .catch(...)` so they cannot break the parent operation.
+- [x] **11.5 Verify:** `cd apps/api && npx tsc --noEmit && npx jest` — all existing tests must still pass. The fire-and-forget calls are wrapped in `void … .catch(...)` so they cannot break the parent operation.
 
 ---
 
@@ -1690,7 +1718,7 @@ Each service needs an injected `LedgerService`. The wiring change is: at the rou
 
 ### Steps
 
-- [ ] **12.1 Confirm every new router is registered** in `apps/api/src/apiRouter.ts`:
+- [x] **12.1 Confirm every new router is registered** in `apps/api/src/apiRouter.ts`:
   ```ts
   import hrRouter from "./hr/hr.routes";
   import softwareLicenseRouter from "./software-license/software-license.routes";
@@ -1705,11 +1733,11 @@ Each service needs an injected `LedgerService`. The wiring change is: at the rou
   apiRouter.use("/inventory", inventoryRouter);
   ```
 
-- [ ] **12.2 Typecheck:** `cd apps/api && npx tsc --noEmit` — expect 0 errors.
+- [x] **12.2 Typecheck:** `cd apps/api && npx tsc --noEmit` — expect 0 errors.
 
-- [ ] **12.3 Run full test suite:** `cd apps/api && npx jest --no-coverage` — expect all new tests pass, no regressions in existing tests.
+- [x] **12.3 Run full test suite:** `cd apps/api && npx jest --no-coverage` — expect all new tests pass, no regressions in existing tests.
 
-- [ ] **12.4 Smoke tests** — start the server (`npm run dev &`, wait 3s) and check auth guards:
+- [x] **12.4 Smoke tests** — start the server (`npm run dev &`, wait 3s) and check auth guards:
   ```bash
   for path in /api/hr/documents /api/software-licenses /api/ledger /api/sales /api/inventory /api/inventory/alerts; do
     code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:3001$path")
@@ -1729,19 +1757,19 @@ Each service needs an injected `LedgerService`. The wiring change is: at the rou
   # 401
   ```
 
-- [ ] **12.5 Stop the dev server:** `pkill -f "tsx.*server" || pkill -f "node.*server"`.
+- [x] **12.5 Stop the dev server:** `pkill -f "tsx.*server" || pkill -f "node.*server"`.
 
-- [ ] **12.6 Final review checklist:**
-  - [ ] All 12 tasks completed
-  - [ ] All new tests pass (Tasks 1, 2, 4, 5, 6, 7, 8, 9)
-  - [ ] No existing test regressions
-  - [ ] All 5 new routers registered in apiRouter.ts
-  - [ ] All 3 new cron jobs registered in server.ts
-  - [ ] Fire-and-forget ledger entries do not throw uncaught errors
-  - [ ] netPay is floored at 0 when raw computation is negative and error is thrown when raw < 0
-  - [ ] Equipment `isHighValue` auto-set at `purchaseValue >= 500000`
-  - [ ] Facility maintenance `submitToFinance` requires `estimatedCost >= 1_000_000`
-  - [ ] File upload accepts only `.pdf .docx .xlsx .hwp` at max 10MB
+- [x] **12.6 Final review checklist:**
+  - [x] All 12 tasks completed
+  - [x] All new tests pass (Tasks 1, 2, 4, 5, 6, 7, 8, 9)
+  - [x] No existing test regressions
+  - [x] All 5 new routers registered in apiRouter.ts
+  - [x] All 3 new cron jobs registered in server.ts
+  - [x] Fire-and-forget ledger entries do not throw uncaught errors
+  - [x] netPay is floored at 0 when raw computation is negative and error is thrown when raw < 0
+  - [x] Equipment `isHighValue` auto-set at `purchaseValue >= 500000`
+  - [x] Facility maintenance `submitToFinance` requires `estimatedCost >= 1_000_000`
+  - [x] File upload accepts only `.pdf .docx .xlsx .hwp` at max 10MB
 
 ---
 

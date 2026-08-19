@@ -1,6 +1,6 @@
 # Guardian(유소년 학부모) Feature Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** GUARDIAN 역할 유저가 자녀(Player)를 연동하고, 자녀 정보 풀패키지 대시보드를 조회하며, 부상·콜업 시 인앱+이메일 알림을 받는 기능 구현.
 
@@ -37,7 +37,7 @@
 - Create: `src/guardian/dto/guardian.dto.ts`
 - Create: `src/guardian/guardian.middleware.ts`
 
-- [ ] **Step 1: DTO 파일 생성**
+- [x] **Step 1: DTO 파일 생성**
 
 ```ts
 // src/guardian/dto/guardian.dto.ts
@@ -56,7 +56,7 @@ export interface IssueInviteCodeDto {
 }
 ```
 
-- [ ] **Step 2: 미들웨어 파일 생성**
+- [x] **Step 2: 미들웨어 파일 생성**
 
 ```ts
 // src/guardian/guardian.middleware.ts
@@ -90,7 +90,7 @@ export async function requireGuardianChild(req: Request, res: Response, next: Ne
 }
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add src/guardian/dto/guardian.dto.ts src/guardian/guardian.middleware.ts
@@ -104,7 +104,7 @@ git commit -m "feat(guardian): DTO 및 미들웨어 추가"
 **Files:**
 - Create: `src/guardian/guardian.repo.ts`
 
-- [ ] **Step 1: repo 파일 생성**
+- [x] **Step 1: repo 파일 생성**
 
 ```ts
 // src/guardian/guardian.repo.ts
@@ -234,7 +234,7 @@ export class GuardianRepository {
 }
 ```
 
-- [ ] **Step 2: 커밋**
+- [x] **Step 2: 커밋**
 
 ```bash
 git add src/guardian/guardian.repo.ts
@@ -249,7 +249,7 @@ git commit -m "feat(guardian): GuardianRepository 추가"
 - Create: `src/guardian/guardian.service.ts`
 - Create: `src/guardian/guardian.service.test.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 ```ts
 // src/guardian/guardian.service.test.ts
@@ -354,14 +354,14 @@ describe("GuardianService.issueInviteCode", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 — 실패 확인**
+- [x] **Step 2: 테스트 실행 — 실패 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx jest guardian.service.test.ts --no-coverage 2>&1 | tail -10
 ```
 Expected: `Cannot find module './guardian.service'`
 
-- [ ] **Step 3: GuardianService 구현**
+- [x] **Step 3: GuardianService 구현**
 
 ```ts
 // src/guardian/guardian.service.ts
@@ -452,14 +452,14 @@ export class GuardianService {
 }
 ```
 
-- [ ] **Step 4: 테스트 실행 — 통과 확인**
+- [x] **Step 4: 테스트 실행 — 통과 확인**
 
 ```bash
 npx jest guardian.service.test.ts --no-coverage 2>&1 | tail -10
 ```
 Expected: `Tests: 7 passed`
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add src/guardian/guardian.service.ts src/guardian/guardian.service.test.ts
@@ -475,7 +475,7 @@ git commit -m "feat(guardian): GuardianService 자녀 연동 + 대시보드 로�
 - Create: `src/guardian/guardian.routes.ts`
 - Modify: `src/server.ts`
 
-- [ ] **Step 1: Controller 생성**
+- [x] **Step 1: Controller 생성**
 
 ```ts
 // src/guardian/guardian.controller.ts
@@ -532,7 +532,7 @@ export class GuardianController {
 }
 ```
 
-- [ ] **Step 2: Routes 생성**
+- [x] **Step 2: Routes 생성**
 
 ```ts
 // src/guardian/guardian.routes.ts
@@ -563,7 +563,7 @@ router.get("/me/dashboard", auth, requireGuardian, controller.getDashboard);
 export default router;
 ```
 
-- [ ] **Step 3: server.ts에 라우터 등록**
+- [x] **Step 3: server.ts에 라우터 등록**
 
 `src/server.ts`에서 다른 라우터가 등록된 곳을 찾아 아래 패턴으로 추가:
 ```ts
@@ -572,7 +572,7 @@ import guardianRouter from "./guardian/guardian.routes";
 app.use("/api/guardian", guardianRouter);
 ```
 
-- [ ] **Step 4: 서버 재시작 후 smoke test**
+- [x] **Step 4: 서버 재시작 후 smoke test**
 
 ```bash
 # 비로그인 → 401
@@ -583,7 +583,7 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:3001/api/guardian/me/chi
 # (로그인 후 access-token 쿠키 사용)
 ```
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add src/guardian/guardian.controller.ts src/guardian/guardian.routes.ts src/server.ts
@@ -597,7 +597,7 @@ git commit -m "feat(guardian): controller, routes, server 등록"
 **Files:**
 - Modify: `src/lib/email.ts`
 
-- [ ] **Step 1: email.ts에 guardian 이메일 함수 추가**
+- [x] **Step 1: email.ts에 guardian 이메일 함수 추가**
 
 기존 `sendInviteEmail` 아래에 추가:
 
@@ -641,7 +641,7 @@ export async function sendGuardianCallupEmail(
 }
 ```
 
-- [ ] **Step 2: 커밋**
+- [x] **Step 2: 커밋**
 
 ```bash
 git add src/lib/email.ts
@@ -656,7 +656,7 @@ git commit -m "feat(guardian): 부상/콜업 학부모 이메일 템플릿 추�
 - Modify: `src/injury/injury.repo.ts`
 - Modify: `src/injury/injury.service.ts`
 
-- [ ] **Step 1: injury.repo.ts의 getPlayerName 쿼리에 guardianId + email 추가**
+- [x] **Step 1: injury.repo.ts의 getPlayerName 쿼리에 guardianId + email 추가**
 
 기존 `getPlayerName` 메서드를 찾아 수정:
 
@@ -683,7 +683,7 @@ getPlayerWithGuardian(playerId: string) {
 }
 ```
 
-- [ ] **Step 2: injury.service.ts의 createInjury에서 getPlayerName → getPlayerWithGuardian 교체 후 guardian 알림 추가**
+- [x] **Step 2: injury.service.ts의 createInjury에서 getPlayerName → getPlayerWithGuardian 교체 후 guardian 알림 추가**
 
 `createInjury` 내 try 블록 안에서 기존 알림 아래에 추가:
 
@@ -721,13 +721,13 @@ if (player?.guardianId) {
 }
 ```
 
-- [ ] **Step 3: 기존 `getPlayerName` 호출부가 있으면 `getPlayerWithGuardian`으로 교체**
+- [x] **Step 3: 기존 `getPlayerName` 호출부가 있으면 `getPlayerWithGuardian`으로 교체**
 
 ```bash
 grep -n "getPlayerName" /Users/juno/work/football/apps/api/src/injury/injury.service.ts
 ```
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add src/injury/injury.repo.ts src/injury/injury.service.ts
@@ -741,7 +741,7 @@ git commit -m "feat(guardian): 부상 발생 시 학부모 인앱+이메일 알�
 **Files:**
 - Modify: `src/player-callup/player-callup.service.ts`
 
-- [ ] **Step 1: approve 메서드에서 OFFICIAL 콜업 승인 시 guardian 알림 추가**
+- [x] **Step 1: approve 메서드에서 OFFICIAL 콜업 승인 시 guardian 알림 추가**
 
 `approve` 메서드 안에서 `await this.repo.approve(id, approvedById)` 이후, `return updated` 전에 추가:
 
@@ -774,7 +774,7 @@ if (guardianId) {
 }
 ```
 
-- [ ] **Step 2: player-callup.repo.ts에 findGuardianEmail 추가**
+- [x] **Step 2: player-callup.repo.ts에 findGuardianEmail 추가**
 
 ```ts
 findGuardianEmail(guardianId: number) {
@@ -785,7 +785,7 @@ findGuardianEmail(guardianId: number) {
 }
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add src/player-callup/player-callup.service.ts src/player-callup/player-callup.repo.ts
@@ -796,21 +796,21 @@ git commit -m "feat(guardian): 1군 콜업 승인 시 학부모 인앱+이메일
 
 ## Task 8: 전체 검증
 
-- [ ] **Step 1: TypeScript 타입 체크**
+- [x] **Step 1: TypeScript 타입 체크**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1
 ```
 Expected: 에러 없음
 
-- [ ] **Step 2: 전체 테스트 실행**
+- [x] **Step 2: 전체 테스트 실행**
 
 ```bash
 npx jest --no-coverage 2>&1 | tail -15
 ```
 Expected: 기존 테스트 모두 통과 + guardian 7개 통과
 
-- [ ] **Step 3: 서버 재시작 후 E2E smoke test**
+- [x] **Step 3: 서버 재시작 후 E2E smoke test**
 
 ```bash
 # 1. 비로그인 → 401
@@ -833,7 +833,7 @@ curl -s http://localhost:3001/api/guardian/me/dashboard \
   -b "access-token=<GUARDIAN_TOKEN>" | jq .
 ```
 
-- [ ] **Step 4: 최종 커밋 + PR 생성**
+- [x] **Step 4: 최종 커밋 + PR 생성**
 
 ```bash
 git push origin feat/guardian-feature
