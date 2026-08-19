@@ -130,7 +130,8 @@
       "overview": "Overview",
       "attendance": "Attendance",
       "injuries": "Injuries",
-      "fees": "Fees"
+      "fees": "Fees",
+      "growth": "Growth Reports"
     },
     "overview": {
       "suspension": "Participation Suspended",
@@ -166,6 +167,18 @@
         "RETURNING": "Returning",
         "RETURNED": "Returned"
       }
+    },
+    "growth": {
+      "empty": "No growth evaluations yet.",
+      "latest": "Latest Evaluation",
+      "coach": "Coach"
+    },
+    "link": {
+      "description": "Enter the invite code provided by your coach.",
+      "codePlaceholder": "Enter invite code",
+      "submit": "Link",
+      "success": "Child linked successfully.",
+      "failed": "Link failed. Please check the code."
     }
   },
   "guardianFeeView": {
