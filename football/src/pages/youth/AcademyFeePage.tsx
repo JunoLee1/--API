@@ -107,7 +107,11 @@ function RegisterFeeDialog({ open, onOpenChange, onDone }: {
                     className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
                     onClick={() => { setSelectedPlayer(p); setStep(2) }}
                   >
-                    {p.playerName}
+                    <span className="font-medium">{p.playerName}</span>
+                    {p.guardianUsername
+                      ? <span className="ml-2 text-muted-foreground">학부모: {p.guardianUsername}</span>
+                      : <span className="ml-2 text-destructive text-xs">학부모 미등록</span>
+                    }
                   </button>
                 ))}
               </div>

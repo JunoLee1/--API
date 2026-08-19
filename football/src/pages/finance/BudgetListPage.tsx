@@ -5,9 +5,12 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { budgetControlApi } from '@/services/budgetControl.service'
+import { seasonApi } from '@/services/season.service'
 import type { BudgetHeaderSummary, BudgetStatus } from '@/types/budget-control'
+import type { Season } from '@/types/season'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Plus } from 'lucide-react'
 
@@ -22,10 +25,15 @@ const STATUS_LABEL: Record<BudgetStatus, string> = {
 function CreateBudgetDialog({ open, onOpenChange, onCreated }: {
   open: boolean; onOpenChange: (v: boolean) => void; onCreated: () => void
 }) {
+  const [seasons, setSeasons] = useState<Season[]>([])
   const [seasonId, setSeasonId] = useState('')
   const [name, setName] = useState('')
   const [totalBudget, setTotalBudget] = useState('')
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (open) seasonApi.list().then(setSeasons).catch(() => {})
+  }, [open])
 
   const handleSubmit = async () => {
     if (!seasonId || !name || !totalBudget) { toast.error('모든 필드를 입력하세요.'); return }
@@ -50,8 +58,15 @@ function CreateBudgetDialog({ open, onOpenChange, onCreated }: {
         <DialogHeader><DialogTitle>예산 편성</DialogTitle></DialogHeader>
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
-            <Label>시즌 ID</Label>
-            <Input type="number" value={seasonId} onChange={e => setSeasonId(e.target.value)} placeholder="예: 3" />
+            <Label>시즌</Label>
+            <Select value={seasonId} onValueChange={setSeasonId}>
+              <SelectTrigger><SelectValue placeholder="시즌 선택" /></SelectTrigger>
+              <SelectContent>
+                {seasons.map(s => (
+                  <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1.5">
             <Label>예산명</Label>

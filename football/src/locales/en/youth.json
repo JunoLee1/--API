@@ -116,6 +116,7 @@
     "status": {
       "PENDING": "Pending",
       "SUBMITTED": "Under Review",
+      "FIRST_APPROVED": "1st Approved",
       "PAID": "Paid",
       "OVERDUE": "Overdue",
       "LOCKED": "Suspended"

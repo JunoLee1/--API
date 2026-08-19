@@ -38,6 +38,7 @@ export interface YouthPlayerSearchResult {
   id: string
   playerName: string
   guardianId: number | null
+  guardianUsername: string | null
 }
 
 export interface AcademyFinanceStats {

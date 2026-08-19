@@ -17,7 +17,15 @@ export class AcademyFeeService {
 
   getAll(query: FeeListQuery) { return this.repo.findAll(query); }
   getByPlayer(playerId: string) { return this.repo.findByPlayer(playerId); }
-  searchYouthPlayers(name: string) { return this.repo.searchYouthPlayers(name); }
+  async searchYouthPlayers(name: string) {
+    const players = await this.repo.searchYouthPlayers(name);
+    return players.map(p => ({
+      id: p.id,
+      playerName: p.playerName,
+      guardianId: p.guardianId,
+      guardianUsername: p.guardian?.username ?? null,
+    }));
+  }
 
   async registerWithProof(dto: { playerId: string; year: number; month: number; amount: number }, proofUrl: string) {
     const prisma = getPrisma();

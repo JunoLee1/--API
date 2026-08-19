@@ -157,9 +157,13 @@ export class AcademyFeeRepository {
       where: {
         playerName: { contains: name, mode: 'insensitive' as const },
         team: { type: 'YOUTH' as any, isLite: false },
-        guardianId: { not: null },
       },
-      select: { id: true, playerName: true, guardianId: true },
+      select: {
+        id: true,
+        playerName: true,
+        guardianId: true,
+        guardian: { select: { username: true } },
+      },
       take: 10,
       orderBy: { playerName: 'asc' },
     })
