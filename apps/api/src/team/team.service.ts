@@ -4,8 +4,8 @@ import { AppError } from "../lib/appError";
 export class TeamService {
   constructor(private repo: TeamRepository) {}
 
-  getAll() {
-    return this.repo.findAll();
+  getAll(clubId?: number | null) {
+    return this.repo.findAll(clubId);
   }
 
   async getById(id: number) {

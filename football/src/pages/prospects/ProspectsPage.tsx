@@ -285,7 +285,7 @@ function SignProspectDialog({ prospect, open, onOpenChange, onSaved }: SignProsp
             </div>
             <div className="space-y-1.5">
               <Label>{t('prospects.signForm.salaryLabel')} *</Label>
-              <Input type="number" placeholder="500000000" value={salary} onChange={(e) => setSalary(e.target.value)} />
+              <Input type="text" inputMode="numeric" placeholder="500,000,000" value={salary ? Number(salary).toLocaleString('ko-KR') : ''} onChange={(e) => setSalary(e.target.value.replace(/[^0-9]/g, ''))} />
             </div>
           </div>
 

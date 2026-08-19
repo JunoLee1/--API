@@ -180,7 +180,7 @@ export function OperatingExpensePage() {
             </div>
             <div className="space-y-1.5">
               <Label>{t('operatingExpense.col.amount')}</Label>
-              <Input type="number" value={form.amount} onChange={(e) => setForm((p) => ({ ...p, amount: e.target.value }))} placeholder="1000000" />
+              <Input type="text" inputMode="numeric" value={form.amount ? Number(form.amount).toLocaleString('ko-KR') : ''} onChange={(e) => setForm((p) => ({ ...p, amount: e.target.value.replace(/[^0-9]/g, '') }))} placeholder="1,000,000" />
             </div>
             <div className="space-y-1.5">
               <Label>{t('operatingExpense.col.date')}</Label>

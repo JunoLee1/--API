@@ -46,19 +46,24 @@ export class StaffRecordService {
 
   async update(
     id: number,
-    data: { name?: string; role?: string; departmentId?: number | null; phone?: string; isActive?: boolean; notes?: string }
+    data: { name?: string; role?: string; departmentId?: number | null; phone?: string; isActive?: boolean; notes?: string },
+    actorId: number,
   ) {
     await this.get(id);
-    // S5: when deactivating via update, record employment end date
     const updateData: typeof data & { employmentEndDate?: Date } = { ...data };
     if (data.isActive === false) {
       updateData.employmentEndDate = new Date();
     }
-    return this.repo.update(id, updateData as any);
+    const result = await this.repo.update(id, updateData as any);
+    await writeAuditLog({ actorId, action: "STAFF_RECORD_UPDATED", targetId: id });
+    return result;
   }
 
-  async delete(id: number) {
+  async delete(id: number, actorId: number) {
     await this.get(id);
+    const linkedSalaryCount = await this.repo.countLinkedSalaries(id);
+    if (linkedSalaryCount > 0) throw new AppError(409, "STAFF_RECORD_HAS_SALARY_HISTORY");
+    await writeAuditLog({ actorId, action: "STAFF_RECORD_DELETED", targetId: id });
     return this.repo.delete(id);
   }
 

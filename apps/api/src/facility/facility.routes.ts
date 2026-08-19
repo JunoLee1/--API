@@ -11,6 +11,12 @@ import { MaintenanceRepository } from "./maintenance/maintenance.repo";
 import { MaintenanceService } from "./maintenance/maintenance.service";
 import { MaintenanceController } from "./maintenance/maintenance.controller";
 import { ReservationController } from "./reservation/reservation.controller";
+import { PreventiveScheduleRepository } from "./preventive-schedule/preventive-schedule.repo";
+import { PreventiveScheduleService } from "./preventive-schedule/preventive-schedule.service";
+import { PreventiveScheduleController } from "./preventive-schedule/preventive-schedule.controller";
+import { AccessLogRepository } from "./access-log/access-log.repo";
+import { AccessLogService } from "./access-log/access-log.service";
+import { AccessLogController } from "./access-log/access-log.controller";
 
 const router = Router();
 
@@ -24,6 +30,14 @@ const maintenanceController = new MaintenanceController(maintenanceService);
 const inspectionRepo = new InspectionRepository(getPrisma());
 const inspectionService = new InspectionService(inspectionRepo, maintenanceService);
 const inspectionController = new InspectionController(inspectionService);
+
+const preventiveScheduleRepo = new PreventiveScheduleRepository(getPrisma());
+const preventiveScheduleService = new PreventiveScheduleService(preventiveScheduleRepo);
+const preventiveScheduleController = new PreventiveScheduleController(preventiveScheduleService);
+
+const accessLogRepo = new AccessLogRepository(getPrisma());
+const accessLogService = new AccessLogService(accessLogRepo);
+const accessLogController = new AccessLogController(accessLogService);
 
 router.get("/reservations", auth, reservationCtrl.list);
 router.post("/reservations", auth, reservationCtrl.create);
@@ -52,5 +66,14 @@ router.post("/maintenance/:id/submit-finance", auth, async (req, res, next) => {
     res.json(await maintenanceService.submitToFinance(Number(req.params.id), req.user!.id));
   } catch (e) { next(e); }
 });
+
+router.get("/preventive-schedules", auth, preventiveScheduleController.list);
+router.post("/preventive-schedules", auth, preventiveScheduleController.create);
+router.get("/preventive-schedules/:id", auth, preventiveScheduleController.get);
+router.patch("/preventive-schedules/:id", auth, preventiveScheduleController.update);
+router.post("/preventive-schedules/:id/deactivate", auth, preventiveScheduleController.deactivate);
+
+router.get("/access-logs", auth, accessLogController.list);
+router.post("/access-logs", auth, accessLogController.logAccess);
 
 export default router;

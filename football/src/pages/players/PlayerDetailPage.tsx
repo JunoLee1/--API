@@ -465,10 +465,11 @@ export function PlayerDetailPage() {
                     {canUpdateMarketValue && (
                       <div className="flex items-center gap-1.5">
                         <Input
-                          type="number"
+                          type="text"
+                          inputMode="numeric"
                           placeholder={t('detailPage.mvPlaceholder')}
-                          value={mvInput}
-                          onChange={(e) => setMvInput(e.target.value)}
+                          value={mvInput ? Number(mvInput).toLocaleString('ko-KR') : ''}
+                          onChange={(e) => setMvInput(e.target.value.replace(/[^0-9]/g, ''))}
                           className="h-7 w-32 text-xs"
                           onKeyDown={(e) => { if (e.key === 'Enter') void handleMvUpdate() }}
                         />

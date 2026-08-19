@@ -19,7 +19,10 @@ export class AdminController {
 
   listUsers = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      requireAdmin(req);
+      const user = requireUser(req);
+      if (!hasPermission(user.role as Role, Permission.SYSTEM_MANAGE)) {
+        throw new AppError(403, "FORBIDDEN");
+      }
       const filters: ListUsersQuery = {
         ...(req.query["username"] && { username: req.query["username"] as string }),
         ...(req.query["role"] && { role: req.query["role"] as Role }),
@@ -27,7 +30,8 @@ export class AdminController {
         ...(req.query["frontOfficeRole"] && { frontOfficeRole: req.query["frontOfficeRole"] as FrontOfficeRole }),
         ...(req.query["isDeleted"] !== undefined && { isDeleted: req.query["isDeleted"] === "true" }),
       };
-      res.status(200).json(await this.service.listUsers(filters));
+      const scopedClubId = user.role === "ADMIN" ? user.clubId : null;
+      res.status(200).json(await this.service.listUsers(filters, user.isDemo, scopedClubId));
     } catch (err) {
       next(err);
     }

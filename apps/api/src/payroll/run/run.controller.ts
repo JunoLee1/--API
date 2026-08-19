@@ -1,11 +1,9 @@
 import type { Request, Response, NextFunction } from "express";
 import { AppError } from "../../lib/appError";
-import { isAdminLike, canWriteFinance } from "../../lib/permissions";
+import { isAdminLike, canWriteFinance, canWriteHR } from "../../lib/permissions";
 import { requireUser } from "../../lib/authMiddleware";
 import type { RunService } from "./run.service";
 import type { CreateRunDto } from "./dto/run.dto";
-
-const canConfirm = (role: string) => isAdminLike(role);
 
 export class RunController {
   constructor(private service: RunService) {}
@@ -13,25 +11,26 @@ export class RunController {
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, frontOfficeRole } = requireUser(req);
-      if (!canWriteFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      if (!canWriteFinance(role, frontOfficeRole) && !canWriteHR(role, frontOfficeRole))
+        throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.list(Number(req.params["id"])));
     } catch (err) { next(err); }
   };
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canWriteFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole, id: actorId } = requireUser(req);
+      if (!canWriteHR(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(
-        await this.service.createRun(Number(req.params["id"]), req.body as CreateRunDto),
+        await this.service.createRun(Number(req.params["id"]), req.body as CreateRunDto, actorId),
       );
     } catch (err) { next(err); }
   };
 
   confirm = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, id: userId } = requireUser(req);
-      if (!canConfirm(role)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole, id: userId } = requireUser(req);
+      if (!canWriteFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.json(
         await this.service.confirmRun(
           Number(req.params["id"]),
@@ -45,7 +44,7 @@ export class RunController {
   secondApprove = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, id: userId } = requireUser(req);
-      if (!canConfirm(role)) throw new AppError(403, "FORBIDDEN");
+      if (!isAdminLike(role)) throw new AppError(403, "FORBIDDEN");
       res.json(
         await this.service.secondApproveRun(
           Number(req.params["id"]),

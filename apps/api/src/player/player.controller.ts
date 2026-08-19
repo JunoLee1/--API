@@ -62,6 +62,7 @@ export class PlayerController {
 
   getPlayers = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const user = requireUser(req);
       const q = req.query;
       const query: PlayerListQuery = {};
       if (q["status"]) query.status = q["status"] as PlayerStatus;
@@ -70,7 +71,8 @@ export class PlayerController {
       if (q["nationalityId"]) query.nationalityId = Number(q["nationalityId"]);
       if (q["excludeYouth"] === "true") query.excludeYouth = true;
       if (q["teamType"]) query.teamType = q["teamType"] as TeamType;
-      res.status(200).json(await this.service.getPlayers(query));
+      const scopedClubId = user.role === "ADMIN" ? user.clubId : null;
+      res.status(200).json(await this.service.getPlayers(query, scopedClubId));
     } catch (err) {
       next(err);
     }

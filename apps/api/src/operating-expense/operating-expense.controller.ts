@@ -45,7 +45,6 @@ export class OperatingExpenseController {
         ...(note !== undefined && { note }),
         ...(overrideReason !== undefined && { overrideReason }),
         createdById: userId,
-        requesterRole: role,
       });
       res.status(201).json(expense);
     } catch (err) { next(err); }
@@ -56,7 +55,9 @@ export class OperatingExpenseController {
       const { role, frontOfficeRole, id: userId } = requireUser(req);
       if (!canDelete(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const id = Number(req.params["id"]);
-      await this.service.delete(id, userId, role);
+      const { reason } = req.body as { reason?: string };
+      if (!reason?.trim()) throw new AppError(400, "DELETION_REASON_REQUIRED");
+      await this.service.delete(id, userId, role, reason.trim());
       res.status(204).end();
     } catch (err) { next(err); }
   };

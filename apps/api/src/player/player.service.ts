@@ -10,8 +10,8 @@ import { decrypt } from "../lib/crypto";
 export class PlayerService {
   constructor(private repo: PlayerRepository, private mvRepo?: MarketValueRepository) {}
 
-  getPlayers(query: PlayerListQuery) {
-    return this.repo.findAll(query);
+  getPlayers(query: PlayerListQuery, clubId?: number | null) {
+    return this.repo.findAll(query, clubId);
   }
 
   async getPlayerById(id: string, includePrivate = false) {

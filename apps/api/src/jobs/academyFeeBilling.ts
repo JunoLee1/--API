@@ -12,5 +12,5 @@ export function startAcademyFeeBillingJob() {
     const service = new AcademyFeeService(new AcademyFeeRepository(prisma), new NotificationRepository(prisma));
     const now = new Date();
     await service.issueMonthlyFees(now.getFullYear(), now.getMonth() + 1, DEFAULT_MONTHLY_AMOUNT).catch(console.error);
-  });
+  }, { timezone: "Asia/Seoul" });
 }

@@ -6,6 +6,7 @@ import type { DevelopmentPlanRepository } from "../development-plan/development-
 const makeRepo = (overrides: Partial<GrowthReportRepository> = {}): GrowthReportRepository =>
   ({
     findEvaluationsByPlayer: jest.fn().mockResolvedValue([]),
+    findPublishedEvaluationsByPlayer: jest.fn().mockResolvedValue([]),
     findEvaluationById: jest.fn().mockResolvedValue(null),
     findEvaluationByPeriod: jest.fn().mockResolvedValue(null),
     createEvaluation: jest.fn(),
@@ -51,7 +52,7 @@ describe("GrowthReportService", () => {
   describe("createEvaluation", () => {
     it("중복 기간이면 409 에러", async () => {
       const repo = makeRepo({ findEvaluationByPeriod: jest.fn().mockResolvedValue(fakeEval) });
-      const svc = new GrowthReportService(repo, makeNotifRepo(), makePlanRepo());
+      const svc = new GrowthReportService(repo, makeNotifRepo(), makePlanRepo(), undefined as any);
       await expect(
         svc.createEvaluation(
           {
@@ -78,7 +79,7 @@ describe("GrowthReportService", () => {
         findEvaluationByPeriod: jest.fn().mockResolvedValue(null),
         createEvaluation: jest.fn().mockResolvedValue(created),
       });
-      const svc = new GrowthReportService(repo, makeNotifRepo(), makePlanRepo());
+      const svc = new GrowthReportService(repo, makeNotifRepo(), makePlanRepo(), undefined as any);
       const result = await svc.createEvaluation(
         {
           playerId: "player-uuid-1",
@@ -102,7 +103,7 @@ describe("GrowthReportService", () => {
   describe("publishEvaluation", () => {
     it("존재하지 않으면 404", async () => {
       const repo = makeRepo({ findEvaluationById: jest.fn().mockResolvedValue(null) });
-      const svc = new GrowthReportService(repo, makeNotifRepo(), makePlanRepo());
+      const svc = new GrowthReportService(repo, makeNotifRepo(), makePlanRepo(), undefined as any);
       await expect(svc.publishEvaluation(999)).rejects.toMatchObject({ statusCode: 404 });
     });
 
@@ -110,7 +111,7 @@ describe("GrowthReportService", () => {
       const repo = makeRepo({
         findEvaluationById: jest.fn().mockResolvedValue({ ...fakeEval, isPublished: true }),
       });
-      const svc = new GrowthReportService(repo, makeNotifRepo(), makePlanRepo());
+      const svc = new GrowthReportService(repo, makeNotifRepo(), makePlanRepo(), undefined as any);
       await expect(svc.publishEvaluation(1)).rejects.toMatchObject({ statusCode: 409 });
     });
 
@@ -121,7 +122,7 @@ describe("GrowthReportService", () => {
         publishEvaluation: jest.fn().mockResolvedValue(published),
       });
       const notifRepo = makeNotifRepo();
-      const svc = new GrowthReportService(repo, notifRepo, makePlanRepo());
+      const svc = new GrowthReportService(repo, notifRepo, makePlanRepo(), undefined as any);
       await svc.publishEvaluation(1);
       expect(notifRepo.createForGuardian).toHaveBeenCalledWith(
         fakePlayer.guardianId,
@@ -138,7 +139,7 @@ describe("GrowthReportService", () => {
         publishEvaluation: jest.fn().mockResolvedValue({ ...evalNoGuardian, isPublished: true }),
       });
       const notifRepo = makeNotifRepo();
-      const svc = new GrowthReportService(repo, notifRepo, makePlanRepo());
+      const svc = new GrowthReportService(repo, notifRepo, makePlanRepo(), undefined as any);
       await svc.publishEvaluation(1);
       expect(notifRepo.createForGuardian).not.toHaveBeenCalled();
     });
@@ -159,12 +160,39 @@ describe("GrowthReportService", () => {
         session: null,
       };
       const repo = makeRepo({ awardBadge: jest.fn().mockResolvedValue(badge) });
-      const svc = new GrowthReportService(repo, makeNotifRepo(), makePlanRepo());
+      const svc = new GrowthReportService(repo, makeNotifRepo(), makePlanRepo(), undefined as any);
       const result = await svc.awardBadge(
         { playerId: "player-uuid-1", badgeType: "PASSION_KING" as const },
         10,
       );
       expect(result).toBe(badge);
     });
+  });
+});
+
+describe("GrowthReportService.getEvaluationsByPlayerForGuardian — IDOR 방지", () => {
+  const makeGuardianRepo = (child: { id: string } | null) => ({
+    findChildByIdAndGuardian: jest.fn().mockResolvedValue(child),
+  });
+
+  it("자녀가 아니면 403", async () => {
+    const guardianRepo = makeGuardianRepo(null);
+    const service = new GrowthReportService(
+      makeRepo(),
+      makeNotifRepo(),
+      makePlanRepo(),
+      guardianRepo as any,
+    );
+    await expect(service.getEvaluationsByPlayerForGuardian("player-uuid-1", 99))
+      .rejects.toMatchObject({ statusCode: 403, message: "FORBIDDEN" });
+  });
+
+  it("자녀이면 published evaluations 반환", async () => {
+    const guardianRepo = makeGuardianRepo({ id: "player-uuid-1" });
+    const evals = [{ id: 1, playerId: "player-uuid-1", isPublished: true }];
+    const repo = makeRepo({ findPublishedEvaluationsByPlayer: jest.fn().mockResolvedValue(evals) });
+    const service = new GrowthReportService(repo, makeNotifRepo(), makePlanRepo(), guardianRepo as any);
+    const result = await service.getEvaluationsByPlayerForGuardian("player-uuid-1", 99);
+    expect(result).toBe(evals);
   });
 });

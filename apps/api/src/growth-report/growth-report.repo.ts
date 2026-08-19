@@ -24,6 +24,14 @@ export class GrowthReportRepository {
     });
   }
 
+  findPublishedEvaluationsByPlayer(playerId: string) {
+    return this.prisma.growthEvaluation.findMany({
+      where: { playerId, isPublished: true },
+      include: EVAL_INCLUDE,
+      orderBy: [{ year: "desc" }, { month: "desc" }],
+    });
+  }
+
   findEvaluationById(id: number) {
     return this.prisma.growthEvaluation.findUnique({ where: { id }, include: EVAL_INCLUDE });
   }

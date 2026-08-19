@@ -1,5 +1,5 @@
 import { api } from './api'
-import type { TrainingLoad, WeeklySummary, UpsertTrainingLoadPayload } from '@/types/training-load'
+import type { TrainingLoad, WeeklySummary, UpsertTrainingLoadPayload, AcwrResult } from '@/types/training-load'
 
 export const trainingLoadApi = {
   list: (params?: { sessionId?: number; playerId?: string }) => {
@@ -13,4 +13,6 @@ export const trainingLoadApi = {
     api.post<TrainingLoad>('/training-loads', payload),
   weeklySummary: (playerId: string, weekStart: string) =>
     api.get<WeeklySummary>(`/training-loads/weekly-summary?playerId=${playerId}&weekStart=${weekStart}`),
+  acwr: (playerId: string) =>
+    api.get<AcwrResult>(`/training-loads/acute-chronic/${playerId}`),
 }

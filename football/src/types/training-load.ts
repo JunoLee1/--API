@@ -21,3 +21,11 @@ export interface UpsertTrainingLoadPayload {
   rpe?: number
   load?: number
 }
+
+export interface AcwrResult {
+  playerId: string
+  acuteLoad: number
+  chronicWeeklyAvg: number
+  acuteChronicRatio: number | null
+  riskLevel: 'UNDERTRAINED' | 'OPTIMAL' | 'HIGH_RISK' | 'UNKNOWN'
+}

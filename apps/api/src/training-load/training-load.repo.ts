@@ -57,7 +57,7 @@ export class TrainingLoadRepository {
       where: {
         playerId,
         load: { not: null },
-        session: { date: { gte: weekStart, lt: weekEnd } },
+        session: { date: { gte: weekStart, lt: weekEnd }, cancelledAt: null },
       },
       select: { load: true },
     });
@@ -84,7 +84,7 @@ export class TrainingLoadRepository {
     const latest = injuries[0]!.occurredAt;
 
     const allLoads = await this.prisma.trainingLoad.findMany({
-      where: { playerId, session: { date: { gte: earliest, lte: latest } } },
+      where: { playerId, session: { date: { gte: earliest, lte: latest }, cancelledAt: null } },
       include: { session: { select: { date: true, sessionType: true } } },
       orderBy: { session: { date: "asc" } },
     });
@@ -140,8 +140,8 @@ export class TrainingLoadRepository {
 
   getLoadsBetween(playerId: string, from: Date, to: Date) {
     return this.prisma.trainingLoad.findMany({
-      where: { playerId, session: { date: { gte: from, lt: to } } },
-      select: { load: true, rpe: true },
+      where: { playerId, session: { date: { gte: from, lt: to }, cancelledAt: null } },
+      select: { load: true, rpe: true, session: { select: { date: true } } },
     });
   }
 

@@ -2,6 +2,7 @@ import { AppError } from "../lib/appError";
 import type { GrowthReportRepository } from "./growth-report.repo";
 import type { NotificationRepository } from "../notification/notification.repo";
 import type { DevelopmentPlanRepository } from "../development-plan/development-plan.repo";
+import type { GuardianRepository } from "../guardian/guardian.repo";
 import type { CreateGrowthEvaluationDto, AwardBadgeDto } from "./dto/growth-report.dto";
 
 export class GrowthReportService {
@@ -9,10 +10,17 @@ export class GrowthReportService {
     private repo: GrowthReportRepository,
     private notifRepo: NotificationRepository,
     private planRepo: DevelopmentPlanRepository,
+    private guardianRepo: GuardianRepository,
   ) {}
 
   getEvaluationsByPlayer(playerId: string) {
     return this.repo.findEvaluationsByPlayer(playerId);
+  }
+
+  async getEvaluationsByPlayerForGuardian(playerId: string, guardianId: number) {
+    const child = await this.guardianRepo.findChildByIdAndGuardian(playerId, guardianId);
+    if (!child) throw new AppError(403, "FORBIDDEN");
+    return this.repo.findPublishedEvaluationsByPlayer(playerId);
   }
 
   async getEvaluationById(id: number) {

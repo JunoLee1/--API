@@ -1,3 +1,5 @@
+import { randomInt } from "crypto";
+import bcrypt from "bcrypt";
 import { RecruitmentRepository } from "./recruitment.repo";
 import { PlanReportRepository } from "../plan-report/plan-report.repo";
 import { AppError } from "../lib/appError";
@@ -92,6 +94,8 @@ export class RecruitmentService {
   async apply(postingId: number, dto: CreateJobApplicationDto) {
     const posting = await this.getPosting(postingId);
     if (posting.status !== "OPEN") throw new AppError(409, "JOB_POSTING_NOT_OPEN");
+    const existing = await this.repo.findApplicationByEmail(postingId, dto.email);
+    if (existing) throw new AppError(409, "APPLICATION_DUPLICATE");
     return this.repo.createApplication(postingId, dto);
   }
 
@@ -211,17 +215,20 @@ export class RecruitmentService {
     if (app.status !== "OFFERED") throw new AppError(409, "APPLICATION_NOT_OFFERED");
     const existing = await this.repo.findOnboardingByApplication(applicationId);
     if (existing) throw new AppError(409, "ONBOARDING_ALREADY_STARTED");
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const rawOtp = randomInt(100000, 1000000).toString();
+    const otpHash = await bcrypt.hash(rawOtp, 10);
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
-    return this.repo.createOnboarding(applicationId, userId, otp, expiresAt);
+    const record = await this.repo.createOnboarding(applicationId, userId, otpHash, expiresAt);
+    return { ...record, otpCode: rawOtp };
   }
 
   async verifyEmail(applicationId: number, otp: string) {
     const onboarding = await this.repo.findOnboardingByApplication(applicationId);
     if (!onboarding) throw new AppError(404, "ONBOARDING_NOT_FOUND");
     if (onboarding.emailVerifiedAt) throw new AppError(409, "EMAIL_ALREADY_VERIFIED");
-    if (onboarding.otpCode !== otp) throw new AppError(400, "INVALID_OTP");
     if (onboarding.otpExpiresAt < new Date()) throw new AppError(400, "OTP_EXPIRED");
+    const isValid = await bcrypt.compare(otp, onboarding.otpCode);
+    if (!isValid) throw new AppError(400, "INVALID_OTP");
     return this.repo.markEmailVerified(applicationId);
   }
 

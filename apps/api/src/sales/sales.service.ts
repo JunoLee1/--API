@@ -314,10 +314,31 @@ export class SalesService {
       if (!existing) throw new AppError(404, "SALES_RECORD_NOT_FOUND");
       if (existing.deletedAt !== null) throw new AppError(400, "ALREADY_CANCELLED");
 
-      // BS1: roll back the ledger entry linked to this sales record
-      await tx.ledgerEntry.deleteMany({
-        where: { relatedModule: "SalesRecord", relatedId: id },
+      // BS1: reverse the ledger entry linked to this sales record (preserves audit trail)
+      const originalEntry = await tx.ledgerEntry.findFirst({
+        where: { relatedModule: "SalesRecord", relatedId: id, reversedById: null },
       });
+      if (originalEntry) {
+        const reversal = await tx.ledgerEntry.create({
+          data: {
+            type: originalEntry.type,
+            category: "REFUND",
+            amount: -Number(originalEntry.amount),
+            currency: originalEntry.currency,
+            exchangeRate: Number(originalEntry.exchangeRate),
+            amountKrw: -Number(originalEntry.amountKrw),
+            isRefund: true,
+            description: formatLedgerDescription("ledger", "refund", { entryId: originalEntry.id }),
+            relatedModule: "SalesRecord",
+            relatedId: id,
+            createdById: deletedById,
+          },
+        });
+        await tx.ledgerEntry.update({
+          where: { id: originalEntry.id },
+          data: { reversedById: reversal.id },
+        });
+      }
 
       // JO1: soft-delete instead of hard delete; BS8: mark REFUNDED for duplicate-refund prevention
       await tx.salesRecord.update({

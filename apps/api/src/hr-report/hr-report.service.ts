@@ -21,6 +21,11 @@ export function computeAttendanceRate(present: number, total: number): number {
   return Math.round((present / total) * 1000) / 10;
 }
 
+export function computeStaffTurnoverRate(terminated: number, avgHeadcount: number): number {
+  if (avgHeadcount === 0) return 0;
+  return Math.round((terminated / avgHeadcount) * 10000) / 100;
+}
+
 export class HrReportService {
   constructor(private repo: HrReportRepository) {}
 
@@ -75,10 +80,12 @@ export class HrReportService {
 
   async getAnnual(year: number) {
     const months = Array.from({ length: 12 }, (_, i) => i + 1);
-    const [monthlyData, wageAnalysis] = await Promise.all([
+    const [monthlyData, wageAnalysis, { terminated: staffTerminated, totalActive: staffActive }] = await Promise.all([
       Promise.all(months.map((m) => this.getMonthly(year, m))),
       this.repo.getWageAnalysis(),
+      this.repo.getStaffTurnoverCount({ start: new Date(Date.UTC(year, 0, 1)), end: new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999)) }),
     ]);
+    const staffTurnoverRate = computeStaffTurnoverRate(staffTerminated, staffActive);
 
     const totalDepartures = monthlyData.reduce((s, m) => s + m.turnover.departures, 0);
     const totalArrivals = monthlyData.reduce((s, m) => s + m.turnover.arrivals, 0);
@@ -130,6 +137,11 @@ export class HrReportService {
       monthlyBreakdown,
       recruitment: { totalIn: totalArrivals, totalOut: totalDepartures },
       wageAnalysis,
+      staffTurnover: {
+        terminated: staffTerminated,
+        avgHeadcount: staffActive,
+        rate: staffTurnoverRate,
+      },
       turnover: { annualRate: annualTurnoverRate, totalDepartures, peakMonth },
       attendance: {
         annualRate: avgAttendanceRate,

@@ -30,6 +30,7 @@ export interface AttendanceSummary {
   absentUnauthorized: number;
   lateUnauthorized: number;
   absentAuthorized: number;
+  lateAuthorized: number;
 }
 
 export interface IssueSummary {
@@ -45,6 +46,8 @@ export interface WageAnalysis {
   minSalary: number;
   maxSalary: number;
   playerCount: number;
+  staffCount: number;
+  totalCount: number;
   distribution: { label: string; count: number }[];
 }
 
@@ -142,13 +145,15 @@ export class HrReportRepository {
     const absentUnauthorized = countFor("ABSENT_UNAUTHORIZED");
     const lateUnauthorized = countFor("LATE_UNAUTHORIZED");
     const absentAuthorized = countFor("ABSENT_AUTHORIZED");
+    const lateAuthorized = countFor("LATE_AUTHORIZED");
 
     return {
-      total: present + absentUnauthorized + lateUnauthorized + absentAuthorized,
+      total: present + absentUnauthorized + lateUnauthorized + absentAuthorized + lateAuthorized,
       present,
       absentUnauthorized,
       lateUnauthorized,
       absentAuthorized,
+      lateAuthorized,
     };
   }
 
@@ -192,33 +197,58 @@ export class HrReportRepository {
       { label: "1000만+", min: 10_000_000, max: Infinity },
     ];
 
-    const [agg, contracts] = await Promise.all([
+    const [contractAgg, contracts, staffSalaries] = await Promise.all([
       this.prisma.contract.aggregate({
         where: { status: "ACTIVE" },
         _sum: { salary: true },
-        _avg: { salary: true },
-        _min: { salary: true },
-        _max: { salary: true },
         _count: { id: true },
       }),
       this.prisma.contract.findMany({
         where: { status: "ACTIVE" },
         select: { salary: true },
       }),
+      this.prisma.staffSalary.findMany({
+        where: { user: { isDeleted: false } },
+        orderBy: { effectiveFrom: "desc" },
+        distinct: ["userId", "staffRecordId"],
+        select: { baseSalary: true },
+      }),
     ]);
+
+    const allSalaries: number[] = [
+      ...contracts.map((c) => Number(c.salary)),
+      ...staffSalaries.map((s) => Number(s.baseSalary)),
+    ];
+    const totalCount = allSalaries.length;
+    const totalAnnualWage = allSalaries.reduce((s, v) => s + v, 0) * 12;
+    const avgSalary = totalCount > 0 ? Math.round(allSalaries.reduce((s, v) => s + v, 0) / totalCount) : 0;
+    const minSalary = totalCount > 0 ? Math.min(...allSalaries) : 0;
+    const maxSalary = totalCount > 0 ? Math.max(...allSalaries) : 0;
 
     const distribution = RANGES.map(({ label, min, max }) => ({
       label,
-      count: contracts.filter((c) => c.salary >= min && c.salary < max).length,
+      count: allSalaries.filter((v) => v >= min && v < max).length,
     }));
 
     return {
-      totalAnnualWage: (agg._sum.salary ?? 0) * 12,
-      avgSalary: Math.round(agg._avg.salary ?? 0),
-      minSalary: agg._min.salary ?? 0,
-      maxSalary: agg._max.salary ?? 0,
-      playerCount: agg._count.id,
+      totalAnnualWage,
+      avgSalary,
+      minSalary,
+      maxSalary,
+      playerCount: contractAgg._count.id,
+      staffCount: staffSalaries.length,
+      totalCount,
       distribution,
     };
+  }
+
+  async getStaffTurnoverCount(period: PeriodRange): Promise<{ terminated: number; totalActive: number }> {
+    const [terminated, totalActive] = await Promise.all([
+      this.prisma.staffRecord.count({
+        where: { terminatedAt: { gte: period.start, lte: period.end } },
+      }),
+      this.prisma.staffRecord.count({ where: { isActive: true } }),
+    ]);
+    return { terminated, totalActive };
   }
 }

@@ -1,4 +1,4 @@
-import { PartnerType, PartnerContractStatus } from "../../generated/enums";
+import { PartnerType, PartnerContractStatus, PartnerTier } from "../../generated/enums";
 
 export interface CreatePartnerDto {
   type: PartnerType;
@@ -15,6 +15,8 @@ export interface UpdatePartnerDto {
   website?: string;
   address?: string;
   phone?: string;
+  tier?: PartnerTier | null;
+  tierReason?: string | null;
 }
 
 export interface CreatePartnerContractDto {
@@ -23,6 +25,9 @@ export interface CreatePartnerContractDto {
   sponsorshipFee?: number;
   discountRate?: number;
   notes?: string;
+  responseHours?: number;
+  resolutionDays?: number;
+  penaltyPerDay?: number;
 }
 
 export interface UpdatePartnerContractDto {
@@ -31,4 +36,7 @@ export interface UpdatePartnerContractDto {
   sponsorshipFee?: number;
   discountRate?: number;
   notes?: string;
+  responseHours?: number;
+  resolutionDays?: number;
+  penaltyPerDay?: number;
 }

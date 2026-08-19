@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { AppError } from "../../lib/appError";
-import { canWriteFinance } from "../../lib/permissions";
+import { canWriteFinance, canReadFinance } from "../../lib/permissions";
 import { requireUser } from "../../lib/authMiddleware";
 import type { AllowanceService } from "./allowance.service";
 import type { CreateAllowanceDto, UpdateAllowanceDto } from "./dto/allowance.dto";
@@ -10,6 +10,8 @@ export class AllowanceController {
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const { role, frontOfficeRole } = requireUser(req);
+      if (!canReadFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.list(Number(req.params["id"])));
     } catch (err) { next(err); }
   };

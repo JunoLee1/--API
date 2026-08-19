@@ -1,9 +1,10 @@
 import { AppError } from "../lib/appError";
+import { fetchKrwRate } from "../lib/exchangeRate";
 import { writeAuditLog } from "../lib/auditLog";
 import { divideEvenly } from "../lib/money";
 import { formatLedgerDescription } from "../lib/ledger-formatter";
 import type { SponsorshipRepository } from "./sponsorship.repo";
-import type { CreateSponsorshipDto, UpdateSponsorshipDto, SponsorshipListQuery } from "./dto/sponsorship.dto";
+import type { CreateSponsorshipDto, UpdateSponsorshipDto, SponsorshipListQuery, MarkPaidDto } from "./dto/sponsorship.dto";
 import type { PaymentSchedule } from "../generated/enums";
 import type { LedgerService } from "../ledger/ledger.service";
 
@@ -115,22 +116,48 @@ export class SponsorshipService {
     return this.applyOverdue(payments);
   }
 
-  async markPaid(sponsorshipId: number, paymentId: number, userId: number) {
+  async markPaid(sponsorshipId: number, paymentId: number, userId: number, dto: MarkPaidDto = {}) {
     const sponsorship = await this.get(sponsorshipId);
     const payment = await this.repo.findPaymentById(paymentId);
     if (!payment || payment.sponsorshipId !== sponsorshipId) {
       throw new AppError(404, "SPONSORSHIP_PAYMENT_NOT_FOUND");
     }
     if (payment.status === "PAID") throw new AppError(409, "ALREADY_PAID");
-    if (Number(payment.amount) <= 0) throw new AppError(400, "INVALID_PAYMENT_AMOUNT");
-    const updated = await this.repo.updatePayment(paymentId, { status: "PAID", paidAt: new Date() });
+    const payAmount = dto.adjustedAmount ?? Number(payment.amount);
+    if (payAmount <= 0) throw new AppError(400, "INVALID_PAYMENT_AMOUNT");
+
+    // Resolve exchange rate before any DB write to avoid partial state
+    const sponsorshipCurrency = sponsorship.currency ?? "KRW";
+    let rate = 1;
+    let amountKrw = payAmount;
+
+    if (sponsorshipCurrency !== "KRW") {
+      if (dto.exchangeRate !== undefined) {
+        if (dto.exchangeRate <= 0) throw new AppError(400, "INVALID_EXCHANGE_RATE");
+        rate = dto.exchangeRate;
+      } else {
+        const fetched = await fetchKrwRate(sponsorshipCurrency as "USD" | "EUR" | "GBP");
+        if (fetched === null) throw new AppError(502, "EXCHANGE_RATE_UNAVAILABLE");
+        rate = fetched;
+      }
+      amountKrw = parseFloat((payAmount * rate).toFixed(2));
+    }
+
+    // Only mark PAID after exchange rate is confirmed valid
+    const updated = await this.repo.updatePayment(paymentId, {
+      status: "PAID",
+      paidAt: new Date(),
+      ...(dto.adjustedAmount !== undefined && { adjustedAmount: dto.adjustedAmount }),
+      ...(dto.adjustmentReason !== undefined && { adjustmentReason: dto.adjustmentReason }),
+      ...(dto.appliedClauseId !== undefined && { appliedClauseId: dto.appliedClauseId }),
+    });
     await this.ledgerService.createAutoEntry({
       type: "INCOME",
       category: "SPONSORSHIP",
-      amount: Number(payment.amount),
-      currency: "KRW",
-      exchangeRate: 1,
-      amountKrw: Number(payment.amount),
+      amount: payAmount,
+      currency: sponsorshipCurrency,
+      exchangeRate: rate,
+      amountKrw,
       description: formatLedgerDescription("sponsorship", "payment_received", { sponsorName: sponsorship.sponsorName, paymentId }),
       relatedModule: "sponsorship",
       relatedId: sponsorshipId,

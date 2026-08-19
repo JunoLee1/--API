@@ -1,10 +1,11 @@
 import { AppError } from "../../lib/appError";
 import { formatLedgerDescription } from "../../lib/ledger-formatter";
+import { writeAuditLog } from "../../lib/auditLog";
 import type { RunRepository } from "./run.repo";
 import type { SalaryRepository } from "../salary/salary.repo";
 import type { ConfigRepository } from "../config/config.repo";
 import type { CreateRunDto } from "./dto/run.dto";
-import type { LedgerService } from "../../ledger/ledger.service";
+import type { PrismaClient } from "../../generated/client";
 
 export function computePayroll(
   baseSalary: number,
@@ -28,7 +29,7 @@ export class RunService {
     private runRepo: RunRepository,
     private salaryRepo: SalaryRepository,
     private configRepo: ConfigRepository,
-    private ledgerService: LedgerService,
+    private prisma: PrismaClient,
   ) {}
 
   async list(salaryId: number) {
@@ -37,7 +38,7 @@ export class RunService {
     return this.runRepo.findAll(salaryId);
   }
 
-  async createRun(salaryId: number, dto: CreateRunDto) {
+  async createRun(salaryId: number, dto: CreateRunDto, actorId?: number) {
     const salary = await this.salaryRepo.findById(salaryId);
     if (!salary) throw new AppError(404, "SALARY_NOT_FOUND");
 
@@ -61,7 +62,11 @@ export class RunService {
       activeConfigs.map((c) => ({ employeeRate: c.employeeRate.toNumber() })),
     );
 
-    return this.runRepo.create({ staffSalaryId: salaryId, month, grossPay, totalDeductions, netPay });
+    const run = await this.runRepo.create({ staffSalaryId: salaryId, month, grossPay, totalDeductions, netPay });
+    if (actorId != null) {
+      await writeAuditLog({ actorId, action: "PAYROLL_RUN_CREATED", targetId: run.id });
+    }
+    return run;
   }
 
   async secondApproveRun(salaryId: number, runId: number, userId: number) {
@@ -78,19 +83,29 @@ export class RunService {
     if (run.confirmedById === userId) {
       throw new AppError(403, "CANNOT_SECOND_APPROVE_OWN_CONFIRMATION");
     }
-    const updated = await this.runRepo.secondApprove(runId, userId);
-    void this.ledgerService.createAutoEntry({
-      type: "EXPENSE",
-      category: "SALARY",
-      amount: Number(updated.netPay),
-      currency: "KRW",
-      exchangeRate: 1,
-      amountKrw: Number(updated.netPay),
-      description: formatLedgerDescription("payroll", "salary_disbursed", { salaryId, runId }),
-      relatedModule: "payroll",
-      relatedId: runId,
-    }, userId).catch(err => console.error("[LedgerAutoEntry:payroll]", err));
-    return updated;
+
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.payrollRun.update({
+        where: { id: runId },
+        data: { secondApprovedById: userId, secondApprovedAt: new Date(), isLocked: true },
+      });
+      await tx.ledgerEntry.create({
+        data: {
+          type: "EXPENSE",
+          category: "SALARY",
+          amount: Number(updated.grossPay),
+          currency: "KRW",
+          exchangeRate: 1,
+          amountKrw: Number(updated.grossPay),
+          isRefund: false,
+          description: formatLedgerDescription("payroll", "salary_disbursed", { salaryId, runId }),
+          relatedModule: "payroll",
+          relatedId: runId,
+          createdById: userId,
+        },
+      });
+      return updated;
+    });
   }
 
   async confirmRun(salaryId: number, runId: number, userId: number) {
@@ -101,10 +116,12 @@ export class RunService {
     if (!run || run.staffSalaryId !== salaryId) throw new AppError(404, "PAYROLL_RUN_NOT_FOUND");
     if (run.status === "CONFIRMED") throw new AppError(409, "ALREADY_CONFIRMED");
 
-    return this.runRepo.update(runId, {
+    const result = await this.runRepo.update(runId, {
       status: "CONFIRMED",
       confirmedById: userId,
       confirmedAt: new Date(),
     });
+    await writeAuditLog({ actorId: userId, action: "PAYROLL_RUN_CONFIRMED", targetId: runId });
+    return result;
   }
 }

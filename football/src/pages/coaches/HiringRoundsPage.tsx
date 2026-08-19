@@ -95,7 +95,7 @@ function CreateRoundDialog({ open, onOpenChange, onSaved }: CreateRoundDialogPro
           </div>
           <div className="space-y-1.5">
             <Label>{t('coaches.rounds.createDialog.budget')}</Label>
-            <Input type="number" placeholder={t('coaches.rounds.createDialog.budgetPlaceholder')} value={budget} onChange={(e) => setBudget(e.target.value)} />
+            <Input type="text" inputMode="numeric" placeholder={t('coaches.rounds.createDialog.budgetPlaceholder')} value={budget ? Number(budget).toLocaleString('ko-KR') : ''} onChange={(e) => setBudget(e.target.value.replace(/[^0-9]/g, ''))} />
             {budget && <p className="text-xs text-muted-foreground mt-0.5">{Number(budget).toLocaleString('ko-KR')}{t('coaches.rounds.createDialog.budgetUnit')}</p>}
           </div>
           <div className="space-y-1.5">

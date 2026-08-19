@@ -161,9 +161,9 @@ function AddBonusDialog({ open, onOpenChange, contractId, onSaved }: AddBonusDia
           <div className="space-y-1.5">
             <Label>{t('contractDetail.bonusAmount')}</Label>
             <Input
-              type="number" placeholder="5000000"
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
+              type="text" inputMode="numeric" placeholder="5,000,000"
+              value={amount ? Number(amount).toLocaleString('ko-KR') : ''}
+              onChange={e => setAmount(e.target.value.replace(/[^0-9]/g, ''))}
             />
           </div>
           <div className="space-y-1.5">
@@ -318,10 +318,11 @@ export function ContractDetailPage() {
           ) : canWrite ? (
             <div className="flex items-center gap-2">
               <Input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 placeholder={t('contractDetail.buyoutPlaceholder')}
-                value={buyoutAmount}
-                onChange={e => setBuyoutAmount(e.target.value)}
+                value={buyoutAmount ? Number(buyoutAmount).toLocaleString('ko-KR') : ''}
+                onChange={e => setBuyoutAmount(e.target.value.replace(/[^0-9]/g, ''))}
                 className="w-40 h-8 text-sm"
               />
               <Button

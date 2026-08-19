@@ -175,27 +175,51 @@ export class TrainingLoadService {
     ]);
 
     const acuteTotal = acuteLoads.reduce((s, l) => s + (l.load ?? 0), 0);
-    const chronicWeeklyAvg = chronicLoads.reduce((s, l) => s + (l.load ?? 0), 0) / 4;
+
+    const chronicTotal = chronicLoads.reduce((s, l) => s + (l.load ?? 0), 0);
+    const distinctWeeks = new Set(chronicLoads.map((l) => this.getISOWeekKey(l.session.date))).size;
+    const actualWeeks = Math.min(distinctWeeks, 4);
+    const chronicWeeklyAvg = actualWeeks === 0 ? 0 : chronicTotal / actualWeeks;
+
     const ratio = chronicWeeklyAvg === 0 ? null : Math.round((acuteTotal / chronicWeeklyAvg) * 100) / 100;
+
+    if (ratio !== null && ratio < 0) {
+      throw new AppError(500, "ACWR_CALC_ERROR");
+    }
+
+    const riskLevel =
+      ratio === null
+        ? "UNKNOWN"
+        : ratio < 0.8
+          ? "UNDERTRAINED"
+          : ratio <= 1.3
+            ? "OPTIMAL"
+            : "HIGH_RISK";
 
     return {
       playerId,
       acuteLoad: acuteTotal,
       chronicWeeklyAvg: Math.round(chronicWeeklyAvg),
       acuteChronicRatio: ratio,
-      riskLevel: ratio == null ? "UNKNOWN" : ratio > 1.5 ? "HIGH" : ratio > 1.3 ? "MODERATE" : "LOW",
+      riskLevel,
     };
   }
 
+  private getISOWeekKey(date: Date): string {
+    const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+    const kst = new Date(date.getTime() + KST_OFFSET_MS);
+    const day = kst.getUTCDay() || 7; // 1=Mon…7=Sun
+    kst.setUTCDate(kst.getUTCDate() - (day - 1)); // move to Monday
+    return kst.toISOString().slice(0, 10);
+  }
+
   private getWeekStart(date: Date): Date {
-    // Convert to KST (UTC+9) before calculating week boundary
     const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
     const kstTime = new Date(date.getTime() + KST_OFFSET_MS);
-    const day = kstTime.getUTCDay(); // 0=Sunday, 1=Monday
+    const day = kstTime.getUTCDay();
     const diff = kstTime.getUTCDate() - day + (day === 0 ? -6 : 1);
     kstTime.setUTCDate(diff);
     kstTime.setUTCHours(0, 0, 0, 0);
-    // Return as UTC (subtract KST offset)
     return new Date(kstTime.getTime() - KST_OFFSET_MS);
   }
 }

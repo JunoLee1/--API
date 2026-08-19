@@ -198,6 +198,22 @@ export class NotificationRepository {
     });
   }
 
+  createForFinanceManager(type: string, getMsg: MsgFactory, entityId?: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const users = await tx.user.findMany({
+        where: { role: "FRONT_OFFICE", frontOfficeRole: "FINANCE_MANAGER", isDeleted: false },
+        select: { id: true, language: true },
+      });
+      if (users.length === 0) return;
+      await tx.notification.createMany({
+        data: users.map((u) => {
+          const { title, body } = getMsg(u.language);
+          return { userId: u.id, type, title, body, entityId };
+        }) as any,
+      });
+    });
+  }
+
   createForPhysicalCoach(type: string, getMsg: MsgFactory, entityId?: number) {
     return this.prisma.$transaction(async (tx) => {
       const users = await tx.user.findMany({
@@ -233,22 +249,6 @@ export class NotificationRepository {
     const { title, body } = getMsg(userRecord?.language ?? 'ko');
     return this.prisma.notification.create({
       data: { userId: guardianUserId, type, title, body, ...(entityId && { entityId }) } as any,
-    });
-  }
-
-  createForFinanceManager(type: string, getMsg: MsgFactory, entityId?: number) {
-    return this.prisma.$transaction(async (tx) => {
-      const users = await tx.user.findMany({
-        where: { role: "FRONT_OFFICE", frontOfficeRole: "FINANCE_MANAGER" },
-        select: { id: true, language: true },
-      });
-      if (users.length === 0) return;
-      await tx.notification.createMany({
-        data: users.map((u) => {
-          const { title, body } = getMsg(u.language);
-          return { userId: u.id, type, title, body, entityId };
-        }) as any,
-      });
     });
   }
 

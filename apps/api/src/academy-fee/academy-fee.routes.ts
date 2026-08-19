@@ -7,7 +7,7 @@ import { AcademyFeeRepository } from "./academy-fee.repo";
 import { NotificationRepository } from "../notification/notification.repo";
 import { getPrisma } from "../lib/prisma";
 import { AppError } from "../lib/appError";
-import { canReadHR, canWriteHR } from "../lib/permissions";
+import { canReadHR, canWriteHR, canReadFinance } from "../lib/permissions";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -60,21 +60,27 @@ const requireFinance = (req: Request, res: Response, next: NextFunction) => {
 // Toss webhook — auth 없음, Toss 서버가 직접 호출
 router.post("/toss-webhook", express.json(), controller.tossWebhook);
 
+// 단건 조회
+router.get("/:id", auth, requireFinanceOrGuardian, controller.getById);
+
+// 재무팀 단건 수동 생성 (B안: 청구서 먼저 발행 → 보호자 납부 → 승인)
+router.post("/", auth, requireFinance, controller.create);
+
 router.get("/stats", auth, (req, res, next) => {
   const { role, frontOfficeRole } = req.user!;
-  if (!canReadHR(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
+  if (!canReadHR(role, frontOfficeRole) && !canReadFinance(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
   next();
 }, controller.getStats);
 
 router.get("/", auth, (req, res, next) => {
   const { role, frontOfficeRole } = req.user!;
-  if (!canReadHR(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
+  if (!canReadHR(role, frontOfficeRole) && !canReadFinance(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
   next();
 }, controller.getAll);
 
 router.get("/player/:playerId", auth, (req, res, next) => {
   const { role, frontOfficeRole } = req.user!;
-  if (!canReadHR(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
+  if (!canReadHR(role, frontOfficeRole) && !canReadFinance(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
   next();
 }, controller.getByPlayer);
 
@@ -113,6 +119,24 @@ router.post("/:id/toss-confirm", auth, async (req, res, next) => {
     next();
   } catch (e) { next(e); }
 }, controller.tossConfirm);
+
+// 재무팀원: 학부모에게 받은 영수증 파일 업로드 → SUBMITTED (재무팀장이 최종 승인)
+router.post("/:id/staff-upload-proof", auth, (req, _res, next) => {
+  const { role, frontOfficeRole } = req.user!;
+  const allowed = role === "ADMIN" || role === "SUPER_ADMIN" || role === "GM" ||
+    (role === "FRONT_OFFICE" && (frontOfficeRole === "FINANCE_STAFF" || frontOfficeRole === "FINANCE_MANAGER" || frontOfficeRole === "TD"));
+  if (!allowed) return next(new AppError(403, "FORBIDDEN"));
+  next();
+}, uploadProof.single("file"), async (req, res, next) => {
+  const cleanup = () => { if (req.file) fs.unlink(req.file.path, () => {}); };
+  try {
+    if (!req.file) return next(new AppError(400, "FILE_REQUIRED"));
+    const feeId = Number(req.params.id);
+    const url = `/uploads/academy-fee-proofs/${req.file.filename}`;
+    const updated = await service.adminSubmitProof(feeId, { paymentProofUrl: url });
+    res.json(updated);
+  } catch (e) { cleanup(); next(e); }
+});
 
 // 학부모: 계좌이체 증빙 파일 업로드 → SUBMITTED
 router.post("/:id/upload-proof", auth, uploadProof.single("file"), async (req, res, next) => {

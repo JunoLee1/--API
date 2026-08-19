@@ -34,7 +34,7 @@ export class OperatingExpenseRepository {
 
   findBySeasonId(seasonId: number) {
     return this.prisma.operatingExpense.findMany({
-      where: { seasonId },
+      where: { seasonId, deletedAt: null },
       include: { createdBy: { select: { id: true, username: true } } },
       orderBy: { date: "desc" },
     });
@@ -58,7 +58,19 @@ export class OperatingExpenseRepository {
     return this.prisma.operatingExpense.findUnique({ where: { id } });
   }
 
-  delete(id: number) {
-    return this.prisma.operatingExpense.delete({ where: { id } });
+  softDelete(id: number, reason: string) {
+    return this.prisma.operatingExpense.update({
+      where: { id },
+      data: { deletedAt: new Date(), deletionReason: reason },
+    });
+  }
+
+  // 보존기간(10년) 만료분 실제 삭제 — cron 전용
+  purgeExpired() {
+    const cutoff = new Date();
+    cutoff.setFullYear(cutoff.getFullYear() - 10);
+    return this.prisma.operatingExpense.deleteMany({
+      where: { deletedAt: { lt: cutoff } },
+    });
   }
 }

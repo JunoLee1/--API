@@ -5,11 +5,13 @@ import { CreatePartnerDto, UpdatePartnerDto, CreatePartnerContractDto, UpdatePar
 const PARTNER_SELECT = {
   id: true, type: true, name: true, country: true,
   website: true, address: true, phone: true, createdAt: true,
+  tier: true, tierReason: true,
 } as const;
 
 const CONTRACT_SELECT = {
   id: true, partnerId: true, status: true, startDate: true,
-  endDate: true, sponsorshipFee: true, discountRate: true, notes: true, createdAt: true,
+  endDate: true, sponsorshipFee: true, discountRate: true, notes: true,
+  responseHours: true, resolutionDays: true, penaltyPerDay: true, createdAt: true,
 } as const;
 
 export class PartnerRepository {
@@ -67,6 +69,8 @@ export class PartnerRepository {
         ...(dto.website !== undefined && { website: dto.website }),
         ...(dto.address !== undefined && { address: dto.address }),
         ...(dto.phone !== undefined && { phone: dto.phone }),
+        ...(dto.tier !== undefined && { tier: dto.tier }),
+        ...(dto.tierReason !== undefined && { tierReason: dto.tierReason }),
       },
       select: PARTNER_SELECT,
     });
@@ -81,6 +85,9 @@ export class PartnerRepository {
         ...(dto.sponsorshipFee !== undefined && { sponsorshipFee: dto.sponsorshipFee }),
         ...(dto.discountRate !== undefined && { discountRate: dto.discountRate }),
         ...(dto.notes !== undefined && { notes: dto.notes }),
+        ...(dto.responseHours !== undefined && { responseHours: dto.responseHours }),
+        ...(dto.resolutionDays !== undefined && { resolutionDays: dto.resolutionDays }),
+        ...(dto.penaltyPerDay !== undefined && { penaltyPerDay: dto.penaltyPerDay }),
       },
       select: CONTRACT_SELECT,
     });
@@ -95,6 +102,9 @@ export class PartnerRepository {
         ...(dto.sponsorshipFee !== undefined && { sponsorshipFee: dto.sponsorshipFee }),
         ...(dto.discountRate !== undefined && { discountRate: dto.discountRate }),
         ...(dto.notes !== undefined && { notes: dto.notes }),
+        ...(dto.responseHours !== undefined && { responseHours: dto.responseHours }),
+        ...(dto.resolutionDays !== undefined && { resolutionDays: dto.resolutionDays }),
+        ...(dto.penaltyPerDay !== undefined && { penaltyPerDay: dto.penaltyPerDay }),
       },
       select: CONTRACT_SELECT,
     });
