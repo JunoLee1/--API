@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { guardianApi } from '@/services/guardian.service'
-import { academyFeeApi } from '@/services/academyFee.service'
 import { PaymentModal } from '@/components/youth/PaymentModal'
 import type { AcademyFee } from '@/types/academy-fee'
 
@@ -27,18 +26,6 @@ export function GuardianFeeView({ playerId }: Props) {
     setFees(prev => prev.map(f => f.id === updated.id ? updated : f))
   }
 
-  const handleViewReceipt = async (feeId: number) => {
-    try {
-      const receipt = await academyFeeApi.getReceipt(feeId)
-      alert(
-        `영수증\n${receipt.year}년 ${receipt.month}월\n` +
-        `금액: ${receipt.amount.toLocaleString()}원\n` +
-        `결제일: ${new Date(receipt.paidAt).toLocaleDateString('ko-KR')}\n` +
-        `결제방법: ${receipt.paymentMethod === 'PG' ? '카드/간편결제' : '계좌이체'}`
-      )
-    } catch { /* 영수증 미발급 상태 */ }
-  }
-
   if (loading) return <p className="text-muted-foreground">{t('guardianFeeView.loading')}</p>
 
   return (
@@ -59,9 +46,14 @@ export function GuardianFeeView({ playerId }: Props) {
               </Button>
             )}
             {fee.status === 'PAID' && fee.receiptIssuedAt && (
-              <Button size="sm" variant="outline" onClick={() => void handleViewReceipt(fee.id)}>
+              <a
+                href={`/academy-fees/${fee.id}/receipt`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-blue-500 underline whitespace-nowrap"
+              >
                 영수증
-              </Button>
+              </a>
             )}
           </div>
         </div>
