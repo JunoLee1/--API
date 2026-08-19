@@ -103,4 +103,24 @@ export class BudgetControlRepository {
       _sum: { amount: true },
     });
   }
+
+  async sumCommitmentAndActual(seasonId: number) {
+    const rows = await this.prisma.operatingExpense.findMany({
+      where: { seasonId, deletedAt: null },
+      select: { category: true, amount: true, paidAt: true },
+    });
+
+    let commitment = 0;
+    let actual = 0;
+    const byCategory: Record<string, number> = {};
+
+    for (const row of rows) {
+      const cat = row.category as string;
+      byCategory[cat] = (byCategory[cat] ?? 0) + row.amount;
+      if (row.paidAt === null) commitment += row.amount;
+      else actual += row.amount;
+    }
+
+    return { commitment, actual, byCategory };
+  }
 }

@@ -4,7 +4,7 @@ import { NotificationRepository } from "../notification/notification.repo";
 import { OperatingCategory } from "../generated/client";
 import { getPrisma } from "../lib/prisma";
 
-const DISCRETIONARY: OperatingCategory[] = ["TRAVEL", "EQUIPMENT", "SCOUTING", "YOUTH"];
+const DISCRETIONARY: OperatingCategory[] = ["MEAL", "TRAVEL", "EQUIPMENT", "SCOUTING", "YOUTH"];
 
 export class OperatingExpenseService {
   constructor(private repo: OperatingExpenseRepository) {}
@@ -33,18 +33,20 @@ export class OperatingExpenseService {
     const ceiling = plan.mandatoryMinimum + (plan.knapsackAllocated ?? 0);
     const currentSpend = await this.repo.sumSpendBySeasonAndCategory(data.seasonId, data.category);
 
-    const expense = await this.repo.create({ ...data, date: new Date(data.date) });
-
     if (currentSpend + data.amount > ceiling) {
-      // 소프트 가드: 생성은 허용, 초과 로그 기록 + FINANCE_MANAGER·GM 알림
+      // 하드 Block: overrideReason 없으면 차단
+      if (!data.overrideReason) {
+        throw new AppError(400, "BUDGET_EXCEEDED");
+      }
+      // overrideReason 있으면 강제 등록 + 로그 + 알림
+      const expense = await this.repo.create({ ...data, date: new Date(data.date) });
       await this.repo.createOverrideLog({
         financialReportId: plan.financialReportId,
         category: data.category,
         amount: data.amount,
-        reason: data.overrideReason ?? "예산 초과 자동 기록",
+        reason: data.overrideReason,
         createdById: data.createdById,
       });
-
       const notifRepo = new NotificationRepository(getPrisma());
       const overAmount = currentSpend + data.amount - ceiling;
       const getMsg = (lang: string | null) => ({
@@ -57,9 +59,10 @@ export class OperatingExpenseService {
         notifRepo.createForFinanceManager("BUDGET_EXCEEDED", getMsg, expense.id),
         notifRepo.createForGM("BUDGET_EXCEEDED", getMsg, expense.id),
       ]);
+      return expense;
     }
 
-    return expense;
+    return this.repo.create({ ...data, date: new Date(data.date) });
   }
 
   async delete(id: number, requesterId: number, requesterRole: string, reason: string) {
@@ -70,6 +73,14 @@ export class OperatingExpenseService {
       throw new AppError(403, "FORBIDDEN");
     }
     return this.repo.softDelete(id, reason);
+  }
+
+  async markPaid(id: number, paidById: number) {
+    const expense = await this.repo.findById(id);
+    if (!expense) throw new AppError(404, "NOT_FOUND");
+    if (expense.deletedAt) throw new AppError(404, "NOT_FOUND");
+    if (expense.paidAt) throw new AppError(400, "ALREADY_PAID");
+    return this.repo.markPaid(id, paidById);
   }
 
   purgeExpired() {

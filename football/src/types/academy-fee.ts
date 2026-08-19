@@ -1,4 +1,4 @@
-export type FeeStatus = 'PENDING' | 'SUBMITTED' | 'PAID' | 'OVERDUE' | 'LOCKED'
+export type FeeStatus = 'PENDING' | 'SUBMITTED' | 'FIRST_APPROVED' | 'PAID' | 'OVERDUE' | 'LOCKED'
 export type PaymentMethod = 'PG' | 'BANK_TRANSFER'
 
 export interface AcademyFee {
@@ -32,6 +32,13 @@ export interface FeeReceipt {
   receiptIssuedAt: string
   playerName: string
   guardianUsername: string
+}
+
+export interface YouthPlayerSearchResult {
+  id: string
+  playerName: string
+  guardianId: number | null
+  guardianUsername: string | null
 }
 
 export interface AcademyFinanceStats {

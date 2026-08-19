@@ -19,30 +19,20 @@ function encryptPhone(text: string) {
 }
 
 async function seedDepartments() {
-  // 상위 부서
-  const finance = await prisma.department.upsert({
-    where: { name: '재무관리' },
-    update: {},
-    create: { name: '재무관리' },
-  });
+  const findOrCreate = async (name: string, extra: Record<string, unknown> = {}) => {
+    const existing = await prisma.department.findFirst({ where: { name, clubId: null } });
+    if (existing) return existing;
+    return prisma.department.create({ data: { name, ...extra } });
+  };
 
-  const asset = await prisma.department.upsert({
-    where: { name: '자산관리' },
-    update: {},
-    create: { name: '자산관리' },
-  });
+  const finance = await findOrCreate('재무관리');
+  const asset   = await findOrCreate('자산관리');
 
-  // 자산관리 하위 부서
-  const subDepts = ['HR', '시설관리', '선수 장비관리', '의료기기 관리', 'IT 자산관리'];
-  for (const name of subDepts) {
-    await prisma.department.upsert({
-      where: { name },
-      update: { parentId: asset.id },
-      create: { name, parentId: asset.id },
-    });
+  for (const name of ['HR', '시설관리', '선수 장비관리', '의료기기 관리', 'IT 자산관리']) {
+    await findOrCreate(name, { parentId: asset.id });
   }
 
-  console.log(`Departments seeded: 재무관리, 자산관리 + ${subDepts.length} sub-departments`);
+  console.log(`Departments seeded: 재무관리, 자산관리 + 5 sub-departments`);
 }
 
 async function seedLeagues() {
@@ -66,9 +56,9 @@ async function seedLeagues() {
 }
 
 async function seedDepartmentHeads() {
-  const asset   = await prisma.department.findUniqueOrThrow({ where: { name: '자산관리' } });
-  const finance  = await prisma.department.findUniqueOrThrow({ where: { name: '재무관리' } });
-  const hrDept   = await prisma.department.findUniqueOrThrow({ where: { name: 'HR' } });
+  const asset   = await prisma.department.findFirstOrThrow({ where: { name: '자산관리', clubId: null } });
+  const finance  = await prisma.department.findFirstOrThrow({ where: { name: '재무관리', clubId: null } });
+  const hrDept   = await prisma.department.findFirstOrThrow({ where: { name: 'HR', clubId: null } });
 
   const assetUser   = await prisma.user.findUnique({ where: { email: 'asset@club.com' } });
   const financeUser = await prisma.user.findUnique({ where: { email: 'finance@club.com' } });
@@ -82,16 +72,13 @@ async function seedDepartmentHeads() {
 }
 
 async function seedHrSubDepartments() {
-  const hrDept = await prisma.department.findUniqueOrThrow({ where: { name: 'HR' } });
+  const hrDept = await prisma.department.findFirstOrThrow({ where: { name: 'HR', clubId: null } });
   const hrUser = await prisma.user.findUnique({ where: { email: 'hr@club.com' } });
 
   const subNames = ['HRM (인사관리)', 'HRD (인재개발)', '노무·총무'];
   for (const name of subNames) {
-    await prisma.department.upsert({
-      where: { name },
-      create: { name, parentId: hrDept.id },
-      update: {},
-    });
+    const existing = await prisma.department.findFirst({ where: { name, clubId: null } });
+    if (!existing) await prisma.department.create({ data: { name, parentId: hrDept.id } });
   }
 
   // hr@club.com → HR 부서 MANAGER
@@ -1101,7 +1088,6 @@ async function main() {
     create: {
       id: "player-001",
       playerName: "김민준",
-      dateOfBirth: new Date("2000-04-12"),
       preferredFoot: "RIGHT",
       height: 183,
       weight: 76,
@@ -1118,7 +1104,6 @@ async function main() {
     create: {
       id: "player-002",
       playerName: "이서준",
-      dateOfBirth: new Date("1998-09-22"),
       preferredFoot: "LEFT",
       height: 179,
       weight: 72,
@@ -1135,7 +1120,6 @@ async function main() {
     create: {
       id: "player-003",
       playerName: "Carlos Silva",
-      dateOfBirth: new Date("2002-01-07"),
       preferredFoot: "RIGHT",
       height: 176,
       weight: 70,
@@ -1152,7 +1136,6 @@ async function main() {
     create: {
       id: "player-004",
       playerName: "박지훈",
-      dateOfBirth: new Date("1997-11-30"),
       preferredFoot: "RIGHT",
       height: 188,
       weight: 82,
@@ -1169,7 +1152,6 @@ async function main() {
     create: {
       id: "player-005",
       playerName: "정현우",
-      dateOfBirth: new Date("2001-07-18"),
       preferredFoot: "BOTH",
       height: 181,
       weight: 74,
@@ -1186,7 +1168,6 @@ async function main() {
     create: {
       id: "player-006",
       playerName: "최재원",
-      dateOfBirth: new Date("1995-02-14"),
       preferredFoot: "RIGHT",
       height: 187,
       weight: 81,
@@ -1203,7 +1184,6 @@ async function main() {
     create: {
       id: "player-007",
       playerName: "한동민",
-      dateOfBirth: new Date("2000-08-05"),
       preferredFoot: "LEFT",
       height: 176,
       weight: 70,
@@ -1220,7 +1200,6 @@ async function main() {
     create: {
       id: "player-008",
       playerName: "오승환",
-      dateOfBirth: new Date("1999-05-21"),
       preferredFoot: "RIGHT",
       height: 178,
       weight: 73,
@@ -1237,7 +1216,6 @@ async function main() {
     create: {
       id: "player-009",
       playerName: "김태영",
-      dateOfBirth: new Date("1994-11-08"),
       preferredFoot: "RIGHT",
       height: 182,
       weight: 78,
@@ -1254,7 +1232,6 @@ async function main() {
     create: {
       id: "player-010",
       playerName: "류현진",
-      dateOfBirth: new Date("2001-03-30"),
       preferredFoot: "RIGHT",
       height: 180,
       weight: 75,
@@ -1271,7 +1248,6 @@ async function main() {
     create: {
       id: "player-011",
       playerName: "박상원",
-      dateOfBirth: new Date("1999-09-15"),
       preferredFoot: "RIGHT",
       height: 177,
       weight: 71,
@@ -1288,7 +1264,6 @@ async function main() {
     create: {
       id: "player-012",
       playerName: "윤대성",
-      dateOfBirth: new Date("1997-06-02"),
       preferredFoot: "BOTH",
       height: 174,
       weight: 68,
@@ -1305,7 +1280,6 @@ async function main() {
     create: {
       id: "player-013",
       playerName: "이강인",
-      dateOfBirth: new Date("2003-01-19"),
       preferredFoot: "LEFT",
       height: 173,
       weight: 66,
@@ -1322,7 +1296,6 @@ async function main() {
     create: {
       id: "player-014",
       playerName: "황희찬",
-      dateOfBirth: new Date("1996-01-26"),
       preferredFoot: "RIGHT",
       height: 177,
       weight: 72,
@@ -1339,7 +1312,6 @@ async function main() {
     create: {
       id: "player-015",
       playerName: "조현우",
-      dateOfBirth: new Date("1991-09-25"),
       preferredFoot: "RIGHT",
       height: 189,
       weight: 83,
@@ -1356,7 +1328,6 @@ async function main() {
     create: {
       id: "player-016",
       playerName: "권창훈",
-      dateOfBirth: new Date("1994-09-30"),
       preferredFoot: "RIGHT",
       height: 175,
       weight: 70,
@@ -1373,7 +1344,6 @@ async function main() {
     create: {
       id: "player-017",
       playerName: "이재성",
-      dateOfBirth: new Date("1992-08-10"),
       preferredFoot: "RIGHT",
       height: 178,
       weight: 74,
@@ -1390,7 +1360,6 @@ async function main() {
     create: {
       id: "player-018",
       playerName: "송민규",
-      dateOfBirth: new Date("1999-09-12"),
       preferredFoot: "BOTH",
       height: 174,
       weight: 68,
@@ -1407,7 +1376,6 @@ async function main() {
     create: {
       id: "player-019",
       playerName: "Mateus Costa",
-      dateOfBirth: new Date("2000-11-14"),
       preferredFoot: "LEFT",
       height: 171,
       weight: 65,
@@ -1424,7 +1392,6 @@ async function main() {
     create: {
       id: "player-020",
       playerName: "김영권",
-      dateOfBirth: new Date("1990-02-27"),
       preferredFoot: "RIGHT",
       height: 185,
       weight: 80,
@@ -2265,7 +2232,6 @@ async function main() {
     create: {
       id: "youth-u15-001",
       playerName: "김유스",
-      dateOfBirth: new Date("2011-03-12"),
       preferredFoot: "RIGHT",
       height: 165,
       weight: 55,
@@ -2284,7 +2250,6 @@ async function main() {
     create: {
       id: "youth-u15-002",
       playerName: "이소년",
-      dateOfBirth: new Date("2011-07-22"),
       preferredFoot: "RIGHT",
       height: 168,
       weight: 57,
@@ -2303,7 +2268,6 @@ async function main() {
     create: {
       id: "youth-u15-003",
       playerName: "박청소년",
-      dateOfBirth: new Date("2012-01-05"),
       preferredFoot: "LEFT",
       height: 162,
       weight: 53,
@@ -2322,7 +2286,6 @@ async function main() {
     create: {
       id: "youth-u15-004",
       playerName: "최미드",
-      dateOfBirth: new Date("2011-09-18"),
       preferredFoot: "RIGHT",
       height: 164,
       weight: 56,
@@ -2341,7 +2304,6 @@ async function main() {
     create: {
       id: "youth-u15-005",
       playerName: "정공격수",
-      dateOfBirth: new Date("2012-05-30"),
       preferredFoot: "RIGHT",
       height: 167,
       weight: 58,
@@ -2361,7 +2323,6 @@ async function main() {
     create: {
       id: "youth-u18-001",
       playerName: "한골키퍼",
-      dateOfBirth: new Date("2008-04-14"),
       preferredFoot: "RIGHT",
       height: 182,
       weight: 72,
@@ -2380,7 +2341,6 @@ async function main() {
     create: {
       id: "youth-u18-002",
       playerName: "오수비수",
-      dateOfBirth: new Date("2008-11-02"),
       preferredFoot: "RIGHT",
       height: 178,
       weight: 68,
@@ -2399,7 +2359,6 @@ async function main() {
     create: {
       id: "youth-u18-003",
       playerName: "윤센터백",
-      dateOfBirth: new Date("2009-02-19"),
       preferredFoot: "RIGHT",
       height: 180,
       weight: 70,
@@ -2418,7 +2377,6 @@ async function main() {
     create: {
       id: "youth-u18-004",
       playerName: "강미드필더",
-      dateOfBirth: new Date("2008-08-07"),
       preferredFoot: "BOTH",
       height: 174,
       weight: 65,
@@ -2437,7 +2395,6 @@ async function main() {
     create: {
       id: "youth-u18-005",
       playerName: "임스트라이커",
-      dateOfBirth: new Date("2009-06-25"),
       preferredFoot: "LEFT",
       height: 176,
       weight: 67,
@@ -2457,7 +2414,7 @@ async function main() {
     data: [
       {
         playerName: yp1.playerName,
-        birthDate: yp1.dateOfBirth,
+        birthDate: new Date("2011-03-12"),
         preferredJerseyNumber: 1,
         teamId: u15Team.id,
         guardianId: guardians[0]!.id,
@@ -2466,7 +2423,7 @@ async function main() {
       },
       {
         playerName: yp2.playerName,
-        birthDate: yp2.dateOfBirth,
+        birthDate: new Date("2011-07-22"),
         preferredJerseyNumber: 4,
         teamId: u15Team.id,
         guardianId: guardians[1]!.id,
@@ -2475,7 +2432,7 @@ async function main() {
       },
       {
         playerName: yp3.playerName,
-        birthDate: yp3.dateOfBirth,
+        birthDate: new Date("2012-01-05"),
         teamId: u15Team.id,
         guardianId: guardians[2]!.id,
         status: "GUARDIAN_APPROVED",
@@ -2483,7 +2440,7 @@ async function main() {
       },
       {
         playerName: yp4.playerName,
-        birthDate: yp4.dateOfBirth,
+        birthDate: new Date("2011-09-18"),
         preferredJerseyNumber: 10,
         teamId: u15Team.id,
         guardianId: guardians[3]!.id,
@@ -2492,7 +2449,7 @@ async function main() {
       },
       {
         playerName: yp6.playerName,
-        birthDate: yp6.dateOfBirth,
+        birthDate: new Date("2008-04-14"),
         preferredJerseyNumber: 1,
         teamId: u18Team.id,
         guardianId: guardians[5]!.id,
@@ -2501,7 +2458,7 @@ async function main() {
       },
       {
         playerName: yp8.playerName,
-        birthDate: yp8.dateOfBirth,
+        birthDate: new Date("2009-02-19"),
         teamId: u18Team.id,
         guardianId: guardians[7]!.id,
         status: "PENDING",
@@ -2555,6 +2512,9 @@ async function main() {
   // ── 2025 시즌 홈 경기 & 티켓 판매 ─────────────────────
   await seedTicketSales2025(admin.id);
 
+  // ── 2025 유소년 회비 (전년도 실적) ────────────────────
+  await seedAcademyFees2025(admin.id);
+
   console.log("✅ Seed complete");
   console.log(`   - Countries: 2`);
   console.log(`   - Users: 21 + 10 유소년 / pw: Password1!`);
@@ -2578,6 +2538,120 @@ async function main() {
   console.log(`   - Players: 20 (1군) + 10 (유소년: U15×5, U18×5)`);
   console.log(`   - Youth Teams: U-15 (id:${u15Team.id}), U-18 (id:${u18Team.id})`);
   console.log(`   - YouthRegistrations: 6 (CONTRACTED×3, GUARDIAN_APPROVED×1, PENDING×2)`);
+}
+
+async function seedAcademyFees2025(adminId: number) {
+  // 유소년 선수 + 보호자 조회
+  const players = await prisma.player.findMany({
+    where: { id: { in: [
+      "youth-u15-001", "youth-u15-002", "youth-u15-003", "youth-u15-004", "youth-u15-005",
+      "youth-u18-001", "youth-u18-002", "youth-u18-003", "youth-u18-004", "youth-u18-005",
+    ] } },
+    select: { id: true, playerName: true, guardianId: true, teamId: true },
+  });
+
+  const u15Amount = 150_000;
+  const u18Amount = 200_000;
+  const u15Ids = new Set(["youth-u15-001","youth-u15-002","youth-u15-003","youth-u15-004","youth-u15-005"]);
+
+  // 월별 status 테이블 (player index 0-4: U15, 5-9: U18)
+  // PAID(p) / FIRST_APPROVED(f) / SUBMITTED(s) / OVERDUE(o) / LOCKED(l) / PENDING(n)
+  const playerOrder = [
+    "youth-u15-001","youth-u15-002","youth-u15-003","youth-u15-004","youth-u15-005",
+    "youth-u18-001","youth-u18-002","youth-u18-003","youth-u18-004","youth-u18-005",
+  ];
+  type MonthStatus = "PAID"|"FIRST_APPROVED"|"SUBMITTED"|"OVERDUE"|"LOCKED"|"PENDING";
+  // 12개월(1-12) × 10선수
+  const statusTable: MonthStatus[][] = [
+    // 1    2      3      4      5      6      7      8      9      10     11        12
+    ["PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","OVERDUE","PENDING"],       // U15-001
+    ["PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","SUBMITTED","PENDING","PENDING"],  // U15-002
+    ["PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","OVERDUE","OVERDUE","LOCKED","PENDING"], // U15-003
+    ["PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","FIRST_APPROVED","PENDING","PENDING"], // U15-004
+    ["PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","PENDING","PENDING"],       // U15-005
+    ["PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","PENDING"],          // U18-001
+    ["PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","OVERDUE","PENDING"],      // U18-002
+    ["PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","FIRST_APPROVED","PENDING","PENDING"], // U18-003
+    ["PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","SUBMITTED","PENDING"],    // U18-004
+    ["PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","PAID","OVERDUE"],         // U18-005
+  ];
+
+  let feeCount = 0;
+  let ledgerCount = 0;
+
+  for (let pi = 0; pi < playerOrder.length; pi++) {
+    const playerId = playerOrder[pi]!;
+    const player = players.find(p => p.id === playerId);
+    if (!player || !player.guardianId) continue;
+
+    const amount = u15Ids.has(playerId) ? u15Amount : u18Amount;
+
+    for (let month = 1; month <= 12; month++) {
+      const status = statusTable[pi]![month - 1]!;
+      const dueDate = new Date(2025, month - 1, 25);
+      const isPaid = status === "PAID";
+      const paidAt = isPaid ? new Date(2025, month - 1, Math.floor(10 + Math.random() * 12)) : undefined;
+
+      const fee = await prisma.academyFee.upsert({
+        where: { playerId_year_month: { playerId, year: 2025, month } },
+        update: {},
+        create: {
+          playerId,
+          guardianId: player.guardianId,
+          amount,
+          dueDate,
+          year: 2025,
+          month,
+          status: status as any,
+          paidAt: paidAt ?? null,
+          paymentMethod: isPaid ? ("BANK_TRANSFER" as any) : null,
+          paymentSubmittedAt: (isPaid || status === "SUBMITTED" || status === "FIRST_APPROVED")
+            ? new Date(2025, month - 1, Math.floor(5 + Math.random() * 10))
+            : null,
+          paymentProofUrl: (isPaid || status === "SUBMITTED" || status === "FIRST_APPROVED")
+            ? `/uploads/academy-fee-proofs/seed-${playerId}-2025-${month}.jpg`
+            : null,
+          receiptIssuedAt: isPaid ? paidAt! : null,
+        },
+      });
+      feeCount++;
+
+      // PAID → LedgerEntry 생성 (autoFillRevenue 집계 대상)
+      if (isPaid) {
+        const existing = await prisma.ledgerEntry.findFirst({
+          where: { relatedModule: "AcademyFee", relatedId: fee.id },
+          select: { id: true },
+        });
+        if (!existing) {
+          await prisma.ledgerEntry.create({
+            data: {
+              type: "INCOME",
+              category: "ACADEMY_FEE",
+              amount,
+              currency: "KRW",
+              exchangeRate: 1,
+              amountKrw: amount,
+              isRefund: false,
+              description: `[아카데미 회비] ${player.playerName} 2025년 ${month}월`,
+              relatedModule: "AcademyFee",
+              relatedId: fee.id,
+              createdById: adminId,
+              createdAt: paidAt,
+            } as any,
+          });
+          ledgerCount++;
+        }
+      }
+    }
+  }
+
+  const totalPaid = playerOrder.reduce((sum, pid, pi) => {
+    const amt = u15Ids.has(pid) ? u15Amount : u18Amount;
+    const paidMonths = statusTable[pi]!.filter(s => s === "PAID").length;
+    return sum + amt * paidMonths;
+  }, 0);
+
+  console.log(`✅ 2025 유소년 회비 시드: ${feeCount}건, PAID 원장 ${ledgerCount}건, 총 ${(totalPaid / 1e6).toFixed(1)}백만원`);
 }
 
 async function seedTicketSales2025(adminId: number) {

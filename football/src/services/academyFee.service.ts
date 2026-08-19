@@ -1,5 +1,5 @@
 import { api } from './api'
-import type { AcademyFee, AcademyFinanceStats, FeeReceipt } from '@/types/academy-fee'
+import type { AcademyFee, AcademyFinanceStats, FeeReceipt, YouthPlayerSearchResult } from '@/types/academy-fee'
 
 export const academyFeeApi = {
   getAll: (params?: { status?: string; teamId?: number; year?: number; month?: number }) => {
@@ -15,6 +15,8 @@ export const academyFeeApi = {
     api.get<AcademyFee[]>(`/academy-fees/player/${playerId}`),
   submitProof: (id: number, paymentProofUrl: string) =>
     api.patch<AcademyFee>(`/academy-fees/${id}/submit-proof`, { paymentProofUrl }),
+  firstApprove: (id: number) =>
+    api.patch<AcademyFee>(`/academy-fees/${id}/first-approve`, {}),
   approve: (id: number) =>
     api.patch<AcademyFee>(`/academy-fees/${id}/approve`, {}),
   issue: (year: number, month: number, amount: number) =>
@@ -41,5 +43,16 @@ export const academyFeeApi = {
     const formData = new FormData()
     formData.append('file', file)
     return api.postForm<AcademyFee>(`/academy-fees/${id}/staff-upload-proof`, formData)
+  },
+  searchPlayers: (name: string) =>
+    api.get<YouthPlayerSearchResult[]>(`/academy-fees/players/search?name=${encodeURIComponent(name)}`),
+  registerWithProof: (playerId: string, year: number, month: number, amount: number, file: File) => {
+    const formData = new FormData()
+    formData.append('playerId', playerId)
+    formData.append('year', String(year))
+    formData.append('month', String(month))
+    formData.append('amount', String(amount))
+    formData.append('file', file)
+    return api.postForm<AcademyFee>('/academy-fees/register-with-proof', formData)
   },
 }

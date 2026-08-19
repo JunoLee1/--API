@@ -20,6 +20,13 @@ const checkWriteFinance = (req: Request, res: Response, next: NextFunction) => {
 
 router.get("/", auth, controller.list);
 router.post("/", auth, controller.create);
+router.patch("/:id/pay", auth, checkWriteFinance, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = Number(req.params["id"]);
+    const result = await service.markPaid(id, req.user!.id);
+    res.json(result);
+  } catch (err) { next(err); }
+});
 router.delete("/:id", auth, checkWriteFinance, controller.delete);
 
 export default router;
