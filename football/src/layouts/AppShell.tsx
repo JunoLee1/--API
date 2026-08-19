@@ -483,6 +483,15 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'SUPER_ADMIN', 'GM', 'FRONT_OFFICE'],
     frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF'],
   },
+  {
+    to: '/admin/payroll',
+    label: 'nav.item.payroll',
+    icon: Banknote,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.finance',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'GM', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['FINANCE_MANAGER', 'HR_MANAGER'],
+  },
   // 관리 > 시설·자산
   {
     to: '/equipment',

@@ -72,7 +72,7 @@ export const payrollApi = {
   createRun: (salaryId: number, payload: { month: string }) =>
     api.post<PayrollRun>(`/payroll/salaries/${salaryId}/runs`, payload),
   confirmRun: (salaryId: number, runId: number) =>
-    api.patch<PayrollRun>(`/payroll/salaries/${salaryId}/runs/${runId}`, { action: 'confirm' }),
+    api.patch<PayrollRun>(`/payroll/salaries/${salaryId}/runs/${runId}`, {}),
   secondApproveRun: (salaryId: number, runId: number) =>
     api.post<PayrollRun>(`/payroll/salaries/${salaryId}/runs/${runId}/second-approve`, {}),
 }

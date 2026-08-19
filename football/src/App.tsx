@@ -88,6 +88,7 @@ import { PlanReportFormPage } from '@/pages/finance/PlanReportFormPage'
 import { PlanReportDetailPage } from '@/pages/finance/PlanReportDetailPage'
 import { DepartmentReviewConfigPage } from '@/pages/admin/DepartmentReviewConfigPage'
 import { ReviewRuleSetPage } from '@/pages/admin/ReviewRuleSetPage'
+import PayrollPage from '@/pages/admin/PayrollPage'
 
 function RootRedirect() {
   const { user, loading } = useCurrentUser()
@@ -229,6 +230,7 @@ function App() {
             <Route path="/finance/plan-reports/:id" element={<PlanReportDetailPage />} />
             <Route path="/finance/budget" element={<BudgetListPage />} />
             <Route path="/finance/budget/:id" element={<BudgetDetailPage />} />
+            <Route path="/admin/payroll" element={<PayrollPage />} />
             <Route path="/player/me" element={<PlayerMeRedirect />} />
           </Route>
 
