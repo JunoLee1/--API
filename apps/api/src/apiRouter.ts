@@ -63,6 +63,7 @@ import hiringSurveyRouter from "./hiring-survey/hiring-survey.routes";
 import formationSnapshotRouter from "./formation-snapshot/formation-snapshot.routes";
 import certificationRouter from "./certification/certification.routes";
 import budgetControlRouter from "./budget-control/budget-control.routes";
+import { monthlySettlementRouter } from "./monthly-settlement/monthly-settlement.routes";
 import { startCertStatusSyncJob } from "./jobs/certStatusSync";
 import { startPreventiveScheduleGenJob } from "./jobs/preventiveScheduleGen";
 import { startContactFollowUpNotifierJob } from "./jobs/contactFollowUpNotifier";
@@ -135,6 +136,7 @@ apiRouter.use("/hiring-surveys", hiringSurveyRouter);
 apiRouter.use("/formation-snapshots", formationSnapshotRouter);
 apiRouter.use("/certification", certificationRouter);
 apiRouter.use("/budget-control", budgetControlRouter);
+apiRouter.use("/monthly-settlement", monthlySettlementRouter);
 
 startCertStatusSyncJob();
 startPreventiveScheduleGenJob();
