@@ -5,7 +5,6 @@ import type { PrismaClient } from "../../generated/client";
 
 const makeRepo = (overrides: Partial<RunRepository> = {}): RunRepository => ({
   findById: jest.fn().mockResolvedValue(null),
-  secondApprove: jest.fn().mockResolvedValue({ id: 1, isLocked: true }),
   ...overrides,
 } as unknown as RunRepository);
 

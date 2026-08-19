@@ -1,6 +1,5 @@
 import { AppError } from "../../lib/appError";
 import { formatLedgerDescription } from "../../lib/ledger-formatter";
-import { writeAuditLog } from "../../lib/auditLog";
 import type { RunRepository } from "./run.repo";
 import type { SalaryRepository } from "../salary/salary.repo";
 import type { ConfigRepository } from "../config/config.repo";
@@ -38,7 +37,7 @@ export class RunService {
     return this.runRepo.findAll(salaryId);
   }
 
-  async createRun(salaryId: number, dto: CreateRunDto, actorId?: number) {
+  async createRun(salaryId: number, dto: CreateRunDto) {
     const salary = await this.salaryRepo.findById(salaryId);
     if (!salary) throw new AppError(404, "SALARY_NOT_FOUND");
 
@@ -62,11 +61,7 @@ export class RunService {
       activeConfigs.map((c) => ({ employeeRate: c.employeeRate.toNumber() })),
     );
 
-    const run = await this.runRepo.create({ staffSalaryId: salaryId, month, grossPay, totalDeductions, netPay });
-    if (actorId != null) {
-      await writeAuditLog({ actorId, action: "PAYROLL_RUN_CREATED", targetId: run.id });
-    }
-    return run;
+    return this.runRepo.create({ staffSalaryId: salaryId, month, grossPay, totalDeductions, netPay });
   }
 
   async secondApproveRun(salaryId: number, runId: number, userId: number) {
@@ -116,12 +111,10 @@ export class RunService {
     if (!run || run.staffSalaryId !== salaryId) throw new AppError(404, "PAYROLL_RUN_NOT_FOUND");
     if (run.status === "CONFIRMED") throw new AppError(409, "ALREADY_CONFIRMED");
 
-    const result = await this.runRepo.update(runId, {
+    return this.runRepo.update(runId, {
       status: "CONFIRMED",
       confirmedById: userId,
       confirmedAt: new Date(),
     });
-    await writeAuditLog({ actorId: userId, action: "PAYROLL_RUN_CONFIRMED", targetId: runId });
-    return result;
   }
 }
