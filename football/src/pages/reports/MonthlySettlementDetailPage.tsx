@@ -12,6 +12,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { ArrowLeft } from 'lucide-react'
+import { RevenueAdjustmentSheet, FIELD_LABELS } from '@/components/RevenueAdjustmentSheet'
+import type { RevenueField } from '@/types/revenue-adjustment'
 
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: '초안',
@@ -36,6 +38,7 @@ export default function MonthlySettlementDetailPage() {
   const [acting, setActing] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
   const [showRejectInput, setShowRejectInput] = useState(false)
+  const [sheetField, setSheetField] = useState<RevenueField | null>(null)
 
   const isFinanceStaff = user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'FINANCE_STAFF'
   const isFinanceManager = user?.role === 'FRONT_OFFICE' && user?.frontOfficeRole === 'FINANCE_MANAGER'
@@ -147,8 +150,12 @@ export default function MonthlySettlementDetailPage() {
               </TableHeader>
               <TableBody>
                 {Object.entries(snap.revenue).map(([cat, amt]) => (
-                  <TableRow key={cat}>
-                    <TableCell>{cat}</TableCell>
+                  <TableRow
+                    key={cat}
+                    onClick={() => setSheetField(cat as RevenueField)}
+                    className="cursor-pointer hover:bg-muted/50"
+                  >
+                    <TableCell>{FIELD_LABELS[cat as RevenueField] ?? cat}</TableCell>
                     <TableCell className="text-right tabular-nums">{(amt as number).toLocaleString()}</TableCell>
                   </TableRow>
                 ))}
@@ -293,6 +300,21 @@ export default function MonthlySettlementDetailPage() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* 수익 드릴다운 시트 */}
+      {sheetField && report && (
+        <RevenueAdjustmentSheet
+          open={sheetField !== null}
+          onClose={() => setSheetField(null)}
+          field={sheetField}
+          fieldLabel={FIELD_LABELS[sheetField]}
+          targetType="monthly"
+          targetId={report.id}
+          year={report.year}
+          month={report.month}
+          canAddAdjustment={isFinanceManager || isAdminLike}
+        />
       )}
     </div>
   )
