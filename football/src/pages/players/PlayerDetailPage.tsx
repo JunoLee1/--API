@@ -193,6 +193,8 @@ export function PlayerDetailPage() {
   }
 
   useEffect(() => {
+    setAllergyEditMode(false)
+    setAllergyInput('')
     fetchPlayer()
   }, [id])
 

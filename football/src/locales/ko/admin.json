@@ -636,6 +636,24 @@
     "loading": "불러오는 중...",
     "loadError": "불러오기 실패"
   },
+  "clubSettings": {
+    "title": "구단 설정",
+    "description": "구단 운영에 관한 기본 설정을 관리합니다.",
+    "loading": "설정을 불러오는 중...",
+    "general": "일반 설정",
+    "generalDesc": "통화, 지수, 비용 한도를 설정합니다.",
+    "currency": "통화 (ISO 4217)",
+    "ibiBeta": "IBI Beta 지수",
+    "maintenanceCostLimit": "유지보수 비용 한도 (원)",
+    "planApprovalLimit": "사업계획 승인 한도",
+    "complimentaryTicketLimit": "무료 티켓 한도",
+    "readOnly": "읽기 전용 설정",
+    "save": "저장",
+    "saving": "저장 중...",
+    "saved": "설정이 저장됐습니다.",
+    "saveFailed": "저장에 실패했습니다.",
+    "loadFailed": "설정을 불러오지 못했습니다."
+  },
   "recruitment": {
     "postingsTitle": "채용 공고 관리",
     "createPosting": "공고 등록",
