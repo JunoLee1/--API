@@ -245,8 +245,8 @@ export default function BudgetDetailPage() {
               </Badge>
               {canWrite && adj.status === 'PENDING' && (
                 <div className="flex gap-1">
-                  <Button size="sm" onClick={() => budgetControlApi.approveAdjustment(header.id, adj.id).then(() => load())}>승인</Button>
-                  <Button size="sm" variant="outline" onClick={() => budgetControlApi.rejectAdjustment(header.id, adj.id).then(() => load())}>반려</Button>
+                  <Button size="sm" onClick={() => budgetControlApi.approveAdjustment(header.id, adj.id).then(() => load()).catch(() => toast.error('승인 실패'))}>승인</Button>
+                  <Button size="sm" variant="outline" onClick={() => budgetControlApi.rejectAdjustment(header.id, adj.id).then(() => load()).catch(() => toast.error('반려 실패'))}>반려</Button>
                 </div>
               )}
             </div>
