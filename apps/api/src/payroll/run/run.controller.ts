@@ -19,10 +19,10 @@ export class RunController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole, id: actorId } = requireUser(req);
+      const { role, frontOfficeRole } = requireUser(req);
       if (!canWriteHR(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(
-        await this.service.createRun(Number(req.params["id"]), req.body as CreateRunDto, actorId),
+        await this.service.createRun(Number(req.params["id"]), req.body as CreateRunDto),
       );
     } catch (err) { next(err); }
   };
