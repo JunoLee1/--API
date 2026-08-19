@@ -91,3 +91,23 @@ describe("BudgetControlService.approve", () => {
     expect(repo.updateStatus).toHaveBeenCalledWith(1, "APPROVED", 2);
   });
 });
+
+describe("BudgetControlService.requestAdjustment", () => {
+  it("throws 400 when status is DRAFT", async () => {
+    const repo = makeRepo({ findById: jest.fn().mockResolvedValue(makeHeader({ status: "DRAFT" })) });
+    await expect(makeService(repo).requestAdjustment(1, { type: "INCREASE", amount: 1_000_000, reason: "test" }, 1))
+      .rejects.toThrow(new AppError(400, "BUDGET_NOT_APPROVED"));
+  });
+
+  it("throws 400 when status is SUBMITTED", async () => {
+    const repo = makeRepo({ findById: jest.fn().mockResolvedValue(makeHeader({ status: "SUBMITTED" })) });
+    await expect(makeService(repo).requestAdjustment(1, { type: "INCREASE", amount: 1_000_000, reason: "test" }, 1))
+      .rejects.toThrow(new AppError(400, "BUDGET_NOT_APPROVED"));
+  });
+
+  it("throws 400 when amount is zero", async () => {
+    const repo = makeRepo({ findById: jest.fn().mockResolvedValue(makeHeader({ status: "APPROVED" })) });
+    await expect(makeService(repo).requestAdjustment(1, { type: "INCREASE", amount: 0, reason: "test" }, 1))
+      .rejects.toThrow(new AppError(400, "INVALID_ADJUSTMENT_AMOUNT"));
+  });
+});
