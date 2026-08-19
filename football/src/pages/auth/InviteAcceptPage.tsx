@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { api } from '@/services/api'
 import type { Role, CoachingRole, FrontOfficeRole } from '@/types/auth'
 import { ROLE_LABEL, COACHING_ROLE_LABEL, FRONT_OFFICE_ROLE_LABEL } from '@/types/auth'
@@ -39,6 +40,17 @@ function roleDisplay(info: InviteInfo) {
 export default function InviteAcceptPage() {
   const { token } = useParams<{ token: string }>()
   const navigate = useNavigate()
+  const { t, i18n } = useTranslation('youth')
+
+  const [lang, setLang] = React.useState<'ko' | 'en'>(
+    (localStorage.getItem('app_lang') as 'ko' | 'en') ?? 'ko'
+  )
+  const toggleLang = () => {
+    const next = lang === 'ko' ? 'en' : 'ko';
+    setLang(next);
+    localStorage.setItem('app_lang', next);
+    i18n.changeLanguage(next);
+  };
 
   const [invite, setInvite] = useState<InviteInfo | null>(null)
   const [error, setError] = useState<'not_found' | 'expired' | 'used' | null>(null)
@@ -70,8 +82,8 @@ export default function InviteAcceptPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (password !== confirmedPassword) { toast.error('비밀번호가 일치하지 않습니다.'); return }
-    if (!nationalityId) { toast.error('국적을 선택해주세요.'); return }
+    if (password !== confirmedPassword) { toast.error(t('inviteAccept.errors.passwordMismatch')); return }
+    if (!nationalityId) { toast.error(t('inviteAccept.errors.nationalityRequired')); return }
     setSubmitting(true)
     try {
       await api.post(`/auth/invites/${token}/accept`, {
@@ -79,34 +91,35 @@ export default function InviteAcceptPage() {
         nationalityId: Number(nationalityId),
         password, confirmedPassword,
       })
-      toast.success('가입이 완료되었습니다. 로그인해주세요.')
+      toast.success(t('inviteAccept.success'))
       navigate('/login')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : ''
-      if (msg.includes('NICKNAME_TAKEN')) toast.error('이미 사용 중인 닉네임입니다.')
-      else if (msg.includes('PASSWORD_MISMATCH')) toast.error('비밀번호가 일치하지 않습니다.')
-      else if (msg.includes('INVALID_PHONE_NUMBER')) toast.error('전화번호 형식이 올바르지 않습니다. (010-0000-0000)')
-      else if (msg.includes('INVITE_EXPIRED')) { setError('expired'); toast.error('초대 링크가 만료되었습니다.') }
-      else if (msg.includes('INVITE_ALREADY_USED')) { setError('used'); toast.error('이미 사용된 초대 링크입니다.') }
-      else toast.error('가입 처리 중 오류가 발생했습니다.')
+      if (msg.includes('NICKNAME_TAKEN')) toast.error(t('inviteAccept.errors.nicknameTaken'))
+      else if (msg.includes('PASSWORD_MISMATCH')) toast.error(t('inviteAccept.errors.passwordMismatch'))
+      else if (msg.includes('INVALID_PHONE_NUMBER')) toast.error(t('inviteAccept.errors.invalidPhone'))
+      else if (msg.includes('INVITE_EXPIRED')) { setError('expired'); toast.error(t('inviteAccept.errors.expired')) }
+      else if (msg.includes('INVITE_ALREADY_USED')) { setError('used'); toast.error(t('inviteAccept.errors.invalidToken')) }
+      else toast.error(t('inviteAccept.errors.failed'))
     } finally { setSubmitting(false) }
   }
 
   if (error) {
-    const messages = {
-      expired: { title: '초대 링크 만료', desc: '이 초대 링크는 만료되었습니다. 관리자에게 새 초대를 요청해주세요.' },
-      used: { title: '이미 사용된 링크', desc: '이 초대 링크는 이미 사용되었습니다. 계정이 있으면 로그인해주세요.' },
-      not_found: { title: '유효하지 않은 링크', desc: '초대 링크가 올바르지 않습니다. 이메일을 다시 확인해주세요.' },
-    }
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
+      <div className="relative min-h-screen flex items-center justify-center bg-muted/30 px-4">
+        <button
+          onClick={toggleLang}
+          className="absolute top-4 right-4 text-sm text-gray-500 hover:text-gray-800"
+        >
+          {lang === 'ko' ? 'EN' : '한국어'}
+        </button>
         <Card className="w-full max-w-md text-center">
           <CardHeader>
-            <CardTitle>{messages[error].title}</CardTitle>
-            <CardDescription>{messages[error].desc}</CardDescription>
+            <CardTitle>{t(`inviteAccept.states.${error}.title`)}</CardTitle>
+            <CardDescription>{t(`inviteAccept.states.${error}.description`)}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" onClick={() => navigate('/login')}>로그인 페이지로</Button>
+            <Button variant="outline" onClick={() => navigate('/login')}>{t('inviteAccept.toLogin')}</Button>
           </CardContent>
         </Card>
       </div>
@@ -115,19 +128,31 @@ export default function InviteAcceptPage() {
 
   if (!invite) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30">
-        <p className="text-sm text-muted-foreground animate-pulse">초대 링크 확인 중...</p>
+      <div className="relative min-h-screen flex items-center justify-center bg-muted/30">
+        <button
+          onClick={toggleLang}
+          className="absolute top-4 right-4 text-sm text-gray-500 hover:text-gray-800"
+        >
+          {lang === 'ko' ? 'EN' : '한국어'}
+        </button>
+        <p className="text-sm text-muted-foreground animate-pulse">{t('inviteAccept.loading')}</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-8">
+    <div className="relative min-h-screen flex items-center justify-center bg-muted/30 px-4 py-8">
+      <button
+        onClick={toggleLang}
+        className="absolute top-4 right-4 text-sm text-gray-500 hover:text-gray-800"
+      >
+        {lang === 'ko' ? 'EN' : '한국어'}
+      </button>
       <Card className="w-full max-w-lg">
         <CardHeader>
-          <CardTitle>Football ERP 가입</CardTitle>
+          <CardTitle>{t('inviteAccept.title')}</CardTitle>
           <CardDescription>
-            <span className="font-medium text-foreground">{invite.email}</span>으로 초대되었습니다.
+            <span className="font-medium text-foreground">{invite.email}</span>{t('inviteAccept.invitedTo')}
           </CardDescription>
           <Badge variant="secondary" className="w-fit">{roleDisplay(invite)}</Badge>
         </CardHeader>
@@ -135,28 +160,28 @@ export default function InviteAcceptPage() {
           <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>이름 *</Label>
-                <Input placeholder="홍길동" value={username} onChange={(e) => setUsername(e.target.value)} required />
+                <Label>{t('inviteAccept.name')} *</Label>
+                <Input placeholder={t('inviteAccept.namePlaceholder')} value={username} onChange={(e) => setUsername(e.target.value)} required />
               </div>
               <div className="space-y-1.5">
-                <Label>닉네임 *</Label>
+                <Label>{t('inviteAccept.nickname')} *</Label>
                 <Input placeholder="hong_gd" value={nickname} onChange={(e) => setNickname(e.target.value)} required />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>전화번호 *</Label>
+                <Label>{t('inviteAccept.phone')} *</Label>
                 <Input placeholder="010-0000-0000" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} required />
               </div>
               <div className="space-y-1.5">
-                <Label>생년월일 *</Label>
+                <Label>{t('inviteAccept.birthDate')} *</Label>
                 <Input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} required />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>국적 *</Label>
+              <Label>{t('inviteAccept.nationality')} *</Label>
               <Select value={nationalityId} onValueChange={setNationalityId}>
-                <SelectTrigger><SelectValue placeholder="국적 선택" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t('inviteAccept.nationalityPlaceholder')} /></SelectTrigger>
                 <SelectContent>
                   {countries.map((c) => (
                     <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
@@ -166,16 +191,16 @@ export default function InviteAcceptPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>비밀번호 *</Label>
+                <Label>{t('inviteAccept.password')} *</Label>
                 <Input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
               </div>
               <div className="space-y-1.5">
-                <Label>비밀번호 확인 *</Label>
+                <Label>{t('inviteAccept.passwordConfirm')} *</Label>
                 <Input type="password" placeholder="••••••••" value={confirmedPassword} onChange={(e) => setConfirmedPassword(e.target.value)} required />
               </div>
             </div>
             <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? '처리 중...' : '가입 완료'}
+              {submitting ? t('inviteAccept.submitting') : t('inviteAccept.submit')}
             </Button>
           </form>
         </CardContent>
