@@ -24,6 +24,28 @@ export const guardianApi = {
 
   submitFeeProof: (playerId: string, feeId: number, url: string) =>
     api.patch<AcademyFee>(`/guardians/me/children/${playerId}/fees/${feeId}/submit-proof`, { url }),
+
+  getGrowthReports: (playerId: string) =>
+    api.get<GrowthEvaluation[]>(`/growth-reports/player/${playerId}`),
+
+  linkByCode: (code: string) =>
+    api.post<void>('/guardians/link/code', { code }),
+
+  issueInviteCode: (playerId: string) =>
+    api.post<{ code: string; expiresAt: string }>('/guardians/invite-code', { playerId }),
+}
+
+export interface GrowthEvaluation {
+  id: number
+  year: number
+  month: number
+  attitude: number
+  fundamentals: number
+  spatialAwareness: number
+  physical: number
+  comment: string | null
+  publishedAt: string | null
+  coachName: string
 }
 
 export interface ChildPlayer {
