@@ -98,6 +98,10 @@ type TeamCtx = 'FIRST_TEAM' | 'YOUTH'
 function DashboardInner({ user, teamCtx }: { user: UserDto; teamCtx: TeamCtx }) {
   const { t } = useTranslation('common')
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (user.role === 'GUARDIAN') navigate('/guardian-portal', { replace: true })
+  }, [user.role, navigate])
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [seasonTicketRevenue, setSeasonTicketRevenue] = useState<number | null>(null)
   const [opsKpiYear, setOpsKpiYear] = useState<number>(new Date().getMonth() === 0 ? new Date().getFullYear() - 1 : new Date().getFullYear())
