@@ -4,6 +4,7 @@ import { InjuryController } from "./injury.controller";
 import { InjuryService } from "./injury.service";
 import { InjuryRepository } from "./injury.repo";
 import { NotificationRepository } from "../notification/notification.repo";
+import { TrainingLoadRepository } from "../training-load/training-load.repo";
 import { getPrisma } from "../lib/prisma";
 import { canReadActiveInjury, canReadInjuryReport } from "../lib/permissions";
 import { AppError } from "../lib/appError";
@@ -12,7 +13,8 @@ const router = Router();
 const prisma = getPrisma();
 const repo = new InjuryRepository(prisma);
 const notifRepo = new NotificationRepository(prisma);
-const service = new InjuryService(repo, notifRepo);
+const loadRepo = new TrainingLoadRepository(prisma);
+const service = new InjuryService(repo, notifRepo, loadRepo);
 const controller = new InjuryController(service);
 
 

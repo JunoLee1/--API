@@ -138,6 +138,13 @@ export class InjuryRepository {
     });
   }
 
+  updatePriorWeeklyLoad(injuryId: number, load: number) {
+    return this.prisma.injury.update({
+      where: { id: injuryId },
+      data: { priorWeeklyLoad: load },
+    });
+  }
+
   updateStatus(id: number, dto: UpdateInjuryStatusDto) {
     return this.prisma.injury.update({
       where: { id },
@@ -153,6 +160,13 @@ export class InjuryRepository {
     return this.prisma.injuryReport.findUnique({
       where: { injuryId },
       select: INJURY_REPORT_SELECT,
+    });
+  }
+
+  getReport(injuryId: number) {
+    return this.prisma.injuryReport.findUnique({
+      where: { injuryId },
+      select: { rehabLoadPercentage: true, allowedActivities: true },
     });
   }
 

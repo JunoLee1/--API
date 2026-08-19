@@ -26,6 +26,12 @@ export function isWeeklyOverload(weeklyTotal: number, position?: string | null):
   return weeklyTotal >= getLoadThreshold(position);
 }
 
+export function getEffectiveThreshold(position?: string | null, rehabLoadPercentage?: number | null): number {
+  const base = getLoadThreshold(position);
+  if (rehabLoadPercentage == null) return base;
+  return Math.round(base * (rehabLoadPercentage / 100));
+}
+
 export class TrainingLoadService {
   constructor(
     private repo: TrainingLoadRepository,
@@ -56,23 +62,24 @@ export class TrainingLoadService {
       if (!isPhysicalCoach && !isHeadCoach && !isAdmin) throw new AppError(403, "LOAD_COACH_ONLY");
     }
 
-    // BH10: warn if player has active injury
-    void this.repo.findActiveInjury(dto.playerId).then(async (activeInjury) => {
-      if (activeInjury) {
-        console.warn(`[TrainingLoad] Player ${dto.playerId} has active injury (${activeInjury.status}) but training load is being recorded`);
-      }
-    }).catch(console.error);
-
     const result = await this.repo.upsert(dto);
 
     if (dto.load !== undefined) {
+      const activeInjury = await this.repo.findActiveInjuryWithReport(dto.playerId);
+      const rehabLoadPercentage = activeInjury?.report?.rehabLoadPercentage ?? null;
+      const allowedActivities = activeInjury?.report?.allowedActivities ?? null;
+
+      if (activeInjury) {
+        console.warn(`[TrainingLoad] Player ${dto.playerId} has active injury (${activeInjury.status})`);
+      }
+
       const weekStart = this.getWeekStart(new Date());
       const total = await this.repo.getWeeklyLoadTotal(dto.playerId, weekStart);
       const player = await this.repo.getPlayerName(dto.playerId);
       const playerName = player?.playerName ?? dto.playerId;
-      // KN3: use position-based threshold for overload check
-      if (isWeeklyOverload(total, player?.position)) {
-        const threshold = getLoadThreshold(player?.position);
+      // KN3: use position-based threshold for overload check; KN6: scale by rehabLoadPercentage
+      const threshold = getEffectiveThreshold(player?.position, rehabLoadPercentage);
+      if (threshold > 0 && total >= threshold) {
         try {
           await Promise.all([
             this.notifRepo.createForPhysicalCoach(
@@ -81,6 +88,7 @@ export class TrainingLoadService {
                 title: "훈련 부하 초과",
                 body: `${playerName} 선수의 이번 주 누적 부하(${total})가 임계값(${threshold})을 초과했습니다.`,
               }),
+              undefined,
             ).catch(console.error),
             this.notifRepo.createForHeadCoach(
               "TRAINING_LOAD_ALERT",
@@ -88,6 +96,7 @@ export class TrainingLoadService {
                 title: "훈련 부하 초과",
                 body: `${playerName} 선수의 이번 주 누적 부하(${total})가 임계값(${threshold})을 초과했습니다.`,
               }),
+              undefined,
             ).catch(console.error),
             this.notifRepo.createForMedicalDirector(
               "TRAINING_LOAD_ALERT",
@@ -95,11 +104,16 @@ export class TrainingLoadService {
                 title: "훈련 부하 초과",
                 body: `${playerName} 선수의 이번 주 누적 부하(${total})가 임계값(${threshold})을 초과했습니다.`,
               }),
+              undefined,
             ).catch(console.error),
           ]);
         } catch (err) {
           console.error("[TrainingLoad:overload-notify]", err);
         }
+      }
+
+      if (allowedActivities != null) {
+        return { ...result, allowedActivities };
       }
     }
 

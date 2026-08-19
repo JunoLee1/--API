@@ -74,11 +74,18 @@ export class MatchLineupRepository {
     });
   }
 
+  // BH9: players with matchAvailable=true AND medicalSignedAt signed are NOT blocked
   findActiveInjuredPlayerIds(playerIds: string[]) {
     return this.prisma.injury.findMany({
       where: {
         playerId: { in: playerIds },
-        status: { not: "RETURNED" },
+        status: { not: "RETURNED" as any },
+        NOT: {
+          injuryReport: {
+            matchAvailable: true,
+            medicalSignedAt: { not: null },
+          },
+        },
       },
       select: { playerId: true },
     });

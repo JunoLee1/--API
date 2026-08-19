@@ -31,6 +31,7 @@ export class InjuryService {
   constructor(
     private repo: InjuryRepository,
     private notifRepo: NotificationRepository,
+    private loadRepo?: { getWeeklyLoadTotal: (playerId: string, weekStart: Date) => Promise<number> },
   ) {}
 
   getByPlayer(playerId: string) {
@@ -45,6 +46,13 @@ export class InjuryService {
 
   async createInjury(dto: CreateInjuryDto) {
     const result = await this.repo.create(dto);
+    // BH4: 부상 시점 직전 7일 훈련 부하 스냅샷 (fire-and-forget)
+    if (this.loadRepo) {
+      const weekStart = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      void this.loadRepo.getWeeklyLoadTotal(dto.playerId, weekStart)
+        .then(load => { if (load > 0) return this.repo.updatePriorWeeklyLoad(result.id, load); })
+        .catch(console.error);
+    }
     try {
       const player = await this.repo.getPlayerWithGuardian(dto.playerId);
       const playerName = player?.playerName ?? "선수";
@@ -82,7 +90,12 @@ export class InjuryService {
     return result;
   }
 
-  async updateStatus(id: number, dto: UpdateInjuryStatusDto) {
+  async updateStatus(
+    id: number,
+    dto: UpdateInjuryStatusDto,
+    _userId?: number,
+    _requester?: { role: string; coachingRole: string | null },
+  ) {
     const injury = await this.repo.findById(id);
     if (!injury) throw new AppError(404, "INJURY_NOT_FOUND");
     const allowed = VALID_INJURY_TRANSITIONS[injury.status] ?? [];
@@ -91,9 +104,15 @@ export class InjuryService {
     }
     const result = await this.repo.updateStatus(id, dto);
     try {
-      const player = await this.repo.getPlayerWithGuardian(injury.playerId);
-      const playerName = player?.playerName ?? "선수";
-      if (dto.status === "READY_TO_RETURN") {
+      const playerName = injury.player?.playerName ?? "선수";
+      if (dto.status === "REHABILITATING") {
+        const title = "재활 훈련 시작";
+        const body = `${playerName} 선수가 재활 훈련을 시작합니다. 훈련 부하 계획을 조정해주세요.`;
+        await Promise.all([
+          this.notifRepo.createForPhysicalCoach("INJURY_REHABILITATING_STARTED", () => ({ title, body }), id).catch(console.error),
+          this.notifRepo.createForHeadCoach("INJURY_REHABILITATING_STARTED", () => ({ title, body }), id).catch(console.error),
+        ]);
+      } else if (dto.status === "READY_TO_RETURN") {
         const title = "선수 복귀 준비 완료";
         const body = `${playerName} 선수가 복귀 준비 단계에 들어섰습니다. 최종 복귀 여부를 검토하세요.`;
         await this.notifRepo.createForCoachingStaff("INJURY_READY_TO_RETURN", () => ({ title, body }), id);
@@ -166,7 +185,26 @@ export class InjuryService {
       ? dto
       : dtoWithoutActivities as UpsertInjuryReportDto;
 
+    // BH7: capture previous values for change detection
+    const existing = await this.repo.getReport(injuryId);
+
     const report = await this.repo.upsertReport(injuryId, safeDto, userId);
+
+    // BH7: notify on rehabLoadPercentage or allowedActivities change
+    const rehabChanged =
+      (safeDto.rehabLoadPercentage !== undefined && safeDto.rehabLoadPercentage !== existing?.rehabLoadPercentage) ||
+      (safeDto.allowedActivities !== undefined && safeDto.allowedActivities !== existing?.allowedActivities);
+
+    if (rehabChanged) {
+      const name = injury.player?.playerName ?? String(injuryId);
+      const pct = report.rehabLoadPercentage;
+      const title = "재활 훈련 조건 변경";
+      const body = `${name} 선수의 재활 부하 허용치가 ${pct != null ? pct + "%" : "미설정"}로 업데이트됐습니다.`;
+      await Promise.all([
+        this.notifRepo.createForPhysicalCoach("INJURY_REPORT_UPDATED", () => ({ title, body }), injuryId).catch(console.error),
+        this.notifRepo.createForHeadCoach("INJURY_REPORT_UPDATED", () => ({ title, body }), injuryId).catch(console.error),
+      ]);
+    }
 
     const warning =
       report.matchAvailable === true && !report.medicalSignedAt

@@ -4,15 +4,17 @@ const mockRepo = {
   findById: jest.fn(),
   findReport: jest.fn(),
   upsertReport: jest.fn(),
+  getReport: jest.fn().mockResolvedValue(null),
   getPlayerWithGuardian: jest.fn(),
   updateStatus: jest.fn(),
   countAvailableByZone: jest.fn(),
 };
 const mockNotifRepo = {
-  createForCoachingStaff: jest.fn(),
-  createForMedicalStaff: jest.fn(),
-  createForMedicalDirector: jest.fn(),
-  createForHeadCoach: jest.fn(),
+  createForCoachingStaff: jest.fn().mockResolvedValue(undefined),
+  createForMedicalStaff: jest.fn().mockResolvedValue(undefined),
+  createForMedicalDirector: jest.fn().mockResolvedValue(undefined),
+  createForHeadCoach: jest.fn().mockResolvedValue(undefined),
+  createForPhysicalCoach: jest.fn().mockResolvedValue(undefined),
 };
 
 jest.mock("../../src/lib/prisma", () => ({ getPrisma: () => ({}) }));
