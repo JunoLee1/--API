@@ -77,7 +77,9 @@ import { HiringSurveyListPage } from '@/pages/admin/recruitment/HiringSurveyList
 import { HiringSurveyDetailPage } from '@/pages/admin/recruitment/HiringSurveyDetailPage'
 import { HiringSurveyRespondPage } from '@/pages/admin/recruitment/HiringSurveyRespondPage'
 import { PlanReportHiringItemsPage } from '@/pages/finance/PlanReportHiringItemsPage'
+import DashboardCharts from '@/pages/finance/DashboardCharts'
 import BudgetListPage from '@/pages/finance/BudgetListPage'
+import AccountCodesPage from '@/pages/settings/AccountCodesPage'
 import BudgetDetailPage from '@/pages/finance/BudgetDetailPage'
 import { TeamSelectPage } from '@/pages/team-select/TeamSelectPage'
 import { LeaguePage } from '@/pages/admin/LeaguePage'
@@ -232,6 +234,8 @@ function App() {
             <Route path="/finance/plan-reports/:id" element={<PlanReportDetailPage />} />
             <Route path="/finance/budget" element={<BudgetListPage />} />
             <Route path="/finance/budget/:id" element={<BudgetDetailPage />} />
+            <Route path="/finance/dashboard" element={<DashboardCharts />} />
+            <Route path="/settings/account-codes" element={<AccountCodesPage />} />
             <Route path="/admin/payroll" element={<PayrollPage />} />
             <Route path="/player/me" element={<PlayerMeRedirect />} />
           </Route>

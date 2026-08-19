@@ -64,6 +64,8 @@ import formationSnapshotRouter from "./formation-snapshot/formation-snapshot.rou
 import certificationRouter from "./certification/certification.routes";
 import budgetControlRouter from "./budget-control/budget-control.routes";
 import { monthlySettlementRouter } from "./monthly-settlement/monthly-settlement.routes";
+import { revenueAdjustmentRouter } from "./revenue-adjustment/revenue-adjustment.routes";
+import { accountCodeRouter } from "./account-code/account-code.routes";
 import { startCertStatusSyncJob } from "./jobs/certStatusSync";
 import { startPreventiveScheduleGenJob } from "./jobs/preventiveScheduleGen";
 import { startContactFollowUpNotifierJob } from "./jobs/contactFollowUpNotifier";
@@ -137,6 +139,8 @@ apiRouter.use("/formation-snapshots", formationSnapshotRouter);
 apiRouter.use("/certification", certificationRouter);
 apiRouter.use("/budget-control", budgetControlRouter);
 apiRouter.use("/monthly-settlement", monthlySettlementRouter);
+apiRouter.use("/revenue-adjustment", revenueAdjustmentRouter);
+apiRouter.use("/account-codes", accountCodeRouter);
 
 startCertStatusSyncJob();
 startPreventiveScheduleGenJob();
