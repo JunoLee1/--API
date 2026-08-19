@@ -91,7 +91,10 @@ export default function BudgetListPage() {
 
   const load = () => {
     setLoading(true)
-    budgetControlApi.getAll().then(setBudgets).finally(() => setLoading(false))
+    budgetControlApi.getAll()
+      .then(setBudgets)
+      .catch(() => toast.error('예산 목록을 불러오지 못했습니다.'))
+      .finally(() => setLoading(false))
   }
 
   useEffect(() => { load() }, [])
