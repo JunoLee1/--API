@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { ledgerApi } from '@/services/ledger.service'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
@@ -8,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export function LedgerPage() {
+  const { t } = useTranslation('finance')
   const { user } = useCurrentUser()
 
   const canLock = !!user && (
@@ -23,9 +25,9 @@ export function LedgerPage() {
     setLocking(true)
     try {
       await ledgerApi.lockPeriod(lockYear, lockMonth)
-      toast.success(`${lockYear}년 ${lockMonth}월 기간이 마감됐습니다.`)
+      toast.success(t('ledger.periodClose.successFull', { year: lockYear, month: lockMonth }))
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : '기간 마감에 실패했습니다.')
+      toast.error(err instanceof Error ? err.message : t('ledger.periodClose.failed'))
     } finally {
       setLocking(false)
     }
@@ -33,17 +35,17 @@ export function LedgerPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">장부 관리</h1>
+      <h1 className="text-2xl font-semibold">{t('ledger.title')}</h1>
 
       {canLock && (
         <Card>
           <CardHeader>
-            <CardTitle>기간 마감</CardTitle>
+            <CardTitle>{t('ledger.periodClose.title')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-end gap-4">
               <div className="space-y-1">
-                <Label htmlFor="lock-year">연도</Label>
+                <Label htmlFor="lock-year">{t('ledger.periodClose.year')}</Label>
                 <Input
                   id="lock-year"
                   type="number"
@@ -53,7 +55,7 @@ export function LedgerPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="lock-month">월</Label>
+                <Label htmlFor="lock-month">{t('ledger.periodClose.month')}</Label>
                 <Input
                   id="lock-month"
                   type="number"
@@ -69,11 +71,11 @@ export function LedgerPage() {
                 disabled={locking}
                 variant="destructive"
               >
-                {locking ? '처리 중...' : '기간 마감'}
+                {locking ? t('ledger.periodClose.processing') : t('ledger.periodClose.action')}
               </Button>
             </div>
             <p className="text-sm text-muted-foreground mt-2">
-              마감된 기간에는 새 장부 항목 및 환불을 등록할 수 없습니다.
+              {t('ledger.periodClose.description')}
             </p>
           </CardContent>
         </Card>

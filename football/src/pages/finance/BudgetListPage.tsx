@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -18,13 +19,10 @@ const STATUS_VARIANT: Record<BudgetStatus, 'default' | 'secondary' | 'outline' |
   DRAFT: 'outline', SUBMITTED: 'secondary', APPROVED: 'default', LOCKED: 'destructive',
 }
 
-const STATUS_LABEL: Record<BudgetStatus, string> = {
-  DRAFT: '초안', SUBMITTED: '결재 중', APPROVED: '확정', LOCKED: '잠금',
-}
-
 function CreateBudgetDialog({ open, onOpenChange, onCreated }: {
   open: boolean; onOpenChange: (v: boolean) => void; onCreated: () => void
 }) {
+  const { t } = useTranslation('finance')
   const [seasons, setSeasons] = useState<Season[]>([])
   const [seasonId, setSeasonId] = useState('')
   const [name, setName] = useState('')
@@ -36,7 +34,7 @@ function CreateBudgetDialog({ open, onOpenChange, onCreated }: {
   }, [open])
 
   const handleSubmit = async () => {
-    if (!seasonId || !name || !totalBudget) { toast.error('모든 필드를 입력하세요.'); return }
+    if (!seasonId || !name || !totalBudget) { toast.error(t('budget.requiredFields')); return }
     setSaving(true)
     try {
       await budgetControlApi.create({
@@ -44,23 +42,23 @@ function CreateBudgetDialog({ open, onOpenChange, onCreated }: {
         name,
         totalBudget: Number(totalBudget.replace(/,/g, '')),
       })
-      toast.success('예산이 등록됐습니다.')
+      toast.success(t('budget.registered'))
       onCreated()
       onOpenChange(false)
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : '등록 실패')
+      toast.error(e instanceof Error ? e.message : t('budget.registerFailed'))
     } finally { setSaving(false) }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>예산 편성</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t('budget.compose')}</DialogTitle></DialogHeader>
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
-            <Label>시즌</Label>
+            <Label>{t('budget.fields.season')}</Label>
             <Select value={seasonId} onValueChange={setSeasonId}>
-              <SelectTrigger><SelectValue placeholder="시즌 선택" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t('budget.dialog.seasonSelect')} /></SelectTrigger>
               <SelectContent>
                 {seasons.map(s => (
                   <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
@@ -69,22 +67,22 @@ function CreateBudgetDialog({ open, onOpenChange, onCreated }: {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>예산명</Label>
-            <Input value={name} onChange={e => setName(e.target.value)} placeholder="예: 2026시즌 운영예산" />
+            <Label>{t('budget.fields.name')}</Label>
+            <Input value={name} onChange={e => setName(e.target.value)} placeholder={t('budget.dialog.namePlaceholder')} />
           </div>
           <div className="space-y-1.5">
-            <Label>총 승인예산 (원)</Label>
+            <Label>{t('budget.fields.totalApproved')}</Label>
             <Input
               inputMode="numeric"
               value={totalBudget ? Number(totalBudget.replace(/,/g, '')).toLocaleString('ko-KR') : ''}
               onChange={e => setTotalBudget(e.target.value.replace(/[^0-9]/g, ''))}
-              placeholder="예: 500,000,000"
+              placeholder={t('budget.dialog.amountPlaceholder')}
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>취소</Button>
-          <Button onClick={handleSubmit} disabled={saving}>{saving ? '등록 중...' : '등록'}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t('budget.cancel')}</Button>
+          <Button onClick={handleSubmit} disabled={saving}>{saving ? t('budget.composing') : t('budget.register')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -92,6 +90,7 @@ function CreateBudgetDialog({ open, onOpenChange, onCreated }: {
 }
 
 export default function BudgetListPage() {
+  const { t } = useTranslation('finance')
   const navigate = useNavigate()
   const { user } = useCurrentUser()
   const [budgets, setBudgets] = useState<BudgetHeaderSummary[]>([])
@@ -108,7 +107,7 @@ export default function BudgetListPage() {
     setLoading(true)
     budgetControlApi.getAll()
       .then(setBudgets)
-      .catch(() => toast.error('예산 목록을 불러오지 못했습니다.'))
+      .catch(() => toast.error(t('budget.errors.loadFailed')))
       .finally(() => setLoading(false))
   }
 
@@ -117,16 +116,16 @@ export default function BudgetListPage() {
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">예산 관리</h1>
+        <h1 className="text-2xl font-semibold">{t('budget.title')}</h1>
         {canWrite && (
           <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <Plus className="h-3.5 w-3.5 mr-1.5" />예산 편성
+            <Plus className="h-3.5 w-3.5 mr-1.5" />{t('budget.compose')}
           </Button>
         )}
       </div>
 
       {loading ? (
-        <p className="text-muted-foreground">불러오는 중...</p>
+        <p className="text-muted-foreground">{t('budget.loading')}</p>
       ) : (
         <div className="space-y-2">
           {budgets.map(b => (
@@ -141,10 +140,10 @@ export default function BudgetListPage() {
                   {b.season.name} · v{b.version} · {b.totalBudget.toLocaleString()}원 · {b.createdBy.username}
                 </p>
               </div>
-              <Badge variant={STATUS_VARIANT[b.status]}>{STATUS_LABEL[b.status]}</Badge>
+              <Badge variant={STATUS_VARIANT[b.status]}>{t(`budget.status.${b.status}`)}</Badge>
             </div>
           ))}
-          {budgets.length === 0 && <p className="text-muted-foreground">등록된 예산이 없습니다.</p>}
+          {budgets.length === 0 && <p className="text-muted-foreground">{t('budget.empty')}</p>}
         </div>
       )}
 
