@@ -26,17 +26,17 @@ export class SalaryController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
+      const { id: actorId, role, frontOfficeRole } = requireUser(req);
       if (!canWriteFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
-      res.status(201).json(await this.service.create(req.body as CreateSalaryDto));
+      res.status(201).json(await this.service.create(req.body as CreateSalaryDto, actorId));
     } catch (err) { next(err); }
   };
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
+      const { id: actorId, role, frontOfficeRole } = requireUser(req);
       if (!canWriteFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.update(Number(req.params["id"]), req.body as UpdateSalaryDto));
+      res.json(await this.service.update(Number(req.params["id"]), req.body as UpdateSalaryDto, actorId));
     } catch (err) { next(err); }
   };
 }
