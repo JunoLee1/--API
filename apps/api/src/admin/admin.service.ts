@@ -34,6 +34,9 @@ export class AdminService {
     if (dto.role === "SUPER_ADMIN" && requesterRole !== "SUPER_ADMIN") {
       throw new AppError(403, "ONLY_SUPER_ADMIN_CAN_GRANT_SUPER_ADMIN");
     }
+    if (dto.role === "GM" && requesterRole !== "SUPER_ADMIN") {
+      throw new AppError(403, "ONLY_SUPER_ADMIN_CAN_GRANT_GM");
+    }
 
     const user = await this.repo.findById(id);
     if (!user) throw new AppError(404, "USER_NOT_FOUND");

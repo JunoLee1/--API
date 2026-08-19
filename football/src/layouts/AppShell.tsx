@@ -399,7 +399,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: Handshake,
     section: 'nav.section.management',
     roles: ['ADMIN', 'FRONT_OFFICE'],
-    frontOfficeRoles: ['GM', 'FINANCE_MANAGER', 'FINANCE_STAFF'],
+    frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF'],
   },
   {
     to: '/admin/hr-report',

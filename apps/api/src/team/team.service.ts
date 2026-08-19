@@ -43,10 +43,4 @@ export class TeamService {
     return this.repo.update(id, { isActive: false });
   }
 
-  async setLiteMode(id: number, isLite: boolean, role: string) {
-    if (role !== "ADMIN") throw new AppError(403, "FORBIDDEN");
-    const team = await this.repo.findById(id);
-    if (!team) throw new AppError(404, "TEAM_NOT_FOUND");
-    return this.repo.updateLiteFlag(id, isLite);
-  }
 }

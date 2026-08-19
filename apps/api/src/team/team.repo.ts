@@ -73,7 +73,5 @@ export class TeamRepository {
     });
   }
 
-  updateLiteFlag(id: number, isLite: boolean) {
-    return this.prisma.team.update({ where: { id }, data: { isLite } });
-  }
+
 }
