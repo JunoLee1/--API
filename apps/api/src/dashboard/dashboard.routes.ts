@@ -5,6 +5,9 @@ import { getPrisma } from "../lib/prisma";
 import { DashboardRepository } from "./dashboard.repo";
 import { DashboardService } from "./dashboard.service";
 import { DashboardController } from "./dashboard.controller";
+import { requireUser } from "../lib/authMiddleware";
+import { canReadFinance } from "../lib/permissions";
+import { AppError } from "../lib/appError";
 
 const router = Router();
 const repo = new DashboardRepository(getPrisma());
@@ -51,6 +54,146 @@ router.get("/coach", auth, async (req, res, next) => {
   } catch (e) {
     next(e);
   }
+});
+
+// ── Finance dashboard ──────────────────────────────────────────────────────
+router.get("/finance", async (req, res, next) => {
+  try {
+    const { role, frontOfficeRole } = requireUser(req);
+    if (!canReadFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+
+    const seasonId = req.query["seasonId"] ? Number(req.query["seasonId"]) : undefined;
+    const year = req.query["year"] ? Number(req.query["year"]) : new Date().getFullYear();
+    const month = req.query["month"] ? Number(req.query["month"]) : undefined;
+
+    const prisma = getPrisma();
+
+    // ── 1. DONUT: revenue breakdown ──────────────────────
+    let seasonDonut: Record<string, number> = {};
+    let monthlyDonut: Record<string, number> = {};
+
+    if (seasonId) {
+      const fr = await prisma.financialReport.findUnique({ where: { seasonId } });
+      if (fr) {
+        seasonDonut = {
+          TICKET:         fr.revenueTicket,
+          SPONSORSHIP:    fr.revenueSponsorship,
+          BROADCAST:      fr.revenueBroadcast,
+          MERCHANDISE:    fr.revenueMerchandise,
+          SUBSIDY:        fr.revenueSubsidy,
+          PARENT_COMPANY: fr.revenueParentCompany,
+          ACADEMY_FEE:    fr.revenueAcademyFee,
+          OTHER:          fr.revenueOther,
+        };
+      }
+    }
+
+    if (month && year) {
+      // Monthly donut from LedgerEntry groupBy category
+      const startDate = new Date(year, month - 1, 1);
+      const endDate   = new Date(year, month, 1);
+      const rows = await prisma.ledgerEntry.groupBy({
+        by: ["category"],
+        where: { type: "INCOME", createdAt: { gte: startDate, lt: endDate }, isRefund: false },
+        _sum: { amountKrw: true },
+      });
+      const CATEGORY_TO_FIELD: Record<string, string> = {
+        TICKET_SALES: "TICKET",
+        SPONSORSHIP:  "SPONSORSHIP",
+        MERCHANDISE:  "MERCHANDISE",
+        ACADEMY_FEE:  "ACADEMY_FEE",
+        OTHER:        "OTHER",
+      };
+      for (const row of rows) {
+        const field = CATEGORY_TO_FIELD[row.category];
+        if (field) {
+          monthlyDonut[field] = (monthlyDonut[field] ?? 0) + Number(row._sum?.amountKrw?.toString() ?? "0");
+        }
+      }
+    }
+
+    // ── 2. TREND: last 12 months MonthlySettlementReport ──
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11);
+    const trendYear  = twelveMonthsAgo.getFullYear();
+    const trendMonth = twelveMonthsAgo.getMonth() + 1;
+
+    const settlements = await prisma.monthlySettlementReport.findMany({
+      where: seasonId
+        ? { seasonId, status: "APPROVED" }
+        : {
+            OR: [
+              { year: { gt: trendYear } },
+              { year: trendYear, month: { gte: trendMonth } },
+            ],
+            status: "APPROVED",
+          },
+      select: { year: true, month: true, totalRevenue: true, totalExpense: true, netIncome: true },
+      orderBy: [{ year: "asc" }, { month: "asc" }],
+      take: 12,
+    });
+
+    const trend = settlements.map(s => ({
+      year: s.year,
+      month: s.month,
+      totalRevenue: s.totalRevenue,
+      totalExpense: s.totalExpense,
+      netIncome: s.netIncome,
+    }));
+
+    // ── 3. GAUGES ─────────────────────────────────────────
+    let revenueAchievement = { actual: 0, target: 0 };
+    let budgetConsumption  = { spent: 0, approved: 0 };
+    let monthlyContribution = { monthly: 0, annualTarget: 0 };
+
+    if (seasonId) {
+      const fr = await prisma.financialReport.findUnique({
+        where: { seasonId },
+        include: { budgetCategoryPlans: true },
+      });
+
+      if (fr) {
+        // Revenue achievement: sum of APPROVED monthly reports vs totalRevenue target
+        const approvedSum = await prisma.monthlySettlementReport.aggregate({
+          where: { seasonId, status: "APPROVED" },
+          _sum: { totalRevenue: true },
+        });
+        revenueAchievement = {
+          actual: approvedSum._sum.totalRevenue ?? 0,
+          target: fr.totalRevenue,
+        };
+
+        // Budget consumption: actual OpEx vs total approved budget
+        const opexSum = await prisma.operatingExpense.aggregate({
+          where: { seasonId, deletedAt: null },
+          _sum: { amount: true },
+        });
+        const totalBudget = fr.budgetCategoryPlans.reduce((acc, p) => acc + p.mandatoryMinimum, 0);
+        budgetConsumption = {
+          spent: Number(opexSum._sum.amount ?? 0),
+          approved: totalBudget,
+        };
+
+        // Monthly contribution
+        if (month && year) {
+          const monthlyReport = await prisma.monthlySettlementReport.findUnique({
+            where: { seasonId_year_month: { seasonId, year, month } },
+            select: { totalRevenue: true },
+          });
+          monthlyContribution = {
+            monthly: monthlyReport?.totalRevenue ?? 0,
+            annualTarget: fr.totalRevenue,
+          };
+        }
+      }
+    }
+
+    res.json({
+      donut: { season: seasonDonut, monthly: monthlyDonut },
+      trend,
+      gauges: { revenueAchievement, budgetConsumption, monthlyContribution },
+    });
+  } catch (err) { next(err); }
 });
 
 export default router;
