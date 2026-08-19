@@ -37,7 +37,7 @@ export class MonthlySettlementService {
 
     const revenue: Record<string, number> = {};
     for (const row of revenueRows) {
-      revenue[row.category] = Number(row._sum?.amountKrw ?? 0);
+      revenue[row.category] = row._sum?.amountKrw ? Number(row._sum.amountKrw.toString()) : 0;
     }
 
     const expenses: Record<string, number> = {};
