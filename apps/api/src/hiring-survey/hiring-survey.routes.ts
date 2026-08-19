@@ -10,7 +10,7 @@ import { PlanReportRepository } from '../plan-report/plan-report.repo'
 import { NotificationRepository } from '../notification/notification.repo'
 
 function requireHR(req: Request, res: Response, next: NextFunction) {
-  const user = req.user
+  const user = req.user as any
   if (!user) return res.status(401).json({ error: "UNAUTHENTICATED" })
   if (!canWriteHR(user.role, user.frontOfficeRole ?? null)) return res.status(403).json({ error: "FORBIDDEN" })
   next()

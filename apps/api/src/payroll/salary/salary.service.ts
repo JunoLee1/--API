@@ -1,4 +1,5 @@
 import { AppError } from "../../lib/appError";
+import { writeAuditLog } from "../../lib/auditLog";
 import type { SalaryRepository } from "./salary.repo";
 import type { CreateSalaryDto, UpdateSalaryDto, SalaryListQuery } from "./dto/salary.dto";
 
@@ -15,15 +16,19 @@ export class SalaryService {
     return record;
   }
 
-  async create(dto: CreateSalaryDto) {
+  async create(dto: CreateSalaryDto, actorId: number) {
     const effectiveFrom = dto.effectiveFrom ? new Date(dto.effectiveFrom) : new Date();
     const closeAt = new Date(effectiveFrom.getTime() - 1);
     await this.repo.closeActive(dto.userId ?? null, dto.staffRecordId ?? null, closeAt);
-    return this.repo.create(dto);
+    const record = await this.repo.create(dto);
+    await writeAuditLog({ actorId, action: "SALARY_CREATED", targetId: record.id });
+    return record;
   }
 
-  async update(id: number, dto: UpdateSalaryDto) {
+  async update(id: number, dto: UpdateSalaryDto, actorId: number) {
     await this.get(id);
-    return this.repo.update(id, dto);
+    const record = await this.repo.update(id, dto);
+    await writeAuditLog({ actorId, action: "SALARY_UPDATED", targetId: id });
+    return record;
   }
 }

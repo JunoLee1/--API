@@ -1,4 +1,5 @@
 import { AppError } from "../lib/appError";
+import { writeAuditLog } from "../lib/auditLog";
 import type { BudgetControlRepository } from "./budget-control.repo";
 import type { CreateBudgetHeaderDto, UpdateBudgetHeaderDto, CreateBudgetLineDto, UpdateBudgetLineDto, CreateAdjustmentDto } from "./dto/budget-control.dto";
 
@@ -7,7 +8,9 @@ export class BudgetControlService {
 
   async create(dto: CreateBudgetHeaderDto, createdById: number) {
     if (dto.totalBudget < 0) throw new AppError(400, "INVALID_BUDGET");
-    return this.repo.createHeader(dto, createdById);
+    const header = await this.repo.createHeader(dto, createdById);
+    await writeAuditLog({ actorId: createdById, action: "BUDGET_CREATED", targetId: header.id });
+    return header;
   }
 
   getAll(seasonId?: number) {
@@ -41,7 +44,9 @@ export class BudgetControlService {
     const header = await this.repo.findById(id);
     if (!header) throw new AppError(404, "BUDGET_NOT_FOUND");
     if (header.status !== "SUBMITTED") throw new AppError(400, "BUDGET_NOT_SUBMITTED");
-    return this.repo.updateStatus(id, "APPROVED", approverId);
+    const result = await this.repo.updateStatus(id, "APPROVED", approverId);
+    await writeAuditLog({ actorId: approverId, action: "BUDGET_APPROVED", targetId: id });
+    return result;
   }
 
   async getAvailableBudget(id: number) {
@@ -131,7 +136,9 @@ export class BudgetControlService {
     const adj = header.adjustments.find(a => a.id === adjId);
     if (!adj) throw new AppError(404, "ADJUSTMENT_NOT_FOUND");
     if (adj.status !== "PENDING") throw new AppError(400, "ADJUSTMENT_NOT_PENDING");
-    return this.repo.updateAdjustmentStatus(adjId, "APPROVED", approverId);
+    const result = await this.repo.updateAdjustmentStatus(adjId, "APPROVED", approverId);
+    await writeAuditLog({ actorId: approverId, action: "BUDGET_ADJUSTMENT_APPROVED", targetId: adjId, detail: { headerId } });
+    return result;
   }
 
   async rejectAdjustment(headerId: number, adjId: number, approverId: number) {
@@ -140,6 +147,8 @@ export class BudgetControlService {
     const adj = header.adjustments.find(a => a.id === adjId);
     if (!adj) throw new AppError(404, "ADJUSTMENT_NOT_FOUND");
     if (adj.status !== "PENDING") throw new AppError(400, "ADJUSTMENT_NOT_PENDING");
-    return this.repo.updateAdjustmentStatus(adjId, "REJECTED", approverId);
+    const result = await this.repo.updateAdjustmentStatus(adjId, "REJECTED", approverId);
+    await writeAuditLog({ actorId: approverId, action: "BUDGET_ADJUSTMENT_REJECTED", targetId: adjId, detail: { headerId } });
+    return result;
   }
 }

@@ -492,6 +492,15 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'SUPER_ADMIN', 'GM', 'FRONT_OFFICE'],
     frontOfficeRoles: ['FINANCE_MANAGER', 'HR_MANAGER'],
   },
+  {
+    to: '/finance/dashboard',
+    label: 'nav.item.financeDashboard',
+    icon: BarChart2,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.finance',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'GM', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF'],
+  },
   // 관리 > 시설·자산
   {
     to: '/equipment',
@@ -592,6 +601,14 @@ const NAV_ITEMS: NavItem[] = [
     section: 'nav.section.management',
     subSection: 'nav.subsection.system',
     roles: ['ADMIN', 'SUPER_ADMIN'],
+  },
+  {
+    to: '/settings/account-codes',
+    label: 'nav.item.accountCodes',
+    icon: SlidersHorizontal,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.system',
+    roles: ['ADMIN'],
   },
   {
     to: '/admin/leagues',

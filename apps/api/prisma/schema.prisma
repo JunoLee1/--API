@@ -369,6 +369,22 @@ enum LedgerEntryType {
   EXPENSE
 }
 
+enum AccountCodeType {
+  REVENUE
+  EXPENSE
+}
+
+enum RevenueField {
+  TICKET
+  SPONSORSHIP
+  BROADCAST
+  MERCHANDISE
+  SUBSIDY
+  PARENT_COMPANY
+  ACADEMY_FEE
+  OTHER
+}
+
 enum LedgerEntryCategory {
   SALARY
   EQUIPMENT_PURCHASE
@@ -380,6 +396,7 @@ enum LedgerEntryCategory {
   ACADEMY_FEE
   REFUND
   OTHER
+  MERCHANDISE
 }
 
 enum SalesType {
@@ -888,6 +905,11 @@ model User {
   budgetHeadersApproved    BudgetHeader[]     @relation("BudgetHeaderApprover")
   adjustmentsCreated       BudgetAdjustment[] @relation("AdjustmentCreator")
   adjustmentsApproved      BudgetAdjustment[] @relation("AdjustmentApprover")
+  settlementsCreated        MonthlySettlementReport[] @relation("SettlementCreator")
+  settlementsFirstSubmitted MonthlySettlementReport[] @relation("SettlementFirstSubmitter")
+  settlementsFirstApproved  MonthlySettlementReport[] @relation("SettlementFirstApprover")
+  settlementsApproved       MonthlySettlementReport[] @relation("SettlementApprover")
+  revenueAdjustments        RevenueAdjustment[]       @relation("AdjCreator")
 }
 
 model Season {
@@ -912,6 +934,7 @@ model Season {
   complianceCheck          SeasonComplianceCheck?
   monthlyBudgetSnapshots   MonthlyBudgetSnapshot[]
   monthlyOperationsSnapshots MonthlyOperationsSnapshot[]
+  monthlySettlements MonthlySettlementReport[]
   squadPlan                SquadPlan?
 }
 
@@ -2405,6 +2428,7 @@ model FinancialReport {
   season               Season   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
   budgetCategoryPlans  BudgetCategoryPlan[]
   overrideLogs         BudgetOverrideLog[]
+  revenueAdjustments   RevenueAdjustment[] @relation("SeasonAdj")
 }
 
 model Department {
@@ -2539,9 +2563,11 @@ model OperatingExpense {
   updatedAt       DateTime          @updatedAt
   deletedAt       DateTime?
   deletionReason  String?
+  accountCodeId   Int?
   season          Season            @relation(fields: [seasonId], references: [id])
   createdBy       User              @relation("OperatingExpenseCreator", fields: [createdById], references: [id])
   paidBy          User?             @relation("OperatingExpensePayer", fields: [paidById], references: [id])
+  accountCode     AccountCode?      @relation(fields: [accountCodeId], references: [id])
 }
 
 // ─────────────────────────────────────────────
@@ -3113,14 +3139,18 @@ model LedgerEntry {
   relatedModule String?
   relatedId     Int?
   isRefund      Boolean             @default(false)
+  isAdjustment  Boolean             @default(false)
+  accountCodeId Int?
   periodLocked  Boolean             @default(false)
   reversedById  Int?                @unique
   createdById   Int
   createdAt     DateTime            @default(now())
 
-  createdBy  User         @relation("LedgerEntryCreator", fields: [createdById], references: [id])
-  reversedBy LedgerEntry? @relation("LedgerReversal", fields: [reversedById], references: [id])
-  reversal   LedgerEntry? @relation("LedgerReversal")
+  createdBy         User               @relation("LedgerEntryCreator", fields: [createdById], references: [id])
+  reversedBy        LedgerEntry?       @relation("LedgerReversal", fields: [reversedById], references: [id])
+  reversal          LedgerEntry?       @relation("LedgerReversal")
+  accountCode       AccountCode?       @relation(fields: [accountCodeId], references: [id])
+  revenueAdjustment RevenueAdjustment?
 }
 
 model LedgerPeriodLock {
@@ -3532,6 +3562,14 @@ enum ExposureChannel {
   OTHER
 }
 
+enum SettlementStatus {
+  DRAFT
+  PENDING_FIRST
+  FIRST_APPROVED
+  APPROVED
+  REJECTED
+}
+
 model DepartmentReviewerConfig {
   id                   Int        @id @default(autoincrement())
   subjectDepartmentId  Int
@@ -3684,4 +3722,74 @@ model PartnerContactLog {
 
   @@index([partnerId])
   @@index([actorId])
+}
+
+model MonthlySettlementReport {
+  id       Int @id @default(autoincrement())
+  seasonId Int
+  year     Int
+  month    Int
+
+  status          SettlementStatus @default(DRAFT)
+  rejectionReason String?
+
+  totalRevenue Float @default(0)
+  totalExpense Float @default(0)
+  netIncome    Float @default(0)
+
+  snapshotJson Json @default("{}")
+
+  note String? @db.Text
+
+  createdById        Int
+  firstSubmittedById Int?
+  firstSubmittedAt   DateTime?
+  firstApproverId    Int?
+  firstApprovedAt    DateTime?
+  approverId         Int?
+  approvedAt         DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  season           Season @relation(fields: [seasonId], references: [id])
+  createdBy        User   @relation("SettlementCreator", fields: [createdById], references: [id])
+  firstSubmittedBy User?  @relation("SettlementFirstSubmitter", fields: [firstSubmittedById], references: [id])
+  firstApprover    User?  @relation("SettlementFirstApprover", fields: [firstApproverId], references: [id])
+  approver         User?  @relation("SettlementApprover", fields: [approverId], references: [id])
+  revenueAdjustments RevenueAdjustment[] @relation("MonthlyAdj")
+
+  @@unique([seasonId, year, month])
+}
+
+// ─────────────────────────────────────────────
+// 계정코드 & 수익 조정
+// ─────────────────────────────────────────────
+
+model AccountCode {
+  id        Int             @id @default(autoincrement())
+  code      String          @unique
+  name      String
+  type      AccountCodeType
+  createdAt DateTime        @default(now())
+
+  ledgerEntries     LedgerEntry[]
+  operatingExpenses OperatingExpense[]
+}
+
+model RevenueAdjustment {
+  id                Int           @id @default(autoincrement())
+  financialReportId Int?
+  monthlyReportId   Int?
+  field             RevenueField
+  delta             Int
+  memo              String?
+  createdById       Int
+  createdAt         DateTime      @default(now())
+  ledgerEntryId     Int?          @unique
+
+  financialReport  FinancialReport?         @relation("SeasonAdj", fields: [financialReportId], references: [id])
+  monthlyReport    MonthlySettlementReport? @relation("MonthlyAdj", fields: [monthlyReportId], references: [id])
+  ledgerEntry      LedgerEntry?             @relation(fields: [ledgerEntryId], references: [id])
+  createdBy        User                     @relation("AdjCreator", fields: [createdById], references: [id])
 }

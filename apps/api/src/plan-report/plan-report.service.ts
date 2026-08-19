@@ -1,5 +1,6 @@
 import { AppError } from '../lib/appError'
 import { canApprovePlan } from '../lib/permissions'
+import { writeAuditLog } from '../lib/auditLog'
 import { PlanReportRepository, ReviewerDeptMap } from './plan-report.repo'
 import { CreatePlanReportDto, ListPlanReportQuery, UpdatePlanReportDto } from './dto/plan-report.dto'
 import { writeApprovalVaultNote, appendResultToVaultNote, VaultPlanData } from './vault'
@@ -71,6 +72,7 @@ export class PlanReportService {
     const vaultData = toVaultData(plan)
     const vaultPath = await writeApprovalVaultNote(vaultData)
     const result = await this.repo.approve(id, userId, vaultPath)
+    await writeAuditLog({ actorId: userId, action: "PLAN_REPORT_APPROVED", targetId: id })
 
     if (plan.templateType === 'HR' && this.notifRepo) {
       void this.notifRepo.createForHrManager(
@@ -88,7 +90,9 @@ export class PlanReportService {
     if (!reason?.trim()) throw new AppError(400, 'REJECTION_REASON_REQUIRED')
     const plan = await this.getById(id)
     if (plan.status !== 'REVIEWING') throw new AppError(409, 'CANNOT_REJECT_NON_REVIEWING')
-    return this.repo.reject(id, userId, reason)
+    const result = await this.repo.reject(id, userId, reason)
+    await writeAuditLog({ actorId: userId, action: "PLAN_REPORT_REJECTED", targetId: id, detail: { reason } })
+    return result
   }
 
   listApprovedHrReports() {

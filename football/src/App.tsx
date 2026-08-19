@@ -77,7 +77,9 @@ import { HiringSurveyListPage } from '@/pages/admin/recruitment/HiringSurveyList
 import { HiringSurveyDetailPage } from '@/pages/admin/recruitment/HiringSurveyDetailPage'
 import { HiringSurveyRespondPage } from '@/pages/admin/recruitment/HiringSurveyRespondPage'
 import { PlanReportHiringItemsPage } from '@/pages/finance/PlanReportHiringItemsPage'
+import DashboardCharts from '@/pages/finance/DashboardCharts'
 import BudgetListPage from '@/pages/finance/BudgetListPage'
+import AccountCodesPage from '@/pages/settings/AccountCodesPage'
 import BudgetDetailPage from '@/pages/finance/BudgetDetailPage'
 import { TeamSelectPage } from '@/pages/team-select/TeamSelectPage'
 import { LeaguePage } from '@/pages/admin/LeaguePage'
@@ -88,6 +90,7 @@ import { PlanReportFormPage } from '@/pages/finance/PlanReportFormPage'
 import { PlanReportDetailPage } from '@/pages/finance/PlanReportDetailPage'
 import { DepartmentReviewConfigPage } from '@/pages/admin/DepartmentReviewConfigPage'
 import { ReviewRuleSetPage } from '@/pages/admin/ReviewRuleSetPage'
+import MonthlySettlementDetailPage from '@/pages/reports/MonthlySettlementDetailPage'
 import PayrollPage from '@/pages/admin/PayrollPage'
 
 function RootRedirect() {
@@ -188,6 +191,7 @@ function App() {
             <Route path="/me" element={<MePage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/reports/new" element={<ReportFormPage />} />
+            <Route path="/reports/monthly/:year/:month" element={<MonthlySettlementDetailPage />} />
             <Route path="/reports/:id" element={<ReportDetailPage />} />
             <Route path="/medical-expenses" element={<MedicalExpensesPage />} />
             <Route path="/medical-expenses/new" element={<MedicalExpenseFormPage />} />
@@ -230,6 +234,8 @@ function App() {
             <Route path="/finance/plan-reports/:id" element={<PlanReportDetailPage />} />
             <Route path="/finance/budget" element={<BudgetListPage />} />
             <Route path="/finance/budget/:id" element={<BudgetDetailPage />} />
+            <Route path="/finance/dashboard" element={<DashboardCharts />} />
+            <Route path="/settings/account-codes" element={<AccountCodesPage />} />
             <Route path="/admin/payroll" element={<PayrollPage />} />
             <Route path="/player/me" element={<PlayerMeRedirect />} />
           </Route>
