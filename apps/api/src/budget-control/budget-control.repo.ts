@@ -1,5 +1,5 @@
 import { PrismaClient } from "../generated/client";
-import type { CreateBudgetHeaderDto, CreateBudgetLineDto, CreateAdjustmentDto } from "./dto/budget-control.dto";
+import type { CreateBudgetHeaderDto, UpdateBudgetHeaderDto, CreateBudgetLineDto, UpdateBudgetLineDto, CreateAdjustmentDto } from "./dto/budget-control.dto";
 
 export class BudgetControlRepository {
   constructor(private prisma: PrismaClient) {}
@@ -55,7 +55,7 @@ export class BudgetControlRepository {
     });
   }
 
-  updateHeader(id: number, data: { name?: string; totalBudget?: number; note?: string }) {
+  updateHeader(id: number, data: UpdateBudgetHeaderDto) {
     return this.prisma.budgetHeader.update({ where: { id }, data });
   }
 
@@ -63,7 +63,7 @@ export class BudgetControlRepository {
     return this.prisma.budgetLine.create({ data: { budgetHeaderId, ...dto } });
   }
 
-  updateLine(lineId: number, data: { originalAmount?: number; note?: string }) {
+  updateLine(lineId: number, data: UpdateBudgetLineDto) {
     return this.prisma.budgetLine.update({ where: { id: lineId }, data });
   }
 
@@ -74,7 +74,10 @@ export class BudgetControlRepository {
   createAdjustment(budgetHeaderId: number, dto: CreateAdjustmentDto, createdById: number) {
     return this.prisma.budgetAdjustment.create({
       data: { budgetHeaderId, ...dto, createdById },
-      include: { createdBy: { select: { id: true, username: true } } },
+      include: {
+        createdBy: { select: { id: true, username: true } },
+        approvedBy: { select: { id: true, username: true } },
+      },
     });
   }
 
@@ -85,6 +88,10 @@ export class BudgetControlRepository {
         status,
         approvedById: approverId,
         approvedAt: new Date(),
+      },
+      include: {
+        createdBy: { select: { id: true, username: true } },
+        approvedBy: { select: { id: true, username: true } },
       },
     });
   }
