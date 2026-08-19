@@ -482,6 +482,15 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'SUPER_ADMIN', 'GM', 'FRONT_OFFICE'],
     frontOfficeRoles: ['FINANCE_MANAGER'],
   },
+  {
+    to: '/finance/budget',
+    label: 'nav.item.budgetControl',
+    icon: Wallet,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.finance',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'GM', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['FINANCE_MANAGER'],
+  },
   // 관리 > 시설·자산
   {
     to: '/equipment',
