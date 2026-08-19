@@ -260,7 +260,7 @@ export function UsersPage() {
               <SelectTrigger className="h-8 w-36 text-sm"><SelectValue placeholder={t('usersPage.allRoles')} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="">{t('usersPage.allRoles')}</SelectItem>
-                {ALL_ROLES.map((r) => <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>)}
+                {availableRoles.map((r) => <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
