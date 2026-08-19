@@ -1,0 +1,374 @@
+{
+  "budget": {
+    "title": "Budget Management",
+    "add": "Add Budget",
+    "compose": "Compose Budget",
+    "composing": "Registering...",
+    "register": "Register",
+    "registered": "Budget registered.",
+    "registerFailed": "Registration failed",
+    "requiredFields": "Please fill in all fields.",
+    "empty": "No budgets registered.",
+    "loading": "Loading...",
+    "notFound": "Budget not found.",
+    "categories": {
+      "PLAYER_WAGES": "Player Wages",
+      "STAFF_WAGES": "Staff Wages",
+      "TRANSFER": "Transfer Fees",
+      "EQUIPMENT": "Equipment & Supplies",
+      "TRAVEL": "Travel & Away",
+      "FACILITY": "Facility",
+      "MEDICAL": "Medical",
+      "YOUTH": "Youth",
+      "MARKETING": "Marketing",
+      "OTHER": "Other"
+    },
+    "status": {
+      "DRAFT": "Draft",
+      "SUBMITTED": "Pending Approval",
+      "APPROVED": "Approved",
+      "LOCKED": "Locked",
+      "REJECTED": "Rejected"
+    },
+    "fields": {
+      "total": "Total",
+      "totalBudget": "Total Budget",
+      "committed": "Committed",
+      "actual": "Actual",
+      "remaining": "Remaining",
+      "season": "Season",
+      "department": "Department",
+      "name": "Budget Name",
+      "totalApproved": "Total Approved Budget (KRW)"
+    },
+    "errors": {
+      "loadFailed": "Failed to load budget list."
+    },
+    "dialog": {
+      "seasonSelect": "Select Season",
+      "namePlaceholder": "e.g. 2026 Season Operating Budget",
+      "amountPlaceholder": "e.g. 500,000,000"
+    },
+    "approval": {
+      "request": "Request Approval",
+      "requested": "Approval requested.",
+      "confirm": "Confirm",
+      "confirmed": "Budget confirmed."
+    },
+    "available": {
+      "title": "Available Budget Summary",
+      "approved": "Approved Budget",
+      "carryoverIncrease": "Carryover & Increase",
+      "decreaseCommitment": "Decrease & Commitment",
+      "available": "Available"
+    },
+    "line": {
+      "title": "Budget Lines",
+      "add": "Add Line",
+      "addDialog": "Add Budget Line",
+      "empty": "No lines registered.",
+      "added": "Budget line added.",
+      "deleted": "Deleted.",
+      "deleteFailed": "Delete failed",
+      "deleteConfirm": "Delete this line?",
+      "addFailed": "Add failed",
+      "adding": "Adding...",
+      "add2": "Add",
+      "category": "Category",
+      "year": "Year",
+      "month": "Month (optional)",
+      "monthAll": "All",
+      "amount": "Amount (KRW)",
+      "note": "Note",
+      "annual": "Annual",
+      "yearFormat": "{{year}}",
+      "monthFormat": "Month {{month}}",
+      "requiredFields": "Please enter category, year, and amount.",
+      "delete": "Delete",
+      "categoryPlaceholder": "e.g. TRAVEL, MEDICAL",
+      "amountPlaceholder": "e.g. 10,000,000"
+    },
+    "adjustment": {
+      "title": "Adjustment History",
+      "empty": "No adjustment history.",
+      "type": {
+        "CARRYOVER": "Carryover",
+        "INCREASE": "Increase",
+        "DECREASE": "Decrease",
+        "TRANSFER": "Transfer"
+      },
+      "status": {
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "PENDING": "Pending"
+      },
+      "approve": "Approve",
+      "reject": "Reject",
+      "approveFailed": "Approve failed",
+      "rejectFailed": "Reject failed"
+    },
+    "cancel": "Cancel",
+    "failed": "Failed"
+  },
+  "ledger": {
+    "title": "Ledger Management",
+    "types": {
+      "INCOME": "Income",
+      "EXPENSE": "Expense"
+    },
+    "periodClose": {
+      "title": "Period Close",
+      "year": "Year",
+      "month": "Month",
+      "processing": "Processing...",
+      "action": "Close Period",
+      "success": "Period closed.",
+      "successFull": "Period close completed for {{year}}/{{month}}.",
+      "failed": "Failed to close period.",
+      "description": "No new ledger entries or refunds can be registered for a closed period."
+    },
+    "errors": {
+      "loadFailed": "Failed to load ledger."
+    }
+  },
+  "planReport": {
+    "title": "Business Plan Reports",
+    "add": "New Report",
+    "edit": "Edit Plan Report",
+    "new": "New Plan Report",
+    "status": {
+      "DRAFT": "Draft",
+      "REVIEWING": "In Review",
+      "SUBMITTED": "Submitted",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected"
+    },
+    "filter": {
+      "allStatus": "All Statuses",
+      "allType": "All Types"
+    },
+    "table": {
+      "title": "Project Name",
+      "type": "Type",
+      "department": "Department",
+      "budget": "Budget",
+      "status": "Status",
+      "createdAt": "Created"
+    },
+    "empty": "No reports found",
+    "fields": {
+      "title": "Project Name *",
+      "titlePlaceholder": "Project name",
+      "type": "Work Type *",
+      "purpose": "Purpose *",
+      "department": "Lead Department *",
+      "departmentSelect": "Select",
+      "startDate": "Start Date *",
+      "endDate": "End Date *",
+      "budget": "Budget (KRW) *",
+      "budgetPlaceholder": "0",
+      "expectedEffect": "Expected Outcome *",
+      "risks": "Key Risks *",
+      "resultDueDate": "Result Due Date *",
+      "extraInfo": "Additional Info",
+      "attachmentsUrl": "Attachment URLs",
+      "attachmentsAdd": "Add",
+      "approvalConditions": "Approval Conditions (check all that apply)",
+      "requiredApproverLevel": "Required Approval Level",
+      "rejectionReason": "Rejection reason: ",
+      "resultDueDateLabel": "Result Due Date",
+      "purposeLabel": "Purpose",
+      "periodLabel": "Period",
+      "budgetLabel": "Budget",
+      "expectedEffectLabel": "Expected Outcome",
+      "risksLabel": "Key Risks"
+    },
+    "conditions": {
+      "hasNewStaff": "New staff hiring included (HR coordination required)",
+      "hasContract": "External contract included (Procurement/Legal coordination required)",
+      "hasExternalLease": "External lease included (Facility/Legal coordination required)",
+      "hasPersonalInfo": "Personal info/portrait rights included (Legal/Privacy coordination required)",
+      "isNewBusiness": "New business (Owner approval required)"
+    },
+    "badges": {
+      "hasNewStaff": "New Staff",
+      "hasContract": "Contract",
+      "hasExternalLease": "External Lease",
+      "hasPersonalInfo": "Personal Info",
+      "isNewBusiness": "New Business"
+    },
+    "actions": {
+      "submit": "Submit for Approval",
+      "submitted": "Submitted for approval",
+      "approve": "Approve",
+      "approved": "Approved",
+      "reject": "Reject",
+      "rejected": "Rejected",
+      "edit": "Edit",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "Updated",
+      "created": "Report registered",
+      "saveFailed": "Failed to save",
+      "error": "An error occurred",
+      "cancel": "Cancel",
+      "confirm": "Confirm"
+    },
+    "result": {
+      "title": "Result Report",
+      "notSubmitted": "Not submitted",
+      "submittedAt": "Submitted: ",
+      "placeholder": "Enter results",
+      "submit": "Submit",
+      "write": "Write Result Report",
+      "submitted": "Result report submitted"
+    },
+    "reviews": {
+      "title": "Collaborating Department Reviews",
+      "waiting": "Waiting"
+    },
+    "attachments": {
+      "title": "Attachments",
+      "urlPlaceholder": "https://..."
+    },
+    "vault": "Vault: ",
+    "rejectPlaceholder": "Rejection reason",
+    "errors": {
+      "loadFailed": "Failed to load reports.",
+      "titleRequired": "Please enter a project name",
+      "departmentRequired": "Please select a lead department"
+    }
+  },
+  "hiringItems": {
+    "title": "Edit Hiring Plan Items",
+    "submitPlan": "Submit Plan →",
+    "submitPlanSuccess": "Plan submitted.",
+    "submitPlanFailed": "Failed to submit.",
+    "empty": "No items auto-generated from survey responses.",
+    "addSection": "Add Item Manually",
+    "add": "Add",
+    "added": "Item added.",
+    "addFailed": "Failed to add.",
+    "updated": "Item updated.",
+    "updateFailed": "Failed to update.",
+    "deleted": "Deleted.",
+    "deleteConfirm": "Delete this item?",
+    "roleTitle": "Role Title",
+    "roleTitleRequired": "Please enter a role title.",
+    "timing": "Timing",
+    "annual": "Annual",
+    "budgetLabel": "Budget",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "ticketSales": {
+    "title": "Ticket Sales Records",
+    "subtitle": "View ticket sales by home match.",
+    "seasonTotal": "Season Revenue",
+    "netSold": "Net Sold",
+    "sellRate": "Sell Rate",
+    "seasonSelect": "Select Season",
+    "registerSale": "Register Sale",
+    "dateFilter": "Match Date",
+    "reset": "Reset",
+    "matchSummary": "Match Summary",
+    "recentMatches": "Recent {{count}} Matches",
+    "allRecords": "All Sales Records",
+    "noSchedule": "No matches scheduled.",
+    "noRecords": "No sales records.",
+    "prev": "Prev",
+    "next": "Next",
+    "tableHeaders": {
+      "date": "Match Date",
+      "home": "Home",
+      "away": "Away",
+      "sold": "Sold",
+      "netSold": "Net Sold",
+      "sellRate": "Sell Rate",
+      "revenue": "Revenue",
+      "saleDate": "Date",
+      "match": "Match",
+      "type": "Type",
+      "channel": "Channel",
+      "status": "Status",
+      "quantity": "Qty",
+      "unitPrice": "Unit Price",
+      "total": "Total",
+      "memo": "Memo"
+    },
+    "ticketType": {
+      "TICKET": "Regular",
+      "VIP_TICKET": "VIP",
+      "COMPLIMENTARY": "Complimentary"
+    },
+    "channel": {
+      "ONLINE": "Online",
+      "ONSITE": "On-site",
+      "PARTNER": "Partner",
+      "SEASON_PASS": "Season Pass"
+    },
+    "saleStatus": {
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled",
+      "REFUNDED": "Refunded"
+    },
+    "unlinked": "Unlinked",
+    "dialog": {
+      "createTitle": "Register Ticket Sale",
+      "editTitle": "Edit Sale Record",
+      "cancelTitle": "Cancel Ticket Sale",
+      "match": "Match",
+      "matchSelect": "Select Match",
+      "type": "Type",
+      "seatZone": "Seat Zone (optional)",
+      "seatZoneSelect": "Select Zone",
+      "channel": "Sales Channel (optional)",
+      "channelSelect": "Select Channel",
+      "quantity": "Quantity",
+      "unitPrice": "Unit Price (₩)",
+      "saleDate": "Sale Date",
+      "memo": "Memo (optional)",
+      "memoPh": "Notes",
+      "submitLabel": "Save",
+      "editSubmitLabel": "Save Changes",
+      "cancelInfo": {
+        "match": "Match",
+        "type": "Type",
+        "originalQty": "Original Quantity",
+        "unitPrice": "Unit Price",
+        "cancelQty": "Cancel Quantity (max {{max}})",
+        "cancelDate": "Cancel Date",
+        "cancelMemo": "Memo (optional)",
+        "cancelMemoPh": "Reason for cancellation",
+        "cancelAmount": "Cancel Amount: ",
+        "cancelAction": "Process Cancellation",
+        "cancelling": "Processing...",
+        "cancelSuccess": "Cancellation processed."
+      }
+    },
+    "actions": {
+      "edit": "Edit",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "saved": "Saved.",
+      "updated": "Updated.",
+      "deleted": "Deleted.",
+      "deleteConfirm": "Delete this sales record?",
+      "saving": "Saving...",
+      "maxCancelExceeded": "Maximum cancellable quantity is {{max}}."
+    },
+    "errors": {
+      "loadFailed": "Failed to load data.",
+      "seasonFailed": "Failed to load season info.",
+      "createRequired": "Please enter match, quantity, unit price, and date.",
+      "updateRequired": "Please enter quantity, unit price, and date.",
+      "cancelRequired": "Please enter cancel quantity and date.",
+      "saveFailed": "Save failed",
+      "updateFailed": "Update failed",
+      "deleteFailed": "Delete failed",
+      "cancelFailed": "Cancel failed"
+    }
+  }
+}

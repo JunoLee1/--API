@@ -13,7 +13,7 @@ export type Permission = (typeof Permission)[keyof typeof Permission]
 const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   ADMIN: [Permission.SYSTEM_MANAGE, Permission.FINANCE_APPROVE, Permission.VIEW_TEAM_RANKING],
   SUPER_ADMIN: [Permission.SYSTEM_MANAGE, Permission.FINANCE_APPROVE, Permission.VIEW_TEAM_RANKING],
-  GM: [Permission.FINANCE_APPROVE, Permission.VIEW_TEAM_RANKING],
+  GM: [Permission.SYSTEM_MANAGE, Permission.FINANCE_APPROVE, Permission.VIEW_TEAM_RANKING],
   FRONT_OFFICE: [Permission.VIEW_TEAM_RANKING],
   COACHING_STAFF: [Permission.VIEW_TEAM_RANKING],
   PLAYER: [Permission.VIEW_TEAM_RANKING],

@@ -110,6 +110,15 @@ export class ClubService {
     if (dto.vatNumber !== undefined && !validateATVatNumber(dto.vatNumber)) {
       throw new AppError(404, "INVALID_VAT_NUMBER");
     }
+    if (dto.isLite !== undefined) {
+      const [updatedClub] = await this.repo.cascadeIsLite(id, dto.isLite);
+      const restDto = { ...dto };
+      delete restDto.isLite;
+      if (Object.keys(restDto).length > 0) {
+        return this.repo.update(id, restDto);
+      }
+      return updatedClub;
+    }
     return this.repo.update(id, dto);
   }
 }

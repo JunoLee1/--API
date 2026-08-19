@@ -1,6 +1,10 @@
 {
   "allergySection": "Allergies & Diet",
   "noAllergies": "No allergy information",
+  "allergyEdit": "Edit Allergies",
+  "allergyPlaceholder": "Comma-separated (e.g. nuts, dairy)",
+  "allergySaved": "Allergy info saved.",
+  "allergySaveFailed": "Failed to save.",
   "title": "Players",
   "list": "Player List",
   "detail": "Player Detail",
