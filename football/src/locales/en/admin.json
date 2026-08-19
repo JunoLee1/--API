@@ -602,6 +602,24 @@
     "loading": "Loading...",
     "loadError": "Failed to load"
   },
+  "clubSettings": {
+    "title": "Club Settings",
+    "description": "Manage basic settings for club operations.",
+    "loading": "Loading settings...",
+    "general": "General Settings",
+    "generalDesc": "Configure currency, index, and cost limits.",
+    "currency": "Currency (ISO 4217)",
+    "ibiBeta": "IBI Beta Index",
+    "maintenanceCostLimit": "Maintenance Cost Limit (₩)",
+    "planApprovalLimit": "Plan Approval Limit",
+    "complimentaryTicketLimit": "Complimentary Ticket Limit",
+    "readOnly": "Read-only Settings",
+    "save": "Save",
+    "saving": "Saving...",
+    "saved": "Settings saved.",
+    "saveFailed": "Failed to save.",
+    "loadFailed": "Failed to load settings."
+  },
   "recruitment": {
     "postingsTitle": "Job Posting Management",
     "createPosting": "Create Posting",

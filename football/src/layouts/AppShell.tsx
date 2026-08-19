@@ -577,6 +577,14 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN'],
   },
   {
+    to: '/admin/club-settings',
+    label: 'nav.item.clubSettings',
+    icon: Settings,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.system',
+    roles: ['ADMIN', 'SUPER_ADMIN'],
+  },
+  {
     to: '/admin/leagues',
     label: 'nav.item.leagueMgmt',
     icon: Trophy,

@@ -45,6 +45,7 @@ import { AuditLogPage } from '@/pages/admin/AuditLogPage'
 import { LoginHistoryPage } from '@/pages/admin/LoginHistoryPage'
 import SafeguardReportPage from '@/pages/admin/SafeguardReportPage'
 import TeamSettingsPage from '@/pages/admin/TeamSettingsPage'
+import ClubSettingsPage from '@/pages/admin/ClubSettingsPage'
 import { ContractDetailPage } from '@/pages/contracts/ContractDetailPage'
 import { ReportsPage } from '@/pages/reports/ReportsPage'
 import { ReportFormPage } from '@/pages/reports/ReportFormPage'
@@ -203,6 +204,7 @@ function App() {
             <Route path="/admin/login-history" element={<LoginHistoryPage />} />
             <Route path="/safeguard-reports" element={<SafeguardReportPage />} />
             <Route path="/admin/team-settings" element={<TeamSettingsPage />} />
+            <Route path="/admin/club-settings" element={<ClubSettingsPage />} />
             <Route path="/admin/departments" element={<DepartmentPage />} />
             <Route path="/admin/staff-records" element={<StaffRecordPage />} />
             <Route path="/admin/financial-report" element={<FinancialReportPage />} />
