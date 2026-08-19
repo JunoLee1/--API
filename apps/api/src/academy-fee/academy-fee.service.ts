@@ -17,6 +17,42 @@ export class AcademyFeeService {
 
   getAll(query: FeeListQuery) { return this.repo.findAll(query); }
   getByPlayer(playerId: string) { return this.repo.findByPlayer(playerId); }
+  searchYouthPlayers(name: string) { return this.repo.searchYouthPlayers(name); }
+
+  async registerWithProof(dto: { playerId: string; year: number; month: number; amount: number }, proofUrl: string) {
+    const prisma = getPrisma();
+    const player = await prisma.player.findUnique({
+      where: { id: dto.playerId },
+      select: { guardianId: true, playerName: true },
+    });
+    if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
+    if (!player.guardianId) throw new AppError(400, "PLAYER_HAS_NO_GUARDIAN");
+
+    const existing = await this.repo.findByPlayerYearMonth(dto.playerId, dto.year, dto.month);
+    if (existing) throw new AppError(409, "FEE_ALREADY_EXISTS");
+
+    const dueDate = new Date(dto.year, dto.month - 1, 25);
+    const fee = await this.repo.createWithProof({
+      playerId: dto.playerId,
+      guardianId: player.guardianId,
+      amount: dto.amount,
+      dueDate,
+      year: dto.year,
+      month: dto.month,
+      paymentProofUrl: proofUrl,
+    });
+
+    void this.notifRepo.createForGuardian(
+      player.guardianId,
+      "FEE_INVOICE_ISSUED",
+      () => ({
+        title: "아카데미 회비 납부 접수",
+        body: `${player.playerName} 선수의 ${dto.month}월 회비(${dto.amount.toLocaleString()}원) 납부 증빙이 접수됐습니다.`,
+      }),
+    ).catch(console.error);
+
+    return fee;
+  }
 
   async createSingle(dto: CreateSingleFeeDto) {
     const prisma = getPrisma();
@@ -108,10 +144,17 @@ export class AcademyFeeService {
     return this.repo.submitPaymentProof(id, dto.paymentProofUrl);
   }
 
-  async approvePayment(id: number, approverId: number) {
+  async firstApprovePayment(id: number) {
     const fee = await this.repo.findById(id);
     if (!fee) throw new AppError(404, "FEE_NOT_FOUND");
     if (fee.status !== "SUBMITTED") throw new AppError(409, "INVALID_STATUS");
+    return this.repo.updateStatus(id, "FIRST_APPROVED");
+  }
+
+  async approvePayment(id: number, approverId: number) {
+    const fee = await this.repo.findById(id);
+    if (!fee) throw new AppError(404, "FEE_NOT_FOUND");
+    if (fee.status !== "FIRST_APPROVED" && fee.status !== "SUBMITTED") throw new AppError(409, "INVALID_STATUS");
 
     const prisma = getPrisma();
     const now = new Date();

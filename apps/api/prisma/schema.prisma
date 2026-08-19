@@ -2316,6 +2316,7 @@ enum PaymentMethod {
 enum FeeStatus {
   PENDING
   SUBMITTED
+  FIRST_APPROVED
   PAID
   OVERDUE
   LOCKED
