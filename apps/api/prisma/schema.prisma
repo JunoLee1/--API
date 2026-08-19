@@ -888,6 +888,10 @@ model User {
   budgetHeadersApproved    BudgetHeader[]     @relation("BudgetHeaderApprover")
   adjustmentsCreated       BudgetAdjustment[] @relation("AdjustmentCreator")
   adjustmentsApproved      BudgetAdjustment[] @relation("AdjustmentApprover")
+  settlementsCreated        MonthlySettlementReport[] @relation("SettlementCreator")
+  settlementsFirstSubmitted MonthlySettlementReport[] @relation("SettlementFirstSubmitter")
+  settlementsFirstApproved  MonthlySettlementReport[] @relation("SettlementFirstApprover")
+  settlementsApproved       MonthlySettlementReport[] @relation("SettlementApprover")
 }
 
 model Season {
@@ -912,6 +916,7 @@ model Season {
   complianceCheck          SeasonComplianceCheck?
   monthlyBudgetSnapshots   MonthlyBudgetSnapshot[]
   monthlyOperationsSnapshots MonthlyOperationsSnapshot[]
+  monthlySettlements MonthlySettlementReport[]
   squadPlan                SquadPlan?
 }
 
@@ -3532,6 +3537,14 @@ enum ExposureChannel {
   OTHER
 }
 
+enum SettlementStatus {
+  DRAFT
+  PENDING_FIRST
+  FIRST_APPROVED
+  APPROVED
+  REJECTED
+}
+
 model DepartmentReviewerConfig {
   id                   Int        @id @default(autoincrement())
   subjectDepartmentId  Int
@@ -3684,4 +3697,41 @@ model PartnerContactLog {
 
   @@index([partnerId])
   @@index([actorId])
+}
+
+model MonthlySettlementReport {
+  id       Int @id @default(autoincrement())
+  seasonId Int
+  year     Int
+  month    Int
+
+  status          SettlementStatus @default(DRAFT)
+  rejectionReason String?
+
+  totalRevenue Float @default(0)
+  totalExpense Float @default(0)
+  netIncome    Float @default(0)
+
+  snapshotJson Json @default("{}")
+
+  note String? @db.Text
+
+  createdById        Int
+  firstSubmittedById Int?
+  firstSubmittedAt   DateTime?
+  firstApproverId    Int?
+  firstApprovedAt    DateTime?
+  approverId         Int?
+  approvedAt         DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  season           Season @relation(fields: [seasonId], references: [id])
+  createdBy        User   @relation("SettlementCreator", fields: [createdById], references: [id])
+  firstSubmittedBy User?  @relation("SettlementFirstSubmitter", fields: [firstSubmittedById], references: [id])
+  firstApprover    User?  @relation("SettlementFirstApprover", fields: [firstApproverId], references: [id])
+  approver         User?  @relation("SettlementApprover", fields: [approverId], references: [id])
+
+  @@unique([seasonId, year, month])
 }

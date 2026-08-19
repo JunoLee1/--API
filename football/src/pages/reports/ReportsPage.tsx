@@ -31,6 +31,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-react'
+import { MonthlySettlementTab } from './MonthlySettlementTab'
 
 const ALL_TYPES: ReportType[] = ['PERFORMANCE', 'MEDICAL', 'TRAINING', 'HR', 'FINANCIAL', 'ASSET']
 const ALL_STATUSES: ReportStatus[] = ['DRAFT', 'SUBMITTED', 'FIRST_APPROVED', 'SECOND_APPROVED', 'APPROVED', 'REJECTED']
@@ -46,6 +47,7 @@ export function ReportsPage() {
   const { t } = useTranslation('report')
   const { user } = useCurrentUser()
   const navigate = useNavigate()
+  const [tab, setTab] = useState<'general' | 'monthly'>('general')
   const [reports, setReports] = useState<Report[]>([])
   const [loading, setLoading] = useState(true)
   const [annualOps, setAnnualOps] = useState<AnnualOpsEntry[]>([])
@@ -93,144 +95,170 @@ export function ReportsPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="border-b px-6 py-4 shrink-0 space-y-3">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-lg font-semibold tracking-tight">{t('page.title')}</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">{descText}</p>
+      {/* Tab header */}
+      <div className="flex gap-0 border-b px-6 shrink-0">
+        <button
+          onClick={() => setTab('general')}
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+            tab === 'general' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          일반 보고서
+        </button>
+        <button
+          onClick={() => setTab('monthly')}
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+            tab === 'monthly' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          월말 결산
+        </button>
+      </div>
+
+      {tab === 'general' && (
+        <>
+          <div className="border-b px-6 py-4 shrink-0 space-y-3">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h1 className="text-lg font-semibold tracking-tight">{t('page.title')}</h1>
+                <p className="text-sm text-muted-foreground mt-0.5">{descText}</p>
+              </div>
+              {canCreate && (
+                <Button size="sm" onClick={() => navigate('/reports/new')}>
+                  <Plus className="h-4 w-4 mr-1" />{t('page.addButton')}
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as ReportType | '')}>
+                <SelectTrigger className="w-36 h-8 text-sm">
+                  <SelectValue>{typeFilter ? t(`type.${typeFilter}`) : t('page.filterAll')}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">{t('page.filterAll')}</SelectItem>
+                  {ALL_TYPES.map((tp) => (
+                    <SelectItem key={tp} value={tp}>{t(`type.${tp}`)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as ReportStatus | '')}>
+                <SelectTrigger className="w-36 h-8 text-sm">
+                  <SelectValue>{statusFilter ? t(`status.${statusFilter}`) : t('page.filterAll')}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">{t('page.filterAll')}</SelectItem>
+                  {ALL_STATUSES.map((s) => (
+                    <SelectItem key={s} value={s}>{t(`status.${s}`)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          {canCreate && (
-            <Button size="sm" onClick={() => navigate('/reports/new')}>
-              <Plus className="h-4 w-4 mr-1" />{t('page.addButton')}
-            </Button>
+
+          <div className="flex-1 overflow-auto">
+            {loading ? (
+              <div className="p-6 space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+              </div>
+            ) : reports.length === 0 ? (
+              <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
+                {t('page.noData')}
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead>{t('page.col.title')}</TableHead>
+                    <TableHead className="w-20">{t('page.col.type')}</TableHead>
+                    <TableHead className="w-24">{t('page.col.status')}</TableHead>
+                    <TableHead className="w-24 text-muted-foreground">{t('page.col.author')}</TableHead>
+                    <TableHead className="w-24 tabular-nums text-muted-foreground">{t('page.col.created')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginated.map((r) => (
+                    <TableRow
+                      key={r.id}
+                      className="cursor-pointer"
+                      onClick={() => navigate(`/reports/${r.id}`)}
+                    >
+                      <TableCell className="font-medium">{r.title}</TableCell>
+                      <TableCell>
+                        <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${REPORT_TYPE_STYLE[r.type]}`}>
+                          {t(`type.${r.type}`)}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${REPORT_STATUS_STYLE[r.status]}`}>
+                          {t(`status.${r.status}`)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{r.author.nickname}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground tabular-nums">{formatDate(r.createdAt)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+
+          {annualOps.length > 0 && (
+            <div className="space-y-3 px-6 py-4 border-t">
+              <h3 className="text-lg font-semibold">연간 운영 KPI 추이</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={annualOps.map((e) => ({
+                  label: `${e.year}-${String(e.month).padStart(2, '0')}`,
+                  수납율: e.data.feeCollectionRate,
+                  미납률: e.data.feeDelinquencyRate,
+                  예산집행률: e.data.budgetExecutionRate,
+                  출석률: e.data.attendanceRate,
+                }))}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="label" />
+                  <YAxis unit="%" domain={[0, 100]} />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="수납율" stroke="#22c55e" dot={false} />
+                  <Line type="monotone" dataKey="미납률" stroke="#ef4444" dot={false} />
+                  <Line type="monotone" dataKey="예산집행률" stroke="#3b82f6" dot={false} />
+                  <Line type="monotone" dataKey="출석률" stroke="#f59e0b" dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           )}
-        </div>
-        <div className="flex gap-2">
-          <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as ReportType | '')}>
-            <SelectTrigger className="w-36 h-8 text-sm">
-              <SelectValue>{typeFilter ? t(`type.${typeFilter}`) : t('page.filterAll')}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">{t('page.filterAll')}</SelectItem>
-              {ALL_TYPES.map((tp) => (
-                <SelectItem key={tp} value={tp}>{t(`type.${tp}`)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as ReportStatus | '')}>
-            <SelectTrigger className="w-36 h-8 text-sm">
-              <SelectValue>{statusFilter ? t(`status.${statusFilter}`) : t('page.filterAll')}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">{t('page.filterAll')}</SelectItem>
-              {ALL_STATUSES.map((s) => (
-                <SelectItem key={s} value={s}>{t(`status.${s}`)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
 
-      <div className="flex-1 overflow-auto">
-        {loading ? (
-          <div className="p-6 space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
-          </div>
-        ) : reports.length === 0 ? (
-          <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-            {t('page.noData')}
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead>{t('page.col.title')}</TableHead>
-                <TableHead className="w-20">{t('page.col.type')}</TableHead>
-                <TableHead className="w-24">{t('page.col.status')}</TableHead>
-                <TableHead className="w-24 text-muted-foreground">{t('page.col.author')}</TableHead>
-                <TableHead className="w-24 tabular-nums text-muted-foreground">{t('page.col.created')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginated.map((r) => (
-                <TableRow
-                  key={r.id}
-                  className="cursor-pointer"
-                  onClick={() => navigate(`/reports/${r.id}`)}
+          {!loading && reports.length > PAGE_SIZE && (
+            <div className="border-t px-6 py-3 flex items-center justify-between shrink-0">
+              <span className="text-xs text-muted-foreground">
+                {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, reports.length)} / {reports.length}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  disabled={safePage <= 1}
+                  onClick={() => setPage((p) => p - 1)}
                 >
-                  <TableCell className="font-medium">{r.title}</TableCell>
-                  <TableCell>
-                    <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${REPORT_TYPE_STYLE[r.type]}`}>
-                      {t(`type.${r.type}`)}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${REPORT_STATUS_STYLE[r.status]}`}>
-                      {t(`status.${r.status}`)}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{r.author.nickname}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground tabular-nums">{formatDate(r.createdAt)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </div>
-
-      {annualOps.length > 0 && (
-        <div className="space-y-3 px-6 py-4 border-t">
-          <h3 className="text-lg font-semibold">연간 운영 KPI 추이</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={annualOps.map((e) => ({
-              label: `${e.year}-${String(e.month).padStart(2, '0')}`,
-              수납율: e.data.feeCollectionRate,
-              미납률: e.data.feeDelinquencyRate,
-              예산집행률: e.data.budgetExecutionRate,
-              출석률: e.data.attendanceRate,
-            }))}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="label" />
-              <YAxis unit="%" domain={[0, 100]} />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="수납율" stroke="#22c55e" dot={false} />
-              <Line type="monotone" dataKey="미납률" stroke="#ef4444" dot={false} />
-              <Line type="monotone" dataKey="예산집행률" stroke="#3b82f6" dot={false} />
-              <Line type="monotone" dataKey="출석률" stroke="#f59e0b" dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-xs tabular-nums px-1">{safePage} / {totalPages}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  disabled={safePage >= totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
-      {!loading && reports.length > PAGE_SIZE && (
-        <div className="border-t px-6 py-3 flex items-center justify-between shrink-0">
-          <span className="text-xs text-muted-foreground">
-            {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, reports.length)} / {reports.length}
-          </span>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              disabled={safePage <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-xs tabular-nums px-1">{safePage} / {totalPages}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              disabled={safePage >= totalPages}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
+      {tab === 'monthly' && <MonthlySettlementTab />}
     </div>
   )
 }

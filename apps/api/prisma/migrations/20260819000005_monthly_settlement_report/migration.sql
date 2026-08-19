@@ -1,0 +1,30 @@
+CREATE TYPE "SettlementStatus" AS ENUM ('DRAFT', 'PENDING_FIRST', 'FIRST_APPROVED', 'APPROVED', 'REJECTED');
+
+CREATE TABLE "MonthlySettlementReport" (
+  "id"                 SERIAL PRIMARY KEY,
+  "seasonId"           INTEGER NOT NULL,
+  "year"               INTEGER NOT NULL,
+  "month"              INTEGER NOT NULL,
+  "status"             "SettlementStatus" NOT NULL DEFAULT 'DRAFT',
+  "rejectionReason"    TEXT,
+  "totalRevenue"       DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "totalExpense"       DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "netIncome"          DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "snapshotJson"       JSONB NOT NULL DEFAULT '{}',
+  "note"               TEXT,
+  "createdById"        INTEGER NOT NULL,
+  "firstSubmittedById" INTEGER,
+  "firstSubmittedAt"   TIMESTAMP(3),
+  "firstApproverId"    INTEGER,
+  "firstApprovedAt"    TIMESTAMP(3),
+  "approverId"         INTEGER,
+  "approvedAt"         TIMESTAMP(3),
+  "createdAt"          TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt"          TIMESTAMP(3) NOT NULL,
+  CONSTRAINT "MonthlySettlementReport_seasonId_year_month_key" UNIQUE ("seasonId", "year", "month"),
+  CONSTRAINT "MonthlySettlementReport_seasonId_fkey" FOREIGN KEY ("seasonId") REFERENCES "Season"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT "MonthlySettlementReport_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT "MonthlySettlementReport_firstSubmittedById_fkey" FOREIGN KEY ("firstSubmittedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT "MonthlySettlementReport_firstApproverId_fkey" FOREIGN KEY ("firstApproverId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT "MonthlySettlementReport_approverId_fkey" FOREIGN KEY ("approverId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE
+);
