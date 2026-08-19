@@ -10,7 +10,7 @@ export class BudgetControlRepository {
         seasonId: dto.seasonId,
         name: dto.name,
         totalBudget: dto.totalBudget,
-        note: dto.note,
+        note: dto.note ?? null,
         createdById,
       },
       include: { lines: true, adjustments: true },
@@ -19,7 +19,7 @@ export class BudgetControlRepository {
 
   findAll(seasonId?: number) {
     return this.prisma.budgetHeader.findMany({
-      where: seasonId ? { seasonId } : undefined,
+      ...(seasonId ? { where: { seasonId } } : {}),
       include: { season: { select: { id: true, name: true } }, createdBy: { select: { id: true, username: true } } },
       orderBy: { createdAt: "desc" },
     });
