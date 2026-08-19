@@ -27,9 +27,6 @@ import enAdmin from './locales/en/admin.json';
 import enFacility from './locales/en/facility.json';
 import enSponsorship from './locales/en/sponsorship.json';
 
-const storedLang = localStorage.getItem('app_lang')
-const initLang: 'ko' | 'en' = storedLang === 'en' ? 'en' : 'ko'
-
 i18n.use(initReactI18next).init({
   resources: {
     ko: {
@@ -61,7 +58,7 @@ i18n.use(initReactI18next).init({
       sponsorship: enSponsorship,
     },
   },
-  lng: initLang,
+  lng: (localStorage.getItem('app_lang') as 'ko' | 'en') ?? 'ko',
   fallbackLng: 'ko',
   defaultNS: 'common',
   interpolation: { escapeValue: false },
