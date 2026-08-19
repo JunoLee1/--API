@@ -844,6 +844,7 @@ model User {
   secondApprovedPayrolls   PayrollRun[]              @relation("PayrollRunSecondApprover")
   budgetOverrideLogs       BudgetOverrideLog[]       @relation("BudgetOverrideLogCreator")
   operatingExpenses        OperatingExpense[]        @relation("OperatingExpenseCreator")
+  paidExpenses             OperatingExpense[]        @relation("OperatingExpensePayer")
   createdPostings          JobPosting[]              @relation("JobPostingCreator")
   approvedPostings         JobPosting[]              @relation("JobPostingApprover")
   applicationOffers        JobApplication[]          @relation("ApplicationOffer")
@@ -2320,6 +2321,7 @@ enum PaymentMethod {
 enum FeeStatus {
   PENDING
   SUBMITTED
+  FIRST_APPROVED
   PAID
   OVERDUE
   LOCKED
@@ -2385,16 +2387,16 @@ model StaffRecord {
 model FinancialReport {
   id                   Int      @id @default(autoincrement())
   seasonId             Int      @unique
-  totalRevenue         Int
+  totalRevenue         Float
   // Revenue breakdown — sum must equal totalRevenue
-  revenueTicket        Int      @default(0)
-  revenueSponsorship   Int      @default(0)
-  revenueBroadcast     Int      @default(0)
-  revenueMerchandise   Int      @default(0)
-  revenueSubsidy       Int      @default(0)
-  revenueParentCompany Int      @default(0)
-  revenueAcademyFee    Int      @default(0)
-  revenueOther         Int      @default(0)
+  revenueTicket        Float    @default(0)
+  revenueSponsorship   Float    @default(0)
+  revenueBroadcast     Float    @default(0)
+  revenueMerchandise   Float    @default(0)
+  revenueSubsidy       Float    @default(0)
+  revenueParentCompany Float    @default(0)
+  revenueAcademyFee    Float    @default(0)
+  revenueOther         Float    @default(0)
   totalOperatingBudget Int?
   contingencyReserve   Int?     @default(0)
   note                 String?
@@ -2531,12 +2533,15 @@ model OperatingExpense {
   date            DateTime
   note            String?
   createdById     Int
+  paidAt          DateTime?
+  paidById        Int?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   deletedAt       DateTime?
   deletionReason  String?
   season          Season            @relation(fields: [seasonId], references: [id])
   createdBy       User              @relation("OperatingExpenseCreator", fields: [createdById], references: [id])
+  paidBy          User?             @relation("OperatingExpensePayer", fields: [paidById], references: [id])
 }
 
 // ─────────────────────────────────────────────

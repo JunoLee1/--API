@@ -53,9 +53,26 @@ export class BudgetControlService {
 
     const approvedBudget = header.totalBudget;
     const carryover = byType["CARRYOVER"] ?? 0;
-    const increase = byType["INCREASE"] ?? 0;
-    const decrease = byType["DECREASE"] ?? 0;
-    const available = approvedBudget + carryover + increase - decrease;
+    const increase  = byType["INCREASE"]  ?? 0;
+    const decrease  = byType["DECREASE"]  ?? 0;
+
+    const { commitment, actual, byCategory } =
+      await this.repo.sumCommitmentAndActual(header.seasonId);
+
+    const available = approvedBudget + carryover + increase - decrease - commitment - actual;
+
+    const lineBreakdown = header.lines.map(line => {
+      const cat = line.category as string | null;
+      const spent = cat ? (byCategory[cat] ?? 0) : 0;
+      return {
+        id: line.id,
+        category: cat,
+        note: line.note,
+        originalAmount: line.originalAmount,
+        spent,
+        remaining: line.originalAmount - spent,
+      };
+    });
 
     return {
       headerId: id,
@@ -64,9 +81,10 @@ export class BudgetControlService {
       carryover,
       increase,
       decrease,
-      commitment: 0,
-      actual: 0,
+      commitment,
+      actual,
       available,
+      lineBreakdown,
     };
   }
 

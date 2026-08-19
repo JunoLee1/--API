@@ -15,6 +15,27 @@ const controller = new FinancialReportController(service);
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 1 * 1024 * 1024 } });
 
+router.get("/prev-season-revenue", auth, async (req, res, next) => {
+  try {
+    const seasonId = Number(req.query["seasonId"]);
+    if (!seasonId) { res.json({ prevRevenue: null }); return; }
+    const prisma = (await import("../lib/prisma")).getPrisma();
+    const cur = await prisma.season.findUnique({ where: { id: seasonId }, select: { endDate: true } });
+    if (!cur) { res.json({ prevRevenue: null }); return; }
+    const prev = await prisma.season.findFirst({
+      where: { endDate: { lt: cur.endDate } },
+      orderBy: { endDate: "desc" },
+      select: { id: true },
+    });
+    if (!prev) { res.json({ prevRevenue: null }); return; }
+    const report = await prisma.financialReport.findUnique({
+      where: { seasonId: prev.id },
+      select: { totalRevenue: true },
+    });
+    res.json({ prevRevenue: report?.totalRevenue ?? null });
+  } catch (err) { next(err); }
+});
+
 router.post("/:seasonId",                   auth, controller.set);
 router.post("/:seasonId/from-prev-season",      auth, controller.setFromPrevSeason);
 router.post("/:seasonId/revenue/auto-fill",     auth, controller.autoFillRevenue);

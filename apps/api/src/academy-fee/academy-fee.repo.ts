@@ -133,6 +133,42 @@ export class AcademyFeeRepository {
     })
   }
 
+  findByPlayerYearMonth(playerId: string, year: number, month: number) {
+    return this.prisma.academyFee.findFirst({
+      where: { playerId, year, month },
+      select: { id: true },
+    })
+  }
+
+  createWithProof(data: CreateAcademyFeeDto & { paymentProofUrl: string }) {
+    return this.prisma.academyFee.create({
+      data: {
+        ...data,
+        status: 'SUBMITTED' as any,
+        paymentMethod: 'BANK_TRANSFER' as any,
+        paymentSubmittedAt: new Date(),
+      },
+      include: INCLUDE,
+    })
+  }
+
+  searchYouthPlayers(name: string) {
+    return this.prisma.player.findMany({
+      where: {
+        playerName: { contains: name, mode: 'insensitive' as const },
+        team: { type: 'YOUTH' as any, isLite: false },
+      },
+      select: {
+        id: true,
+        playerName: true,
+        guardianId: true,
+        guardian: { select: { username: true } },
+      },
+      take: 10,
+      orderBy: { playerName: 'asc' },
+    })
+  }
+
   getFinanceStats(year: number, month: number) {
     return this.prisma.academyFee.groupBy({
       by: ['status'],

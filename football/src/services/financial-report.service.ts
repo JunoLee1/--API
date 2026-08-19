@@ -78,13 +78,13 @@ export const financialReportApi = {
   },
 
   setRevenueBreakdown: (seasonId: number, breakdown: RevenueBreakdown) =>
-    api.put<FinancialReport>(`/financial-report/${seasonId}/revenue`, breakdown),
+    api.put<FinancialReport>(`/financial-reports/${seasonId}/revenue`, breakdown),
 
   setFromPrevSeason: (seasonId: number, prevSeasonId: number) =>
-    api.post<FinancialReport>(`/financial-report/${seasonId}/from-prev-season`, { prevSeasonId }),
+    api.post<FinancialReport>(`/financial-reports/${seasonId}/from-prev-season`, { prevSeasonId }),
 
   autoFillRevenue: (seasonId: number) =>
-    api.post<FinancialReport>(`/financial-report/${seasonId}/revenue/auto-fill`, {}),
+    api.post<FinancialReport>(`/financial-reports/${seasonId}/revenue/auto-fill`, {}),
 
   getPnL: (seasonId: number) =>
     api.get<PnL>(`/financial-reports/${seasonId}/pl`),

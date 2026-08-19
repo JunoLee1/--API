@@ -116,6 +116,7 @@
     "status": {
       "PENDING": "대기",
       "SUBMITTED": "확인 중",
+      "FIRST_APPROVED": "1차 승인",
       "PAID": "완료",
       "OVERDUE": "연체",
       "LOCKED": "정지"

@@ -28,6 +28,7 @@ import {
   BookOpen,
   Briefcase,
   Building2,
+  CalendarCheck,
   CalendarDays,
   CalendarX2,
   ChevronRight,
@@ -56,6 +57,7 @@ import {
   Ticket,
   TrendingUp,
   Trophy,
+  User,
   UserPlus,
   UserSearch,
   Users,
@@ -77,6 +79,7 @@ import {
   type FrontOfficeRole,
   type Role,
 } from '@/types/auth'
+import { getSectionOrder } from '@/lib/sectionOrder'
 
 type TeamCtx = 'FIRST_TEAM' | 'YOUTH'
 const TeamContext = createContext<TeamCtx>('FIRST_TEAM')
@@ -101,18 +104,6 @@ interface NavItem {
 }
 
 
-const SECTION_ORDER: Array<NavItem['section'] & string> = [
-  'nav.section.playerMgmt',
-  'nav.section.contractTransfer',
-  'nav.section.injuryMedical',
-  'nav.section.training',
-  'nav.section.matchAnalysis',
-  'nav.section.youth',
-  'nav.section.coachingStaff',
-  'nav.section.docApproval',
-  'nav.section.management',
-]
-
 const MANAGEMENT_SUBSECTION_ORDER: NavSubSection[] = [
   'nav.subsection.hr',
   'nav.subsection.finance',
@@ -128,7 +119,7 @@ const SUBSECTION_ICON: Record<NavSubSection, LucideIcon> = {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { to: '/dashboard', label: 'nav.item.dashboard', icon: BarChart3, end: true, roles: ['ADMIN', 'SUPER_ADMIN', 'GM', 'FRONT_OFFICE', 'COACHING_STAFF', 'PLAYER', 'AGENT'] },
+  { to: '/dashboard', label: 'nav.item.dashboard', icon: BarChart3, end: true, roles: ['ADMIN', 'SUPER_ADMIN', 'GM', 'FRONT_OFFICE', 'COACHING_STAFF', 'AGENT'] },
   {
     to: '/guardian-portal',
     label: 'nav.item.guardianPortal',
@@ -296,13 +287,14 @@ const NAV_ITEMS: NavItem[] = [
     label: 'nav.item.tacticalAnalysis',
     icon: FileText,
     section: 'nav.section.matchAnalysis',
-    roles: ['ADMIN', 'COACHING_STAFF', 'PLAYER'],
+    roles: ['ADMIN', 'COACHING_STAFF'],
   },
   {
     to: '/matches/rankings',
     label: 'nav.item.rankings',
     icon: BarChart3,
     section: 'nav.section.matchAnalysis',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'GM', 'FRONT_OFFICE', 'COACHING_STAFF', 'AGENT'],
   },
   {
     to: '/squad',
@@ -592,6 +584,31 @@ const NAV_ITEMS: NavItem[] = [
     subSection: 'nav.subsection.system',
     roles: ['SUPER_ADMIN'],
   },
+
+  // PLAYER 전용
+  {
+    to: '/player/me',
+    label: 'nav.item.myProfile',
+    icon: User,
+    end: true,
+    roles: ['PLAYER'],
+  },
+  {
+    to: '/injuries',
+    label: 'nav.item.myInjuries',
+    icon: Stethoscope,
+    end: true,
+    section: 'nav.section.injuryMedical',
+    roles: ['PLAYER'],
+  },
+  {
+    to: '/training/attendance',
+    label: 'nav.item.myAttendance',
+    icon: CalendarCheck,
+    end: true,
+    section: 'nav.section.training',
+    roles: ['PLAYER'],
+  },
 ]
 
 export function AppShell() {
@@ -709,10 +726,21 @@ export function AppShell() {
     return true
   })
 
+  const sectionOrder = getSectionOrder(user?.role ?? 'ADMIN', user?.coachingRole, user?.frontOfficeRole)
+
   const navGroups: Array<{ section: string | null; items: NavItem[] }> = []
   const rootItems = visibleNavItems.filter((i) => !i.section)
   if (rootItems.length > 0) navGroups.push({ section: null, items: rootItems })
-  for (const s of SECTION_ORDER) {
+  for (const s of sectionOrder) {
+    const items = visibleNavItems.filter((i) => i.section === s)
+    if (items.length > 0) navGroups.push({ section: s, items })
+  }
+  // sectionOrder에 없는 섹션도 끝에 추가 (안전망)
+  const sectionOrderSet = new Set<string>(sectionOrder)
+  const remainingSections = [...new Set(
+    visibleNavItems.filter((i) => i.section && !sectionOrderSet.has(i.section)).map((i) => i.section!)
+  )]
+  for (const s of remainingSections) {
     const items = visibleNavItems.filter((i) => i.section === s)
     if (items.length > 0) navGroups.push({ section: s, items })
   }

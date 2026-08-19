@@ -7,7 +7,7 @@ import { AcademyFeeRepository } from "./academy-fee.repo";
 import { NotificationRepository } from "../notification/notification.repo";
 import { getPrisma } from "../lib/prisma";
 import { AppError } from "../lib/appError";
-import { canReadHR, canWriteHR, canReadFinance } from "../lib/permissions";
+import { canReadHR, canReadFinance, isAdminLike } from "../lib/permissions";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -57,14 +57,37 @@ const requireFinance = (req: Request, res: Response, next: NextFunction) => {
   next();
 };
 
+const requireAdminLike = (req: Request, res: Response, next: NextFunction) => {
+  if (!isAdminLike(req.user!.role)) return next(new AppError(403, "FORBIDDEN"));
+  next();
+};
+
 // Toss webhook — auth 없음, Toss 서버가 직접 호출
 router.post("/toss-webhook", express.json(), controller.tossWebhook);
 
-// 단건 조회
-router.get("/:id", auth, requireFinanceOrGuardian, controller.getById);
+// 학부모 영수증 수령 후 회비 등록 + 증빙 첨부 (SUBMITTED 직생성)
+router.post("/register-with-proof", auth, requireFinance, uploadProof.single("file"), async (req, res, next) => {
+  const cleanup = () => { if (req.file) fs.unlink(req.file.path, () => {}); };
+  try {
+    if (!req.file) return next(new AppError(400, "FILE_REQUIRED"));
+    const { playerId, year, month, amount } = req.body;
+    if (!playerId || !year || !month || !amount) { cleanup(); return next(new AppError(400, "MISSING_FIELDS")); }
+    const url = `/uploads/academy-fee-proofs/${req.file.filename}`;
+    res.json(await service.registerWithProof(
+      { playerId, year: Number(year), month: Number(month), amount: Number(amount) },
+      url,
+    ));
+  } catch (e) { cleanup(); next(e); }
+});
 
-// 재무팀 단건 수동 생성 (B안: 청구서 먼저 발행 → 보호자 납부 → 승인)
-router.post("/", auth, requireFinance, controller.create);
+// 유소년 선수 이름 검색 (회비 등록용)
+router.get("/players/search", auth, requireFinance, async (req, res, next) => {
+  try {
+    const name = String(req.query.name ?? "").trim();
+    if (!name) return res.json([]);
+    res.json(await service.searchYouthPlayers(name));
+  } catch (e) { next(e); }
+});
 
 router.get("/stats", auth, (req, res, next) => {
   const { role, frontOfficeRole } = req.user!;
@@ -84,23 +107,25 @@ router.get("/player/:playerId", auth, (req, res, next) => {
   next();
 }, controller.getByPlayer);
 
-router.post("/issue", auth, (req, res, next) => {
-  const { role, frontOfficeRole } = req.user!;
-  if (!canWriteHR(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
-  next();
-}, controller.issueMonthlyFees);
+// 재무팀 단건 수동 생성 (B안: 청구서 먼저 발행 → 보호자 납부 → 승인)
+router.post("/", auth, requireFinance, controller.create);
 
-router.patch("/:id/submit-proof", auth, (req, res, next) => {
-  const { role, frontOfficeRole } = req.user!;
-  if (!canWriteHR(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
-  next();
-}, controller.submitPaymentProof);
+// 단건 조회 — 반드시 specific 경로들 다음에 위치해야 /stats 등이 /:id 에 매칭되지 않음
+router.get("/:id", auth, requireFinanceOrGuardian, controller.getById);
 
-router.patch("/:id/approve", auth, (req, res, next) => {
-  const { role, frontOfficeRole } = req.user!;
-  if (!canWriteHR(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
-  next();
-}, controller.approvePayment);
+router.post("/issue", auth, requireFinance, controller.issueMonthlyFees);
+
+router.patch("/:id/submit-proof", auth, requireFinance, controller.submitPaymentProof);
+
+// 1차 승인: FINANCE_MANAGER → SUBMITTED → FIRST_APPROVED
+router.patch("/:id/first-approve", auth, requireFinance, async (req, res, next) => {
+  try {
+    res.json(await service.firstApprovePayment(Number(req.params.id)));
+  } catch (e) { next(e); }
+});
+
+// 2차 최종 승인: GM/ADMIN → FIRST_APPROVED → PAID + LedgerEntry
+router.patch("/:id/approve", auth, requireAdminLike, controller.approvePayment);
 
 // Receipt — Guardian (own only) or finance team/admin
 router.get("/:id/receipt", auth, requireFinanceOrGuardian, controller.getReceipt);
