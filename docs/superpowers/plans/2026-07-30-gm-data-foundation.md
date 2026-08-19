@@ -10,6 +10,26 @@
 
 ---
 
+## ✅ 그릴 결정사항 (2026-08-19)
+
+- **MealExpense**: 별도 모델 폐기 → `StaffAllowance.type = 'MEAL'`로 흡수. `MealExpensePage.tsx` 불필요
+- **PlayerAllergy**: `Player.allergies String[]` 필드 추가 (스키마 미적용, 별도 모델 없음). FE: PlayerDetailPage `info` 탭 의료 서브섹션에 배지 표시. 편집 권한: MEDICAL/MEDICAL_DIRECTOR + ADMIN
+- **FINANCE_MANAGER 역할**: 이미 완료 ✅
+- **StaffRecord**: BE+FE 이미 완료 ✅ (StaffRecordPage.tsx, AppShell nav 등록)
+- **ClubSettings**: BE 완료 ✅. FE: `/admin/club-settings` 전용 페이지 신설 (ADMIN 전용, AppShell management 섹션 추가)
+
+## ✅ 이미 완료된 것 (플랜 체크박스 미반영)
+- `FrontOfficeRole.FINANCE_MANAGER` enum 추가
+- `ClubSettings` 모델 + BE API (`club-settings.routes.ts` 등록)
+- `StaffRecord` 모델 + BE API + FE (`StaffRecordPage.tsx`, `staff-record.service.ts`)
+- `football/src/services/club-settings.service.ts` 생성
+
+## 잔여 구현
+- A. `Player.allergies String[]` — 스키마 migration + player PATCH API 수정 + PlayerDetailPage info 탭
+- B. `/admin/club-settings` FE 페이지 — GET/PATCH ClubSettings 폼 (currency, 각종 한도)
+
+---
+
 ## 파일 맵
 
 ### 스키마 (Task 1)

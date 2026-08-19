@@ -8,6 +8,10 @@
 
 **Tech Stack:** Prisma (PostgreSQL), Express + TypeScript (BE), React + TypeScript + sonner(toast) (FE), Jest (BE unit test)
 
+## ✅ 구현 완료 (2026-08-19 확인)
+
+`wage-cap.service.ts` BE 완료. FE `ContractsPage.tsx`에서 `wageCapWarning` toast.warning 처리 완료. 잔여 구현 없음.
+
 ---
 
 ## 파일 맵

@@ -1,6 +1,6 @@
 # 유소년 모듈 Plan 6: 성장 리포트 시스템 (Growth Metrics + Coach Evaluation + Parent Report)
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 코치가 유소년 선수를 4개 차원(태도/기본기/공간이해/신체발달)으로 월간 평가하고, 디지털 배지를 수여하며, 학부모에게 시각화 성장 리포트를 자동 발송하는 시스템을 구현한다.
 
@@ -45,7 +45,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: BadgeType enum 추가**
+- [x] **Step 1: BadgeType enum 추가**
 
 `schema.prisma`에서 기존 enum 블록 끝에 추가:
 
@@ -61,7 +61,7 @@ enum BadgeType {
 }
 ```
 
-- [ ] **Step 2: NotificationType에 GROWTH_REPORT_PUBLISHED 추가**
+- [x] **Step 2: NotificationType에 GROWTH_REPORT_PUBLISHED 추가**
 
 기존 `enum NotificationType` 블록의 `INCIDENT_REPORT_SUBMITTED` 뒤에 추가:
 
@@ -69,7 +69,7 @@ enum BadgeType {
   GROWTH_REPORT_PUBLISHED
 ```
 
-- [ ] **Step 3: GrowthEvaluation 모델 추가**
+- [x] **Step 3: GrowthEvaluation 모델 추가**
 
 YouthRegistration 모델 뒤에 추가:
 
@@ -102,7 +102,7 @@ model GrowthEvaluation {
 }
 ```
 
-- [ ] **Step 4: PlayerBadge 모델 추가**
+- [x] **Step 4: PlayerBadge 모델 추가**
 
 GrowthEvaluation 모델 뒤에 추가:
 
@@ -122,7 +122,7 @@ model PlayerBadge {
 }
 ```
 
-- [ ] **Step 5: 역관계 추가**
+- [x] **Step 5: 역관계 추가**
 
 `model Player`에:
 ```prisma
@@ -141,7 +141,7 @@ model PlayerBadge {
   playerBadges       PlayerBadge[]
 ```
 
-- [ ] **Step 6: 마이그레이션 실행**
+- [x] **Step 6: 마이그레이션 실행**
 
 ```bash
 cd apps/api && npx prisma migrate dev --name add-growth-evaluation-badge
@@ -156,19 +156,19 @@ echo "-- Migration applied via db push" > prisma/migrations/${TIMESTAMP}_add_gro
 npx prisma migrate resolve --applied ${TIMESTAMP}_add_growth_evaluation_badge
 ```
 
-- [ ] **Step 7: Prisma generate**
+- [x] **Step 7: Prisma generate**
 
 ```bash
 npx prisma generate
 ```
 
-- [ ] **Step 8: TypeScript 확인**
+- [x] **Step 8: TypeScript 확인**
 
 ```bash
 npx tsc --noEmit 2>&1 | grep -v "country.repo\|monthlyAttendance" | head -20
 ```
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add apps/api/prisma/
@@ -183,7 +183,7 @@ git commit -m "feat(youth): GrowthEvaluation + PlayerBadge 스키마 추가"
 - Create: `apps/api/src/growth-report/dto/growth-report.dto.ts`
 - Create: `apps/api/src/growth-report/growth-report.repo.ts`
 
-- [ ] **Step 1: DTO 작성**
+- [x] **Step 1: DTO 작성**
 
 `apps/api/src/growth-report/dto/growth-report.dto.ts`:
 
@@ -255,7 +255,7 @@ export function parseCreateEvaluationDto(body: Record<string, unknown>): CreateG
 }
 ```
 
-- [ ] **Step 2: Repository 작성**
+- [x] **Step 2: Repository 작성**
 
 `apps/api/src/growth-report/growth-report.repo.ts`:
 
@@ -338,7 +338,7 @@ export class GrowthReportRepository {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/growth-report/
@@ -353,7 +353,7 @@ git commit -m "feat(youth): GrowthReport DTO and Repository"
 - Create: `apps/api/src/growth-report/growth-report.service.ts`
 - Create: `apps/api/__test__/growth-report/growth-report.service.test.ts`
 
-- [ ] **Step 1: 실패하는 테스트 작성**
+- [x] **Step 1: 실패하는 테스트 작성**
 
 `apps/api/__test__/growth-report/growth-report.service.test.ts`:
 
@@ -450,7 +450,7 @@ describe("GrowthReportService - awardBadge", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 → 실패 확인**
+- [x] **Step 2: 테스트 실행 → 실패 확인**
 
 ```bash
 cd apps/api && npx jest __test__/growth-report/growth-report.service.test.ts --no-coverage 2>&1 | tail -10
@@ -458,7 +458,7 @@ cd apps/api && npx jest __test__/growth-report/growth-report.service.test.ts --n
 
 Expected: FAIL — `GrowthReportService is not a function`
 
-- [ ] **Step 3: Service 구현**
+- [x] **Step 3: Service 구현**
 
 `apps/api/src/growth-report/growth-report.service.ts`:
 
@@ -529,7 +529,7 @@ export class GrowthReportService {
 }
 ```
 
-- [ ] **Step 4: 테스트 실행 → 통과 확인**
+- [x] **Step 4: 테스트 실행 → 통과 확인**
 
 ```bash
 cd apps/api && npx jest __test__/growth-report/growth-report.service.test.ts --no-coverage
@@ -537,7 +537,7 @@ cd apps/api && npx jest __test__/growth-report/growth-report.service.test.ts --n
 
 Expected: PASS (6 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/growth-report/ apps/api/__test__/growth-report/
@@ -553,7 +553,7 @@ git commit -m "feat(youth): GrowthReportService TDD (6 tests)"
 - Create: `apps/api/src/growth-report/growth-report.routes.ts`
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: Controller 작성**
+- [x] **Step 1: Controller 작성**
 
 `apps/api/src/growth-report/growth-report.controller.ts`:
 
@@ -614,7 +614,7 @@ export class GrowthReportController {
 }
 ```
 
-- [ ] **Step 2: Routes 작성**
+- [x] **Step 2: Routes 작성**
 
 `apps/api/src/growth-report/growth-report.routes.ts`:
 
@@ -650,7 +650,7 @@ router.post("/badges", auth, controller.awardBadge);
 export default router;
 ```
 
-- [ ] **Step 3: apiRouter.ts에 등록**
+- [x] **Step 3: apiRouter.ts에 등록**
 
 `apps/api/src/apiRouter.ts`에서 다른 router import 패턴을 확인 후:
 
@@ -660,19 +660,19 @@ import growthReportRouter from "./growth-report/growth-report.routes";
 apiRouter.use("/growth-reports", growthReportRouter);
 ```
 
-- [ ] **Step 4: TypeScript 확인**
+- [x] **Step 4: TypeScript 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | grep -v "country.repo\|monthlyAttendance" | head -20
 ```
 
-- [ ] **Step 5: 전체 테스트**
+- [x] **Step 5: 전체 테스트**
 
 ```bash
 cd apps/api && npx jest --no-coverage 2>&1 | tail -15
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/growth-report/ apps/api/src/apiRouter.ts
@@ -687,7 +687,7 @@ git commit -m "feat(youth): GrowthReport controller, routes, API 등록"
 - Create: `football/src/types/growth-report.ts`
 - Create: `football/src/services/growthReport.service.ts`
 
-- [ ] **Step 1: 타입 작성**
+- [x] **Step 1: 타입 작성**
 
 `football/src/types/growth-report.ts`:
 
@@ -776,7 +776,7 @@ export interface AwardBadgePayload {
 }
 ```
 
-- [ ] **Step 2: API 서비스 작성**
+- [x] **Step 2: API 서비스 작성**
 
 `football/src/services/growthReport.service.ts`:
 
@@ -813,13 +813,13 @@ export const growthReportApi = {
 }
 ```
 
-- [ ] **Step 3: TypeScript 확인**
+- [x] **Step 3: TypeScript 확인**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | head -10
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/types/growth-report.ts football/src/services/growthReport.service.ts
@@ -833,7 +833,7 @@ git commit -m "feat(youth): GrowthReport FE 타입 + API 서비스"
 **Files:**
 - Create: `football/src/components/players/GrowthRadarChart.tsx`
 
-- [ ] **Step 1: 레이더 차트 컴포넌트 작성**
+- [x] **Step 1: 레이더 차트 컴포넌트 작성**
 
 `football/src/components/players/GrowthRadarChart.tsx`:
 
@@ -944,13 +944,13 @@ export function GrowthRadarChart({ dimensions, size = 200 }: Props) {
 }
 ```
 
-- [ ] **Step 2: TypeScript 확인**
+- [x] **Step 2: TypeScript 확인**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | head -10
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/components/players/GrowthRadarChart.tsx
@@ -965,7 +965,7 @@ git commit -m "feat(youth): SVG 레이더 차트 컴포넌트 (4차원 성장 �
 - Create: `football/src/pages/youth/GrowthEvaluationFormDialog.tsx`
 - Create: `football/src/pages/youth/BadgeAwardDialog.tsx`
 
-- [ ] **Step 1: 평가 입력 다이얼로그 작성**
+- [x] **Step 1: 평가 입력 다이얼로그 작성**
 
 `football/src/pages/youth/GrowthEvaluationFormDialog.tsx`:
 
@@ -1094,7 +1094,7 @@ export function GrowthEvaluationFormDialog({ open, onClose, onCreated, playerId,
 }
 ```
 
-- [ ] **Step 2: 배지 수여 다이얼로그 작성**
+- [x] **Step 2: 배지 수여 다이얼로그 작성**
 
 `football/src/pages/youth/BadgeAwardDialog.tsx`:
 
@@ -1196,13 +1196,13 @@ export function BadgeAwardDialog({ open, onClose, onAwarded, players }: Props) {
 }
 ```
 
-- [ ] **Step 3: TypeScript 확인**
+- [x] **Step 3: TypeScript 확인**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | head -15
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/pages/youth/
@@ -1218,7 +1218,7 @@ git commit -m "feat(youth): 성장 평가 입력 폼 + 배지 수여 다이얼�
 - Modify: `football/src/pages/players/PlayerDetailPage.tsx`
 - Modify: `football/src/App.tsx`
 
-- [ ] **Step 1: 성장 리포트 페이지 작성**
+- [x] **Step 1: 성장 리포트 페이지 작성**
 
 `football/src/pages/youth/GrowthReportPage.tsx`:
 
@@ -1368,7 +1368,7 @@ export default function GrowthReportPage() {
 }
 ```
 
-- [ ] **Step 2: PlayerDetailPage에 성장 리포트 링크 추가**
+- [x] **Step 2: PlayerDetailPage에 성장 리포트 링크 추가**
 
 `football/src/pages/players/PlayerDetailPage.tsx`에서 YOUTH 팀 선수 상세 페이지에 성장 리포트 버튼 추가. 기존 PDI 섹션 아래에 추가:
 
@@ -1392,7 +1392,7 @@ const navigate = useNavigate()
 )}
 ```
 
-- [ ] **Step 3: App.tsx에 라우트 추가**
+- [x] **Step 3: App.tsx에 라우트 추가**
 
 ```bash
 grep -n "incident-reports\|youth" football/src/App.tsx | tail -10
@@ -1405,19 +1405,19 @@ import GrowthReportPage from './pages/youth/GrowthReportPage'
 <Route path="/growth-reports/:playerId" element={<GrowthReportPage />} />
 ```
 
-- [ ] **Step 4: TypeScript 확인**
+- [x] **Step 4: TypeScript 확인**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | head -20
 ```
 
-- [ ] **Step 5: 전체 BE 테스트**
+- [x] **Step 5: 전체 BE 테스트**
 
 ```bash
 cd apps/api && npx jest --no-coverage 2>&1 | tail -10
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd /Users/juno/work/football

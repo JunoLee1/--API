@@ -1,6 +1,6 @@
 # 월말 결산 보고서 (MonthlySettlementReport) Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 매월 말 수익·운영비·P&L을 자동 집계한 웹 보고서를 생성하고, FINANCE_STAFF → FINANCE_MANAGER → GM 3단계 전자결재 후 데이터를 자동 잠금. 외부 제출용 Excel(3 시트) 다운로드 제공.
 
@@ -59,7 +59,7 @@
 
 **Files:** `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: `SettlementStatus` 열거형 추가**
+- [x] **Step 1: `SettlementStatus` 열거형 추가**
 
 ```prisma
 enum SettlementStatus {
@@ -71,7 +71,7 @@ enum SettlementStatus {
 }
 ```
 
-- [ ] **Step 2: `MonthlySettlementReport` 모델 추가**
+- [x] **Step 2: `MonthlySettlementReport` 모델 추가**
 
 ```prisma
 model MonthlySettlementReport {
@@ -131,7 +131,7 @@ settlementsFirstApproved  MonthlySettlementReport[] @relation("SettlementFirstAp
 settlementsApproved       MonthlySettlementReport[] @relation("SettlementApprover")
 ```
 
-- [ ] **Step 3: migration 파일 생성 및 적용**
+- [x] **Step 3: migration 파일 생성 및 적용**
 
 ```sql
 -- apps/api/prisma/migrations/20260819000004_monthly_settlement_report/migration.sql

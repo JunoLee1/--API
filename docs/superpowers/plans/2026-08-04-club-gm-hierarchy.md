@@ -4,10 +4,43 @@
 
 **Goal:** Club 엔티티 신설, GM을 독립 Role로 승격, isLite를 Team에서 Club 레벨로 이동해 `SUPER_ADMIN → ADMIN(Club) → GM(Club) → 1군/2군/유소년` 계층을 구축한다.
 
+---
+
+## 🔴 Grill 결정사항 (2026-08-19)
+
+### 이미 완료된 것
+- Role.GM enum ✅ / FrontOfficeRole.GM 제거 ✅
+- Club 모델 ✅ / User.clubId ✅ / Team.clubId ✅
+- JWT에 clubId 포함 ✅
+- club/ 모듈 전체 (dto, repo, service, controller, routes) ✅
+- /clubs apiRouter 등록 ✅
+- isAdminLike() includes GM ✅
+- FE types: Role 'GM' ✅, ROLE_LABEL.GM ✅
+- useLiteMode: club.isLite 읽기 ✅
+
+### 그릴 핵심 결정
+1. **GM 권한**: 단일 구단이므로 GM = ADMIN 동급, club-scoping 없음
+2. **Team.isLite 유지**: Team.isLite + Club.isLite 공존, Club 변경 시 cascade로 Team 일괄 업데이트
+3. **cascade 구현**: `club.service.ts` update()에서 prisma.$transaction으로 처리
+4. **setLiteMode 삭제**: team.service.ts + team.repo.ts에서 제거 (orphaned)
+5. **GM 권한 부여**: SUPER_ADMIN만 role=GM 설정 가능 (backend guard + FE SUPER_ADMIN only)
+6. **SUPER_ADMIN vs ADMIN**: SUPER_ADMIN=전사관리자, ADMIN=구단이사
+7. **GM에 SYSTEM_MANAGE 추가**: Admin 패널 접근 허용
+
+### 잔여 구현 (소규모 7개)
+- [ ] **A** `permissions.ts` — GM에 SYSTEM_MANAGE 추가
+- [ ] **B** `admin.service.ts` — updateUserRole: SUPER_ADMIN만 GM 부여 가드
+- [ ] **C** `team.service.ts` + `team.repo.ts` — setLiteMode / updateLiteFlag 삭제
+- [ ] **D** `club.service.ts` — update() cascade 트랜잭션 (Club.isLite → Team.isLite)
+- [ ] **E** `UsersPage.tsx` — ALL_ROLES에 'GM' 추가 (SUPER_ADMIN에게만 표시)
+- [ ] **F** `AppShell.tsx` — line 402 `frontOfficeRoles: ['GM']` 제거
+
+---
+
 **Architecture:**
 - `Club` 모델이 여러 `Team`을 소유하고, `User`(ADMIN/GM/FRONT_OFFICE)도 `clubId`로 Club에 귀속된다.
 - `GM`은 `Role` enum에 최상위로 추가되고 `FrontOfficeRole.GM`은 제거된다.
-- `isLite`는 `Team`에서 `Club`으로 이동, Team API 응답에는 `club.isLite`가 포함된다.
+- `isLite`는 Team + Club 양쪽에 존재, Club 변경 시 cascade로 동기화.
 - JWT payload에 `clubId`가 포함되어 API 레이어에서 club-scoping을 수행할 수 있다.
 
 **Tech Stack:** Prisma + PostgreSQL, Express (TypeScript), React + TypeScript (Vite)
