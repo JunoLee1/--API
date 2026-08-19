@@ -93,7 +93,10 @@
       "facilityMgmt": "Facility",
       "leagueMgmt": "League Management",
       "budgetControl": "Budget Control",
-      "guardianPortal": "My Child"
+      "guardianPortal": "My Child",
+      "myProfile": "My Profile",
+      "myInjuries": "My Injuries",
+      "myAttendance": "My Attendance"
     }
   },
   "action": {

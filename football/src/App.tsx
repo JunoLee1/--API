@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
+import { getDefaultLanding } from '@/lib/roleLanding'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Toaster } from '@/components/ui/sonner'
 import { AppShell } from '@/layouts/AppShell'
 import { ConfirmProvider } from '@/lib/confirm-dialog'
@@ -86,6 +88,17 @@ import { PlanReportDetailPage } from '@/pages/finance/PlanReportDetailPage'
 import { DepartmentReviewConfigPage } from '@/pages/admin/DepartmentReviewConfigPage'
 import { ReviewRuleSetPage } from '@/pages/admin/ReviewRuleSetPage'
 
+function RootRedirect() {
+  const { user, loading } = useCurrentUser()
+  if (loading) return null
+  if (!user) return <Navigate to="/login" replace />
+  return <Navigate to={getDefaultLanding(user.role, user.coachingRole, user.frontOfficeRole)} replace />
+}
+
+function PlayerMeRedirect() {
+  return <Navigate to="/me" replace />
+}
+
 function GrowthReportRedirect() {
   const { playerId } = useParams<{ playerId: string }>()
   return <Navigate to={`/players/${playerId}`} replace />
@@ -130,6 +143,7 @@ function App() {
               </PrivateRoute>
             }
           >
+            <Route index element={<RootRedirect />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/coach-dashboard" element={<CoachDashboard />} />
             <Route path="/players" element={<PlayersPage />} />
@@ -213,9 +227,10 @@ function App() {
             <Route path="/finance/plan-reports/:id" element={<PlanReportDetailPage />} />
             <Route path="/finance/budget" element={<BudgetListPage />} />
             <Route path="/finance/budget/:id" element={<BudgetDetailPage />} />
+            <Route path="/player/me" element={<PlayerMeRedirect />} />
           </Route>
 
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
         <Toaster richColors position="top-right" />
       </ConfirmProvider>
