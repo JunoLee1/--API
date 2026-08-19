@@ -1,0 +1,374 @@
+{
+  "budget": {
+    "title": "예산 관리",
+    "add": "예산 추가",
+    "compose": "예산 편성",
+    "composing": "등록 중...",
+    "register": "등록",
+    "registered": "예산이 등록됐습니다.",
+    "registerFailed": "등록 실패",
+    "requiredFields": "모든 필드를 입력하세요.",
+    "empty": "등록된 예산이 없습니다.",
+    "loading": "불러오는 중...",
+    "notFound": "예산을 찾을 수 없습니다.",
+    "categories": {
+      "PLAYER_WAGES": "선수 급여",
+      "STAFF_WAGES": "스태프 급여",
+      "TRANSFER": "이적료",
+      "EQUIPMENT": "장비·용품",
+      "TRAVEL": "출장·원정",
+      "FACILITY": "시설",
+      "MEDICAL": "의료",
+      "YOUTH": "유소년",
+      "MARKETING": "마케팅",
+      "OTHER": "기타"
+    },
+    "status": {
+      "DRAFT": "초안",
+      "SUBMITTED": "결재 중",
+      "APPROVED": "확정",
+      "LOCKED": "잠금",
+      "REJECTED": "반려"
+    },
+    "fields": {
+      "total": "총",
+      "totalBudget": "총 예산",
+      "committed": "집행 예정",
+      "actual": "실 집행",
+      "remaining": "잔여",
+      "season": "시즌",
+      "department": "부서",
+      "name": "예산명",
+      "totalApproved": "총 승인예산 (원)"
+    },
+    "errors": {
+      "loadFailed": "예산 목록을 불러오지 못했습니다."
+    },
+    "dialog": {
+      "seasonSelect": "시즌 선택",
+      "namePlaceholder": "예: 2026시즌 운영예산",
+      "amountPlaceholder": "예: 500,000,000"
+    },
+    "approval": {
+      "request": "결재 요청",
+      "requested": "결재 요청됐습니다.",
+      "confirm": "확정",
+      "confirmed": "예산이 확정됐습니다."
+    },
+    "available": {
+      "title": "가용예산 현황",
+      "approved": "승인예산",
+      "carryoverIncrease": "이월·증액",
+      "decreaseCommitment": "삭감·집행",
+      "available": "가용예산"
+    },
+    "line": {
+      "title": "예산 라인",
+      "add": "라인 추가",
+      "addDialog": "예산 라인 추가",
+      "empty": "등록된 라인이 없습니다.",
+      "added": "예산 라인이 추가됐습니다.",
+      "deleted": "삭제됐습니다.",
+      "deleteFailed": "삭제 실패",
+      "deleteConfirm": "라인을 삭제하시겠습니까?",
+      "addFailed": "추가 실패",
+      "adding": "추가 중...",
+      "add2": "추가",
+      "category": "카테고리",
+      "year": "연도",
+      "month": "월 (선택)",
+      "monthAll": "전체",
+      "amount": "금액 (원)",
+      "note": "비고",
+      "annual": "연간",
+      "yearFormat": "{{year}}년",
+      "monthFormat": "{{month}}월",
+      "requiredFields": "카테고리, 연도, 금액을 입력하세요.",
+      "delete": "삭제",
+      "categoryPlaceholder": "예: TRAVEL, MEDICAL",
+      "amountPlaceholder": "예: 10,000,000"
+    },
+    "adjustment": {
+      "title": "조정 이력",
+      "empty": "조정 이력이 없습니다.",
+      "type": {
+        "CARRYOVER": "이월",
+        "INCREASE": "증액",
+        "DECREASE": "삭감",
+        "TRANSFER": "전용"
+      },
+      "status": {
+        "APPROVED": "승인",
+        "REJECTED": "반려",
+        "PENDING": "대기"
+      },
+      "approve": "승인",
+      "reject": "반려",
+      "approveFailed": "승인 실패",
+      "rejectFailed": "반려 실패"
+    },
+    "cancel": "취소",
+    "failed": "실패"
+  },
+  "ledger": {
+    "title": "장부 관리",
+    "types": {
+      "INCOME": "수입",
+      "EXPENSE": "지출"
+    },
+    "periodClose": {
+      "title": "기간 마감",
+      "year": "연도",
+      "month": "월",
+      "processing": "처리 중...",
+      "action": "기간 마감",
+      "success": "기간이 마감됐습니다.",
+      "successFull": "{{year}}년 {{month}}월 마감이 완료되었습니다.",
+      "failed": "기간 마감에 실패했습니다.",
+      "description": "마감된 기간에는 새 장부 항목 및 환불을 등록할 수 없습니다."
+    },
+    "errors": {
+      "loadFailed": "원장을 불러오지 못했습니다."
+    }
+  },
+  "planReport": {
+    "title": "계획보고서",
+    "add": "새 보고서",
+    "edit": "계획보고서 수정",
+    "new": "계획보고서 작성",
+    "status": {
+      "DRAFT": "작성중",
+      "REVIEWING": "검토중",
+      "SUBMITTED": "제출됨",
+      "APPROVED": "승인완료",
+      "REJECTED": "반려"
+    },
+    "filter": {
+      "allStatus": "전체 상태",
+      "allType": "전체 업무"
+    },
+    "table": {
+      "title": "사업명",
+      "type": "업무",
+      "department": "주관 부서",
+      "budget": "예산",
+      "status": "상태",
+      "createdAt": "생성일"
+    },
+    "empty": "보고서가 없습니다",
+    "fields": {
+      "title": "사업명 *",
+      "titlePlaceholder": "사업명",
+      "type": "업무 유형 *",
+      "purpose": "추진 목적 *",
+      "department": "주관 부서 *",
+      "departmentSelect": "선택",
+      "startDate": "추진 시작일 *",
+      "endDate": "추진 종료일 *",
+      "budget": "예산 (원) *",
+      "budgetPlaceholder": "0",
+      "expectedEffect": "기대효과 *",
+      "risks": "주요 리스크 *",
+      "resultDueDate": "결과보고 예정일 *",
+      "extraInfo": "추가 정보",
+      "attachmentsUrl": "첨부자료 URL",
+      "attachmentsAdd": "추가",
+      "approvalConditions": "결재 조건 (해당 항목 체크)",
+      "requiredApproverLevel": "요구 승인선",
+      "rejectionReason": "반려 사유: ",
+      "resultDueDateLabel": "결과보고 예정일",
+      "purposeLabel": "추진 목적",
+      "periodLabel": "추진 기간",
+      "budgetLabel": "예산",
+      "expectedEffectLabel": "기대효과",
+      "risksLabel": "주요 리스크"
+    },
+    "conditions": {
+      "hasNewStaff": "신규 인력 채용 포함 (HR 협조 필요)",
+      "hasContract": "외부 계약 포함 (구매·법무 협조 필요)",
+      "hasExternalLease": "외부 임대 포함 (시설·법무 협조 필요)",
+      "hasPersonalInfo": "개인정보·초상권 포함 (법무·개인정보 협조 필요)",
+      "isNewBusiness": "신규 사업 (구단주 승인 필요)"
+    },
+    "badges": {
+      "hasNewStaff": "신규인력",
+      "hasContract": "계약포함",
+      "hasExternalLease": "외부임대",
+      "hasPersonalInfo": "개인정보",
+      "isNewBusiness": "신규사업"
+    },
+    "actions": {
+      "submit": "결재 상신",
+      "submitted": "결재 상신되었습니다",
+      "approve": "승인",
+      "approved": "승인되었습니다",
+      "reject": "반려",
+      "rejected": "반려되었습니다",
+      "edit": "수정",
+      "save": "저장",
+      "saving": "저장 중...",
+      "saved": "수정되었습니다",
+      "created": "보고서가 등록되었습니다",
+      "saveFailed": "저장에 실패했습니다",
+      "error": "오류가 발생했습니다",
+      "cancel": "취소",
+      "confirm": "확인"
+    },
+    "result": {
+      "title": "결과보고",
+      "notSubmitted": "미제출",
+      "submittedAt": "제출일: ",
+      "placeholder": "결과를 입력하세요",
+      "submit": "제출",
+      "write": "결과보고 작성",
+      "submitted": "결과보고 제출되었습니다"
+    },
+    "reviews": {
+      "title": "협조 부서 검토",
+      "waiting": "대기중"
+    },
+    "attachments": {
+      "title": "첨부자료",
+      "urlPlaceholder": "https://..."
+    },
+    "vault": "Vault: ",
+    "rejectPlaceholder": "반려 사유",
+    "errors": {
+      "loadFailed": "보고서를 불러오지 못했습니다.",
+      "titleRequired": "사업명을 입력하세요",
+      "departmentRequired": "주관 부서를 선택하세요"
+    }
+  },
+  "hiringItems": {
+    "title": "채용 계획 항목 편집",
+    "submitPlan": "계획서 상신 →",
+    "submitPlanSuccess": "계획서가 상신됐습니다.",
+    "submitPlanFailed": "상신에 실패했습니다.",
+    "empty": "조사 응답에서 자동 생성된 항목이 없습니다.",
+    "addSection": "항목 직접 추가",
+    "add": "추가",
+    "added": "항목이 추가됐습니다.",
+    "addFailed": "추가에 실패했습니다.",
+    "updated": "항목이 수정됐습니다.",
+    "updateFailed": "수정에 실패했습니다.",
+    "deleted": "삭제됐습니다.",
+    "deleteConfirm": "이 항목을 삭제하시겠습니까?",
+    "roleTitle": "직책명",
+    "roleTitleRequired": "직책명을 입력하세요.",
+    "timing": "시기",
+    "annual": "연간",
+    "budgetLabel": "예산",
+    "save": "저장",
+    "cancel": "취소",
+    "edit": "수정",
+    "delete": "삭제"
+  },
+  "ticketSales": {
+    "title": "티켓 판매 기록",
+    "subtitle": "홈경기별 티켓 판매 실적을 조회합니다.",
+    "seasonTotal": "시즌 수입",
+    "netSold": "순판매량",
+    "sellRate": "판매율",
+    "seasonSelect": "시즌 선택",
+    "registerSale": "판매 등록",
+    "dateFilter": "경기일",
+    "reset": "초기화",
+    "matchSummary": "경기별 요약",
+    "recentMatches": "최근 {{count}}경기",
+    "allRecords": "전체 판매 기록",
+    "noSchedule": "경기 일정이 없습니다.",
+    "noRecords": "판매 기록이 없습니다.",
+    "prev": "이전",
+    "next": "다음",
+    "tableHeaders": {
+      "date": "경기일",
+      "home": "홈",
+      "away": "어웨이",
+      "sold": "판매량",
+      "netSold": "순판매",
+      "sellRate": "판매율",
+      "revenue": "수입",
+      "saleDate": "날짜",
+      "match": "경기",
+      "type": "종류",
+      "channel": "채널",
+      "status": "상태",
+      "quantity": "수량",
+      "unitPrice": "단가",
+      "total": "합계",
+      "memo": "메모"
+    },
+    "ticketType": {
+      "TICKET": "일반",
+      "VIP_TICKET": "VIP",
+      "COMPLIMENTARY": "무료"
+    },
+    "channel": {
+      "ONLINE": "온라인",
+      "ONSITE": "현장",
+      "PARTNER": "제휴처",
+      "SEASON_PASS": "시즌권"
+    },
+    "saleStatus": {
+      "COMPLETED": "완료",
+      "CANCELLED": "취소",
+      "REFUNDED": "환불"
+    },
+    "unlinked": "미연결",
+    "dialog": {
+      "createTitle": "티켓 판매 등록",
+      "editTitle": "판매 기록 수정",
+      "cancelTitle": "티켓 판매 취소",
+      "match": "경기",
+      "matchSelect": "경기 선택",
+      "type": "종류",
+      "seatZone": "좌석 구역 (선택)",
+      "seatZoneSelect": "구역 선택",
+      "channel": "판매 채널 (선택)",
+      "channelSelect": "채널 선택",
+      "quantity": "수량",
+      "unitPrice": "단가 (₩)",
+      "saleDate": "판매일",
+      "memo": "메모 (선택)",
+      "memoPh": "비고",
+      "submitLabel": "저장",
+      "editSubmitLabel": "수정 저장",
+      "cancelInfo": {
+        "match": "경기",
+        "type": "종류",
+        "originalQty": "원래 수량",
+        "unitPrice": "단가",
+        "cancelQty": "취소 수량 (최대 {{max}}장)",
+        "cancelDate": "취소 날짜",
+        "cancelMemo": "메모 (선택)",
+        "cancelMemoPh": "취소 사유",
+        "cancelAmount": "취소 금액: ",
+        "cancelAction": "취소 처리",
+        "cancelling": "처리 중...",
+        "cancelSuccess": "취소 처리됐습니다."
+      }
+    },
+    "actions": {
+      "edit": "수정",
+      "cancel": "취소",
+      "delete": "삭제",
+      "saved": "저장됐습니다.",
+      "updated": "수정됐습니다.",
+      "deleted": "삭제됐습니다.",
+      "deleteConfirm": "이 판매 기록을 삭제하시겠습니까?",
+      "saving": "저장 중...",
+      "maxCancelExceeded": "최대 취소 가능 수량은 {{max}}장입니다."
+    },
+    "errors": {
+      "loadFailed": "데이터 로드에 실패했습니다.",
+      "seasonFailed": "시즌 정보를 불러오지 못했습니다.",
+      "createRequired": "경기, 수량, 단가, 날짜를 입력해주세요.",
+      "updateRequired": "수량, 단가, 날짜를 입력해주세요.",
+      "cancelRequired": "취소 수량과 날짜를 입력해주세요.",
+      "saveFailed": "저장 실패",
+      "updateFailed": "수정 실패",
+      "deleteFailed": "삭제 실패",
+      "cancelFailed": "취소 처리 실패"
+    }
+  }
+}

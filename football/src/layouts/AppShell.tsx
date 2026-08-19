@@ -399,7 +399,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: Handshake,
     section: 'nav.section.management',
     roles: ['ADMIN', 'FRONT_OFFICE'],
-    frontOfficeRoles: ['GM', 'FINANCE_MANAGER', 'FINANCE_STAFF'],
+    frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF'],
   },
   {
     to: '/admin/hr-report',
@@ -482,6 +482,15 @@ const NAV_ITEMS: NavItem[] = [
     subSection: 'nav.subsection.finance',
     roles: ['ADMIN', 'SUPER_ADMIN', 'GM', 'FRONT_OFFICE'],
     frontOfficeRoles: ['FINANCE_MANAGER', 'FINANCE_STAFF'],
+  },
+  {
+    to: '/admin/payroll',
+    label: 'nav.item.payroll',
+    icon: Banknote,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.finance',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'GM', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['FINANCE_MANAGER', 'HR_MANAGER'],
   },
   // 관리 > 시설·자산
   {
@@ -575,6 +584,14 @@ const NAV_ITEMS: NavItem[] = [
     section: 'nav.section.management',
     subSection: 'nav.subsection.system',
     roles: ['ADMIN'],
+  },
+  {
+    to: '/admin/club-settings',
+    label: 'nav.item.clubSettings',
+    icon: Settings,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.system',
+    roles: ['ADMIN', 'SUPER_ADMIN'],
   },
   {
     to: '/admin/leagues',

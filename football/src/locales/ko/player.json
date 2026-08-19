@@ -1,6 +1,10 @@
 {
   "allergySection": "알레르기 / 식이 정보",
   "noAllergies": "알레르기 정보 없음",
+  "allergyEdit": "알레르기 편집",
+  "allergyPlaceholder": "쉼표로 구분 (예: 견과류, 유제품)",
+  "allergySaved": "알레르기 정보가 저장됐습니다.",
+  "allergySaveFailed": "저장에 실패했습니다.",
   "title": "선수",
   "list": "선수 목록",
   "detail": "선수 상세",

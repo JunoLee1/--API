@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { planReportApi } from '@/services/plan-report.service'
 import type { PlanReport, PlanTemplateType } from '@/types/plan-report'
 import { TEMPLATE_TYPE_LABELS } from '@/types/plan-report'
@@ -22,9 +23,6 @@ import {
 } from '@/components/ui/table'
 import { Plus } from 'lucide-react'
 
-const STATUS_LABELS: Record<string, string> = {
-  DRAFT: '작성중', REVIEWING: '검토중', APPROVED: '승인완료', REJECTED: '반려',
-}
 const STATUS_COLORS: Record<string, string> = {
   DRAFT: 'bg-gray-100 text-gray-700 border-gray-200',
   REVIEWING: 'bg-blue-100 text-blue-700 border-blue-200',
@@ -34,6 +32,7 @@ const STATUS_COLORS: Record<string, string> = {
 const PLAN_TEMPLATE_TYPES: PlanTemplateType[] = ['GENERAL', 'HR', 'MARKETING', 'GOODS', 'SQUAD', 'MEDICAL', 'IT']
 
 export function PlanReportListPage() {
+  const { t } = useTranslation('finance')
   const navigate = useNavigate()
   const [plans, setPlans] = useState<PlanReport[]>([])
   const [loading, setLoading] = useState(true)
@@ -54,31 +53,33 @@ export function PlanReportListPage() {
   return (
     <div className="flex flex-col h-full">
       <div className="border-b px-6 py-4 shrink-0 flex items-center justify-between">
-        <h1 className="text-lg font-semibold tracking-tight">계획보고서</h1>
+        <h1 className="text-lg font-semibold tracking-tight">{t('planReport.title')}</h1>
         <Button size="sm" onClick={() => navigate('/finance/plan-reports/new')}>
-          <Plus className="h-4 w-4 mr-1" />새 보고서
+          <Plus className="h-4 w-4 mr-1" />{t('planReport.add')}
         </Button>
       </div>
 
       <div className="px-6 py-3 border-b shrink-0 flex gap-3">
         <Select value={filterType} onValueChange={setFilterType}>
           <SelectTrigger className="w-36 h-8 text-sm">
-            <SelectValue>{filterType ? TEMPLATE_TYPE_LABELS[filterType as PlanTemplateType] : '전체 업무'}</SelectValue>
+            <SelectValue>{filterType ? TEMPLATE_TYPE_LABELS[filterType as PlanTemplateType] : t('planReport.filter.allType')}</SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">전체 업무</SelectItem>
-            {PLAN_TEMPLATE_TYPES.map(t => (
-              <SelectItem key={t} value={t}>{TEMPLATE_TYPE_LABELS[t]}</SelectItem>
+            <SelectItem value="">{t('planReport.filter.allType')}</SelectItem>
+            {PLAN_TEMPLATE_TYPES.map(type => (
+              <SelectItem key={type} value={type}>{TEMPLATE_TYPE_LABELS[type]}</SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-32 h-8 text-sm">
-            <SelectValue>{filterStatus ? STATUS_LABELS[filterStatus] : '전체 상태'}</SelectValue>
+            <SelectValue>{filterStatus ? t(`planReport.status.${filterStatus}`) : t('planReport.filter.allStatus')}</SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">전체 상태</SelectItem>
-            {Object.entries(STATUS_LABELS).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
+            <SelectItem value="">{t('planReport.filter.allStatus')}</SelectItem>
+            {(['DRAFT', 'REVIEWING', 'APPROVED', 'REJECTED'] as const).map(v => (
+              <SelectItem key={v} value={v}>{t(`planReport.status.${v}`)}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -89,17 +90,17 @@ export function PlanReportListPage() {
             {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
           </div>
         ) : plans.length === 0 ? (
-          <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">보고서가 없습니다</div>
+          <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">{t('planReport.empty')}</div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead>사업명</TableHead>
-                <TableHead className="w-24">업무</TableHead>
-                <TableHead className="w-32">주관 부서</TableHead>
-                <TableHead className="w-32 tabular-nums">예산</TableHead>
-                <TableHead className="w-24">상태</TableHead>
-                <TableHead className="w-24 text-muted-foreground">생성일</TableHead>
+                <TableHead>{t('planReport.table.title')}</TableHead>
+                <TableHead className="w-24">{t('planReport.table.type')}</TableHead>
+                <TableHead className="w-32">{t('planReport.table.department')}</TableHead>
+                <TableHead className="w-32 tabular-nums">{t('planReport.table.budget')}</TableHead>
+                <TableHead className="w-24">{t('planReport.table.status')}</TableHead>
+                <TableHead className="w-24 text-muted-foreground">{t('planReport.table.createdAt')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -115,7 +116,7 @@ export function PlanReportListPage() {
                   <TableCell className="text-sm tabular-nums">{p.budget.toLocaleString()}원</TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${STATUS_COLORS[p.status]}`}>
-                      {STATUS_LABELS[p.status]}
+                      {t(`planReport.status.${p.status}`)}
                     </span>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{p.createdAt.slice(0, 10)}</TableCell>

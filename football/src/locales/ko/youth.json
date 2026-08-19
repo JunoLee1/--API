@@ -130,7 +130,8 @@
       "overview": "개요",
       "attendance": "출결",
       "injuries": "부상",
-      "fees": "학비"
+      "fees": "학비",
+      "growth": "성장보고서"
     },
     "overview": {
       "suspension": "참가 정지",
@@ -166,6 +167,18 @@
         "RETURNING": "복귀 준비",
         "RETURNED": "복귀 완료"
       }
+    },
+    "growth": {
+      "empty": "성장 평가 기록이 없습니다.",
+      "latest": "최신 평가",
+      "coach": "코치"
+    },
+    "link": {
+      "description": "담당 코치로부터 받은 초대코드를 입력하세요.",
+      "codePlaceholder": "초대코드 입력",
+      "submit": "연동하기",
+      "success": "자녀 연동이 완료됐습니다.",
+      "failed": "연동에 실패했습니다. 코드를 확인하세요."
     }
   },
   "guardianFeeView": {
@@ -181,6 +194,48 @@
       "PAID": "납부 완료",
       "OVERDUE": "연체",
       "LOCKED": "정지"
+    }
+  },
+  "inviteAccept": {
+    "title": "초대 수락",
+    "subtitle": "아래 정보를 입력해 계정을 완성하세요.",
+    "nickname": "닉네임",
+    "password": "비밀번호",
+    "passwordConfirm": "비밀번호 확인",
+    "submit": "가입 완료",
+    "submitting": "처리 중...",
+    "success": "가입이 완료됐습니다. 로그인해 주세요.",
+    "loading": "초대 링크 확인 중...",
+    "toLogin": "로그인 페이지로",
+    "invitedTo": "으로 초대되었습니다.",
+    "name": "이름",
+    "phone": "전화번호",
+    "birthDate": "생년월일",
+    "nationality": "국적",
+    "nationalityPlaceholder": "국적 선택",
+    "namePlaceholder": "홍길동",
+    "errors": {
+      "passwordMismatch": "비밀번호가 일치하지 않습니다.",
+      "nicknameTaken": "이미 사용 중인 닉네임입니다.",
+      "invalidToken": "유효하지 않은 초대 링크입니다.",
+      "expired": "만료된 초대 링크입니다.",
+      "failed": "가입에 실패했습니다. 다시 시도해 주세요.",
+      "nationalityRequired": "국적을 선택해주세요.",
+      "invalidPhone": "전화번호 형식이 올바르지 않습니다. (010-0000-0000)"
+    },
+    "states": {
+      "expired": {
+        "title": "만료된 초대",
+        "description": "이 초대 링크는 만료되었습니다."
+      },
+      "used": {
+        "title": "이미 사용된 초대",
+        "description": "이 초대 링크는 이미 사용되었습니다."
+      },
+      "not_found": {
+        "title": "유효하지 않은 초대",
+        "description": "초대 링크를 찾을 수 없습니다."
+      }
     }
   }
 }

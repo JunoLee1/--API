@@ -130,7 +130,8 @@
       "overview": "Overview",
       "attendance": "Attendance",
       "injuries": "Injuries",
-      "fees": "Fees"
+      "fees": "Fees",
+      "growth": "Growth Reports"
     },
     "overview": {
       "suspension": "Participation Suspended",
@@ -166,6 +167,18 @@
         "RETURNING": "Returning",
         "RETURNED": "Returned"
       }
+    },
+    "growth": {
+      "empty": "No growth evaluations yet.",
+      "latest": "Latest Evaluation",
+      "coach": "Coach"
+    },
+    "link": {
+      "description": "Enter the invite code provided by your coach.",
+      "codePlaceholder": "Enter invite code",
+      "submit": "Link",
+      "success": "Child linked successfully.",
+      "failed": "Link failed. Please check the code."
     }
   },
   "guardianFeeView": {
@@ -181,6 +194,48 @@
       "PAID": "Paid",
       "OVERDUE": "Overdue",
       "LOCKED": "Suspended"
+    }
+  },
+  "inviteAccept": {
+    "title": "Accept Invitation",
+    "subtitle": "Enter your details to complete account setup.",
+    "nickname": "Nickname",
+    "password": "Password",
+    "passwordConfirm": "Confirm Password",
+    "submit": "Complete Sign Up",
+    "submitting": "Processing...",
+    "success": "Sign up complete. Please log in.",
+    "loading": "Verifying invitation link...",
+    "toLogin": "Go to Login",
+    "invitedTo": " has invited you.",
+    "name": "Name",
+    "phone": "Phone",
+    "birthDate": "Date of Birth",
+    "nationality": "Nationality",
+    "nationalityPlaceholder": "Select nationality",
+    "namePlaceholder": "e.g. John Doe",
+    "errors": {
+      "passwordMismatch": "Passwords do not match.",
+      "nicknameTaken": "This nickname is already taken.",
+      "invalidToken": "Invalid invitation link.",
+      "expired": "This invitation link has expired.",
+      "failed": "Sign up failed. Please try again.",
+      "nationalityRequired": "Please select a nationality.",
+      "invalidPhone": "Invalid phone format. (010-0000-0000)"
+    },
+    "states": {
+      "expired": {
+        "title": "Expired Invitation",
+        "description": "This invitation link has expired."
+      },
+      "used": {
+        "title": "Invitation Already Used",
+        "description": "This invitation link has already been used."
+      },
+      "not_found": {
+        "title": "Invalid Invitation",
+        "description": "This invitation link could not be found."
+      }
     }
   }
 }

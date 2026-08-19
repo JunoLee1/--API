@@ -62,4 +62,11 @@ export class ClubRepository {
   update(id: number, dto: UpdateClubDto) {
     return this.prisma.club.update({ where: { id }, data: dto, select: CLUB_SELECT });
   }
+
+  cascadeIsLite(clubId: number, isLite: boolean) {
+    return this.prisma.$transaction([
+      this.prisma.club.update({ where: { id: clubId }, data: { isLite }, select: CLUB_SELECT }),
+      this.prisma.team.updateMany({ where: { clubId }, data: { isLite } }),
+    ])
+  }
 }

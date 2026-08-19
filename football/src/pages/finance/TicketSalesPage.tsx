@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { salesApi } from '@/services/sales.service'
 import { seasonApi } from '@/services/season.service'
 import { matchApi } from '@/services/match.service'
@@ -19,26 +20,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
-const TICKET_TYPE_LABEL: Record<string, string> = {
-  TICKET: '일반',
-  VIP_TICKET: 'VIP',
-  COMPLIMENTARY: '무료',
-}
 const TICKET_TYPES = ['TICKET', 'VIP_TICKET', 'COMPLIMENTARY'] as const
 type TicketType = typeof TICKET_TYPES[number]
-
-const CHANNEL_LABEL: Record<string, string> = {
-  ONLINE: '온라인',
-  ONSITE: '현장',
-  PARTNER: '제휴처',
-  SEASON_PASS: '시즌권',
-}
-
-const STATUS_BADGE: Record<string, { label: string; className: string }> = {
-  COMPLETED: { label: '완료', className: 'text-green-600' },
-  CANCELLED: { label: '취소', className: 'text-red-500' },
-  REFUNDED: { label: '환불', className: 'text-orange-500' },
-}
 
 const RECENT_MATCHES = 5
 const PAGE_SIZE = 5
@@ -61,6 +44,7 @@ const emptyCancelForm = () => ({
 })
 
 export function TicketSalesPage() {
+  const { t } = useTranslation('finance')
   const { user } = useCurrentUser()
   const canWrite = !!user && (
     ['ADMIN', 'SUPER_ADMIN', 'GM'].includes(user.role) ||
@@ -88,12 +72,31 @@ export function TicketSalesPage() {
   const [cancelForm, setCancelForm] = useState(emptyCancelForm())
   const [cancelling, setCancelling] = useState(false)
 
+  const TICKET_TYPE_LABEL: Record<string, string> = {
+    TICKET: t('ticketSales.ticketType.TICKET'),
+    VIP_TICKET: t('ticketSales.ticketType.VIP_TICKET'),
+    COMPLIMENTARY: t('ticketSales.ticketType.COMPLIMENTARY'),
+  }
+
+  const CHANNEL_LABEL: Record<string, string> = {
+    ONLINE: t('ticketSales.channel.ONLINE'),
+    ONSITE: t('ticketSales.channel.ONSITE'),
+    PARTNER: t('ticketSales.channel.PARTNER'),
+    SEASON_PASS: t('ticketSales.channel.SEASON_PASS'),
+  }
+
+  const STATUS_BADGE: Record<string, { label: string; className: string }> = {
+    COMPLETED: { label: t('ticketSales.saleStatus.COMPLETED'), className: 'text-green-600' },
+    CANCELLED: { label: t('ticketSales.saleStatus.CANCELLED'), className: 'text-red-500' },
+    REFUNDED: { label: t('ticketSales.saleStatus.REFUNDED'), className: 'text-orange-500' },
+  }
+
   useEffect(() => {
     seasonApi.list().then((list) => {
       setSeasons(list)
       const active = list.find((s) => s.status === 'ACTIVE') ?? list[0]
       if (active) setSelectedSeasonId(active.id)
-    }).catch(() => toast.error('시즌 정보를 불러오지 못했습니다.'))
+    }).catch(() => toast.error(t('ticketSales.errors.seasonFailed')))
   }, [])
 
   useEffect(() => {
@@ -108,7 +111,7 @@ export function TicketSalesPage() {
       setSummary(s)
       setRecords(r)
       setMatches(m)
-    }).catch(() => toast.error('데이터 로드에 실패했습니다.'))
+    }).catch(() => toast.error(t('ticketSales.errors.loadFailed')))
       .finally(() => setLoading(false))
   }, [selectedSeasonId])
 
@@ -188,7 +191,7 @@ export function TicketSalesPage() {
     const qty = Number(form.quantity)
     const price = Number(form.unitPrice)
     if (!form.matchId || !qty || !price || !form.saleDate) {
-      toast.error('경기, 수량, 단가, 날짜를 입력해주세요.')
+      toast.error(t('ticketSales.errors.createRequired'))
       return
     }
     setSaving(true)
@@ -203,11 +206,11 @@ export function TicketSalesPage() {
         ...(form.seatZoneId && { seatZoneId: Number(form.seatZoneId) }),
         ...(form.channel && { channel: form.channel as any }),
       })
-      toast.success('저장됐습니다.')
+      toast.success(t('ticketSales.actions.saved'))
       setCreateOpen(false)
       await reload()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '저장 실패')
+      toast.error(err instanceof Error ? err.message : t('ticketSales.errors.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -218,7 +221,7 @@ export function TicketSalesPage() {
     const qty = Number(form.quantity)
     const price = Number(form.unitPrice)
     if (!qty || !price || !form.saleDate) {
-      toast.error('수량, 단가, 날짜를 입력해주세요.')
+      toast.error(t('ticketSales.errors.updateRequired'))
       return
     }
     setSaving(true)
@@ -229,24 +232,24 @@ export function TicketSalesPage() {
         saleDate: form.saleDate,
         description: form.description || undefined,
       })
-      toast.success('수정됐습니다.')
+      toast.success(t('ticketSales.actions.updated'))
       setEditRecord(null)
       await reload()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '수정 실패')
+      toast.error(err instanceof Error ? err.message : t('ticketSales.errors.updateFailed'))
     } finally {
       setSaving(false)
     }
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm('이 판매 기록을 삭제하시겠습니까?')) return
+    if (!confirm(t('ticketSales.actions.deleteConfirm'))) return
     try {
       await salesApi.delete(id)
-      toast.success('삭제됐습니다.')
+      toast.success(t('ticketSales.actions.deleted'))
       await reload()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '삭제 실패')
+      toast.error(err instanceof Error ? err.message : t('ticketSales.errors.deleteFailed'))
     }
   }
 
@@ -259,11 +262,11 @@ export function TicketSalesPage() {
     if (!cancelTarget) return
     const qty = Number(cancelForm.quantity)
     if (!qty || !cancelForm.saleDate) {
-      toast.error('취소 수량과 날짜를 입력해주세요.')
+      toast.error(t('ticketSales.errors.cancelRequired'))
       return
     }
     if (qty > cancelTarget.quantity) {
-      toast.error(`최대 취소 가능 수량은 ${cancelTarget.quantity}장입니다.`)
+      toast.error(t('ticketSales.actions.maxCancelExceeded', { max: cancelTarget.quantity }))
       return
     }
     setCancelling(true)
@@ -273,11 +276,11 @@ export function TicketSalesPage() {
         saleDate: cancelForm.saleDate,
         ...(cancelForm.description && { description: cancelForm.description }),
       })
-      toast.success('취소 처리됐습니다.')
+      toast.success(t('ticketSales.dialog.cancelInfo.cancelSuccess'))
       setCancelTarget(null)
       await reload()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '취소 처리 실패')
+      toast.error(err instanceof Error ? err.message : t('ticketSales.errors.cancelFailed'))
     } finally {
       setCancelling(false)
     }
@@ -287,8 +290,8 @@ export function TicketSalesPage() {
     <div className="p-6 space-y-6 max-w-5xl mx-auto">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">티켓 판매 기록</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">홈경기별 티켓 판매 실적을 조회합니다.</p>
+          <h1 className="text-2xl font-bold">{t('ticketSales.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{t('ticketSales.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           <Select
@@ -297,7 +300,7 @@ export function TicketSalesPage() {
           >
             <SelectTrigger className="w-40">
               <span className={selectedSeasonId ? '' : 'text-muted-foreground'}>
-                {seasons.find((s) => s.id === selectedSeasonId)?.name ?? '시즌 선택'}
+                {seasons.find((s) => s.id === selectedSeasonId)?.name ?? t('ticketSales.seasonSelect')}
               </span>
             </SelectTrigger>
             <SelectContent>
@@ -306,13 +309,13 @@ export function TicketSalesPage() {
               ))}
             </SelectContent>
           </Select>
-          {canWrite && <Button onClick={openCreate}>판매 등록</Button>}
+          {canWrite && <Button onClick={openCreate}>{t('ticketSales.registerSale')}</Button>}
         </div>
       </div>
 
       {/* 경기일 날짜 필터 */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm text-muted-foreground shrink-0">경기일</span>
+        <span className="text-sm text-muted-foreground shrink-0">{t('ticketSales.dateFilter')}</span>
         <Input
           type="date"
           className="w-38"
@@ -328,7 +331,7 @@ export function TicketSalesPage() {
         />
         {(filterFrom || filterTo) && (
           <Button size="sm" variant="ghost" onClick={() => { setFilterFrom(''); setFilterTo('') }}>
-            초기화
+            {t('ticketSales.reset')}
           </Button>
         )}
       </div>
@@ -344,15 +347,15 @@ export function TicketSalesPage() {
         ) : (
           <>
             <div className="border rounded-lg p-4">
-              <p className="text-sm text-muted-foreground">시즌 수입</p>
+              <p className="text-sm text-muted-foreground">{t('ticketSales.seasonTotal')}</p>
               <p className="text-2xl font-bold mt-1">₩{totalRevenue.toLocaleString()}</p>
             </div>
             <div className="border rounded-lg p-4">
-              <p className="text-sm text-muted-foreground">순판매량</p>
+              <p className="text-sm text-muted-foreground">{t('ticketSales.netSold')}</p>
               <p className="text-2xl font-bold mt-1">{seasonNetSold.toLocaleString()}장</p>
             </div>
             <div className="border rounded-lg p-4">
-              <p className="text-sm text-muted-foreground">판매율</p>
+              <p className="text-sm text-muted-foreground">{t('ticketSales.sellRate')}</p>
               <p className="text-2xl font-bold mt-1">
                 {seasonSellRate !== null ? `${seasonSellRate}%` : '-'}
               </p>
@@ -363,18 +366,18 @@ export function TicketSalesPage() {
 
       {/* 경기별 요약 — 최근 5경기 */}
       <div className="space-y-2">
-        <h2 className="text-base font-semibold">경기별 요약 <span className="text-sm text-muted-foreground font-normal">(최근 {RECENT_MATCHES}경기)</span></h2>
+        <h2 className="text-base font-semibold">{t('ticketSales.matchSummary')} <span className="text-sm text-muted-foreground font-normal">({t('ticketSales.recentMatches', { count: RECENT_MATCHES })})</span></h2>
         <div className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>경기일</TableHead>
-                <TableHead>홈</TableHead>
-                <TableHead>어웨이</TableHead>
-                <TableHead className="text-right">판매량</TableHead>
-                <TableHead className="text-right">순판매</TableHead>
-                <TableHead className="text-right">판매율</TableHead>
-                <TableHead className="text-right">수입</TableHead>
+                <TableHead>{t('ticketSales.tableHeaders.date')}</TableHead>
+                <TableHead>{t('ticketSales.tableHeaders.home')}</TableHead>
+                <TableHead>{t('ticketSales.tableHeaders.away')}</TableHead>
+                <TableHead className="text-right">{t('ticketSales.tableHeaders.sold')}</TableHead>
+                <TableHead className="text-right">{t('ticketSales.tableHeaders.netSold')}</TableHead>
+                <TableHead className="text-right">{t('ticketSales.tableHeaders.sellRate')}</TableHead>
+                <TableHead className="text-right">{t('ticketSales.tableHeaders.revenue')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -392,7 +395,7 @@ export function TicketSalesPage() {
               {!loading && recentSummary.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    경기 일정이 없습니다.
+                    {t('ticketSales.noSchedule')}
                   </TableCell>
                 </TableRow>
               )}
@@ -424,20 +427,20 @@ export function TicketSalesPage() {
 
       {/* 전체 판매 기록 — 5개씩 페이징 */}
       <div className="space-y-2">
-        <h2 className="text-base font-semibold">전체 판매 기록</h2>
+        <h2 className="text-base font-semibold">{t('ticketSales.allRecords')}</h2>
         <div className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>날짜</TableHead>
-                <TableHead>경기</TableHead>
-                <TableHead>종류</TableHead>
-                <TableHead>채널</TableHead>
-                <TableHead>상태</TableHead>
-                <TableHead className="text-right">수량</TableHead>
-                <TableHead className="text-right">단가</TableHead>
-                <TableHead className="text-right">합계</TableHead>
-                <TableHead>메모</TableHead>
+                <TableHead>{t('ticketSales.tableHeaders.saleDate')}</TableHead>
+                <TableHead>{t('ticketSales.tableHeaders.match')}</TableHead>
+                <TableHead>{t('ticketSales.tableHeaders.type')}</TableHead>
+                <TableHead>{t('ticketSales.tableHeaders.channel')}</TableHead>
+                <TableHead>{t('ticketSales.tableHeaders.status')}</TableHead>
+                <TableHead className="text-right">{t('ticketSales.tableHeaders.quantity')}</TableHead>
+                <TableHead className="text-right">{t('ticketSales.tableHeaders.unitPrice')}</TableHead>
+                <TableHead className="text-right">{t('ticketSales.tableHeaders.total')}</TableHead>
+                <TableHead>{t('ticketSales.tableHeaders.memo')}</TableHead>
                 {canWrite && <TableHead />}
               </TableRow>
             </TableHeader>
@@ -445,7 +448,7 @@ export function TicketSalesPage() {
               {records.length === 0 && !loading && (
                 <TableRow>
                   <TableCell colSpan={canWrite ? 10 : 9} className="text-center text-muted-foreground py-8">
-                    판매 기록이 없습니다.
+                    {t('ticketSales.noRecords')}
                   </TableCell>
                 </TableRow>
               )}
@@ -460,7 +463,7 @@ export function TicketSalesPage() {
                     <TableCell>
                       {r.match
                         ? `${r.match.homeTeamName} vs ${r.match.awayTeamName}`
-                        : <span className="text-muted-foreground text-xs">미연결</span>}
+                        : <span className="text-muted-foreground text-xs">{t('ticketSales.unlinked')}</span>}
                     </TableCell>
                     <TableCell className="text-sm">{TICKET_TYPE_LABEL[r.type] ?? r.type}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">
@@ -480,9 +483,9 @@ export function TicketSalesPage() {
                         <div className="flex gap-1 justify-end">
                           {isCompleted && (
                             <>
-                              <Button size="sm" variant="ghost" onClick={() => openEdit(r)}>수정</Button>
-                              <Button size="sm" variant="ghost" className="text-orange-500" onClick={() => openCancel(r)}>취소</Button>
-                              <Button size="sm" variant="ghost" className="text-destructive" onClick={() => void handleDelete(r.id)}>삭제</Button>
+                              <Button size="sm" variant="ghost" onClick={() => openEdit(r)}>{t('ticketSales.actions.edit')}</Button>
+                              <Button size="sm" variant="ghost" className="text-orange-500" onClick={() => openCancel(r)}>{t('ticketSales.actions.cancel')}</Button>
+                              <Button size="sm" variant="ghost" className="text-destructive" onClick={() => void handleDelete(r.id)}>{t('ticketSales.actions.delete')}</Button>
                             </>
                           )}
                         </div>
@@ -496,9 +499,9 @@ export function TicketSalesPage() {
         </div>
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 pt-1">
-            <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>이전</Button>
+            <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>{t('ticketSales.prev')}</Button>
             <span className="text-sm text-muted-foreground">{page} / {totalPages}</span>
-            <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>다음</Button>
+            <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>{t('ticketSales.next')}</Button>
           </div>
         )}
       </div>
@@ -506,7 +509,7 @@ export function TicketSalesPage() {
       {/* 판매 등록 다이얼로그 */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>티켓 판매 등록</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t('ticketSales.dialog.createTitle')}</DialogTitle></DialogHeader>
           <SaleForm
             form={form}
             setForm={setForm}
@@ -516,7 +519,7 @@ export function TicketSalesPage() {
             saving={saving}
             onSubmit={() => void handleCreate()}
             onMatchChange={(v) => void handleMatchChange(v)}
-            submitLabel="저장"
+            submitLabel={t('ticketSales.dialog.submitLabel')}
           />
         </DialogContent>
       </Dialog>
@@ -524,7 +527,7 @@ export function TicketSalesPage() {
       {/* 수정 다이얼로그 */}
       <Dialog open={!!editRecord} onOpenChange={(o) => { if (!o) setEditRecord(null) }}>
         <DialogContent>
-          <DialogHeader><DialogTitle>판매 기록 수정</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t('ticketSales.dialog.editTitle')}</DialogTitle></DialogHeader>
           <SaleForm
             form={form}
             setForm={setForm}
@@ -533,7 +536,7 @@ export function TicketSalesPage() {
             showMatchSelect={false}
             saving={saving}
             onSubmit={() => void handleUpdate()}
-            submitLabel="수정 저장"
+            submitLabel={t('ticketSales.dialog.editSubmitLabel')}
           />
         </DialogContent>
       </Dialog>
@@ -541,22 +544,22 @@ export function TicketSalesPage() {
       {/* 취소 다이얼로그 */}
       <Dialog open={!!cancelTarget} onOpenChange={(o) => { if (!o) setCancelTarget(null) }}>
         <DialogContent>
-          <DialogHeader><DialogTitle>티켓 판매 취소</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t('ticketSales.dialog.cancelTitle')}</DialogTitle></DialogHeader>
           {cancelTarget && (
             <div className="space-y-3 pt-1">
               <div className="text-sm text-muted-foreground border rounded-lg p-3 space-y-1">
                 <p>
-                  <span className="font-medium">경기:</span>{' '}
+                  <span className="font-medium">{t('ticketSales.dialog.cancelInfo.match')}:</span>{' '}
                   {cancelTarget.match
                     ? `${cancelTarget.match.homeTeamName} vs ${cancelTarget.match.awayTeamName}`
                     : '-'}
                 </p>
-                <p><span className="font-medium">종류:</span> {TICKET_TYPE_LABEL[cancelTarget.type] ?? cancelTarget.type}</p>
-                <p><span className="font-medium">원래 수량:</span> {cancelTarget.quantity.toLocaleString()}장</p>
-                <p><span className="font-medium">단가:</span> ₩{Number(cancelTarget.unitPrice).toLocaleString()}</p>
+                <p><span className="font-medium">{t('ticketSales.dialog.cancelInfo.type')}:</span> {TICKET_TYPE_LABEL[cancelTarget.type] ?? cancelTarget.type}</p>
+                <p><span className="font-medium">{t('ticketSales.dialog.cancelInfo.originalQty')}:</span> {cancelTarget.quantity.toLocaleString()}장</p>
+                <p><span className="font-medium">{t('ticketSales.dialog.cancelInfo.unitPrice')}:</span> ₩{Number(cancelTarget.unitPrice).toLocaleString()}</p>
               </div>
               <div className="space-y-1">
-                <Label>취소 수량 (최대 {cancelTarget.quantity}장)</Label>
+                <Label>{t('ticketSales.dialog.cancelInfo.cancelQty', { max: cancelTarget.quantity })}</Label>
                 <Input
                   type="number"
                   min={1}
@@ -567,7 +570,7 @@ export function TicketSalesPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label>취소 날짜</Label>
+                <Label>{t('ticketSales.dialog.cancelInfo.cancelDate')}</Label>
                 <Input
                   type="date"
                   value={cancelForm.saleDate}
@@ -575,20 +578,20 @@ export function TicketSalesPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label>메모 (선택)</Label>
+                <Label>{t('ticketSales.dialog.cancelInfo.cancelMemo')}</Label>
                 <Input
                   value={cancelForm.description}
                   onChange={(e) => setCancelForm((prev) => ({ ...prev, description: e.target.value }))}
-                  placeholder="취소 사유"
+                  placeholder={t('ticketSales.dialog.cancelInfo.cancelMemoPh')}
                 />
               </div>
               {cancelForm.quantity && (
                 <p className="text-sm text-muted-foreground">
-                  취소 금액: ₩{(Number(cancelForm.quantity) * Number(cancelTarget.unitPrice)).toLocaleString()}
+                  {t('ticketSales.dialog.cancelInfo.cancelAmount')}₩{(Number(cancelForm.quantity) * Number(cancelTarget.unitPrice)).toLocaleString()}
                 </p>
               )}
               <Button className="w-full" variant="destructive" onClick={() => void handleCancel()} disabled={cancelling}>
-                {cancelling ? '처리 중...' : '취소 처리'}
+                {cancelling ? t('ticketSales.dialog.cancelInfo.cancelling') : t('ticketSales.dialog.cancelInfo.cancelAction')}
               </Button>
             </div>
           )}
@@ -611,6 +614,21 @@ interface SaleFormProps {
 }
 
 function SaleForm({ form, setForm, matches, seatZones, showMatchSelect, saving, onSubmit, onMatchChange, submitLabel }: SaleFormProps) {
+  const { t } = useTranslation('finance')
+
+  const TICKET_TYPE_LABEL: Record<string, string> = {
+    TICKET: t('ticketSales.ticketType.TICKET'),
+    VIP_TICKET: t('ticketSales.ticketType.VIP_TICKET'),
+    COMPLIMENTARY: t('ticketSales.ticketType.COMPLIMENTARY'),
+  }
+
+  const CHANNEL_LABEL: Record<string, string> = {
+    ONLINE: t('ticketSales.channel.ONLINE'),
+    ONSITE: t('ticketSales.channel.ONSITE'),
+    PARTNER: t('ticketSales.channel.PARTNER'),
+    SEASON_PASS: t('ticketSales.channel.SEASON_PASS'),
+  }
+
   const f = <K extends keyof ReturnType<typeof emptyForm>>(key: K) =>
     (val: ReturnType<typeof emptyForm>[K]) => setForm((prev) => ({ ...prev, [key]: val }))
 
@@ -618,7 +636,7 @@ function SaleForm({ form, setForm, matches, seatZones, showMatchSelect, saving, 
     <div className="space-y-3 pt-1">
       {showMatchSelect && (
         <div className="space-y-1">
-          <Label>경기</Label>
+          <Label>{t('ticketSales.dialog.match')}</Label>
           <Select
             value={form.matchId}
             onValueChange={(v) => {
@@ -632,7 +650,7 @@ function SaleForm({ form, setForm, matches, seatZones, showMatchSelect, saving, 
               onMatchChange?.(v)
             }}
           >
-            <SelectTrigger><SelectValue placeholder="경기 선택" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder={t('ticketSales.dialog.matchSelect')} /></SelectTrigger>
             <SelectContent>
               {matches.map((m) => (
                 <SelectItem key={m.id} value={m.id.toString()}>
@@ -644,7 +662,7 @@ function SaleForm({ form, setForm, matches, seatZones, showMatchSelect, saving, 
         </div>
       )}
       <div className="space-y-1">
-        <Label>종류</Label>
+        <Label>{t('ticketSales.dialog.type')}</Label>
         <Select
           value={form.type}
           onValueChange={(v) => {
@@ -668,7 +686,7 @@ function SaleForm({ form, setForm, matches, seatZones, showMatchSelect, saving, 
       </div>
       {seatZones.length > 0 && (
         <div className="space-y-1">
-          <Label>좌석 구역 (선택)</Label>
+          <Label>{t('ticketSales.dialog.seatZone')}</Label>
           <Select
             value={form.seatZoneId}
             onValueChange={(v) => {
@@ -680,7 +698,7 @@ function SaleForm({ form, setForm, matches, seatZones, showMatchSelect, saving, 
               }))
             }}
           >
-            <SelectTrigger><SelectValue placeholder="구역 선택" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder={t('ticketSales.dialog.seatZoneSelect')} /></SelectTrigger>
             <SelectContent>
               {seatZones.map((z) => (
                 <SelectItem key={z.id} value={z.id.toString()}>
@@ -692,12 +710,12 @@ function SaleForm({ form, setForm, matches, seatZones, showMatchSelect, saving, 
         </div>
       )}
       <div className="space-y-1">
-        <Label>판매 채널 (선택)</Label>
+        <Label>{t('ticketSales.dialog.channel')}</Label>
         <Select
           value={form.channel}
           onValueChange={f('channel')}
         >
-          <SelectTrigger><SelectValue placeholder="채널 선택" /></SelectTrigger>
+          <SelectTrigger><SelectValue placeholder={t('ticketSales.dialog.channelSelect')} /></SelectTrigger>
           <SelectContent>
             {Object.entries(CHANNEL_LABEL).map(([val, label]) => (
               <SelectItem key={val} value={val}>{label}</SelectItem>
@@ -707,24 +725,24 @@ function SaleForm({ form, setForm, matches, seatZones, showMatchSelect, saving, 
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <Label>수량</Label>
+          <Label>{t('ticketSales.dialog.quantity')}</Label>
           <Input type="number" min={1} value={form.quantity} onChange={(e) => f('quantity')(e.target.value)} placeholder="0" />
         </div>
         <div className="space-y-1">
-          <Label>단가 (₩)</Label>
+          <Label>{t('ticketSales.dialog.unitPrice')}</Label>
           <Input type="number" min={0} value={form.unitPrice} onChange={(e) => f('unitPrice')(e.target.value)} placeholder="0" />
         </div>
       </div>
       <div className="space-y-1">
-        <Label>판매일</Label>
+        <Label>{t('ticketSales.dialog.saleDate')}</Label>
         <Input type="date" value={form.saleDate} onChange={(e) => f('saleDate')(e.target.value)} />
       </div>
       <div className="space-y-1">
-        <Label>메모 (선택)</Label>
-        <Input value={form.description} onChange={(e) => f('description')(e.target.value)} placeholder="비고" />
+        <Label>{t('ticketSales.dialog.memo')}</Label>
+        <Input value={form.description} onChange={(e) => f('description')(e.target.value)} placeholder={t('ticketSales.dialog.memoPh')} />
       </div>
       <Button className="w-full" onClick={onSubmit} disabled={saving}>
-        {saving ? '저장 중...' : submitLabel}
+        {saving ? t('ticketSales.actions.saving') : submitLabel}
       </Button>
     </div>
   )
