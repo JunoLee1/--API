@@ -19,7 +19,7 @@ const contactLogRepo = new ContactLogRepository(getPrisma());
 const contactLogService = new ContactLogService(contactLogRepo, repo);
 const contactLogController = new ContactLogController(contactLogService);
 
-const checkContactLog = (req: Request, res: Response, next: NextFunction) => {
+const checkContactLog = (req: Request & { user?: Express.User }, res: Response, next: NextFunction) => {
   const { role } = req.user!;
   if (!isAdminLike(role) && role !== "FRONT_OFFICE") return next(new AppError(403, "FORBIDDEN"));
   next();
