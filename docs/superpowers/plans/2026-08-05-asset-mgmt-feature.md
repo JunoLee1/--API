@@ -29,7 +29,7 @@
 - Task 12: 전체 검증 ✅
 
 ### 잔여 구현 (프론트엔드 1개)
-- [ ] `/asset/inventory` 페이지 신설 — ASSET_MANAGER / ASSET_STAFF 전용
+- [x] `/asset/inventory` 페이지 신설 — ASSET_MANAGER / ASSET_STAFF 전용
   - **탭 1:** 소모품 재고 — 목록 + 수량 조정 + 부족 배지 (`GET /inventory`, `PATCH /inventory/:id/quantity`, `GET /inventory/alerts`)
   - **탭 2:** 소프트웨어 라이선스 — ASSET_MANAGER 전용, 발급·사용자 할당 (`GET/POST /software-licenses`, `POST /:id/assign`, `DELETE /:id/assign/:userId`)
 
