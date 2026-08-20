@@ -2422,6 +2422,7 @@ model FinancialReport {
   revenueOther         Float    @default(0)
   totalOperatingBudget Int?
   contingencyReserve   Int?     @default(0)
+  playerSalaryBudget   Int?
   note                 String?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt

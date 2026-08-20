@@ -514,6 +514,8 @@
     "totalOperatingBudget": "총 운영예산",
     "contingencyReserve": "예비비",
     "discretionaryPool": "재량 예산",
+    "playerSalaryBudget": "선수 계약금 예산",
+    "actual": "실적",
     "categoriesSection": "카테고리별 설정",
     "mandatoryMinimum": "최소 배정액",
     "tiers": "티어 (이름 / 비용 / 가치점수)",

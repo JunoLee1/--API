@@ -399,6 +399,15 @@ export class FinancialReportService {
       actual: actuals?.[c.category] ?? 0,
       variance: (c.knapsackAllocated ?? c.mandatoryMinimum) - (actuals?.[c.category] ?? 0),
     }));
+    if (plan.playerSalaryBudget != null) {
+      comparison.push({
+        category: "PLAYER_SALARY" as any,
+        mandatoryMinimum: plan.playerSalaryBudget,
+        knapsackAllocated: null,
+        actual: actuals?.["PLAYER_SALARY"] ?? 0,
+        variance: plan.playerSalaryBudget - (actuals?.["PLAYER_SALARY"] ?? 0),
+      });
+    }
     return { ...plan, actuals, comparison };
   }
 

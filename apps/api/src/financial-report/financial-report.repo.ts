@@ -27,6 +27,7 @@ export function sumBreakdown(b: RevenueBreakdownDto): number {
 export interface UpsertBudgetPlanDto {
   totalOperatingBudget: number;
   contingencyReserve: number;
+  playerSalaryBudget?: number;
   categories: {
     category: OperatingCategory;
     mandatoryMinimum: number;
@@ -65,8 +66,8 @@ export class FinancialReportRepository {
   async upsertBudgetPlan(seasonId: number, dto: UpsertBudgetPlanDto) {
     const report = await this.prisma.financialReport.upsert({
       where: { seasonId },
-      create: { seasonId, totalRevenue: 0, totalOperatingBudget: dto.totalOperatingBudget, contingencyReserve: dto.contingencyReserve },
-      update: { totalOperatingBudget: dto.totalOperatingBudget, contingencyReserve: dto.contingencyReserve },
+      create: { seasonId, totalRevenue: 0, totalOperatingBudget: dto.totalOperatingBudget, contingencyReserve: dto.contingencyReserve, playerSalaryBudget: dto.playerSalaryBudget ?? null },
+      update: { totalOperatingBudget: dto.totalOperatingBudget, contingencyReserve: dto.contingencyReserve, playerSalaryBudget: dto.playerSalaryBudget ?? null },
       select: { id: true },
     });
 
@@ -141,7 +142,7 @@ export class FinancialReportRepository {
     });
     if (!season) return null;
 
-    const [medical, operating] = await Promise.all([
+    const [medical, operating, playerContracts] = await Promise.all([
       this.prisma.medicalExpense.aggregate({
         where: { status: "APPROVED", receiptDate: { gte: season.startDate, lte: season.endDate } },
         _sum: { totalAmount: true },
@@ -151,10 +152,23 @@ export class FinancialReportRepository {
         where: { seasonId },
         _sum: { amount: true },
       }),
+      this.prisma.contract.findMany({
+        where: { status: "ACTIVE", startDate: { lte: season.endDate }, endDate: { gte: season.startDate } },
+        select: { salary: true, startDate: true, endDate: true },
+      }),
     ]);
+
+    const playerSalaryActual = playerContracts.reduce((sum, c) => {
+      const overlapStart = c.startDate > season.startDate ? c.startDate : season.startDate;
+      const overlapEnd = c.endDate < season.endDate ? c.endDate : season.endDate;
+      if (overlapEnd <= overlapStart) return sum;
+      const months = (overlapEnd.getTime() - overlapStart.getTime()) / (1000 * 60 * 60 * 24 * 30.44);
+      return sum + (c.salary / 12) * months;
+    }, 0);
 
     const result: Record<string, number> = {
       MEDICAL: medical._sum?.totalAmount ?? 0,
+      PLAYER_SALARY: Math.round(playerSalaryActual),
     };
     for (const row of operating) {
       result[row.category] = row._sum?.amount ?? 0;
