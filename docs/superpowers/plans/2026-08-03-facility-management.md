@@ -1,6 +1,6 @@
 # Facility Management Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** FacilityInspection + MaintenanceRequest CRUD API 구현, ISSUE_FOUND 시 자동 유지보수 생성, EMERGENCY/RESOLVED 전체 스태프 알림 발송.
 
@@ -37,7 +37,7 @@
 - Create: `apps/api/src/facility/inspection/dto/inspection.dto.ts`
 - Create: `apps/api/src/facility/inspection/inspection.repo.ts`
 
-- [ ] **Step 1: inspection.dto.ts 작성**
+- [x] **Step 1: inspection.dto.ts 작성**
 
 ```ts
 import type { FacilityZone, InspectionType, InspectionResult } from "../../../generated/enums";
@@ -71,7 +71,7 @@ export interface InspectionListQuery {
 }
 ```
 
-- [ ] **Step 2: inspection.repo.ts 작성**
+- [x] **Step 2: inspection.repo.ts 작성**
 
 ```ts
 import type { PrismaClient } from "../../../generated/client";
@@ -125,7 +125,7 @@ export class InspectionRepository {
 }
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 cd /Users/juno/work/football
@@ -141,7 +141,7 @@ git commit -m "feat: add FacilityInspection DTO and repository"
 - Create: `apps/api/src/facility/maintenance/dto/maintenance.dto.ts`
 - Create: `apps/api/src/facility/maintenance/maintenance.repo.ts`
 
-- [ ] **Step 1: maintenance.dto.ts 작성**
+- [x] **Step 1: maintenance.dto.ts 작성**
 
 ```ts
 import type { MaintenancePriority, MaintenanceStatus } from "../../../generated/enums";
@@ -170,7 +170,7 @@ export interface MaintenanceListQuery {
 }
 ```
 
-- [ ] **Step 2: maintenance.repo.ts 작성**
+- [x] **Step 2: maintenance.repo.ts 작성**
 
 ```ts
 import type { PrismaClient } from "../../../generated/client";
@@ -227,7 +227,7 @@ export class MaintenanceRepository {
 }
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 cd /Users/juno/work/football
@@ -247,7 +247,7 @@ git commit -m "feat: add MaintenanceRequest DTO and repository"
 
 > Note: supertest in this project requires `(request as any).default(app)`. Service unit tests use mock repos and don't need supertest.
 
-- [ ] **Step 1: maintenance.service 테스트 작성**
+- [x] **Step 1: maintenance.service 테스트 작성**
 
 Create `apps/api/__test__/facility/maintenance.service.test.ts`:
 
@@ -325,7 +325,7 @@ describe("MaintenanceService", () => {
 });
 ```
 
-- [ ] **Step 2: inspection.service 테스트 작성**
+- [x] **Step 2: inspection.service 테스트 작성**
 
 Create `apps/api/__test__/facility/inspection.service.test.ts`:
 
@@ -400,7 +400,7 @@ describe("InspectionService", () => {
 });
 ```
 
-- [ ] **Step 3: 테스트 실행 — 실패 확인**
+- [x] **Step 3: 테스트 실행 — 실패 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -409,7 +409,7 @@ npx jest __test__/facility --no-coverage
 
 Expected: FAIL (구현 파일 없음)
 
-- [ ] **Step 4: maintenance.service.ts 구현**
+- [x] **Step 4: maintenance.service.ts 구현**
 
 Create `apps/api/src/facility/maintenance/maintenance.service.ts`:
 
@@ -458,7 +458,7 @@ export class MaintenanceService {
 }
 ```
 
-- [ ] **Step 5: inspection.service.ts 구현**
+- [x] **Step 5: inspection.service.ts 구현**
 
 Create `apps/api/src/facility/inspection/inspection.service.ts`:
 
@@ -510,7 +510,7 @@ export class InspectionService {
 }
 ```
 
-- [ ] **Step 6: 테스트 실행 — 통과 확인**
+- [x] **Step 6: 테스트 실행 — 통과 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -519,7 +519,7 @@ npx jest __test__/facility --no-coverage
 
 Expected: 9개 테스트 모두 PASS
 
-- [ ] **Step 7: 커밋**
+- [x] **Step 7: 커밋**
 
 ```bash
 cd /Users/juno/work/football
@@ -539,7 +539,7 @@ git commit -m "feat: add InspectionService and MaintenanceService with ISSUE_FOU
 - Create: `apps/api/src/facility/facility.routes.ts`
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: NotificationRepository에 createForAllStaff 추가**
+- [x] **Step 1: NotificationRepository에 createForAllStaff 추가**
 
 `apps/api/src/notification/notification.repo.ts`의 마지막 메서드 앞에 추가:
 
@@ -561,7 +561,7 @@ git commit -m "feat: add InspectionService and MaintenanceService with ISSUE_FOU
   }
 ```
 
-- [ ] **Step 2: NotificationService에 notifyFacilityEmergency / notifyFacilityResolved 추가**
+- [x] **Step 2: NotificationService에 notifyFacilityEmergency / notifyFacilityResolved 추가**
 
 `apps/api/src/notification/notification.service.ts`의 `getPartnerAlerts` 메서드 앞에 추가:
 
@@ -593,7 +593,7 @@ git commit -m "feat: add InspectionService and MaintenanceService with ISSUE_FOU
   }
 ```
 
-- [ ] **Step 3: inspection.controller.ts 작성**
+- [x] **Step 3: inspection.controller.ts 작성**
 
 Create `apps/api/src/facility/inspection/inspection.controller.ts`:
 
@@ -647,7 +647,7 @@ export class InspectionController {
 }
 ```
 
-- [ ] **Step 4: maintenance.controller.ts 작성**
+- [x] **Step 4: maintenance.controller.ts 작성**
 
 Create `apps/api/src/facility/maintenance/maintenance.controller.ts`:
 
@@ -701,7 +701,7 @@ export class MaintenanceController {
 }
 ```
 
-- [ ] **Step 5: facility.routes.ts 작성**
+- [x] **Step 5: facility.routes.ts 작성**
 
 Create `apps/api/src/facility/facility.routes.ts`:
 
@@ -745,7 +745,7 @@ router.patch("/maintenance/:id", auth, maintenanceController.update);
 export default router;
 ```
 
-- [ ] **Step 6: apiRouter.ts에 facility 등록**
+- [x] **Step 6: apiRouter.ts에 facility 등록**
 
 `apps/api/src/apiRouter.ts`에서 마지막 `import` 다음에 추가:
 
@@ -759,7 +759,7 @@ import facilityRouter from "./facility/facility.routes";
 apiRouter.use("/facility", facilityRouter);
 ```
 
-- [ ] **Step 7: TypeScript 빌드 확인**
+- [x] **Step 7: TypeScript 빌드 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -768,7 +768,7 @@ npx tsc --noEmit 2>&1 | grep "facility\|notification"
 
 Expected: facility/notification 관련 에러 없음
 
-- [ ] **Step 8: 전체 테스트 실행**
+- [x] **Step 8: 전체 테스트 실행**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -777,7 +777,7 @@ npx jest __test__/facility --no-coverage 2>&1 | tail -10
 
 Expected: 9개 테스트 모두 PASS
 
-- [ ] **Step 9: 커밋**
+- [x] **Step 9: 커밋**
 
 ```bash
 cd /Users/juno/work/football
@@ -789,12 +789,12 @@ git commit -m "feat: wire up facility management routes and notification methods
 
 ## 완료 체크리스트
 
-- [ ] `GET /api/facility/inspections` — 목록 반환 (zone/type/result 필터)
-- [ ] `POST /api/facility/inspections` result=OK → 201, maintenanceId 없음
-- [ ] `POST /api/facility/inspections` result=ISSUE_FOUND → 201, `createdMaintenanceId` 포함, EMERGENCY 알림 발송
-- [ ] `POST /api/facility/maintenance` priority=EMERGENCY → 201, staff-room emit
-- [ ] `PATCH /api/facility/maintenance/:id` status=RESOLVED → resolvedAt 설정, 알림 발송
-- [ ] `PATCH /api/facility/maintenance/:id` (이미 RESOLVED) → 409
-- [ ] ADMIN/FRONT_OFFICE 외 쓰기 → 403
-- [ ] 9개 유닛 테스트 통과
-- [ ] tsc 에러 없음
+- [x] `GET /api/facility/inspections` — 목록 반환 (zone/type/result 필터)
+- [x] `POST /api/facility/inspections` result=OK → 201, maintenanceId 없음
+- [x] `POST /api/facility/inspections` result=ISSUE_FOUND → 201, `createdMaintenanceId` 포함, EMERGENCY 알림 발송
+- [x] `POST /api/facility/maintenance` priority=EMERGENCY → 201, staff-room emit
+- [x] `PATCH /api/facility/maintenance/:id` status=RESOLVED → resolvedAt 설정, 알림 발송
+- [x] `PATCH /api/facility/maintenance/:id` (이미 RESOLVED) → 409
+- [x] ADMIN/FRONT_OFFICE 외 쓰기 → 403
+- [x] 9개 유닛 테스트 통과
+- [x] tsc 에러 없음

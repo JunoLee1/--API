@@ -1,6 +1,6 @@
 # Department CRUD Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Department(부서)를 독립 Prisma 모델로 구현하고, StaffRecord가 FK로 참조하며, 관리자가 부서를 CRUD할 수 있는 백엔드 API와 프론트엔드 페이지를 추가한다.
 
@@ -42,7 +42,7 @@
 - Modify: `apps/api/prisma/schema.prisma`
 - Create: `apps/api/prisma/migrations/20260731000002_department/migration.sql`
 
-- [ ] **Step 1: schema.prisma에 Department 모델 추가 + StaffRecord 수정**
+- [x] **Step 1: schema.prisma에 Department 모델 추가 + StaffRecord 수정**
 
 `apps/api/prisma/schema.prisma`에서 `StaffRecord` 모델을 찾아 `department String?` 줄을 아래로 교체하고, 파일 끝에 Department 모델을 추가한다.
 
@@ -64,7 +64,7 @@ model Department {
 }
 ```
 
-- [ ] **Step 2: 마이그레이션 SQL 파일 작성**
+- [x] **Step 2: 마이그레이션 SQL 파일 작성**
 
 `apps/api/prisma/migrations/20260731000002_department/migration.sql` 생성:
 ```sql
@@ -90,7 +90,7 @@ ALTER TABLE "StaffRecord" ADD CONSTRAINT "StaffRecord_departmentId_fkey"
     FOREIGN KEY ("departmentId") REFERENCES "Department"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 ```
 
-- [ ] **Step 3: 마이그레이션 적용 + Prisma 클라이언트 재생성**
+- [x] **Step 3: 마이그레이션 적용 + Prisma 클라이언트 재생성**
 
 ```bash
 cd apps/api
@@ -105,7 +105,7 @@ npx prisma generate
 
 확인: `npx prisma studio`에서 Department 테이블, StaffRecord에 departmentId 컬럼 존재 여부 체크
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/20260731000002_department/
@@ -121,7 +121,7 @@ git commit -m "feat(db): Department 모델 추가, StaffRecord.department → de
 - Create: `apps/api/src/department/department.service.ts`
 - Create: `apps/api/__test__/department/department.service.test.ts`
 
-- [ ] **Step 1: 테스트 파일 작성 (실패 상태)**
+- [x] **Step 1: 테스트 파일 작성 (실패 상태)**
 
 `apps/api/__test__/department/department.service.test.ts`:
 ```typescript
@@ -201,7 +201,7 @@ describe("DepartmentService", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 - 실패 확인**
+- [x] **Step 2: 테스트 실행 - 실패 확인**
 
 ```bash
 cd apps/api
@@ -210,7 +210,7 @@ npx jest __test__/department/department.service.test.ts --no-coverage
 
 Expected: FAIL (DepartmentService 모듈 없음)
 
-- [ ] **Step 3: DepartmentRepository 구현**
+- [x] **Step 3: DepartmentRepository 구현**
 
 `apps/api/src/department/department.repo.ts`:
 ```typescript
@@ -245,7 +245,7 @@ export class DepartmentRepository {
 }
 ```
 
-- [ ] **Step 4: DepartmentService 구현**
+- [x] **Step 4: DepartmentService 구현**
 
 `apps/api/src/department/department.service.ts`:
 ```typescript
@@ -287,7 +287,7 @@ export class DepartmentService {
 }
 ```
 
-- [ ] **Step 5: 테스트 실행 - 통과 확인**
+- [x] **Step 5: 테스트 실행 - 통과 확인**
 
 ```bash
 cd apps/api
@@ -296,7 +296,7 @@ npx jest __test__/department/department.service.test.ts --no-coverage
 
 Expected: PASS (8 tests)
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add apps/api/src/department/ apps/api/__test__/department/
@@ -312,7 +312,7 @@ git commit -m "feat(department): repo + service TDD"
 - Create: `apps/api/src/department/department.routes.ts`
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: DepartmentController 작성**
+- [x] **Step 1: DepartmentController 작성**
 
 `apps/api/src/department/department.controller.ts`:
 ```typescript
@@ -385,7 +385,7 @@ export class DepartmentController {
 }
 ```
 
-- [ ] **Step 2: DepartmentRoutes 작성**
+- [x] **Step 2: DepartmentRoutes 작성**
 
 `apps/api/src/department/department.routes.ts`:
 ```typescript
@@ -411,7 +411,7 @@ router.delete("/:id", auth, controller.delete);
 export default router;
 ```
 
-- [ ] **Step 3: apiRouter.ts에 등록**
+- [x] **Step 3: apiRouter.ts에 등록**
 
 `apps/api/src/apiRouter.ts`에서 기존 import들 아래 추가:
 ```typescript
@@ -423,7 +423,7 @@ import departmentRouter from "./department/department.routes";
 apiRouter.use("/departments", departmentRouter);
 ```
 
-- [ ] **Step 4: TS 빌드 확인**
+- [x] **Step 4: TS 빌드 확인**
 
 ```bash
 cd apps/api
@@ -432,7 +432,7 @@ npx tsc --noEmit
 
 Expected: 에러 없음
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add apps/api/src/department/ apps/api/src/apiRouter.ts
@@ -447,7 +447,7 @@ git commit -m "feat(department): controller + routes, /departments 엔드포인�
 - Modify: `apps/api/src/staff-record/staff-record.repo.ts`
 - Modify: `apps/api/src/staff-record/staff-record.service.ts`
 
-- [ ] **Step 1: StaffRecordRepository 수정**
+- [x] **Step 1: StaffRecordRepository 수정**
 
 `apps/api/src/staff-record/staff-record.repo.ts` 전체를 아래로 교체:
 ```typescript
@@ -509,7 +509,7 @@ export class StaffRecordRepository {
 }
 ```
 
-- [ ] **Step 2: StaffRecordService 수정**
+- [x] **Step 2: StaffRecordService 수정**
 
 `apps/api/src/staff-record/staff-record.service.ts` 전체를 아래로 교체:
 ```typescript
@@ -551,7 +551,7 @@ export class StaffRecordService {
 }
 ```
 
-- [ ] **Step 3: TS 빌드 확인**
+- [x] **Step 3: TS 빌드 확인**
 
 ```bash
 cd apps/api
@@ -560,7 +560,7 @@ npx tsc --noEmit
 
 Expected: 에러 없음
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add apps/api/src/staff-record/
@@ -575,7 +575,7 @@ git commit -m "refactor(staff-record): department String → departmentId FK, in
 - Create: `football/src/services/department.service.ts`
 - Create: `football/src/pages/admin/DepartmentPage.tsx`
 
-- [ ] **Step 1: FE API 서비스 작성**
+- [x] **Step 1: FE API 서비스 작성**
 
 `football/src/services/department.service.ts`:
 ```typescript
@@ -599,7 +599,7 @@ export const departmentApi = {
 };
 ```
 
-- [ ] **Step 2: DepartmentPage 작성**
+- [x] **Step 2: DepartmentPage 작성**
 
 `football/src/pages/admin/DepartmentPage.tsx`:
 ```tsx
@@ -768,7 +768,7 @@ export function DepartmentPage() {
 }
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add football/src/services/department.service.ts football/src/pages/admin/DepartmentPage.tsx
@@ -787,7 +787,7 @@ git commit -m "feat(department): FE API 서비스 + DepartmentPage CRUD UI"
 - Modify: `football/src/locales/ko/admin.json`
 - Modify: `football/src/locales/ko/common.json`
 
-- [ ] **Step 1: FE StaffRecord 타입 수정**
+- [x] **Step 1: FE StaffRecord 타입 수정**
 
 `football/src/services/staff-record.service.ts`에서 `StaffRecord` 인터페이스를 아래로 교체:
 ```typescript
@@ -823,7 +823,7 @@ export const staffRecordApi = {
 };
 ```
 
-- [ ] **Step 2: StaffRecordPage 수정**
+- [x] **Step 2: StaffRecordPage 수정**
 
 `football/src/pages/admin/StaffRecordPage.tsx` 전체를 아래로 교체:
 ```tsx
@@ -1036,7 +1036,7 @@ export function StaffRecordPage() {
 }
 ```
 
-- [ ] **Step 3: i18n 키 추가**
+- [x] **Step 3: i18n 키 추가**
 
 `football/src/locales/ko/admin.json`의 `staffRecord` 객체에 2개 키 추가:
 ```json
@@ -1069,7 +1069,7 @@ export function StaffRecordPage() {
 "departments": "부서 관리"
 ```
 
-- [ ] **Step 4: App.tsx 라우트 추가**
+- [x] **Step 4: App.tsx 라우트 추가**
 
 `football/src/App.tsx`에 import 추가:
 ```tsx
@@ -1081,7 +1081,7 @@ import { DepartmentPage } from '@/pages/admin/DepartmentPage'
 <Route path="/admin/departments" element={<DepartmentPage />} />
 ```
 
-- [ ] **Step 5: AppShell.tsx nav 항목 추가**
+- [x] **Step 5: AppShell.tsx nav 항목 추가**
 
 `football/src/layouts/AppShell.tsx`에서 staff-records nav 항목(to: '/admin/staff-records') 바로 위에 추가:
 ```typescript
@@ -1097,7 +1097,7 @@ import { DepartmentPage } from '@/pages/admin/DepartmentPage'
 
 `Building2`는 이미 AppShell imports에 있음 (확인 필요 - 없으면 lucide-react import에 추가).
 
-- [ ] **Step 6: FE TS 빌드 확인**
+- [x] **Step 6: FE TS 빌드 확인**
 
 ```bash
 cd football
@@ -1106,7 +1106,7 @@ npx tsc --noEmit
 
 Expected: 에러 없음
 
-- [ ] **Step 7: 커밋**
+- [x] **Step 7: 커밋**
 
 ```bash
 git add football/src/services/staff-record.service.ts \

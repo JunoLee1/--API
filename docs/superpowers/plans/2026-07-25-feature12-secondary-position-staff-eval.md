@@ -1,6 +1,6 @@
 # Feature 12: 멀티포지션 체력 + 코칭스태프 평가 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** ① 선수가 대열 포지션을 가질 때 포지션별 체력 목표치를 관리하고, ② HEAD_COACH가 코칭스태프 멤버를 주기적으로 평가(점수+코멘트)할 수 있게 한다.
 
@@ -40,7 +40,7 @@
 - Modify: `apps/api/prisma/schema.prisma`
 - Create: `apps/api/prisma/migrations/20260725000002_secondary_position_staff_eval/migration.sql`
 
-- [ ] **Step 1: schema.prisma에 모델 추가**
+- [x] **Step 1: schema.prisma에 모델 추가**
 
 `apps/api/prisma/schema.prisma`의 Player 모델 relations 목록에 추가 (현재 `academyFees` 마지막 줄 아래):
 ```prisma
@@ -80,7 +80,7 @@ model CoachingStaffEvaluation {
 }
 ```
 
-- [ ] **Step 2: 마이그레이션 디렉터리 + SQL 작성**
+- [x] **Step 2: 마이그레이션 디렉터리 + SQL 작성**
 
 ```bash
 mkdir -p /Users/juno/work/football/apps/api/prisma/migrations/20260725000002_secondary_position_staff_eval
@@ -110,7 +110,7 @@ CREATE TABLE "CoachingStaffEvaluation" (
 );
 ```
 
-- [ ] **Step 3: 마이그레이션 적용 (shadow DB 우회 패턴)**
+- [x] **Step 3: 마이그레이션 적용 (shadow DB 우회 패턴)**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -124,7 +124,7 @@ npx dotenv -e .env -- npx prisma migrate resolve --applied 20260725000002_second
 
 Expected: `Migration 20260725000002_secondary_position_staff_eval marked as applied`
 
-- [ ] **Step 4: Prisma 클라이언트 재생성**
+- [x] **Step 4: Prisma 클라이언트 재생성**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx prisma generate
@@ -132,7 +132,7 @@ cd /Users/juno/work/football/apps/api && npx prisma generate
 
 Expected: `Generated Prisma Client`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/20260725000002_secondary_position_staff_eval/
@@ -150,7 +150,7 @@ git commit -m "feat(db): add PlayerSecondaryPosition and CoachingStaffEvaluation
 
 **Context:** 이 프로젝트의 BE는 Express + Passport JWT 인증. 라우터 패턴은 `router.METHOD("/path", auth, controller.handler)`. `AppError(status, code)` 사용. 권한 체크: `ADMIN` 또는 `role === "COACHING_STAFF" && coachingRole === "HEAD_COACH"`.
 
-- [ ] **Step 1: repo 작성**
+- [x] **Step 1: repo 작성**
 
 ```typescript
 // apps/api/src/player/secondary-position.repo.ts
@@ -182,7 +182,7 @@ export class SecondaryPositionRepository {
 }
 ```
 
-- [ ] **Step 2: player.controller.ts에 핸들러 추가**
+- [x] **Step 2: player.controller.ts에 핸들러 추가**
 
 `player.controller.ts` import 에 추가:
 ```typescript
@@ -231,7 +231,7 @@ private secondaryPositionRepo = new SecondaryPositionRepository(getPrisma());
   };
 ```
 
-- [ ] **Step 3: player.routes.ts에 라우트 추가**
+- [x] **Step 3: player.routes.ts에 라우트 추가**
 
 `player.routes.ts`에서 마지막 `export default router;` 위에 추가:
 ```typescript
@@ -240,7 +240,7 @@ router.post("/:id/secondary-positions", auth, controller.createSecondaryPosition
 router.delete("/:id/secondary-positions/:posId", auth, controller.deleteSecondaryPosition);
 ```
 
-- [ ] **Step 4: TypeScript 빌드 확인**
+- [x] **Step 4: TypeScript 빌드 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | grep -v "country.repo\|monthlyAttend" | head -10
@@ -248,7 +248,7 @@ cd apps/api && npx tsc --noEmit 2>&1 | grep -v "country.repo\|monthlyAttend" | h
 
 Expected: 새 에러 없음 (기존 country.repo, monthlyAttend 에러는 무시)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/player/secondary-position.repo.ts apps/api/src/player/player.controller.ts apps/api/src/player/player.routes.ts
@@ -264,7 +264,7 @@ git commit -m "feat(player): add secondary positions CRUD endpoints"
 - Modify: `apps/api/src/coaching-staff/coaching-staff.controller.ts`
 - Modify: `apps/api/src/coaching-staff/coaching-staff.routes.ts`
 
-- [ ] **Step 1: eval repo 작성**
+- [x] **Step 1: eval repo 작성**
 
 ```typescript
 // apps/api/src/coaching-staff/coaching-staff-eval.repo.ts
@@ -294,7 +294,7 @@ export class CoachingStaffEvalRepository {
 }
 ```
 
-- [ ] **Step 2: coaching-staff.controller.ts에 핸들러 추가**
+- [x] **Step 2: coaching-staff.controller.ts에 핸들러 추가**
 
 `coaching-staff.controller.ts` import에 추가:
 ```typescript
@@ -341,7 +341,7 @@ private evalRepo = new CoachingStaffEvalRepository(getPrisma());
   };
 ```
 
-- [ ] **Step 3: coaching-staff.routes.ts에 라우트 추가**
+- [x] **Step 3: coaching-staff.routes.ts에 라우트 추가**
 
 `export default router;` 위에 추가:
 ```typescript
@@ -349,7 +349,7 @@ router.get("/:staffId/evaluations", auth, controller.listEvaluations);
 router.post("/:staffId/evaluations", auth, controller.createEvaluation);
 ```
 
-- [ ] **Step 4: TypeScript 확인 + Commit**
+- [x] **Step 4: TypeScript 확인 + Commit**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | grep -v "country.repo\|monthlyAttend" | head -10
@@ -369,7 +369,7 @@ git commit -m "feat(coaching-staff): add evaluation CRUD endpoints"
 
 **Context:** `PlayerDetailPage`에서 "기본 정보" 탭(`value="info"`)은 `<TabsContent value="info">` 안에 렌더링된다. `useCurrentUser()`로 role/coachingRole 접근 가능. `playerApi`는 `football/src/services/player.service.ts`. `POSITION_LABEL`은 `football/src/types/player.ts`에서 import.
 
-- [ ] **Step 1: 타입 + 서비스 작성**
+- [x] **Step 1: 타입 + 서비스 작성**
 
 ```typescript
 // football/src/types/secondary-position.ts
@@ -399,7 +399,7 @@ export const secondaryPositionApi = {
 }
 ```
 
-- [ ] **Step 2: SecondaryPositionsModule 컴포넌트 작성**
+- [x] **Step 2: SecondaryPositionsModule 컴포넌트 작성**
 
 ```tsx
 // football/src/components/player/SecondaryPositionsModule.tsx
@@ -556,7 +556,7 @@ export function SecondaryPositionsModule({ playerId, primaryPosition }: Props) {
 }
 ```
 
-- [ ] **Step 3: PlayerDetailPage "기본 정보" 탭에 삽입**
+- [x] **Step 3: PlayerDetailPage "기본 정보" 탭에 삽입**
 
 `PlayerDetailPage.tsx`에 import 추가:
 ```tsx
@@ -571,7 +571,7 @@ import { SecondaryPositionsModule } from '@/components/player/SecondaryPositions
 </section>
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/types/secondary-position.ts football/src/services/secondary-position.service.ts football/src/components/player/SecondaryPositionsModule.tsx football/src/pages/players/PlayerDetailPage.tsx
@@ -590,7 +590,7 @@ git commit -m "feat(player): add secondary positions module to PlayerDetailPage"
 
 **Context:** `StaffManagementPage.tsx`의 `StaffCard` 컴포넌트에 "평가" 버튼을 추가한다. HEAD_COACH만 평가 다이얼로그를 열 수 있다. 평가 후 카드 내부에 최근 3건의 평가 이력(점수, 코멘트, 날짜, 평가자)을 표시한다.
 
-- [ ] **Step 1: 타입 + 서비스 작성**
+- [x] **Step 1: 타입 + 서비스 작성**
 
 ```typescript
 // football/src/types/coaching-staff-eval.ts
@@ -618,7 +618,7 @@ export const coachingStaffEvalApi = {
 }
 ```
 
-- [ ] **Step 2: StaffEvaluationDialog 작성**
+- [x] **Step 2: StaffEvaluationDialog 작성**
 
 ```tsx
 // football/src/components/coaching-staff/StaffEvaluationDialog.tsx
@@ -700,7 +700,7 @@ export function StaffEvaluationDialog({ open, onClose, staffId, staffName, onCre
 }
 ```
 
-- [ ] **Step 3: StaffManagementPage StaffCard에 평가 버튼 + 이력 추가**
+- [x] **Step 3: StaffManagementPage StaffCard에 평가 버튼 + 이력 추가**
 
 `StaffManagementPage.tsx` import 블록에 추가:
 ```tsx
@@ -764,7 +764,7 @@ useEffect(() => { fetchEvals() }, [fetchEvals])
 )}
 ```
 
-- [ ] **Step 4: TypeScript 빌드 확인**
+- [x] **Step 4: TypeScript 빌드 확인**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | head -20
@@ -772,7 +772,7 @@ cd football && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 에러 없음
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/types/coaching-staff-eval.ts football/src/services/coaching-staff-eval.service.ts football/src/components/coaching-staff/StaffEvaluationDialog.tsx football/src/pages/coaching-staff/StaffManagementPage.tsx

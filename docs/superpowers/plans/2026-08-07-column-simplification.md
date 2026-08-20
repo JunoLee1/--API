@@ -217,11 +217,11 @@ gh pr create \
 - COACHING_STAFF 유저는 계약/급여 정보 미노출
 
 ## Test Plan
-- [ ] ADMIN 로그인 → PlayerDetailPage → 계약 섹션 표시 확인
-- [ ] GM 로그인 → PlayerDetailPage → 계약 섹션 표시 확인
-- [ ] FO(TD) 로그인 → PlayerDetailPage → 계약 섹션 표시 확인
-- [ ] COACHING_STAFF 로그인 → PlayerDetailPage → 계약 섹션 미노출 확인
-- [ ] PLAYER 로그인 → PlayerDetailPage → 계약 섹션 미노출 확인"
+- [x] ADMIN 로그인 → PlayerDetailPage → 계약 섹션 표시 확인
+- [x] GM 로그인 → PlayerDetailPage → 계약 섹션 표시 확인
+- [x] FO(TD) 로그인 → PlayerDetailPage → 계약 섹션 표시 확인
+- [x] COACHING_STAFF 로그인 → PlayerDetailPage → 계약 섹션 미노출 확인
+- [x] PLAYER 로그인 → PlayerDetailPage → 계약 섹션 미노출 확인"
 ```
 
 ---

@@ -1,6 +1,6 @@
 # Shot Event & Auto xA Calculation Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 경기별 슈팅 이벤트를 기록하고, 이를 바탕으로 PlayerMatchStats의 xG와 xA를 포지션별 가중치를 적용해 자동 계산한다.
 
@@ -69,7 +69,7 @@ const XA_WEIGHT: Record<string, number> = {
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: `ShotResult` enum과 `ShotEvent` 모델을 schema.prisma에 추가**
+- [x] **Step 1: `ShotResult` enum과 `ShotEvent` 모델을 schema.prisma에 추가**
 
 `apps/api/prisma/schema.prisma` 안에서 `model TeamMatchStats` 바로 앞에 다음을 삽입:
 
@@ -108,7 +108,7 @@ model ShotEvent {
   shotsAsAssister ShotEvent[] @relation("ShotAssister")
 ```
 
-- [ ] **Step 2: 마이그레이션 실행**
+- [x] **Step 2: 마이그레이션 실행**
 
 ```bash
 cd apps/api
@@ -117,7 +117,7 @@ npx prisma migrate dev --name shot_events
 
 Expected: `migrations/20260720_shot_events/migration.sql` 생성됨, `✔ Your database is now in sync with your schema.`
 
-- [ ] **Step 3: Prisma 클라이언트 재생성 확인**
+- [x] **Step 3: Prisma 클라이언트 재생성 확인**
 
 ```bash
 cd apps/api
@@ -126,7 +126,7 @@ npx prisma generate
 
 Expected: `✔ Generated Prisma Client`
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/
@@ -140,7 +140,7 @@ git commit -m "feat(shot-event): add ShotEvent model and ShotResult enum"
 **Files:**
 - Modify: `apps/api/src/match/dto/match.dto.ts`
 
-- [ ] **Step 1: `CreateShotEventDto` 인터페이스를 match.dto.ts에 추가**
+- [x] **Step 1: `CreateShotEventDto` 인터페이스를 match.dto.ts에 추가**
 
 `apps/api/src/match/dto/match.dto.ts` 파일 맨 아래에 추가:
 
@@ -158,7 +158,7 @@ export interface CreateShotEventDto {
 }
 ```
 
-- [ ] **Step 2: 커밋**
+- [x] **Step 2: 커밋**
 
 ```bash
 git add apps/api/src/match/dto/match.dto.ts
@@ -172,7 +172,7 @@ git commit -m "feat(shot-event): add CreateShotEventDto"
 **Files:**
 - Modify: `apps/api/src/match/match.repo.ts`
 
-- [ ] **Step 1: XA_WEIGHT 상수와 슈팅 메서드를 match.repo.ts에 추가**
+- [x] **Step 1: XA_WEIGHT 상수와 슈팅 메서드를 match.repo.ts에 추가**
 
 `apps/api/src/match/match.repo.ts` 파일 상단 import 직후, `MatchRepository` 클래스 선언 바로 위에 상수 추가:
 
@@ -275,7 +275,7 @@ import 추가 (파일 상단):
 import { CreateShotEventDto } from "./dto/match.dto";
 ```
 
-- [ ] **Step 2: API 서버 기동 확인 (타입 에러 없는지)**
+- [x] **Step 2: API 서버 기동 확인 (타입 에러 없는지)**
 
 ```bash
 cd apps/api
@@ -285,7 +285,7 @@ npx ts-node-dev --transpile-only src/server.ts &
 
 Expected: 타입 에러 없이 기동
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add apps/api/src/match/match.repo.ts
@@ -301,7 +301,7 @@ git commit -m "feat(shot-event): add repo methods for shot events and xG/xA reca
 - Modify: `apps/api/src/match/match.controller.ts`
 - Modify: `apps/api/src/match/match.routes.ts`
 
-- [ ] **Step 1: match.service.ts에 슈팅 서비스 메서드 추가**
+- [x] **Step 1: match.service.ts에 슈팅 서비스 메서드 추가**
 
 import에 `CreateShotEventDto`, `VALID_SHOT_RESULTS` 추가:
 ```typescript
@@ -336,7 +336,7 @@ import {
   }
 ```
 
-- [ ] **Step 2: match.controller.ts에 슈팅 컨트롤러 메서드 추가**
+- [x] **Step 2: match.controller.ts에 슈팅 컨트롤러 메서드 추가**
 
 `MatchController` 클래스 맨 아래에 추가:
 ```typescript
@@ -368,7 +368,7 @@ import {
   };
 ```
 
-- [ ] **Step 3: match.routes.ts에 슈팅 라우트 추가**
+- [x] **Step 3: match.routes.ts에 슈팅 라우트 추가**
 
 `export default router;` 바로 위에 추가:
 ```typescript
@@ -378,7 +378,7 @@ router.post("/:id/shots",              auth, controller.createShotEvent);
 router.delete("/:id/shots/:eventId",   auth, controller.deleteShotEvent);
 ```
 
-- [ ] **Step 4: 수동 테스트**
+- [x] **Step 4: 수동 테스트**
 
 ```bash
 # 서버 실행 상태에서
@@ -391,7 +391,7 @@ curl -X POST http://localhost:3001/matches/1/shots \
 
 Expected: 201 + ShotEvent JSON 반환, DB의 PlayerMatchStats.xG 업데이트됨
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add apps/api/src/match/match.service.ts \
@@ -408,7 +408,7 @@ git commit -m "feat(shot-event): add shot event API endpoints with xG/xA recalcu
 - Modify: `football/src/types/match.ts`
 - Modify: `football/src/services/match.service.ts`
 
-- [ ] **Step 1: `ShotEvent` 타입을 match.ts에 추가**
+- [x] **Step 1: `ShotEvent` 타입을 match.ts에 추가**
 
 `football/src/types/match.ts` 파일 안에 `MatchDetail` interface 바로 위에 추가:
 
@@ -450,7 +450,7 @@ export interface MatchDetail extends Match {
 }
 ```
 
-- [ ] **Step 2: `matchApi`에 shots 메서드 추가**
+- [x] **Step 2: `matchApi`에 shots 메서드 추가**
 
 `football/src/services/match.service.ts`의 `matchApi` 객체 맨 아래 (마지막 메서드 다음, `}` 닫기 전)에 추가:
 
@@ -479,7 +479,7 @@ import에 타입 추가:
 import type { Match, MatchDetail, CompetitionType, ShotEvent, ShotResult } from '@/types/match'
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add football/src/types/match.ts football/src/services/match.service.ts
@@ -498,7 +498,7 @@ MatchDetailPage는 현재 765줄이다. 이 Task에서:
 2. `AddShotDialog` 컴포넌트 추가 (파일 내 local component)
 3. "슈팅 이벤트" 카드를 "선수 기록" 카드 바로 앞에 삽입
 
-- [ ] **Step 1: import 추가**
+- [x] **Step 1: import 추가**
 
 `MatchDetailPage.tsx` 상단 import 블록에 추가:
 ```typescript
@@ -507,7 +507,7 @@ import { SHOT_RESULT_LABEL, SHOT_RESULT_STYLE } from '@/types/match'
 import { Trash2, Plus } from 'lucide-react'
 ```
 
-- [ ] **Step 2: `shotEvents` 상태 및 fetch 로직 추가**
+- [x] **Step 2: `shotEvents` 상태 및 fetch 로직 추가**
 
 `MatchDetailPage` 함수 내 다른 `useState` 선언들과 함께 추가:
 ```typescript
@@ -551,7 +551,7 @@ const handleDeleteShot = async (eventId: number) => {
 }
 ```
 
-- [ ] **Step 3: `AddShotDialog` 컴포넌트를 `MatchDetailPage` 함수 위에 추가**
+- [x] **Step 3: `AddShotDialog` 컴포넌트를 `MatchDetailPage` 함수 위에 추가**
 
 `MatchDetailPage` 함수 선언 바로 위 (파일 중반부, `PlayerRadar` 함수 아래)에:
 
@@ -729,7 +729,7 @@ function AddShotDialog({
 }
 ```
 
-- [ ] **Step 4: "슈팅 이벤트" 카드를 JSX에 삽입**
+- [x] **Step 4: "슈팅 이벤트" 카드를 JSX에 삽입**
 
 `{/* 선수 기록 */}` 주석 바로 위 (현재 line 666)에 다음 카드 삽입:
 
@@ -779,7 +779,7 @@ function AddShotDialog({
 )}
 ```
 
-- [ ] **Step 5: `AddShotDialog` 마운트 추가**
+- [x] **Step 5: `AddShotDialog` 마운트 추가**
 
 `{match && ( <> ... </> )}` 블록 안에 기존 다이얼로그들과 함께 추가:
 
@@ -795,7 +795,7 @@ function AddShotDialog({
 )}
 ```
 
-- [ ] **Step 6: 개발 서버에서 동작 확인**
+- [x] **Step 6: 개발 서버에서 동작 확인**
 
 ```bash
 cd football
@@ -809,7 +809,7 @@ npm run dev
 5. 삭제 버튼으로 이벤트 삭제 → xG 재계산 확인
 6. 어시스터가 있는 슈팅 저장 → StatsTab에서 해당 선수 xA 값 업데이트 확인
 
-- [ ] **Step 7: 커밋**
+- [x] **Step 7: 커밋**
 
 ```bash
 git add football/src/pages/matches/MatchDetailPage.tsx

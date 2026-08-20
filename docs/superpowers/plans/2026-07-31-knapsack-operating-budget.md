@@ -1,6 +1,6 @@
 # Knapsack 운영비 예산 관리 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** GM이 시즌 초 운영비를 카테고리별 티어(Basic/Standard/Premium)로 정의하고, 0/1 Knapsack으로 재량 예산을 최적 배분하며, 실제 지출과 비교하는 대시보드를 구현한다.
 
@@ -58,7 +58,7 @@
 - Modify: `apps/api/prisma/schema.prisma`
 - Create: `apps/api/prisma/migrations/20260731000003_knapsack_budget/migration.sql`
 
-- [ ] **Step 1: schema.prisma 수정**
+- [x] **Step 1: schema.prisma 수정**
 
 `FinancialReport` 모델에 필드 추가:
 
@@ -156,7 +156,7 @@ model OperatingExpense {
   operatingExpenses OperatingExpense[]
 ```
 
-- [ ] **Step 2: 마이그레이션 SQL 작성**
+- [x] **Step 2: 마이그레이션 SQL 작성**
 
 ```bash
 mkdir -p /Users/juno/work/football/apps/api/prisma/migrations/20260731000003_knapsack_budget
@@ -245,7 +245,7 @@ ALTER TABLE "OperatingExpense"
   FOREIGN KEY ("createdById") REFERENCES "User"("id") ON UPDATE CASCADE;
 ```
 
-- [ ] **Step 3: 마이그레이션 적용**
+- [x] **Step 3: 마이그레이션 적용**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -258,7 +258,7 @@ DATABASE_URL="postgresql://postgres:1234@localhost:5432/football" \
 
 Expected: `migrate resolve` 성공, `prisma generate` 완료
 
-- [ ] **Step 4: TypeScript 확인**
+- [x] **Step 4: TypeScript 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -20
@@ -266,7 +266,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 에러 없음
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -285,7 +285,7 @@ git commit -m "feat(budget): Knapsack 운영비 스키마 — BudgetCategoryPlan
 
 **배경:** Multiple-choice Knapsack (MCKP). 카테고리 수 ≤ 6, 티어 수 ≤ 3이므로 4^6 = 4096 조합 브루트포스로 충분. 순수 계산(Prisma 의존 없음).
 
-- [ ] **Step 1: 테스트 파일 작성**
+- [x] **Step 1: 테스트 파일 작성**
 
 ```typescript
 // apps/api/__test__/budget/knapsack.service.test.ts
@@ -404,7 +404,7 @@ describe("KnapsackService.solve", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 — 실패 확인**
+- [x] **Step 2: 테스트 실행 — 실패 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -413,7 +413,7 @@ npx jest __test__/budget/knapsack.service.test.ts --no-coverage 2>&1 | tail -10
 
 Expected: `FAIL` — "Cannot find module '../../src/budget/knapsack.service'"
 
-- [ ] **Step 3: KnapsackService 구현**
+- [x] **Step 3: KnapsackService 구현**
 
 ```typescript
 // apps/api/src/budget/knapsack.service.ts
@@ -505,7 +505,7 @@ export class KnapsackService {
 }
 ```
 
-- [ ] **Step 4: 테스트 실행 — 통과 확인**
+- [x] **Step 4: 테스트 실행 — 통과 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -514,7 +514,7 @@ npx jest __test__/budget/knapsack.service.test.ts --no-coverage 2>&1 | tail -10
 
 Expected: `PASS` — 6 tests passing
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -539,7 +539,7 @@ git commit -m "feat(budget): KnapsackService — MCKP 브루트포스 구현 + �
 - `POST /financial-reports/:seasonId/budget/optimize` — Knapsack 실행 후 결과 저장
 - `POST /financial-reports/:seasonId/budget/override` — BudgetOverrideLog 추가
 
-- [ ] **Step 1: repo 확장**
+- [x] **Step 1: repo 확장**
 
 `apps/api/src/financial-report/financial-report.repo.ts` 전체 교체:
 
@@ -687,7 +687,7 @@ export class FinancialReportRepository {
 }
 ```
 
-- [ ] **Step 2: service 확장**
+- [x] **Step 2: service 확장**
 
 `apps/api/src/financial-report/financial-report.service.ts` 전체 교체:
 
@@ -791,7 +791,7 @@ export class FinancialReportService {
 }
 ```
 
-- [ ] **Step 3: controller 확장**
+- [x] **Step 3: controller 확장**
 
 `apps/api/src/financial-report/financial-report.controller.ts` 에 아래 메서드 추가 (기존 set/setFromCSV/get 유지):
 
@@ -893,7 +893,7 @@ export class FinancialReportController {
 }
 ```
 
-- [ ] **Step 4: routes 확장**
+- [x] **Step 4: routes 확장**
 
 `apps/api/src/financial-report/financial-report.routes.ts` 전체 교체:
 
@@ -927,7 +927,7 @@ router.post("/:seasonId/budget/override", auth, controller.addOverride);
 export default router;
 ```
 
-- [ ] **Step 5: TypeScript 확인**
+- [x] **Step 5: TypeScript 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -20
@@ -935,7 +935,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 에러 없음
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -956,7 +956,7 @@ git commit -m "feat(budget): Budget Plan BE — Knapsack optimize·override 엔�
 
 **엔드포인트:** `GET /operating-expenses?seasonId=`, `POST /operating-expenses`, `DELETE /operating-expenses/:id`
 
-- [ ] **Step 1: repo 작성**
+- [x] **Step 1: repo 작성**
 
 ```typescript
 // apps/api/src/operating-expense/operating-expense.repo.ts
@@ -997,7 +997,7 @@ export class OperatingExpenseRepository {
 }
 ```
 
-- [ ] **Step 2: service 작성**
+- [x] **Step 2: service 작성**
 
 ```typescript
 // apps/api/src/operating-expense/operating-expense.service.ts
@@ -1039,7 +1039,7 @@ export class OperatingExpenseService {
 }
 ```
 
-- [ ] **Step 3: controller 작성**
+- [x] **Step 3: controller 작성**
 
 ```typescript
 // apps/api/src/operating-expense/operating-expense.controller.ts
@@ -1098,7 +1098,7 @@ export class OperatingExpenseController {
 }
 ```
 
-- [ ] **Step 4: routes 작성**
+- [x] **Step 4: routes 작성**
 
 ```typescript
 // apps/api/src/operating-expense/operating-expense.routes.ts
@@ -1122,7 +1122,7 @@ router.delete("/:id", auth, controller.delete);
 export default router;
 ```
 
-- [ ] **Step 5: apiRouter.ts에 등록**
+- [x] **Step 5: apiRouter.ts에 등록**
 
 `apps/api/src/apiRouter.ts`에서 기존 router 등록 목록 끝에 추가:
 
@@ -1132,7 +1132,7 @@ import operatingExpenseRouter from "./operating-expense/operating-expense.routes
 apiRouter.use("/operating-expenses", operatingExpenseRouter);
 ```
 
-- [ ] **Step 6: TypeScript 확인 + Commit**
+- [x] **Step 6: TypeScript 확인 + Commit**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -20
@@ -1155,7 +1155,7 @@ git commit -m "feat(budget): OperatingExpense BE — TRAVEL/EQUIPMENT/SCOUTING/Y
 - Modify: `football/src/services/financial-report.service.ts`
 - Create: `football/src/services/operating-expense.service.ts`
 
-- [ ] **Step 1: budget.ts 타입 작성**
+- [x] **Step 1: budget.ts 타입 작성**
 
 ```typescript
 // football/src/types/budget.ts
@@ -1242,7 +1242,7 @@ export interface OperatingExpense {
 }
 ```
 
-- [ ] **Step 2: financial-report.service.ts 확장**
+- [x] **Step 2: financial-report.service.ts 확장**
 
 기존 파일 끝에 추가:
 
@@ -1265,7 +1265,7 @@ export const budgetPlanApi = {
 }
 ```
 
-- [ ] **Step 3: operating-expense.service.ts 작성**
+- [x] **Step 3: operating-expense.service.ts 작성**
 
 ```typescript
 // football/src/services/operating-expense.service.ts
@@ -1289,7 +1289,7 @@ export const operatingExpenseApi = {
 }
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -1317,7 +1317,7 @@ git commit -m "feat(budget): FE 타입 + API 서비스 — BudgetPlan·Operating
 5. 카테고리별 배분액 vs 실적 비교 테이블
 6. 긴급지출 Override 로그 폼
 
-- [ ] **Step 1: BudgetPlanPage.tsx 작성**
+- [x] **Step 1: BudgetPlanPage.tsx 작성**
 
 ```typescript
 // football/src/pages/admin/BudgetPlanPage.tsx
@@ -1596,7 +1596,7 @@ export function BudgetPlanPage() {
 }
 ```
 
-- [ ] **Step 2: App.tsx에 라우트 추가**
+- [x] **Step 2: App.tsx에 라우트 추가**
 
 `football/src/App.tsx`에서 기존 admin 라우트 목록에 추가:
 
@@ -1606,7 +1606,7 @@ import { BudgetPlanPage } from '@/pages/admin/BudgetPlanPage'
 <Route path="/admin/budget-plan" element={<BudgetPlanPage />} />
 ```
 
-- [ ] **Step 3: AppShell.tsx에 nav 항목 추가**
+- [x] **Step 3: AppShell.tsx에 nav 항목 추가**
 
 `football/src/layouts/AppShell.tsx`에서 `/admin/financial-report` 항목 아래에 추가:
 
@@ -1616,7 +1616,7 @@ import { BudgetPlanPage } from '@/pages/admin/BudgetPlanPage'
 
 상단 import에 `PieChart` 추가: `import { ..., PieChart } from 'lucide-react'`
 
-- [ ] **Step 4: i18n 추가**
+- [x] **Step 4: i18n 추가**
 
 `football/src/locales/ko/admin.json`에 `budget` 키 추가:
 
@@ -1662,7 +1662,7 @@ import { BudgetPlanPage } from '@/pages/admin/BudgetPlanPage'
 "nav.item.budgetPlan": "운영비 예산"
 ```
 
-- [ ] **Step 5: TypeScript + Vite 빌드 확인**
+- [x] **Step 5: TypeScript + Vite 빌드 확인**
 
 ```bash
 cd /Users/juno/work/football/football
@@ -1672,7 +1672,7 @@ npx vite build 2>&1 | grep -E "error|✓ built"
 
 Expected: 에러 없음, `✓ built in ...`
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -1693,7 +1693,7 @@ git commit -m "feat(budget): FE BudgetPlanPage — 티어 설정·Knapsack 최�
 - Modify: `football/src/layouts/AppShell.tsx`
 - Modify: `football/src/locales/ko/admin.json`
 
-- [ ] **Step 1: OperatingExpensePage.tsx 작성**
+- [x] **Step 1: OperatingExpensePage.tsx 작성**
 
 ```typescript
 // football/src/pages/admin/OperatingExpensePage.tsx
@@ -1872,7 +1872,7 @@ export function OperatingExpensePage() {
 }
 ```
 
-- [ ] **Step 2: App.tsx + AppShell.tsx 업데이트**
+- [x] **Step 2: App.tsx + AppShell.tsx 업데이트**
 
 `football/src/App.tsx`에 추가:
 
@@ -1890,7 +1890,7 @@ import { OperatingExpensePage } from '@/pages/admin/OperatingExpensePage'
 
 `import { ..., Receipt } from 'lucide-react'` 추가
 
-- [ ] **Step 3: i18n 추가**
+- [x] **Step 3: i18n 추가**
 
 `football/src/locales/ko/admin.json`에 `operatingExpense` 키 추가:
 
@@ -1928,7 +1928,7 @@ import { OperatingExpensePage } from '@/pages/admin/OperatingExpensePage'
 "nav.item.operatingExpenses": "운영비 지출"
 ```
 
-- [ ] **Step 4: TypeScript + Vite 빌드 확인**
+- [x] **Step 4: TypeScript + Vite 빌드 확인**
 
 ```bash
 cd /Users/juno/work/football/football
@@ -1938,7 +1938,7 @@ npx vite build 2>&1 | grep -E "error|✓ built"
 
 Expected: 에러 없음, `✓ built in ...`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 cd /Users/juno/work/football

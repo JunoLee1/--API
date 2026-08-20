@@ -1,6 +1,6 @@
 # TransferRequest 구현 플랜
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Agency 주도 이적 요청 워크플로우 — DRAFT → PENDING_APPROVAL → APPROVED → CONFIRMED/REJECTED 상태 머신 구현
 
@@ -31,7 +31,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: schema.prisma에 enum과 모델 추가**
+- [x] **Step 1: schema.prisma에 enum과 모델 추가**
 
 `apps/api/prisma/schema.prisma`에서 기존 `enum RecallStatus` 블록 바로 아래에 추가:
 
@@ -81,7 +81,7 @@ model TransferRequest {
 }
 ```
 
-- [ ] **Step 2: User 모델에 역방향 관계 추가**
+- [x] **Step 2: User 모델에 역방향 관계 추가**
 
 `model User` 블록에서 기존 관계 목록 끝에 추가:
 
@@ -92,7 +92,7 @@ model TransferRequest {
   transferRequestsRejected   TransferRequest[] @relation("TRRejectedBy")
 ```
 
-- [ ] **Step 3: Player 모델에 역방향 관계 추가**
+- [x] **Step 3: Player 모델에 역방향 관계 추가**
 
 `model Player` 블록 관계 목록 끝에:
 
@@ -100,7 +100,7 @@ model TransferRequest {
   transferRequests TransferRequest[]
 ```
 
-- [ ] **Step 4: Agency 모델에 역방향 관계 추가**
+- [x] **Step 4: Agency 모델에 역방향 관계 추가**
 
 `model Agency` 블록 관계 목록 끝에:
 
@@ -108,7 +108,7 @@ model TransferRequest {
   transferRequests TransferRequest[]
 ```
 
-- [ ] **Step 5: 마이그레이션 실행**
+- [x] **Step 5: 마이그레이션 실행**
 
 ```bash
 cd apps/api
@@ -117,7 +117,7 @@ npx prisma migrate dev --name add-transfer-request
 
 Expected: `Your database is now in sync with your schema.` 출력 후 `prisma/migrations/` 아래 새 폴더 생성.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/
@@ -131,7 +131,7 @@ git commit -m "feat: add TransferRequest model with status machine schema"
 **Files:**
 - Create: `apps/api/src/transfer-request/dto/transfer-request.dto.ts`
 
-- [ ] **Step 1: DTO 파일 생성**
+- [x] **Step 1: DTO 파일 생성**
 
 ```typescript
 import { TransferType, TransferRequestStatus } from "../../generated/enums";
@@ -172,7 +172,7 @@ export interface ListTransferRequestQuery {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/transfer-request/dto/transfer-request.dto.ts
@@ -186,7 +186,7 @@ git commit -m "feat: add TransferRequest DTOs"
 **Files:**
 - Create: `apps/api/src/transfer-request/transfer-request.repo.ts`
 
-- [ ] **Step 1: Repository 생성**
+- [x] **Step 1: Repository 생성**
 
 ```typescript
 import { PrismaClient, Prisma } from "../generated/client";
@@ -372,7 +372,7 @@ export class TransferRequestRepository {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/transfer-request/transfer-request.repo.ts
@@ -387,7 +387,7 @@ git commit -m "feat: add TransferRequestRepository"
 - Create: `apps/api/__test__/transfer-request/transfer-request.service.test.ts`
 - Create: `apps/api/src/transfer-request/transfer-request.service.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 ```typescript
 import { describe, test, jest, expect, beforeEach } from "@jest/globals";
@@ -526,7 +526,7 @@ describe("TransferRequestService", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 — 실패 확인**
+- [x] **Step 2: 테스트 실행 — 실패 확인**
 
 ```bash
 cd apps/api
@@ -535,7 +535,7 @@ npx jest __test__/transfer-request/transfer-request.service.test.ts --no-coverag
 
 Expected: `Cannot find module '../../src/transfer-request/transfer-request.service'`
 
-- [ ] **Step 3: Service 구현**
+- [x] **Step 3: Service 구현**
 
 ```typescript
 import { AppError } from "../lib/appError";
@@ -660,7 +660,7 @@ export class TransferRequestService {
 }
 ```
 
-- [ ] **Step 4: 테스트 실행 — 통과 확인**
+- [x] **Step 4: 테스트 실행 — 통과 확인**
 
 ```bash
 cd apps/api
@@ -669,7 +669,7 @@ npx jest __test__/transfer-request/transfer-request.service.test.ts --no-coverag
 
 Expected: `Tests: 13 passed, 13 total`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/transfer-request/transfer-request.service.ts apps/api/__test__/transfer-request/transfer-request.service.test.ts
@@ -684,7 +684,7 @@ git commit -m "feat: add TransferRequestService with status machine logic"
 - Create: `apps/api/__test__/transfer-request/transfer-request.controller.test.ts`
 - Create: `apps/api/src/transfer-request/transfer-request.controller.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 ```typescript
 import { describe, test, jest, expect, beforeEach } from "@jest/globals";
@@ -807,7 +807,7 @@ describe("TransferRequestController", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 — 실패 확인**
+- [x] **Step 2: 테스트 실행 — 실패 확인**
 
 ```bash
 cd apps/api
@@ -816,7 +816,7 @@ npx jest __test__/transfer-request/transfer-request.controller.test.ts --no-cove
 
 Expected: `Cannot find module '../../src/transfer-request/transfer-request.controller'`
 
-- [ ] **Step 3: Controller 구현**
+- [x] **Step 3: Controller 구현**
 
 ```typescript
 import { Request, Response, NextFunction } from "express";
@@ -889,7 +889,7 @@ export class TransferRequestController {
 }
 ```
 
-- [ ] **Step 4: 테스트 실행 — 통과 확인**
+- [x] **Step 4: 테스트 실행 — 통과 확인**
 
 ```bash
 cd apps/api
@@ -898,7 +898,7 @@ npx jest __test__/transfer-request/transfer-request.controller.test.ts --no-cove
 
 Expected: `Tests: 11 passed, 11 total`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/transfer-request/transfer-request.controller.ts apps/api/__test__/transfer-request/transfer-request.controller.test.ts
@@ -913,7 +913,7 @@ git commit -m "feat: add TransferRequestController with role guards"
 - Create: `apps/api/src/transfer-request/transfer-request.routes.ts`
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: Routes 파일 생성**
+- [x] **Step 1: Routes 파일 생성**
 
 ```typescript
 import { Router } from "express";
@@ -943,7 +943,7 @@ router.delete("/:id", auth, controller.remove);
 export default router;
 ```
 
-- [ ] **Step 2: apiRouter.ts에 라우트 등록**
+- [x] **Step 2: apiRouter.ts에 라우트 등록**
 
 `apps/api/src/apiRouter.ts`에서 `agencyRouter` import 바로 아래에 추가:
 
@@ -957,7 +957,7 @@ import transferRequestRouter from "./transfer-request/transfer-request.routes";
 apiRouter.use("/transfer-requests", transferRequestRouter);
 ```
 
-- [ ] **Step 3: TypeScript 컴파일 확인**
+- [x] **Step 3: TypeScript 컴파일 확인**
 
 ```bash
 cd apps/api
@@ -966,7 +966,7 @@ npx tsc --noEmit 2>&1 | head -20
 
 Expected: 에러 없음 (출력 없음)
 
-- [ ] **Step 4: 전체 테스트 실행**
+- [x] **Step 4: 전체 테스트 실행**
 
 ```bash
 cd apps/api
@@ -975,7 +975,7 @@ npx jest --no-coverage 2>&1 | tail -20
 
 Expected: 기존 테스트 포함 모두 통과, 새 테스트 24개 추가.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/transfer-request/transfer-request.routes.ts apps/api/src/apiRouter.ts

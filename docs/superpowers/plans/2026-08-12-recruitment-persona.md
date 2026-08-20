@@ -1,6 +1,6 @@
 # Recruitment Persona Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Resolve 4 open criticals from 서지혜 & Claire personas — interview score validation on result confirmation, HEAD_COACH PII access restriction, source enum required, and cost-per-hire KPI endpoint.
 
@@ -32,7 +32,7 @@
 - Modify: `apps/api/prisma/schema.prisma`
 - Create: `apps/api/prisma/migrations/20260812300002_recruitment_persona/migration.sql`
 
-- [ ] **Step 1: Update ApplicationSource enum in schema**
+- [x] **Step 1: Update ApplicationSource enum in schema**
 
 Find `enum ApplicationSource` in `apps/api/prisma/schema.prisma` and replace:
 
@@ -50,7 +50,7 @@ enum ApplicationSource {
 }
 ```
 
-- [ ] **Step 2: Make source non-nullable in JobApplication**
+- [x] **Step 2: Make source non-nullable in JobApplication**
 
 Find `source ApplicationSource?` in the `JobApplication` model and change to:
 
@@ -58,7 +58,7 @@ Find `source ApplicationSource?` in the `JobApplication` model and change to:
 source ApplicationSource
 ```
 
-- [ ] **Step 3: Create migration SQL**
+- [x] **Step 3: Create migration SQL**
 
 ```bash
 mkdir -p apps/api/prisma/migrations/20260812300002_recruitment_persona
@@ -81,7 +81,7 @@ ALTER TABLE "JobApplication" ALTER COLUMN "source" SET NOT NULL;
 ALTER TABLE "JobApplication" ALTER COLUMN "source" SET DEFAULT 'DIRECT';
 ```
 
-- [ ] **Step 4: Apply migration**
+- [x] **Step 4: Apply migration**
 
 ```bash
 cd apps/api
@@ -92,7 +92,7 @@ npx prisma generate
 
 Expected: `Migration 20260812300002_recruitment_persona marked as applied`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/20260812300002_recruitment_persona/
@@ -107,7 +107,7 @@ git commit -m "feat(schema): ApplicationSource enum extended + source required (
 - Modify: `apps/api/src/recruitment/recruitment.service.ts`
 - Modify: `apps/api/__test__/recruitment/recruitment.service.test.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 In `apps/api/__test__/recruitment/recruitment.service.test.ts`, add inside the describe block:
 
@@ -136,7 +136,7 @@ describe('updateInterviewResult', () => {
 });
 ```
 
-- [ ] **Step 2: Run to confirm fail**
+- [x] **Step 2: Run to confirm fail**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="recruitment.service" --no-coverage 2>&1 | tail -15
@@ -144,7 +144,7 @@ cd apps/api && npx jest --testPathPattern="recruitment.service" --no-coverage 2>
 
 Expected: FAIL — no score validation logic.
 
-- [ ] **Step 3: Add score validation in recruitment.service.ts**
+- [x] **Step 3: Add score validation in recruitment.service.ts**
 
 Find `updateInterviewRound` (or equivalent method that sets `result`) in `apps/api/src/recruitment/recruitment.service.ts`. Add score validation before the update:
 
@@ -172,7 +172,7 @@ async updateInterviewRound(
 }
 ```
 
-- [ ] **Step 4: Run test to confirm pass**
+- [x] **Step 4: Run test to confirm pass**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="recruitment.service" --no-coverage 2>&1 | tail -10
@@ -180,7 +180,7 @@ cd apps/api && npx jest --testPathPattern="recruitment.service" --no-coverage 2>
 
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/recruitment/recruitment.service.ts apps/api/__test__/recruitment/recruitment.service.test.ts
@@ -194,11 +194,11 @@ git commit -m "feat(recruitment): validate all 3 interview scores on result conf
 **Files:**
 - Modify: `apps/api/src/recruitment/recruitment.routes.ts`
 
-- [ ] **Step 1: Find the GET /applications/:id route**
+- [x] **Step 1: Find the GET /applications/:id route**
 
 Open `apps/api/src/recruitment/recruitment.routes.ts` and locate the `GET /applications/:id` route handler.
 
-- [ ] **Step 2: Add role guard**
+- [x] **Step 2: Add role guard**
 
 Currently the route likely uses `requireUser`. Replace with a role check:
 
@@ -218,7 +218,7 @@ router.get('/applications/:id', requireUser, (req, res, next) => {
 
 Note: If there is already a separate `HEAD_COACH` interview scoring endpoint that doesn't expose PII fields, ensure it remains accessible — only the full application detail route is restricted.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/recruitment/recruitment.routes.ts
@@ -235,7 +235,7 @@ git commit -m "feat(recruitment): restrict application PII to HR/ADMIN/SUPER_ADM
 - Modify: `apps/api/src/recruitment/recruitment.routes.ts`
 - Create: `apps/api/__test__/recruitment/cost-per-hire.test.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 Create `apps/api/__test__/recruitment/cost-per-hire.test.ts`:
 
@@ -277,7 +277,7 @@ describe('getCostPerHire', () => {
 });
 ```
 
-- [ ] **Step 2: Run to confirm fail**
+- [x] **Step 2: Run to confirm fail**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="cost-per-hire" --no-coverage 2>&1 | tail -10
@@ -285,7 +285,7 @@ cd apps/api && npx jest --testPathPattern="cost-per-hire" --no-coverage 2>&1 | t
 
 Expected: FAIL — `getCostPerHire` not defined.
 
-- [ ] **Step 3: Add getCostPerHire to repo**
+- [x] **Step 3: Add getCostPerHire to repo**
 
 In `apps/api/src/recruitment/recruitment.repo.ts`, add:
 
@@ -314,7 +314,7 @@ async getCostPerHire() {
 }
 ```
 
-- [ ] **Step 4: Add getCostPerHire to controller**
+- [x] **Step 4: Add getCostPerHire to controller**
 
 In `apps/api/src/recruitment/recruitment.controller.ts`, add:
 
@@ -325,7 +325,7 @@ async getCostPerHire(req: Request, res: Response) {
 }
 ```
 
-- [ ] **Step 5: Register route**
+- [x] **Step 5: Register route**
 
 In `apps/api/src/recruitment/recruitment.routes.ts`, add alongside `time-to-hire`:
 
@@ -334,7 +334,7 @@ In `apps/api/src/recruitment/recruitment.routes.ts`, add alongside `time-to-hire
 router.get('/cost-per-hire', requireUser, controller.getCostPerHire);
 ```
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="cost-per-hire" --no-coverage 2>&1 | tail -10
@@ -342,7 +342,7 @@ cd apps/api && npx jest --testPathPattern="cost-per-hire" --no-coverage 2>&1 | t
 
 Expected: PASS
 
-- [ ] **Step 7: Run full recruitment test suite**
+- [x] **Step 7: Run full recruitment test suite**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="recruitment" --no-coverage 2>&1 | tail -15
@@ -350,7 +350,7 @@ cd apps/api && npx jest --testPathPattern="recruitment" --no-coverage 2>&1 | tai
 
 Expected: All PASS
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add apps/api/src/recruitment/ apps/api/__test__/recruitment/cost-per-hire.test.ts

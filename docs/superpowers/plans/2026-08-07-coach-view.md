@@ -1,6 +1,6 @@
 # 감독 뷰 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** HEAD_COACH 역할에 맞게 메뉴를 정리하고, 대시보드에 "오늘 훈련·부상자·다음 경기" 3-box를 추가하며, 영어로 노출되던 훈련 상태값을 한국어로 교체한다.
 
@@ -27,7 +27,7 @@
 **Files:**
 - Modify: `football/src/types/training.ts`
 
-- [ ] **Step 1: SESSION_TYPE_LABEL 교체**
+- [x] **Step 1: SESSION_TYPE_LABEL 교체**
 
 `football/src/types/training.ts`에서 아래 상수를 찾아 교체:
 
@@ -43,7 +43,7 @@ export const SESSION_TYPE_LABEL: Record<SessionType, string> = {
 }
 ```
 
-- [ ] **Step 2: ATTENDANCE_LABEL 교체**
+- [x] **Step 2: ATTENDANCE_LABEL 교체**
 
 같은 파일에서:
 
@@ -56,7 +56,7 @@ export const ATTENDANCE_LABEL: Record<AttendanceStatus, string> = {
 }
 ```
 
-- [ ] **Step 3: PHASE_LABEL 교체**
+- [x] **Step 3: PHASE_LABEL 교체**
 
 같은 파일에서:
 
@@ -69,7 +69,7 @@ export const PHASE_LABEL: Record<ContentPhase, string> = {
 }
 ```
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add football/src/types/training.ts
@@ -84,7 +84,7 @@ git commit -m "fix(i18n): 훈련 상태값·세션 타입·출결 라벨 한국�
 - Modify: `football/src/layouts/AppShell.tsx`
 - Modify: `football/src/App.tsx`
 
-- [ ] **Step 1: /equipment에서 COACHING_STAFF 제거**
+- [x] **Step 1: /equipment에서 COACHING_STAFF 제거**
 
 `football/src/layouts/AppShell.tsx`에서 `/equipment` 항목을 찾아 수정:
 
@@ -110,7 +110,7 @@ git commit -m "fix(i18n): 훈련 상태값·세션 타입·출결 라벨 한국�
 },
 ```
 
-- [ ] **Step 2: /training/dashboard → /training/analysis (AppShell nav)**
+- [x] **Step 2: /training/dashboard → /training/analysis (AppShell nav)**
 
 같은 파일에서 `/training/dashboard` 항목을 찾아 수정:
 
@@ -134,7 +134,7 @@ git commit -m "fix(i18n): 훈련 상태값·세션 타입·출결 라벨 한국�
 },
 ```
 
-- [ ] **Step 3: App.tsx 라우트 경로 변경**
+- [x] **Step 3: App.tsx 라우트 경로 변경**
 
 `football/src/App.tsx`에서:
 
@@ -146,7 +146,7 @@ git commit -m "fix(i18n): 훈련 상태값·세션 타입·출결 라벨 한국�
 <Route path="/training/analysis" element={<CoachDashboardPage />} />
 ```
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add football/src/layouts/AppShell.tsx football/src/App.tsx
@@ -160,7 +160,7 @@ git commit -m "fix(nav): COACHING_STAFF 장비 메뉴 숨김, 훈련 분석 경�
 **Files:**
 - Create: `football/src/components/dashboard/CoachQuickView.tsx`
 
-- [ ] **Step 1: 컴포넌트 파일 생성**
+- [x] **Step 1: 컴포넌트 파일 생성**
 
 `football/src/components/dashboard/CoachQuickView.tsx` 신규 생성:
 
@@ -322,7 +322,7 @@ export function CoachQuickView({ seasonId }: { seasonId: number | undefined }) {
 }
 ```
 
-- [ ] **Step 2: injury.service.ts에서 active() 반환 타입 확인**
+- [x] **Step 2: injury.service.ts에서 active() 반환 타입 확인**
 
 `football/src/services/injury.service.ts`를 열어 `active()` 반환값에 `playerName`, `expectedReturnDate`가 있는지 확인. 없으면 `injuryApi.active()` 호출 후 playerId를 쓰는 부분을 수정하거나 타입을 보완.
 
@@ -338,7 +338,7 @@ export function CoachQuickView({ seasonId }: { seasonId: number | undefined }) {
 .map((i) => i.playerId)
 ```
 
-- [ ] **Step 3: TrainingParticipant 타입에 playerName 확인**
+- [x] **Step 3: TrainingParticipant 타입에 playerName 확인**
 
 `football/src/types/training.ts`에서 `TrainingParticipant` 혹은 `TrainingSessionDetail`의 participants 배열 타입을 확인. `playerName`이 없으면 `playerId`로 대체:
 
@@ -347,7 +347,7 @@ export function CoachQuickView({ seasonId }: { seasonId: number | undefined }) {
 .map((p: TrainingParticipant) => p.playerName ?? p.playerId)
 ```
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add football/src/components/dashboard/CoachQuickView.tsx
@@ -361,7 +361,7 @@ git commit -m "feat(dashboard): CoachQuickView 3-box 컴포넌트 추가"
 **Files:**
 - Modify: `football/src/pages/dashboard/DashboardPage.tsx`
 
-- [ ] **Step 1: import 추가**
+- [x] **Step 1: import 추가**
 
 `DashboardPage.tsx` 상단 import 블록에 추가:
 
@@ -369,7 +369,7 @@ git commit -m "feat(dashboard): CoachQuickView 3-box 컴포넌트 추가"
 import { CoachQuickView } from '@/components/dashboard/CoachQuickView'
 ```
 
-- [ ] **Step 2: currentSeasonId state 확인**
+- [x] **Step 2: currentSeasonId state 확인**
 
 `DashboardPage.tsx`에서 `seasonId`를 담는 state 변수명 확인. 이미 있으면 재사용. 없으면:
 
@@ -386,7 +386,7 @@ seasonApi.getActive().then((s) => {
 }).catch(() => null)
 ```
 
-- [ ] **Step 3: HEAD_COACH 조건부 렌더링 삽입**
+- [x] **Step 3: HEAD_COACH 조건부 렌더링 삽입**
 
 `DashboardPage.tsx`의 return 블록에서 `{/* 숫자 카드 */}` 바로 위에 삽입:
 
@@ -401,7 +401,7 @@ seasonApi.getActive().then((s) => {
   ...
 ```
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add football/src/pages/dashboard/DashboardPage.tsx
@@ -412,25 +412,25 @@ git commit -m "feat(dashboard): HEAD_COACH 대시보드에 CoachQuickView 3-box 
 
 ## Task 5: 수동 검증
 
-- [ ] **Step 1: 개발 서버 실행**
+- [x] **Step 1: 개발 서버 실행**
 
 ```bash
 cd football && npm run dev
 ```
 
-- [ ] **Step 2: COACHING_STAFF / HEAD_COACH 계정으로 로그인 후 확인**
+- [x] **Step 2: COACHING_STAFF / HEAD_COACH 계정으로 로그인 후 확인**
 
-- [ ] 사이드바에 장비 관리 메뉴가 보이지 않는지 확인
-- [ ] 훈련 메뉴 아래 "코치 대시보드" 클릭 시 `/training/analysis` 경로로 열리는지 확인
-- [ ] 대시보드 진입 시 stat cards 위에 3-box(오늘 훈련 / 부상자 / 다음 경기)가 표시되는지 확인
-- [ ] 훈련 세션 타입 배지가 한국어로 표시되는지 확인 (예: "수비 전술")
-- [ ] 출결 상태가 한국어로 표시되는지 확인 (예: "출석", "무단 결석")
+- [x] 사이드바에 장비 관리 메뉴가 보이지 않는지 확인
+- [x] 훈련 메뉴 아래 "코치 대시보드" 클릭 시 `/training/analysis` 경로로 열리는지 확인
+- [x] 대시보드 진입 시 stat cards 위에 3-box(오늘 훈련 / 부상자 / 다음 경기)가 표시되는지 확인
+- [x] 훈련 세션 타입 배지가 한국어로 표시되는지 확인 (예: "수비 전술")
+- [x] 출결 상태가 한국어로 표시되는지 확인 (예: "출석", "무단 결석")
 
-- [ ] **Step 3: FRONT_OFFICE 계정으로 로그인 후 장비 메뉴 정상 표시 확인**
+- [x] **Step 3: FRONT_OFFICE 계정으로 로그인 후 장비 메뉴 정상 표시 확인**
 
 COACHING_STAFF에서만 제거됐고 FRONT_OFFICE는 그대로인지 확인.
 
-- [ ] **Step 4: 최종 커밋 + PR 생성**
+- [x] **Step 4: 최종 커밋 + PR 생성**
 
 ```bash
 git push -u origin feat/coach-view
@@ -444,10 +444,10 @@ gh pr create \
 - 훈련 세션 타입, 출결 상태, 훈련 단계 라벨 한국어 교체
 
 ## Test plan
-- [ ] HEAD_COACH 로그인 → 사이드바 장비 메뉴 없음 확인
-- [ ] 대시보드 3-box 정상 렌더링 확인
-- [ ] 훈련 페이지 한국어 라벨 확인
-- [ ] FRONT_OFFICE 로그인 → 장비 메뉴 정상 표시 확인
+- [x] HEAD_COACH 로그인 → 사이드바 장비 메뉴 없음 확인
+- [x] 대시보드 3-box 정상 렌더링 확인
+- [x] 훈련 페이지 한국어 라벨 확인
+- [x] FRONT_OFFICE 로그인 → 장비 메뉴 정상 표시 확인
 
 🤖 Generated with Claude Code
 EOF

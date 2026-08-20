@@ -1,6 +1,6 @@
 # Inbound Application Webhook Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** `POST /webhooks/applications/:source` 엔드포인트 구현 — 사람인/Glassdoor/Indeed/Facebook 인바운드 지원서를 HMAC 검증 후 JobApplication으로 저장.
 
@@ -39,7 +39,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: schema.prisma 수정 — ApplicationSource에 FACEBOOK 추가**
+- [x] **Step 1: schema.prisma 수정 — ApplicationSource에 FACEBOOK 추가**
 
 `apps/api/prisma/schema.prisma`의 `ApplicationSource` enum 찾아서:
 
@@ -53,7 +53,7 @@ enum ApplicationSource {
 }
 ```
 
-- [ ] **Step 2: schema.prisma 수정 — JobPosting에 externalJobId 추가**
+- [x] **Step 2: schema.prisma 수정 — JobPosting에 externalJobId 추가**
 
 `JobPosting` 모델(`model JobPosting {` 찾기, 현재 line ~2103)에서 `updatedAt` 다음 줄에 추가:
 
@@ -80,7 +80,7 @@ model JobPosting {
 }
 ```
 
-- [ ] **Step 3: 마이그레이션 실행**
+- [x] **Step 3: 마이그레이션 실행**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -89,7 +89,7 @@ npx prisma migrate dev --name add_webhook_externalJobId_and_facebook_source
 
 Expected: `Your database is now in sync with your schema.` 출력.
 
-- [ ] **Step 4: Prisma 클라이언트 재생성**
+- [x] **Step 4: Prisma 클라이언트 재생성**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -98,7 +98,7 @@ npm run generate
 
 Expected: `Generated Prisma Client` 출력.
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 cd /Users/juno/work/football
@@ -121,7 +121,7 @@ git commit -m "feat: add JobPosting.externalJobId and ApplicationSource.FACEBOOK
 - Test: `apps/api/__test__/webhook/adapters/indeed.adapter.test.ts`
 - Test: `apps/api/__test__/webhook/adapters/facebook.adapter.test.ts`
 
-- [ ] **Step 1: types.ts 작성**
+- [x] **Step 1: types.ts 작성**
 
 `apps/api/src/webhook/adapters/types.ts`:
 
@@ -140,7 +140,7 @@ export interface WebhookAdapter {
 }
 ```
 
-- [ ] **Step 2: 테스트 파일 4개 작성 (실패 확인용)**
+- [x] **Step 2: 테스트 파일 4개 작성 (실패 확인용)**
 
 `apps/api/__test__/webhook/adapters/saramin.adapter.test.ts`:
 
@@ -280,7 +280,7 @@ describe("FacebookAdapter", () => {
 });
 ```
 
-- [ ] **Step 3: 테스트 실행 — 실패 확인**
+- [x] **Step 3: 테스트 실행 — 실패 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -289,7 +289,7 @@ npx jest __test__/webhook/adapters --no-coverage
 
 Expected: 4개 파일 모두 FAIL (파일 없음)
 
-- [ ] **Step 4: saramin.adapter.ts 구현**
+- [x] **Step 4: saramin.adapter.ts 구현**
 
 `apps/api/src/webhook/adapters/saramin.adapter.ts`:
 
@@ -315,7 +315,7 @@ export class SaraminAdapter implements WebhookAdapter {
 }
 ```
 
-- [ ] **Step 5: glassdoor.adapter.ts 구현**
+- [x] **Step 5: glassdoor.adapter.ts 구현**
 
 `apps/api/src/webhook/adapters/glassdoor.adapter.ts`:
 
@@ -341,7 +341,7 @@ export class GlassdoorAdapter implements WebhookAdapter {
 }
 ```
 
-- [ ] **Step 6: indeed.adapter.ts 구현**
+- [x] **Step 6: indeed.adapter.ts 구현**
 
 `apps/api/src/webhook/adapters/indeed.adapter.ts`:
 
@@ -368,7 +368,7 @@ export class IndeedAdapter implements WebhookAdapter {
 }
 ```
 
-- [ ] **Step 7: facebook.adapter.ts 구현**
+- [x] **Step 7: facebook.adapter.ts 구현**
 
 `apps/api/src/webhook/adapters/facebook.adapter.ts`:
 
@@ -394,7 +394,7 @@ export class FacebookAdapter implements WebhookAdapter {
 }
 ```
 
-- [ ] **Step 8: 테스트 실행 — 통과 확인**
+- [x] **Step 8: 테스트 실행 — 통과 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -403,7 +403,7 @@ npx jest __test__/webhook/adapters --no-coverage
 
 Expected: 8개 테스트 모두 PASS
 
-- [ ] **Step 9: 커밋**
+- [x] **Step 9: 커밋**
 
 ```bash
 cd /Users/juno/work/football
@@ -419,7 +419,7 @@ git commit -m "feat: add webhook source adapters (saramin, glassdoor, indeed, fa
 - Create: `apps/api/src/webhook/hmac.middleware.ts`
 - Test: `apps/api/__test__/webhook/hmac.middleware.test.ts`
 
-- [ ] **Step 1: 테스트 작성**
+- [x] **Step 1: 테스트 작성**
 
 `apps/api/__test__/webhook/hmac.middleware.test.ts`:
 
@@ -505,7 +505,7 @@ describe("verifyWebhookSignature", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 — 실패 확인**
+- [x] **Step 2: 테스트 실행 — 실패 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -514,7 +514,7 @@ npx jest __test__/webhook/hmac.middleware --no-coverage
 
 Expected: FAIL (파일 없음)
 
-- [ ] **Step 3: hmac.middleware.ts 구현**
+- [x] **Step 3: hmac.middleware.ts 구현**
 
 `apps/api/src/webhook/hmac.middleware.ts`:
 
@@ -566,7 +566,7 @@ export function verifyWebhookSignature(req: Request, _res: Response, next: NextF
 }
 ```
 
-- [ ] **Step 4: 테스트 실행 — 통과 확인**
+- [x] **Step 4: 테스트 실행 — 통과 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -575,7 +575,7 @@ npx jest __test__/webhook/hmac.middleware --no-coverage
 
 Expected: 5개 테스트 모두 PASS
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 cd /Users/juno/work/football
@@ -591,7 +591,7 @@ git commit -m "feat: add HMAC signature verification middleware for webhooks"
 - Create: `apps/api/src/webhook/webhook.service.ts`
 - Test: `apps/api/__test__/webhook/webhook.service.test.ts`
 
-- [ ] **Step 1: 테스트 작성**
+- [x] **Step 1: 테스트 작성**
 
 `apps/api/__test__/webhook/webhook.service.test.ts`:
 
@@ -671,7 +671,7 @@ describe("WebhookService.handleInbound", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 — 실패 확인**
+- [x] **Step 2: 테스트 실행 — 실패 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -680,7 +680,7 @@ npx jest __test__/webhook/webhook.service --no-coverage
 
 Expected: FAIL (파일 없음)
 
-- [ ] **Step 3: webhook.service.ts 구현**
+- [x] **Step 3: webhook.service.ts 구현**
 
 `apps/api/src/webhook/webhook.service.ts`:
 
@@ -723,7 +723,7 @@ export class WebhookService {
 }
 ```
 
-- [ ] **Step 4: 테스트 실행 — 통과 확인**
+- [x] **Step 4: 테스트 실행 — 통과 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -732,7 +732,7 @@ npx jest __test__/webhook/webhook.service --no-coverage
 
 Expected: 3개 테스트 모두 PASS
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 cd /Users/juno/work/football
@@ -749,7 +749,7 @@ git commit -m "feat: add WebhookService for inbound application upsert"
 - Create: `apps/api/src/webhook/webhook.routes.ts`
 - Modify: `apps/api/src/app.ts`
 
-- [ ] **Step 1: webhook.controller.ts 작성**
+- [x] **Step 1: webhook.controller.ts 작성**
 
 `apps/api/src/webhook/webhook.controller.ts`:
 
@@ -791,7 +791,7 @@ export class WebhookController {
 }
 ```
 
-- [ ] **Step 2: webhook.routes.ts 작성**
+- [x] **Step 2: webhook.routes.ts 작성**
 
 `apps/api/src/webhook/webhook.routes.ts`:
 
@@ -811,7 +811,7 @@ router.post("/applications/:source", verifyWebhookSignature, controller.handleAp
 export default router;
 ```
 
-- [ ] **Step 3: app.ts 수정**
+- [x] **Step 3: app.ts 수정**
 
 `apps/api/src/app.ts`를 다음과 같이 변경 — `/webhooks`를 `express.json()` 이전에 마운트하고, `express.json()`을 `/api`로 범위 축소:
 
@@ -842,7 +842,7 @@ app.use(errorHandler);
 export default app
 ```
 
-- [ ] **Step 4: TypeScript 빌드 확인**
+- [x] **Step 4: TypeScript 빌드 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -851,7 +851,7 @@ npx tsc --noEmit
 
 Expected: 오류 없음
 
-- [ ] **Step 5: 전체 테스트 실행**
+- [x] **Step 5: 전체 테스트 실행**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -860,7 +860,7 @@ npx jest --no-coverage
 
 Expected: 기존 테스트 포함 모두 PASS
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 cd /Users/juno/work/football
@@ -872,9 +872,9 @@ git commit -m "feat: wire up webhook router for inbound application endpoint"
 
 ## 완료 체크리스트
 
-- [ ] `GET /api` 기존 테스트 통과 확인 (app.ts 변경 영향 없음)
-- [ ] `POST /webhooks/applications/saramin` — 유효한 서명 + payload → `{ received: true, id: N }` 반환
-- [ ] `POST /webhooks/applications/unknown` → 400
-- [ ] 서명 오류 → 401
-- [ ] 존재하지 않는 `externalJobId` → 404
-- [ ] 동일 `externalApplicantId` 재전송 → 200 (중복 생성 없음)
+- [x] `GET /api` 기존 테스트 통과 확인 (app.ts 변경 영향 없음)
+- [x] `POST /webhooks/applications/saramin` — 유효한 서명 + payload → `{ received: true, id: N }` 반환
+- [x] `POST /webhooks/applications/unknown` → 400
+- [x] 서명 오류 → 401
+- [x] 존재하지 않는 `externalJobId` → 404
+- [x] 동일 `externalApplicantId` 재전송 → 200 (중복 생성 없음)

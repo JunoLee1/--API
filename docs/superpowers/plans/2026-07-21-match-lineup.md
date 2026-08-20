@@ -1,6 +1,6 @@
 # Match Starting Lineup Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 경기별 포메이션·선발·후보 라인업을 COACHING_STAFF/HEAD_COACH가 구성하고, HEAD_COACH가 확정하는 기능을 BE부터 FE까지 구현한다.
 
@@ -39,7 +39,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: Match 모델 끝에 lineup 관계 추가**
+- [x] **Step 1: Match 모델 끝에 lineup 관계 추가**
 
 `apps/api/prisma/schema.prisma`의 Match 모델 (line ~744)에서 `shotEvents ShotEvent[]` 다음 줄에 추가:
 
@@ -47,7 +47,7 @@
   matchLineup      MatchLineup?
 ```
 
-- [ ] **Step 2: Player 모델에 lineupSlots 관계 추가**
+- [x] **Step 2: Player 모델에 lineupSlots 관계 추가**
 
 Player 모델에 `matchSquads MatchSquad[]` 줄 다음에 추가:
 
@@ -55,7 +55,7 @@ Player 모델에 `matchSquads MatchSquad[]` 줄 다음에 추가:
   lineupSlots      LineupSlot[]
 ```
 
-- [ ] **Step 3: User 모델에 lineupConfirmations 관계 추가**
+- [x] **Step 3: User 모델에 lineupConfirmations 관계 추가**
 
 User 모델에 `squadConfirmations MatchSquad[]` 줄 다음에 추가:
 
@@ -63,7 +63,7 @@ User 모델에 `squadConfirmations MatchSquad[]` 줄 다음에 추가:
   lineupConfirmations MatchLineup[] @relation("LineupConfirmations")
 ```
 
-- [ ] **Step 4: MatchLineup + LineupSlot 모델 추가**
+- [x] **Step 4: MatchLineup + LineupSlot 모델 추가**
 
 `schema.prisma` 파일 끝 (MatchSquad 모델 이후)에 추가:
 
@@ -99,7 +99,7 @@ model LineupSlot {
 }
 ```
 
-- [ ] **Step 5: Migration 실행**
+- [x] **Step 5: Migration 실행**
 
 ```bash
 cd apps/api && npx prisma migrate dev --name add_match_lineup
@@ -107,7 +107,7 @@ cd apps/api && npx prisma migrate dev --name add_match_lineup
 
 Expected: `✔ Generated Prisma Client` 출력, 에러 없음.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/prisma/
@@ -121,7 +121,7 @@ git commit -m "feat(lineup): MatchLineup + LineupSlot 스키마 추가"
 **Files:**
 - Create: `apps/api/src/match/dto/lineup.dto.ts`
 
-- [ ] **Step 1: DTO 파일 작성**
+- [x] **Step 1: DTO 파일 작성**
 
 ```typescript
 // apps/api/src/match/dto/lineup.dto.ts
@@ -138,7 +138,7 @@ export interface SaveLineupDto {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/match/dto/lineup.dto.ts
@@ -153,7 +153,7 @@ git commit -m "feat(lineup): lineup DTO 추가"
 - Create: `apps/api/__test__/match/match.lineup.service.test.ts`
 - Create: `apps/api/src/match/match.lineup.service.ts`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 ```typescript
 // apps/api/__test__/match/match.lineup.service.test.ts
@@ -235,7 +235,7 @@ describe("MatchLineupService - confirmLineup", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 — FAIL 확인**
+- [x] **Step 2: 테스트 실행 — FAIL 확인**
 
 ```bash
 cd apps/api && npx jest __test__/match/match.lineup.service.test.ts --no-coverage
@@ -243,7 +243,7 @@ cd apps/api && npx jest __test__/match/match.lineup.service.test.ts --no-coverag
 
 Expected: `Cannot find module '../../src/match/match.lineup.service'`
 
-- [ ] **Step 3: Service 구현**
+- [x] **Step 3: Service 구현**
 
 ```typescript
 // apps/api/src/match/match.lineup.service.ts
@@ -286,7 +286,7 @@ export class MatchLineupService {
 }
 ```
 
-- [ ] **Step 4: 테스트 실행 — PASS 확인**
+- [x] **Step 4: 테스트 실행 — PASS 확인**
 
 ```bash
 cd apps/api && npx jest __test__/match/match.lineup.service.test.ts --no-coverage
@@ -294,7 +294,7 @@ cd apps/api && npx jest __test__/match/match.lineup.service.test.ts --no-coverag
 
 Expected: `Tests: 5 passed, 5 total`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/match/match.lineup.service.ts apps/api/__test__/match/match.lineup.service.test.ts
@@ -308,7 +308,7 @@ git commit -m "feat(lineup): MatchLineupService 구현 + 테스트"
 **Files:**
 - Create: `apps/api/src/match/match.lineup.repo.ts`
 
-- [ ] **Step 1: Repo 작성**
+- [x] **Step 1: Repo 작성**
 
 ```typescript
 // apps/api/src/match/match.lineup.repo.ts
@@ -369,7 +369,7 @@ export class MatchLineupRepository {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/match/match.lineup.repo.ts
@@ -384,7 +384,7 @@ git commit -m "feat(lineup): MatchLineupRepository 구현"
 - Create: `apps/api/src/match/match.lineup.controller.ts`
 - Modify: `apps/api/src/match/match.routes.ts`
 
-- [ ] **Step 1: Controller 작성**
+- [x] **Step 1: Controller 작성**
 
 ```typescript
 // apps/api/src/match/match.lineup.controller.ts
@@ -428,7 +428,7 @@ export class MatchLineupController {
 }
 ```
 
-- [ ] **Step 2: match.routes.ts에 lineup 라우트 등록**
+- [x] **Step 2: match.routes.ts에 lineup 라우트 등록**
 
 `apps/api/src/match/match.routes.ts`에서 import 블록 끝 (getPrisma import 위)에 추가:
 
@@ -450,7 +450,7 @@ router.put("/:id/lineup", auth, lineupController.saveLineup);
 router.post("/:id/lineup/confirm", auth, lineupController.confirmLineup);
 ```
 
-- [ ] **Step 3: 빌드 확인**
+- [x] **Step 3: 빌드 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit
@@ -458,7 +458,7 @@ cd apps/api && npx tsc --noEmit
 
 Expected: 에러 없음.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/src/match/match.lineup.controller.ts apps/api/src/match/match.routes.ts
@@ -473,7 +473,7 @@ git commit -m "feat(lineup): lineup 컨트롤러 + 라우트 등록"
 - Create: `football/src/types/lineup.ts`
 - Create: `football/src/services/lineup.service.ts`
 
-- [ ] **Step 1: 타입 정의**
+- [x] **Step 1: 타입 정의**
 
 ```typescript
 // football/src/types/lineup.ts
@@ -519,7 +519,7 @@ export interface LineupDragPayload {
 }
 ```
 
-- [ ] **Step 2: API 서비스 작성**
+- [x] **Step 2: API 서비스 작성**
 
 ```typescript
 // football/src/services/lineup.service.ts
@@ -538,7 +538,7 @@ export const lineupApi = {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/types/lineup.ts football/src/services/lineup.service.ts
@@ -554,7 +554,7 @@ git commit -m "feat(lineup): FE 타입 + lineupApi 서비스"
 
 드래그 전송 키: `'text/lineup-player'` (FormationSlot의 `'text/squad-player'`와 분리)
 
-- [ ] **Step 1: 전체 페이지 구현**
+- [x] **Step 1: 전체 페이지 구현**
 
 ```tsx
 // football/src/pages/matches/MatchLineupPage.tsx
@@ -1017,7 +1017,7 @@ export function MatchLineupPage() {
 }
 ```
 
-- [ ] **Step 2: TypeScript 타입 확인**
+- [x] **Step 2: TypeScript 타입 확인**
 
 ```bash
 cd football && npx tsc --noEmit
@@ -1025,7 +1025,7 @@ cd football && npx tsc --noEmit
 
 Expected: 에러 없음.
 
-- [ ] **Step 3: 브라우저에서 동작 확인**
+- [x] **Step 3: 브라우저에서 동작 확인**
 
 1. 코칭스태프 계정으로 로그인 후 경기 상세 → "라인업 관리" 버튼 클릭
 2. 선수 풀에서 선수 카드를 피치 슬롯으로 드래그해서 배치 확인
@@ -1033,7 +1033,7 @@ Expected: 에러 없음.
 4. "저장" 버튼 클릭 → 성공 토스트 확인
 5. 페이지 새로고침 후 배치 상태 유지 확인
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/pages/matches/MatchLineupPage.tsx
@@ -1044,7 +1044,7 @@ git commit -m "feat(lineup): MatchLineupPage 드래그앤드롭 라인업 관리
 
 ### Task 8: 전체 테스트 실행
 
-- [ ] **Step 1: BE 전체 테스트**
+- [x] **Step 1: BE 전체 테스트**
 
 ```bash
 cd apps/api && npx jest --no-coverage
@@ -1052,7 +1052,7 @@ cd apps/api && npx jest --no-coverage
 
 Expected: 기존 테스트 포함 모두 PASS.
 
-- [ ] **Step 2: FE 타입 최종 확인**
+- [x] **Step 2: FE 타입 최종 확인**
 
 ```bash
 cd football && npx tsc --noEmit
@@ -1060,7 +1060,7 @@ cd football && npx tsc --noEmit
 
 Expected: 에러 없음.
 
-- [ ] **Step 3: 최종 commit**
+- [x] **Step 3: 최종 commit**
 
 ```bash
 git add -A

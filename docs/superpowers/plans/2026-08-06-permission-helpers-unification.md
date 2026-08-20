@@ -1,6 +1,6 @@
 # Permission Helpers Unification Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 흩어진 role/foRole 권한 체크를 `permissions.ts`의 중앙 헬퍼로 통일하고, SUPER_ADMIN 전용 게이트를 명확히 분리한다.
 
@@ -42,7 +42,7 @@
 - Modify: `apps/api/src/lib/permissions.ts`
 - Modify: `apps/api/__test__/lib/permissions.test.ts`
 
-- [ ] **Step 1: 실패하는 테스트 작성**
+- [x] **Step 1: 실패하는 테스트 작성**
 
 `apps/api/__test__/lib/permissions.test.ts`의 기존 내용을 유지하고 아래 블록을 맨 끝에 추가:
 
@@ -117,7 +117,7 @@ describe("canManageTD", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx jest __test__/lib/permissions.test.ts --no-coverage 2>&1 | tail -15
@@ -125,7 +125,7 @@ cd /Users/juno/work/football/apps/api && npx jest __test__/lib/permissions.test.
 
 Expected: FAIL — `requireSuperAdmin is not a function` 등
 
-- [ ] **Step 3: `permissions.ts` 구현**
+- [x] **Step 3: `permissions.ts` 구현**
 
 `apps/api/src/lib/permissions.ts` 전체를 아래로 교체:
 
@@ -190,7 +190,7 @@ export const canManageTD = (role: string, foRole?: string | null): boolean =>
   (role === 'FRONT_OFFICE' && foRole === 'TD')
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx jest __test__/lib/permissions.test.ts --no-coverage 2>&1 | tail -10
@@ -198,7 +198,7 @@ cd /Users/juno/work/football/apps/api && npx jest __test__/lib/permissions.test.
 
 Expected: PASS (모든 테스트)
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 cd /Users/juno/work/football && git add apps/api/src/lib/permissions.ts apps/api/__test__/lib/permissions.test.ts
@@ -214,7 +214,7 @@ git commit -m "feat: add requireSuperAdmin and domain permission helpers to perm
 - Modify: `apps/api/src/admin/admin.service.ts`
 - Modify: `apps/api/__test__/admin/admin.service.test.ts`
 
-- [ ] **Step 1: admin.service.ts — setDemoStatus에서 requesterRole 파라미터 제거**
+- [x] **Step 1: admin.service.ts — setDemoStatus에서 requesterRole 파라미터 제거**
 
 `setDemoStatus` 메서드를 아래로 교체 (SUPER_ADMIN 체크는 controller로 이동):
 
@@ -229,7 +229,7 @@ async setDemoStatus(id: number, dto: SetDemoDto, requesterId: number) {
 }
 ```
 
-- [ ] **Step 2: admin.service.test.ts — setDemoStatus 테스트 업데이트**
+- [x] **Step 2: admin.service.test.ts — setDemoStatus 테스트 업데이트**
 
 `describe("AdminService - setDemoStatus")`블록을 아래로 교체:
 
@@ -262,7 +262,7 @@ describe("AdminService - setDemoStatus", () => {
 });
 ```
 
-- [ ] **Step 3: admin.controller.ts — deleteUser + setDemoStatus 교체**
+- [x] **Step 3: admin.controller.ts — deleteUser + setDemoStatus 교체**
 
 `deleteUser` 핸들러 내부:
 ```typescript
@@ -303,7 +303,7 @@ setDemoStatus = async (req: Request, res: Response, next: NextFunction) => {
 import { hasPermission, Permission, requireSuperAdmin } from "../lib/permissions";
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx jest __test__/admin/admin.service.test.ts --no-coverage 2>&1 | tail -10
@@ -311,7 +311,7 @@ cd /Users/juno/work/football/apps/api && npx jest __test__/admin/admin.service.t
 
 Expected: PASS (기존 통과 테스트 유지 + setDemoStatus 3개 통과)
 
-- [ ] **Step 5: 타입 체크**
+- [x] **Step 5: 타입 체크**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | tail -5
@@ -319,7 +319,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | tail -5
 
 Expected: 에러 없음
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 cd /Users/juno/work/football && git add apps/api/src/admin/admin.controller.ts apps/api/src/admin/admin.service.ts apps/api/__test__/admin/admin.service.test.ts
@@ -353,11 +353,11 @@ const canWrite = (role: string, foRole: string | null | undefined) =>
 
 `run.controller.ts`만 `canConfirm`도 있습니다 — 건드리지 않습니다.
 
-- [ ] **Step 1: 4개 파일 수정**
+- [x] **Step 1: 4개 파일 수정**
 
 각 파일 import와 canWrite 함수를 위 패턴으로 수정.
 
-- [ ] **Step 2: 타입 체크**
+- [x] **Step 2: 타입 체크**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | tail -5
@@ -365,7 +365,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | tail -5
 
 Expected: 에러 없음
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 cd /Users/juno/work/football && git add apps/api/src/payroll/
@@ -382,7 +382,7 @@ git commit -m "refactor: replace inline finance checks with canWriteFinance in p
 - Modify: `apps/api/src/sponsorship/sponsorship.controller.ts`
 - Modify: `apps/api/src/meal-expense/meal-expense.controller.ts`
 
-- [ ] **Step 1: `financial-report/financial-report.controller.ts` 수정**
+- [x] **Step 1: `financial-report/financial-report.controller.ts` 수정**
 
 import 교체:
 ```typescript
@@ -398,7 +398,7 @@ const canRead = (role: string, foRole: string | null | undefined) =>
   canReadFinance(role, foRole) || (role === "FRONT_OFFICE" && foRole === "TD");
 ```
 
-- [ ] **Step 2: `operating-expense/operating-expense.controller.ts` 수정**
+- [x] **Step 2: `operating-expense/operating-expense.controller.ts` 수정**
 
 import 교체:
 ```typescript
@@ -417,7 +417,7 @@ const canDelete = (role: string, foRole: string | null | undefined) =>
   canWriteFinance(role, foRole);
 ```
 
-- [ ] **Step 3: `sponsorship/sponsorship.controller.ts` 수정**
+- [x] **Step 3: `sponsorship/sponsorship.controller.ts` 수정**
 
 ```typescript
 import { isAdminLike, canWriteFinance } from "../lib/permissions";
@@ -431,7 +431,7 @@ isAdminLike(role) || (role === "FRONT_OFFICE" && foRole === "FINANCE_MANAGER");
 
 (`isAdminLike`를 다른 곳에서도 쓰면 import 유지, 아니면 제거)
 
-- [ ] **Step 4: `meal-expense/meal-expense.controller.ts` 수정**
+- [x] **Step 4: `meal-expense/meal-expense.controller.ts` 수정**
 
 import 교체:
 ```typescript
@@ -453,13 +453,13 @@ const canDelete = (role: string, frontOfficeRole: string | null | undefined) =>
   (role === "FRONT_OFFICE" && frontOfficeRole === "EQUIPMENT_MANAGER");
 ```
 
-- [ ] **Step 5: 타입 체크**
+- [x] **Step 5: 타입 체크**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | tail -5
 ```
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 cd /Users/juno/work/football && git add apps/api/src/financial-report/ apps/api/src/operating-expense/ apps/api/src/sponsorship/ apps/api/src/meal-expense/
@@ -475,7 +475,7 @@ git commit -m "refactor: replace inline finance checks with canReadFinance/canWr
 - Modify: `apps/api/src/hr-report/hr-report.routes.ts`
 - Modify: `apps/api/src/hiring-automation/hiring-automation.routes.ts`
 
-- [ ] **Step 1: `hr/hr.routes.ts` 수정**
+- [x] **Step 1: `hr/hr.routes.ts` 수정**
 
 import 교체:
 ```typescript
@@ -492,7 +492,7 @@ function requireHR(req: Request, res: Response, next: NextFunction) {
 }
 ```
 
-- [ ] **Step 2: `hr-report/hr-report.routes.ts` 수정**
+- [x] **Step 2: `hr-report/hr-report.routes.ts` 수정**
 
 import 교체:
 ```typescript
@@ -509,7 +509,7 @@ const requireHR = (req: any, res: any, next: any) => {
 };
 ```
 
-- [ ] **Step 3: `hiring-automation/hiring-automation.routes.ts` 수정**
+- [x] **Step 3: `hiring-automation/hiring-automation.routes.ts` 수정**
 
 import 교체:
 ```typescript
@@ -543,13 +543,13 @@ const requireAdmin = (req: any, _res: any, next: any) => {
 };
 ```
 
-- [ ] **Step 4: 타입 체크**
+- [x] **Step 4: 타입 체크**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | tail -5
 ```
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 cd /Users/juno/work/football && git add apps/api/src/hr/ apps/api/src/hr-report/ apps/api/src/hiring-automation/
@@ -564,7 +564,7 @@ git commit -m "refactor: replace inline HR checks with canReadHR/canWriteHR"
 - Modify: `apps/api/src/recruitment/recruitment.controller.ts`
 - Modify: `apps/api/src/coach/coach.controller.ts`
 
-- [ ] **Step 1: `recruitment/recruitment.controller.ts` 수정**
+- [x] **Step 1: `recruitment/recruitment.controller.ts` 수정**
 
 import 교체:
 ```typescript
@@ -585,7 +585,7 @@ const canApprove = (role: string, foRole: string | null | undefined) =>
   canWriteHR(role, foRole);
 ```
 
-- [ ] **Step 2: `coach/coach.controller.ts` 수정**
+- [x] **Step 2: `coach/coach.controller.ts` 수정**
 
 import 교체:
 ```typescript
@@ -604,13 +604,13 @@ const canApprove = (role: string) =>
   role === "GM";
 ```
 
-- [ ] **Step 3: 타입 체크**
+- [x] **Step 3: 타입 체크**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | tail -5
 ```
 
-- [ ] **Step 4: 전체 테스트 확인**
+- [x] **Step 4: 전체 테스트 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx jest --no-coverage 2>&1 | tail -15
@@ -618,7 +618,7 @@ cd /Users/juno/work/football/apps/api && npx jest --no-coverage 2>&1 | tail -15
 
 Expected: Task 1 이전과 동일한 pass/fail 수 (새로운 실패 없음)
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 cd /Users/juno/work/football && git add apps/api/src/recruitment/ apps/api/src/coach/
@@ -634,13 +634,13 @@ git commit -m "refactor: replace inline HR/TD checks with canWriteHR/canManageTD
 
 `report.controller.ts`에는 `isHrManager`, `isFinanceManager`, `isHrStaff`, `isFinanceStaff` 등 8개의 지역 헬퍼 함수가 있습니다. 이를 central 헬퍼로 교체합니다.
 
-- [ ] **Step 1: import 교체**
+- [x] **Step 1: import 교체**
 
 ```typescript
 import { isAdminLike, canReadFinance, canWriteFinance, canReadHR, canWriteHR } from "../lib/permissions";
 ```
 
-- [ ] **Step 2: 지역 헬퍼 함수 4개 제거 및 사용처 교체**
+- [x] **Step 2: 지역 헬퍼 함수 4개 제거 및 사용처 교체**
 
 제거할 함수: `isHrManager`, `isHrStaff`, `isFinanceManager`, `isFinanceStaff`
 
@@ -668,13 +668,13 @@ if (type === "FINANCIAL" && !canReadFinance(role, foRole)) {
 
 `isGM`, `isHeadCoach`, `isAssetManager`, `isAssetStaff` 함수는 asset 도메인에서만 쓰이므로 **그대로 유지** (asset 헬퍼는 이번 스코프 밖).
 
-- [ ] **Step 3: 타입 체크**
+- [x] **Step 3: 타입 체크**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | tail -5
 ```
 
-- [ ] **Step 4: 전체 테스트 최종 확인**
+- [x] **Step 4: 전체 테스트 최종 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx jest --no-coverage 2>&1 | tail -15
@@ -682,7 +682,7 @@ cd /Users/juno/work/football/apps/api && npx jest --no-coverage 2>&1 | tail -15
 
 Expected: 기존 대비 새로운 실패 없음
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 cd /Users/juno/work/football && git add apps/api/src/report/report.controller.ts

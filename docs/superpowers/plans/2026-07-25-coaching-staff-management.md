@@ -1,6 +1,6 @@
 # HEAD_COACH 코칭스태프 통합 관리 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** HEAD_COACH가 `/coaching-staff/management` 한 화면에서 소속 코칭스태프 현황·이번 주 세션 배정·이번 달 포지션별 성과를 조회하고, 스태프 카드에서 부재(CoachAvailability)를 인라인으로 등록/삭제한다.
 
@@ -36,7 +36,7 @@
 - Create: `apps/api/src/coaching-staff/coaching-staff.service.ts`
 - Create: `apps/api/__test__/coaching-staff/coaching-staff.service.test.ts`
 
-- [ ] **Step 1: 테스트 파일 작성**
+- [x] **Step 1: 테스트 파일 작성**
 
 ```typescript
 // apps/api/__test__/coaching-staff/coaching-staff.service.test.ts
@@ -72,7 +72,7 @@ describe("CoachingStaffService.getAll", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 (FAIL 확인)**
+- [x] **Step 2: 테스트 실행 (FAIL 확인)**
 
 ```bash
 cd apps/api && npx jest __test__/coaching-staff/coaching-staff.service.test.ts --verbose
@@ -80,7 +80,7 @@ cd apps/api && npx jest __test__/coaching-staff/coaching-staff.service.test.ts -
 
 Expected: FAIL — "Cannot find module '../../src/coaching-staff/coaching-staff.service'"
 
-- [ ] **Step 3: repo 구현**
+- [x] **Step 3: repo 구현**
 
 ```typescript
 // apps/api/src/coaching-staff/coaching-staff.repo.ts
@@ -118,7 +118,7 @@ export class CoachingStaffRepository {
 }
 ```
 
-- [ ] **Step 4: service 구현**
+- [x] **Step 4: service 구현**
 
 ```typescript
 // apps/api/src/coaching-staff/coaching-staff.service.ts
@@ -133,7 +133,7 @@ export class CoachingStaffService {
 }
 ```
 
-- [ ] **Step 5: 테스트 재실행 (PASS 확인)**
+- [x] **Step 5: 테스트 재실행 (PASS 확인)**
 
 ```bash
 cd apps/api && npx jest __test__/coaching-staff/coaching-staff.service.test.ts --verbose
@@ -141,7 +141,7 @@ cd apps/api && npx jest __test__/coaching-staff/coaching-staff.service.test.ts -
 
 Expected: 2 tests PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/coaching-staff/ apps/api/__test__/coaching-staff/
@@ -157,7 +157,7 @@ git commit -m "feat(coaching-staff): add repo + service with weekly absence quer
 - Create: `apps/api/src/coaching-staff/coaching-staff.routes.ts`
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: controller 작성**
+- [x] **Step 1: controller 작성**
 
 ```typescript
 // apps/api/src/coaching-staff/coaching-staff.controller.ts
@@ -197,7 +197,7 @@ export class CoachingStaffController {
 }
 ```
 
-- [ ] **Step 2: routes 작성**
+- [x] **Step 2: routes 작성**
 
 ```typescript
 // apps/api/src/coaching-staff/coaching-staff.routes.ts
@@ -219,7 +219,7 @@ router.get("/", auth, controller.getAll);
 export default router;
 ```
 
-- [ ] **Step 3: apiRouter.ts에 등록**
+- [x] **Step 3: apiRouter.ts에 등록**
 
 `apps/api/src/apiRouter.ts` 마지막 import 아래에 추가:
 ```typescript
@@ -231,7 +231,7 @@ import coachingStaffRouter from "./coaching-staff/coaching-staff.routes";
 apiRouter.use("/coaching-staff", coachingStaffRouter);
 ```
 
-- [ ] **Step 4: 기존 테스트 회귀 확인**
+- [x] **Step 4: 기존 테스트 회귀 확인**
 
 ```bash
 cd apps/api && npx jest --passWithNoTests 2>&1 | grep -E "Tests:|FAIL"
@@ -239,7 +239,7 @@ cd apps/api && npx jest --passWithNoTests 2>&1 | grep -E "Tests:|FAIL"
 
 Expected: 실패 수 기존 기준 이상 증가 없음
 
-- [ ] **Step 5: 수동 검증 (서버 실행 후)**
+- [x] **Step 5: 수동 검증 (서버 실행 후)**
 
 ```bash
 # 터미널 1: 서버 기동
@@ -252,7 +252,7 @@ curl -s -H "Authorization: Bearer <head_coach_token>" \
 
 Expected: `{ id, nickname, coachingRole, teamId, coachAvailabilities: [] }` 형태
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/coaching-staff/ apps/api/src/apiRouter.ts
@@ -267,7 +267,7 @@ git commit -m "feat(coaching-staff): add GET /coaching-staff endpoint (HEAD_COAC
 - Create: `football/src/types/coaching-staff.ts`
 - Create: `football/src/services/coaching-staff.service.ts`
 
-- [ ] **Step 1: 타입 파일 작성**
+- [x] **Step 1: 타입 파일 작성**
 
 ```typescript
 // football/src/types/coaching-staff.ts
@@ -290,7 +290,7 @@ export interface CoachingStaffMember {
 }
 ```
 
-- [ ] **Step 2: API 서비스 작성**
+- [x] **Step 2: API 서비스 작성**
 
 ```typescript
 // football/src/services/coaching-staff.service.ts
@@ -323,7 +323,7 @@ export const coachingStaffApi = {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/types/coaching-staff.ts football/src/services/coaching-staff.service.ts
@@ -339,7 +339,7 @@ git commit -m "feat(coaching-staff): add FE types and API service"
 
 Section 1은 페이지의 핵심이다. 각 COACHING_STAFF 유저를 카드로 표시하고, 이번 주 부재를 배지로 표시하며, HEAD_COACH는 부재를 인라인 등록/삭제할 수 있다.
 
-- [ ] **Step 1: 페이지 파일 생성 (Section 1만)**
+- [x] **Step 1: 페이지 파일 생성 (Section 1만)**
 
 ```tsx
 // football/src/pages/coaching-staff/StaffManagementPage.tsx
@@ -578,7 +578,7 @@ export function StaffManagementPage() {
 }
 ```
 
-- [ ] **Step 2: `COACHING_ROLE_LABEL` 임포트 확인**
+- [x] **Step 2: `COACHING_ROLE_LABEL` 임포트 확인**
 
 ```bash
 grep -n "COACHING_ROLE_LABEL" /Users/juno/work/football/football/src/types/auth.ts | head -3
@@ -598,7 +598,7 @@ export const COACHING_ROLE_LABEL: Record<string, string> = {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/pages/coaching-staff/
@@ -614,7 +614,7 @@ git commit -m "feat(coaching-staff): add StaffManagementPage Section 1 staff car
 
 Section 2와 3은 기존 `trainingApi`를 재활용한다. 이 두 섹션을 하나의 태스크에서 추가한다.
 
-- [ ] **Step 1: 주간 날짜 유틸 + 월간 날짜 유틸 추가 (파일 상단)**
+- [x] **Step 1: 주간 날짜 유틸 + 월간 날짜 유틸 추가 (파일 상단)**
 
 `StaffManagementPage.tsx` 임포트 블록 아래, `formatDateKR` 위에 추가:
 
@@ -651,7 +651,7 @@ function getThisMonthRange(): { from: string; to: string; label: string } {
 }
 ```
 
-- [ ] **Step 2: Section 2, 3용 state + 데이터 페치 추가**
+- [x] **Step 2: Section 2, 3용 state + 데이터 페치 추가**
 
 `StaffManagementPage` 함수 내 `staff` state 아래에 추가:
 
@@ -688,7 +688,7 @@ useEffect(() => {
 }, [fetchStaff])
 ```
 
-- [ ] **Step 3: Section 2 컴포넌트 — 이번 주 세션 배정**
+- [x] **Step 3: Section 2 컴포넌트 — 이번 주 세션 배정**
 
 `StaffManagementPage` return 문에서 `{/* Sections 2 & 3 추가 예정 */}` 를 아래로 교체:
 
@@ -771,7 +771,7 @@ useEffect(() => {
 </section>
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/pages/coaching-staff/StaffManagementPage.tsx
@@ -786,7 +786,7 @@ git commit -m "feat(coaching-staff): add Section 2 weekly sessions and Section 3
 - Modify: `football/src/App.tsx`
 - Modify: `football/src/layouts/AppShell.tsx`
 
-- [ ] **Step 1: App.tsx에 라우트 추가**
+- [x] **Step 1: App.tsx에 라우트 추가**
 
 `App.tsx`에서 `HiringRoundsPage` import 아래에 추가:
 ```typescript
@@ -798,7 +798,7 @@ import { StaffManagementPage } from '@/pages/coaching-staff/StaffManagementPage'
 <Route path="/coaching-staff/management" element={<StaffManagementPage />} />
 ```
 
-- [ ] **Step 2: AppShell.tsx — 섹션 타입 확장**
+- [x] **Step 2: AppShell.tsx — 섹션 타입 확장**
 
 `AppShell.tsx`에서 섹션 타입 정의를 찾아 `'코칭스태프'`를 추가:
 
@@ -816,7 +816,7 @@ const SECTION_ORDER = [
 ]
 ```
 
-- [ ] **Step 3: AppShell.tsx — 네비게이션 항목 추가**
+- [x] **Step 3: AppShell.tsx — 네비게이션 항목 추가**
 
 AppShell.tsx import 블록에 `Users2` 아이콘이 없으면 추가:
 ```typescript
@@ -835,7 +835,7 @@ NAV_ITEMS 배열에서 `'유소년'` 섹션 마지막 항목 아래에 추가:
 },
 ```
 
-- [ ] **Step 4: TypeScript 빌드 확인**
+- [x] **Step 4: TypeScript 빌드 확인**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | head -20
@@ -843,7 +843,7 @@ cd football && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 에러 없음
 
-- [ ] **Step 5: 브라우저에서 검증**
+- [x] **Step 5: 브라우저에서 검증**
 
 ```bash
 cd football && npm run dev
@@ -856,7 +856,7 @@ cd football && npm run dev
 5. Section 2: 이번 주 세션이 코치별로 그룹핑 표시 확인
 6. Section 3: 담당 포지션별 평균 점수 카드 확인
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add football/src/App.tsx football/src/layouts/AppShell.tsx
