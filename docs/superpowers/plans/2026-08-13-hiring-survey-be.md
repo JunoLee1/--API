@@ -1,6 +1,6 @@
 # HR 채용 연간 계획 워크플로우 — 백엔드 구현 플랜
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 채용 수요 조사(HiringNeedsSurvey) → 계획 항목(HiringPlanItem) → PlanReport(HR) 승인 → 채용공고 등록 백엔드 플로우 구현
 
@@ -43,7 +43,7 @@ apps/api/__test__/hiring-survey/hiring-survey.service.test.ts ← 신규
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: NotificationType enum에 4개 값 추가**
+- [x] **Step 1: NotificationType enum에 4개 값 추가**
 
 `NotificationType` enum을 찾아 끝에 추가:
 ```prisma
@@ -53,7 +53,7 @@ apps/api/__test__/hiring-survey/hiring-survey.service.test.ts ← 신규
   HIRING_PLAN_APPROVED
 ```
 
-- [ ] **Step 2: SurveyStatus, SurveyPriority enum 추가**
+- [x] **Step 2: SurveyStatus, SurveyPriority enum 추가**
 
 `PlanStatus` enum 아래에 추가:
 ```prisma
@@ -69,7 +69,7 @@ enum SurveyPriority {
 }
 ```
 
-- [ ] **Step 3: HiringNeedsSurvey 모델 추가**
+- [x] **Step 3: HiringNeedsSurvey 모델 추가**
 
 `PlanReport` 모델 아래에 추가:
 ```prisma
@@ -138,7 +138,7 @@ model HiringPlanItem {
 }
 ```
 
-- [ ] **Step 4: PlanReport 모델에 surveyId + hiringPlanItems 추가**
+- [x] **Step 4: PlanReport 모델에 surveyId + hiringPlanItems 추가**
 
 `PlanReport` 모델에 필드/관계 추가:
 ```prisma
@@ -150,7 +150,7 @@ model HiringPlanItem {
   hiringPlanItems HiringPlanItem[]
 ```
 
-- [ ] **Step 5: JobPosting 모델에 hiringPlanItemId 추가**
+- [x] **Step 5: JobPosting 모델에 hiringPlanItemId 추가**
 
 `JobPosting` 모델에:
 ```prisma
@@ -161,7 +161,7 @@ model HiringPlanItem {
   hiringPlanItem   HiringPlanItem? @relation(fields: [hiringPlanItemId], references: [id])
 ```
 
-- [ ] **Step 6: User 모델에 역관계 추가**
+- [x] **Step 6: User 모델에 역관계 추가**
 
 `User` 모델에 추가:
 ```prisma
@@ -169,7 +169,7 @@ model HiringPlanItem {
   surveyResponses      SurveyResponse[]    @relation("SurveyResponseSubmitter")
 ```
 
-- [ ] **Step 7: Department 모델에 역관계 추가**
+- [x] **Step 7: Department 모델에 역관계 추가**
 
 `Department` 모델에 추가:
 ```prisma
@@ -177,7 +177,7 @@ model HiringPlanItem {
   surveyResponses  SurveyResponse[]   @relation("SurveyResponse")
 ```
 
-- [ ] **Step 8: 마이그레이션 실행**
+- [x] **Step 8: 마이그레이션 실행**
 
 ```bash
 cd apps/api
@@ -186,7 +186,7 @@ npx prisma migrate dev --name add_hiring_survey_flow
 
 Expected: `✔ Generated Prisma Client` 출력, 마이그레이션 파일 생성
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/
@@ -200,7 +200,7 @@ git commit -m "feat(prisma): add HiringNeedsSurvey, SurveyResponse, HiringPlanIt
 **Files:**
 - Modify: `apps/api/src/notification/notification.repo.ts`
 
-- [ ] **Step 1: createForHrManager 메서드 추가**
+- [x] **Step 1: createForHrManager 메서드 추가**
 
 `createForAdmin` 메서드 아래에 추가:
 ```typescript
@@ -221,7 +221,7 @@ createForHrManager(type: string, getMsg: MsgFactory, entityId?: number) {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/notification/notification.repo.ts
@@ -235,7 +235,7 @@ git commit -m "feat(notification): add createForHrManager helper"
 **Files:**
 - Modify: `apps/api/src/plan-report/plan-report.service.ts`
 
-- [ ] **Step 1: resolveApproverLevel에 HR 분기 추가**
+- [x] **Step 1: resolveApproverLevel에 HR 분기 추가**
 
 `resolveApproverLevel` 함수 첫 번째 분기로 추가:
 ```typescript
@@ -258,7 +258,7 @@ const requiredApproverLevel = resolveApproverLevel(
 )
 ```
 
-- [ ] **Step 2: approve()에 HIRING_PLAN_APPROVED 알림 추가**
+- [x] **Step 2: approve()에 HIRING_PLAN_APPROVED 알림 추가**
 
 `PlanReportService` 생성자에 `NotificationRepository` 추가:
 ```typescript
@@ -287,7 +287,7 @@ export class PlanReportService {
   }
 ```
 
-- [ ] **Step 3: plan-report.routes.ts에서 NotificationRepository 주입**
+- [x] **Step 3: plan-report.routes.ts에서 NotificationRepository 주입**
 
 `apps/api/src/plan-report/plan-report.routes.ts`에서:
 ```typescript
@@ -297,7 +297,7 @@ const notifRepo = new NotificationRepository(prisma)
 const service = new PlanReportService(repo, notifRepo)
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/src/plan-report/plan-report.service.ts apps/api/src/plan-report/plan-report.routes.ts
@@ -312,7 +312,7 @@ git commit -m "feat(plan-report): HR always requires ADMIN approval + HIRING_PLA
 - Create: `apps/api/src/hiring-survey/dto/hiring-survey.dto.ts`
 - Create: `apps/api/src/hiring-survey/hiring-survey.repo.ts`
 
-- [ ] **Step 1: DTO 파일 작성**
+- [x] **Step 1: DTO 파일 작성**
 
 `apps/api/src/hiring-survey/dto/hiring-survey.dto.ts`:
 ```typescript
@@ -350,7 +350,7 @@ export interface UpdateHiringPlanItemDto {
 }
 ```
 
-- [ ] **Step 2: Repository 파일 작성**
+- [x] **Step 2: Repository 파일 작성**
 
 `apps/api/src/hiring-survey/hiring-survey.repo.ts`:
 ```typescript
@@ -442,7 +442,7 @@ export class HiringSurveyRepository {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/hiring-survey/
@@ -456,7 +456,7 @@ git commit -m "feat(hiring-survey): add DTO and Repository"
 **Files:**
 - Create: `apps/api/src/hiring-survey/hiring-survey.service.ts`
 
-- [ ] **Step 1: 서비스 파일 작성**
+- [x] **Step 1: 서비스 파일 작성**
 
 `apps/api/src/hiring-survey/hiring-survey.service.ts`:
 ```typescript
@@ -612,7 +612,7 @@ export class HiringSurveyService {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/hiring-survey/hiring-survey.service.ts
@@ -626,7 +626,7 @@ git commit -m "feat(hiring-survey): add HiringSurveyService with close + auto-co
 **Files:**
 - Modify: `apps/api/src/plan-report/plan-report.repo.ts`
 
-- [ ] **Step 1: createDraftForSurvey 메서드 추가**
+- [x] **Step 1: createDraftForSurvey 메서드 추가**
 
 기존 `create` 메서드 아래에 추가:
 ```typescript
@@ -655,7 +655,7 @@ createDraftForSurvey(data: {
 }
 ```
 
-- [ ] **Step 2: HiringPlanItem CRUD 메서드 추가**
+- [x] **Step 2: HiringPlanItem CRUD 메서드 추가**
 
 ```typescript
 listHiringPlanItems(planReportId: number) {
@@ -708,7 +708,7 @@ deleteHiringPlanItem(id: number, planReportId: number) {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/plan-report/plan-report.repo.ts
@@ -723,7 +723,7 @@ git commit -m "feat(plan-report): add createDraftForSurvey + HiringPlanItem CRUD
 - Create: `apps/api/src/hiring-survey/hiring-survey.controller.ts`
 - Create: `apps/api/src/hiring-survey/hiring-survey.routes.ts`
 
-- [ ] **Step 1: Controller 작성**
+- [x] **Step 1: Controller 작성**
 
 `apps/api/src/hiring-survey/hiring-survey.controller.ts`:
 ```typescript
@@ -763,7 +763,7 @@ export class HiringSurveyController {
 }
 ```
 
-- [ ] **Step 2: Routes 작성**
+- [x] **Step 2: Routes 작성**
 
 `apps/api/src/hiring-survey/hiring-survey.routes.ts`:
 ```typescript
@@ -793,7 +793,7 @@ router.post('/:id/close', auth, controller.close)
 export default router
 ```
 
-- [ ] **Step 3: server.ts에 라우터 등록**
+- [x] **Step 3: server.ts에 라우터 등록**
 
 `apps/api/src/server.ts`에서 기존 라우터 등록 블록에 추가:
 ```typescript
@@ -802,7 +802,7 @@ import hiringSurveyRouter from './hiring-survey/hiring-survey.routes'
 app.use('/api/hiring-surveys', hiringSurveyRouter)
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/src/hiring-survey/hiring-survey.controller.ts apps/api/src/hiring-survey/hiring-survey.routes.ts apps/api/src/server.ts
@@ -817,7 +817,7 @@ git commit -m "feat(hiring-survey): add controller, routes, register in server"
 - Modify: `apps/api/src/plan-report/plan-report.controller.ts`
 - Modify: `apps/api/src/plan-report/plan-report.routes.ts`
 
-- [ ] **Step 1: PlanReportController에 HiringPlanItem 핸들러 추가**
+- [x] **Step 1: PlanReportController에 HiringPlanItem 핸들러 추가**
 
 `apps/api/src/plan-report/plan-report.controller.ts`에 추가:
 ```typescript
@@ -857,7 +857,7 @@ export class PlanReportController {
   ) {}
 ```
 
-- [ ] **Step 2: plan-report.routes.ts에 엔드포인트 추가**
+- [x] **Step 2: plan-report.routes.ts에 엔드포인트 추가**
 
 ```typescript
 router.get('/:id/hiring-items', auth, controller.listHiringItems)
@@ -866,7 +866,7 @@ router.patch('/:id/hiring-items/:itemId', auth, controller.updateHiringItem)
 router.delete('/:id/hiring-items/:itemId', auth, controller.deleteHiringItem)
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/plan-report/
@@ -881,7 +881,7 @@ git commit -m "feat(plan-report): add HiringPlanItem CRUD endpoints"
 - Modify: `apps/api/src/recruitment/dto/recruitment.dto.ts`
 - Modify: `apps/api/src/recruitment/recruitment.repo.ts`
 
-- [ ] **Step 1: CreateJobPostingDto에 필드 추가**
+- [x] **Step 1: CreateJobPostingDto에 필드 추가**
 
 `apps/api/src/recruitment/dto/recruitment.dto.ts`의 `CreateJobPostingDto`에:
 ```typescript
@@ -892,7 +892,7 @@ export interface CreateJobPostingDto {
 }
 ```
 
-- [ ] **Step 2: createPosting repo 메서드에 필드 전달 확인**
+- [x] **Step 2: createPosting repo 메서드에 필드 전달 확인**
 
 `apps/api/src/recruitment/recruitment.repo.ts`의 `createPosting`:
 ```typescript
@@ -902,7 +902,7 @@ createPosting(data: CreateJobPostingDto & { createdById: number }) {
 ```
 `data as any`로 이미 처리되므로 `hiringPlanItemId`가 자동으로 전달된다. 변경 불필요.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/recruitment/dto/recruitment.dto.ts
@@ -917,7 +917,7 @@ git commit -m "feat(recruitment): add hiringPlanItemId to CreateJobPostingDto"
 - Create: `apps/api/src/jobs/hiringSurveyReminder.ts`
 - Modify: `apps/api/src/server.ts`
 
-- [ ] **Step 1: cron job 파일 작성**
+- [x] **Step 1: cron job 파일 작성**
 
 `apps/api/src/jobs/hiringSurveyReminder.ts`:
 ```typescript
@@ -946,7 +946,7 @@ export function startHiringSurveyReminderJob() {
 }
 ```
 
-- [ ] **Step 2: server.ts에 cron 등록**
+- [x] **Step 2: server.ts에 cron 등록**
 
 ```typescript
 import { startHiringSurveyReminderJob } from './jobs/hiringSurveyReminder'
@@ -954,7 +954,7 @@ import { startHiringSurveyReminderJob } from './jobs/hiringSurveyReminder'
 startHiringSurveyReminderJob()
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/jobs/hiringSurveyReminder.ts apps/api/src/server.ts
@@ -968,7 +968,7 @@ git commit -m "feat(jobs): add hiring survey D-3 reminder + auto-close cron"
 **Files:**
 - Create: `apps/api/__test__/hiring-survey/hiring-survey.service.test.ts`
 
-- [ ] **Step 1: 테스트 파일 작성**
+- [x] **Step 1: 테스트 파일 작성**
 
 `apps/api/__test__/hiring-survey/hiring-survey.service.test.ts`:
 ```typescript
@@ -1103,7 +1103,7 @@ describe('close', () => {
 })
 ```
 
-- [ ] **Step 2: 테스트 실행**
+- [x] **Step 2: 테스트 실행**
 
 ```bash
 cd apps/api
@@ -1112,7 +1112,7 @@ npx jest __test__/hiring-survey/hiring-survey.service.test.ts --no-coverage
 
 Expected: 6 tests pass
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/__test__/hiring-survey/
@@ -1126,7 +1126,7 @@ git commit -m "test(hiring-survey): add HiringSurveyService unit tests"
 **Files:**
 - Modify: `apps/api/__test__/plan-report/plan-report.service.test.ts` (신규 또는 추가)
 
-- [ ] **Step 1: HR 승인 레벨 테스트 추가**
+- [x] **Step 1: HR 승인 레벨 테스트 추가**
 
 `apps/api/__test__/plan-report/plan-report.service.test.ts` 작성 (파일 없으면 신규):
 ```typescript
@@ -1193,7 +1193,7 @@ describe('submit — HR 연간 계획 승인 레벨', () => {
 })
 ```
 
-- [ ] **Step 2: 테스트 실행**
+- [x] **Step 2: 테스트 실행**
 
 ```bash
 npx jest __test__/plan-report/plan-report.service.test.ts --no-coverage
@@ -1201,7 +1201,7 @@ npx jest __test__/plan-report/plan-report.service.test.ts --no-coverage
 
 Expected: 2 tests pass
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/__test__/plan-report/plan-report.service.test.ts
@@ -1212,7 +1212,7 @@ git commit -m "test(plan-report): verify HR always gets ADMIN approver level"
 
 ## 최종 확인
 
-- [ ] **전체 테스트 통과 확인**
+- [x] **전체 테스트 통과 확인**
 
 ```bash
 cd apps/api
@@ -1221,7 +1221,7 @@ npx jest --no-coverage
 
 Expected: 기존 테스트 모두 통과 + 신규 테스트 8개 통과
 
-- [ ] **서버 기동 확인**
+- [x] **서버 기동 확인**
 
 ```bash
 npx tsx src/server.ts

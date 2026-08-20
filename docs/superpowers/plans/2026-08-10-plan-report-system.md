@@ -1,6 +1,6 @@
 # PlanReport System Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Replace `DepartmentAnnualPlan` with a flexible `PlanReport` system supporting 7 business-type templates, conditional approval routing, file attachments, and Obsidian vault archiving.
 
@@ -46,7 +46,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: Add new enums after `ReviewStatus`**
+- [x] **Step 1: Add new enums after `ReviewStatus`**
 
 In `schema.prisma`, after the existing `ReviewStatus` enum (around line 3037), add:
 
@@ -68,7 +68,7 @@ enum ApproverLevel {
 }
 ```
 
-- [ ] **Step 2: Add `PlanReport` model, replace `DepartmentAnnualPlan` block**
+- [x] **Step 2: Add `PlanReport` model, replace `DepartmentAnnualPlan` block**
 
 Delete the entire block from `model DepartmentAnnualPlan` through `model DepartmentReviewerConfig` (lines ~2984–3053) and replace with:
 
@@ -113,7 +113,7 @@ model PlanReport {
 }
 ```
 
-- [ ] **Step 3: Update `PlanReview` model — change relation target**
+- [x] **Step 3: Update `PlanReview` model — change relation target**
 
 Replace the `plan` field in `PlanReview` (currently `DepartmentAnnualPlan`):
 
@@ -136,7 +136,7 @@ model PlanReview {
 }
 ```
 
-- [ ] **Step 4: Update `ClubSettings` — add approval config**
+- [x] **Step 4: Update `ClubSettings` — add approval config**
 
 ```prisma
 model ClubSettings {
@@ -150,7 +150,7 @@ model ClubSettings {
 
 `reviewerDeptMap` shape: `{ "hr": deptId, "procurement": deptId, "legal": deptId, "facility": deptId, "privacy": deptId }`. Null keys are skipped — partial config is valid.
 
-- [ ] **Step 5: Update `User` model relations**
+- [x] **Step 5: Update `User` model relations**
 
 Remove:
 ```
@@ -164,7 +164,7 @@ createdPlanReports  PlanReport[] @relation("PlanReportCreatedBy")
 approvedPlanReports PlanReport[] @relation("PlanReportApprovedBy")
 ```
 
-- [ ] **Step 6: Update `Department` model relations**
+- [x] **Step 6: Update `Department` model relations**
 
 Remove:
 ```
@@ -180,7 +180,7 @@ planReports  PlanReport[]
 
 (`planReviews PlanReview[] @relation("PlanReviewerDept")` stays as-is.)
 
-- [ ] **Step 7: Generate migration and client**
+- [x] **Step 7: Generate migration and client**
 
 ```bash
 cd apps/api
@@ -190,7 +190,7 @@ npx prisma generate
 
 Expected: migration created, client regenerated with no errors.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add apps/api/prisma/
@@ -204,7 +204,7 @@ git commit -m "feat: replace DepartmentAnnualPlan with PlanReport schema"
 **Files:**
 - Create: `apps/api/src/plan-report/dto/plan-report.dto.ts`
 
-- [ ] **Step 1: Write the DTO file**
+- [x] **Step 1: Write the DTO file**
 
 ```typescript
 export type PlanTemplateType = 'GENERAL' | 'HR' | 'MARKETING' | 'GOODS' | 'SQUAD' | 'MEDICAL' | 'IT'
@@ -265,7 +265,7 @@ export interface ListPlanReportQuery {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/plan-report/dto/
@@ -280,7 +280,7 @@ git commit -m "feat: add PlanReport DTOs"
 - Create: `apps/api/src/plan-report/vault.ts`
 - Create: `apps/api/src/plan-report/vault.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```typescript
 // apps/api/src/plan-report/vault.test.ts
@@ -367,7 +367,7 @@ describe('appendResultToVaultNote', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests — expect FAIL (module not found)**
+- [x] **Step 2: Run tests — expect FAIL (module not found)**
 
 ```bash
 cd apps/api && npx jest src/plan-report/vault.test.ts --no-coverage
@@ -375,7 +375,7 @@ cd apps/api && npx jest src/plan-report/vault.test.ts --no-coverage
 
 Expected: FAIL with "Cannot find module './vault'"
 
-- [ ] **Step 3: Implement vault.ts**
+- [x] **Step 3: Implement vault.ts**
 
 ```typescript
 // apps/api/src/plan-report/vault.ts
@@ -482,7 +482,7 @@ ${reviewLines}
 }
 ```
 
-- [ ] **Step 4: Run tests — expect PASS**
+- [x] **Step 4: Run tests — expect PASS**
 
 ```bash
 cd apps/api && npx jest src/plan-report/vault.test.ts --no-coverage
@@ -490,7 +490,7 @@ cd apps/api && npx jest src/plan-report/vault.test.ts --no-coverage
 
 Expected: PASS (6 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/plan-report/vault.ts apps/api/src/plan-report/vault.test.ts
@@ -504,7 +504,7 @@ git commit -m "feat: add Obsidian vault writer for PlanReport"
 **Files:**
 - Modify: `apps/api/src/lib/permissions.ts`
 
-- [ ] **Step 1: Write failing test (inline in permissions.test.ts if it exists, or add to service test)**
+- [x] **Step 1: Write failing test (inline in permissions.test.ts if it exists, or add to service test)**
 
 Add these assertions to verify before implementing:
 
@@ -516,7 +516,7 @@ Add these assertions to verify before implementing:
 // FRONT_OFFICE → cannot approve any level ✓
 ```
 
-- [ ] **Step 2: Add `canApprovePlan` to `permissions.ts`**
+- [x] **Step 2: Add `canApprovePlan` to `permissions.ts`**
 
 ```typescript
 export function canApprovePlan(userRole: string, requiredLevel: string | null): boolean {
@@ -532,7 +532,7 @@ export function canApprovePlan(userRole: string, requiredLevel: string | null): 
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/lib/permissions.ts
@@ -546,7 +546,7 @@ git commit -m "feat: add canApprovePlan permission helper"
 **Files:**
 - Create: `apps/api/src/plan-report/plan-report.repo.ts`
 
-- [ ] **Step 1: Write the repository**
+- [x] **Step 1: Write the repository**
 
 ```typescript
 // apps/api/src/plan-report/plan-report.repo.ts
@@ -705,7 +705,7 @@ export class PlanReportRepository {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/plan-report/plan-report.repo.ts
@@ -720,7 +720,7 @@ git commit -m "feat: add PlanReport repository"
 - Create: `apps/api/src/plan-report/plan-report.service.ts`
 - Create: `apps/api/src/plan-report/plan-report.service.test.ts`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 ```typescript
 // apps/api/src/plan-report/plan-report.service.test.ts
@@ -931,7 +931,7 @@ describe('submitResult', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests — expect FAIL**
+- [x] **Step 2: Run tests — expect FAIL**
 
 ```bash
 cd apps/api && npx jest src/plan-report/plan-report.service.test.ts --no-coverage
@@ -939,7 +939,7 @@ cd apps/api && npx jest src/plan-report/plan-report.service.test.ts --no-coverag
 
 Expected: FAIL with "Cannot find module './plan-report.service'"
 
-- [ ] **Step 3: Implement plan-report.service.ts**
+- [x] **Step 3: Implement plan-report.service.ts**
 
 ```typescript
 // apps/api/src/plan-report/plan-report.service.ts
@@ -1081,7 +1081,7 @@ function toVaultData(plan: any): VaultPlanData {
 }
 ```
 
-- [ ] **Step 4: Run tests — expect PASS**
+- [x] **Step 4: Run tests — expect PASS**
 
 ```bash
 cd apps/api && npx jest src/plan-report/plan-report.service.test.ts --no-coverage
@@ -1089,7 +1089,7 @@ cd apps/api && npx jest src/plan-report/plan-report.service.test.ts --no-coverag
 
 Expected: PASS (12 tests)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/plan-report/plan-report.service.ts apps/api/src/plan-report/plan-report.service.test.ts
@@ -1104,7 +1104,7 @@ git commit -m "feat: add PlanReport service with conditional approval engine"
 - Create: `apps/api/src/plan-report/plan-report.controller.ts`
 - Create: `apps/api/src/plan-report/plan-report.routes.ts`
 
-- [ ] **Step 1: Write plan-report.controller.ts**
+- [x] **Step 1: Write plan-report.controller.ts**
 
 ```typescript
 // apps/api/src/plan-report/plan-report.controller.ts
@@ -1179,7 +1179,7 @@ export class PlanReportController {
 }
 ```
 
-- [ ] **Step 2: Write plan-report.routes.ts**
+- [x] **Step 2: Write plan-report.routes.ts**
 
 ```typescript
 // apps/api/src/plan-report/plan-report.routes.ts
@@ -1219,7 +1219,7 @@ router.post('/upload', auth, upload.single('file'), controller.uploadAttachment)
 export default router
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/plan-report/plan-report.controller.ts apps/api/src/plan-report/plan-report.routes.ts
@@ -1234,7 +1234,7 @@ git commit -m "feat: add PlanReport controller and routes with file upload"
 - Modify: `apps/api/src/plan-review/plan-review.service.ts`
 - Modify: `apps/api/src/plan-review/plan-review.repo.ts`
 
-- [ ] **Step 1: Update plan-review.service.ts**
+- [x] **Step 1: Update plan-review.service.ts**
 
 Change `departmentAnnualPlan` → `planReport` in the `confirm` method:
 
@@ -1256,7 +1256,7 @@ async confirm(planId: number, userId: number, comment?: string) {
 }
 ```
 
-- [ ] **Step 2: Verify plan-review.repo.ts has no DepartmentAnnualPlan references**
+- [x] **Step 2: Verify plan-review.repo.ts has no DepartmentAnnualPlan references**
 
 ```bash
 grep "departmentAnnualPlan\|DepartmentAnnualPlan" apps/api/src/plan-review/plan-review.repo.ts
@@ -1264,7 +1264,7 @@ grep "departmentAnnualPlan\|DepartmentAnnualPlan" apps/api/src/plan-review/plan-
 
 Expected: no output. If any found, replace with `planReport` / `PlanReport`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/plan-review/
@@ -1279,7 +1279,7 @@ git commit -m "fix: update plan-review to reference PlanReport instead of Depart
 - Modify: `apps/api/src/server.ts`
 - Delete: `apps/api/src/department-plan/` (directory)
 
-- [ ] **Step 1: Update server.ts**
+- [x] **Step 1: Update server.ts**
 
 Find the import and route registration for department-plan routes (search for `department-plan` in server.ts).
 
@@ -1297,13 +1297,13 @@ import planReportRoutes from './plan-report/plan-report.routes'
 app.use('/plan-reports', planReportRoutes)
 ```
 
-- [ ] **Step 2: Delete old department-plan module**
+- [x] **Step 2: Delete old department-plan module**
 
 ```bash
 rm -rf apps/api/src/department-plan
 ```
 
-- [ ] **Step 3: Run full test suite to confirm no regressions**
+- [x] **Step 3: Run full test suite to confirm no regressions**
 
 ```bash
 cd apps/api && npx jest --no-coverage 2>&1 | tail -20
@@ -1311,7 +1311,7 @@ cd apps/api && npx jest --no-coverage 2>&1 | tail -20
 
 Expected: all existing tests pass, no import errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/src/server.ts
@@ -1328,7 +1328,7 @@ git commit -m "feat: wire PlanReport routes, remove DepartmentAnnualPlan module"
 - Delete: `football/src/types/department-plan.ts`
 - Delete: `football/src/services/department-plan.service.ts`
 
-- [ ] **Step 1: Write types**
+- [x] **Step 1: Write types**
 
 ```typescript
 // football/src/types/plan-report.ts
@@ -1440,7 +1440,7 @@ export const EXTRA_FIELDS_CONFIG: Record<PlanTemplateType, Array<{ key: string; 
 }
 ```
 
-- [ ] **Step 2: Write frontend service**
+- [x] **Step 2: Write frontend service**
 
 ```typescript
 // football/src/services/plan-report.service.ts
@@ -1480,14 +1480,14 @@ export const planReportApi = {
 }
 ```
 
-- [ ] **Step 3: Delete old files**
+- [x] **Step 3: Delete old files**
 
 ```bash
 rm football/src/types/department-plan.ts
 rm football/src/services/department-plan.service.ts
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/types/plan-report.ts football/src/services/plan-report.service.ts
@@ -1502,7 +1502,7 @@ git commit -m "feat: add PlanReport frontend types and API service"
 - Create: `football/src/pages/finance/PlanReportListPage.tsx`
 - Delete: `football/src/pages/finance/DepartmentPlanListPage.tsx`
 
-- [ ] **Step 1: Write PlanReportListPage.tsx**
+- [x] **Step 1: Write PlanReportListPage.tsx**
 
 ```tsx
 // football/src/pages/finance/PlanReportListPage.tsx
@@ -1590,14 +1590,14 @@ export function PlanReportListPage() {
 }
 ```
 
-- [ ] **Step 2: Delete old page**
+- [x] **Step 2: Delete old page**
 
 ```bash
 rm football/src/pages/finance/DepartmentPlanListPage.tsx
 rm football/src/pages/finance/DepartmentBudgetSummaryPage.tsx
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/pages/finance/PlanReportListPage.tsx
@@ -1612,7 +1612,7 @@ git commit -m "feat: add PlanReportListPage"
 - Create: `football/src/pages/finance/PlanReportFormPage.tsx`
 - Delete: `football/src/pages/finance/DepartmentPlanFormPage.tsx`
 
-- [ ] **Step 1: Write PlanReportFormPage.tsx**
+- [x] **Step 1: Write PlanReportFormPage.tsx**
 
 ```tsx
 // football/src/pages/finance/PlanReportFormPage.tsx
@@ -1837,13 +1837,13 @@ export function PlanReportFormPage() {
 }
 ```
 
-- [ ] **Step 2: Delete old form page**
+- [x] **Step 2: Delete old form page**
 
 ```bash
 rm football/src/pages/finance/DepartmentPlanFormPage.tsx
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/pages/finance/PlanReportFormPage.tsx
@@ -1859,7 +1859,7 @@ git commit -m "feat: add PlanReportFormPage with template selector, conditional 
 - Modify: `football/src/App.tsx`
 - Delete: `football/src/pages/finance/DepartmentPlanDetailPage.tsx`
 
-- [ ] **Step 1: Write PlanReportDetailPage.tsx**
+- [x] **Step 1: Write PlanReportDetailPage.tsx**
 
 ```tsx
 // football/src/pages/finance/PlanReportDetailPage.tsx
@@ -2083,7 +2083,7 @@ export function PlanReportDetailPage() {
 }
 ```
 
-- [ ] **Step 2: Update App.tsx routes**
+- [x] **Step 2: Update App.tsx routes**
 
 Find the department-plan route block in `football/src/App.tsx` and replace:
 
@@ -2115,13 +2115,13 @@ import { PlanReportDetailPage } from '@/pages/finance/PlanReportDetailPage'
 <Route path="/finance/plan-reports/:id" element={<PlanReportDetailPage />} />
 ```
 
-- [ ] **Step 3: Delete old detail page**
+- [x] **Step 3: Delete old detail page**
 
 ```bash
 rm football/src/pages/finance/DepartmentPlanDetailPage.tsx
 ```
 
-- [ ] **Step 4: TypeScript build check**
+- [x] **Step 4: TypeScript build check**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | head -30
@@ -2129,7 +2129,7 @@ cd football && npx tsc --noEmit 2>&1 | head -30
 
 Expected: no errors (or only pre-existing errors unrelated to plan-report).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/pages/finance/PlanReportDetailPage.tsx football/src/App.tsx

@@ -1,6 +1,6 @@
 # 식대 통합 + 스폰서 은행 계좌 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** (1) 식대(`MealExpense`) 페이지를 운영비 지출(`OperatingExpense`)로 완전 흡수하고, (2) 스폰서 등록/상세 폼에 국내·영국 은행 계좌 입력 필드를 추가한다.
 
@@ -58,7 +58,7 @@
 
 `MealExpense`에는 `seasonId`가 없고 `date`만 있다. 마이그레이션 SQL은 `date`가 포함된 `Season`을 찾아 `seasonId`를 결정한다. 어떤 시즌에도 속하지 않는 식대는 `note`에 원본 날짜를 기록한 채 현재 활성 시즌(있을 경우)에 귀속시키고, 없으면 skip(손실 방지용 로그로 남김)한다.
 
-- [ ] **Step 1: 마이그레이션 SQL 작성**
+- [x] **Step 1: 마이그레이션 SQL 작성**
 
 `apps/api/prisma/migrations/20260810000002_migrate_meal_to_operating/` 디렉터리를 만들고 `migration.sql`을 작성한다.
 
@@ -85,7 +85,7 @@ DROP TABLE IF EXISTS "MealExpense";
 DROP TYPE IF EXISTS "MealExpenseType";
 ```
 
-- [ ] **Step 2: schema.prisma 에서 MealExpense 관련 코드 제거**
+- [x] **Step 2: schema.prisma 에서 MealExpense 관련 코드 제거**
 
 `apps/api/prisma/schema.prisma`에서 다음을 삭제한다:
 - `model MealExpense { ... }` 블록 전체
@@ -95,7 +95,7 @@ DROP TYPE IF EXISTS "MealExpenseType";
 - `Match` 모델 내 `mealExpenses MealExpense[]` 라인
 - `TrainingSession` 모델 내 `mealExpenses MealExpense[]` 라인
 
-- [ ] **Step 3: prisma migrate deploy로 마이그레이션 적용**
+- [x] **Step 3: prisma migrate deploy로 마이그레이션 적용**
 
 ```bash
 cd apps/api
@@ -104,7 +104,7 @@ npx prisma migrate deploy
 
 Expected output: `1 migration applied.`
 
-- [ ] **Step 4: prisma generate**
+- [x] **Step 4: prisma generate**
 
 ```bash
 npx prisma generate
@@ -112,7 +112,7 @@ npx prisma generate
 
 Expected: no errors. `@prisma/client`에서 `MealExpense` 타입이 사라진 것을 확인한다.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/20260810000002_migrate_meal_to_operating/
@@ -129,13 +129,13 @@ git commit -m "feat: migrate MealExpense to OperatingExpense(MEAL), drop MealExp
 - Modify: `apps/api/src/financial-report/financial-report.repo.ts`
 - Modify: `apps/api/src/financial-report/financial-report.service.ts`
 
-- [ ] **Step 1: meal-expense 디렉터리 삭제**
+- [x] **Step 1: meal-expense 디렉터리 삭제**
 
 ```bash
 rm -rf apps/api/src/meal-expense
 ```
 
-- [ ] **Step 2: apiRouter.ts 에서 meal-expense 라우터 제거**
+- [x] **Step 2: apiRouter.ts 에서 meal-expense 라우터 제거**
 
 `apps/api/src/apiRouter.ts` 에서 다음 두 줄을 삭제한다:
 ```ts
@@ -144,7 +144,7 @@ import mealExpenseRouter from "./meal-expense/meal-expense.routes";
 apiRouter.use("/meal-expenses", mealExpenseRouter);
 ```
 
-- [ ] **Step 3: financial-report.repo.ts — MEAL 집계를 operatingExpense로 이관**
+- [x] **Step 3: financial-report.repo.ts — MEAL 집계를 operatingExpense로 이관**
 
 현재 코드 (`apps/api/src/financial-report/financial-report.repo.ts`):
 ```ts
@@ -192,7 +192,7 @@ for (const row of operating) {
 }
 ```
 
-- [ ] **Step 4: financial-report.service.ts — mealExpense 집계 참조 제거**
+- [x] **Step 4: financial-report.service.ts — mealExpense 집계 참조 제거**
 
 `financial-report.service.ts`에서 `prisma.mealExpense.aggregate` 호출을 찾아 동일하게 제거한다.
 
@@ -206,7 +206,7 @@ prisma.mealExpense.aggregate({
 
 삭제 후 `meal` 변수 참조도 함께 정리한다(MEAL은 이제 operatingExpense groupBy에서 자동으로 포함된다).
 
-- [ ] **Step 5: 빌드 확인**
+- [x] **Step 5: 빌드 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit
@@ -214,7 +214,7 @@ cd apps/api && npx tsc --noEmit
 
 Expected: no errors.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/apiRouter.ts apps/api/src/financial-report/
@@ -231,14 +231,14 @@ git commit -m "feat: remove meal-expense module, fix financial-report to read ME
 - Delete: `football/src/pages/admin/MealExpensePage.tsx`
 - Delete: `football/src/services/meal-expense.service.ts`
 
-- [ ] **Step 1: MealExpensePage.tsx 삭제**
+- [x] **Step 1: MealExpensePage.tsx 삭제**
 
 ```bash
 rm football/src/pages/admin/MealExpensePage.tsx
 rm football/src/services/meal-expense.service.ts
 ```
 
-- [ ] **Step 2: App.tsx 에서 import와 라우트 제거**
+- [x] **Step 2: App.tsx 에서 import와 라우트 제거**
 
 `football/src/App.tsx`에서 다음을 삭제한다:
 ```ts
@@ -249,7 +249,7 @@ import { MealExpensePage } from '@/pages/admin/MealExpensePage'
 <Route path="/admin/meal-expenses" element={<MealExpensePage />} />
 ```
 
-- [ ] **Step 3: AppShell.tsx 에서 nav 항목 제거**
+- [x] **Step 3: AppShell.tsx 에서 nav 항목 제거**
 
 `football/src/layouts/AppShell.tsx`에서 다음 블록을 삭제한다:
 ```ts
@@ -266,7 +266,7 @@ import { MealExpensePage } from '@/pages/admin/MealExpensePage'
 
 `Receipt` 아이콘 import도 다른 곳에서 쓰이지 않는다면 함께 제거한다.
 
-- [ ] **Step 4: 빌드 확인**
+- [x] **Step 4: 빌드 확인**
 
 ```bash
 cd football && npx tsc --noEmit
@@ -274,7 +274,7 @@ cd football && npx tsc --noEmit
 
 Expected: no errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/layouts/AppShell.tsx football/src/App.tsx
@@ -290,7 +290,7 @@ git commit -m "feat: remove meal-expense nav, route, page, and service from FE"
 - Modify: `football/src/locales/ko/admin.json`
 - Modify: `football/src/locales/en/admin.json`
 
-- [ ] **Step 1: DISCRETIONARY_CATEGORIES 상수 교체**
+- [x] **Step 1: DISCRETIONARY_CATEGORIES 상수 교체**
 
 `football/src/pages/admin/OperatingExpensePage.tsx`:
 
@@ -308,22 +308,22 @@ const FORM_CATEGORIES = ALL_OPERATING_CATEGORIES.filter((c) => c !== 'MEDICAL')
 
 파일 내 `DISCRETIONARY_CATEGORIES` 참조를 모두 `FORM_CATEGORIES`로 교체한다.
 
-- [ ] **Step 2: i18n — mealExpense 키 제거 (ko)**
+- [x] **Step 2: i18n — mealExpense 키 제거 (ko)**
 
 `football/src/locales/ko/admin.json`에서 `"mealExpense": { ... }` 블록 전체를 삭제한다.
 
-- [ ] **Step 3: i18n — mealExpense 키 제거 (en)**
+- [x] **Step 3: i18n — mealExpense 키 제거 (en)**
 
 `football/src/locales/en/admin.json`에서 `"mealExpense": { ... }` 블록 전체를 삭제한다.
 
-- [ ] **Step 4: 브라우저에서 운영비 지출 페이지 확인**
+- [x] **Step 4: 브라우저에서 운영비 지출 페이지 확인**
 
 개발 서버를 실행하고 `/admin/operating-expenses`를 열어 다음을 확인한다:
 - 카테고리 드롭다운에 "식대"가 표시됨
 - nav 사이드바에 "식대" 항목이 사라짐
 - "식대" 항목 클릭 시 404가 아닌 페이지가 사라진 것을 확인
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/pages/admin/OperatingExpensePage.tsx football/src/locales/
@@ -338,7 +338,7 @@ git commit -m "feat: include MEAL in OperatingExpensePage categories"
 - Modify: `apps/api/prisma/schema.prisma`
 - Create: `apps/api/prisma/migrations/20260810000003_add_sponsor_bank/migration.sql`
 
-- [ ] **Step 1: schema.prisma Sponsorship 모델에 컬럼 추가**
+- [x] **Step 1: schema.prisma Sponsorship 모델에 컬럼 추가**
 
 `apps/api/prisma/schema.prisma`의 `model Sponsorship` 블록에 다음 nullable 필드를 추가한다 (`deletedAt DateTime?` 바로 위):
 
@@ -354,7 +354,7 @@ git commit -m "feat: include MEAL in OperatingExpensePage categories"
   ukSwiftBic            String?
 ```
 
-- [ ] **Step 2: 마이그레이션 SQL 작성**
+- [x] **Step 2: 마이그레이션 SQL 작성**
 
 `apps/api/prisma/migrations/20260810000003_add_sponsor_bank/migration.sql`:
 
@@ -369,7 +369,7 @@ ALTER TABLE "Sponsorship"
   ADD COLUMN "ukSwiftBic"            TEXT;
 ```
 
-- [ ] **Step 3: 마이그레이션 적용 + generate**
+- [x] **Step 3: 마이그레이션 적용 + generate**
 
 ```bash
 cd apps/api
@@ -379,7 +379,7 @@ npx prisma generate
 
 Expected: `1 migration applied.`
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/prisma/
@@ -394,7 +394,7 @@ git commit -m "feat: add domestic and UK bank account columns to Sponsorship"
 - Modify: `apps/api/src/sponsorship/dto/sponsorship.dto.ts`
 - Modify: `apps/api/src/sponsorship/sponsorship.repo.ts`
 
-- [ ] **Step 1: DTO에 bank 필드 추가**
+- [x] **Step 1: DTO에 bank 필드 추가**
 
 `apps/api/src/sponsorship/dto/sponsorship.dto.ts`:
 
@@ -443,7 +443,7 @@ export interface SponsorshipListQuery {
 }
 ```
 
-- [ ] **Step 2: Repo create/update에 bank 필드 포함 확인**
+- [x] **Step 2: Repo create/update에 bank 필드 포함 확인**
 
 `apps/api/src/sponsorship/sponsorship.repo.ts`의 `create`와 `update` 메서드가 DTO spread를 사용하고 있다면 자동으로 반영된다. Prisma `data: dto` 형태로 넘기는지 확인하고, 명시적 필드 목록이 있다면 7개 필드를 추가한다.
 
@@ -472,7 +472,7 @@ async create(dto: CreateSponsorshipDto & { createdById: number }) {
 }
 ```
 
-- [ ] **Step 3: 빌드 확인**
+- [x] **Step 3: 빌드 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit
@@ -480,7 +480,7 @@ cd apps/api && npx tsc --noEmit
 
 Expected: no errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/src/sponsorship/
@@ -494,7 +494,7 @@ git commit -m "feat: add bank account fields to sponsorship DTO and repo"
 **Files:**
 - Modify: `football/src/types/sponsorship.ts`
 
-- [ ] **Step 1: Sponsorship 인터페이스에 bank 필드 추가**
+- [x] **Step 1: Sponsorship 인터페이스에 bank 필드 추가**
 
 `football/src/types/sponsorship.ts`의 `Sponsorship` 인터페이스:
 
@@ -561,7 +561,7 @@ export interface UpdateSponsorshipDto {
 }
 ```
 
-- [ ] **Step 2: 빌드 확인**
+- [x] **Step 2: 빌드 확인**
 
 ```bash
 cd football && npx tsc --noEmit
@@ -569,7 +569,7 @@ cd football && npx tsc --noEmit
 
 Expected: no errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/types/sponsorship.ts
@@ -585,7 +585,7 @@ git commit -m "feat: add bank account fields to Sponsorship types"
 - Modify: `football/src/locales/ko/sponsorship.json`
 - Modify: `football/src/locales/en/sponsorship.json`
 
-- [ ] **Step 1: i18n 키 추가 (ko)**
+- [x] **Step 1: i18n 키 추가 (ko)**
 
 `football/src/locales/ko/sponsorship.json`의 `"form"` 객체에 추가:
 
@@ -609,7 +609,7 @@ git commit -m "feat: add bank account fields to Sponsorship types"
 }
 ```
 
-- [ ] **Step 2: i18n 키 추가 (en)**
+- [x] **Step 2: i18n 키 추가 (en)**
 
 `football/src/locales/en/sponsorship.json`의 `"form"` 객체에 추가:
 
@@ -623,7 +623,7 @@ git commit -m "feat: add bank account fields to Sponsorship types"
 "bank.swiftBic": "SWIFT / BIC"
 ```
 
-- [ ] **Step 3: CreateSponsorshipDialog state 확장**
+- [x] **Step 3: CreateSponsorshipDialog state 확장**
 
 `football/src/pages/sponsorship/SponsorshipPage.tsx`의 `CreateSponsorshipDialog` 컴포넌트 state:
 
@@ -656,7 +656,7 @@ const reset = () => {
 }
 ```
 
-- [ ] **Step 4: handleSave DTO에 bank 필드 포함**
+- [x] **Step 4: handleSave DTO에 bank 필드 포함**
 
 ```ts
 const dto: CreateSponsorshipDto = {
@@ -676,7 +676,7 @@ const dto: CreateSponsorshipDto = {
 }
 ```
 
-- [ ] **Step 5: 폼 UI에 국내/영국 은행 섹션 추가**
+- [x] **Step 5: 폼 UI에 국내/영국 은행 섹션 추가**
 
 기존 `paymentSchedule` 필드 아래에 추가:
 
@@ -735,14 +735,14 @@ const dto: CreateSponsorshipDto = {
 
 `DialogContent`에 `className="max-w-md"` → `className="max-w-lg"` 로 넓힌다 (콘텐츠 증가).
 
-- [ ] **Step 6: 브라우저 확인**
+- [x] **Step 6: 브라우저 확인**
 
 스폰서십 등록 다이얼로그를 열어:
 - 국내/영국 은행 섹션이 표시되는지 확인
 - 모든 bank 필드 비워두고 등록 → 성공
 - 국내 계좌만 입력 후 등록 → 성공
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add football/src/pages/sponsorship/SponsorshipPage.tsx football/src/locales/
@@ -758,7 +758,7 @@ git commit -m "feat: add domestic and UK bank account fields to sponsorship crea
 - Modify: `football/src/locales/ko/sponsorship.json`
 - Modify: `football/src/locales/en/sponsorship.json`
 
-- [ ] **Step 1: i18n 키 추가 — 상세 페이지용 (ko)**
+- [x] **Step 1: i18n 키 추가 — 상세 페이지용 (ko)**
 
 `football/src/locales/ko/sponsorship.json` 최상위에 추가:
 
@@ -780,7 +780,7 @@ git commit -m "feat: add domestic and UK bank account fields to sponsorship crea
 }
 ```
 
-- [ ] **Step 2: i18n 키 추가 — 상세 페이지용 (en)**
+- [x] **Step 2: i18n 키 추가 — 상세 페이지용 (en)**
 
 `football/src/locales/en/sponsorship.json` 최상위에 추가:
 
@@ -802,7 +802,7 @@ git commit -m "feat: add domestic and UK bank account fields to sponsorship crea
 }
 ```
 
-- [ ] **Step 3: BankEditDialog 컴포넌트 추가**
+- [x] **Step 3: BankEditDialog 컴포넌트 추가**
 
 `SponsorshipDetailPage.tsx` 파일 상단 (`SponsorshipDetailPage` 함수 위)에 추가:
 
@@ -912,7 +912,7 @@ function BankEditDialog({ open, onOpenChange, sponsorship, onSaved }: BankEditDi
 
 `DialogFooter`를 쓰므로 import에 `DialogFooter` 추가 확인.
 
-- [ ] **Step 4: 상세 페이지에 계좌 정보 섹션 추가**
+- [x] **Step 4: 상세 페이지에 계좌 정보 섹션 추가**
 
 `SponsorshipDetailPage` 컴포넌트에 state 추가:
 ```ts
@@ -971,7 +971,7 @@ const [bankEditOpen, setBankEditOpen] = useState(false)
 )}
 ```
 
-- [ ] **Step 5: 브라우저 확인**
+- [x] **Step 5: 브라우저 확인**
 
 스폰서십 상세 페이지에서:
 - 계좌 정보 섹션이 납부 스케줄 위에 표시되는지 확인
@@ -980,7 +980,7 @@ const [bankEditOpen, setBankEditOpen] = useState(false)
 - 국내 계좌 입력 후 저장 → 섹션에 계좌 정보 표시
 - canWrite가 false인 사용자는 "수정" 버튼 미노출
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add football/src/pages/sponsorship/SponsorshipDetailPage.tsx football/src/locales/
@@ -991,7 +991,7 @@ git commit -m "feat: add bank account section to sponsorship detail page"
 
 ## Task 10: 최종 빌드 + 통합 확인
 
-- [ ] **Step 1: BE 전체 빌드**
+- [x] **Step 1: BE 전체 빌드**
 
 ```bash
 cd apps/api && npx tsc --noEmit
@@ -999,7 +999,7 @@ cd apps/api && npx tsc --noEmit
 
 Expected: no errors.
 
-- [ ] **Step 2: FE 전체 빌드**
+- [x] **Step 2: FE 전체 빌드**
 
 ```bash
 cd football && npx tsc --noEmit
@@ -1007,7 +1007,7 @@ cd football && npx tsc --noEmit
 
 Expected: no errors.
 
-- [ ] **Step 3: BE 테스트 실행**
+- [x] **Step 3: BE 테스트 실행**
 
 ```bash
 cd apps/api && npx jest
@@ -1015,7 +1015,7 @@ cd apps/api && npx jest
 
 Expected: all tests pass.
 
-- [ ] **Step 4: 통합 시나리오 체크리스트**
+- [x] **Step 4: 통합 시나리오 체크리스트**
 
 | 시나리오 | 확인 |
 |---|---|
@@ -1028,7 +1028,7 @@ Expected: all tests pass.
 | canWrite 없는 유저는 은행 수정 버튼 미노출 | ☐ |
 | FinancialReport MEAL 합계가 올바르게 집계 | ☐ |
 
-- [ ] **Step 5: 최종 Commit**
+- [x] **Step 5: 최종 Commit**
 
 ```bash
 git add -A
