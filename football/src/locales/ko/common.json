@@ -359,6 +359,34 @@
       "DRAW": "무",
       "LOSS": "패"
     },
+    "opsKpi": {
+      "financeTitle": "재무 KPI ({{year}}년 {{month}}월)",
+      "hrTitle": "운영 KPI ({{year}}년 {{month}}월)",
+      "feeCollectionRate": "회비 수납율",
+      "feeDelinquencyRate": "미납률",
+      "budgetExecutionRate": "예산 집행률",
+      "overrideCount": "예외 승인 건수",
+      "overrideUnit": "건",
+      "monthlySettlementRate": "월말 정산 완료율",
+      "registrationRate": "등록 완료율",
+      "attendanceRate": "출석률 (프로)",
+      "noticeReadRate": "공지 열람률",
+      "noticeUnreadTitle": "공지 미열람자 목록",
+      "attendanceDrillTitle": "선수별 출석 현황",
+      "seasonTicketRevenue": "시즌 티켓 수입",
+      "drillCol": {
+        "name": "이름",
+        "unreadCount": "미열람 건수",
+        "player": "선수",
+        "present": "출석",
+        "lateUnauth": "지각",
+        "absentUnauth": "무단결석",
+        "authorizedAbsence": "공결",
+        "effectiveAbsences": "실효결석",
+        "noData": "데이터가 없습니다",
+        "loadFailed": "데이터를 불러오지 못했습니다."
+      }
+    },
     "coachView": {
       "todayAbsent": "오늘 훈련 결석",
       "noSession": "오늘 훈련 없음",

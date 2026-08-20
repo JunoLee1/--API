@@ -359,6 +359,34 @@
       "DRAW": "D",
       "LOSS": "L"
     },
+    "opsKpi": {
+      "financeTitle": "Finance KPI ({{month}}/{{year}})",
+      "hrTitle": "Operations KPI ({{month}}/{{year}})",
+      "feeCollectionRate": "Fee Collection Rate",
+      "feeDelinquencyRate": "Delinquency Rate",
+      "budgetExecutionRate": "Budget Execution Rate",
+      "overrideCount": "Override Approvals",
+      "overrideUnit": "",
+      "monthlySettlementRate": "Monthly Settlement Rate",
+      "registrationRate": "Registration Rate",
+      "attendanceRate": "Attendance Rate (Pro)",
+      "noticeReadRate": "Notice Read Rate",
+      "noticeUnreadTitle": "Unread Notice List",
+      "attendanceDrillTitle": "Player Attendance",
+      "seasonTicketRevenue": "Season Ticket Revenue",
+      "drillCol": {
+        "name": "Name",
+        "unreadCount": "Unread",
+        "player": "Player",
+        "present": "Present",
+        "lateUnauth": "Late",
+        "absentUnauth": "Unauth. Absent",
+        "authorizedAbsence": "Auth. Absent",
+        "effectiveAbsences": "Effective Abs.",
+        "noData": "No data",
+        "loadFailed": "Failed to load data."
+      }
+    },
     "coachView": {
       "todayAbsent": "Today's Absences",
       "noSession": "No session today",

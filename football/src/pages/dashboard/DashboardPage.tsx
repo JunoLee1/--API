@@ -192,7 +192,7 @@ function DashboardInner({ user, teamCtx }: { user: UserDto; teamCtx: TeamCtx }) 
         .catch(() => null)
     }
     if (config.showAcademyFinance) {
-      dashboardApi.academyFinance()
+      dashboardApi.academyFinance(opsKpiYear, opsKpiMonth)
         .then((data) => { if (!cancelled) setAcademyFinance(data) })
         .catch(() => null)
     }
@@ -233,7 +233,7 @@ function DashboardInner({ user, teamCtx }: { user: UserDto; teamCtx: TeamCtx }) 
             onClick={() => navigate('/finance/ticket-sales')}
           >
             <StatCard
-              label="시즌 티켓 수입"
+              label={t('dashboard.opsKpi.seasonTicketRevenue')}
               value={`₩${seasonTicketRevenue.toLocaleString()}`}
             />
           </button>
@@ -247,7 +247,7 @@ function DashboardInner({ user, teamCtx }: { user: UserDto; teamCtx: TeamCtx }) 
 
       {/* 아카데미 회비 KPI 섹션 */}
       {config.showAcademyFinance && academyFinance && (
-        <AcademyFinanceSection data={academyFinance} />
+        <AcademyFinanceSection data={academyFinance} year={opsKpiYear} month={opsKpiMonth} />
       )}
 
       {/* 운영/재무 KPI 섹션 */}
