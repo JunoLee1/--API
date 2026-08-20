@@ -38,6 +38,14 @@ export interface Report {
   rejectionReason: string | null
   authorId: number
   author: ReportUser
+  reviewerId: number | null
+  reviewer: ReportUser | null
+  firstReviewerId: number | null
+  firstReviewer: ReportUser | null
+  firstReviewedAt: string | null
+  secondReviewerId: number | null
+  secondReviewer: ReportUser | null
+  secondReviewedAt: string | null
   departmentId: number | null
   department: { id: number; name: string; category: string | null } | null
   reviews: ReportReview[]
