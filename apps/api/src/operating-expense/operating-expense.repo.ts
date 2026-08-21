@@ -58,6 +58,10 @@ export class OperatingExpenseRepository {
     return this.prisma.operatingExpense.findUnique({ where: { id } });
   }
 
+  update(id: number, data: { amount?: number; category?: OperatingCategory; note?: string }) {
+    return this.prisma.operatingExpense.update({ where: { id }, data });
+  }
+
   markPaid(id: number, paidById: number) {
     return this.prisma.operatingExpense.update({
       where: { id },

@@ -47,7 +47,11 @@ router.get("/:seasonId",                    auth, controller.get);
 router.get("/:seasonId/budget",             auth, controller.getBudgetPlan);
 router.put("/:seasonId/budget",             auth, controller.upsertBudgetPlan);
 router.post("/:seasonId/budget/optimize",   auth, controller.optimize);
-router.post("/:seasonId/budget/override",   auth, controller.addOverride);
+router.post("/:seasonId/budget/override",                      auth, controller.addOverride);
+router.post("/:seasonId/budget/override/:logId/approve",       auth, controller.approveOverride);
+router.post("/:seasonId/budget/override/:logId/reject",        auth, controller.rejectOverride);
 router.post("/:seasonId/budget/auto-generate", auth, controller.autoGenerateBudget);
+router.get("/:seasonId/payroll/monthly",        auth, controller.getPayrollByMonth);
+router.get("/:seasonId/revenue-log",            auth, controller.getRevenueLogs);
 
 export default router;
