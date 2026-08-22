@@ -705,6 +705,15 @@ enum SalesChannel {
   SEASON_PASS
 }
 
+enum ExpenseStatus {
+  PENDING
+  FIRST_APPROVED
+  APPROVED
+  PAID
+  REJECTED
+  CANCELLED
+}
+
 // ─────────────────────────────────────────────
 // Models
 // ─────────────────────────────────────────────
@@ -864,6 +873,10 @@ model User {
   revenueLogChanges        FinancialReportRevenueLog[] @relation("RevenueLogChanger")
   operatingExpenses        OperatingExpense[]        @relation("OperatingExpenseCreator")
   paidExpenses             OperatingExpense[]        @relation("OperatingExpensePayer")
+  firstApprovedExpenses    OperatingExpense[]        @relation("OperatingExpenseFirstApprover")
+  approvedExpenses         OperatingExpense[]        @relation("OperatingExpenseApprover")
+  rejectedExpenses         OperatingExpense[]        @relation("OperatingExpenseRejecter")
+  cancelledExpenses        OperatingExpense[]        @relation("OperatingExpenseCanceller")
   createdPostings          JobPosting[]              @relation("JobPostingCreator")
   approvedPostings         JobPosting[]              @relation("JobPostingApprover")
   applicationOffers        JobApplication[]          @relation("ApplicationOffer")
@@ -2573,10 +2586,27 @@ model OperatingExpense {
   deletedAt       DateTime?
   deletionReason  String?
   accountCodeId   Int?
+  status             ExpenseStatus     @default(PENDING)
+  budgetLineId       Int
+  firstApprovedById  Int?
+  firstApprovedAt    DateTime?
+  approvedById       Int?
+  approvedAt         DateTime?
+  rejectedById       Int?
+  rejectedAt         DateTime?
+  rejectionReason    String?
+  cancelledById      Int?
+  cancelledAt        DateTime?
+  cancellationReason String?
   season          Season            @relation(fields: [seasonId], references: [id])
   createdBy       User              @relation("OperatingExpenseCreator", fields: [createdById], references: [id])
   paidBy          User?             @relation("OperatingExpensePayer", fields: [paidById], references: [id])
   accountCode     AccountCode?      @relation(fields: [accountCodeId], references: [id])
+  budgetLine         BudgetLine        @relation(fields: [budgetLineId], references: [id])
+  firstApprovedBy    User?             @relation("OperatingExpenseFirstApprover", fields: [firstApprovedById], references: [id])
+  approvedBy         User?             @relation("OperatingExpenseApprover", fields: [approvedById], references: [id])
+  rejectedBy         User?             @relation("OperatingExpenseRejecter", fields: [rejectedById], references: [id])
+  cancelledBy        User?             @relation("OperatingExpenseCanceller", fields: [cancelledById], references: [id])
 }
 
 // ─────────────────────────────────────────────
@@ -2606,18 +2636,19 @@ model BudgetHeader {
 }
 
 model BudgetLine {
-  id             Int          @id @default(autoincrement())
+  id             Int               @id @default(autoincrement())
   budgetHeaderId Int
   departmentId   Int?
-  category       String
+  category       OperatingCategory
   year           Int
   month          Int?
-  originalAmount Int          @default(0)
+  originalAmount Int               @default(0)
   note           String?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  budgetHeader   BudgetHeader @relation(fields: [budgetHeaderId], references: [id], onDelete: Cascade)
-  department     Department?  @relation(fields: [departmentId], references: [id])
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  budgetHeader      BudgetHeader      @relation(fields: [budgetHeaderId], references: [id], onDelete: Cascade)
+  department        Department?       @relation(fields: [departmentId], references: [id])
+  operatingExpenses OperatingExpense[]
 }
 
 model BudgetAdjustment {

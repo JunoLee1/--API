@@ -89,6 +89,22 @@ export class NotificationRepository {
     return this.createForWhere({ role: "COACHING_STAFF" }, type, getMsg, entityId);
   }
 
+  createForFinanceStaff(type: string, getMsg: MsgFactory, entityId?: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const users = await tx.user.findMany({
+        where: { role: "FRONT_OFFICE", frontOfficeRole: { in: ["FINANCE_STAFF", "FINANCE_MANAGER"] }, isDeleted: false },
+        select: { id: true, language: true },
+      });
+      if (users.length === 0) return;
+      await tx.notification.createMany({
+        data: users.map((u) => {
+          const { title, body } = getMsg(u.language);
+          return { userId: u.id, type, title, body, entityId };
+        }) as any,
+      });
+    });
+  }
+
   createForPhysicalCoach(type: string, getMsg: MsgFactory, entityId?: number) {
     return this.createForWhere({ role: "COACHING_STAFF", coachingRole: "PHYSICAL_COACH" }, type, getMsg, entityId);
   }

@@ -11,9 +11,11 @@ export interface UpdateBudgetHeaderDto {
   note?: string;
 }
 
+import { OperatingCategory } from "../../generated/client";
+
 export interface CreateBudgetLineDto {
   departmentId?: number;
-  category: string;
+  category: OperatingCategory;
   year: number;
   month?: number;
   originalAmount: number;

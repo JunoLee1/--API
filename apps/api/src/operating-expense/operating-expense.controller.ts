@@ -32,18 +32,19 @@ export class OperatingExpenseController {
     try {
       const { role, frontOfficeRole, id: userId } = requireUser(req);
       if (!canCreate(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
-      const { seasonId, category, amount, date, note, overrideReason } = req.body as {
+      const { seasonId, category, amount, date, note, budgetLineId } = req.body as {
         seasonId: number;
         category: OperatingCategory;
         amount: number;
         date: string;
         note?: string;
-        overrideReason?: string;
+        budgetLineId: number;
       };
+      if (!budgetLineId) throw new AppError(400, "BUDGET_LINE_ID_REQUIRED");
       const expense = await this.service.create({
         seasonId, category, amount, date,
         ...(note !== undefined && { note }),
-        ...(overrideReason !== undefined && { overrideReason }),
+        budgetLineId,
         createdById: userId,
       });
       res.status(201).json(expense);

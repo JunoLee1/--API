@@ -118,9 +118,14 @@ export default function BudgetListPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">{t('budget.title')}</h1>
         {canWrite && (
-          <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <Plus className="h-3.5 w-3.5 mr-1.5" />{t('budget.compose')}
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate('/finance/budget/auto')}>
+              자동 산출
+            </Button>
+            <Button size="sm" onClick={() => setCreateOpen(true)}>
+              <Plus className="h-3.5 w-3.5 mr-1.5" />{t('budget.compose')}
+            </Button>
+          </div>
         )}
       </div>
 
