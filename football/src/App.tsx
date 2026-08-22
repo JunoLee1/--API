@@ -81,6 +81,7 @@ import DashboardCharts from '@/pages/finance/DashboardCharts'
 import BudgetListPage from '@/pages/finance/BudgetListPage'
 import AccountCodesPage from '@/pages/settings/AccountCodesPage'
 import BudgetDetailPage from '@/pages/finance/BudgetDetailPage'
+import BudgetAutoPage from '@/pages/finance/BudgetAutoPage'
 import { TeamSelectPage } from '@/pages/team-select/TeamSelectPage'
 import { LeaguePage } from '@/pages/admin/LeaguePage'
 import { TicketSalesPage } from '@/pages/finance/TicketSalesPage'
@@ -233,6 +234,7 @@ function App() {
             <Route path="/finance/plan-reports/:id/edit" element={<PlanReportFormPage />} />
             <Route path="/finance/plan-reports/:id" element={<PlanReportDetailPage />} />
             <Route path="/finance/budget" element={<BudgetListPage />} />
+            <Route path="/finance/budget/auto" element={<BudgetAutoPage />} />
             <Route path="/finance/budget/:id" element={<BudgetDetailPage />} />
             <Route path="/finance/dashboard" element={<DashboardCharts />} />
             <Route path="/settings/account-codes" element={<AccountCodesPage />} />
