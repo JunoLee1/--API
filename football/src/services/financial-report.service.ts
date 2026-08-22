@@ -2,14 +2,14 @@ import { api } from './api'
 import type { BudgetPlan, UpsertBudgetPlanPayload, OptimizeResult, AutoGenerateResult } from '@/types/budget'
 
 export interface RevenueBreakdown {
-  revenueTicket: number
-  revenueSponsorship: number
-  revenueBroadcast: number
-  revenueMerchandise: number
-  revenueSubsidy: number
-  revenueParentCompany: number
-  revenueAcademyFee: number
-  revenueOther: number
+  plannedRevenueTicket: number
+  plannedRevenueSponsorship: number
+  plannedRevenueBroadcast: number
+  plannedRevenueMerchandise: number
+  plannedRevenueSubsidy: number
+  plannedRevenueParentCompany: number
+  plannedRevenueAcademyFee: number
+  plannedRevenueOther: number
 }
 
 export interface FinancialReport {
@@ -19,14 +19,14 @@ export interface FinancialReport {
   note: string | null
   createdAt: string
   updatedAt: string
-  revenueTicket?: number
-  revenueSponsorship?: number
-  revenueBroadcast?: number
-  revenueMerchandise?: number
-  revenueSubsidy?: number
-  revenueParentCompany?: number
-  revenueAcademyFee?: number
-  revenueOther?: number
+  plannedRevenueTicket?: number
+  plannedRevenueSponsorship?: number
+  plannedRevenueBroadcast?: number
+  plannedRevenueMerchandise?: number
+  plannedRevenueSubsidy?: number
+  plannedRevenueParentCompany?: number
+  plannedRevenueAcademyFee?: number
+  plannedRevenueOther?: number
 }
 
 export interface PnLRevenueActual {

@@ -121,16 +121,16 @@ router.get("/finance", auth, async (req, res, next) => {
           }),
           prisma.financialReport.findUnique({
             where: { seasonId },
-            select: { revenueBroadcast: true, revenueSubsidy: true, revenueParentCompany: true },
+            select: { plannedRevenueBroadcast: true, plannedRevenueSubsidy: true, plannedRevenueParentCompany: true },
           }),
         ]);
         seasonDonut = {
           TICKET:         Number((ticketAgg._sum as any).totalAmount ?? 0),
           SPONSORSHIP:    Number(sponsorAgg._sum.amount ?? 0),
-          BROADCAST:      fr?.revenueBroadcast ?? 0,
+          BROADCAST:      fr?.plannedRevenueBroadcast ?? 0,
           MERCHANDISE:    Number((uniformAgg._sum as any).totalAmount ?? 0),
-          SUBSIDY:        fr?.revenueSubsidy ?? 0,
-          PARENT_COMPANY: fr?.revenueParentCompany ?? 0,
+          SUBSIDY:        fr?.plannedRevenueSubsidy ?? 0,
+          PARENT_COMPANY: fr?.plannedRevenueParentCompany ?? 0,
           ACADEMY_FEE:    Number(academyAgg._sum.amountKrw ?? 0),
           OTHER:          Number((otherAgg._sum as any).totalAmount ?? 0),
         };

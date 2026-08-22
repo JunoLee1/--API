@@ -117,24 +117,6 @@ export class SponsorshipRepository {
     return this.prisma.sponsorshipPayment.findUnique({ where: { id } });
   }
 
-  async syncRevenueSponsorship(paidAt: Date, amountKrw: number): Promise<{ synced: boolean; seasonId?: number }> {
-    const season = await this.prisma.season.findFirst({
-      where: { startDate: { lte: paidAt }, endDate: { gte: paidAt } },
-      select: { id: true },
-    });
-    if (!season) return { synced: false };
-
-    await this.prisma.financialReport.upsert({
-      where: { seasonId: season.id },
-      create: { seasonId: season.id, totalRevenue: amountKrw, revenueSponsorship: amountKrw },
-      update: {
-        revenueSponsorship: { increment: amountKrw },
-        totalRevenue: { increment: amountKrw },
-      },
-    });
-    return { synced: true, seasonId: season.id };
-  }
-
   updatePayment(id: number, data: { status: "PAID"; paidAt: Date; adjustedAmount?: number; adjustmentReason?: string; appliedClauseId?: number }) {
     return this.prisma.sponsorshipPayment.update({
       where: { id },

@@ -2426,15 +2426,17 @@ model FinancialReport {
   id                   Int      @id @default(autoincrement())
   seasonId             Int      @unique
   totalRevenue         Float
-  // Revenue breakdown — sum must equal totalRevenue
-  revenueTicket        Float    @default(0)
-  revenueSponsorship   Float    @default(0)
-  revenueBroadcast     Float    @default(0)
-  revenueMerchandise   Float    @default(0)
-  revenueSubsidy       Float    @default(0)
-  revenueParentCompany Float    @default(0)
-  revenueAcademyFee    Float    @default(0)
-  revenueOther         Float    @default(0)
+  // Planned revenue breakdown (계획값). Actuals are always computed live from
+  // source tables (SalesRecord, SponsorshipPayment, LedgerEntry). Do not write
+  // actuals into these fields — that broke dashboards prior to 2026-08-22.
+  plannedRevenueTicket        Float    @default(0)
+  plannedRevenueSponsorship   Float    @default(0)
+  plannedRevenueBroadcast     Float    @default(0)
+  plannedRevenueMerchandise   Float    @default(0)
+  plannedRevenueSubsidy       Float    @default(0)
+  plannedRevenueParentCompany Float    @default(0)
+  plannedRevenueAcademyFee    Float    @default(0)
+  plannedRevenueOther         Float    @default(0)
   totalOperatingBudget Int?
   contingencyReserve   Int?     @default(0)
   playerSalaryBudget   Int?
