@@ -154,7 +154,9 @@ export default function DashboardCharts() {
             onValueChange={(v) => setSelectedSeasonId(Number(v))}
           >
             <SelectTrigger className="w-40 h-8 text-sm">
-              <SelectValue placeholder="시즌 선택" />
+              <SelectValue placeholder="시즌 선택">
+                {seasons.find((s) => s.id === selectedSeasonId)?.name ?? '시즌 선택'}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {seasons.map((s) => (

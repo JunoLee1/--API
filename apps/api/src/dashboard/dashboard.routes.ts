@@ -69,21 +69,70 @@ router.get("/finance", auth, async (req, res, next) => {
     const prisma = getPrisma();
 
     // ── 1. DONUT: revenue breakdown ──────────────────────
+    // Compute actuals live from source tables so switching seasons never shows
+    // stale FinancialReport values (which double as prev-season forecast when
+    // auto-fill has been run). Manual-only fields (BROADCAST/SUBSIDY/PARENT_COMPANY)
+    // still come from FinancialReport since they have no system-of-record source.
     let seasonDonut: Record<string, number> = {};
     let monthlyDonut: Record<string, number> = {};
 
     if (seasonId) {
-      const fr = await prisma.financialReport.findUnique({ where: { seasonId } });
-      if (fr) {
+      const season = await prisma.season.findUnique({
+        where: { id: seasonId },
+        select: { startDate: true, endDate: true },
+      });
+      if (season) {
+        const [ticketAgg, uniformAgg, otherAgg, sponsorAgg, academyAgg, fr] = await Promise.all([
+          prisma.salesRecord.aggregate({
+            where: {
+              type: { in: ["TICKET", "VIP_TICKET"] as any[] },
+              match: { seasonId },
+              deletedAt: null,
+            } as any,
+            _sum: { totalAmount: true },
+          }),
+          prisma.salesRecord.aggregate({
+            where: {
+              type: "UNIFORM",
+              saleDate: { gte: season.startDate, lte: season.endDate },
+              deletedAt: null,
+            } as any,
+            _sum: { totalAmount: true },
+          }),
+          prisma.salesRecord.aggregate({
+            where: {
+              type: "OTHER",
+              saleDate: { gte: season.startDate, lte: season.endDate },
+              deletedAt: null,
+            } as any,
+            _sum: { totalAmount: true },
+          }),
+          prisma.sponsorshipPayment.aggregate({
+            where: { status: "PAID", paidAt: { gte: season.startDate, lte: season.endDate } },
+            _sum: { amount: true },
+          }),
+          prisma.ledgerEntry.aggregate({
+            where: {
+              category: "ACADEMY_FEE",
+              type: "INCOME",
+              createdAt: { gte: season.startDate, lte: season.endDate },
+            },
+            _sum: { amountKrw: true },
+          }),
+          prisma.financialReport.findUnique({
+            where: { seasonId },
+            select: { revenueBroadcast: true, revenueSubsidy: true, revenueParentCompany: true },
+          }),
+        ]);
         seasonDonut = {
-          TICKET:         fr.revenueTicket,
-          SPONSORSHIP:    fr.revenueSponsorship,
-          BROADCAST:      fr.revenueBroadcast,
-          MERCHANDISE:    fr.revenueMerchandise,
-          SUBSIDY:        fr.revenueSubsidy,
-          PARENT_COMPANY: fr.revenueParentCompany,
-          ACADEMY_FEE:    fr.revenueAcademyFee,
-          OTHER:          fr.revenueOther,
+          TICKET:         Number((ticketAgg._sum as any).totalAmount ?? 0),
+          SPONSORSHIP:    Number(sponsorAgg._sum.amount ?? 0),
+          BROADCAST:      fr?.revenueBroadcast ?? 0,
+          MERCHANDISE:    Number((uniformAgg._sum as any).totalAmount ?? 0),
+          SUBSIDY:        fr?.revenueSubsidy ?? 0,
+          PARENT_COMPANY: fr?.revenueParentCompany ?? 0,
+          ACADEMY_FEE:    Number(academyAgg._sum.amountKrw ?? 0),
+          OTHER:          Number((otherAgg._sum as any).totalAmount ?? 0),
         };
       }
     }
