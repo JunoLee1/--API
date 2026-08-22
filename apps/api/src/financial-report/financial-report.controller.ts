@@ -160,7 +160,13 @@ export class FinancialReportController {
       const { role, frontOfficeRole } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
-      const report = await this.service.autoFillRevenueFromPrevSeason(seasonId);
+
+      // ?lookback=N (default 3). 유효하지 않으면 default fallback.
+      const raw = req.query["lookback"];
+      const parsed = raw !== undefined ? Number(raw) : NaN;
+      const lookback = Number.isInteger(parsed) && parsed >= 1 ? parsed : 3;
+
+      const report = await this.service.autoFillRevenueFromPrevSeasons(seasonId, lookback);
       res.status(200).json(report);
     } catch (err) { next(err); }
   };
