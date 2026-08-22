@@ -1,22 +1,28 @@
+jest.mock("../../src/lib/season-actuals", () => ({
+  getSeasonRevenueActuals: jest.fn(),
+}));
+
+import { getSeasonRevenueActuals } from "../../src/lib/season-actuals";
 import { BudgetAutomationService } from "../../src/budget-automation/budget-automation.service";
 import { AppError } from "../../src/lib/appError";
 import { BudgetAutomationRepository } from "../../src/budget-automation/budget-automation.repo";
+
+const mockedGetSeasonRevenueActuals = getSeasonRevenueActuals as jest.MockedFunction<typeof getSeasonRevenueActuals>;
 
 const SEASON_2024 = { id: 10, name: "2023/24", startDate: new Date("2023-07-01") };
 const SEASON_2025 = { id: 11, name: "2024/25", startDate: new Date("2024-07-01") };
 const SEASON_2026 = { id: 12, name: "2025/26", startDate: new Date("2025-07-01") };
 const TARGET_SEASON = { id: 13, name: "2026/27", startDate: new Date("2026-07-01") };
 
-const makeReport = (seasonId: number, overrides = {}) => ({
-  seasonId,
-  revenueTicket: 100_000_000,
-  revenueSponsorship: 50_000_000,
-  revenueBroadcast: 30_000_000,
-  revenueMerchandise: 10_000_000,
-  revenueSubsidy: 5_000_000,
-  revenueParentCompany: 0,
-  revenueAcademyFee: 0,
-  revenueOther: 0,
+const makeActuals = (overrides: Partial<Record<string, number>> = {}): Record<string, number> => ({
+  plannedRevenueTicket: 100_000_000,
+  plannedRevenueSponsorship: 50_000_000,
+  plannedRevenueBroadcast: 0,     // manual-only, no system-of-record
+  plannedRevenueMerchandise: 10_000_000,
+  plannedRevenueSubsidy: 0,       // manual-only
+  plannedRevenueParentCompany: 0, // manual-only
+  plannedRevenueAcademyFee: 0,
+  plannedRevenueOther: 0,
   ...overrides,
 });
 
@@ -29,11 +35,6 @@ const makeExpenseRow = (seasonId: number, category: string, amount: number) => (
 const makeRepo = (overrides: Partial<BudgetAutomationRepository> = {}): BudgetAutomationRepository => ({
   getTargetSeason: jest.fn().mockResolvedValue(TARGET_SEASON),
   getPastSeasons: jest.fn().mockResolvedValue([SEASON_2026, SEASON_2025, SEASON_2024]),
-  getFinancialReports: jest.fn().mockResolvedValue([
-    makeReport(SEASON_2024.id),
-    makeReport(SEASON_2025.id),
-    makeReport(SEASON_2026.id),
-  ]),
   getExpenseActualsByCategory: jest.fn().mockResolvedValue([
     makeExpenseRow(SEASON_2024.id, "TRAVEL", 20_000_000),
     makeExpenseRow(SEASON_2025.id, "TRAVEL", 22_000_000),
@@ -56,6 +57,15 @@ const baseRequest = {
   expenseGoal: "MAINTAIN" as const,
 };
 
+beforeEach(() => {
+  mockedGetSeasonRevenueActuals.mockReset();
+  // Default: three seasons of revenue actuals (called once per seasonId in chrono order)
+  mockedGetSeasonRevenueActuals
+    .mockResolvedValueOnce(makeActuals() as any)   // SEASON_2024
+    .mockResolvedValueOnce(makeActuals() as any)   // SEASON_2025
+    .mockResolvedValueOnce(makeActuals() as any);  // SEASON_2026
+});
+
 describe("BudgetAutomationService.preview", () => {
   it("throws 404 when target season not found", async () => {
     const repo = makeRepo({ getTargetSeason: jest.fn().mockResolvedValue(null) });
@@ -77,6 +87,11 @@ describe("BudgetAutomationService.preview", () => {
 
   it("applies AGGRESSIVE goal (×1.2) to expense", async () => {
     const r1 = await new BudgetAutomationService(makeRepo()).preview({ ...baseRequest, expenseGoal: "MAINTAIN" });
+    // Re-prime helper mock for the second preview call
+    mockedGetSeasonRevenueActuals
+      .mockResolvedValueOnce(makeActuals() as any)
+      .mockResolvedValueOnce(makeActuals() as any)
+      .mockResolvedValueOnce(makeActuals() as any);
     const r2 = await new BudgetAutomationService(makeRepo()).preview({ ...baseRequest, expenseGoal: "AGGRESSIVE" });
     expect(r2.expense.byCategory["TRAVEL"].predicted)
       .toBeCloseTo(r1.expense.byCategory["TRAVEL"].predicted * 1.2, -4);
@@ -84,6 +99,10 @@ describe("BudgetAutomationService.preview", () => {
 
   it("applies categoryOverrides over expenseGoal", async () => {
     const r1 = await new BudgetAutomationService(makeRepo()).preview({ ...baseRequest, expenseGoal: "MAINTAIN" });
+    mockedGetSeasonRevenueActuals
+      .mockResolvedValueOnce(makeActuals() as any)
+      .mockResolvedValueOnce(makeActuals() as any)
+      .mockResolvedValueOnce(makeActuals() as any);
     const r2 = await new BudgetAutomationService(makeRepo()).preview({
       ...baseRequest,
       expenseGoal: "MAINTAIN",
@@ -94,9 +113,10 @@ describe("BudgetAutomationService.preview", () => {
   });
 
   it("sets INSUFFICIENT_DATA warning when only 1 season available", async () => {
+    mockedGetSeasonRevenueActuals.mockReset();
+    mockedGetSeasonRevenueActuals.mockResolvedValueOnce(makeActuals() as any);
     const repo = makeRepo({
       getPastSeasons: jest.fn().mockResolvedValue([SEASON_2026]),
-      getFinancialReports: jest.fn().mockResolvedValue([makeReport(SEASON_2026.id)]),
       getExpenseActualsByCategory: jest.fn().mockResolvedValue([
         makeExpenseRow(SEASON_2026.id, "TRAVEL", 24_000_000),
       ]),
@@ -117,6 +137,10 @@ describe("BudgetAutomationService.preview", () => {
 
   it("uses inflation parameter to increase predictions", async () => {
     const r0 = await new BudgetAutomationService(makeRepo()).preview({ ...baseRequest, inflation: 0 });
+    mockedGetSeasonRevenueActuals
+      .mockResolvedValueOnce(makeActuals() as any)
+      .mockResolvedValueOnce(makeActuals() as any)
+      .mockResolvedValueOnce(makeActuals() as any);
     const r1 = await new BudgetAutomationService(makeRepo()).preview({ ...baseRequest, inflation: 0.1 });
     expect(r1.expense.byCategory["TRAVEL"].predicted)
       .toBeGreaterThan(r0.expense.byCategory["TRAVEL"].predicted);
@@ -128,6 +152,19 @@ describe("BudgetAutomationService.preview", () => {
     expect(result.parameters.lookback).toBe(3);
     expect(result.parameters.inflation).toBe(0.03);
     expect(result.parameters.seasonsUsed).toBe(3);
+  });
+
+  it("returns INSUFFICIENT_DATA for manual-only revenue categories (BROADCAST, SUBSIDY, PARENT_COMPANY)", async () => {
+    // Default beforeEach primes three seasons where those three keys = 0
+    const result = await new BudgetAutomationService(makeRepo()).preview(baseRequest);
+
+    expect(result.revenue.byCategory["plannedRevenueBroadcast"].warning).toBe("INSUFFICIENT_DATA");
+    expect(result.revenue.byCategory["plannedRevenueSubsidy"].warning).toBe("INSUFFICIENT_DATA");
+    expect(result.revenue.byCategory["plannedRevenueParentCompany"].warning).toBe("INSUFFICIENT_DATA");
+
+    // Non-manual categories with actuals > 0 should NOT have INSUFFICIENT_DATA
+    expect(result.revenue.byCategory["plannedRevenueTicket"].warning).not.toBe("INSUFFICIENT_DATA");
+    expect(result.revenue.byCategory["plannedRevenueSponsorship"].warning).not.toBe("INSUFFICIENT_DATA");
   });
 });
 
