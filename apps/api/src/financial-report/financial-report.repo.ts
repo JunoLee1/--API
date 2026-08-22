@@ -1,26 +1,26 @@
 import { PrismaClient, OperatingCategory } from "../generated/client";
 
 export interface RevenueBreakdownDto {
-  revenueTicket?: number;
-  revenueSponsorship?: number;
-  revenueBroadcast?: number;
-  revenueMerchandise?: number;
-  revenueSubsidy?: number;
-  revenueParentCompany?: number;
-  revenueAcademyFee?: number;
-  revenueOther?: number;
+  plannedRevenueTicket?: number;
+  plannedRevenueSponsorship?: number;
+  plannedRevenueBroadcast?: number;
+  plannedRevenueMerchandise?: number;
+  plannedRevenueSubsidy?: number;
+  plannedRevenueParentCompany?: number;
+  plannedRevenueAcademyFee?: number;
+  plannedRevenueOther?: number;
 }
 
 export function sumBreakdown(b: RevenueBreakdownDto): number {
   return (
-    (b.revenueTicket ?? 0) +
-    (b.revenueSponsorship ?? 0) +
-    (b.revenueBroadcast ?? 0) +
-    (b.revenueMerchandise ?? 0) +
-    (b.revenueSubsidy ?? 0) +
-    (b.revenueParentCompany ?? 0) +
-    (b.revenueAcademyFee ?? 0) +
-    (b.revenueOther ?? 0)
+    (b.plannedRevenueTicket ?? 0) +
+    (b.plannedRevenueSponsorship ?? 0) +
+    (b.plannedRevenueBroadcast ?? 0) +
+    (b.plannedRevenueMerchandise ?? 0) +
+    (b.plannedRevenueSubsidy ?? 0) +
+    (b.plannedRevenueParentCompany ?? 0) +
+    (b.plannedRevenueAcademyFee ?? 0) +
+    (b.plannedRevenueOther ?? 0)
   );
 }
 
@@ -42,14 +42,14 @@ export class FinancialReportRepository {
     const noteVal = note ?? null;
     const breakdownData = breakdown
       ? {
-          revenueTicket: breakdown.revenueTicket ?? 0,
-          revenueSponsorship: breakdown.revenueSponsorship ?? 0,
-          revenueBroadcast: breakdown.revenueBroadcast ?? 0,
-          revenueMerchandise: breakdown.revenueMerchandise ?? 0,
-          revenueSubsidy: breakdown.revenueSubsidy ?? 0,
-          revenueParentCompany: breakdown.revenueParentCompany ?? 0,
-          revenueAcademyFee: breakdown.revenueAcademyFee ?? 0,
-          revenueOther: breakdown.revenueOther ?? 0,
+          plannedRevenueTicket: breakdown.plannedRevenueTicket ?? 0,
+          plannedRevenueSponsorship: breakdown.plannedRevenueSponsorship ?? 0,
+          plannedRevenueBroadcast: breakdown.plannedRevenueBroadcast ?? 0,
+          plannedRevenueMerchandise: breakdown.plannedRevenueMerchandise ?? 0,
+          plannedRevenueSubsidy: breakdown.plannedRevenueSubsidy ?? 0,
+          plannedRevenueParentCompany: breakdown.plannedRevenueParentCompany ?? 0,
+          plannedRevenueAcademyFee: breakdown.plannedRevenueAcademyFee ?? 0,
+          plannedRevenueOther: breakdown.plannedRevenueOther ?? 0,
         }
       : {};
 
@@ -57,7 +57,7 @@ export class FinancialReportRepository {
     const before = changedById
       ? await this.prisma.financialReport.findUnique({
           where: { seasonId },
-          select: { id: true, revenueBroadcast: true, revenueSubsidy: true, revenueParentCompany: true },
+          select: { id: true, plannedRevenueBroadcast: true, plannedRevenueSubsidy: true, plannedRevenueParentCompany: true },
         })
       : null;
 
@@ -69,7 +69,7 @@ export class FinancialReportRepository {
 
     // 변경된 필드만 로그 생성
     if (changedById && before && breakdown) {
-      const TRACKED = ["revenueBroadcast", "revenueSubsidy", "revenueParentCompany"] as const;
+      const TRACKED = ["plannedRevenueBroadcast", "plannedRevenueSubsidy", "plannedRevenueParentCompany"] as const;
       const logs = TRACKED.flatMap((field) => {
         const oldVal = Number((before as any)[field] ?? 0);
         const newVal = Number((breakdownData as any)[field] ?? 0);

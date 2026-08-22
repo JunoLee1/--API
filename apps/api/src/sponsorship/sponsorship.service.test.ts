@@ -22,7 +22,6 @@ const makeMarkPaidRepo = (overrides: Record<string, any> = {}) => ({
   ...makeRepo(),
   findPaymentById: jest.fn(),
   updatePayment: jest.fn(),
-  syncRevenueSponsorship: jest.fn().mockResolvedValue({ synced: true, seasonId: 1 }),
   ...overrides,
 });
 

@@ -203,7 +203,7 @@ export class FinancialReportService {
       } as any,
       _sum: { totalAmount: true },
     });
-    const revenueTicket = Number((ticketResult._sum as any).totalAmount ?? 0);
+    const plannedRevenueTicket = Number((ticketResult._sum as any).totalAmount ?? 0);
 
     // 2. 유니폼/MD 실수입 (SalesRecord type=UNIFORM, saleDate 범위)
     const uniformResult = await prisma.salesRecord.aggregate({
@@ -214,7 +214,7 @@ export class FinancialReportService {
       } as any,
       _sum: { totalAmount: true },
     });
-    const revenueMerchandise = Number((uniformResult._sum as any).totalAmount ?? 0);
+    const plannedRevenueMerchandise = Number((uniformResult._sum as any).totalAmount ?? 0);
 
     // 3-extra. 기타 판매 실수입 (SalesRecord type=OTHER, saleDate 범위)
     const otherSalesResult = await prisma.salesRecord.aggregate({
@@ -225,7 +225,7 @@ export class FinancialReportService {
       } as any,
       _sum: { totalAmount: true },
     });
-    const revenueOther = Number((otherSalesResult._sum as any).totalAmount ?? 0);
+    const plannedRevenueOther = Number((otherSalesResult._sum as any).totalAmount ?? 0);
 
     // 4. 스폰서십 실수입 (SponsorshipPayment status=PAID, paidAt 범위)
     const sponsorResult = await prisma.sponsorshipPayment.aggregate({
@@ -235,7 +235,7 @@ export class FinancialReportService {
       },
       _sum: { amount: true },
     });
-    const revenueSponsorship = Number(sponsorResult._sum.amount ?? 0);
+    const plannedRevenueSponsorship = Number(sponsorResult._sum.amount ?? 0);
 
     // 5. 아카데미 회비 실수입 (LedgerEntry category=ACADEMY_FEE, 전년도 시즌 기간)
     const academyFeeResult = await prisma.ledgerEntry.aggregate({
@@ -246,17 +246,17 @@ export class FinancialReportService {
       },
       _sum: { amountKrw: true },
     });
-    const revenueAcademyFee = Number(academyFeeResult._sum.amountKrw ?? 0);
+    const plannedRevenueAcademyFee = Number(academyFeeResult._sum.amountKrw ?? 0);
 
     const breakdown: RevenueBreakdownDto = {
-      revenueTicket,
-      revenueSponsorship,
-      revenueMerchandise,
-      revenueAcademyFee,
-      revenueBroadcast: 0,     // 중계권 — 시스템 외부 데이터, 수동 입력
-      revenueSubsidy: 0,       // 지자체/정부 보조금 — 시스템 외부 데이터, 수동 입력
-      revenueParentCompany: 0, // 모기업 지원금 — 수동 입력
-      revenueOther,
+      plannedRevenueTicket,
+      plannedRevenueSponsorship,
+      plannedRevenueMerchandise,
+      plannedRevenueAcademyFee,
+      plannedRevenueBroadcast: 0,     // 중계권 — 시스템 외부 데이터, 수동 입력
+      plannedRevenueSubsidy: 0,       // 지자체/정부 보조금 — 시스템 외부 데이터, 수동 입력
+      plannedRevenueParentCompany: 0, // 모기업 지원금 — 수동 입력
+      plannedRevenueOther,
     };
 
     const total = sumBreakdown(breakdown);
@@ -360,9 +360,9 @@ export class FinancialReportService {
       sponsorship: Number(sponsorshipAgg._sum.amount ?? 0),
       academyFee: Number(academyFeeAgg._sum.amountKrw ?? 0),
       // 수동 기입 항목 — FinancialReport에서 읽음
-      broadcast: financialReport?.revenueBroadcast ?? 0,
-      subsidy: financialReport?.revenueSubsidy ?? 0,
-      parentCompany: financialReport?.revenueParentCompany ?? 0,
+      broadcast: financialReport?.plannedRevenueBroadcast ?? 0,
+      subsidy: financialReport?.plannedRevenueSubsidy ?? 0,
+      parentCompany: financialReport?.plannedRevenueParentCompany ?? 0,
     };
     const totalRevenueActual = Object.values(revenueActual).reduce((a, b) => a + b, 0);
 

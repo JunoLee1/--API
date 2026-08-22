@@ -1,14 +1,14 @@
 export type GoalWeight = 'AGGRESSIVE' | 'MAINTAIN' | 'CONSERVATIVE'
 export type OperatingCategory = 'MEDICAL' | 'MEAL' | 'TRAVEL' | 'EQUIPMENT' | 'SCOUTING' | 'YOUTH'
 export type RevenueKey =
-  | 'revenueTicket'
-  | 'revenueSponsorship'
-  | 'revenueBroadcast'
-  | 'revenueMerchandise'
-  | 'revenueSubsidy'
-  | 'revenueParentCompany'
-  | 'revenueAcademyFee'
-  | 'revenueOther'
+  | 'plannedRevenueTicket'
+  | 'plannedRevenueSponsorship'
+  | 'plannedRevenueBroadcast'
+  | 'plannedRevenueMerchandise'
+  | 'plannedRevenueSubsidy'
+  | 'plannedRevenueParentCompany'
+  | 'plannedRevenueAcademyFee'
+  | 'plannedRevenueOther'
 
 export interface CategoryPrediction {
   predicted: number

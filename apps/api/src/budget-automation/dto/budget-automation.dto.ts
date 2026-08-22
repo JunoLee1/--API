@@ -9,14 +9,14 @@ export const GOAL_MULTIPLIER: Record<GoalWeight, number> = {
 };
 
 export const REVENUE_KEYS = [
-  "revenueTicket",
-  "revenueSponsorship",
-  "revenueBroadcast",
-  "revenueMerchandise",
-  "revenueSubsidy",
-  "revenueParentCompany",
-  "revenueAcademyFee",
-  "revenueOther",
+  "plannedRevenueTicket",
+  "plannedRevenueSponsorship",
+  "plannedRevenueBroadcast",
+  "plannedRevenueMerchandise",
+  "plannedRevenueSubsidy",
+  "plannedRevenueParentCompany",
+  "plannedRevenueAcademyFee",
+  "plannedRevenueOther",
 ] as const;
 
 export type RevenueKey = (typeof REVENUE_KEYS)[number];

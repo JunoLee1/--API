@@ -24,14 +24,14 @@ export class BudgetAutomationRepository {
       where: { seasonId: { in: seasonIds } },
       select: {
         seasonId: true,
-        revenueTicket: true,
-        revenueSponsorship: true,
-        revenueBroadcast: true,
-        revenueMerchandise: true,
-        revenueSubsidy: true,
-        revenueParentCompany: true,
-        revenueAcademyFee: true,
-        revenueOther: true,
+        plannedRevenueTicket: true,
+        plannedRevenueSponsorship: true,
+        plannedRevenueBroadcast: true,
+        plannedRevenueMerchandise: true,
+        plannedRevenueSubsidy: true,
+        plannedRevenueParentCompany: true,
+        plannedRevenueAcademyFee: true,
+        plannedRevenueOther: true,
       },
     });
   }

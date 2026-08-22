@@ -21,17 +21,17 @@ const GOAL_LABELS: Record<GoalWeight, string> = {
 }
 
 const EXPENSE_CATS: OperatingCategory[] = ['MEDICAL', 'MEAL', 'TRAVEL', 'EQUIPMENT', 'SCOUTING', 'YOUTH']
-const REVENUE_KEYS = ['revenueTicket', 'revenueSponsorship', 'revenueBroadcast', 'revenueMerchandise', 'revenueSubsidy', 'revenueParentCompany', 'revenueAcademyFee', 'revenueOther'] as const
+const REVENUE_KEYS = ['plannedRevenueTicket', 'plannedRevenueSponsorship', 'plannedRevenueBroadcast', 'plannedRevenueMerchandise', 'plannedRevenueSubsidy', 'plannedRevenueParentCompany', 'plannedRevenueAcademyFee', 'plannedRevenueOther'] as const
 
 const REVENUE_LABELS: Record<string, string> = {
-  revenueTicket: '티켓 수입',
-  revenueSponsorship: '스폰서십',
-  revenueBroadcast: '중계권',
-  revenueMerchandise: '머천다이즈',
-  revenueSubsidy: '보조금',
-  revenueParentCompany: '모기업 지원',
-  revenueAcademyFee: '아카데미 수강료',
-  revenueOther: '기타',
+  plannedRevenueTicket: '티켓 수입',
+  plannedRevenueSponsorship: '스폰서십',
+  plannedRevenueBroadcast: '중계권',
+  plannedRevenueMerchandise: '머천다이즈',
+  plannedRevenueSubsidy: '보조금',
+  plannedRevenueParentCompany: '모기업 지원',
+  plannedRevenueAcademyFee: '아카데미 수강료',
+  plannedRevenueOther: '기타',
 }
 
 const EXPENSE_LABELS: Record<OperatingCategory, string> = {
