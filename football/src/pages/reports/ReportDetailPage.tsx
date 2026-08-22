@@ -146,6 +146,36 @@ export function ReportDetailPage() {
   const isAuthor = report?.authorId === user?.id
   const canSubmit = isAuthor && (report?.status === 'DRAFT' || report?.status === 'REJECTED')
 
+  const isGM = user?.role === 'GM'
+  const foRole = user?.frontOfficeRole
+  const isHrManager = user?.role === 'FRONT_OFFICE' && foRole === 'HR_MANAGER'
+  const isAssetManager = user?.role === 'FRONT_OFFICE' && foRole === 'ASSET_MANAGER'
+  const isFinanceManager = user?.role === 'FRONT_OFFICE' && foRole === 'FINANCE_MANAGER'
+  const isHeadCoachRole = user?.role === 'COACHING_STAFF' && user?.coachingRole === 'HEAD_COACH'
+
+  const canApprove = (() => {
+    if (!report) return false
+    switch (report.type) {
+      case 'HR':
+        if (report.status === 'SUBMITTED') return isHrManager
+        if (report.status === 'FIRST_APPROVED') return isAssetManager
+        if (report.status === 'SECOND_APPROVED') return isGM
+        return false
+      case 'ASSET':
+        if (report.status === 'SUBMITTED') return isAssetManager
+        if (report.status === 'FIRST_APPROVED') return isGM
+        return false
+      case 'FINANCIAL':
+        if (report.status === 'SUBMITTED') return isFinanceManager
+        if (report.status === 'FIRST_APPROVED') return isGM
+        return false
+      case 'TRAINING':
+        return isHeadCoachRole && report.status === 'SUBMITTED'
+      default:
+        return isGM && report.status === 'SUBMITTED'
+    }
+  })()
+
   // Departments where this user is head (for review actions)
   const myDeptIds: number[] = []
   if (report?.reviews && user) {
@@ -178,6 +208,24 @@ export function ReportDetailPage() {
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : '제출에 실패했습니다')
     } finally { setActing(false) }
+  }
+
+  const handleApprove = async () => {
+    if (!report) return
+    setActing(true)
+    try {
+      setReport(await reportApi.approve(report.id))
+      toast.success('승인됐습니다')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : '승인에 실패했습니다')
+    } finally { setActing(false) }
+  }
+
+  const handleRejectDirect = async (reason: string) => {
+    if (!report) return
+    setReport(await reportApi.reject(report.id, reason))
+    setRejectOpen(false)
+    toast.success('반려됐습니다')
   }
 
   const handleConfirmReview = async (deptId: number) => {
@@ -240,6 +288,16 @@ export function ReportDetailPage() {
           {canSubmit && (
             <Button size="sm" onClick={handleSubmit} disabled={acting}>제출</Button>
           )}
+          {canApprove && (
+            <>
+              <Button size="sm" variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" disabled={acting} onClick={() => setRejectOpen(true)}>
+                반려
+              </Button>
+              <Button size="sm" disabled={acting} onClick={handleApprove}>
+                승인
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -260,10 +318,22 @@ export function ReportDetailPage() {
                 <p>{formatDateTime(report.submittedAt)}</p>
               </div>
             )}
+            {report.firstReviewedAt && report.firstReviewer && (
+              <div>
+                <p className="text-muted-foreground text-xs mb-0.5">1차 승인일</p>
+                <p>{formatDateTime(report.firstReviewedAt)} ({report.firstReviewer.nickname})</p>
+              </div>
+            )}
+            {report.secondReviewedAt && report.secondReviewer && (
+              <div>
+                <p className="text-muted-foreground text-xs mb-0.5">2차 승인일</p>
+                <p>{formatDateTime(report.secondReviewedAt)} ({report.secondReviewer.nickname})</p>
+              </div>
+            )}
             {report.reviewedAt && (
               <div>
                 <p className="text-muted-foreground text-xs mb-0.5">최종 처리일</p>
-                <p>{formatDateTime(report.reviewedAt)}</p>
+                <p>{formatDateTime(report.reviewedAt)}{report.reviewer ? ` (${report.reviewer.nickname})` : ''}</p>
               </div>
             )}
           </div>
@@ -316,7 +386,7 @@ export function ReportDetailPage() {
       <RejectDialog
         open={rejectOpen}
         onOpenChange={(v) => { setRejectOpen(v); if (!v) setRejectingDeptId(null) }}
-        onConfirm={handleRejectReview}
+        onConfirm={rejectingDeptId !== null ? handleRejectReview : handleRejectDirect}
       />
     </div>
   )

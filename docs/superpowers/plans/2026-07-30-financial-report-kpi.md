@@ -1,6 +1,6 @@
 # Financial Report & Wage Cap KPI Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** FinancialReport 모델로 시즌 수익 데이터를 수동 입력 또는 CSV 업로드로 저장하고, RATIO 임금상한 계산을 구현하며, 임금 KPI 대시보드 페이지를 제공한다.
 
@@ -57,7 +57,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: schema.prisma에 FinancialReport 모델 추가**
+- [x] **Step 1: schema.prisma에 FinancialReport 모델 추가**
 
 Season 모델 뒤에 다음 모델을 추가하고, Season 모델에 relation을 추가한다.
 
@@ -78,7 +78,7 @@ model FinancialReport {
 
 `apps/api/prisma/schema.prisma`의 Season 모델에서 기존 relation 목록(matches, trainingSessions 등) 끝에 `financialReport FinancialReport?` 한 줄을 추가하고, 파일 말미에 FinancialReport 모델을 추가한다.
 
-- [ ] **Step 2: 마이그레이션 생성 및 적용**
+- [x] **Step 2: 마이그레이션 생성 및 적용**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -87,7 +87,7 @@ npx prisma migrate dev --name financial_report
 
 Expected: `apps/api/prisma/migrations/20260730000002_financial_report/migration.sql` 생성, "Done" 출력
 
-- [ ] **Step 3: Prisma Client 재생성 확인**
+- [x] **Step 3: Prisma Client 재생성 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -96,7 +96,7 @@ npx tsc --noEmit 2>&1 | head -10
 
 Expected: 에러 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -129,7 +129,7 @@ category,amount
 ```
 또는 헤더 없이 한 줄로 `전체,1000000000`. 두 번째 컬럼 숫자들의 합이 totalRevenue가 된다.
 
-- [ ] **Step 1: financial-report.repo.ts 작성**
+- [x] **Step 1: financial-report.repo.ts 작성**
 
 ```typescript
 // apps/api/src/financial-report/financial-report.repo.ts
@@ -152,7 +152,7 @@ export class FinancialReportRepository {
 }
 ```
 
-- [ ] **Step 2: financial-report.service.ts 작성**
+- [x] **Step 2: financial-report.service.ts 작성**
 
 ```typescript
 // apps/api/src/financial-report/financial-report.service.ts
@@ -193,7 +193,7 @@ export class FinancialReportService {
 }
 ```
 
-- [ ] **Step 3: financial-report.controller.ts 작성**
+- [x] **Step 3: financial-report.controller.ts 작성**
 
 ```typescript
 // apps/api/src/financial-report/financial-report.controller.ts
@@ -243,7 +243,7 @@ export class FinancialReportController {
 }
 ```
 
-- [ ] **Step 4: financial-report.routes.ts 작성**
+- [x] **Step 4: financial-report.routes.ts 작성**
 
 multer를 `memoryStorage`로 사용해 디스크 저장 없이 버퍼를 직접 읽는다.
 
@@ -272,7 +272,7 @@ router.get("/:seasonId", auth, controller.get);
 export default router;
 ```
 
-- [ ] **Step 5: apiRouter.ts에 등록**
+- [x] **Step 5: apiRouter.ts에 등록**
 
 `apps/api/src/apiRouter.ts`의 기존 import 목록 끝에 추가:
 
@@ -286,7 +286,7 @@ import financialReportRouter from "./financial-report/financial-report.routes";
 apiRouter.use("/financial-reports", financialReportRouter);
 ```
 
-- [ ] **Step 6: TypeScript 확인**
+- [x] **Step 6: TypeScript 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -20
@@ -294,7 +294,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 에러 없음
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -317,7 +317,7 @@ git commit -m "feat(financial-report): FinancialReport API - 수동 입력 + CSV
 - `PATCH /seasons/:id/wage-cap` — wageCapType + wageCapValue 설정. ADMIN only.
 - `GET /seasons/active/wage-cap-kpi` — 활성 시즌 임금 KPI. 인증 필요.
 
-- [ ] **Step 1: season.dto.ts에 SetWageCapDto 추가**
+- [x] **Step 1: season.dto.ts에 SetWageCapDto 추가**
 
 기존 `CreateSeasonDto` 아래에 추가:
 
@@ -335,7 +335,7 @@ export interface SetWageCapDto {
 }
 ```
 
-- [ ] **Step 2: season.repo.ts에 updateWageCap + KPI 쿼리 추가**
+- [x] **Step 2: season.repo.ts에 updateWageCap + KPI 쿼리 추가**
 
 ```typescript
 // apps/api/src/season/season.repo.ts
@@ -418,7 +418,7 @@ export class SeasonRepository {
 }
 ```
 
-- [ ] **Step 3: season.service.ts에 setWageCap + getWageCapKPI 추가**
+- [x] **Step 3: season.service.ts에 setWageCap + getWageCapKPI 추가**
 
 ```typescript
 // apps/api/src/season/season.service.ts
@@ -498,7 +498,7 @@ export class SeasonService {
 }
 ```
 
-- [ ] **Step 4: season.controller.ts에 setWageCap + getWageCapKPI 추가**
+- [x] **Step 4: season.controller.ts에 setWageCap + getWageCapKPI 추가**
 
 기존 컨트롤러 클래스 내 `closeSeason` 메서드 뒤에 추가:
 
@@ -524,7 +524,7 @@ export class SeasonService {
   };
 ```
 
-- [ ] **Step 5: season.routes.ts에 새 라우트 등록**
+- [x] **Step 5: season.routes.ts에 새 라우트 등록**
 
 기존 라우트 목록에서 `router.patch("/:id/close", ...)` 아래에 추가:
 
@@ -538,7 +538,7 @@ router.patch("/:id/wage-cap", auth, controller.setWageCap);
 
 주의: `GET /seasons/active/wage-cap-kpi`는 `/active` 경로를 `/:id`보다 먼저 등록해야 한다. 기존 `router.get("/active", ...)` 다음에 추가한다.
 
-- [ ] **Step 6: TypeScript 확인**
+- [x] **Step 6: TypeScript 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -20
@@ -546,7 +546,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 에러 없음
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -564,7 +564,7 @@ git commit -m "feat(season): 임금상한 설정 API + 임금 KPI 엔드포인�
 
 RATIO 타입 시 `FinancialReport.totalRevenue * wageCapValue`를 cap으로 사용한다. FinancialReport가 없으면 OK 반환(graceful degradation).
 
-- [ ] **Step 1: 실패 테스트 먼저 추가**
+- [x] **Step 1: 실패 테스트 먼저 추가**
 
 `apps/api/__test__/contract/wage-cap.service.test.ts`에서 `makeService` 시그니처를 변경하고 RATIO 테스트 4개를 추가한다. 기존 파일을 완전히 교체:
 
@@ -694,7 +694,7 @@ describe("WageCapService.check — RATIO", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 — RATIO 4개 실패 확인**
+- [x] **Step 2: 테스트 실행 — RATIO 4개 실패 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -703,7 +703,7 @@ npx jest __test__/contract/wage-cap.service.test.ts --no-coverage 2>&1 | tail -2
 
 Expected: RATIO describe 블록 4개 FAIL ("Cannot read properties of undefined (reading 'findUnique')" 또는 유사)
 
-- [ ] **Step 3: wage-cap.service.ts 수정 — RATIO 지원 추가**
+- [x] **Step 3: wage-cap.service.ts 수정 — RATIO 지원 추가**
 
 ```typescript
 // apps/api/src/contract/wage-cap.service.ts
@@ -762,7 +762,7 @@ export class WageCapService {
 }
 ```
 
-- [ ] **Step 4: 테스트 실행 — 전체 통과 확인**
+- [x] **Step 4: 테스트 실행 — 전체 통과 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -771,7 +771,7 @@ npx jest __test__/contract/wage-cap.service.test.ts --no-coverage 2>&1 | tail -2
 
 Expected: `PASS`, 13 tests passing (FIXED 8 + RATIO 4 = 12... wait, 8 + 4 = 12)
 
-- [ ] **Step 5: TypeScript 확인**
+- [x] **Step 5: TypeScript 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -10
@@ -779,7 +779,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -10
 
 Expected: 에러 없음
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -796,7 +796,7 @@ git commit -m "feat(wage-cap): RATIO 임금상한 계산 구현 (FinancialReport
 - Modify: `football/src/services/season.service.ts`
 - Modify: `football/src/pages/admin/SeasonsPage.tsx`
 
-- [ ] **Step 1: types/season.ts 확장**
+- [x] **Step 1: types/season.ts 확장**
 
 ```typescript
 // football/src/types/season.ts
@@ -836,7 +836,7 @@ export const SEASON_STATUS_STYLE: Record<SeasonStatus, string> = {
 }
 ```
 
-- [ ] **Step 2: services/season.service.ts에 setWageCap + getWageCapKPI 추가**
+- [x] **Step 2: services/season.service.ts에 setWageCap + getWageCapKPI 추가**
 
 ```typescript
 // football/src/services/season.service.ts
@@ -863,7 +863,7 @@ export const seasonApi = {
 }
 ```
 
-- [ ] **Step 3: SeasonsPage.tsx에 임금상한 설정 다이얼로그 추가**
+- [x] **Step 3: SeasonsPage.tsx에 임금상한 설정 다이얼로그 추가**
 
 기존 SeasonsPage.tsx를 읽은 후 아래를 반영:
 
@@ -1210,7 +1210,7 @@ export function SeasonsPage() {
 }
 ```
 
-- [ ] **Step 4: i18n 키 추가 (ko)**
+- [x] **Step 4: i18n 키 추가 (ko)**
 
 `football/src/locales/ko/admin.json`의 `seasonsPage` 객체 내 기존 마지막 키 뒤에 추가:
 
@@ -1241,7 +1241,7 @@ export function SeasonsPage() {
 }
 ```
 
-- [ ] **Step 5: i18n 키 추가 (en)**
+- [x] **Step 5: i18n 키 추가 (en)**
 
 `football/src/locales/en/admin.json`의 `seasonsPage` 내 동일 위치에:
 
@@ -1272,7 +1272,7 @@ export function SeasonsPage() {
 }
 ```
 
-- [ ] **Step 6: TypeScript 확인**
+- [x] **Step 6: TypeScript 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -20
@@ -1280,7 +1280,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 에러 없음
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -1305,7 +1305,7 @@ git commit -m "feat(season): FE 임금상한 설정 UI + Season 타입 확장"
 - 수동 입력: totalRevenue 숫자 입력 → POST /financial-reports/:seasonId
 - CSV 업로드: 파일 선택 → POST /financial-reports/:seasonId/csv
 
-- [ ] **Step 1: financial-report.service.ts 작성**
+- [x] **Step 1: financial-report.service.ts 작성**
 
 ```typescript
 // football/src/services/financial-report.service.ts
@@ -1350,7 +1350,7 @@ postForm: <T>(url: string, body: FormData): Promise<T> =>
 
 `football/src/services/api.ts`를 읽어 실제 구조를 확인한 후 `postForm`을 추가한다.
 
-- [ ] **Step 2: FinancialReportPage.tsx 작성**
+- [x] **Step 2: FinancialReportPage.tsx 작성**
 
 ```typescript
 // football/src/pages/admin/FinancialReportPage.tsx
@@ -1508,7 +1508,7 @@ export function FinancialReportPage() {
 }
 ```
 
-- [ ] **Step 3: App.tsx에 라우트 추가**
+- [x] **Step 3: App.tsx에 라우트 추가**
 
 기존 `import { MealExpensePage }` 아래에:
 ```typescript
@@ -1520,7 +1520,7 @@ import { FinancialReportPage } from '@/pages/admin/FinancialReportPage'
 <Route path="/admin/financial-report" element={<FinancialReportPage />} />
 ```
 
-- [ ] **Step 4: AppShell.tsx에 네비게이션 항목 추가**
+- [x] **Step 4: AppShell.tsx에 네비게이션 항목 추가**
 
 기존 meal-expenses 항목(to: '/admin/meal-expenses') 아래에:
 
@@ -1537,7 +1537,7 @@ import { FinancialReportPage } from '@/pages/admin/FinancialReportPage'
 
 `AppShell.tsx` 상단 import에 `BarChart2`가 없다면 `import { ..., BarChart2 } from 'lucide-react'`에 추가.
 
-- [ ] **Step 5: i18n 키 추가 (ko)**
+- [x] **Step 5: i18n 키 추가 (ko)**
 
 `football/src/locales/ko/admin.json`에 최상위 수준 키로 추가:
 
@@ -1574,7 +1574,7 @@ import { FinancialReportPage } from '@/pages/admin/FinancialReportPage'
 }
 ```
 
-- [ ] **Step 6: i18n 키 추가 (en)**
+- [x] **Step 6: i18n 키 추가 (en)**
 
 `football/src/locales/en/admin.json`에:
 
@@ -1613,7 +1613,7 @@ import { FinancialReportPage } from '@/pages/admin/FinancialReportPage'
 
 주의: `nav.item.financialReport` 키가 AppShell.tsx에서 참조되는 네임스페이스 경로와 정확히 일치해야 한다. AppShell.tsx가 `useTranslation('common')`을 쓴다면 `common.json`에, `useTranslation('admin')`이면 `admin.json`에 추가한다. 실제 파일을 읽어 확인 후 올바른 위치에 추가한다.
 
-- [ ] **Step 7: TypeScript 확인**
+- [x] **Step 7: TypeScript 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -20
@@ -1621,7 +1621,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 에러 없음
 
-- [ ] **Step 8: Vite 빌드 확인**
+- [x] **Step 8: Vite 빌드 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx vite build 2>&1 | grep -E "error|✓ built"
@@ -1629,7 +1629,7 @@ cd /Users/juno/work/football/football && npx vite build 2>&1 | grep -E "error|�
 
 Expected: `✓ built in ...`
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 cd /Users/juno/work/football

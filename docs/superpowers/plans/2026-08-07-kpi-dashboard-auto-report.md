@@ -1,6 +1,6 @@
 # KPI 대시보드 + 자동화 보고서 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 운영/재무팀 8개 KPI를 역할별 대시보드에 표시하고, 월말 cron으로 운영 지표 스냅샷을 저장해 자동화 보고서를 제공한다.
 
@@ -42,7 +42,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: 스키마에 두 모델 추가**
+- [x] **Step 1: 스키마에 두 모델 추가**
 
 `apps/api/prisma/schema.prisma` 끝에 추가:
 
@@ -76,7 +76,7 @@ model MonthlyOperationsSnapshot {
 }
 ```
 
-- [ ] **Step 2: Migration 생성·적용**
+- [x] **Step 2: Migration 생성·적용**
 
 ```bash
 cd apps/api
@@ -85,7 +85,7 @@ npx prisma migrate dev --name add_monthly_snapshots
 
 Expected: migration 파일 생성, DB 적용 완료
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/prisma/
@@ -100,7 +100,7 @@ git commit -m "feat: add MonthlyBudgetSnapshot and MonthlyOperationsSnapshot mod
 - Create: `apps/api/src/ops-report/ops-report.repo.ts`
 - Create: `apps/api/src/ops-report/ops-report.service.ts`
 
-- [ ] **Step 1: 레포 작성**
+- [x] **Step 1: 레포 작성**
 
 `apps/api/src/ops-report/ops-report.repo.ts`:
 
@@ -168,7 +168,7 @@ export class OpsReportRepository {
 }
 ```
 
-- [ ] **Step 2: 서비스 작성 — 실시간 KPI 계산 로직**
+- [x] **Step 2: 서비스 작성 — 실시간 KPI 계산 로직**
 
 `apps/api/src/ops-report/ops-report.service.ts`:
 
@@ -295,7 +295,7 @@ export class OpsReportService {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/ops-report/
@@ -310,7 +310,7 @@ git commit -m "feat: add OpsReportRepository and OpsReportService with KPI calcu
 - Create: `apps/api/src/ops-report/ops-report.controller.ts`
 - Create: `apps/api/src/ops-report/ops-report.routes.ts`
 
-- [ ] **Step 1: 컨트롤러 작성**
+- [x] **Step 1: 컨트롤러 작성**
 
 `apps/api/src/ops-report/ops-report.controller.ts`:
 
@@ -378,7 +378,7 @@ export class OpsReportController {
 }
 ```
 
-- [ ] **Step 2: 라우트 작성**
+- [x] **Step 2: 라우트 작성**
 
 `apps/api/src/ops-report/ops-report.routes.ts`:
 
@@ -403,7 +403,7 @@ router.get("/budget/annual", auth, controller.getAnnualBudget);
 export default router;
 ```
 
-- [ ] **Step 3: server.ts에 라우트 등록**
+- [x] **Step 3: server.ts에 라우트 등록**
 
 `apps/api/src/server.ts`에서 다른 라우터 등록 패턴 옆에 추가:
 
@@ -413,7 +413,7 @@ import opsReportRouter from "./ops-report/ops-report.routes";
 app.use("/api/reports", opsReportRouter);
 ```
 
-- [ ] **Step 4: TypeScript 체크**
+- [x] **Step 4: TypeScript 체크**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | grep "ops-report"
@@ -421,7 +421,7 @@ cd apps/api && npx tsc --noEmit 2>&1 | grep "ops-report"
 
 Expected: 출력 없음
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/ops-report/ apps/api/src/server.ts
@@ -437,7 +437,7 @@ git commit -m "feat: add ops-report routes for KPI and budget snapshots"
 - Create: `apps/api/src/jobs/monthlyBudgetReport.ts`
 - Modify: `apps/api/src/server.ts`
 
-- [ ] **Step 1: monthlyOperationsReport 잡 작성**
+- [x] **Step 1: monthlyOperationsReport 잡 작성**
 
 `apps/api/src/jobs/monthlyOperationsReport.ts`:
 
@@ -468,7 +468,7 @@ export function startMonthlyOperationsReportJob() {
 }
 ```
 
-- [ ] **Step 2: monthlyBudgetReport 잡 작성**
+- [x] **Step 2: monthlyBudgetReport 잡 작성**
 
 `apps/api/src/jobs/monthlyBudgetReport.ts`:
 
@@ -499,7 +499,7 @@ export function startMonthlyBudgetReportJob() {
 }
 ```
 
-- [ ] **Step 3: server.ts에 두 잡 등록**
+- [x] **Step 3: server.ts에 두 잡 등록**
 
 ```typescript
 import { startMonthlyOperationsReportJob } from "./jobs/monthlyOperationsReport";
@@ -509,7 +509,7 @@ startMonthlyOperationsReportJob();
 startMonthlyBudgetReportJob();
 ```
 
-- [ ] **Step 4: TypeScript 체크**
+- [x] **Step 4: TypeScript 체크**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | grep -E "ops-report|monthlyOps|monthlyBudget"
@@ -517,7 +517,7 @@ cd apps/api && npx tsc --noEmit 2>&1 | grep -E "ops-report|monthlyOps|monthlyBud
 
 Expected: 출력 없음
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/jobs/ apps/api/src/server.ts
@@ -532,7 +532,7 @@ git commit -m "feat: add monthly operations and budget report cron jobs"
 - Create: `football/src/types/ops-report.ts`
 - Create: `football/src/services/ops-report.service.ts`
 
-- [ ] **Step 1: 타입 정의**
+- [x] **Step 1: 타입 정의**
 
 `football/src/types/ops-report.ts`:
 
@@ -561,7 +561,7 @@ export interface AnnualOpsEntry {
 }
 ```
 
-- [ ] **Step 2: API 서비스 작성**
+- [x] **Step 2: API 서비스 작성**
 
 `football/src/services/ops-report.service.ts`:
 
@@ -584,7 +584,7 @@ export const opsReportApi = {
 }
 ```
 
-- [ ] **Step 3: TypeScript 체크**
+- [x] **Step 3: TypeScript 체크**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | grep "ops-report"
@@ -592,7 +592,7 @@ cd football && npx tsc --noEmit 2>&1 | grep "ops-report"
 
 Expected: 출력 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/types/ops-report.ts football/src/services/ops-report.service.ts
@@ -606,7 +606,7 @@ git commit -m "feat: add ops-report frontend types and API service"
 **Files:**
 - Create: `football/src/components/dashboard/OpsKpiSection.tsx`
 
-- [ ] **Step 1: 컴포넌트 작성**
+- [x] **Step 1: 컴포넌트 작성**
 
 `football/src/components/dashboard/OpsKpiSection.tsx`:
 
@@ -672,7 +672,7 @@ export function OpsKpiSection({ role, data }: Props) {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add football/src/components/dashboard/OpsKpiSection.tsx
@@ -687,7 +687,7 @@ git commit -m "feat: add OpsKpiSection dashboard component"
 - Modify: `football/src/pages/dashboard/dashboardConfig.ts`
 - Modify: `football/src/pages/dashboard/DashboardPage.tsx`
 
-- [ ] **Step 1: dashboardConfig에 showOpsKpi 추가**
+- [x] **Step 1: dashboardConfig에 showOpsKpi 추가**
 
 `dashboardConfig.ts`의 `DashboardConfig` 인터페이스에:
 
@@ -713,7 +713,7 @@ ADMIN 블록 (role === 'ADMIN'):
 showOpsKpi: 'all',
 ```
 
-- [ ] **Step 2: DashboardPage에 OpsKpiSection 추가**
+- [x] **Step 2: DashboardPage에 OpsKpiSection 추가**
 
 `DashboardPage.tsx` import 추가:
 
@@ -755,7 +755,7 @@ if (config.showOpsKpi) {
 )}
 ```
 
-- [ ] **Step 3: TypeScript 체크**
+- [x] **Step 3: TypeScript 체크**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | grep -E "dashboard|OpsKpi"
@@ -763,7 +763,7 @@ cd football && npx tsc --noEmit 2>&1 | grep -E "dashboard|OpsKpi"
 
 Expected: 출력 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/pages/dashboard/
@@ -777,13 +777,13 @@ git commit -m "feat: wire OpsKpiSection into dashboard by role"
 **Files:**
 - Modify: `football/src/pages/reports/ReportsPage.tsx`
 
-- [ ] **Step 1: 기존 ReportsPage 읽기**
+- [x] **Step 1: 기존 ReportsPage 읽기**
 
 ```bash
 cat football/src/pages/reports/ReportsPage.tsx
 ```
 
-- [ ] **Step 2: 연간 KPI 라인 차트 섹션 추가**
+- [x] **Step 2: 연간 KPI 라인 차트 섹션 추가**
 
 기존 import에 추가:
 
@@ -838,7 +838,7 @@ seasonApi.active().then((season) => {
 )}
 ```
 
-- [ ] **Step 3: TypeScript 체크**
+- [x] **Step 3: TypeScript 체크**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | grep "reports"
@@ -846,7 +846,7 @@ cd football && npx tsc --noEmit 2>&1 | grep "reports"
 
 Expected: 출력 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/pages/reports/ReportsPage.tsx

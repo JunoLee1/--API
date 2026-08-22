@@ -1,6 +1,6 @@
 # Recruitment Automation Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 지원자 상태 자동 전환 + 채용 자동화 레이어(LeagueLevelWeightConfig · DepartmentIbiConfig · SeasonComplianceCheck · ComplianceDeadline · HiringPriorityQueue · 분기 cron) 완전 구현
 
@@ -44,7 +44,7 @@
 **Files:**
 - Modify: `prisma/schema.prisma`
 
-- [ ] **Step 1: schema.prisma에서 ClubSettings 모델에 ibiBeta 추가**
+- [x] **Step 1: schema.prisma에서 ClubSettings 모델에 ibiBeta 추가**
 
 `ClubSettings` 모델 찾아서 아래 필드 추가:
 ```prisma
@@ -55,7 +55,7 @@ model ClubSettings {
 }
 ```
 
-- [ ] **Step 2: 마이그레이션 실행**
+- [x] **Step 2: 마이그레이션 실행**
 
 ```bash
 cd /Users/juno/work/football
@@ -64,7 +64,7 @@ npx prisma migrate dev --name add-ibi-beta-to-club-settings
 
 Expected: `✔ Your database is now in sync with your schema.`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add prisma/schema.prisma prisma/migrations/
@@ -80,7 +80,7 @@ git commit -m "feat: add ibiBeta to ClubSettings for hiring priority β"
 - Modify: `apps/api/src/recruitment/recruitment.repo.ts`
 - Modify: `apps/api/src/recruitment/recruitment.service.ts`
 
-- [ ] **Step 1: DTO 수정 — UpdateJobApplicationDto에 status 추가**
+- [x] **Step 1: DTO 수정 — UpdateJobApplicationDto에 status 추가**
 
 `apps/api/src/recruitment/dto/recruitment.dto.ts`의 `UpdateJobApplicationDto` 수정:
 ```typescript
@@ -93,7 +93,7 @@ export interface UpdateJobApplicationDto {
 }
 ```
 
-- [ ] **Step 2: Repo에 setApplicationStatus 추가**
+- [x] **Step 2: Repo에 setApplicationStatus 추가**
 
 `apps/api/src/recruitment/recruitment.repo.ts`에 아래 메서드 추가 (ApplicationSource import 기존 유지):
 ```typescript
@@ -111,7 +111,7 @@ setApplicationStatus(id: number, status: JobApplicationStatus) {
 }
 ```
 
-- [ ] **Step 3: Service 수정 — scheduleInterview 자동 전환**
+- [x] **Step 3: Service 수정 — scheduleInterview 자동 전환**
 
 `apps/api/src/recruitment/recruitment.service.ts`의 `scheduleInterview` 메서드를 아래로 교체:
 ```typescript
@@ -126,7 +126,7 @@ async scheduleInterview(applicationId: number, dto: CreateInterviewDto) {
 }
 ```
 
-- [ ] **Step 4: Service 수정 — createReferenceCheck 자동 전환**
+- [x] **Step 4: Service 수정 — createReferenceCheck 자동 전환**
 
 `createReferenceCheck` 메서드를 아래로 교체:
 ```typescript
@@ -137,7 +137,7 @@ async createReferenceCheck(applicationId: number, dto: CreateReferenceCheckDto) 
 }
 ```
 
-- [ ] **Step 5: Service 수정 — updateApplication SCREENING 전용 검증**
+- [x] **Step 5: Service 수정 — updateApplication SCREENING 전용 검증**
 
 `updateApplication` 메서드를 아래로 교체:
 ```typescript
@@ -150,7 +150,7 @@ async updateApplication(id: number, dto: UpdateJobApplicationDto) {
 }
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/recruitment/
@@ -164,7 +164,7 @@ git commit -m "feat: auto-transition application status on interview scheduling 
 **Files:**
 - Create: `apps/api/__test__/recruitment/recruitment.service.test.ts`
 
-- [ ] **Step 1: 테스트 파일 작성**
+- [x] **Step 1: 테스트 파일 작성**
 
 ```typescript
 import { describe, test, expect, jest, beforeEach } from "@jest/globals";
@@ -306,7 +306,7 @@ describe("updateApplication", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 — 실패 확인**
+- [x] **Step 2: 테스트 실행 — 실패 확인**
 
 ```bash
 cd /Users/juno/work/football
@@ -315,7 +315,7 @@ npx jest __test__/recruitment/recruitment.service.test.ts --no-coverage
 
 Expected: FAIL — `setApplicationStatus is not a function` 또는 유사 오류
 
-- [ ] **Step 3: 테스트 재실행 — 통과 확인 (Task 2 구현 후)**
+- [x] **Step 3: 테스트 재실행 — 통과 확인 (Task 2 구현 후)**
 
 ```bash
 npx jest __test__/recruitment/recruitment.service.test.ts --no-coverage
@@ -323,7 +323,7 @@ npx jest __test__/recruitment/recruitment.service.test.ts --no-coverage
 
 Expected: 8 tests passed
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/__test__/recruitment/
@@ -338,7 +338,7 @@ git commit -m "test: recruitment service status transition coverage"
 - Modify: `apps/api/src/department/department.repo.ts`
 - Modify: `apps/api/src/department/department.service.ts`
 
-- [ ] **Step 1: Repo 수정**
+- [x] **Step 1: Repo 수정**
 
 `apps/api/src/department/department.repo.ts` 파일에서 import 추가:
 ```typescript
@@ -369,7 +369,7 @@ update(
 }
 ```
 
-- [ ] **Step 2: Service 수정**
+- [x] **Step 2: Service 수정**
 
 `apps/api/src/department/department.service.ts` 파일에서 import 추가:
 ```typescript
@@ -391,7 +391,7 @@ async update(
 
 (기존 로직 그대로, 시그니처만 확장)
 
-- [ ] **Step 3: 빌드 확인**
+- [x] **Step 3: 빌드 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -400,7 +400,7 @@ npx tsc --noEmit 2>&1 | head -20
 
 Expected: 오류 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/src/department/
@@ -416,7 +416,7 @@ git commit -m "feat: expose category field in department CRUD"
 - Modify: `apps/api/src/club-settings/club-settings.service.ts`
 - Modify: `apps/api/src/club-settings/club-settings.controller.ts`
 
-- [ ] **Step 1: Repo 수정**
+- [x] **Step 1: Repo 수정**
 
 `apps/api/src/club-settings/club-settings.repo.ts` 전체 교체:
 ```typescript
@@ -443,7 +443,7 @@ export class ClubSettingsRepository {
 }
 ```
 
-- [ ] **Step 2: Service 수정**
+- [x] **Step 2: Service 수정**
 
 `apps/api/src/club-settings/club-settings.service.ts` 전체 교체:
 ```typescript
@@ -469,7 +469,7 @@ export class ClubSettingsService {
 }
 ```
 
-- [ ] **Step 3: Controller 수정**
+- [x] **Step 3: Controller 수정**
 
 `apps/api/src/club-settings/club-settings.controller.ts`의 update 핸들러를 찾아서 body 처리 수정:
 ```typescript
@@ -483,7 +483,7 @@ update = async (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/src/club-settings/
@@ -497,7 +497,7 @@ git commit -m "feat: expose ibiBeta in ClubSettings API"
 **Files:**
 - Create: `apps/api/src/hiring-automation/dto/hiring-automation.dto.ts`
 
-- [ ] **Step 1: DTO 파일 작성**
+- [x] **Step 1: DTO 파일 작성**
 
 ```typescript
 import type { LeagueLevel, DepartmentCategory } from "../../generated/enums";
@@ -546,7 +546,7 @@ export interface UpdateComplianceDeadlineDto {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/hiring-automation/
@@ -560,7 +560,7 @@ git commit -m "feat: hiring-automation DTOs"
 **Files:**
 - Create: `apps/api/src/hiring-automation/hiring-automation.repo.ts`
 
-- [ ] **Step 1: Repo 파일 작성**
+- [x] **Step 1: Repo 파일 작성**
 
 ```typescript
 import type { PrismaClient } from "../generated/client";
@@ -737,7 +737,7 @@ export class HiringAutomationRepository {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/hiring-automation/hiring-automation.repo.ts
@@ -751,7 +751,7 @@ git commit -m "feat: hiring-automation repository"
 **Files:**
 - Create: `apps/api/src/hiring-automation/hiring-automation.service.ts`
 
-- [ ] **Step 1: Service 파일 작성**
+- [x] **Step 1: Service 파일 작성**
 
 ```typescript
 import { HiringAutomationRepository } from "./hiring-automation.repo";
@@ -931,7 +931,7 @@ export class HiringAutomationService {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/hiring-automation/hiring-automation.service.ts
@@ -946,7 +946,7 @@ git commit -m "feat: hiring-automation service with priority queue calculation"
 - Create: `apps/api/src/hiring-automation/hiring-automation.controller.ts`
 - Create: `apps/api/src/hiring-automation/hiring-automation.routes.ts`
 
-- [ ] **Step 1: Controller 파일 작성**
+- [x] **Step 1: Controller 파일 작성**
 
 ```typescript
 import { Request, Response, NextFunction } from "express";
@@ -1059,7 +1059,7 @@ export class HiringAutomationController {
 }
 ```
 
-- [ ] **Step 2: Routes 파일 작성**
+- [x] **Step 2: Routes 파일 작성**
 
 ```typescript
 import { Router } from "express";
@@ -1119,7 +1119,7 @@ router.delete("/compliance-deadlines/:id", auth, requireAdmin, controller.delete
 export default router;
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/hiring-automation/
@@ -1135,7 +1135,7 @@ git commit -m "feat: hiring-automation controller and routes"
 - Modify: `apps/api/src/hr-report/hr-report.controller.ts`
 - Modify: `apps/api/src/hr-report/hr-report.routes.ts`
 
-- [ ] **Step 1: hr-report.service.ts에 getHiringPriorityQueue 추가**
+- [x] **Step 1: hr-report.service.ts에 getHiringPriorityQueue 추가**
 
 `apps/api/src/hr-report/hr-report.service.ts` 파일 맨 위 import 추가:
 ```typescript
@@ -1162,7 +1162,7 @@ async getHiringPriorityQueue(prisma: PrismaClient) {
 }
 ```
 
-- [ ] **Step 2: hr-report.controller.ts에 핸들러 추가**
+- [x] **Step 2: hr-report.controller.ts에 핸들러 추가**
 
 `HrReportController`에 아래 추가:
 ```typescript
@@ -1178,7 +1178,7 @@ getHiringPriorityQueue = async (_req: Request, res: Response, next: NextFunction
 };
 ```
 
-- [ ] **Step 3: hr-report.routes.ts에 라우트 추가**
+- [x] **Step 3: hr-report.routes.ts에 라우트 추가**
 
 기존 `router.get("/annual", ...)` 이후에 추가:
 ```typescript
@@ -1199,7 +1199,7 @@ const requireHR = (req: any, res: any, next: any) => {
 };
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/src/hr-report/
@@ -1213,7 +1213,7 @@ git commit -m "feat: GET /hr-reports/hiring-priority for on-demand priority queu
 **Files:**
 - Create: `apps/api/src/jobs/quarterlyJobPostingDraft.ts`
 
-- [ ] **Step 1: Cron 파일 작성**
+- [x] **Step 1: Cron 파일 작성**
 
 ```typescript
 import cron from "node-cron";
@@ -1288,7 +1288,7 @@ export function startQuarterlyJobPostingDraftJob() {
 }
 ```
 
-- [ ] **Step 2: server.ts에서 cron 등록**
+- [x] **Step 2: server.ts에서 cron 등록**
 
 `apps/api/src/server.ts`에서 기존 cron 등록 패턴 참고하여 import 및 호출 추가:
 ```typescript
@@ -1297,7 +1297,7 @@ import { startQuarterlyJobPostingDraftJob } from "./jobs/quarterlyJobPostingDraf
 startQuarterlyJobPostingDraftJob();
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/jobs/quarterlyJobPostingDraft.ts apps/api/src/server.ts
@@ -1311,21 +1311,21 @@ git commit -m "feat: quarterly cron for auto JobPosting draft generation"
 **Files:**
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: import 추가**
+- [x] **Step 1: import 추가**
 
 `apps/api/src/apiRouter.ts`에서 기존 import들 마지막에 추가:
 ```typescript
 import hiringAutomationRouter from "./hiring-automation/hiring-automation.routes";
 ```
 
-- [ ] **Step 2: 라우터 등록**
+- [x] **Step 2: 라우터 등록**
 
 기존 `apiRouter.use("/payroll", payrollRouter);` 이후에 추가:
 ```typescript
 apiRouter.use("/hiring-automation", hiringAutomationRouter);
 ```
 
-- [ ] **Step 3: 빌드 확인**
+- [x] **Step 3: 빌드 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -1334,7 +1334,7 @@ npx tsc --noEmit 2>&1 | head -30
 
 Expected: 오류 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/src/apiRouter.ts
@@ -1348,7 +1348,7 @@ git commit -m "feat: register hiring-automation router"
 **Files:**
 - Create: `apps/api/__test__/hiring-automation/hiring-automation.service.test.ts`
 
-- [ ] **Step 1: 테스트 파일 작성**
+- [x] **Step 1: 테스트 파일 작성**
 
 ```typescript
 import { describe, test, expect, jest, beforeEach } from "@jest/globals";
@@ -1508,7 +1508,7 @@ describe("computePriorityQueue", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행**
+- [x] **Step 2: 테스트 실행**
 
 ```bash
 cd /Users/juno/work/football
@@ -1517,7 +1517,7 @@ npx jest __test__/hiring-automation/hiring-automation.service.test.ts --no-cover
 
 Expected: 7 tests passed
 
-- [ ] **Step 3: 전체 테스트 스위트 확인**
+- [x] **Step 3: 전체 테스트 스위트 확인**
 
 ```bash
 npx jest --no-coverage 2>&1 | tail -20
@@ -1525,7 +1525,7 @@ npx jest --no-coverage 2>&1 | tail -20
 
 Expected: 기존 테스트 모두 통과 + 새 테스트 추가
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/__test__/hiring-automation/

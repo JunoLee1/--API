@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle, AlertCircle, CheckCircle2, ChevronRight } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
@@ -93,38 +94,39 @@ function KpiCard(item: KpiItem) {
   )
 }
 
-const FINANCE_KPIS = (data: Record<string, number>): KpiItem[] => [
-  { label: '회비 수납율', value: data['feeCollectionRate'] ?? 0, unit: '%', warnBelow: 80 },
-  { label: '미납률', value: data['feeDelinquencyRate'] ?? 0, unit: '%', warnAbove: 10 },
-  { label: '예산 집행률', value: data['budgetExecutionRate'] ?? 0, unit: '%', warnAbove: 90, dangerAbove: 100 },
-  { label: '예외 승인 건수', value: data['overrideCount'] ?? 0, unit: '건', warnAbove: 0 },
-  { label: '월말 정산 완료율', value: data['monthlySettlementRate'] ?? 0, unit: '%', warnBelow: 100 },
+const FINANCE_KPIS = (data: Record<string, number>, t: (k: string) => string): KpiItem[] => [
+  { label: t('dashboard.opsKpi.feeCollectionRate'), value: data['feeCollectionRate'] ?? 0, unit: '%', warnBelow: 80 },
+  { label: t('dashboard.opsKpi.feeDelinquencyRate'), value: data['feeDelinquencyRate'] ?? 0, unit: '%', warnAbove: 10 },
+  { label: t('dashboard.opsKpi.budgetExecutionRate'), value: data['budgetExecutionRate'] ?? 0, unit: '%', warnAbove: 90, dangerAbove: 100 },
+  { label: t('dashboard.opsKpi.overrideCount'), value: data['overrideCount'] ?? 0, unit: t('dashboard.opsKpi.overrideUnit'), warnAbove: 0 },
+  { label: t('dashboard.opsKpi.monthlySettlementRate'), value: data['monthlySettlementRate'] ?? 0, unit: '%', warnBelow: 100 },
 ]
 
 const HR_KPIS = (
   data: Record<string, number>,
+  t: (k: string) => string,
   onAttendanceClick: () => void,
   onNoticeClick: () => void,
 ): KpiItem[] => [
-  { label: '등록 완료율', value: data['registrationRate'] ?? 0, unit: '%', warnBelow: 90 },
-  { label: '출석률 (프로)', value: data['attendanceRate'] ?? 0, unit: '%', warnBelow: 80, onClick: onAttendanceClick },
-  { label: '공지 열람률', value: data['noticeReadRate'] ?? 0, unit: '%', warnBelow: 60, onClick: onNoticeClick },
+  { label: t('dashboard.opsKpi.registrationRate'), value: data['registrationRate'] ?? 0, unit: '%', warnBelow: 90 },
+  { label: t('dashboard.opsKpi.attendanceRate'), value: data['attendanceRate'] ?? 0, unit: '%', warnBelow: 80, onClick: onAttendanceClick },
+  { label: t('dashboard.opsKpi.noticeReadRate'), value: data['noticeReadRate'] ?? 0, unit: '%', warnBelow: 60, onClick: onNoticeClick },
 ]
 
-function NoticeUnreadDrillTable({ items }: { items: NoticeUnreadDrillItem[] }) {
+function NoticeUnreadDrillTable({ items, t }: { items: NoticeUnreadDrillItem[]; t: (k: string) => string }) {
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>이름</TableHead>
-          <TableHead className="text-right">미열람 건수</TableHead>
+          <TableHead>{t('dashboard.opsKpi.drillCol.name')}</TableHead>
+          <TableHead className="text-right">{t('dashboard.opsKpi.drillCol.unreadCount')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {items.length === 0 ? (
           <TableRow>
             <TableCell colSpan={2} className="text-center text-muted-foreground">
-              데이터가 없습니다
+              {t('dashboard.opsKpi.drillCol.noData')}
             </TableCell>
           </TableRow>
         ) : (
@@ -140,25 +142,25 @@ function NoticeUnreadDrillTable({ items }: { items: NoticeUnreadDrillItem[] }) {
   )
 }
 
-function AttendanceDrillTable({ items }: { items: AttendanceDrillItem[] }) {
+function AttendanceDrillTable({ items, t }: { items: AttendanceDrillItem[]; t: (k: string) => string }) {
   return (
     <div className="overflow-x-auto">
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>선수</TableHead>
-          <TableHead className="text-right">출석</TableHead>
-          <TableHead className="text-right">지각</TableHead>
-          <TableHead className="text-right">무단결석</TableHead>
-          <TableHead className="text-right">공결</TableHead>
-          <TableHead className="text-right">실효결석</TableHead>
+          <TableHead>{t('dashboard.opsKpi.drillCol.player')}</TableHead>
+          <TableHead className="text-right">{t('dashboard.opsKpi.drillCol.present')}</TableHead>
+          <TableHead className="text-right">{t('dashboard.opsKpi.drillCol.lateUnauth')}</TableHead>
+          <TableHead className="text-right">{t('dashboard.opsKpi.drillCol.absentUnauth')}</TableHead>
+          <TableHead className="text-right">{t('dashboard.opsKpi.drillCol.authorizedAbsence')}</TableHead>
+          <TableHead className="text-right">{t('dashboard.opsKpi.drillCol.effectiveAbsences')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {items.length === 0 ? (
           <TableRow>
             <TableCell colSpan={6} className="text-center text-muted-foreground">
-              데이터가 없습니다
+              {t('dashboard.opsKpi.drillCol.noData')}
             </TableCell>
           </TableRow>
         ) : (
@@ -180,6 +182,7 @@ function AttendanceDrillTable({ items }: { items: AttendanceDrillItem[] }) {
 }
 
 export function OpsKpiSection({ role, data, year, month }: Props) {
+  const { t } = useTranslation('common')
   const [drill, setDrill] = useState<DrillType>(null)
 
   const { data: noticeUnreadData, isLoading: noticeLoading, isError: noticeError } = useQuery({
@@ -196,16 +199,18 @@ export function OpsKpiSection({ role, data, year, month }: Props) {
 
   const isHr = role === 'HR_MANAGER'
   const kpis = isHr
-    ? HR_KPIS(data, () => setDrill('attendance'), () => setDrill('notice-unread'))
-    : FINANCE_KPIS(data)
-  const title = isHr ? '운영 KPI' : '재무 KPI'
+    ? HR_KPIS(data, t, () => setDrill('attendance'), () => setDrill('notice-unread'))
+    : FINANCE_KPIS(data, t)
+  const title = isHr
+    ? t('dashboard.opsKpi.hrTitle', { year, month })
+    : t('dashboard.opsKpi.financeTitle', { year, month })
   const gridClass = kpis.length <= 3
     ? 'grid grid-cols-2 gap-3 sm:grid-cols-3'
     : 'grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5'
 
   const sheetTitle =
-    drill === 'notice-unread' ? '공지 미열람자 목록' :
-    drill === 'attendance' ? '선수별 출석 현황' : ''
+    drill === 'notice-unread' ? t('dashboard.opsKpi.noticeUnreadTitle') :
+    drill === 'attendance' ? t('dashboard.opsKpi.attendanceDrillTitle') : ''
   const isLoading = drill === 'notice-unread' ? noticeLoading : attendanceLoading
   const isError = drill === 'notice-unread' ? noticeError : attendanceError
 
@@ -232,11 +237,11 @@ export function OpsKpiSection({ role, data, year, month }: Props) {
                   ))}
                 </div>
               ) : isError ? (
-                <p className="text-sm text-destructive py-4 text-center">데이터를 불러오지 못했습니다.</p>
+                <p className="text-sm text-destructive py-4 text-center">{t('dashboard.opsKpi.drillCol.loadFailed')}</p>
               ) : drill === 'notice-unread' ? (
-                <NoticeUnreadDrillTable items={noticeUnreadData ?? []} />
+                <NoticeUnreadDrillTable items={noticeUnreadData ?? []} t={t} />
               ) : drill === 'attendance' ? (
-                <AttendanceDrillTable items={attendanceData ?? []} />
+                <AttendanceDrillTable items={attendanceData ?? []} t={t} />
               ) : null}
             </div>
           </SheetContent>

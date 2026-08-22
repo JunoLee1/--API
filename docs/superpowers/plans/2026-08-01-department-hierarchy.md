@@ -1,6 +1,6 @@
 # Department Hierarchy Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** `Department` 모델에 `parentId` 계층 구조를 추가하고, `ASSET_MANAGER` frontOfficeRole을 신설하며, 자산관리 하위 5개 부서를 시드 데이터로 구성한다.
 
@@ -30,7 +30,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: FrontOfficeRole enum에 ASSET_MANAGER 추가**
+- [x] **Step 1: FrontOfficeRole enum에 ASSET_MANAGER 추가**
 
 `schema.prisma` 53번째 줄 `FrontOfficeRole` enum:
 ```prisma
@@ -46,7 +46,7 @@ enum FrontOfficeRole {
 }
 ```
 
-- [ ] **Step 2: Department 모델에 parentId 셀프 릴레이션 추가**
+- [x] **Step 2: Department 모델에 parentId 셀프 릴레이션 추가**
 
 ```prisma
 model Department {
@@ -62,7 +62,7 @@ model Department {
 }
 ```
 
-- [ ] **Step 3: 마이그레이션 생성 및 적용**
+- [x] **Step 3: 마이그레이션 생성 및 적용**
 
 ```bash
 cd apps/api
@@ -71,7 +71,7 @@ npx prisma migrate dev --name add-department-hierarchy
 
 Expected: `migrations/` 아래 새 폴더 생성, `prisma generate` 자동 실행
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/
@@ -85,13 +85,13 @@ git commit -m "feat(department): add parentId hierarchy + ASSET_MANAGER role"
 **Files:**
 - Modify: `apps/api/prisma/seed.ts`
 
-- [ ] **Step 1: 기존 department 시드 코드 위치 파악**
+- [x] **Step 1: 기존 department 시드 코드 위치 파악**
 
 ```bash
 grep -n "department\|Department" apps/api/prisma/seed.ts | head -20
 ```
 
-- [ ] **Step 2: 부서 시드 함수 추가**
+- [x] **Step 2: 부서 시드 함수 추가**
 
 seed.ts에서 기존 department 시드 코드를 아래로 교체 (없으면 추가):
 
@@ -124,14 +124,14 @@ async function seedDepartments() {
 }
 ```
 
-- [ ] **Step 3: seedDepartments를 main 함수에서 호출**
+- [x] **Step 3: seedDepartments를 main 함수에서 호출**
 
 seed.ts의 main 함수 내 적절한 위치(User 생성 전)에 추가:
 ```typescript
 await seedDepartments();
 ```
 
-- [ ] **Step 4: 시드 실행 확인**
+- [x] **Step 4: 시드 실행 확인**
 
 ```bash
 cd apps/api
@@ -140,7 +140,7 @@ npx prisma db seed
 
 Expected: `Departments seeded: 재무관리, 자산관리 + 5 sub-departments`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/prisma/seed.ts
@@ -154,7 +154,7 @@ git commit -m "feat(department): seed 재무관리·자산관리 hierarchy"
 **Files:**
 - Modify: `apps/api/src/department/department.repo.ts`
 
-- [ ] **Step 1: findAll에 children include 추가, create에 parentId 지원**
+- [x] **Step 1: findAll에 children include 추가, create에 parentId 지원**
 
 ```typescript
 import { PrismaClient } from "../generated/client";
@@ -201,7 +201,7 @@ export class DepartmentRepository {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/department/department.repo.ts
@@ -215,7 +215,7 @@ git commit -m "feat(department): repo supports parentId + children include"
 **Files:**
 - Create: `apps/api/src/department/department.service.test.ts`
 
-- [ ] **Step 1: 테스트 파일 작성**
+- [x] **Step 1: 테스트 파일 작성**
 
 ```typescript
 import { DepartmentService } from "./department.service";
@@ -291,7 +291,7 @@ describe('DepartmentService', () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 — FAIL 확인**
+- [x] **Step 2: 테스트 실행 — FAIL 확인**
 
 ```bash
 cd apps/api
@@ -300,7 +300,7 @@ npx jest department.service.test --no-coverage
 
 Expected: FAIL (service에 parentId 검증 없음)
 
-- [ ] **Step 3: Commit (failing test)**
+- [x] **Step 3: Commit (failing test)**
 
 ```bash
 git add apps/api/src/department/department.service.test.ts
@@ -314,7 +314,7 @@ git commit -m "test(department): failing tests for parentId hierarchy"
 **Files:**
 - Modify: `apps/api/src/department/department.service.ts`
 
-- [ ] **Step 1: parentId 검증 + delete 보호 로직 추가**
+- [x] **Step 1: parentId 검증 + delete 보호 로직 추가**
 
 ```typescript
 import { DepartmentRepository } from "./department.repo";
@@ -365,7 +365,7 @@ export class DepartmentService {
 }
 ```
 
-- [ ] **Step 2: 테스트 실행 — PASS 확인**
+- [x] **Step 2: 테스트 실행 — PASS 확인**
 
 ```bash
 cd apps/api
@@ -374,7 +374,7 @@ npx jest department.service.test --no-coverage
 
 Expected: 5 tests PASS
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/department/department.service.ts
@@ -388,7 +388,7 @@ git commit -m "feat(department): parentId validation + delete guard for children
 **Files:**
 - Modify: `apps/api/src/department/department.controller.ts`
 
-- [ ] **Step 1: ASSET_MANAGER 권한 추가 + create body에 parentId 처리**
+- [x] **Step 1: ASSET_MANAGER 권한 추가 + create body에 parentId 처리**
 
 ```typescript
 import { Request, Response, NextFunction } from "express";
@@ -465,7 +465,7 @@ export class DepartmentController {
 }
 ```
 
-- [ ] **Step 2: 전체 테스트 실행**
+- [x] **Step 2: 전체 테스트 실행**
 
 ```bash
 cd apps/api
@@ -474,7 +474,7 @@ npx jest --no-coverage
 
 Expected: All existing tests PASS
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/department/department.controller.ts
@@ -489,7 +489,7 @@ git commit -m "feat(department): ASSET_MANAGER canRead/canWrite + parentId in cr
 - Modify: `football/src/types/auth.ts`
 - Modify: `football/src/services/department.service.ts`
 
-- [ ] **Step 1: auth.ts — ASSET_MANAGER 추가**
+- [x] **Step 1: auth.ts — ASSET_MANAGER 추가**
 
 `football/src/types/auth.ts` 14번째 줄 `FrontOfficeRole` 타입:
 ```typescript
@@ -518,7 +518,7 @@ export const FRONT_OFFICE_ROLE_LABEL: Record<FrontOfficeRole, string> = {
 }
 ```
 
-- [ ] **Step 2: department.service.ts — Department 타입에 계층 필드 추가**
+- [x] **Step 2: department.service.ts — Department 타입에 계층 필드 추가**
 
 `football/src/services/department.service.ts` 전체 교체:
 
@@ -549,7 +549,7 @@ export const departmentApi = {
 };
 ```
 
-- [ ] **Step 3: TypeScript 타입 체크**
+- [x] **Step 3: TypeScript 타입 체크**
 
 ```bash
 cd football
@@ -558,7 +558,7 @@ npx tsc --noEmit
 
 Expected: 에러 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/types/auth.ts football/src/services/department.service.ts
@@ -569,13 +569,13 @@ git commit -m "feat(department): FE types — ASSET_MANAGER + Department hierarc
 
 ## Task 8: 통합 확인
 
-- [ ] **Step 1: BE 서버 시작**
+- [x] **Step 1: BE 서버 시작**
 
 ```bash
 cd apps/api && npm run dev
 ```
 
-- [ ] **Step 2: 시드 데이터 확인**
+- [x] **Step 2: 시드 데이터 확인**
 
 ```bash
 curl -s http://localhost:3000/api/departments \
@@ -593,7 +593,7 @@ Expected:
 ]
 ```
 
-- [ ] **Step 3: 하위 부서가 있는 부서 삭제 시도 — 409 확인**
+- [x] **Step 3: 하위 부서가 있는 부서 삭제 시도 — 409 확인**
 
 ```bash
 curl -s -X DELETE http://localhost:3000/api/departments/<자산관리id> \
@@ -602,7 +602,7 @@ curl -s -X DELETE http://localhost:3000/api/departments/<자산관리id> \
 
 Expected: `{"error": "DEPARTMENT_HAS_CHILDREN"}`
 
-- [ ] **Step 4: Final commit**
+- [x] **Step 4: Final commit**
 
 ```bash
 git add -A

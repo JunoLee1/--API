@@ -46,6 +46,7 @@ import {
   LayoutGrid,
   type LucideIcon,
   Menu,
+  Boxes,
   Package,
   PieChart,
   Receipt,
@@ -518,6 +519,15 @@ const NAV_ITEMS: NavItem[] = [
     subSection: 'nav.subsection.facilityAssets',
     roles: ['ADMIN', 'FRONT_OFFICE'],
     frontOfficeRoles: ['FACILITY_MANAGER', 'FACILITY_STAFF'],
+  },
+  {
+    to: '/asset/inventory',
+    label: 'nav.item.assetInventory',
+    icon: Boxes,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.facilityAssets',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['ASSET_MANAGER', 'ASSET_STAFF'],
   },
   {
     to: '/admin/partners',

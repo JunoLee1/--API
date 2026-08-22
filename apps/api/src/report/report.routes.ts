@@ -68,6 +68,8 @@ router.delete("/rule-sets/:ruleId", auth, requireAdmin, controller.deleteRuleSet
 router.get("/:id", auth, controller.get);
 router.patch("/:id", auth, upload.single("file"), controller.update);
 router.post("/:id/submit", auth, controller.submit);
+router.post("/:id/approve", auth, controller.approve);
+router.post("/:id/reject", auth, controller.reject);
 
 // Department review actions — dept head only
 router.post("/:id/reviews/:deptId/confirm", auth, requireHeadOfDept("deptId"), controller.confirmReview);

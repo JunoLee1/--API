@@ -45,6 +45,7 @@ export interface BudgetPlan {
   totalRevenue: number
   totalOperatingBudget: number | null
   contingencyReserve: number | null
+  playerSalaryBudget: number | null
   budgetCategoryPlans: BudgetCategoryPlan[]
   overrideLogs: BudgetOverrideLog[]
   actuals: Record<string, number> | null
@@ -53,6 +54,7 @@ export interface BudgetPlan {
 export interface UpsertBudgetPlanPayload {
   totalOperatingBudget: number
   contingencyReserve: number
+  playerSalaryBudget?: number
   categories: {
     category: OperatingCategory
     mandatoryMinimum: number

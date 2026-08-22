@@ -1,6 +1,6 @@
 # Coaching Staff 스키마 확장 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 코칭스태프 도메인 설계를 Prisma 스키마에 반영한다 — CoachAvailability, TrainingLoad, PlayerDevelopmentPlan 신규 모델과 TrainingResult.scoredById 필드 추가.
 
@@ -22,7 +22,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: `PlayerDevelopmentPlanStatus` enum 추가**
+- [x] **Step 1: `PlayerDevelopmentPlanStatus` enum 추가**
 
 기존 enum 블록 하단(`BonusTeamScope` 아래)에 추가:
 
@@ -34,7 +34,7 @@ enum PlayerDevelopmentPlanStatus {
 }
 ```
 
-- [ ] **Step 2: `NotificationType` enum에 2개 값 추가**
+- [x] **Step 2: `NotificationType` enum에 2개 값 추가**
 
 기존 `NotificationType` enum의 마지막 값(`COACH_TUTOR_SUPPORT_NEEDED`) 아래에 추가:
 
@@ -43,7 +43,7 @@ enum PlayerDevelopmentPlanStatus {
   PLAYER_DEVELOPMENT_PLAN_ACTIVATED
 ```
 
-- [ ] **Step 3: Prisma format 확인**
+- [x] **Step 3: Prisma format 확인**
 
 ```bash
 cd apps/api && npx prisma format
@@ -51,7 +51,7 @@ cd apps/api && npx prisma format
 
 Expected: 에러 없이 포맷 완료
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma
@@ -65,7 +65,7 @@ git commit -m "feat(schema): add PlayerDevelopmentPlanStatus enum and coaching s
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: `TrainingResult` 모델에 scoredById 필드와 relation 추가**
+- [x] **Step 1: `TrainingResult` 모델에 scoredById 필드와 relation 추가**
 
 현재 `TrainingResult` 모델:
 ```prisma
@@ -99,14 +99,14 @@ model TrainingResult {
 }
 ```
 
-- [ ] **Step 2: `User` 모델에 back-relation 추가**
+- [x] **Step 2: `User` 모델에 back-relation 추가**
 
 `User` 모델의 relation 목록 마지막에 추가 (tutorAssignments 아래):
 ```prisma
   scoredTrainingResults TrainingResult[] @relation("TrainingResultScorer")
 ```
 
-- [ ] **Step 3: Prisma format 확인**
+- [x] **Step 3: Prisma format 확인**
 
 ```bash
 cd apps/api && npx prisma format
@@ -114,7 +114,7 @@ cd apps/api && npx prisma format
 
 Expected: 에러 없이 포맷 완료
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma
@@ -128,7 +128,7 @@ git commit -m "feat(schema): add scoredById to TrainingResult for evaluator trac
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: `CoachAvailability` 모델 추가**
+- [x] **Step 1: `CoachAvailability` 모델 추가**
 
 `CoachTutorAssignment` 모델 아래에 추가:
 
@@ -147,7 +147,7 @@ model CoachAvailability {
 }
 ```
 
-- [ ] **Step 2: `User` 모델에 back-relations 추가**
+- [x] **Step 2: `User` 모델에 back-relations 추가**
 
 `User` 모델의 relation 목록 마지막에 추가 (scoredTrainingResults 아래):
 ```prisma
@@ -155,7 +155,7 @@ model CoachAvailability {
   createdAvailabilities CoachAvailability[] @relation("CoachAvailabilityCreatedBy")
 ```
 
-- [ ] **Step 3: Prisma format 확인**
+- [x] **Step 3: Prisma format 확인**
 
 ```bash
 cd apps/api && npx prisma format
@@ -163,7 +163,7 @@ cd apps/api && npx prisma format
 
 Expected: 에러 없이 포맷 완료
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma
@@ -177,7 +177,7 @@ git commit -m "feat(schema): add CoachAvailability model"
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: `TrainingLoad` 모델 추가**
+- [x] **Step 1: `TrainingLoad` 모델 추가**
 
 `CoachAvailability` 모델 아래에 추가:
 
@@ -196,21 +196,21 @@ model TrainingLoad {
 }
 ```
 
-- [ ] **Step 2: `Player` 모델에 back-relation 추가**
+- [x] **Step 2: `Player` 모델에 back-relation 추가**
 
 `Player` 모델의 relation 목록 마지막에 추가 (medicalExpenses 아래):
 ```prisma
   trainingLoads TrainingLoad[]
 ```
 
-- [ ] **Step 3: `TrainingSession` 모델에 back-relation 추가**
+- [x] **Step 3: `TrainingSession` 모델에 back-relation 추가**
 
 `TrainingSession` 모델의 relation 목록 마지막에 추가 (results 아래):
 ```prisma
   trainingLoads TrainingLoad[]
 ```
 
-- [ ] **Step 4: Prisma format 확인**
+- [x] **Step 4: Prisma format 확인**
 
 ```bash
 cd apps/api && npx prisma format
@@ -218,7 +218,7 @@ cd apps/api && npx prisma format
 
 Expected: 에러 없이 포맷 완료
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma
@@ -232,7 +232,7 @@ git commit -m "feat(schema): add TrainingLoad model with RPE and load fields"
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: `PlayerDevelopmentPlan` 모델 추가**
+- [x] **Step 1: `PlayerDevelopmentPlan` 모델 추가**
 
 `TrainingLoad` 모델 아래에 추가:
 
@@ -257,28 +257,28 @@ model PlayerDevelopmentPlan {
 }
 ```
 
-- [ ] **Step 2: `Player` 모델에 back-relation 추가**
+- [x] **Step 2: `Player` 모델에 back-relation 추가**
 
 `Player` 모델의 relation 목록 (trainingLoads 아래)에 추가:
 ```prisma
   developmentPlans PlayerDevelopmentPlan[]
 ```
 
-- [ ] **Step 3: `User` 모델에 back-relation 추가**
+- [x] **Step 3: `User` 모델에 back-relation 추가**
 
 `User` 모델의 relation 목록 마지막에 추가 (createdAvailabilities 아래):
 ```prisma
   developmentPlans PlayerDevelopmentPlan[] @relation("PDPCoach")
 ```
 
-- [ ] **Step 4: `Season` 모델에 back-relation 추가**
+- [x] **Step 4: `Season` 모델에 back-relation 추가**
 
 `Season` 모델의 relation 목록 (tacticalAnalyses 아래)에 추가:
 ```prisma
   developmentPlans PlayerDevelopmentPlan[]
 ```
 
-- [ ] **Step 5: Prisma format 확인**
+- [x] **Step 5: Prisma format 확인**
 
 ```bash
 cd apps/api && npx prisma format
@@ -286,7 +286,7 @@ cd apps/api && npx prisma format
 
 Expected: 에러 없이 포맷 완료
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma
@@ -302,7 +302,7 @@ git commit -m "feat(schema): add PlayerDevelopmentPlan model"
 
 > **참고:** 이 저장소는 `prisma migrate dev` shadow DB 충돌 이슈가 있습니다. 아래 3단계 워크플로우를 사용하세요.
 
-- [ ] **Step 1: Migration SQL 생성**
+- [x] **Step 1: Migration SQL 생성**
 
 ```bash
 cd apps/api
@@ -315,7 +315,7 @@ npx prisma migrate diff \
 
 Expected: `prisma/migrations/20260717_coaching_staff_schema/migration.sql` 생성. 파일 내용에 `CREATE TABLE "CoachAvailability"`, `CREATE TABLE "TrainingLoad"`, `CREATE TABLE "PlayerDevelopmentPlan"` 포함 확인.
 
-- [ ] **Step 2: DB에 적용**
+- [x] **Step 2: DB에 적용**
 
 ```bash
 cd apps/api
@@ -326,7 +326,7 @@ npx prisma db execute \
 
 Expected: 에러 없이 완료
 
-- [ ] **Step 3: 마이그레이션 이력 등록**
+- [x] **Step 3: 마이그레이션 이력 등록**
 
 ```bash
 cd apps/api && npx prisma migrate resolve --applied 20260717_coaching_staff_schema
@@ -334,7 +334,7 @@ cd apps/api && npx prisma migrate resolve --applied 20260717_coaching_staff_sche
 
 Expected: `Migration 20260717_coaching_staff_schema marked as applied`
 
-- [ ] **Step 4: Prisma Client 재생성**
+- [x] **Step 4: Prisma Client 재생성**
 
 ```bash
 cd apps/api && npx prisma generate
@@ -342,7 +342,7 @@ cd apps/api && npx prisma generate
 
 Expected: `src/generated/` 업데이트 완료
 
-- [ ] **Step 5: 기존 테스트 회귀 확인**
+- [x] **Step 5: 기존 테스트 회귀 확인**
 
 ```bash
 cd apps/api && npx jest --passWithNoTests 2>&1 | grep -E "Tests:|Test Suites:|FAIL"
@@ -350,7 +350,7 @@ cd apps/api && npx jest --passWithNoTests 2>&1 | grep -E "Tests:|Test Suites:|FA
 
 Expected: 실패 수 기존 기준(15 failed) 이상 증가 없음
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/prisma/migrations/20260717_coaching_staff_schema/
@@ -364,7 +364,7 @@ git commit -m "feat(schema): apply coaching_staff_schema migration"
 **Files:**
 - Create: `apps/api/__test__/coaching-staff/coaching-staff.schema.test.ts`
 
-- [ ] **Step 1: 테스트 파일 작성**
+- [x] **Step 1: 테스트 파일 작성**
 
 ```typescript
 // apps/api/__test__/coaching-staff/coaching-staff.schema.test.ts
@@ -498,7 +498,7 @@ describe('PlayerDevelopmentPlan', () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행**
+- [x] **Step 2: 테스트 실행**
 
 ```bash
 cd apps/api && npx jest __test__/coaching-staff/coaching-staff.schema.test.ts --verbose
@@ -506,7 +506,7 @@ cd apps/api && npx jest __test__/coaching-staff/coaching-staff.schema.test.ts --
 
 Expected: 6개 테스트 모두 PASS
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/__test__/coaching-staff/

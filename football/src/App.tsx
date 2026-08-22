@@ -30,6 +30,7 @@ import { MatchDetailPage } from '@/pages/matches/MatchDetailPage'
 import { MatchLineupPage } from '@/pages/matches/MatchLineupPage'
 import { RankingsPage } from '@/pages/matches/RankingsPage'
 import { TacticalAnalysisPage } from '@/pages/tactical/TacticalAnalysisPage'
+import { AssetInventoryPage } from '@/pages/asset/AssetInventoryPage'
 import { EquipmentPage } from '@/pages/equipment/EquipmentPage'
 import { FacilityPage } from '@/pages/facility/FacilityPage'
 import { SponsorshipPage } from '@/pages/sponsorship/SponsorshipPage'
@@ -183,6 +184,7 @@ function App() {
             <Route path="/matches/rankings" element={<RankingsPage />} />
             <Route path="/matches/:id/lineup" element={<MatchLineupPage />} />
             <Route path="/matches/:id" element={<MatchDetailPage />} />
+            <Route path="/asset/inventory" element={<AssetInventoryPage />} />
             <Route path="/equipment" element={<EquipmentPage />} />
             <Route path="/facility" element={<FacilityPage />} />
             <Route path="/sponsorship" element={<SponsorshipPage />} />

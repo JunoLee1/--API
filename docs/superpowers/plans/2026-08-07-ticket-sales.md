@@ -1,6 +1,6 @@
 # 홈경기 티켓 판매 관리 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 재무팀이 홈경기별 티켓 판매 실적을 기록·조회하고, 저장 시 원장(LedgerEntry)에 자동 반영한다.
 
@@ -38,7 +38,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: 스키마 수정**
+- [x] **Step 1: 스키마 수정**
 
 `apps/api/prisma/schema.prisma`의 `SalesRecord` 모델에 추가:
 
@@ -66,7 +66,7 @@ model SalesRecord {
 salesRecords SalesRecord[]
 ```
 
-- [ ] **Step 2: Migration 실행**
+- [x] **Step 2: Migration 실행**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx prisma migrate dev --name add_sales_record_match_id
@@ -87,7 +87,7 @@ npx prisma migrate resolve --applied 20260807XXXXXX_add_sales_record_match_id
 npx prisma generate
 ```
 
-- [ ] **Step 3: TypeScript 확인**
+- [x] **Step 3: TypeScript 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -5
@@ -95,7 +95,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -5
 
 Expected: 출력 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 cd /Users/juno/work/football && git add apps/api/prisma/ && git commit -m "feat: add matchId FK to SalesRecord"
@@ -109,7 +109,7 @@ cd /Users/juno/work/football && git add apps/api/prisma/ && git commit -m "feat:
 - Modify: `apps/api/src/sales/dto/sales.dto.ts`
 - Modify: `apps/api/src/sales/sales.repo.ts`
 
-- [ ] **Step 1: DTO에 matchId 추가**
+- [x] **Step 1: DTO에 matchId 추가**
 
 `apps/api/src/sales/dto/sales.dto.ts` 전체 교체:
 
@@ -125,7 +125,7 @@ export interface CreateSalesRecordDto {
 }
 ```
 
-- [ ] **Step 2: 레포 메서드 추가**
+- [x] **Step 2: 레포 메서드 추가**
 
 `apps/api/src/sales/sales.repo.ts` 전체 교체:
 
@@ -220,7 +220,7 @@ export class SalesRepository {
 }
 ```
 
-- [ ] **Step 3: TypeScript 확인**
+- [x] **Step 3: TypeScript 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | grep "sales"
@@ -228,7 +228,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | grep "sales"
 
 Expected: 출력 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 cd /Users/juno/work/football && git add apps/api/src/sales/ && git commit -m "feat: extend sales repo with match-linked queries"
@@ -241,7 +241,7 @@ cd /Users/juno/work/football && git add apps/api/src/sales/ && git commit -m "fe
 **Files:**
 - Modify: `apps/api/src/sales/sales.service.ts`
 
-- [ ] **Step 1: SalesService 전체 교체**
+- [x] **Step 1: SalesService 전체 교체**
 
 `apps/api/src/sales/sales.service.ts`:
 
@@ -341,7 +341,7 @@ export class SalesService {
 }
 ```
 
-- [ ] **Step 2: TypeScript 확인**
+- [x] **Step 2: TypeScript 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | grep "sales"
@@ -349,7 +349,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | grep "sales"
 
 Expected: 출력 없음
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 cd /Users/juno/work/football && git add apps/api/src/sales/sales.service.ts && git commit -m "feat: add TICKET validation, home-game guard, and auto-ledger in SalesService"
@@ -363,7 +363,7 @@ cd /Users/juno/work/football && git add apps/api/src/sales/sales.service.ts && g
 - Modify: `apps/api/src/sales/sales.controller.ts`
 - Modify: `apps/api/src/sales/sales.routes.ts`
 
-- [ ] **Step 1: 컨트롤러 전체 교체**
+- [x] **Step 1: 컨트롤러 전체 교체**
 
 `apps/api/src/sales/sales.controller.ts`:
 
@@ -447,7 +447,7 @@ export class SalesController {
 }
 ```
 
-- [ ] **Step 2: 라우트 전체 교체**
+- [x] **Step 2: 라우트 전체 교체**
 
 `apps/api/src/sales/sales.routes.ts`:
 
@@ -475,7 +475,7 @@ router.delete("/:id",               auth, ctrl.delete);
 export default router;
 ```
 
-- [ ] **Step 3: TypeScript 확인**
+- [x] **Step 3: TypeScript 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -5
@@ -483,7 +483,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -5
 
 Expected: 출력 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 cd /Users/juno/work/football && git add apps/api/src/sales/ && git commit -m "feat: add permission guards and new endpoints to sales controller"
@@ -497,7 +497,7 @@ cd /Users/juno/work/football && git add apps/api/src/sales/ && git commit -m "fe
 - Create: `football/src/types/sales.ts`
 - Create: `football/src/services/sales.service.ts`
 
-- [ ] **Step 1: 타입 정의**
+- [x] **Step 1: 타입 정의**
 
 `football/src/types/sales.ts`:
 
@@ -544,7 +544,7 @@ export interface CreateSalesRecordDto {
 }
 ```
 
-- [ ] **Step 2: API 서비스 작성**
+- [x] **Step 2: API 서비스 작성**
 
 먼저 `football/src/services/api.ts`를 읽어 `api.get`/`api.post`/`api.delete` 패턴 확인 후 작성.
 
@@ -575,7 +575,7 @@ export const salesApi = {
 }
 ```
 
-- [ ] **Step 3: TypeScript 확인**
+- [x] **Step 3: TypeScript 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep "sales"
@@ -583,7 +583,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep "sales"
 
 Expected: 출력 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 cd /Users/juno/work/football && git add football/src/types/sales.ts football/src/services/sales.service.ts && git commit -m "feat: add sales frontend types and API service"
@@ -596,11 +596,11 @@ cd /Users/juno/work/football && git add football/src/types/sales.ts football/src
 **Files:**
 - Modify: `football/src/pages/matches/MatchDetailPage.tsx`
 
-- [ ] **Step 1: 기존 파일 읽기**
+- [x] **Step 1: 기존 파일 읽기**
 
 `football/src/pages/matches/MatchDetailPage.tsx` 전체 구조 파악 — `match`, `user`, JSX 반환 구조 확인.
 
-- [ ] **Step 2: 티켓 판매 섹션 컴포넌트 추가**
+- [x] **Step 2: 티켓 판매 섹션 컴포넌트 추가**
 
 파일 상단 import 추가:
 ```typescript
@@ -765,7 +765,7 @@ JSX 섹션 (홈경기 + 권한 조건 충족 시만 렌더링, 기존 섹션들 
 )}
 ```
 
-- [ ] **Step 3: TypeScript 확인**
+- [x] **Step 3: TypeScript 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep "MatchDetail"
@@ -773,7 +773,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep "MatchDeta
 
 Expected: 출력 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 cd /Users/juno/work/football && git add football/src/pages/matches/MatchDetailPage.tsx && git commit -m "feat: add ticket sales section to MatchDetailPage"
@@ -786,7 +786,7 @@ cd /Users/juno/work/football && git add football/src/pages/matches/MatchDetailPa
 **Files:**
 - Create: `football/src/pages/finance/TicketSalesPage.tsx`
 
-- [ ] **Step 1: 페이지 작성**
+- [x] **Step 1: 페이지 작성**
 
 `football/src/pages/finance/TicketSalesPage.tsx`:
 
@@ -920,7 +920,7 @@ export function TicketSalesPage() {
 }
 ```
 
-- [ ] **Step 2: 라우터에 등록**
+- [x] **Step 2: 라우터에 등록**
 
 `football/src/App.tsx` (또는 라우터 설정 파일)에서 기존 재무 라우트 패턴 옆에 추가:
 ```tsx
@@ -931,7 +931,7 @@ import { TicketSalesPage } from '@/pages/finance/TicketSalesPage'
 
 파일 위치 확인: `find /Users/juno/work/football/football/src -name "App.tsx" -o -name "router.tsx" | head -3`
 
-- [ ] **Step 3: TypeScript 확인**
+- [x] **Step 3: TypeScript 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep "TicketSales"
@@ -939,7 +939,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep "TicketSal
 
 Expected: 출력 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 cd /Users/juno/work/football && git add football/src/pages/finance/ football/src/App.tsx && git commit -m "feat: add TicketSalesPage with per-match summary and full records table"
@@ -954,7 +954,7 @@ cd /Users/juno/work/football && git add football/src/pages/finance/ football/src
 - Modify: `football/src/pages/dashboard/dashboardConfig.ts`
 - Modify: `football/src/pages/dashboard/DashboardPage.tsx`
 
-- [ ] **Step 1: AppShell 재무 메뉴에 링크 추가**
+- [x] **Step 1: AppShell 재무 메뉴에 링크 추가**
 
 `football/src/layouts/AppShell.tsx`에서 `nav.subsection.finance` 섹션의 마지막 항목 뒤에 추가:
 
@@ -975,7 +975,7 @@ cd /Users/juno/work/football && git add football/src/pages/finance/ football/src
 import { ..., Ticket } from 'lucide-react'
 ```
 
-- [ ] **Step 2: dashboardConfig에 showTicketRevenue 추가**
+- [x] **Step 2: dashboardConfig에 showTicketRevenue 추가**
 
 `football/src/pages/dashboard/dashboardConfig.ts`의 `DashboardConfig` 인터페이스에:
 ```typescript
@@ -987,7 +987,7 @@ showTicketRevenue?: boolean
 showTicketRevenue: true,
 ```
 
-- [ ] **Step 3: DashboardPage에 KPI 카드 추가**
+- [x] **Step 3: DashboardPage에 KPI 카드 추가**
 
 `football/src/pages/dashboard/DashboardPage.tsx`에 import 추가:
 ```typescript
@@ -1025,7 +1025,7 @@ KPI 카드 렌더링 (기존 stat cards 옆에 추가):
 
 `useNavigate` 이미 import 돼 있는지 확인 — 없으면 `import { useNavigate } from 'react-router-dom'` 추가.
 
-- [ ] **Step 4: TypeScript 확인**
+- [x] **Step 4: TypeScript 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -5
@@ -1033,7 +1033,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -5
 
 Expected: 출력 없음
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 cd /Users/juno/work/football && git add football/src/layouts/AppShell.tsx football/src/pages/dashboard/ && git commit -m "feat: add ticket sales nav link and dashboard KPI card"

@@ -201,6 +201,28 @@ export class OperatingExpenseService {
     return updated;
   }
 
+  async update(id: number, userId: number, data: { amount?: number; category?: OperatingCategory; note?: string }) {
+    const expense = await this.repo.findById(id);
+    if (!expense || expense.deletedAt) throw new AppError(404, "NOT_FOUND");
+    if (expense.paidAt) throw new AppError(409, "ALREADY_PAID");
+    if (expense.createdById !== userId) throw new AppError(403, "FORBIDDEN");
+
+    const newAmount = data.amount ?? expense.amount;
+    const newCategory = data.category ?? expense.category;
+    if (newAmount <= 0) throw new AppError(400, "INVALID_AMOUNT");
+
+    if (data.amount !== undefined && data.amount > expense.amount) {
+      const plan = await this.repo.findBudgetPlan(expense.seasonId, newCategory);
+      if (!plan) throw new AppError(400, "BUDGET_PLAN_NOT_FOUND");
+      const ceiling = plan.mandatoryMinimum + (plan.knapsackAllocated ?? 0);
+      const currentSpend = await this.repo.sumSpendBySeasonAndCategory(expense.seasonId, newCategory);
+      const additional = data.amount - expense.amount;
+      if (currentSpend + additional > ceiling) throw new AppError(400, "BUDGET_EXCEEDED");
+    }
+
+    return this.repo.update(id, data);
+  }
+
   async delete(id: number, requesterId: number, requesterRole: string, reason: string) {
     const expense = await this.repo.findById(id);
     if (!expense) throw new AppError(404, "NOT_FOUND");

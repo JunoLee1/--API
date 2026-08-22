@@ -1,6 +1,6 @@
 # 이번 시즌 가용예산 자동 생성 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 전년도 카테고리별 실제 지출을 기반으로 이번 시즌 운영비 예산 플랜(`totalOperatingBudget`, `contingencyReserve`, 카테고리별 `mandatoryMinimum`)을 자동 생성하는 기능 추가.
 
@@ -44,7 +44,7 @@
   ```
 - `prevSeasonId`는 서비스 메서드가 직접 탐색: 현재 시즌보다 `endDate`가 이전인 시즌 중 가장 최근 것
 
-- [ ] **Step 1: 테스트 파일 작성 (실패 확인용)**
+- [x] **Step 1: 테스트 파일 작성 (실패 확인용)**
 
 ```typescript
 // apps/api/__test__/budget/auto-generate.service.test.ts
@@ -137,14 +137,14 @@ describe("FinancialReportService.autoGenerateBudgetPlan", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 — 실패 확인**
+- [x] **Step 2: 테스트 실행 — 실패 확인**
 
 ```bash
 cd apps/api && npx jest __test__/budget/auto-generate.service.test.ts --no-coverage 2>&1 | tail -20
 ```
 Expected: `autoGenerateBudgetPlan is not a function` 또는 `method does not exist` 류 에러
 
-- [ ] **Step 3: 서비스에 `autoGenerateBudgetPlan` 추가**
+- [x] **Step 3: 서비스에 `autoGenerateBudgetPlan` 추가**
 
 `apps/api/src/financial-report/financial-report.service.ts`의 `getActuals` 메서드 바로 아래에 추가:
 
@@ -200,7 +200,7 @@ async autoGenerateBudgetPlan(
 }
 ```
 
-- [ ] **Step 4: 테스트 실행 — 통과 확인**
+- [x] **Step 4: 테스트 실행 — 통과 확인**
 
 ```bash
 cd apps/api && npx jest __test__/budget/auto-generate.service.test.ts --no-coverage 2>&1 | tail -20
@@ -209,7 +209,7 @@ Expected: `4 tests passed`
 
 > **Note:** Prisma mock이 module 레벨 mock으로 제대로 주입이 안 되면 통합 테스트 방식으로 전환. 테스트 실패 시 `jest.spyOn(prismaModule, 'getPrisma')` 방식으로 조정.
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add apps/api/src/financial-report/financial-report.service.ts apps/api/__test__/budget/auto-generate.service.test.ts
@@ -224,7 +224,7 @@ git commit -m "feat: add autoGenerateBudgetPlan service method with growth/conti
 - Modify: `apps/api/src/financial-report/financial-report.controller.ts`
 - Modify: `apps/api/src/financial-report/financial-report.routes.ts`
 
-- [ ] **Step 1: 컨트롤러에 `autoGenerateBudget` 핸들러 추가**
+- [x] **Step 1: 컨트롤러에 `autoGenerateBudget` 핸들러 추가**
 
 `apps/api/src/financial-report/financial-report.controller.ts`의 `setFromPrevSeason` 메서드 바로 아래에 추가:
 
@@ -241,7 +241,7 @@ autoGenerateBudget = async (req: Request, res: Response, next: NextFunction) => 
 };
 ```
 
-- [ ] **Step 2: 라우트에 엔드포인트 추가**
+- [x] **Step 2: 라우트에 엔드포인트 추가**
 
 `apps/api/src/financial-report/financial-report.routes.ts`의 `router.post("/:seasonId/budget/override", ...)` 라인 바로 뒤에 추가:
 
@@ -265,14 +265,14 @@ router.post("/:seasonId/budget/override",         auth, controller.addOverride);
 router.post("/:seasonId/budget/auto-generate",    auth, controller.autoGenerateBudget);
 ```
 
-- [ ] **Step 3: TS 컴파일 확인**
+- [x] **Step 3: TS 컴파일 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | grep -v "^$"
 ```
 Expected: 출력 없음 (에러 없음)
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add apps/api/src/financial-report/financial-report.controller.ts apps/api/src/financial-report/financial-report.routes.ts
@@ -292,7 +292,7 @@ git commit -m "feat: add POST budget/auto-generate endpoint"
 - `budgetPlanApi` 객체가 이미 있음 (`football/src/services/financial-report.service.ts:90`)
 - 응답 타입: `{ totalOperatingBudget: number, contingencyReserve: number, categories: [...], zeroCategories: string[] }`
 
-- [ ] **Step 1: `AutoGenerateResult` 타입을 `football/src/types/budget.ts`에 추가**
+- [x] **Step 1: `AutoGenerateResult` 타입을 `football/src/types/budget.ts`에 추가**
 
 파일 끝에 추가:
 
@@ -305,7 +305,7 @@ export interface AutoGenerateResult {
 }
 ```
 
-- [ ] **Step 2: `budgetPlanApi`에 `autoGenerate` 추가**
+- [x] **Step 2: `budgetPlanApi`에 `autoGenerate` 추가**
 
 `football/src/services/financial-report.service.ts`의 `budgetPlanApi` 객체 끝에 추가:
 
@@ -319,7 +319,7 @@ import에도 타입 추가:
 import type { BudgetPlan, UpsertBudgetPlanPayload, OptimizeResult, AutoGenerateResult } from '@/types/budget'
 ```
 
-- [ ] **Step 3: 한국어 i18n 키 추가**
+- [x] **Step 3: 한국어 i18n 키 추가**
 
 `football/src/locales/ko/admin.json`의 `"budget"` 섹션에 추가:
 
@@ -337,7 +337,7 @@ import type { BudgetPlan, UpsertBudgetPlanPayload, OptimizeResult, AutoGenerateR
 "zeroCategoriesWarning": "실적 없는 카테고리 (최소치 0으로 설정):"
 ```
 
-- [ ] **Step 4: 영어 i18n 키 추가**
+- [x] **Step 4: 영어 i18n 키 추가**
 
 `football/src/locales/en/admin.json`의 `"budget"` 섹션에 추가:
 
@@ -355,14 +355,14 @@ import type { BudgetPlan, UpsertBudgetPlanPayload, OptimizeResult, AutoGenerateR
 "zeroCategoriesWarning": "Categories with no prior data (set to 0):"
 ```
 
-- [ ] **Step 5: TS 컴파일 확인**
+- [x] **Step 5: TS 컴파일 확인**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | grep -v "^$"
 ```
 Expected: 출력 없음
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add football/src/types/budget.ts football/src/services/financial-report.service.ts football/src/locales/ko/admin.json football/src/locales/en/admin.json
@@ -390,7 +390,7 @@ git commit -m "feat: add autoGenerate API client and i18n keys for budget auto-g
 2. 입력 폼: `growthRate` (기본 10), `contingencyRate` (기본 0)
 3. 생성 완료 후: `budgetPlanApi.get(seasonId)`로 플랜 재로드, 폼 상태도 업데이트
 
-- [ ] **Step 1: import에 Dialog 추가 및 state 추가**
+- [x] **Step 1: import에 Dialog 추가 및 state 추가**
 
 현재 import 블록 끝에 추가:
 ```typescript
@@ -410,7 +410,7 @@ const [autoGenerating, setAutoGenerating] = useState(false)
 const [zeroWarnings, setZeroWarnings] = useState<string[]>([])
 ```
 
-- [ ] **Step 2: `handleAutoGenerate` 핸들러 추가**
+- [x] **Step 2: `handleAutoGenerate` 핸들러 추가**
 
 `handleOverride` 함수 바로 다음에 추가:
 
@@ -446,7 +446,7 @@ const handleAutoGenerate = async () => {
 }
 ```
 
-- [ ] **Step 3: 자동 생성 버튼을 페이지 상단에 추가**
+- [x] **Step 3: 자동 생성 버튼을 페이지 상단에 추가**
 
 `<div className="border-b px-6 py-4">` 블록 안, `<p className="text-sm ...">` 바로 아래에 추가:
 
@@ -462,7 +462,7 @@ const handleAutoGenerate = async () => {
 </div>
 ```
 
-- [ ] **Step 4: 경고 배너 추가**
+- [x] **Step 4: 경고 배너 추가**
 
 `<div className="px-6 py-4 space-y-6 max-w-4xl">` 안, 첫 번째 `<section>` 바로 위에 추가:
 
@@ -475,7 +475,7 @@ const handleAutoGenerate = async () => {
 )}
 ```
 
-- [ ] **Step 5: 다이얼로그 두 개 추가**
+- [x] **Step 5: 다이얼로그 두 개 추가**
 
 페이지 return의 최상위 `<div>` 닫는 태그 바로 전에 추가:
 
@@ -520,14 +520,14 @@ const handleAutoGenerate = async () => {
 </Dialog>
 ```
 
-- [ ] **Step 6: TS 컴파일 확인**
+- [x] **Step 6: TS 컴파일 확인**
 
 ```bash
 cd football && npx tsc --noEmit 2>&1 | grep -v "^$"
 ```
 Expected: 출력 없음
 
-- [ ] **Step 7: 커밋**
+- [x] **Step 7: 커밋**
 
 ```bash
 git add football/src/pages/admin/BudgetPlanPage.tsx

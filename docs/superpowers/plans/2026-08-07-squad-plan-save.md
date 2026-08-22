@@ -1,6 +1,6 @@
 # Squad Planner Save (스쿼드 플래너 저장) Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Let HEAD_COACH save the current squad formation and slot assignments per season, and restore them automatically on page mount.
 
@@ -33,7 +33,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: Add SquadPlan model and Season back-relation**
+- [x] **Step 1: Add SquadPlan model and Season back-relation**
 
 Open `apps/api/prisma/schema.prisma`.
 
@@ -88,7 +88,7 @@ model SquadPlan {
 }
 ```
 
-- [ ] **Step 2: Check User model for existing back-relations and add SquadPlan**
+- [x] **Step 2: Check User model for existing back-relations and add SquadPlan**
 
 Run:
 ```bash
@@ -100,7 +100,7 @@ grep -n "^model User" apps/api/prisma/schema.prisma
 ```
 Open that line and add `squadPlans SquadPlan[]` to the User model's relation list.
 
-- [ ] **Step 3: Run migration**
+- [x] **Step 3: Run migration**
 
 ```bash
 cd apps/api && npx prisma migrate dev --name add_squad_plan
@@ -108,14 +108,14 @@ cd apps/api && npx prisma migrate dev --name add_squad_plan
 
 Expected: migration file created, `SquadPlan` table created in DB, Prisma client regenerated with `squadPlan` model available.
 
-- [ ] **Step 4: Verify generated client**
+- [x] **Step 4: Verify generated client**
 
 ```bash
 grep -r "squadPlan" apps/api/src/generated/client/index.d.ts | head -5
 ```
 Expected: lines containing `squadPlan` in the PrismaClient type.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/
@@ -133,7 +133,7 @@ git commit -m "feat(db): add SquadPlan model — seasonId unique, slots Json"
 - Create: `apps/api/src/squad-plan/squad-plan.controller.ts`
 - Create: `apps/api/src/squad-plan/squad-plan.routes.ts`
 
-- [ ] **Step 1: Create DTO file**
+- [x] **Step 1: Create DTO file**
 
 Create `apps/api/src/squad-plan/dto/squad-plan.dto.ts`:
 
@@ -146,7 +146,7 @@ export interface SaveSquadPlanDto {
 }
 ```
 
-- [ ] **Step 2: Create repository**
+- [x] **Step 2: Create repository**
 
 Create `apps/api/src/squad-plan/squad-plan.repo.ts`:
 
@@ -198,7 +198,7 @@ export class SquadPlanRepository {
 }
 ```
 
-- [ ] **Step 3: Create service**
+- [x] **Step 3: Create service**
 
 Create `apps/api/src/squad-plan/squad-plan.service.ts`:
 
@@ -229,7 +229,7 @@ export class SquadPlanService {
 }
 ```
 
-- [ ] **Step 4: Create controller**
+- [x] **Step 4: Create controller**
 
 Create `apps/api/src/squad-plan/squad-plan.controller.ts`:
 
@@ -277,7 +277,7 @@ export class SquadPlanController {
 }
 ```
 
-- [ ] **Step 5: Create routes**
+- [x] **Step 5: Create routes**
 
 Create `apps/api/src/squad-plan/squad-plan.routes.ts`:
 
@@ -300,14 +300,14 @@ router.put("/", auth, controller.save);
 export default router;
 ```
 
-- [ ] **Step 6: TypeScript compile check**
+- [x] **Step 6: TypeScript compile check**
 
 ```bash
 cd apps/api && npx tsc --noEmit
 ```
 Expected: no errors. If errors appear in `squad-plan.repo.ts` about `slots` type, add a cast: `slots: dto.slots as import("@prisma/client").Prisma.InputJsonValue`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add apps/api/src/squad-plan/
@@ -321,7 +321,7 @@ git commit -m "feat(api): add squad-plan module (GET + PUT, HEAD_COACH write gua
 **Files:**
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: Add import**
+- [x] **Step 1: Add import**
 
 In `apps/api/src/apiRouter.ts`, after the last import (currently `import opsReportRouter from "./ops-report/ops-report.routes";`), add:
 
@@ -329,7 +329,7 @@ In `apps/api/src/apiRouter.ts`, after the last import (currently `import opsRepo
 import squadPlanRouter from "./squad-plan/squad-plan.routes";
 ```
 
-- [ ] **Step 2: Register route**
+- [x] **Step 2: Register route**
 
 After the last `apiRouter.use(...)` line (currently `apiRouter.use("/ops-reports", opsReportRouter);`), add:
 
@@ -337,7 +337,7 @@ After the last `apiRouter.use(...)` line (currently `apiRouter.use("/ops-reports
 apiRouter.use("/squad-plan", squadPlanRouter);
 ```
 
-- [ ] **Step 3: Smoke-test the endpoint**
+- [x] **Step 3: Smoke-test the endpoint**
 
 Start the API (or rely on the existing dev server) and run:
 
@@ -349,7 +349,7 @@ curl -s -o /dev/null -w "%{http_code}" \
 
 Expected: `200` (returns `null` if no plan saved yet) or `401` if no cookie — either is correct, not `404`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/src/apiRouter.ts
@@ -363,7 +363,7 @@ git commit -m "feat(api): register /squad-plan route"
 **Files:**
 - Create: `football/src/services/squadPlan.service.ts`
 
-- [ ] **Step 1: Create the service file**
+- [x] **Step 1: Create the service file**
 
 Create `football/src/services/squadPlan.service.ts`:
 
@@ -395,7 +395,7 @@ export const squadPlanApi = {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add football/src/services/squadPlan.service.ts
@@ -425,7 +425,7 @@ This task replaces the entire file with the updated version. Read the current fi
 12. `handleSave` function: calls `squadPlanApi.save`, resets `isDirty`, updates `savedSlots`.
 13. Save button in header (disabled unless `isDirty`, hidden unless `canSave`).
 
-- [ ] **Step 1: Write the updated SquadPlannerPage**
+- [x] **Step 1: Write the updated SquadPlannerPage**
 
 Replace `football/src/pages/squad/SquadPlannerPage.tsx` with:
 
@@ -782,14 +782,14 @@ export function SquadPlannerPage() {
 }
 ```
 
-- [ ] **Step 2: TypeScript compile check**
+- [x] **Step 2: TypeScript compile check**
 
 ```bash
 cd football && npx tsc --noEmit
 ```
 Expected: no errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/pages/squad/SquadPlannerPage.tsx
@@ -804,7 +804,7 @@ git commit -m "feat(fe): add save button + dirty state + plan restore to SquadPl
 - Modify: `football/src/locales/ko/squad.json`
 - Modify: `football/src/locales/en/squad.json`
 
-- [ ] **Step 1: Add Korean i18n keys**
+- [x] **Step 1: Add Korean i18n keys**
 
 In `football/src/locales/ko/squad.json`, inside `"planner"`, add the following keys after `"loadFailed"`:
 
@@ -836,7 +836,7 @@ The final `"planner"` block should look like:
 }
 ```
 
-- [ ] **Step 2: Add English i18n keys**
+- [x] **Step 2: Add English i18n keys**
 
 In `football/src/locales/en/squad.json`, inside `"planner"`, add after `"loadFailed"`:
 
@@ -868,21 +868,21 @@ The final `"planner"` block should look like:
 }
 ```
 
-- [ ] **Step 3: Commit i18n**
+- [x] **Step 3: Commit i18n**
 
 ```bash
 git add football/src/locales/ko/squad.json football/src/locales/en/squad.json
 git commit -m "feat(i18n): add squad planner save keys (ko + en)"
 ```
 
-- [ ] **Step 4: Final compile check**
+- [x] **Step 4: Final compile check**
 
 ```bash
 cd apps/api && npx tsc --noEmit && cd ../football && npx tsc --noEmit
 ```
 Expected: both exit 0, no errors.
 
-- [ ] **Step 5: Open PR**
+- [x] **Step 5: Open PR**
 
 ```bash
 gh pr create \
@@ -895,12 +895,12 @@ gh pr create \
 - Auto-restore on mount; unavailable players silently cleared from restored slots
 
 ## Test plan
-- [ ] Log in as HEAD_COACH, open Squad Planner, drag players into slots, click Save — confirm toast success and page reload restores the same placement
-- [ ] Log in as ASSISTANT_COACH — confirm Save button is not rendered
-- [ ] Log in as ADMIN — confirm Save button is rendered and works
-- [ ] Injure a saved player, reload page — confirm their slot is empty with no error
-- [ ] Change formation — confirm Save button disappears (isDirty resets) and placement auto-rebuilds
-- [ ] Call `PUT /squad-plan` as ASSISTANT_COACH via curl — confirm 403
+- [x] Log in as HEAD_COACH, open Squad Planner, drag players into slots, click Save — confirm toast success and page reload restores the same placement
+- [x] Log in as ASSISTANT_COACH — confirm Save button is not rendered
+- [x] Log in as ADMIN — confirm Save button is rendered and works
+- [x] Injure a saved player, reload page — confirm their slot is empty with no error
+- [x] Change formation — confirm Save button disappears (isDirty resets) and placement auto-rebuilds
+- [x] Call `PUT /squad-plan` as ASSISTANT_COACH via curl — confirm 403
 EOF
 )"
 ```

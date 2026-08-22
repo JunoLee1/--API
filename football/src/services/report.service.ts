@@ -37,6 +37,10 @@ export const reportApi = {
   rejectReview: (reportId: number, deptId: number, reason: string) =>
     api.post<Report>(`/reports/${reportId}/reviews/${deptId}/reject`, { reason }),
 
+  approve: (id: number) => api.post<Report>(`/reports/${id}/approve`),
+
+  reject: (id: number, reason: string) => api.post<Report>(`/reports/${id}/reject`, { reason }),
+
   listRuleSets: () => api.get<ReviewRuleSet[]>('/reports/rule-sets'),
 
   createRuleSet: (reportType: string, reviewerCategory: string) =>

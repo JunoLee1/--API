@@ -1,6 +1,6 @@
 # Report Approval HEAD_COACH Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** COACHING_STAFF가 TRAINING 타입 보고서를 제출하고, HEAD_COACH가 승인/반려할 수 있게 프론트엔드 3파일을 수정한다.
 
@@ -19,7 +19,7 @@
 
 **Context:** 이 레포는 Hono/Express API + React 프론트 + Prisma 구조의 스포츠 ERP다. 보고서 결재 시스템은 `/reports`와 `/reports/:id`에 구현돼 있다. 현재 승인자는 GM(FRONT_OFFICE + frontOfficeRole=GM)만 가능하다. 백엔드는 이미 HEAD_COACH + TRAINING 타입 조합의 결재 로직이 구현돼 있다.
 
-- [ ] **Step 1: ReportFormPage에 TRAINING 타입 추가**
+- [x] **Step 1: ReportFormPage에 TRAINING 타입 추가**
 
 `football/src/pages/reports/ReportFormPage.tsx` line 20:
 
@@ -31,7 +31,7 @@ const TYPES: ReportType[] = ['FINANCIAL', 'PERFORMANCE', 'MEDICAL']
 const TYPES: ReportType[] = ['FINANCIAL', 'PERFORMANCE', 'MEDICAL', 'TRAINING']
 ```
 
-- [ ] **Step 2: ReportDetailPage HEAD_COACH 결재 버튼 추가**
+- [x] **Step 2: ReportDetailPage HEAD_COACH 결재 버튼 추가**
 
 `football/src/pages/reports/ReportDetailPage.tsx`:
 
@@ -51,7 +51,7 @@ line 155 인근 버튼 조건 교체:
 {canApprove && (
 ```
 
-- [ ] **Step 3: ReportsPage HEAD_COACH 안내 문구 추가**
+- [x] **Step 3: ReportsPage HEAD_COACH 안내 문구 추가**
 
 `football/src/pages/reports/ReportsPage.tsx`:
 
@@ -74,14 +74,14 @@ line 57 인근 설명 문구:
   : '내가 작성한 보고서 목록'}
 ```
 
-- [ ] **Step 4: 브라우저에서 동작 확인**
+- [x] **Step 4: 브라우저에서 동작 확인**
 
 1. COACHING_STAFF로 로그인 → `/reports/new` → 유형에 `훈련` 선택 가능 확인
 2. 훈련 보고서 제출 → HEAD_COACH로 로그인 → `/reports` 목록에 해당 보고서 보임 확인
 3. 보고서 클릭 → 승인/반려 버튼 노출 확인
 4. 승인 클릭 → 상태 `APPROVED` 변경 확인
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add football/src/pages/reports/ReportFormPage.tsx \

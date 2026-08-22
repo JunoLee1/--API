@@ -10,22 +10,25 @@ export class FinancialReportService {
     private knapsack: KnapsackService,
   ) {}
 
-  async set(seasonId: number, totalRevenue: number, note?: string, breakdown?: RevenueBreakdownDto) {
+  async set(seasonId: number, totalRevenue: number, note?: string, breakdown?: RevenueBreakdownDto, changedById?: number) {
     if (totalRevenue <= 0) throw new AppError(400, "INVALID_REVENUE");
-    // When breakdown is provided, its sum must equal totalRevenue
     if (breakdown) {
       const breakdownSum = sumBreakdown(breakdown);
       if (breakdownSum !== totalRevenue) {
         throw new AppError(400, "REVENUE_BREAKDOWN_SUM_MISMATCH");
       }
     }
-    return this.repo.upsert(seasonId, totalRevenue, note, breakdown);
+    return this.repo.upsert(seasonId, totalRevenue, note, breakdown, changedById);
   }
 
-  async setBreakdown(seasonId: number, breakdown: RevenueBreakdownDto, note?: string) {
+  async setBreakdown(seasonId: number, breakdown: RevenueBreakdownDto, note?: string, changedById?: number) {
     const total = sumBreakdown(breakdown);
     if (total <= 0) throw new AppError(400, "INVALID_REVENUE");
-    return this.repo.upsert(seasonId, total, note, breakdown);
+    return this.repo.upsert(seasonId, total, note, breakdown, changedById);
+  }
+
+  async getRevenueLogs(seasonId: number) {
+    return this.repo.getRevenueLogs(seasonId);
   }
 
   async setFromCSV(seasonId: number, csvContent: string, note?: string) {
@@ -88,6 +91,26 @@ export class FinancialReportService {
     if (amount <= 0) throw new AppError(400, "INVALID_AMOUNT");
     if (!reason.trim()) throw new AppError(400, "REASON_REQUIRED");
     return this.repo.addOverrideLog(plan.id, category, amount, reason, createdById);
+  }
+
+  async getPayrollByMonth(seasonId: number) {
+    return this.repo.getPayrollByMonth(seasonId);
+  }
+
+  async approveOverride(logId: number, reviewerId: number) {
+    const log = await this.repo.findOverrideLog(logId);
+    if (!log) throw new AppError(404, "OVERRIDE_LOG_NOT_FOUND");
+    if (log.status !== "PENDING") throw new AppError(409, "ALREADY_REVIEWED");
+    if (log.createdById === reviewerId) throw new AppError(403, "SELF_APPROVAL_FORBIDDEN");
+    return this.repo.approveOverrideLog(logId, reviewerId);
+  }
+
+  async rejectOverride(logId: number, reviewerId: number, reviewNote: string) {
+    if (!reviewNote?.trim()) throw new AppError(400, "REVIEW_NOTE_REQUIRED");
+    const log = await this.repo.findOverrideLog(logId);
+    if (!log) throw new AppError(404, "OVERRIDE_LOG_NOT_FOUND");
+    if (log.status !== "PENDING") throw new AppError(409, "ALREADY_REVIEWED");
+    return this.repo.rejectOverrideLog(logId, reviewerId, reviewNote.trim());
   }
 
   async getActuals(seasonId: number) {
@@ -399,6 +422,15 @@ export class FinancialReportService {
       actual: actuals?.[c.category] ?? 0,
       variance: (c.knapsackAllocated ?? c.mandatoryMinimum) - (actuals?.[c.category] ?? 0),
     }));
+    if (plan.playerSalaryBudget != null) {
+      comparison.push({
+        category: "PLAYER_SALARY" as any,
+        mandatoryMinimum: plan.playerSalaryBudget,
+        knapsackAllocated: null,
+        actual: actuals?.["PLAYER_SALARY"] ?? 0,
+        variance: plan.playerSalaryBudget - (actuals?.["PLAYER_SALARY"] ?? 0),
+      });
+    }
     return { ...plan, actuals, comparison };
   }
 

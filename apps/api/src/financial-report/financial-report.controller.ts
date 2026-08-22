@@ -17,24 +17,34 @@ export class FinancialReportController {
 
   set = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
+      const { role, frontOfficeRole, id: userId } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
       const { totalRevenue, note, breakdown } = req.body as { totalRevenue: number; note?: string; breakdown?: RevenueBreakdownDto };
       if (!Number.isInteger(totalRevenue)) throw new AppError(400, "INVALID_REVENUE");
-      const report = await this.service.set(seasonId, totalRevenue, note, breakdown);
+      const report = await this.service.set(seasonId, totalRevenue, note, breakdown, userId);
       res.status(200).json(report);
     } catch (err) { next(err); }
   };
 
   setBreakdown = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
+      const { role, frontOfficeRole, id: userId } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
       const { note, ...breakdown } = req.body as RevenueBreakdownDto & { note?: string };
-      const report = await this.service.setBreakdown(seasonId, breakdown, note);
+      const report = await this.service.setBreakdown(seasonId, breakdown, note, userId);
       res.status(200).json(report);
+    } catch (err) { next(err); }
+  };
+
+  getRevenueLogs = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = requireUser(req);
+      if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const seasonId = Number(req.params["seasonId"]);
+      const logs = await this.service.getRevenueLogs(seasonId);
+      res.json(logs);
     } catch (err) { next(err); }
   };
 
@@ -99,6 +109,37 @@ export class FinancialReportController {
       const { category, amount, reason } = req.body as { category: OperatingCategory; amount: number; reason: string };
       const log = await this.service.addOverride(seasonId, category, amount, reason, userId);
       res.status(201).json(log);
+    } catch (err) { next(err); }
+  };
+
+  getPayrollByMonth = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = requireUser(req);
+      if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const seasonId = Number(req.params["seasonId"]);
+      const result = await this.service.getPayrollByMonth(seasonId);
+      res.json(result);
+    } catch (err) { next(err); }
+  };
+
+  approveOverride = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole, id: userId } = requireUser(req);
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const logId = Number(req.params["logId"]);
+      const result = await this.service.approveOverride(logId, userId);
+      res.json(result);
+    } catch (err) { next(err); }
+  };
+
+  rejectOverride = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole, id: userId } = requireUser(req);
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const logId = Number(req.params["logId"]);
+      const { reviewNote } = req.body as { reviewNote: string };
+      const result = await this.service.rejectOverride(logId, userId, reviewNote);
+      res.json(result);
     } catch (err) { next(err); }
   };
 

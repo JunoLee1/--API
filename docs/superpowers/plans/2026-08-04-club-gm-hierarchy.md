@@ -1,6 +1,6 @@
 # Club Entity & GM Role Hierarchy Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Club 엔티티 신설, GM을 독립 Role로 승격, isLite를 Team에서 Club 레벨로 이동해 `SUPER_ADMIN → ADMIN(Club) → GM(Club) → 1군/2군/유소년` 계층을 구축한다.
 
@@ -28,12 +28,12 @@
 7. **GM에 SYSTEM_MANAGE 추가**: Admin 패널 접근 허용
 
 ### 잔여 구현 (소규모 7개)
-- [ ] **A** `permissions.ts` — GM에 SYSTEM_MANAGE 추가
-- [ ] **B** `admin.service.ts` — updateUserRole: SUPER_ADMIN만 GM 부여 가드
-- [ ] **C** `team.service.ts` + `team.repo.ts` — setLiteMode / updateLiteFlag 삭제
-- [ ] **D** `club.service.ts` — update() cascade 트랜잭션 (Club.isLite → Team.isLite)
-- [ ] **E** `UsersPage.tsx` — ALL_ROLES에 'GM' 추가 (SUPER_ADMIN에게만 표시)
-- [ ] **F** `AppShell.tsx` — line 402 `frontOfficeRoles: ['GM']` 제거
+- [x] **A** `permissions.ts` — GM에 SYSTEM_MANAGE 추가
+- [x] **B** `admin.service.ts` — updateUserRole: SUPER_ADMIN만 GM 부여 가드
+- [x] **C** `team.service.ts` + `team.repo.ts` — setLiteMode / updateLiteFlag 삭제
+- [x] **D** `club.service.ts` — update() cascade 트랜잭션 (Club.isLite → Team.isLite)
+- [x] **E** `UsersPage.tsx` — ALL_ROLES에 'GM' 추가 (SUPER_ADMIN에게만 표시)
+- [x] **F** `AppShell.tsx` — line 402 `frontOfficeRoles: ['GM']` 제거
 
 ---
 
@@ -87,7 +87,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: Role enum에 GM 추가, FrontOfficeRole에서 GM 제거**
+- [x] **Step 1: Role enum에 GM 추가, FrontOfficeRole에서 GM 제거**
 
 `schema.prisma` 최상단 enum 섹션을 아래로 교체:
 
@@ -120,7 +120,7 @@ enum FrontOfficeRole {
 }
 ```
 
-- [ ] **Step 2: Club 모델 추가**
+- [x] **Step 2: Club 모델 추가**
 
 `schema.prisma`에서 `model Team {` 바로 위에 Club 모델 삽입:
 
@@ -137,7 +137,7 @@ model Club {
 }
 ```
 
-- [ ] **Step 3: Team 모델 — clubId 추가, isLite 제거**
+- [x] **Step 3: Team 모델 — clubId 추가, isLite 제거**
 
 `model Team { ... }` 블록을 다음으로 교체:
 
@@ -167,7 +167,7 @@ model Team {
 }
 ```
 
-- [ ] **Step 4: User 모델 — clubId 추가, Club relation 추가**
+- [x] **Step 4: User 모델 — clubId 추가, Club relation 추가**
 
 User 모델의 `teamId Int?` 바로 아래에 추가:
 
@@ -181,7 +181,7 @@ User 모델의 relation 영역 (team relation 근처)에 추가:
   club                     Club?                   @relation(fields: [clubId], references: [id])
 ```
 
-- [ ] **Step 5: Migration 실행**
+- [x] **Step 5: Migration 실행**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -190,7 +190,7 @@ npx prisma migrate dev --name add-club-and-gm-role
 
 Expected: 마이그레이션 파일 생성 후 DB에 적용, `prisma generate` 자동 실행
 
-- [ ] **Step 6: TypeScript 빌드 오류 확인**
+- [x] **Step 6: TypeScript 빌드 오류 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -199,7 +199,7 @@ npx tsc --noEmit 2>&1 | head -50
 
 Expected: `FrontOfficeRole.GM` 참조 오류들 나열됨 (다음 Task에서 순차 수정)
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/
@@ -214,7 +214,7 @@ git commit -m "feat: add Club model, GM Role, clubId to Team and User"
 - Modify: `apps/api/src/lib/express.d.ts`
 - Modify: `apps/api/src/lib/permissions.ts`
 
-- [ ] **Step 1: express.d.ts에 clubId 추가**
+- [x] **Step 1: express.d.ts에 clubId 추가**
 
 `apps/api/src/lib/express.d.ts` 전체 교체:
 
@@ -235,7 +235,7 @@ declare global {
 }
 ```
 
-- [ ] **Step 2: permissions.ts에 GM 추가**
+- [x] **Step 2: permissions.ts에 GM 추가**
 
 `apps/api/src/lib/permissions.ts` 전체 교체:
 
@@ -272,7 +272,7 @@ export function hasPermission(role: Role, permission: Permission): boolean {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/lib/express.d.ts apps/api/src/lib/permissions.ts
@@ -287,7 +287,7 @@ git commit -m "feat: add GM to permissions and clubId to Express.User"
 - Modify: `apps/api/src/auth/auth.repo.ts`
 - Modify: `apps/api/src/auth/auth.service.ts`
 
-- [ ] **Step 1: auth.repo.ts — findByEmail, findById 쿼리에 clubId 추가**
+- [x] **Step 1: auth.repo.ts — findByEmail, findById 쿼리에 clubId 추가**
 
 `apps/api/src/auth/auth.repo.ts`의 두 select 블록에 `clubId: true` 추가:
 
@@ -309,7 +309,7 @@ findById(id: number) {
 }
 ```
 
-- [ ] **Step 2: auth.service.ts — generateTokens에 clubId 포함**
+- [x] **Step 2: auth.service.ts — generateTokens에 clubId 포함**
 
 `apps/api/src/auth/auth.service.ts`의 `login` 메서드에서:
 
@@ -324,11 +324,11 @@ const tokens = generateTokens({
 });
 ```
 
-- [ ] **Step 3: lib/dto.ts — CreateUserDto에서 GM은 frontOfficeRole 없음 (변경 없음)**
+- [x] **Step 3: lib/dto.ts — CreateUserDto에서 GM은 frontOfficeRole 없음 (변경 없음)**
 
 `GM` role은 `frontOfficeRole`을 갖지 않으므로 기존 optional 처리로 충분. 변경 불필요.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/src/auth/auth.repo.ts apps/api/src/auth/auth.service.ts
@@ -344,7 +344,7 @@ git commit -m "feat: include clubId in JWT and auth queries"
 - Modify: `apps/api/src/admin/admin.service.ts`
 - Modify: `apps/api/src/admin/admin.repo.ts`
 
-- [ ] **Step 1: admin.dto.ts 전체 교체**
+- [x] **Step 1: admin.dto.ts 전체 교체**
 
 ```typescript
 import { Role, CoachingRole, FrontOfficeRole } from "../../generated/enums";
@@ -372,7 +372,7 @@ export interface PlayerWithoutAccountDto {
 }
 ```
 
-- [ ] **Step 2: admin.repo.ts — USER_SELECT에 clubId 추가, updateRole에 clubId 지원**
+- [x] **Step 2: admin.repo.ts — USER_SELECT에 clubId 추가, updateRole에 clubId 지원**
 
 `apps/api/src/admin/admin.repo.ts`의 `USER_SELECT` 수정:
 
@@ -411,7 +411,7 @@ updateRole(
 }
 ```
 
-- [ ] **Step 3: admin.service.ts — GM role 처리**
+- [x] **Step 3: admin.service.ts — GM role 처리**
 
 `apps/api/src/admin/admin.service.ts`의 `updateUserRole` 메서드 교체:
 
@@ -429,14 +429,14 @@ async updateUserRole(id: number, dto: UpdateUserRoleDto, requesterId: number) {
 }
 ```
 
-- [ ] **Step 4: TypeScript 빌드 오류 확인**
+- [x] **Step 4: TypeScript 빌드 오류 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
 npx tsc --noEmit 2>&1 | grep -v "generated" | head -30
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/admin/
@@ -453,7 +453,7 @@ git commit -m "feat: admin layer supports GM role and clubId assignment"
 - Modify: `apps/api/src/team/team.controller.ts`
 - Modify: `apps/api/src/team/team.routes.ts`
 
-- [ ] **Step 1: team.repo.ts 전체 교체**
+- [x] **Step 1: team.repo.ts 전체 교체**
 
 ```typescript
 import { PrismaClient } from "../generated/client";
@@ -517,7 +517,7 @@ export class TeamRepository {
 }
 ```
 
-- [ ] **Step 2: team.service.ts 전체 교체 (setLiteMode 제거)**
+- [x] **Step 2: team.service.ts 전체 교체 (setLiteMode 제거)**
 
 ```typescript
 import { TeamRepository, CreateTeamDto, UpdateTeamDto } from "./team.repo";
@@ -552,7 +552,7 @@ export class TeamService {
 }
 ```
 
-- [ ] **Step 3: team.controller.ts 전체 교체 (setLiteMode 제거, GM 권한 추가)**
+- [x] **Step 3: team.controller.ts 전체 교체 (setLiteMode 제거, GM 권한 추가)**
 
 ```typescript
 import { Request, Response, NextFunction } from "express";
@@ -602,7 +602,7 @@ export class TeamController {
 }
 ```
 
-- [ ] **Step 4: team.routes.ts — /lite 라우트 제거**
+- [x] **Step 4: team.routes.ts — /lite 라우트 제거**
 
 ```typescript
 import { auth } from "../lib/authMiddleware";
@@ -626,7 +626,7 @@ router.patch("/:id", auth, controller.update);
 export default router;
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/team/
@@ -650,7 +650,7 @@ git commit -m "feat: team layer uses club.isLite, GM can manage teams, remove se
 - `POST /clubs` — SUPER_ADMIN 전용
 - `PATCH /clubs/:id` — SUPER_ADMIN, ADMIN (isActive, isLite, name 변경)
 
-- [ ] **Step 1: club.dto.ts 생성**
+- [x] **Step 1: club.dto.ts 생성**
 
 ```typescript
 export interface CreateClubDto {
@@ -664,7 +664,7 @@ export interface UpdateClubDto {
 }
 ```
 
-- [ ] **Step 2: club.repo.ts 생성**
+- [x] **Step 2: club.repo.ts 생성**
 
 ```typescript
 import { PrismaClient } from "../generated/client";
@@ -704,7 +704,7 @@ export class ClubRepository {
 }
 ```
 
-- [ ] **Step 3: club.service.ts 생성**
+- [x] **Step 3: club.service.ts 생성**
 
 ```typescript
 import { ClubRepository } from "./club.repo";
@@ -737,7 +737,7 @@ export class ClubService {
 }
 ```
 
-- [ ] **Step 4: club.controller.ts 생성**
+- [x] **Step 4: club.controller.ts 생성**
 
 ```typescript
 import { Request, Response, NextFunction } from "express";
@@ -776,7 +776,7 @@ export class ClubController {
 }
 ```
 
-- [ ] **Step 5: club.routes.ts 생성**
+- [x] **Step 5: club.routes.ts 생성**
 
 ```typescript
 import { auth } from "../lib/authMiddleware";
@@ -799,7 +799,7 @@ router.patch("/:id", auth, controller.update);
 export default router;
 ```
 
-- [ ] **Step 6: apiRouter.ts에 club 라우터 등록**
+- [x] **Step 6: apiRouter.ts에 club 라우터 등록**
 
 `apps/api/src/apiRouter.ts` 최상단 import에 추가:
 
@@ -813,7 +813,7 @@ import clubRouter from "./club/club.routes";
 apiRouter.use("/clubs", clubRouter);
 ```
 
-- [ ] **Step 7: 빌드 오류 확인**
+- [x] **Step 7: 빌드 오류 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -822,7 +822,7 @@ npx tsc --noEmit 2>&1 | grep -v "generated" | head -30
 
 Expected: 오류 없음 또는 seed.ts 관련 오류만 (다음 Task)
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add apps/api/src/club/ apps/api/src/apiRouter.ts
@@ -836,7 +836,7 @@ git commit -m "feat: add Club CRUD API module"
 **Files:**
 - Modify: `apps/api/prisma/seed.ts`
 
-- [ ] **Step 1: seed.ts에 Club 생성, GM 유저 추가, clubId 할당**
+- [x] **Step 1: seed.ts에 Club 생성, GM 유저 추가, clubId 할당**
 
 seed.ts의 `// ── Users ─────────────────────────────────────────────` 섹션 이전에 Club 생성 코드 삽입:
 
@@ -901,7 +901,7 @@ const firstTeam = await prisma.team.upsert({
 });
 ```
 
-- [ ] **Step 2: Seed 실행**
+- [x] **Step 2: Seed 실행**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -910,7 +910,7 @@ npx prisma db seed
 
 Expected: 오류 없이 완료
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/prisma/seed.ts
@@ -925,7 +925,7 @@ git commit -m "feat: seed Club, GM user, assign clubId to teams and admin"
 - Modify: `football/src/types/auth.ts`
 - Modify: `football/src/types/team.ts`
 
-- [ ] **Step 1: types/auth.ts 전체 교체**
+- [x] **Step 1: types/auth.ts 전체 교체**
 
 ```typescript
 export type Role = 'ADMIN' | 'SUPER_ADMIN' | 'GM' | 'FRONT_OFFICE' | 'COACHING_STAFF' | 'PLAYER' | 'AGENT' | 'GUARDIAN'
@@ -1020,7 +1020,7 @@ export interface LoginResponse {
 }
 ```
 
-- [ ] **Step 2: types/team.ts 전체 교체**
+- [x] **Step 2: types/team.ts 전체 교체**
 
 ```typescript
 export type TeamType = 'FIRST_TEAM' | 'B_TEAM' | 'YOUTH'
@@ -1059,7 +1059,7 @@ export const TEAM_TYPE_LABEL: Record<TeamType, string> = {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/types/
@@ -1077,7 +1077,7 @@ git commit -m "feat: frontend types add GM Role, Club, update Team with club rel
 - Modify: `football/src/services/teamAdmin.service.ts`
 - Modify: `football/src/pages/admin/TeamSettingsPage.tsx`
 
-- [ ] **Step 1: club.service.ts 생성**
+- [x] **Step 1: club.service.ts 생성**
 
 ```typescript
 import { api } from './api'
@@ -1097,14 +1097,14 @@ export const clubApi = {
 }
 ```
 
-- [ ] **Step 2: teamAdmin.service.ts 전체 교체 (setLite 제거)**
+- [x] **Step 2: teamAdmin.service.ts 전체 교체 (setLite 제거)**
 
 ```typescript
 // setLite는 club API로 이동됨 — clubApi.update(clubId, { isLite }) 사용
 export {}
 ```
 
-- [ ] **Step 3: AppShell.tsx — GM nav 필터링 업데이트**
+- [x] **Step 3: AppShell.tsx — GM nav 필터링 업데이트**
 
 `football/src/layouts/AppShell.tsx`에서 `visibleNavItems` 필터 블록을 찾아 GM 추가:
 
@@ -1125,7 +1125,7 @@ const visibleNavItems = NAV_ITEMS.filter((item) => {
 })
 ```
 
-- [ ] **Step 4: useLiteMode.ts — club.isLite 읽도록 수정**
+- [x] **Step 4: useLiteMode.ts — club.isLite 읽도록 수정**
 
 ```typescript
 import { useState, useEffect } from 'react'
@@ -1150,7 +1150,7 @@ export function useLiteMode(): boolean {
 }
 ```
 
-- [ ] **Step 5: TeamSettingsPage.tsx — Club 레벨 isLite 토글로 교체**
+- [x] **Step 5: TeamSettingsPage.tsx — Club 레벨 isLite 토글로 교체**
 
 ```typescript
 import { useEffect, useState } from 'react'
@@ -1220,7 +1220,7 @@ export default function TeamSettingsPage() {
 }
 ```
 
-- [ ] **Step 6: Frontend TypeScript 빌드 오류 확인**
+- [x] **Step 6: Frontend TypeScript 빌드 오류 확인**
 
 ```bash
 cd /Users/juno/work/football/football
@@ -1229,7 +1229,7 @@ npx tsc --noEmit 2>&1 | head -50
 
 Expected: `team.isLite` 직접 참조 오류가 있으면 `team.club?.isLite` 로 수정
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add football/src/
@@ -1240,7 +1240,7 @@ git commit -m "feat: frontend GM nav, club-level isLite, club API service"
 
 ## Task 10: 전체 빌드 최종 확인
 
-- [ ] **Step 1: Backend 빌드**
+- [x] **Step 1: Backend 빌드**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -1249,7 +1249,7 @@ npx tsc --noEmit 2>&1 | grep -v "generated"
 
 Expected: 오류 없음
 
-- [ ] **Step 2: Frontend 빌드**
+- [x] **Step 2: Frontend 빌드**
 
 ```bash
 cd /Users/juno/work/football/football
@@ -1258,7 +1258,7 @@ npx tsc --noEmit 2>&1
 
 Expected: 오류 없음
 
-- [ ] **Step 3: `team.isLite` 직접 참조 잔재 검색**
+- [x] **Step 3: `team.isLite` 직접 참조 잔재 검색**
 
 ```bash
 grep -rn "\.isLite" /Users/juno/work/football/football/src --include="*.ts" --include="*.tsx"
@@ -1266,7 +1266,7 @@ grep -rn "\.isLite" /Users/juno/work/football/football/src --include="*.ts" --in
 
 잔재가 있으면 `team.club?.isLite ?? false`로 교체
 
-- [ ] **Step 4: FrontOfficeRole.GM 잔재 검색**
+- [x] **Step 4: FrontOfficeRole.GM 잔재 검색**
 
 ```bash
 grep -rn '"GM"\|'\''GM'\''' /Users/juno/work/football/apps/api/src --include="*.ts" | grep -v "generated"
@@ -1275,7 +1275,7 @@ grep -rn '"GM"\|'\''GM'\''' /Users/juno/work/football/football/src --include="*.
 
 잔재가 있으면 수정
 
-- [ ] **Step 5: Final Commit**
+- [x] **Step 5: Final Commit**
 
 ```bash
 git add -A

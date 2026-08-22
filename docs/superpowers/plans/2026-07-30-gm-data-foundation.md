@@ -1,6 +1,6 @@
 # GM Data Foundation Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** GM 인수인계서에서 도출된 5개 신규 도메인(Player 알레르기, ClubSettings, FINANCE_MANAGER 역할, StaffRecord, MealExpense)을 스키마에 추가하고 기본 CRUD API + 프론트엔드 서비스를 구현한다.
 
@@ -80,7 +80,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: FrontOfficeRole enum에 FINANCE_MANAGER 추가**
+- [x] **Step 1: FrontOfficeRole enum에 FINANCE_MANAGER 추가**
 
 `schema.prisma`에서 `enum FrontOfficeRole` 블록을 찾아 아래와 같이 수정:
 
@@ -96,7 +96,7 @@ enum FrontOfficeRole {
 }
 ```
 
-- [ ] **Step 2: Season 모델에 wageCapType/Value 추가**
+- [x] **Step 2: Season 모델에 wageCapType/Value 추가**
 
 ```prisma
 enum WageCapType {
@@ -120,7 +120,7 @@ model Season {
 }
 ```
 
-- [ ] **Step 3: Player 모델에 allergies/foodPreferences 추가**
+- [x] **Step 3: Player 모델에 allergies/foodPreferences 추가**
 
 Player 모델 안에 아래 두 필드 추가:
 
@@ -133,7 +133,7 @@ model Player {
 }
 ```
 
-- [ ] **Step 4: ClubSettings 모델 추가**
+- [x] **Step 4: ClubSettings 모델 추가**
 
 ```prisma
 model ClubSettings {
@@ -142,7 +142,7 @@ model ClubSettings {
 }
 ```
 
-- [ ] **Step 5: StaffRecord 모델 추가**
+- [x] **Step 5: StaffRecord 모델 추가**
 
 ```prisma
 model StaffRecord {
@@ -161,7 +161,7 @@ model StaffRecord {
 }
 ```
 
-- [ ] **Step 6: MealExpense 모델 추가**
+- [x] **Step 6: MealExpense 모델 추가**
 
 ```prisma
 enum MealExpenseType {
@@ -188,7 +188,7 @@ model MealExpense {
 }
 ```
 
-- [ ] **Step 7: TrainingSession과 Match 모델에 역참조 추가**
+- [x] **Step 7: TrainingSession과 Match 모델에 역참조 추가**
 
 TrainingSession 모델에:
 ```prisma
@@ -206,7 +206,7 @@ staffRecordsCreated  StaffRecord[]  @relation("StaffRecordCreator")
 mealExpensesCreated  MealExpense[]  @relation("MealExpenseCreator")
 ```
 
-- [ ] **Step 8: migration 생성 및 적용**
+- [x] **Step 8: migration 생성 및 적용**
 
 ```bash
 cd apps/api
@@ -215,7 +215,7 @@ npx prisma migrate dev --name gm-data-foundation
 
 Expected: migration 파일 생성 + DB 반영 성공
 
-- [ ] **Step 9: Prisma client 재생성 확인**
+- [x] **Step 9: Prisma client 재생성 확인**
 
 ```bash
 npx prisma generate
@@ -223,7 +223,7 @@ npx prisma generate
 
 Expected: `✔ Generated Prisma Client`
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/
@@ -239,7 +239,7 @@ git commit -m "feat(schema): GM data foundation - allergies, ClubSettings, Staff
 - Modify: `football/src/locales/en/admin.json`
 - Modify: `apps/api/src/admin/admin.controller.ts` (초대 생성 유효성)
 
-- [ ] **Step 1: ko/admin.json에 FINANCE_MANAGER 라벨 추가**
+- [x] **Step 1: ko/admin.json에 FINANCE_MANAGER 라벨 추가**
 
 `admin.json`의 `frontOfficeRole` 번역 맵 안에:
 
@@ -247,13 +247,13 @@ git commit -m "feat(schema): GM data foundation - allergies, ClubSettings, Staff
 "FINANCE_MANAGER": "재무 담당"
 ```
 
-- [ ] **Step 2: en/admin.json에 FINANCE_MANAGER 라벨 추가**
+- [x] **Step 2: en/admin.json에 FINANCE_MANAGER 라벨 추가**
 
 ```json
 "FINANCE_MANAGER": "Finance Manager"
 ```
 
-- [ ] **Step 3: 백엔드 초대 생성 유효성 확인**
+- [x] **Step 3: 백엔드 초대 생성 유효성 확인**
 
 `apps/api/src/admin/admin.controller.ts`에서 `frontOfficeRole` 유효성 검사 배열을 찾아 `FINANCE_MANAGER` 추가:
 
@@ -264,7 +264,7 @@ const validFrontOfficeRoles = [
 ];
 ```
 
-- [ ] **Step 4: 서버 재시작 후 FINANCE_MANAGER 역할로 초대 생성 테스트**
+- [x] **Step 4: 서버 재시작 후 FINANCE_MANAGER 역할로 초대 생성 테스트**
 
 ```bash
 curl -X POST http://localhost:3000/api/admin/invite \
@@ -275,7 +275,7 @@ curl -X POST http://localhost:3000/api/admin/invite \
 
 Expected: `201` 응답
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/locales/ko/admin.json football/src/locales/en/admin.json apps/api/src/admin/admin.controller.ts
@@ -294,7 +294,7 @@ git commit -m "feat: FINANCE_MANAGER 역할 초대 유효성 및 i18n 추가"
 - Modify: `apps/api/src/apiRouter.ts`
 - Create: `football/src/services/club-settings.service.ts`
 
-- [ ] **Step 1: club-settings.repo.ts 작성**
+- [x] **Step 1: club-settings.repo.ts 작성**
 
 ```typescript
 // apps/api/src/club-settings/club-settings.repo.ts
@@ -321,7 +321,7 @@ export class ClubSettingsRepository {
 }
 ```
 
-- [ ] **Step 2: club-settings.service.ts 작성**
+- [x] **Step 2: club-settings.service.ts 작성**
 
 ```typescript
 // apps/api/src/club-settings/club-settings.service.ts
@@ -343,7 +343,7 @@ export class ClubSettingsService {
 }
 ```
 
-- [ ] **Step 3: club-settings.controller.ts 작성**
+- [x] **Step 3: club-settings.controller.ts 작성**
 
 ```typescript
 // apps/api/src/club-settings/club-settings.controller.ts
@@ -371,7 +371,7 @@ export class ClubSettingsController {
 }
 ```
 
-- [ ] **Step 4: club-settings.routes.ts 작성**
+- [x] **Step 4: club-settings.routes.ts 작성**
 
 ```typescript
 // apps/api/src/club-settings/club-settings.routes.ts
@@ -394,7 +394,7 @@ router.patch("/", auth, controller.update);
 export default router;
 ```
 
-- [ ] **Step 5: apiRouter.ts에 등록**
+- [x] **Step 5: apiRouter.ts에 등록**
 
 ```typescript
 import clubSettingsRouter from "./club-settings/club-settings.routes";
@@ -402,7 +402,7 @@ import clubSettingsRouter from "./club-settings/club-settings.routes";
 apiRouter.use("/club-settings", clubSettingsRouter);
 ```
 
-- [ ] **Step 6: FE 서비스 작성**
+- [x] **Step 6: FE 서비스 작성**
 
 ```typescript
 // football/src/services/club-settings.service.ts
@@ -420,7 +420,7 @@ export const clubSettingsApi = {
 };
 ```
 
-- [ ] **Step 7: 동작 확인**
+- [x] **Step 7: 동작 확인**
 
 ```bash
 # GET
@@ -435,7 +435,7 @@ curl -X PATCH http://localhost:3000/api/club-settings \
 # Expected: {"id":1,"currency":"GBP"}
 ```
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add apps/api/src/club-settings/ apps/api/src/apiRouter.ts football/src/services/club-settings.service.ts
@@ -455,7 +455,7 @@ git commit -m "feat: ClubSettings API - 구단 통화 설정"
 - Create: `football/src/services/staff-record.service.ts`
 - Create: `football/src/pages/admin/StaffRecordPage.tsx`
 
-- [ ] **Step 1: staff-record.repo.ts 작성**
+- [x] **Step 1: staff-record.repo.ts 작성**
 
 ```typescript
 // apps/api/src/staff-record/staff-record.repo.ts
@@ -503,7 +503,7 @@ export class StaffRecordRepository {
 }
 ```
 
-- [ ] **Step 2: staff-record.service.ts 작성**
+- [x] **Step 2: staff-record.service.ts 작성**
 
 ```typescript
 // apps/api/src/staff-record/staff-record.service.ts
@@ -538,7 +538,7 @@ export class StaffRecordService {
 }
 ```
 
-- [ ] **Step 3: staff-record.controller.ts 작성**
+- [x] **Step 3: staff-record.controller.ts 작성**
 
 ```typescript
 // apps/api/src/staff-record/staff-record.controller.ts
@@ -599,7 +599,7 @@ export class StaffRecordController {
 }
 ```
 
-- [ ] **Step 4: staff-record.routes.ts 작성**
+- [x] **Step 4: staff-record.routes.ts 작성**
 
 ```typescript
 // apps/api/src/staff-record/staff-record.routes.ts
@@ -625,7 +625,7 @@ router.delete("/:id", auth, controller.delete);
 export default router;
 ```
 
-- [ ] **Step 5: apiRouter.ts에 등록**
+- [x] **Step 5: apiRouter.ts에 등록**
 
 ```typescript
 import staffRecordRouter from "./staff-record/staff-record.routes";
@@ -633,7 +633,7 @@ import staffRecordRouter from "./staff-record/staff-record.routes";
 apiRouter.use("/staff-records", staffRecordRouter);
 ```
 
-- [ ] **Step 6: FE 서비스 작성**
+- [x] **Step 6: FE 서비스 작성**
 
 ```typescript
 // football/src/services/staff-record.service.ts
@@ -664,7 +664,7 @@ export const staffRecordApi = {
 };
 ```
 
-- [ ] **Step 7: StaffRecordPage.tsx 작성**
+- [x] **Step 7: StaffRecordPage.tsx 작성**
 
 ```tsx
 // football/src/pages/admin/StaffRecordPage.tsx
@@ -810,7 +810,7 @@ export function StaffRecordPage() {
 }
 ```
 
-- [ ] **Step 8: admin.json i18n 추가 (ko)**
+- [x] **Step 8: admin.json i18n 추가 (ko)**
 
 `football/src/locales/ko/admin.json`에 `staffRecord` 섹션 추가:
 
@@ -832,7 +832,7 @@ export function StaffRecordPage() {
 }
 ```
 
-- [ ] **Step 9: admin.json i18n 추가 (en)**
+- [x] **Step 9: admin.json i18n 추가 (en)**
 
 ```json
 "staffRecord": {
@@ -852,11 +852,11 @@ export function StaffRecordPage() {
 }
 ```
 
-- [ ] **Step 10: 라우트 등록 및 사이드바 연결 확인**
+- [x] **Step 10: 라우트 등록 및 사이드바 연결 확인**
 
 `football/src/App.tsx` 또는 라우터 파일에서 `/admin/staff` 경로에 `StaffRecordPage` 등록. 사이드바 nav에 관련 항목이 있으면 연결.
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 git add apps/api/src/staff-record/ apps/api/src/apiRouter.ts \
@@ -879,7 +879,7 @@ git commit -m "feat: StaffRecord - 비로그인 직원 기록 CRUD"
 - Create: `football/src/services/meal-expense.service.ts`
 - Create: `football/src/pages/admin/MealExpensePage.tsx`
 
-- [ ] **Step 1: meal-expense.repo.ts 작성**
+- [x] **Step 1: meal-expense.repo.ts 작성**
 
 ```typescript
 // apps/api/src/meal-expense/meal-expense.repo.ts
@@ -935,7 +935,7 @@ export class MealExpenseRepository {
 }
 ```
 
-- [ ] **Step 2: meal-expense.service.ts 작성**
+- [x] **Step 2: meal-expense.service.ts 작성**
 
 ```typescript
 // apps/api/src/meal-expense/meal-expense.service.ts
@@ -985,7 +985,7 @@ export class MealExpenseService {
 }
 ```
 
-- [ ] **Step 3: meal-expense.controller.ts 작성**
+- [x] **Step 3: meal-expense.controller.ts 작성**
 
 ```typescript
 // apps/api/src/meal-expense/meal-expense.controller.ts
@@ -1049,7 +1049,7 @@ export class MealExpenseController {
 }
 ```
 
-- [ ] **Step 4: meal-expense.routes.ts 작성**
+- [x] **Step 4: meal-expense.routes.ts 작성**
 
 ```typescript
 // apps/api/src/meal-expense/meal-expense.routes.ts
@@ -1075,7 +1075,7 @@ router.delete("/:id", auth, controller.delete);
 export default router;
 ```
 
-- [ ] **Step 5: apiRouter.ts에 등록**
+- [x] **Step 5: apiRouter.ts에 등록**
 
 ```typescript
 import mealExpenseRouter from "./meal-expense/meal-expense.routes";
@@ -1083,7 +1083,7 @@ import mealExpenseRouter from "./meal-expense/meal-expense.routes";
 apiRouter.use("/meal-expenses", mealExpenseRouter);
 ```
 
-- [ ] **Step 6: FE 서비스 작성**
+- [x] **Step 6: FE 서비스 작성**
 
 ```typescript
 // football/src/services/meal-expense.service.ts
@@ -1120,7 +1120,7 @@ export const mealExpenseApi = {
 };
 ```
 
-- [ ] **Step 7: i18n 추가 (ko/admin.json)**
+- [x] **Step 7: i18n 추가 (ko/admin.json)**
 
 ```json
 "mealExpense": {
@@ -1137,7 +1137,7 @@ export const mealExpenseApi = {
 }
 ```
 
-- [ ] **Step 8: i18n 추가 (en/admin.json)**
+- [x] **Step 8: i18n 추가 (en/admin.json)**
 
 ```json
 "mealExpense": {
@@ -1154,7 +1154,7 @@ export const mealExpenseApi = {
 }
 ```
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add apps/api/src/meal-expense/ apps/api/src/apiRouter.ts \
@@ -1172,7 +1172,7 @@ git commit -m "feat: MealExpense - 세션/경기일 식대 기록 CRUD"
 - Modify: `football/src/services/player.service.ts` (타입 확장)
 - Modify: `football/src/pages/players/PlayerDetailPage.tsx`
 
-- [ ] **Step 1: BE player.service.ts updatePlayer에 allergies/foodPreferences 허용**
+- [x] **Step 1: BE player.service.ts updatePlayer에 allergies/foodPreferences 허용**
 
 `player.service.ts`의 updatePlayer 메서드에서 허용 필드에 추가:
 
@@ -1182,7 +1182,7 @@ if (body.allergies !== undefined) updateData.allergies = body.allergies;
 if (body.foodPreferences !== undefined) updateData.foodPreferences = body.foodPreferences;
 ```
 
-- [ ] **Step 2: FE player 타입에 필드 추가**
+- [x] **Step 2: FE player 타입에 필드 추가**
 
 `football/src/services/player.service.ts`의 Player 인터페이스에:
 
@@ -1191,7 +1191,7 @@ allergies: string[];
 foodPreferences: string | null;
 ```
 
-- [ ] **Step 3: PlayerDetailPage에 알레르기 섹션 추가**
+- [x] **Step 3: PlayerDetailPage에 알레르기 섹션 추가**
 
 FRONT_OFFICE 역할 사용자에게 `allergies`와 `foodPreferences`를 표시하고 수정할 수 있는 섹션을 기존 인적사항 카드 하단에 추가.
 
@@ -1215,7 +1215,7 @@ FRONT_OFFICE 역할 사용자에게 `allergies`와 `foodPreferences`를 표시�
 )}
 ```
 
-- [ ] **Step 4: i18n 추가**
+- [x] **Step 4: i18n 추가**
 
 `ko/player.json`:
 ```json
@@ -1229,11 +1229,11 @@ FRONT_OFFICE 역할 사용자에게 `allergies`와 `foodPreferences`를 표시�
 "noAllergies": "No allergy information"
 ```
 
-- [ ] **Step 5: 동작 확인**
+- [x] **Step 5: 동작 확인**
 
 선수 상세 페이지에서 FRONT_OFFICE 로그인 후 알레르기 섹션이 표시되는지 확인.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/player/ football/src/services/player.service.ts \

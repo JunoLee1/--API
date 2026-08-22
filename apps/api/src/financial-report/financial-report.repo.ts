@@ -27,6 +27,7 @@ export function sumBreakdown(b: RevenueBreakdownDto): number {
 export interface UpsertBudgetPlanDto {
   totalOperatingBudget: number;
   contingencyReserve: number;
+  playerSalaryBudget?: number;
   categories: {
     category: OperatingCategory;
     mandatoryMinimum: number;
@@ -37,7 +38,7 @@ export interface UpsertBudgetPlanDto {
 export class FinancialReportRepository {
   constructor(private prisma: PrismaClient) {}
 
-  async upsert(seasonId: number, totalRevenue: number, note?: string, breakdown?: RevenueBreakdownDto) {
+  async upsert(seasonId: number, totalRevenue: number, note?: string, breakdown?: RevenueBreakdownDto, changedById?: number) {
     const noteVal = note ?? null;
     const breakdownData = breakdown
       ? {
@@ -51,11 +52,36 @@ export class FinancialReportRepository {
           revenueOther: breakdown.revenueOther ?? 0,
         }
       : {};
-    return (this.prisma.financialReport as any).upsert({
+
+    // 수동 입력 3개 필드의 기존 값 조회 (변경 이력 기록용)
+    const before = changedById
+      ? await this.prisma.financialReport.findUnique({
+          where: { seasonId },
+          select: { id: true, revenueBroadcast: true, revenueSubsidy: true, revenueParentCompany: true },
+        })
+      : null;
+
+    const result = await (this.prisma.financialReport as any).upsert({
       where: { seasonId },
       create: { seasonId, totalRevenue, note: noteVal, ...breakdownData },
       update: { totalRevenue, note: noteVal, ...breakdownData },
     });
+
+    // 변경된 필드만 로그 생성
+    if (changedById && before && breakdown) {
+      const TRACKED = ["revenueBroadcast", "revenueSubsidy", "revenueParentCompany"] as const;
+      const logs = TRACKED.flatMap((field) => {
+        const oldVal = Number((before as any)[field] ?? 0);
+        const newVal = Number((breakdownData as any)[field] ?? 0);
+        if (oldVal === newVal) return [];
+        return [{ financialReportId: before.id, field, oldValue: oldVal, newValue: newVal, changedById }];
+      });
+      if (logs.length > 0) {
+        await this.prisma.financialReportRevenueLog.createMany({ data: logs as any });
+      }
+    }
+
+    return result;
   }
 
   async findBySeasonId(seasonId: number) {
@@ -65,8 +91,8 @@ export class FinancialReportRepository {
   async upsertBudgetPlan(seasonId: number, dto: UpsertBudgetPlanDto) {
     const report = await this.prisma.financialReport.upsert({
       where: { seasonId },
-      create: { seasonId, totalRevenue: 0, totalOperatingBudget: dto.totalOperatingBudget, contingencyReserve: dto.contingencyReserve },
-      update: { totalOperatingBudget: dto.totalOperatingBudget, contingencyReserve: dto.contingencyReserve },
+      create: { seasonId, totalRevenue: 0, totalOperatingBudget: dto.totalOperatingBudget, contingencyReserve: dto.contingencyReserve, playerSalaryBudget: dto.playerSalaryBudget ?? null },
+      update: { totalOperatingBudget: dto.totalOperatingBudget, contingencyReserve: dto.contingencyReserve, playerSalaryBudget: dto.playerSalaryBudget ?? null },
       select: { id: true },
     });
 
@@ -134,6 +160,60 @@ export class FinancialReportRepository {
     });
   }
 
+  async getRevenueLogs(seasonId: number) {
+    const report = await this.prisma.financialReport.findUnique({
+      where: { seasonId },
+      select: { id: true },
+    });
+    if (!report) return [];
+    return this.prisma.financialReportRevenueLog.findMany({
+      where: { financialReportId: report.id },
+      include: { changedBy: { select: { id: true, username: true } } },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    });
+  }
+
+  async getPayrollByMonth(seasonId: number) {
+    const season = await this.prisma.season.findUnique({
+      where: { id: seasonId },
+      select: { startDate: true, endDate: true },
+    });
+    if (!season) return [];
+
+    const rows = await this.prisma.payrollRun.groupBy({
+      by: ["month"],
+      where: { status: "CONFIRMED", month: { gte: season.startDate, lte: season.endDate } },
+      _sum: { grossPay: true },
+      _count: { id: true },
+      orderBy: { month: "asc" },
+    });
+
+    return rows.map((r) => ({
+      month: r.month.toISOString().slice(0, 7),
+      grossPay: Number(r._sum.grossPay ?? 0),
+      count: r._count.id,
+    }));
+  }
+
+  async findOverrideLog(id: number) {
+    return this.prisma.budgetOverrideLog.findUnique({ where: { id } });
+  }
+
+  async approveOverrideLog(id: number, reviewerId: number) {
+    return this.prisma.budgetOverrideLog.update({
+      where: { id },
+      data: { status: "APPROVED", reviewedById: reviewerId, reviewedAt: new Date() },
+    });
+  }
+
+  async rejectOverrideLog(id: number, reviewerId: number, reviewNote: string) {
+    return this.prisma.budgetOverrideLog.update({
+      where: { id },
+      data: { status: "REJECTED", reviewedById: reviewerId, reviewedAt: new Date(), reviewNote },
+    });
+  }
+
   async getActuals(seasonId: number) {
     const season = await this.prisma.season.findUnique({
       where: { id: seasonId },
@@ -141,7 +221,7 @@ export class FinancialReportRepository {
     });
     if (!season) return null;
 
-    const [medical, operating] = await Promise.all([
+    const [medical, operating, playerContracts] = await Promise.all([
       this.prisma.medicalExpense.aggregate({
         where: { status: "APPROVED", receiptDate: { gte: season.startDate, lte: season.endDate } },
         _sum: { totalAmount: true },
@@ -151,10 +231,23 @@ export class FinancialReportRepository {
         where: { seasonId },
         _sum: { amount: true },
       }),
+      this.prisma.contract.findMany({
+        where: { status: "ACTIVE", startDate: { lte: season.endDate }, endDate: { gte: season.startDate } },
+        select: { salary: true, startDate: true, endDate: true },
+      }),
     ]);
+
+    const playerSalaryActual = playerContracts.reduce((sum, c) => {
+      const overlapStart = c.startDate > season.startDate ? c.startDate : season.startDate;
+      const overlapEnd = c.endDate < season.endDate ? c.endDate : season.endDate;
+      if (overlapEnd <= overlapStart) return sum;
+      const months = (overlapEnd.getTime() - overlapStart.getTime()) / (1000 * 60 * 60 * 24 * 30.44);
+      return sum + (c.salary / 12) * months;
+    }, 0);
 
     const result: Record<string, number> = {
       MEDICAL: medical._sum?.totalAmount ?? 0,
+      PLAYER_SALARY: Math.round(playerSalaryActual),
     };
     for (const row of operating) {
       result[row.category] = row._sum?.amount ?? 0;

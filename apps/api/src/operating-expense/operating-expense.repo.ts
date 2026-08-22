@@ -95,6 +95,29 @@ export class OperatingExpenseRepository {
     return this.prisma.operatingExpense.update({ where: { id }, data });
   }
 
+  update(id: number, data: { amount?: number; category?: OperatingCategory; note?: string }) {
+    return this.prisma.operatingExpense.update({ where: { id }, data });
+  }
+
+  async findBudgetPlan(seasonId: number, category: OperatingCategory) {
+    const report = await this.prisma.financialReport.findUnique({
+      where: { seasonId },
+      include: {
+        budgetCategoryPlans: { where: { category } },
+      },
+    });
+    if (!report) return null;
+    return report.budgetCategoryPlans[0] ?? null;
+  }
+
+  async sumSpendBySeasonAndCategory(seasonId: number, category: OperatingCategory) {
+    const result = await this.prisma.operatingExpense.aggregate({
+      where: { seasonId, category },
+      _sum: { amount: true },
+    });
+    return result._sum.amount ?? 0;
+  }
+
   softDelete(id: number, reason: string) {
     return this.prisma.operatingExpense.update({
       where: { id },
