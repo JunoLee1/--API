@@ -1,5 +1,6 @@
 export type GoalWeight = 'AGGRESSIVE' | 'MAINTAIN' | 'CONSERVATIVE'
-export type OperatingCategory = 'MEDICAL' | 'MEAL' | 'TRAVEL' | 'EQUIPMENT' | 'SCOUTING' | 'YOUTH'
+// Category codes are runtime-resolved via ExpenseCategory table (ADR-0012).
+export type OperatingCategory = string
 export type RevenueKey =
   | 'plannedRevenueTicket'
   | 'plannedRevenueSponsorship'
@@ -24,7 +25,7 @@ export interface BudgetPreviewResponse {
   }
   expense: {
     total: number
-    byCategory: Record<OperatingCategory, CategoryPrediction>
+    byCategory: Record<string, CategoryPrediction>
   }
   parameters: {
     targetSeasonId: number
@@ -32,7 +33,7 @@ export interface BudgetPreviewResponse {
     inflation: number
     revenueGoal: GoalWeight
     expenseGoal: GoalWeight
-    categoryOverrides: Partial<Record<OperatingCategory, GoalWeight>>
+    categoryOverrides: Record<string, GoalWeight>
     seasonsUsed: number
   }
 }
@@ -43,7 +44,7 @@ export interface BudgetPreviewRequest {
   inflation?: number
   revenueGoal: GoalWeight
   expenseGoal: GoalWeight
-  categoryOverrides?: Partial<Record<OperatingCategory, GoalWeight>>
+  categoryOverrides?: Record<string, GoalWeight>
 }
 
 export interface BudgetApplyRequest extends BudgetPreviewRequest {

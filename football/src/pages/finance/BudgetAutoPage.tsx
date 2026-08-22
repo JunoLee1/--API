@@ -13,6 +13,7 @@ import { seasonApi } from '@/services/season.service'
 import type { BudgetPreviewResponse, GoalWeight, OperatingCategory, BudgetPreviewRequest } from '@/types/budget-automation'
 import type { Season } from '@/types/season'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { useExpenseCategories } from '@/hooks/useExpenseCategories'
 
 const GOAL_LABELS: Record<GoalWeight, string> = {
   AGGRESSIVE: '공격적 투자 (×1.2)',
@@ -20,7 +21,6 @@ const GOAL_LABELS: Record<GoalWeight, string> = {
   CONSERVATIVE: '긴축 재정 (×0.8)',
 }
 
-const EXPENSE_CATS: OperatingCategory[] = ['MEDICAL', 'MEAL', 'TRAVEL', 'EQUIPMENT', 'SCOUTING', 'YOUTH']
 const REVENUE_KEYS = ['plannedRevenueTicket', 'plannedRevenueSponsorship', 'plannedRevenueBroadcast', 'plannedRevenueMerchandise', 'plannedRevenueSubsidy', 'plannedRevenueParentCompany', 'plannedRevenueAcademyFee', 'plannedRevenueOther'] as const
 
 const REVENUE_LABELS: Record<string, string> = {
@@ -32,15 +32,6 @@ const REVENUE_LABELS: Record<string, string> = {
   plannedRevenueParentCompany: '모기업 지원',
   plannedRevenueAcademyFee: '아카데미 수강료',
   plannedRevenueOther: '기타',
-}
-
-const EXPENSE_LABELS: Record<OperatingCategory, string> = {
-  MEDICAL: '의료',
-  MEAL: '식비',
-  TRAVEL: '출장',
-  EQUIPMENT: '장비',
-  SCOUTING: '스카우팅',
-  YOUTH: '유스',
 }
 
 const WARNING_LABEL: Record<string, string> = {
@@ -66,6 +57,8 @@ export default function BudgetAutoPage() {
   const navigate = useNavigate()
   const { user } = useCurrentUser()
   const canApply = user?.frontOfficeRole === 'FINANCE_MANAGER' || user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
+
+  const { rows: expenseCats, labelOf } = useExpenseCategories()
 
   const [seasons, setSeasons] = useState<Season[]>([])
   const [targetSeasonId, setTargetSeasonId] = useState('')
@@ -191,14 +184,14 @@ export default function BudgetAutoPage() {
         <CardHeader><CardTitle>카테고리별 지출 목표 (선택)</CardTitle></CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 gap-3">
-            {EXPENSE_CATS.map(cat => (
-              <div key={cat} className="space-y-1">
-                <Label>{EXPENSE_LABELS[cat]}</Label>
+            {expenseCats.map(cat => (
+              <div key={cat.code} className="space-y-1">
+                <Label>{cat.label}</Label>
                 <Select
-                  value={categoryOverrides[cat] ?? ''}
+                  value={categoryOverrides[cat.code] ?? ''}
                   onValueChange={v => {
                     const next = { ...categoryOverrides }
-                    if (v) next[cat] = v as GoalWeight; else delete next[cat]
+                    if (v) next[cat.code] = v as GoalWeight; else delete next[cat.code]
                     setCategoryOverrides(next)
                   }}
                 >
@@ -279,11 +272,12 @@ export default function BudgetAutoPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {EXPENSE_CATS.map(cat => {
-                    const p = preview.expense.byCategory[cat]
+                  {expenseCats.map(cat => {
+                    const p = preview.expense.byCategory[cat.code]
+                    if (!p) return null
                     return (
-                      <tr key={cat} className="border-b last:border-0">
-                        <td className="py-1.5">{EXPENSE_LABELS[cat]}</td>
+                      <tr key={cat.code} className="border-b last:border-0">
+                        <td className="py-1.5">{cat.label}</td>
                         <td className="text-right"><CagrBadge cagr={p.cagr} /></td>
                         <td className="text-right font-mono">₩{fmt(p.predicted)}</td>
                         <td className="text-right">
