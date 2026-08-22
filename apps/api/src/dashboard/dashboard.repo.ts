@@ -492,9 +492,18 @@ export class DashboardRepository {
     const [thisMonthExpense, pendingOperatingExpenseCount] = await Promise.all([
       this.prisma.operatingExpense.aggregate({
         _sum: { amount: true },
-        where: { date: { gte: START_OF_MONTH() } },
+        where: {
+          date: { gte: START_OF_MONTH() },
+          status: { in: ["APPROVED", "PAID"] },
+          deletedAt: null,
+        },
       }).then((r) => r._sum.amount ?? 0),
-      this.prisma.operatingExpense.count({ where: { date: { gte: START_OF_MONTH() } } }),
+      this.prisma.operatingExpense.count({
+        where: {
+          status: "PENDING",
+          deletedAt: null,
+        },
+      }),
     ]);
     return { thisMonthExpense, pendingOperatingExpenseCount };
   }

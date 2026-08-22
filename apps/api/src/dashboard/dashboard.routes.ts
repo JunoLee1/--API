@@ -149,7 +149,7 @@ router.get("/finance", auth, async (req, res, next) => {
     if (seasonId) {
       const fr = await prisma.financialReport.findUnique({
         where: { seasonId },
-        include: { budgetCategoryPlans: true },
+        select: { id: true, seasonId: true, totalRevenue: true },
       });
 
       if (fr) {
@@ -163,15 +163,24 @@ router.get("/finance", auth, async (req, res, next) => {
           target: fr.totalRevenue,
         };
 
-        // Budget consumption: actual OpEx vs total approved budget
-        const opexSum = await prisma.operatingExpense.aggregate({
-          where: { seasonId, deletedAt: null },
-          _sum: { amount: true },
-        });
-        const totalBudget = fr.budgetCategoryPlans.reduce((acc, p) => acc + p.mandatoryMinimum + (p.knapsackAllocated ?? 0), 0);
+        // Budget consumption: committed OpEx vs total budget lines
+        const [opexSum, budgetLineSum] = await Promise.all([
+          prisma.operatingExpense.aggregate({
+            where: {
+              seasonId,
+              status: { in: ["FIRST_APPROVED", "APPROVED", "PAID"] },
+              deletedAt: null,
+            },
+            _sum: { amount: true },
+          }),
+          prisma.budgetLine.aggregate({
+            where: { budgetHeader: { seasonId } },
+            _sum: { originalAmount: true },
+          }),
+        ]);
         budgetConsumption = {
           spent: Number(opexSum._sum.amount ?? 0),
-          approved: totalBudget,
+          approved: Number(budgetLineSum._sum.originalAmount ?? 0),
         };
 
         // Monthly contribution

@@ -36,7 +36,7 @@ export class DashboardService {
       case "AGENT":
         return this.repo.getAgentStats(user.id);
       default:
-        throw new Error(`Unknown role: ${(user as any).role}`);
+        throw new AppError(403, "FORBIDDEN");
     }
   }
 
