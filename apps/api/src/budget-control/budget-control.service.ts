@@ -2,9 +2,13 @@ import { AppError } from "../lib/appError";
 import { writeAuditLog } from "../lib/auditLog";
 import type { BudgetControlRepository } from "./budget-control.repo";
 import type { CreateBudgetHeaderDto, UpdateBudgetHeaderDto, CreateBudgetLineDto, UpdateBudgetLineDto, CreateAdjustmentDto } from "./dto/budget-control.dto";
+import type { ExpenseCategoryService } from "../expense-category/expense-category.service";
 
 export class BudgetControlService {
-  constructor(private repo: BudgetControlRepository) {}
+  constructor(
+    private repo: BudgetControlRepository,
+    private categoryService: ExpenseCategoryService,
+  ) {}
 
   async create(dto: CreateBudgetHeaderDto, createdById: number) {
     if (dto.totalBudget < 0) throw new AppError(400, "INVALID_BUDGET");
@@ -99,7 +103,11 @@ export class BudgetControlService {
     if (!header) throw new AppError(404, "BUDGET_NOT_FOUND");
     if (header.status === "APPROVED" || header.status === "LOCKED")
       throw new AppError(400, "BUDGET_ALREADY_APPROVED");
-    return this.repo.createLine(headerId, dto);
+    if (!(await this.categoryService.isValidCode(dto.category))) {
+      throw new AppError(400, "INVALID_CATEGORY");
+    }
+    const categoryId = await this.categoryService.resolveCategoryId(dto.category);
+    return this.repo.createLine(headerId, { ...dto, categoryId });
   }
 
   async updateLine(headerId: number, lineId: number, dto: UpdateBudgetLineDto) {

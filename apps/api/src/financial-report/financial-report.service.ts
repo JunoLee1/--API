@@ -4,11 +4,25 @@ import { KnapsackService } from "../budget/knapsack.service";
 import { OperatingCategory, SeasonStatus } from "../generated/client";
 import { getPrisma } from "../lib/prisma";
 import { getSeasonRevenueActuals } from "../lib/season-actuals";
+import { ExpenseCategoryService } from "../expense-category/expense-category.service";
+
+// Wire-format DTO (from controller) — category is a code string.
+export interface UpsertBudgetPlanRequest {
+  totalOperatingBudget: number;
+  contingencyReserve: number;
+  playerSalaryBudget?: number;
+  categories: {
+    category: string;
+    mandatoryMinimum: number;
+    tiers: { name: string; cost: number; value: number }[];
+  }[];
+}
 
 export class FinancialReportService {
   constructor(
     private repo: FinancialReportRepository,
     private knapsack: KnapsackService,
+    private categoryService: ExpenseCategoryService,
   ) {}
 
   async set(seasonId: number, totalRevenue: number, note?: string, breakdown?: RevenueBreakdownDto, changedById?: number) {
@@ -43,10 +57,24 @@ export class FinancialReportService {
     return report;
   }
 
-  async upsertBudgetPlan(seasonId: number, dto: UpsertBudgetPlanDto) {
+  async upsertBudgetPlan(seasonId: number, dto: UpsertBudgetPlanRequest) {
     if (dto.totalOperatingBudget <= 0) throw new AppError(400, "INVALID_BUDGET");
     if (dto.contingencyReserve < 0) throw new AppError(400, "INVALID_CONTINGENCY");
-    return this.repo.upsertBudgetPlan(seasonId, dto);
+    // Resolve code → id for each category
+    const resolved: UpsertBudgetPlanDto = {
+      totalOperatingBudget: dto.totalOperatingBudget,
+      contingencyReserve: dto.contingencyReserve,
+      ...(dto.playerSalaryBudget !== undefined ? { playerSalaryBudget: dto.playerSalaryBudget } : {}),
+      categories: await Promise.all(
+        dto.categories.map(async (c) => ({
+          category: c.category as OperatingCategory,
+          categoryId: await this.categoryService.resolveCategoryId(c.category),
+          mandatoryMinimum: c.mandatoryMinimum,
+          tiers: c.tiers,
+        }))
+      ),
+    };
+    return this.repo.upsertBudgetPlan(seasonId, resolved);
   }
 
   async getBudgetPlan(seasonId: number) {
@@ -82,7 +110,7 @@ export class FinancialReportService {
 
   async addOverride(
     seasonId: number,
-    category: OperatingCategory,
+    category: string,
     amount: number,
     reason: string,
     createdById: number
@@ -91,7 +119,11 @@ export class FinancialReportService {
     if (!plan) throw new AppError(404, "FINANCIAL_REPORT_NOT_FOUND");
     if (amount <= 0) throw new AppError(400, "INVALID_AMOUNT");
     if (!reason.trim()) throw new AppError(400, "REASON_REQUIRED");
-    return this.repo.addOverrideLog(plan.id, category, amount, reason, createdById);
+    if (!(await this.categoryService.isValidCode(category))) {
+      throw new AppError(400, "INVALID_CATEGORY");
+    }
+    const categoryId = await this.categoryService.resolveCategoryId(category);
+    return this.repo.addOverrideLog(plan.id, category as OperatingCategory, categoryId, amount, reason, createdById);
   }
 
   async getPayrollByMonth(seasonId: number) {
@@ -143,14 +175,15 @@ export class FinancialReportService {
     const prevActuals = await this.repo.getActuals(prevSeason.id);
     if (!prevActuals) throw new AppError(404, "PREV_SEASON_NOT_FOUND");
 
-    const ALL_CATS: OperatingCategory[] = ["MEDICAL", "MEAL", "TRAVEL", "EQUIPMENT", "SCOUTING", "YOUTH"];
-    const zeroCategories: OperatingCategory[] = [];
+    const activeCategories = await this.categoryService.listActive();
+    const zeroCategories: string[] = [];
 
-    const categories = ALL_CATS.map((cat) => {
-      const actual = prevActuals[cat] ?? 0;
-      if (actual === 0) zeroCategories.push(cat);
+    const categories = activeCategories.map((c) => {
+      const actual = prevActuals[c.code] ?? 0;
+      if (actual === 0) zeroCategories.push(c.code);
       return {
-        category: cat,
+        category: c.code as OperatingCategory,
+        categoryId: c.id,
         mandatoryMinimum: Math.round(actual * (1 + growthRate)),
         tiers: [] as { name: string; cost: number; value: number }[],
       };
@@ -302,9 +335,10 @@ export class FinancialReportService {
         where: { status: "CONFIRMED", month: { gte: startDate, lte: endDate } },
         _sum: { grossPay: true },
       }),
-      // 운영비 카테고리별
+      // 운영비 카테고리별 — group by (categoryId, category) so the SPORTS_EQUIPMENT
+      // rename aggregates correctly; translate to code strings below.
       prisma.operatingExpense.groupBy({
-        by: ["category"],
+        by: ["categoryId", "category"],
         where: { seasonId },
         _sum: { amount: true },
       }),
@@ -333,9 +367,12 @@ export class FinancialReportService {
 
     const operatingByCategory: Record<string, number> = {};
     let totalOperating = 0;
+    const activeCats = await this.categoryService.listAll();
+    const codeById = new Map(activeCats.map((c) => [c.id, c.code]));
     for (const row of operatingGroups) {
       const amt = row._sum.amount ?? 0;
-      operatingByCategory[row.category] = amt;
+      const code = (row.categoryId != null ? codeById.get(row.categoryId) : undefined) ?? row.category;
+      operatingByCategory[code] = (operatingByCategory[code] ?? 0) + amt;
       totalOperating += amt;
     }
 
@@ -402,13 +439,18 @@ export class FinancialReportService {
       this.getBudgetPlan(seasonId),
       this.repo.getActuals(seasonId),
     ]);
-    const comparison = plan.budgetCategoryPlans.map((c) => ({
-      category: c.category,
-      mandatoryMinimum: c.mandatoryMinimum,
-      knapsackAllocated: c.knapsackAllocated,
-      actual: actuals?.[c.category] ?? 0,
-      variance: (c.knapsackAllocated ?? c.mandatoryMinimum) - (actuals?.[c.category] ?? 0),
-    }));
+    // Prefer the ExpenseCategory FK code when available; fall back to enum column
+    // during dual-state period until migration B removes the enum.
+    const comparison = plan.budgetCategoryPlans.map((c) => {
+      const code = c.expenseCategory?.code ?? c.category;
+      return {
+        category: code,
+        mandatoryMinimum: c.mandatoryMinimum,
+        knapsackAllocated: c.knapsackAllocated,
+        actual: actuals?.[code] ?? 0,
+        variance: (c.knapsackAllocated ?? c.mandatoryMinimum) - (actuals?.[code] ?? 0),
+      };
+    });
     if (plan.playerSalaryBudget != null) {
       comparison.push({
         category: "PLAYER_SALARY" as any,
@@ -418,7 +460,12 @@ export class FinancialReportService {
         variance: plan.playerSalaryBudget - (actuals?.["PLAYER_SALARY"] ?? 0),
       });
     }
-    return { ...plan, actuals, comparison };
+    // Rewrite budgetCategoryPlans to expose `category` as the code string too.
+    const remappedBudgetCategoryPlans = plan.budgetCategoryPlans.map((c) => ({
+      ...c,
+      category: (c.expenseCategory?.code ?? c.category) as any,
+    }));
+    return { ...plan, budgetCategoryPlans: remappedBudgetCategoryPlans, actuals, comparison };
   }
 
   private parseCSV(content: string): number {

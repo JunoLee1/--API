@@ -4,6 +4,7 @@ import { OperatingCategory } from "../generated/client";
 import { getSeasonRevenueActuals } from "../lib/season-actuals";
 import { AppError } from "../lib/appError";
 import type { BudgetAutomationRepository } from "./budget-automation.repo";
+import type { ExpenseCategoryService } from "../expense-category/expense-category.service";
 import {
   GOAL_MULTIPLIER,
   REVENUE_KEYS,
@@ -37,7 +38,10 @@ function predict(base: number, cagr: number, inflation: number, goal: GoalWeight
 }
 
 export class BudgetAutomationService {
-  constructor(private repo: BudgetAutomationRepository) {}
+  constructor(
+    private repo: BudgetAutomationRepository,
+    private categoryService: ExpenseCategoryService,
+  ) {}
 
   async preview(dto: BudgetPreviewRequestDto): Promise<BudgetPreviewResponse> {
     const lookback = dto.lookback ?? 3;
@@ -93,11 +97,14 @@ export class BudgetAutomationService {
     const expenseByCat: Record<string, CategoryPrediction> = {};
     let expenseTotal = 0;
 
-    for (const cat of Object.values(OperatingCategory)) {
+    const activeCategories = await this.categoryService.listActive();
+
+    for (const catRow of activeCategories) {
+      const cat = catRow.code;
       const chronoValues = chronoSeasonIds.map((id) => expenseMap[cat]?.[id] ?? 0);
       const { cagr, warning: cagrWarning } = computeCagr(chronoValues);
       const base = chronoValues[chronoValues.length - 1] ?? 0;
-      const goalForCat = dto.categoryOverrides?.[cat as OperatingCategory] ?? dto.expenseGoal;
+      const goalForCat = dto.categoryOverrides?.[cat] ?? dto.expenseGoal;
       const predicted = predict(base, cagr, inflation, goalForCat);
       expenseTotal += predicted;
 
@@ -141,13 +148,15 @@ export class BudgetAutomationService {
     const targetSeason = await this.repo.getTargetSeason(dto.targetSeasonId);
     const year = new Date(targetSeason!.startDate).getFullYear();
 
-    const lines = (
-      Object.entries(previewResult.expense.byCategory) as [OperatingCategory, CategoryPrediction][]
-    ).map(([cat, pred]) => ({
-      category: cat,
-      originalAmount: pred.predicted,
-      year,
-    }));
+    const entries = Object.entries(previewResult.expense.byCategory) as [string, CategoryPrediction][];
+    const lines = await Promise.all(
+      entries.map(async ([cat, pred]) => ({
+        category: cat as OperatingCategory,
+        categoryId: await this.categoryService.resolveCategoryId(cat),
+        originalAmount: pred.predicted,
+        year,
+      }))
+    );
 
     const totalBudget = lines.reduce((sum, l) => sum + l.originalAmount, 0);
 

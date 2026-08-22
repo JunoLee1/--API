@@ -3,7 +3,6 @@ import { AppError } from "../lib/appError";
 import { canWriteFinance } from "../lib/permissions";
 import { requireUser } from "../lib/authMiddleware";
 import { FinancialReportService } from "./financial-report.service";
-import { OperatingCategory } from "../generated/client";
 import type { RevenueBreakdownDto } from "./financial-report.repo";
 
 const canWrite = (role: string, foRole: string | null | undefined) =>
@@ -106,7 +105,7 @@ export class FinancialReportController {
       const { role, frontOfficeRole, id: userId } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.params["seasonId"]);
-      const { category, amount, reason } = req.body as { category: OperatingCategory; amount: number; reason: string };
+      const { category, amount, reason } = req.body as { category: string; amount: number; reason: string };
       const log = await this.service.addOverride(seasonId, category, amount, reason, userId);
       res.status(201).json(log);
     } catch (err) { next(err); }

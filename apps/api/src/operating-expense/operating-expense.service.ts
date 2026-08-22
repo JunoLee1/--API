@@ -2,6 +2,7 @@ import { AppError } from "../lib/appError";
 import { OperatingExpenseRepository } from "./operating-expense.repo";
 import { NotificationRepository } from "../notification/notification.repo";
 import { OperatingCategory } from "../generated/client";
+import { ExpenseCategoryService } from "../expense-category/expense-category.service";
 import { canReadFinance, canWriteFinance } from "../lib/permissions";
 
 export const APPROVAL_THRESHOLD = 1_000_000;
@@ -10,15 +11,27 @@ export class OperatingExpenseService {
   constructor(
     private repo: OperatingExpenseRepository,
     private notifRepo: NotificationRepository,
+    private categoryService: ExpenseCategoryService,
   ) {}
 
-  list(seasonId: number) {
-    return this.repo.findBySeasonId(seasonId);
+  async list(seasonId: number) {
+    const rows = await this.repo.findBySeasonId(seasonId);
+    // Dual-read: prefer FK-backed code, fallback to enum column during transition.
+    return rows.map((r) => ({
+      ...r,
+      category: (r.expenseCategory?.code ?? r.category) as string,
+      budgetLine: r.budgetLine
+        ? {
+            ...r.budgetLine,
+            category: (r.budgetLine.expenseCategory?.code ?? r.budgetLine.category) as string,
+          }
+        : r.budgetLine,
+    }));
   }
 
   async create(data: {
     seasonId: number;
-    category: OperatingCategory;
+    category: string;
     amount: number;
     date: string;
     note?: string;
@@ -26,6 +39,10 @@ export class OperatingExpenseService {
     budgetLineId: number;
   }) {
     if (data.amount <= 0) throw new AppError(400, "INVALID_AMOUNT");
+    if (!(await this.categoryService.isValidCode(data.category))) {
+      throw new AppError(400, "INVALID_CATEGORY");
+    }
+    const categoryId = await this.categoryService.resolveCategoryId(data.category);
 
     const line = await this.repo.findBudgetLine(data.budgetLineId);
     if (!line) throw new AppError(404, "BUDGET_LINE_NOT_FOUND");
@@ -34,6 +51,8 @@ export class OperatingExpenseService {
     try {
       expense = await this.repo.createWithBudgetCheck({
         ...data,
+        category: data.category as OperatingCategory,
+        categoryId,
         date: new Date(data.date),
         note: data.note ?? null,
       });
@@ -201,15 +220,19 @@ export class OperatingExpenseService {
     return updated;
   }
 
-  async update(id: number, userId: number, data: { amount?: number; category?: OperatingCategory; note?: string }) {
+  async update(id: number, userId: number, data: { amount?: number; category?: string; note?: string }) {
     const expense = await this.repo.findById(id);
     if (!expense || expense.deletedAt) throw new AppError(404, "NOT_FOUND");
     if (expense.paidAt) throw new AppError(409, "ALREADY_PAID");
     if (expense.createdById !== userId) throw new AppError(403, "FORBIDDEN");
 
     const newAmount = data.amount ?? expense.amount;
-    const newCategory = data.category ?? expense.category;
+    const newCategory = (data.category ?? expense.category) as OperatingCategory;
     if (newAmount <= 0) throw new AppError(400, "INVALID_AMOUNT");
+
+    if (data.category !== undefined && !(await this.categoryService.isValidCode(data.category))) {
+      throw new AppError(400, "INVALID_CATEGORY");
+    }
 
     if (data.amount !== undefined && data.amount > expense.amount) {
       const plan = await this.repo.findBudgetPlan(expense.seasonId, newCategory);
@@ -220,7 +243,15 @@ export class OperatingExpenseService {
       if (currentSpend + additional > ceiling) throw new AppError(400, "BUDGET_EXCEEDED");
     }
 
-    return this.repo.update(id, data);
+    const payload: { amount?: number; category?: OperatingCategory; categoryId?: number; note?: string } = {};
+    if (data.amount !== undefined) payload.amount = data.amount;
+    if (data.category !== undefined) {
+      payload.category = data.category as OperatingCategory;
+      payload.categoryId = await this.categoryService.resolveCategoryId(data.category);
+    }
+    if (data.note !== undefined) payload.note = data.note;
+
+    return this.repo.update(id, payload);
   }
 
   async delete(id: number, requesterId: number, requesterRole: string, reason: string) {

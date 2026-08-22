@@ -3,7 +3,6 @@ import { AppError } from "../lib/appError";
 import { canReadFinance, canWriteFinance } from "../lib/permissions";
 import { requireUser } from "../lib/authMiddleware";
 import { OperatingExpenseService } from "./operating-expense.service";
-import { OperatingCategory } from "../generated/client";
 
 const canRead = (role: string, foRole: string | null | undefined) =>
   canReadFinance(role, foRole) || (role === "FRONT_OFFICE" && foRole === "TD");
@@ -34,7 +33,7 @@ export class OperatingExpenseController {
       if (!canCreate(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       const { seasonId, category, amount, date, note, budgetLineId } = req.body as {
         seasonId: number;
-        category: OperatingCategory;
+        category: string;
         amount: number;
         date: string;
         note?: string;
@@ -55,8 +54,8 @@ export class OperatingExpenseController {
     try {
       const { id: userId } = requireUser(req);
       const id = Number(req.params["id"]);
-      const body = req.body as { amount?: number; category?: OperatingCategory; note?: string };
-      const data: { amount?: number; category?: OperatingCategory; note?: string } = {};
+      const body = req.body as { amount?: number; category?: string; note?: string };
+      const data: { amount?: number; category?: string; note?: string } = {};
       if (body.amount !== undefined) data.amount = body.amount;
       if (body.category !== undefined) data.category = body.category;
       if (body.note !== undefined) data.note = body.note;

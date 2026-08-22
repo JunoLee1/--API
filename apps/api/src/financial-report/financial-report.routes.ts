@@ -6,11 +6,12 @@ import { FinancialReportService } from "./financial-report.service";
 import { FinancialReportRepository } from "./financial-report.repo";
 import { KnapsackService } from "../budget/knapsack.service";
 import { getPrisma } from "../lib/prisma";
+import { expenseCategoryService } from "../expense-category/expense-category.routes";
 
 const router = Router();
 const repo = new FinancialReportRepository(getPrisma());
 const knapsack = new KnapsackService();
-const service = new FinancialReportService(repo, knapsack);
+const service = new FinancialReportService(repo, knapsack, expenseCategoryService);
 const controller = new FinancialReportController(service);
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 1 * 1024 * 1024 } });
