@@ -162,6 +162,10 @@ export class SponsorshipService {
       relatedModule: "sponsorship",
       relatedId: sponsorshipId,
     }, userId);
+    // Sync FinancialReport.revenueSponsorship so dashboards/reports reflect this
+    // payment without waiting for a manual auto-fill. Silent no-op if paidAt is
+    // outside any season window.
+    await this.repo.syncRevenueSponsorship(new Date(), amountKrw);
     return updated;
   }
 
