@@ -719,16 +719,16 @@ enum ExpenseStatus {
 // ─────────────────────────────────────────────
 
 model Club {
-  id                  Int      @id @default(autoincrement())
-  name                String
-  isActive            Boolean  @default(true)
-  isLite              Boolean  @default(false)
-  countryId           Int?
-  ownerEmail          String?  @unique
-  businessRegNumber   String?
-  companyNumber       String?
-  vatNumber           String?
-  createdAt           DateTime @default(now())
+  id                Int      @id @default(autoincrement())
+  name              String
+  isActive          Boolean  @default(true)
+  isLite            Boolean  @default(false)
+  countryId         Int?
+  ownerEmail        String?  @unique
+  businessRegNumber String?
+  companyNumber     String?
+  vatNumber         String?
+  createdAt         DateTime @default(now())
 
   country     Country?     @relation(fields: [countryId], references: [id])
   teams       Team[]
@@ -749,14 +749,14 @@ model Team {
   clubId           Int?
   createdAt        DateTime @default(now())
 
-  club             Club?                @relation(fields: [clubId], references: [id])
-  players          Player[]
-  coachingStaff    User[]
-  trainingSessions TrainingSession[]
-  matches          Match[]
-  coaches          Coach[]
-  callupsFrom        PlayerCallup[]    @relation("CallupFromTeam")
-  callupsTo          PlayerCallup[]    @relation("CallupToTeam")
+  club               Club?               @relation(fields: [clubId], references: [id])
+  players            Player[]
+  coachingStaff      User[]
+  trainingSessions   TrainingSession[]
+  matches            Match[]
+  coaches            Coach[]
+  callupsFrom        PlayerCallup[]      @relation("CallupFromTeam")
+  callupsTo          PlayerCallup[]      @relation("CallupToTeam")
   jerseyNumbers      JerseyNumber[]
   youthRegistrations YouthRegistration[]
   incidentReports    IncidentReport[]
@@ -800,131 +800,131 @@ model User {
   teamId          Int?
   clubId          Int?
 
-  phoneNumber              PhoneNumber             @relation(fields: [phoneNumberId], references: [id])
-  nationality              Country                 @relation(fields: [nationalityId], references: [id])
-  player                   Player?
-  recallRequests           Recall[]                @relation("RecallRequestedBy")
-  recallApprovals          Recall[]                @relation("RecallApprovedBy")
-  managedInjuries          Injury[]
-  createdSessions          TrainingSession[]       @relation("TrainingSessionCreatedBy")
-  approvedSessions         TrainingSession[]       @relation("TrainingSessionApprovedBy")
-  tacticalAnalyses         TacticalAnalysis[]
-  notifications            Notification[]
-  managedContracts         Contract[]
-  agentPlayers             Player[]                @relation("AgentPlayers")
-  createdProspects         Prospect[]              @relation("ProspectCreatedBy")
-  requestedLoans           EquipmentLoan[]         @relation("LoanRequestedBy")
-  approvedLoans            EquipmentLoan[]         @relation("LoanApprovedBy")
-  auditLogs                AuditLog[]
-  authoredReports          Report[]                @relation("ReportAuthor")
-  reviewedReports          Report[]                @relation("ReportReviewer")
-  firstReviewedReports     Report[]                @relation("ReportFirstReviewer")
-  secondReviewedReports    Report[]                @relation("ReportSecondReviewer")
-  submittedMedicalExpenses MedicalExpense[]        @relation("MedicalExpenseSubmitter")
-  leaderReviewedExpenses   MedicalExpense[]        @relation("MedicalExpenseLeaderReviewer")
-  adminReviewedExpenses    MedicalExpense[]        @relation("MedicalExpenseAdminReviewer")
-  createdInjuryReports     InjuryReport[]          @relation("InjuryReportCreator")
-  updatedInjuryReports     InjuryReport[]          @relation("InjuryReportUpdater")
-  coachSignedReports       InjuryReport[]          @relation("InjuryReportCoachSigner")
-  trainerSignedReports     InjuryReport[]          @relation("InjuryReportTrainerSigner")
-  medicalSignedReports     InjuryReport[]          @relation("InjuryReportMedicalSigner")
-  assessedInjuries         InjuryAssessment[]
-  squadConfirmations       MatchSquad[]       @relation("SquadConfirmations")
-  lineupConfirmations      MatchLineup[]      @relation("LineupConfirmations")
-  team                     Team?                   @relation(fields: [teamId], references: [id])
-  club                     Club?                   @relation(fields: [clubId], references: [id])
-  createdHiringRounds      CoachHiringRound[]      @relation("HiringRoundCreatedBy")
-  coachProfile             Coach?                  @relation("CoachUser")
-  tutorAssignments         CoachTutorAssignment[]  @relation("TutorAssignments")
-  scoredTrainingResults    TrainingResult[]        @relation("TrainingResultScorer")
-  coachAvailabilities      CoachAvailability[]     @relation("CoachAvailabilityUser")
-  createdAvailabilities    CoachAvailability[]     @relation("CoachAvailabilityCreatedBy")
-  developmentPlans         PlayerDevelopmentPlan[] @relation("PDPCoach")
-  uploadedVideos           TrainingVideo[]         @relation("VideoUploader")
-  videoAssignments         VideoAssignment[]       @relation("VideoAssigner")
-  trainingReferences       TrainingReference[]
-  requestedCallups         PlayerCallup[]          @relation("CallupRequestedBy")
-  approvedCallups          PlayerCallup[]          @relation("CallupApprovedBy")
-  loginHistory             LoginHistory[]
-  recordedMarketValues     MarketValueHistory[]
-  guardianPlayers          Player[]                @relation("GuardianPlayers")
-  guardianRegistrations    YouthRegistration[]     @relation("GuardianRegistrations")
-  youthRegistrations       YouthRegistration[]     @relation("YouthRegistrationRequester")
-  reportedIncidents        IncidentReport[]        @relation("IncidentReporter")
-  coachEvaluations         GrowthEvaluation[]      @relation("CoachEvaluations")
-  awardedBadges            PlayerBadge[]           @relation("CoachBadges")
-  isSuspended              Boolean                 @default(false)
-  suspendedAt              DateTime?
-  safeguardReportsAccused  SafeguardReport[]       @relation("SafeguardAccused")
-  guardianFees             AcademyFee[]            @relation("GuardianFees")
-  givenEvaluations         CoachingStaffEvaluation[] @relation("EvaluationGiver")
-  receivedEvaluations      CoachingStaffEvaluation[] @relation("EvaluationReceiver")
-  staffRecordsCreated      StaffRecord[]             @relation("StaffRecordCreator")
-  inspectedFacilities      FacilityInspection[]      @relation("FacilityInspector")
-  maintenanceRequests      MaintenanceRequest[]      @relation("MaintenanceRequestCreator")
-  createdSponsorships      Sponsorship[]             @relation("SponsorshipCreator")
-  fmApprovedMaintenances   MaintenanceRequest[]      @relation("MaintenanceFMApprover")
-  gmApprovedMaintenances   MaintenanceRequest[]      @relation("MaintenanceGMApprover")
-  staffSalary              StaffSalary[]             @relation("UserSalary")
-  confirmedPayrolls        PayrollRun[]              @relation("PayrollRunConfirmer")
-  secondApprovedPayrolls   PayrollRun[]              @relation("PayrollRunSecondApprover")
-  budgetOverrideLogs       BudgetOverrideLog[]       @relation("BudgetOverrideLogCreator")
-  budgetOverrideReviews    BudgetOverrideLog[]       @relation("BudgetOverrideLogReviewer")
-  revenueLogChanges        FinancialReportRevenueLog[] @relation("RevenueLogChanger")
-  operatingExpenses        OperatingExpense[]        @relation("OperatingExpenseCreator")
-  paidExpenses             OperatingExpense[]        @relation("OperatingExpensePayer")
-  firstApprovedExpenses    OperatingExpense[]        @relation("OperatingExpenseFirstApprover")
-  approvedExpenses         OperatingExpense[]        @relation("OperatingExpenseApprover")
-  rejectedExpenses         OperatingExpense[]        @relation("OperatingExpenseRejecter")
-  cancelledExpenses        OperatingExpense[]        @relation("OperatingExpenseCanceller")
-  createdPostings          JobPosting[]              @relation("JobPostingCreator")
-  approvedPostings         JobPosting[]              @relation("JobPostingApprover")
-  applicationOffers        JobApplication[]          @relation("ApplicationOffer")
-  onboarding               Onboarding?               @relation("OnboardingUser")
-  headedDepartments        Department[]              @relation("DepartmentHead")
-  departmentMemberships    UserDepartment[]
-  sentInvites              UserInvite[]              @relation("InviteSender")
-  issuedGuardianCodes      GuardianInviteCode[]      @relation("GuardianCodeIssuer")
-  usedGuardianCodes        GuardianInviteCode[]      @relation("GuardianCodeUser")
-  createdSoftwareLicenses  SoftwareLicense[]         @relation("SoftwareLicenseCreator")
-  ledgerEntries            LedgerEntry[]             @relation("LedgerEntryCreator")
-  salesRecords             SalesRecord[]             @relation("SalesRecordCreator")
-  salesRecordsUpdated        SalesRecord[]             @relation("SalesRecordUpdater")
-  squadPlans                 SquadPlan[]
-  facilityReservations       FacilityReservation[]     @relation("FacilityReservations")
-  interviewerScores          InterviewerScore[]        @relation("InterviewerScores")
-  createdAppeals             AttendanceAppeal[]        @relation("AppealCreator")
-  reviewedAppeals            AttendanceAppeal[]        @relation("AppealReviewer")
-  transferRequestsRequested  TransferRequest[]         @relation("TRRequestedBy")
-  transferRequestsReviewed   TransferRequest[]         @relation("TRReviewedBy")
-  transferRequestsConfirmed  TransferRequest[]         @relation("TRConfirmedBy")
-  transferRequestsRejected   TransferRequest[]         @relation("TRRejectedBy")
-  createdPlanReports         PlanReport[]              @relation("PlanReportCreatedBy")
-  approvedPlanReports        PlanReport[]              @relation("PlanReportApprovedBy")
-  confirmedPlanReviews       PlanReview[]              @relation("PlanReviewConfirmer")
-  confirmedReportReviews     ReportReview[]            @relation("ReportReviewConfirmer")
-  createdSurveys             HiringNeedsSurvey[]       @relation("SurveyCreatedBy")
-  surveyResponses            SurveyResponse[]          @relation("SurveyResponseSubmitter")
-  disposedEquipmentUnits     EquipmentUnit[]           @relation("EquipmentDisposer")
-  formationSnapshots         FormationSnapshot[]       @relation("FormationSnapshotCreatedBy")
-  periodLocks        LedgerPeriodLock[] @relation("PeriodLockCreator")
-  certifications        Certification[]    @relation("CertOwner")
-  certFirstApprovals    Certification[]    @relation("CertFirstApprover")
-  certSecondApprovals   Certification[]    @relation("CertSecondApprover")
-  facilityAccessLogs       FacilityAccessLog[]
-  disposalRequests         EquipmentDisposalVerification[] @relation("DisposalRequestedBy")
-  disposalVerifications    EquipmentDisposalVerification[] @relation("DisposalVerifiedBy")
-  sponsorshipExposureEvents SponsorshipExposureEvent[] @relation("ExposureEventCreator")
-  partnerContactLogs        PartnerContactLog[]         @relation("ContactLogActor")
-  budgetHeadersCreated     BudgetHeader[]     @relation("BudgetHeaderCreator")
-  budgetHeadersApproved    BudgetHeader[]     @relation("BudgetHeaderApprover")
-  adjustmentsCreated       BudgetAdjustment[] @relation("AdjustmentCreator")
-  adjustmentsApproved      BudgetAdjustment[] @relation("AdjustmentApprover")
-  settlementsCreated        MonthlySettlementReport[] @relation("SettlementCreator")
-  settlementsFirstSubmitted MonthlySettlementReport[] @relation("SettlementFirstSubmitter")
-  settlementsFirstApproved  MonthlySettlementReport[] @relation("SettlementFirstApprover")
-  settlementsApproved       MonthlySettlementReport[] @relation("SettlementApprover")
-  revenueAdjustments        RevenueAdjustment[]       @relation("AdjCreator")
+  phoneNumber               PhoneNumber                     @relation(fields: [phoneNumberId], references: [id])
+  nationality               Country                         @relation(fields: [nationalityId], references: [id])
+  player                    Player?
+  recallRequests            Recall[]                        @relation("RecallRequestedBy")
+  recallApprovals           Recall[]                        @relation("RecallApprovedBy")
+  managedInjuries           Injury[]
+  createdSessions           TrainingSession[]               @relation("TrainingSessionCreatedBy")
+  approvedSessions          TrainingSession[]               @relation("TrainingSessionApprovedBy")
+  tacticalAnalyses          TacticalAnalysis[]
+  notifications             Notification[]
+  managedContracts          Contract[]
+  agentPlayers              Player[]                        @relation("AgentPlayers")
+  createdProspects          Prospect[]                      @relation("ProspectCreatedBy")
+  requestedLoans            EquipmentLoan[]                 @relation("LoanRequestedBy")
+  approvedLoans             EquipmentLoan[]                 @relation("LoanApprovedBy")
+  auditLogs                 AuditLog[]
+  authoredReports           Report[]                        @relation("ReportAuthor")
+  reviewedReports           Report[]                        @relation("ReportReviewer")
+  firstReviewedReports      Report[]                        @relation("ReportFirstReviewer")
+  secondReviewedReports     Report[]                        @relation("ReportSecondReviewer")
+  submittedMedicalExpenses  MedicalExpense[]                @relation("MedicalExpenseSubmitter")
+  leaderReviewedExpenses    MedicalExpense[]                @relation("MedicalExpenseLeaderReviewer")
+  adminReviewedExpenses     MedicalExpense[]                @relation("MedicalExpenseAdminReviewer")
+  createdInjuryReports      InjuryReport[]                  @relation("InjuryReportCreator")
+  updatedInjuryReports      InjuryReport[]                  @relation("InjuryReportUpdater")
+  coachSignedReports        InjuryReport[]                  @relation("InjuryReportCoachSigner")
+  trainerSignedReports      InjuryReport[]                  @relation("InjuryReportTrainerSigner")
+  medicalSignedReports      InjuryReport[]                  @relation("InjuryReportMedicalSigner")
+  assessedInjuries          InjuryAssessment[]
+  squadConfirmations        MatchSquad[]                    @relation("SquadConfirmations")
+  lineupConfirmations       MatchLineup[]                   @relation("LineupConfirmations")
+  team                      Team?                           @relation(fields: [teamId], references: [id])
+  club                      Club?                           @relation(fields: [clubId], references: [id])
+  createdHiringRounds       CoachHiringRound[]              @relation("HiringRoundCreatedBy")
+  coachProfile              Coach?                          @relation("CoachUser")
+  tutorAssignments          CoachTutorAssignment[]          @relation("TutorAssignments")
+  scoredTrainingResults     TrainingResult[]                @relation("TrainingResultScorer")
+  coachAvailabilities       CoachAvailability[]             @relation("CoachAvailabilityUser")
+  createdAvailabilities     CoachAvailability[]             @relation("CoachAvailabilityCreatedBy")
+  developmentPlans          PlayerDevelopmentPlan[]         @relation("PDPCoach")
+  uploadedVideos            TrainingVideo[]                 @relation("VideoUploader")
+  videoAssignments          VideoAssignment[]               @relation("VideoAssigner")
+  trainingReferences        TrainingReference[]
+  requestedCallups          PlayerCallup[]                  @relation("CallupRequestedBy")
+  approvedCallups           PlayerCallup[]                  @relation("CallupApprovedBy")
+  loginHistory              LoginHistory[]
+  recordedMarketValues      MarketValueHistory[]
+  guardianPlayers           Player[]                        @relation("GuardianPlayers")
+  guardianRegistrations     YouthRegistration[]             @relation("GuardianRegistrations")
+  youthRegistrations        YouthRegistration[]             @relation("YouthRegistrationRequester")
+  reportedIncidents         IncidentReport[]                @relation("IncidentReporter")
+  coachEvaluations          GrowthEvaluation[]              @relation("CoachEvaluations")
+  awardedBadges             PlayerBadge[]                   @relation("CoachBadges")
+  isSuspended               Boolean                         @default(false)
+  suspendedAt               DateTime?
+  safeguardReportsAccused   SafeguardReport[]               @relation("SafeguardAccused")
+  guardianFees              AcademyFee[]                    @relation("GuardianFees")
+  givenEvaluations          CoachingStaffEvaluation[]       @relation("EvaluationGiver")
+  receivedEvaluations       CoachingStaffEvaluation[]       @relation("EvaluationReceiver")
+  staffRecordsCreated       StaffRecord[]                   @relation("StaffRecordCreator")
+  inspectedFacilities       FacilityInspection[]            @relation("FacilityInspector")
+  maintenanceRequests       MaintenanceRequest[]            @relation("MaintenanceRequestCreator")
+  createdSponsorships       Sponsorship[]                   @relation("SponsorshipCreator")
+  fmApprovedMaintenances    MaintenanceRequest[]            @relation("MaintenanceFMApprover")
+  gmApprovedMaintenances    MaintenanceRequest[]            @relation("MaintenanceGMApprover")
+  staffSalary               StaffSalary[]                   @relation("UserSalary")
+  confirmedPayrolls         PayrollRun[]                    @relation("PayrollRunConfirmer")
+  secondApprovedPayrolls    PayrollRun[]                    @relation("PayrollRunSecondApprover")
+  budgetOverrideLogs        BudgetOverrideLog[]             @relation("BudgetOverrideLogCreator")
+  budgetOverrideReviews     BudgetOverrideLog[]             @relation("BudgetOverrideLogReviewer")
+  revenueLogChanges         FinancialReportRevenueLog[]     @relation("RevenueLogChanger")
+  operatingExpenses         OperatingExpense[]              @relation("OperatingExpenseCreator")
+  paidExpenses              OperatingExpense[]              @relation("OperatingExpensePayer")
+  firstApprovedExpenses     OperatingExpense[]              @relation("OperatingExpenseFirstApprover")
+  approvedExpenses          OperatingExpense[]              @relation("OperatingExpenseApprover")
+  rejectedExpenses          OperatingExpense[]              @relation("OperatingExpenseRejecter")
+  cancelledExpenses         OperatingExpense[]              @relation("OperatingExpenseCanceller")
+  createdPostings           JobPosting[]                    @relation("JobPostingCreator")
+  approvedPostings          JobPosting[]                    @relation("JobPostingApprover")
+  applicationOffers         JobApplication[]                @relation("ApplicationOffer")
+  onboarding                Onboarding?                     @relation("OnboardingUser")
+  headedDepartments         Department[]                    @relation("DepartmentHead")
+  departmentMemberships     UserDepartment[]
+  sentInvites               UserInvite[]                    @relation("InviteSender")
+  issuedGuardianCodes       GuardianInviteCode[]            @relation("GuardianCodeIssuer")
+  usedGuardianCodes         GuardianInviteCode[]            @relation("GuardianCodeUser")
+  createdSoftwareLicenses   SoftwareLicense[]               @relation("SoftwareLicenseCreator")
+  ledgerEntries             LedgerEntry[]                   @relation("LedgerEntryCreator")
+  salesRecords              SalesRecord[]                   @relation("SalesRecordCreator")
+  salesRecordsUpdated       SalesRecord[]                   @relation("SalesRecordUpdater")
+  squadPlans                SquadPlan[]
+  facilityReservations      FacilityReservation[]           @relation("FacilityReservations")
+  interviewerScores         InterviewerScore[]              @relation("InterviewerScores")
+  createdAppeals            AttendanceAppeal[]              @relation("AppealCreator")
+  reviewedAppeals           AttendanceAppeal[]              @relation("AppealReviewer")
+  transferRequestsRequested TransferRequest[]               @relation("TRRequestedBy")
+  transferRequestsReviewed  TransferRequest[]               @relation("TRReviewedBy")
+  transferRequestsConfirmed TransferRequest[]               @relation("TRConfirmedBy")
+  transferRequestsRejected  TransferRequest[]               @relation("TRRejectedBy")
+  createdPlanReports        PlanReport[]                    @relation("PlanReportCreatedBy")
+  approvedPlanReports       PlanReport[]                    @relation("PlanReportApprovedBy")
+  confirmedPlanReviews      PlanReview[]                    @relation("PlanReviewConfirmer")
+  confirmedReportReviews    ReportReview[]                  @relation("ReportReviewConfirmer")
+  createdSurveys            HiringNeedsSurvey[]             @relation("SurveyCreatedBy")
+  surveyResponses           SurveyResponse[]                @relation("SurveyResponseSubmitter")
+  disposedEquipmentUnits    EquipmentUnit[]                 @relation("EquipmentDisposer")
+  formationSnapshots        FormationSnapshot[]             @relation("FormationSnapshotCreatedBy")
+  periodLocks               LedgerPeriodLock[]              @relation("PeriodLockCreator")
+  certifications            Certification[]                 @relation("CertOwner")
+  certFirstApprovals        Certification[]                 @relation("CertFirstApprover")
+  certSecondApprovals       Certification[]                 @relation("CertSecondApprover")
+  facilityAccessLogs        FacilityAccessLog[]
+  disposalRequests          EquipmentDisposalVerification[] @relation("DisposalRequestedBy")
+  disposalVerifications     EquipmentDisposalVerification[] @relation("DisposalVerifiedBy")
+  sponsorshipExposureEvents SponsorshipExposureEvent[]      @relation("ExposureEventCreator")
+  partnerContactLogs        PartnerContactLog[]             @relation("ContactLogActor")
+  budgetHeadersCreated      BudgetHeader[]                  @relation("BudgetHeaderCreator")
+  budgetHeadersApproved     BudgetHeader[]                  @relation("BudgetHeaderApprover")
+  adjustmentsCreated        BudgetAdjustment[]              @relation("AdjustmentCreator")
+  adjustmentsApproved       BudgetAdjustment[]              @relation("AdjustmentApprover")
+  settlementsCreated        MonthlySettlementReport[]       @relation("SettlementCreator")
+  settlementsFirstSubmitted MonthlySettlementReport[]       @relation("SettlementFirstSubmitter")
+  settlementsFirstApproved  MonthlySettlementReport[]       @relation("SettlementFirstApprover")
+  settlementsApproved       MonthlySettlementReport[]       @relation("SettlementApprover")
+  revenueAdjustments        RevenueAdjustment[]             @relation("AdjCreator")
 }
 
 model Season {
@@ -938,19 +938,19 @@ model Season {
   leagueLevel  LeagueLevel?
   leagueId     Int?
 
-  league                   League?               @relation(fields: [leagueId], references: [id])
-  matches                  Match[]
-  trainingSessions         TrainingSession[]
-  tacticalAnalyses         TacticalAnalysis[]
-  developmentPlans         PlayerDevelopmentPlan[]
-  financialReport          FinancialReport?
-  budgetHeaders            BudgetHeader[]
-  operatingExpenses        OperatingExpense[]
-  complianceCheck          SeasonComplianceCheck?
-  monthlyBudgetSnapshots   MonthlyBudgetSnapshot[]
+  league                     League?                     @relation(fields: [leagueId], references: [id])
+  matches                    Match[]
+  trainingSessions           TrainingSession[]
+  tacticalAnalyses           TacticalAnalysis[]
+  developmentPlans           PlayerDevelopmentPlan[]
+  financialReport            FinancialReport?
+  budgetHeaders              BudgetHeader[]
+  operatingExpenses          OperatingExpense[]
+  complianceCheck            SeasonComplianceCheck?
+  monthlyBudgetSnapshots     MonthlyBudgetSnapshot[]
   monthlyOperationsSnapshots MonthlyOperationsSnapshot[]
-  monthlySettlements MonthlySettlementReport[]
-  squadPlan                SquadPlan?
+  monthlySettlements         MonthlySettlementReport[]
+  squadPlan                  SquadPlan?
 }
 
 model League {
@@ -982,20 +982,20 @@ model ClubLeague {
 }
 
 model Player {
-  id               String           @id @default(uuid())
-  playerName       String
-  preferredFoot    Foot
-  height           Int
-  weight           Int
-  position         Position
-  level            PlayerLevel
-  status           PlayerStatus     @default(ACTIVE)
-  externalId       String?          @unique
-  nationalityId    Int
-  userId           Int?             @unique
-  agentId          Int?
-  guardianId       Int?
-  agencyId         Int?
+  id                                String           @id @default(uuid())
+  playerName                        String
+  preferredFoot                     Foot
+  height                            Int
+  weight                            Int
+  position                          Position
+  level                             PlayerLevel
+  status                            PlayerStatus     @default(ACTIVE)
+  externalId                        String?          @unique
+  nationalityId                     Int
+  userId                            Int?             @unique
+  agentId                           Int?
+  guardianId                        Int?
+  agencyId                          Int?
   emergencyContactNameEncrypted     String?
   emergencyContactNameIv            String?
   emergencyContactPhoneEncrypted    String?
@@ -1004,18 +1004,18 @@ model Player {
   emergencyContactRelationIv        String?
   dateOfBirthEncrypted              String?
   dateOfBirthIv                     String?
-  workPermitStatus WorkPermitStatus @default(NOT_REQUIRED)
-  workPermitExpiry DateTime?
-  teamId           Int?
-  promotedFromYouthAt  DateTime?
-  youthOriginTeamId    Int?
+  workPermitStatus                  WorkPermitStatus @default(NOT_REQUIRED)
+  workPermitExpiry                  DateTime?
+  teamId                            Int?
+  promotedFromYouthAt               DateTime?
+  youthOriginTeamId                 Int?
 
-  nationality            Country                 @relation(fields: [nationalityId], references: [id])
-  user                   User?                   @relation(fields: [userId], references: [id])
-  agent                  User?                   @relation("AgentPlayers", fields: [agentId], references: [id])
-  guardian               User?                   @relation("GuardianPlayers", fields: [guardianId], references: [id])
-  agency                 Agency?                 @relation(fields: [agencyId], references: [id])
-  team                   Team?                   @relation(fields: [teamId], references: [id])
+  nationality            Country                   @relation(fields: [nationalityId], references: [id])
+  user                   User?                     @relation(fields: [userId], references: [id])
+  agent                  User?                     @relation("AgentPlayers", fields: [agentId], references: [id])
+  guardian               User?                     @relation("GuardianPlayers", fields: [guardianId], references: [id])
+  agency                 Agency?                   @relation(fields: [agencyId], references: [id])
+  team                   Team?                     @relation(fields: [teamId], references: [id])
   contracts              Contract[]
   transfers              Transfer[]
   injuries               Injury[]
@@ -1024,12 +1024,12 @@ model Player {
   matchStats             PlayerMatchStats[]
   tacticalLineups        TacticalLineup[]
   equipmentAssignments   EquipmentAssignment[]
-  prospects              Prospect[]              @relation("ProspectConvertedPlayer")
+  prospects              Prospect[]                @relation("ProspectConvertedPlayer")
   medicalExpenses        MedicalExpense[]
   trainingLoads          TrainingLoad[]
   developmentPlans       PlayerDevelopmentPlan[]
-  momAnalyses            TacticalAnalysis[]      @relation("MomPlayer")
-  improvementAnalyses    TacticalAnalysis[]      @relation("ImprovementPlayer")
+  momAnalyses            TacticalAnalysis[]        @relation("MomPlayer")
+  improvementAnalyses    TacticalAnalysis[]        @relation("ImprovementPlayer")
   videoAssignments       VideoAssignment[]
   callups                PlayerCallup[]
   workPermitAlerts       WorkPermitAlertLog[]
@@ -1042,8 +1042,8 @@ model Player {
   marketValueHistory     MarketValueHistory[]
   matchSquads            MatchSquad[]
   lineupSlots            LineupSlot[]
-  shotsAsShooter         ShotEvent[] @relation("ShotShooter")
-  shotsAsAssister        ShotEvent[] @relation("ShotAssister")
+  shotsAsShooter         ShotEvent[]               @relation("ShotShooter")
+  shotsAsAssister        ShotEvent[]               @relation("ShotAssister")
   incidentReports        IncidentReport[]
   growthEvaluations      GrowthEvaluation[]
   badges                 PlayerBadge[]
@@ -1052,7 +1052,7 @@ model Player {
   studentCode            String?                   @unique
   guardianInviteCodes    GuardianInviteCode[]
   transferRequests       TransferRequest[]
-  certifications         Certification[]    @relation("PlayerCertifications")
+  certifications         Certification[]           @relation("PlayerCertifications")
 }
 
 model Contract {
@@ -1098,10 +1098,10 @@ model PerformanceBonus {
   description String
   contractId  Int
 
-  contract Contract       @relation(fields: [contractId], references: [id])
-  triggers BonusTrigger[]
-  triggeredAt  DateTime?
-  executedAt   DateTime?
+  contract    Contract       @relation(fields: [contractId], references: [id])
+  triggers    BonusTrigger[]
+  triggeredAt DateTime?
+  executedAt  DateTime?
 }
 
 model BonusTrigger {
@@ -1169,32 +1169,32 @@ model TransferRequest {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  player      Player  @relation(fields: [playerId], references: [id])
-  agency      Agency  @relation(fields: [agencyId], references: [id])
-  requestedBy User    @relation("TRRequestedBy", fields: [requestedById], references: [id])
-  reviewedBy  User?   @relation("TRReviewedBy", fields: [reviewedById], references: [id])
-  confirmedBy User?   @relation("TRConfirmedBy", fields: [confirmedById], references: [id])
-  rejectedBy  User?   @relation("TRRejectedBy", fields: [rejectedById], references: [id])
+  player      Player @relation(fields: [playerId], references: [id])
+  agency      Agency @relation(fields: [agencyId], references: [id])
+  requestedBy User   @relation("TRRequestedBy", fields: [requestedById], references: [id])
+  reviewedBy  User?  @relation("TRReviewedBy", fields: [reviewedById], references: [id])
+  confirmedBy User?  @relation("TRConfirmedBy", fields: [confirmedById], references: [id])
+  rejectedBy  User?  @relation("TRRejectedBy", fields: [rejectedById], references: [id])
 }
 
 model Partner {
-  id        Int         @id @default(autoincrement())
-  type      PartnerType
-  name      String
-  country   String?
-  website   String?
-  address   String?
-  phone     String?
-  createdAt DateTime    @default(now())
+  id         Int          @id @default(autoincrement())
+  type       PartnerType
+  name       String
+  country    String?
+  website    String?
+  address    String?
+  phone      String?
+  createdAt  DateTime     @default(now())
   tier       PartnerTier?
   tierReason String?
 
-  injuries             Injury[]
-  equipmentItems       EquipmentItem[]
-  contracts            PartnerContract[]
-  maintenanceRequests  MaintenanceRequest[] @relation("MaintenancePartner")
-  preventiveSchedules  PreventiveSchedule[]
-  contactLogs          PartnerContactLog[]
+  injuries            Injury[]
+  equipmentItems      EquipmentItem[]
+  contracts           PartnerContract[]
+  maintenanceRequests MaintenanceRequest[] @relation("MaintenancePartner")
+  preventiveSchedules PreventiveSchedule[]
+  contactLogs         PartnerContactLog[]
 }
 
 model PartnerContract {
@@ -1241,24 +1241,24 @@ model Injury {
   expectedReturnDate DateTime?
   status             InjuryStatus  @default(OCCURRED)
   occurredAt         DateTime      @default(now())
-  priorWeeklyLoad Int?
+  priorWeeklyLoad    Int?
   playerId           String
   medicalStaffId     Int
   hospitalType       HospitalType?
   partnerId          Int?
   customHospitalName String?
 
-  player          Player            @relation(fields: [playerId], references: [id])
-  medicalStaff    User              @relation(fields: [medicalStaffId], references: [id])
-  partner         Partner?          @relation(fields: [partnerId], references: [id])
-  medicalExpenses MedicalExpense[]
-  injuryReport    InjuryReport?
-  assessment      InjuryAssessment?
-  externalReports ExternalReport[]
-  incidentReports IncidentReport[]
-  dataRetentionFlaggedAt  DateTime?
-  dataRetentionReason     String?
-  retainUntil             DateTime?
+  player                 Player            @relation(fields: [playerId], references: [id])
+  medicalStaff           User              @relation(fields: [medicalStaffId], references: [id])
+  partner                Partner?          @relation(fields: [partnerId], references: [id])
+  medicalExpenses        MedicalExpense[]
+  injuryReport           InjuryReport?
+  assessment             InjuryAssessment?
+  externalReports        ExternalReport[]
+  incidentReports        IncidentReport[]
+  dataRetentionFlaggedAt DateTime?
+  dataRetentionReason    String?
+  retainUntil            DateTime?
 }
 
 model InjuryAssessment {
@@ -1308,18 +1308,18 @@ enum ExternalReportStatus {
 }
 
 model ExternalReport {
-  id                 Int                  @id @default(autoincrement())
-  injuryId           Int?
-  incidentReportId   Int?
-  safeguardReportId  Int?
-  target             ExternalReportTarget
-  status             ExternalReportStatus @default(PENDING_SUBMISSION)
-  reportData         Json
-  dueDate            DateTime?
-  submittedAt        DateTime?
-  submittedNote      String?
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
+  id                Int                  @id @default(autoincrement())
+  injuryId          Int?
+  incidentReportId  Int?
+  safeguardReportId Int?
+  target            ExternalReportTarget
+  status            ExternalReportStatus @default(PENDING_SUBMISSION)
+  reportData        Json
+  dueDate           DateTime?
+  submittedAt       DateTime?
+  submittedNote     String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
 
   injury         Injury?         @relation(fields: [injuryId], references: [id], onDelete: Cascade)
   incidentReport IncidentReport? @relation(fields: [incidentReportId], references: [id], onDelete: Cascade)
@@ -1329,28 +1329,28 @@ model ExternalReport {
 }
 
 model Match {
-  id              Int             @id @default(autoincrement())
-  date            DateTime
-  homeTeamName    String
-  awayTeamName    String
-  homeScore       Int?
-  awayScore       Int?
-  competitionType CompetitionType
-  venue           Venue?
-  externalId      String?         @unique
-  seasonId        Int
-  teamId          Int?
-  actualAttendance Int?
-  capacity         Int?
-  priceRegular     Int?
-  priceVip         Int?
+  id                 Int             @id @default(autoincrement())
+  date               DateTime
+  homeTeamName       String
+  awayTeamName       String
+  homeScore          Int?
+  awayScore          Int?
+  competitionType    CompetitionType
+  venue              Venue?
+  externalId         String?         @unique
+  seasonId           Int
+  teamId             Int?
+  actualAttendance   Int?
+  capacity           Int?
+  priceRegular       Int?
+  priceVip           Int?
   statSheetRaw       Json?
   statSheetImagePath String?
 
-  season           Season             @relation(fields: [seasonId], references: [id])
-  team             Team?              @relation(fields: [teamId], references: [id])
-  playerMatchStats PlayerMatchStats[]
-  teamMatchStats   TeamMatchStats?
+  season             Season              @relation(fields: [seasonId], references: [id])
+  team               Team?               @relation(fields: [teamId], references: [id])
+  playerMatchStats   PlayerMatchStats[]
+  teamMatchStats     TeamMatchStats?
   tacticalAnalyses   TacticalAnalysis[]
   formationSnapshots FormationSnapshot[]
   squadPlayers       MatchSquad[]
@@ -1363,19 +1363,19 @@ model Match {
 }
 
 model PlayerMatchStats {
-  id                Int      @id @default(autoincrement())
-  goals             Int?
-  assists           Int?
-  xG                Float?
-  xA                Float?
-  shots             Int?
-  keyPasses         Int?
-  tackles           Int?
-  tacklesAttempted  Int?
-  tackleSuccessRate Float?
-  clearances        Int?
-  interceptions     Int?
-  saves             Int?
+  id                     Int      @id @default(autoincrement())
+  goals                  Int?
+  assists                Int?
+  xG                     Float?
+  xA                     Float?
+  shots                  Int?
+  keyPasses              Int?
+  tackles                Int?
+  tacklesAttempted       Int?
+  tackleSuccessRate      Float?
+  clearances             Int?
+  interceptions          Int?
+  saves                  Int?
   cleanSheet             Boolean?
   minutesPlayed          Int?
   passesAttempted        Int?
@@ -1404,7 +1404,7 @@ model PlayerMatchStats {
   longPassesAttempted    Int?
   longPassesCompleted    Int?
   matchId                Int
-  playerId          String
+  playerId               String
 
   match  Match  @relation(fields: [matchId], references: [id])
   player Player @relation(fields: [playerId], references: [id])
@@ -1430,28 +1430,28 @@ model ShotEvent {
   minute                   Int?
 
   match    Match   @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  shooter  Player  @relation("ShotShooter",  fields: [shooterId],  references: [id])
+  shooter  Player  @relation("ShotShooter", fields: [shooterId], references: [id])
   assister Player? @relation("ShotAssister", fields: [assisterId], references: [id])
 
   @@index([matchId])
 }
 
 model TeamMatchStats {
-  id            Int   @id @default(autoincrement())
-  possession    Int
-  shots         Int
-  shotsOnTarget Int
-  passes        Int
-  passAccuracy  Float
-  fouls         Int
-  yellowCards   Int
-  redCards      Int
-  xG            Float
-  corners       Int
-  offsides      Int
-  tackles       Int
-  interceptions Int
-  clearances    Int
+  id               Int    @id @default(autoincrement())
+  possession       Int
+  shots            Int
+  shotsOnTarget    Int
+  passes           Int
+  passAccuracy     Float
+  fouls            Int
+  yellowCards      Int
+  redCards         Int
+  xG               Float
+  corners          Int
+  offsides         Int
+  tackles          Int
+  interceptions    Int
+  clearances       Int
   oppShots         Int?
   oppShotsOnTarget Int?
   oppCorners       Int?
@@ -1460,7 +1460,7 @@ model TeamMatchStats {
   oppRedCards      Int?
   oppXG            Float?
   oppOffsides      Int?
-  matchId       Int   @unique
+  matchId          Int    @unique
 
   match Match @relation(fields: [matchId], references: [id])
 }
@@ -1479,10 +1479,10 @@ model TrainingSession {
   teamId       Int?
   targetLoad   Int?
 
-  season        Season                @relation(fields: [seasonId], references: [id])
-  team          Team?                 @relation(fields: [teamId], references: [id])
-  createdBy     User                  @relation("TrainingSessionCreatedBy", fields: [createdById], references: [id])
-  approvedBy    User?                 @relation("TrainingSessionApprovedBy", fields: [approvedById], references: [id])
+  season          Season                @relation(fields: [seasonId], references: [id])
+  team            Team?                 @relation(fields: [teamId], references: [id])
+  createdBy       User                  @relation("TrainingSessionCreatedBy", fields: [createdById], references: [id])
+  approvedBy      User?                 @relation("TrainingSessionApprovedBy", fields: [approvedById], references: [id])
   contents        TrainingContent[]
   participants    TrainingParticipant[]
   results         TrainingResult[]
@@ -1519,9 +1519,9 @@ model TrainingResult {
   sessionId        Int
   playerId         String
 
-  session  TrainingSession @relation(fields: [sessionId], references: [id])
-  player   Player          @relation(fields: [playerId], references: [id])
-  scoredBy User?           @relation("TrainingResultScorer", fields: [scoredById], references: [id])
+  session  TrainingSession    @relation(fields: [sessionId], references: [id])
+  player   Player             @relation(fields: [playerId], references: [id])
+  scoredBy User?              @relation("TrainingResultScorer", fields: [scoredById], references: [id])
   appeals  AttendanceAppeal[]
 
   @@unique([sessionId, playerId])
@@ -1539,20 +1539,20 @@ model TacticalAnalysis {
   createdById      Int
 
   // PRE_MATCH
-  opponentFormation   String?
-  opponentKeyThreat   String? @db.Text
-  opponentWeakness    String? @db.Text
-  opponentKeyPlayer   String?
+  opponentFormation     String?
+  opponentKeyThreat     String? @db.Text
+  opponentWeakness      String? @db.Text
+  opponentKeyPlayer     String?
   opponentPressureScore Int?
   opponentSetPieceScore Int?
   opponentCounterScore  Int?
   // POST_MATCH
-  tacticalCompliance  String? @db.Text
-  concededAnalysis    String? @db.Text
-  momPlayerId         String?
-  momNote             String?
-  improvementPlayerId String?
-  improvementNote     String?
+  tacticalCompliance    String? @db.Text
+  concededAnalysis      String? @db.Text
+  momPlayerId           String?
+  momNote               String?
+  improvementPlayerId   String?
+  improvementNote       String?
 
   match             Match            @relation(fields: [matchId], references: [id])
   season            Season           @relation(fields: [seasonId], references: [id])
@@ -1583,13 +1583,13 @@ model TacticalMedia {
 }
 
 model FormationSnapshot {
-  id            Int      @id @default(autoincrement())
-  matchId       Int
-  minute        Int?
-  formation     String
-  changeReason  String?
-  createdById   Int
-  createdAt     DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  matchId      Int
+  minute       Int?
+  formation    String
+  changeReason String?
+  createdById  Int
+  createdAt    DateTime @default(now())
 
   match     Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
   createdBy User  @relation("FormationSnapshotCreatedBy", fields: [createdById], references: [id])
@@ -1624,30 +1624,30 @@ model EquipmentItem {
 }
 
 model EquipmentUnit {
-  id                 Int                  @id @default(autoincrement())
-  status             EquipmentUnitStatus  @default(AVAILABLE)
-  equipmentItemId    Int
-  serialNumber       String?
-  purchasedAt        DateTime?
-  purchaseValue      Decimal?             @db.Decimal(12, 2)
-  bookValue          Decimal?             @db.Decimal(12, 2)
-  depreciationRate   Decimal?             @db.Decimal(5, 4)
-  depreciationMethod DepreciationMethod?
-  isHighValue        Boolean              @default(false)
-  expiresAt          DateTime?
-  lastInspectedAt       DateTime?
+  id                     Int                 @id @default(autoincrement())
+  status                 EquipmentUnitStatus @default(AVAILABLE)
+  equipmentItemId        Int
+  serialNumber           String?
+  purchasedAt            DateTime?
+  purchaseValue          Decimal?            @db.Decimal(12, 2)
+  bookValue              Decimal?            @db.Decimal(12, 2)
+  depreciationRate       Decimal?            @db.Decimal(5, 4)
+  depreciationMethod     DepreciationMethod?
+  isHighValue            Boolean             @default(false)
+  expiresAt              DateTime?
+  lastInspectedAt        DateTime?
   inspectionIntervalDays Int?
-  nextInspectionDue     DateTime?
-  lastSanitizedAt       DateTime?
-  sanitationStatus      String?
-  disposedById          Int?
-  disposedAt            DateTime?
-  disposalNote          String?   @db.Text
+  nextInspectionDue      DateTime?
+  lastSanitizedAt        DateTime?
+  sanitationStatus       String?
+  disposedById           Int?
+  disposedAt             DateTime?
+  disposalNote           String?             @db.Text
 
-  item        EquipmentItem         @relation(fields: [equipmentItemId], references: [id])
-  assignments EquipmentAssignment[]
-  loans       EquipmentLoan[]
-  disposedBy  User?                 @relation("EquipmentDisposer", fields: [disposedById], references: [id])
+  item                 EquipmentItem                  @relation(fields: [equipmentItemId], references: [id])
+  assignments          EquipmentAssignment[]
+  loans                EquipmentLoan[]
+  disposedBy           User?                          @relation("EquipmentDisposer", fields: [disposedById], references: [id])
   disposalVerification EquipmentDisposalVerification?
 }
 
@@ -1723,9 +1723,9 @@ model Report {
   rejectionReason String?
 
   authorId     Int
-  author       User       @relation("ReportAuthor", fields: [authorId], references: [id])
+  author       User        @relation("ReportAuthor", fields: [authorId], references: [id])
   reviewerId   Int?
-  reviewer     User?      @relation("ReportReviewer", fields: [reviewerId], references: [id])
+  reviewer     User?       @relation("ReportReviewer", fields: [reviewerId], references: [id])
   departmentId Int?
   department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
 
@@ -1764,7 +1764,6 @@ enum MedicalExpenseStatus {
   APPROVED
   REJECTED
 }
-
 
 model MedicalExpense {
   id              Int                  @id @default(autoincrement())
@@ -1818,16 +1817,16 @@ enum SecurityLevel {
 }
 
 model InjuryReport {
-  id                 Int           @id @default(autoincrement())
-  injuryId           Int           @unique
-  diagnosisName      String?
-  treatmentContent   String?       @db.Text
-  rehabStage         RehabStage?
-  trainingReturnDate DateTime?
-  matchAvailable     Boolean?
-  reinjuryRisk       RiskLevel?
-  medicalOpinion     String?       @db.Text
-  securityLevel      SecurityLevel @default(INTERNAL)
+  id                  Int           @id @default(autoincrement())
+  injuryId            Int           @unique
+  diagnosisName       String?
+  treatmentContent    String?       @db.Text
+  rehabStage          RehabStage?
+  trainingReturnDate  DateTime?
+  matchAvailable      Boolean?
+  reinjuryRisk        RiskLevel?
+  medicalOpinion      String?       @db.Text
+  securityLevel       SecurityLevel @default(INTERNAL)
   allowedActivities   String?       @db.Text
   rehabLoadPercentage Int?
 
@@ -2217,8 +2216,8 @@ model GrowthEvaluation {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  player Player                @relation(fields: [playerId], references: [id])
-  coach  User                  @relation("CoachEvaluations", fields: [coachId], references: [id])
+  player Player                 @relation(fields: [playerId], references: [id])
+  coach  User                   @relation("CoachEvaluations", fields: [coachId], references: [id])
   plan   PlayerDevelopmentPlan? @relation(fields: [planId], references: [id])
 
   @@unique([playerId, year, month])
@@ -2239,23 +2238,23 @@ model PlayerBadge {
 }
 
 model PlayerCallup {
-  id            Int                @id @default(autoincrement())
-  playerId      String
-  fromTeamId    Int
-  toTeamId      Int
-  requestedById Int
-  approvedById  Int?
-  reason          String
-  rejectionReason String?
-  status          PlayerCallupStatus @default(REQUESTED)
-  callupType      CallupType         @default(OFFICIAL)
-  youthCoachConfirmed   Boolean            @default(false)
-  medicalConfirmed      Boolean            @default(false)
-  requiredDocuments     String[]           @default([])
-  startDate     DateTime
-  endDate       DateTime?
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
+  id                  Int                @id @default(autoincrement())
+  playerId            String
+  fromTeamId          Int
+  toTeamId            Int
+  requestedById       Int
+  approvedById        Int?
+  reason              String
+  rejectionReason     String?
+  status              PlayerCallupStatus @default(REQUESTED)
+  callupType          CallupType         @default(OFFICIAL)
+  youthCoachConfirmed Boolean            @default(false)
+  medicalConfirmed    Boolean            @default(false)
+  requiredDocuments   String[]           @default([])
+  startDate           DateTime
+  endDate             DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
 
   player      Player @relation(fields: [playerId], references: [id])
   fromTeam    Team   @relation("CallupFromTeam", fields: [fromTeamId], references: [id])
@@ -2313,24 +2312,24 @@ model MatchSquad {
   confirmedById Int?
   notifiedAt    DateTime?
 
-  match       Match   @relation(fields: [matchId], references: [id])
-  player      Player  @relation(fields: [playerId], references: [id])
-  confirmedBy User?   @relation("SquadConfirmations", fields: [confirmedById], references: [id])
+  match       Match  @relation(fields: [matchId], references: [id])
+  player      Player @relation(fields: [playerId], references: [id])
+  confirmedBy User?  @relation("SquadConfirmations", fields: [confirmedById], references: [id])
 
   @@unique([matchId, playerId])
   @@index([matchId])
 }
 
 model MatchLineup {
-  id            Int        @id @default(autoincrement())
-  matchId       Int        @unique
+  id            Int       @id @default(autoincrement())
+  matchId       Int       @unique
   formation     String
-  isConfirmed   Boolean    @default(false)
+  isConfirmed   Boolean   @default(false)
   confirmedAt   DateTime?
   confirmedById Int?
 
-  match       Match       @relation(fields: [matchId], references: [id])
-  confirmedBy User?       @relation("LineupConfirmations", fields: [confirmedById], references: [id])
+  match       Match        @relation(fields: [matchId], references: [id])
+  confirmedBy User?        @relation("LineupConfirmations", fields: [confirmedById], references: [id])
   slots       LineupSlot[]
 
   @@index([matchId])
@@ -2343,8 +2342,8 @@ model LineupSlot {
   slotKey   String
   isStarter Boolean @default(true)
 
-  lineup  MatchLineup @relation(fields: [lineupId], references: [id], onDelete: Cascade)
-  player  Player      @relation(fields: [playerId], references: [id])
+  lineup MatchLineup @relation(fields: [lineupId], references: [id], onDelete: Cascade)
+  player Player      @relation(fields: [playerId], references: [id])
 
   @@unique([lineupId, slotKey])
   @@unique([lineupId, playerId])
@@ -2366,22 +2365,22 @@ enum FeeStatus {
 }
 
 model AcademyFee {
-  id                  Int        @id @default(autoincrement())
-  playerId            String
-  guardianId          Int
-  amount              Int
-  dueDate             DateTime
-  status              FeeStatus  @default(PENDING)
-  paidAt              DateTime?
-  paymentProofUrl     String?
-  paymentSubmittedAt  DateTime?
-  paymentMethod       PaymentMethod?
-  pgTransactionId     String?
-  receiptIssuedAt     DateTime?
-  year                Int
-  month               Int
-  createdAt           DateTime   @default(now())
-  updatedAt           DateTime   @updatedAt
+  id                 Int            @id @default(autoincrement())
+  playerId           String
+  guardianId         Int
+  amount             Int
+  dueDate            DateTime
+  status             FeeStatus      @default(PENDING)
+  paidAt             DateTime?
+  paymentProofUrl    String?
+  paymentSubmittedAt DateTime?
+  paymentMethod      PaymentMethod?
+  pgTransactionId    String?
+  receiptIssuedAt    DateTime?
+  year               Int
+  month              Int
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
 
   player   Player @relation(fields: [playerId], references: [id])
   guardian User   @relation("GuardianFees", fields: [guardianId], references: [id])
@@ -2415,68 +2414,68 @@ model StaffRecord {
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
-  createdBy     User          @relation("StaffRecordCreator", fields: [createdById], references: [id])
-  staffSalaries StaffSalary[]
-  employmentStartDate  DateTime?
-  employmentEndDate    DateTime?
-  certifications       Certification[]   @relation("StaffCertifications")
+  createdBy           User            @relation("StaffRecordCreator", fields: [createdById], references: [id])
+  staffSalaries       StaffSalary[]
+  employmentStartDate DateTime?
+  employmentEndDate   DateTime?
+  certifications      Certification[] @relation("StaffCertifications")
 }
 
 model FinancialReport {
-  id                   Int      @id @default(autoincrement())
-  seasonId             Int      @unique
-  totalRevenue         Float
+  id                          Int                         @id @default(autoincrement())
+  seasonId                    Int                         @unique
+  totalRevenue                Float
   // Planned revenue breakdown (계획값). Actuals are always computed live from
   // source tables (SalesRecord, SponsorshipPayment, LedgerEntry). Do not write
   // actuals into these fields — that broke dashboards prior to 2026-08-22.
-  plannedRevenueTicket        Float    @default(0)
-  plannedRevenueSponsorship   Float    @default(0)
-  plannedRevenueBroadcast     Float    @default(0)
-  plannedRevenueMerchandise   Float    @default(0)
-  plannedRevenueSubsidy       Float    @default(0)
-  plannedRevenueParentCompany Float    @default(0)
-  plannedRevenueAcademyFee    Float    @default(0)
-  plannedRevenueOther         Float    @default(0)
-  totalOperatingBudget Int?
-  contingencyReserve   Int?     @default(0)
-  playerSalaryBudget   Int?
-  note                 String?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  season               Season   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  budgetCategoryPlans  BudgetCategoryPlan[]
-  overrideLogs         BudgetOverrideLog[]
-  revenueLogs          FinancialReportRevenueLog[]
-  revenueAdjustments   RevenueAdjustment[] @relation("SeasonAdj")
+  plannedRevenueTicket        Float                       @default(0)
+  plannedRevenueSponsorship   Float                       @default(0)
+  plannedRevenueBroadcast     Float                       @default(0)
+  plannedRevenueMerchandise   Float                       @default(0)
+  plannedRevenueSubsidy       Float                       @default(0)
+  plannedRevenueParentCompany Float                       @default(0)
+  plannedRevenueAcademyFee    Float                       @default(0)
+  plannedRevenueOther         Float                       @default(0)
+  totalOperatingBudget        Int?
+  contingencyReserve          Int?                        @default(0)
+  playerSalaryBudget          Int?
+  note                        String?
+  createdAt                   DateTime                    @default(now())
+  updatedAt                   DateTime                    @updatedAt
+  season                      Season                      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  budgetCategoryPlans         BudgetCategoryPlan[]
+  overrideLogs                BudgetOverrideLog[]
+  revenueLogs                 FinancialReportRevenueLog[]
+  revenueAdjustments          RevenueAdjustment[]         @relation("SeasonAdj")
 }
 
 model Department {
-  id           Int                @id @default(autoincrement())
-  name         String
-  clubId       Int?
-  isActive     Boolean            @default(true)
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
-  category     DepartmentCategory?
-  parentId     Int?
-  headId       Int?
-  club         Club?              @relation(fields: [clubId], references: [id])
-  parent       Department?        @relation("DepartmentHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
-  children     Department[]       @relation("DepartmentHierarchy")
-  head         User?              @relation("DepartmentHead", fields: [headId], references: [id], onDelete: SetNull)
-  staffRecords StaffRecord[]
-  postings     JobPosting[]
-  members      UserDepartment[]
-  ibiConfigs   DepartmentIbiConfig[]
-  planReports      PlanReport[]
-  subjectConfigs   DepartmentReviewerConfig[] @relation("SubjectDept")
-  reviewerConfigs  DepartmentReviewerConfig[] @relation("ReviewerDept")
-  planReviews      PlanReview[]               @relation("PlanReviewerDept")
-  reportReviews    ReportReview[]             @relation("ReportReviewerDept")
-  reports          Report[]
-  surveyTargets    SurveyTargetDept[]         @relation("SurveyTargetDept")
-  surveyResponses  SurveyResponse[]           @relation("SurveyResponse")
-  budgetLines      BudgetLine[]
+  id              Int                        @id @default(autoincrement())
+  name            String
+  clubId          Int?
+  isActive        Boolean                    @default(true)
+  createdAt       DateTime                   @default(now())
+  updatedAt       DateTime                   @updatedAt
+  category        DepartmentCategory?
+  parentId        Int?
+  headId          Int?
+  club            Club?                      @relation(fields: [clubId], references: [id])
+  parent          Department?                @relation("DepartmentHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children        Department[]               @relation("DepartmentHierarchy")
+  head            User?                      @relation("DepartmentHead", fields: [headId], references: [id], onDelete: SetNull)
+  staffRecords    StaffRecord[]
+  postings        JobPosting[]
+  members         UserDepartment[]
+  ibiConfigs      DepartmentIbiConfig[]
+  planReports     PlanReport[]
+  subjectConfigs  DepartmentReviewerConfig[] @relation("SubjectDept")
+  reviewerConfigs DepartmentReviewerConfig[] @relation("ReviewerDept")
+  planReviews     PlanReview[]               @relation("PlanReviewerDept")
+  reportReviews   ReportReview[]             @relation("ReportReviewerDept")
+  reports         Report[]
+  surveyTargets   SurveyTargetDept[]         @relation("SurveyTargetDept")
+  surveyResponses SurveyResponse[]           @relation("SurveyResponse")
+  budgetLines     BudgetLine[]
 
   @@unique([name, clubId])
 }
@@ -2510,6 +2509,25 @@ enum OperatingCategory {
   YOUTH
 }
 
+// ─────────────────────────────────────────────
+// Expense Category (table-backed, replacing OperatingCategory enum)
+// ─────────────────────────────────────────────
+
+model ExpenseCategory {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique
+  label     String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  operatingExpenses   OperatingExpense[]
+  budgetCategoryPlans BudgetCategoryPlan[]
+  budgetLines         BudgetLine[]
+  budgetOverrideLogs  BudgetOverrideLog[]
+}
+
 enum BudgetStatus {
   DRAFT
   SUBMITTED
@@ -2534,11 +2552,13 @@ model BudgetCategoryPlan {
   id                Int               @id @default(autoincrement())
   financialReportId Int
   category          OperatingCategory
+  categoryId        Int?
   mandatoryMinimum  Int               @default(0)
   knapsackAllocated Int?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   financialReport   FinancialReport   @relation(fields: [financialReportId], references: [id], onDelete: Cascade)
+  expenseCategory   ExpenseCategory?  @relation(fields: [categoryId], references: [id])
   tiers             BudgetTier[]
 
   @@unique([financialReportId, category])
@@ -2560,6 +2580,7 @@ model BudgetOverrideLog {
   id                Int               @id @default(autoincrement())
   financialReportId Int
   category          OperatingCategory
+  categoryId        Int?
   amount            Int
   reason            String
   createdById       Int
@@ -2571,23 +2592,25 @@ model BudgetOverrideLog {
   financialReport   FinancialReport   @relation(fields: [financialReportId], references: [id], onDelete: Cascade)
   createdBy         User              @relation("BudgetOverrideLogCreator", fields: [createdById], references: [id])
   reviewedBy        User?             @relation("BudgetOverrideLogReviewer", fields: [reviewedById], references: [id])
+  expenseCategory   ExpenseCategory?  @relation(fields: [categoryId], references: [id])
 }
 
 model OperatingExpense {
-  id              Int               @id @default(autoincrement())
-  seasonId        Int
-  category        OperatingCategory
-  amount          Int
-  date            DateTime
-  note            String?
-  createdById     Int
-  paidAt          DateTime?
-  paidById        Int?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  deletedAt       DateTime?
-  deletionReason  String?
-  accountCodeId   Int?
+  id                 Int               @id @default(autoincrement())
+  seasonId           Int
+  category           OperatingCategory
+  categoryId         Int?
+  amount             Int
+  date               DateTime
+  note               String?
+  createdById        Int
+  paidAt             DateTime?
+  paidById           Int?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  deletedAt          DateTime?
+  deletionReason     String?
+  accountCodeId      Int?
   status             ExpenseStatus     @default(PENDING)
   budgetLineId       Int
   firstApprovedById  Int?
@@ -2600,10 +2623,11 @@ model OperatingExpense {
   cancelledById      Int?
   cancelledAt        DateTime?
   cancellationReason String?
-  season          Season            @relation(fields: [seasonId], references: [id])
-  createdBy       User              @relation("OperatingExpenseCreator", fields: [createdById], references: [id])
-  paidBy          User?             @relation("OperatingExpensePayer", fields: [paidById], references: [id])
-  accountCode     AccountCode?      @relation(fields: [accountCodeId], references: [id])
+  season             Season            @relation(fields: [seasonId], references: [id])
+  createdBy          User              @relation("OperatingExpenseCreator", fields: [createdById], references: [id])
+  paidBy             User?             @relation("OperatingExpensePayer", fields: [paidById], references: [id])
+  accountCode        AccountCode?      @relation(fields: [accountCodeId], references: [id])
+  expenseCategory    ExpenseCategory?  @relation(fields: [categoryId], references: [id])
   budgetLine         BudgetLine        @relation(fields: [budgetLineId], references: [id])
   firstApprovedBy    User?             @relation("OperatingExpenseFirstApprover", fields: [firstApprovedById], references: [id])
   approvedBy         User?             @relation("OperatingExpenseApprover", fields: [approvedById], references: [id])
@@ -2616,21 +2640,21 @@ model OperatingExpense {
 // ─────────────────────────────────────────────
 
 model BudgetHeader {
-  id           Int               @id @default(autoincrement())
+  id           Int                @id @default(autoincrement())
   seasonId     Int
-  version      Int               @default(1)
-  status       BudgetStatus      @default(DRAFT)
+  version      Int                @default(1)
+  status       BudgetStatus       @default(DRAFT)
   name         String
-  totalBudget  Int               @default(0)
+  totalBudget  Int                @default(0)
   note         String?
   createdById  Int
   approvedById Int?
   approvedAt   DateTime?
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  season       Season            @relation(fields: [seasonId], references: [id])
-  createdBy    User              @relation("BudgetHeaderCreator", fields: [createdById], references: [id])
-  approvedBy   User?             @relation("BudgetHeaderApprover", fields: [approvedById], references: [id])
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  season       Season             @relation(fields: [seasonId], references: [id])
+  createdBy    User               @relation("BudgetHeaderCreator", fields: [createdById], references: [id])
+  approvedBy   User?              @relation("BudgetHeaderApprover", fields: [approvedById], references: [id])
   lines        BudgetLine[]
   adjustments  BudgetAdjustment[]
 
@@ -2638,18 +2662,20 @@ model BudgetHeader {
 }
 
 model BudgetLine {
-  id             Int               @id @default(autoincrement())
-  budgetHeaderId Int
-  departmentId   Int?
-  category       OperatingCategory
-  year           Int
-  month          Int?
-  originalAmount Int               @default(0)
-  note           String?
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  budgetHeader      BudgetHeader      @relation(fields: [budgetHeaderId], references: [id], onDelete: Cascade)
-  department        Department?       @relation(fields: [departmentId], references: [id])
+  id                Int                @id @default(autoincrement())
+  budgetHeaderId    Int
+  departmentId      Int?
+  category          OperatingCategory
+  categoryId        Int?
+  year              Int
+  month             Int?
+  originalAmount    Int                @default(0)
+  note              String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  budgetHeader      BudgetHeader       @relation(fields: [budgetHeaderId], references: [id], onDelete: Cascade)
+  department        Department?        @relation(fields: [departmentId], references: [id])
+  expenseCategory   ExpenseCategory?   @relation(fields: [categoryId], references: [id])
   operatingExpenses OperatingExpense[]
 }
 
@@ -2710,19 +2736,19 @@ enum ReferenceCheckResult {
 }
 
 model JobPosting {
-  id            Int              @id @default(autoincrement())
-  title         String
-  departmentId  Int?
-  headcount     Int              @default(1)
-  description   String
-  status        JobPostingStatus @default(DRAFT)
-  externalJobId String?
-  createdById   Int
-  approvedById  Int?
-  approvedAt    DateTime?
-  closedAt      DateTime?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  id               Int              @id @default(autoincrement())
+  title            String
+  departmentId     Int?
+  headcount        Int              @default(1)
+  description      String
+  status           JobPostingStatus @default(DRAFT)
+  externalJobId    String?
+  createdById      Int
+  approvedById     Int?
+  approvedAt       DateTime?
+  closedAt         DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
   budget           Int?
   planReportId     Int?             @unique
   hiringPlanItemId Int?
@@ -2736,32 +2762,32 @@ model JobPosting {
 }
 
 model JobApplication {
-  id            Int                  @id @default(autoincrement())
-  postingId     Int
-  applicantName String
-  email         String
-  phone         String?
-  resumeUrl     String?
-  status        JobApplicationStatus @default(APPLIED)
-  rejectedAt      DateTime?
-  rejectionReason String?
-  previousStatus  JobApplicationStatus?
-  offeredAt       DateTime?
-  offeredById   Int?
-  createdAt     DateTime             @default(now())
-  updatedAt            DateTime             @updatedAt
-  source               ApplicationSource @default(DIRECT)
-  externalApplicantId  String?
+  id                  Int                   @id @default(autoincrement())
+  postingId           Int
+  applicantName       String
+  email               String
+  phone               String?
+  resumeUrl           String?
+  status              JobApplicationStatus  @default(APPLIED)
+  rejectedAt          DateTime?
+  rejectionReason     String?
+  previousStatus      JobApplicationStatus?
+  offeredAt           DateTime?
+  offeredById         Int?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  source              ApplicationSource     @default(DIRECT)
+  externalApplicantId String?
 
-  posting        JobPosting      @relation(fields: [postingId], references: [id])
-  offeredBy      User?           @relation("ApplicationOffer", fields: [offeredById], references: [id])
-  interviews     Interview[]
-  referenceCheck ReferenceCheck?
-  onboarding     Onboarding?
-  referenceCheckConsent      Boolean?
-  referenceCheckConsentAt    DateTime?
-  dataRetentionDeadline      DateTime?
-  dataRetentionFlaggedAt     DateTime?
+  posting                 JobPosting      @relation(fields: [postingId], references: [id])
+  offeredBy               User?           @relation("ApplicationOffer", fields: [offeredById], references: [id])
+  interviews              Interview[]
+  referenceCheck          ReferenceCheck?
+  onboarding              Onboarding?
+  referenceCheckConsent   Boolean?
+  referenceCheckConsentAt DateTime?
+  dataRetentionDeadline   DateTime?
+  dataRetentionFlaggedAt  DateTime?
 
   @@unique([postingId, externalApplicantId])
   @@unique([postingId, email])
@@ -2781,23 +2807,23 @@ model Interview {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
-  application       JobApplication    @relation(fields: [applicationId], references: [id])
+  application       JobApplication     @relation(fields: [applicationId], references: [id])
   interviewerScores InterviewerScore[]
 
   @@unique([applicationId, round])
 }
 
 model InterviewerScore {
-  id           Int    @id @default(autoincrement())
-  interviewId  Int
+  id            Int     @id @default(autoincrement())
+  interviewId   Int
   interviewerId Int
-  scoreSkill   Int?
-  scoreComm    Int?
-  scoreCulture Int?
-  comment      String?
+  scoreSkill    Int?
+  scoreComm     Int?
+  scoreCulture  Int?
+  comment       String?
 
-  interview    Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
-  interviewer  User      @relation("InterviewerScores", fields: [interviewerId], references: [id])
+  interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  interviewer User      @relation("InterviewerScores", fields: [interviewerId], references: [id])
 
   @@unique([interviewId, interviewerId])
 }
@@ -2835,26 +2861,26 @@ model Onboarding {
 // ─────────────────────────────────────────────
 
 model LeagueLevelWeightConfig {
-  id               Int                @id @default(autoincrement())
-  leagueLevel      LeagueLevel
-  category         DepartmentCategory
-  weight           Decimal            @db.Decimal(5, 4)
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
+  id          Int                @id @default(autoincrement())
+  leagueLevel LeagueLevel
+  category    DepartmentCategory
+  weight      Decimal            @db.Decimal(5, 4)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
 
   @@unique([leagueLevel, category])
 }
 
 model DepartmentIbiConfig {
-  id                Int        @id @default(autoincrement())
-  departmentId      Int
-  jobTitle          String
-  coreTaskRatio     Decimal    @db.Decimal(4, 3)
-  replacementDays   Int
-  backupHeadcount   Int
-  effectiveFrom     DateTime
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
+  id              Int      @id @default(autoincrement())
+  departmentId    Int
+  jobTitle        String
+  coreTaskRatio   Decimal  @db.Decimal(4, 3)
+  replacementDays Int
+  backupHeadcount Int
+  effectiveFrom   DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   department Department @relation(fields: [departmentId], references: [id])
 
@@ -2862,13 +2888,13 @@ model DepartmentIbiConfig {
 }
 
 model SeasonComplianceCheck {
-  id                    Int       @id @default(autoincrement())
-  seasonId              Int       @unique
-  afcQualificationMet   Boolean   @default(false)
-  officeStaffCountMet   Boolean   @default(false)
-  checkedAt             DateTime?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  id                  Int       @id @default(autoincrement())
+  seasonId            Int       @unique
+  afcQualificationMet Boolean   @default(false)
+  officeStaffCountMet Boolean   @default(false)
+  checkedAt           DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   season Season @relation(fields: [seasonId], references: [id])
 }
@@ -2889,47 +2915,47 @@ model ComplianceDeadline {
 // ─────────────────────────────────────────────
 
 model FacilityInspection {
-  id                  Int              @id @default(autoincrement())
-  type                InspectionType
-  facilityZone        FacilityZone
-  result              InspectionResult
-  sanitationScore     Int?
-  isStatutory         Boolean          @default(false)
-  certificateUrl      String?
-  statutoryDeadline   DateTime?
-  inspectedById       Int
-  inspectedAt         DateTime         @default(now())
-  notes               String?
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt
+  id                Int              @id @default(autoincrement())
+  type              InspectionType
+  facilityZone      FacilityZone
+  result            InspectionResult
+  sanitationScore   Int?
+  isStatutory       Boolean          @default(false)
+  certificateUrl    String?
+  statutoryDeadline DateTime?
+  inspectedById     Int
+  inspectedAt       DateTime         @default(now())
+  notes             String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
-  inspectedBy         User               @relation("FacilityInspector", fields: [inspectedById], references: [id])
+  inspectedBy         User                 @relation("FacilityInspector", fields: [inspectedById], references: [id])
   maintenanceRequests MaintenanceRequest[]
 }
 
 model MaintenanceRequest {
-  id                  Int                 @id @default(autoincrement())
-  title               String
-  description         String              @db.Text
-  priority            MaintenancePriority
-  status              MaintenanceStatus   @default(OPEN)
-  sourceInspectionId  Int?
-  postIncidentReport  String?             @db.Text
-  estimatedCost       Decimal?            @db.Decimal(12, 2)
-  actualCost          Decimal?            @db.Decimal(12, 2)
-  resolvedAt          DateTime?
-  approvedById        Int?
-  approvedAt          DateTime?
-  gmApprovedById      Int?
-  gmApprovedAt        DateTime?
-  rejectionReason     String?
-  isLocked            Boolean             @default(false)
-  financeSubmittedAt  DateTime?
-  createdById         Int
-  partnerId           Int?
-  sourceScheduleId    Int?
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
+  id                 Int                 @id @default(autoincrement())
+  title              String
+  description        String              @db.Text
+  priority           MaintenancePriority
+  status             MaintenanceStatus   @default(OPEN)
+  sourceInspectionId Int?
+  postIncidentReport String?             @db.Text
+  estimatedCost      Decimal?            @db.Decimal(12, 2)
+  actualCost         Decimal?            @db.Decimal(12, 2)
+  resolvedAt         DateTime?
+  approvedById       Int?
+  approvedAt         DateTime?
+  gmApprovedById     Int?
+  gmApprovedAt       DateTime?
+  rejectionReason    String?
+  isLocked           Boolean             @default(false)
+  financeSubmittedAt DateTime?
+  createdById        Int
+  partnerId          Int?
+  sourceScheduleId   Int?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 
   sourceInspection FacilityInspection? @relation(fields: [sourceInspectionId], references: [id])
   createdBy        User                @relation("MaintenanceRequestCreator", fields: [createdById], references: [id])
@@ -2957,27 +2983,27 @@ model Certification {
   notes           String?
   rejectionReason String?
 
-  ownerId         Int
-  approvedById    Int?
-  approvedAt      DateTime?
-  gmApprovedById  Int?
-  gmApprovedAt    DateTime?
+  ownerId        Int
+  approvedById   Int?
+  approvedAt     DateTime?
+  gmApprovedById Int?
+  gmApprovedAt   DateTime?
 
-  playerId        String?
-  coachId         Int?
-  staffId         Int?
-  facilityZone    FacilityZone?
+  playerId     String?
+  coachId      Int?
+  staffId      Int?
+  facilityZone FacilityZone?
 
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  owner           User              @relation("CertOwner",          fields: [ownerId],        references: [id])
-  approvedBy      User?             @relation("CertFirstApprover",  fields: [approvedById],   references: [id])
-  gmApprovedBy    User?             @relation("CertSecondApprover", fields: [gmApprovedById], references: [id])
-  player          Player?           @relation("PlayerCertifications", fields: [playerId],      references: [id])
-  coach           Coach?            @relation("CoachCertifications",  fields: [coachId],       references: [id])
-  staff           StaffRecord?      @relation("StaffCertifications",  fields: [staffId],       references: [id])
-  reminders       CertificationReminderLog[]
+  owner        User                       @relation("CertOwner", fields: [ownerId], references: [id])
+  approvedBy   User?                      @relation("CertFirstApprover", fields: [approvedById], references: [id])
+  gmApprovedBy User?                      @relation("CertSecondApprover", fields: [gmApprovedById], references: [id])
+  player       Player?                    @relation("PlayerCertifications", fields: [playerId], references: [id])
+  coach        Coach?                     @relation("CoachCertifications", fields: [coachId], references: [id])
+  staff        StaffRecord?               @relation("StaffCertifications", fields: [staffId], references: [id])
+  reminders    CertificationReminderLog[]
 
   @@index([expiresAt])
   @@index([status])
@@ -2988,12 +3014,12 @@ model Certification {
 }
 
 model CertificationReminderLog {
-  id              Int           @id @default(autoincrement())
+  id              Int      @id @default(autoincrement())
   certificationId Int
   daysThreshold   Int
-  sentAt          DateTime      @default(now())
+  sentAt          DateTime @default(now())
 
-  certification   Certification @relation(fields: [certificationId], references: [id], onDelete: Cascade)
+  certification Certification @relation(fields: [certificationId], references: [id], onDelete: Cascade)
 
   @@unique([certificationId, daysThreshold])
 }
@@ -3003,24 +3029,24 @@ model CertificationReminderLog {
 // ─────────────────────────────────────────────
 
 model Sponsorship {
-  id                 Int             @id @default(autoincrement())
-  sponsorName        String
-  type               SponsorType
-  totalFee           Decimal         @db.Decimal(14, 2)
-  contractStart      DateTime
-  contractEnd        DateTime
-  paymentSchedule    PaymentSchedule
-  attachedContractId Int?
-  createdById        Int
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
-  exposureCount Int?
-  mediaValue    Decimal? @db.Decimal(15, 2)
-  fanReach      Int?
-  currency               CurrencyCode @default(KRW)
-  targetExposureCount    Int?
-  targetFanReach         Int?
-  targetMediaValue       Decimal?     @db.Decimal(15, 2)
+  id                  Int             @id @default(autoincrement())
+  sponsorName         String
+  type                SponsorType
+  totalFee            Decimal         @db.Decimal(14, 2)
+  contractStart       DateTime
+  contractEnd         DateTime
+  paymentSchedule     PaymentSchedule
+  attachedContractId  Int?
+  createdById         Int
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  exposureCount       Int?
+  mediaValue          Decimal?        @db.Decimal(15, 2)
+  fanReach            Int?
+  currency            CurrencyCode    @default(KRW)
+  targetExposureCount Int?
+  targetFanReach      Int?
+  targetMediaValue    Decimal?        @db.Decimal(15, 2)
 
   // 국내 계좌
   domesticBankName      String?
@@ -3033,18 +3059,18 @@ model Sponsorship {
   ukSwiftBic            String?
 
   // 국내/해외 구분
-  isOverseas            Boolean @default(false)
+  isOverseas        Boolean @default(false)
   // 국내 전용
-  businessRegNumber     String?
-  postalCode            String?
-  address               String?
-  addressDetail         String?
+  businessRegNumber String?
+  postalCode        String?
+  address           String?
+  addressDetail     String?
   // 해외 전용
-  taxId                 String?
-  overseasAddress       String?
+  taxId             String?
+  overseasAddress   String?
 
-  attachedContract PartnerContract?     @relation(fields: [attachedContractId], references: [id])
-  createdBy        User                 @relation("SponsorshipCreator", fields: [createdById], references: [id])
+  attachedContract PartnerContract?           @relation(fields: [attachedContractId], references: [id])
+  createdBy        User                       @relation("SponsorshipCreator", fields: [createdById], references: [id])
   payments         SponsorshipPayment[]
   clauses          SponsorshipClause[]
   exposureEvents   SponsorshipExposureEvent[]
@@ -3052,15 +3078,15 @@ model Sponsorship {
 }
 
 model SponsorshipPayment {
-  id            Int                      @id @default(autoincrement())
-  sponsorshipId Int
-  dueDate       DateTime
-  amount        Decimal                  @db.Decimal(14, 2)
-  paidAt        DateTime?
-  status        SponsorshipPaymentStatus @default(PENDING)
-  createdAt     DateTime                 @default(now())
-  updatedAt     DateTime                 @updatedAt
-  adjustedAmount   Decimal?  @db.Decimal(14, 2)
+  id               Int                      @id @default(autoincrement())
+  sponsorshipId    Int
+  dueDate          DateTime
+  amount           Decimal                  @db.Decimal(14, 2)
+  paidAt           DateTime?
+  status           SponsorshipPaymentStatus @default(PENDING)
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  adjustedAmount   Decimal?                 @db.Decimal(14, 2)
   adjustmentReason String?
   appliedClauseId  Int?
 
@@ -3102,35 +3128,35 @@ model StaffSalary {
 }
 
 model StaffAllowance {
-  id            Int         @id @default(autoincrement())
+  id            Int      @id @default(autoincrement())
   staffSalaryId Int
   name          String
-  amount        Decimal     @db.Decimal(12, 2)
-  taxable       Boolean     @default(true)
-  createdAt     DateTime    @default(now())
+  amount        Decimal  @db.Decimal(12, 2)
+  taxable       Boolean  @default(true)
+  createdAt     DateTime @default(now())
 
   staffSalary StaffSalary @relation(fields: [staffSalaryId], references: [id])
 }
 
 model PayrollRun {
-  id              Int              @id @default(autoincrement())
-  staffSalaryId   Int
-  month           DateTime
-  grossPay        Decimal          @db.Decimal(12, 2)
-  totalDeductions Decimal          @db.Decimal(12, 2)
-  netPay          Decimal          @db.Decimal(12, 2)
-  status              PayrollRunStatus @default(DRAFT)
-  confirmedById       Int?
-  confirmedAt         DateTime?
-  secondApprovedById  Int?
-  secondApprovedAt    DateTime?
-  isLocked            Boolean          @default(false)
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt
+  id                 Int              @id @default(autoincrement())
+  staffSalaryId      Int
+  month              DateTime
+  grossPay           Decimal          @db.Decimal(12, 2)
+  totalDeductions    Decimal          @db.Decimal(12, 2)
+  netPay             Decimal          @db.Decimal(12, 2)
+  status             PayrollRunStatus @default(DRAFT)
+  confirmedById      Int?
+  confirmedAt        DateTime?
+  secondApprovedById Int?
+  secondApprovedAt   DateTime?
+  isLocked           Boolean          @default(false)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
 
-  staffSalary        StaffSalary @relation(fields: [staffSalaryId], references: [id])
-  confirmedBy        User?       @relation("PayrollRunConfirmer", fields: [confirmedById], references: [id])
-  secondApprovedBy   User?       @relation("PayrollRunSecondApprover", fields: [secondApprovedById], references: [id])
+  staffSalary      StaffSalary @relation(fields: [staffSalaryId], references: [id])
+  confirmedBy      User?       @relation("PayrollRunConfirmer", fields: [confirmedById], references: [id])
+  secondApprovedBy User?       @relation("PayrollRunSecondApprover", fields: [secondApprovedById], references: [id])
 
   @@unique([staffSalaryId, month])
 }
@@ -3196,11 +3222,11 @@ model LedgerEntry {
 }
 
 model LedgerPeriodLock {
-  id          Int      @id @default(autoincrement())
-  year        Int
-  month       Int
-  lockedById  Int
-  lockedAt    DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  year       Int
+  month      Int
+  lockedById Int
+  lockedAt   DateTime @default(now())
 
   lockedBy User @relation("PeriodLockCreator", fields: [lockedById], references: [id])
 
@@ -3208,10 +3234,10 @@ model LedgerPeriodLock {
 }
 
 model WorkPermitAlertLog {
-  id        Int      @id @default(autoincrement())
-  playerId  String
-  window    String   // "30D" | "60D"
-  sentAt    DateTime @default(now())
+  id       Int      @id @default(autoincrement())
+  playerId String
+  window   String // "30D" | "60D"
+  sentAt   DateTime @default(now())
 
   player Player @relation(fields: [playerId], references: [id])
 
@@ -3219,31 +3245,31 @@ model WorkPermitAlertLog {
 }
 
 model SalesRecord {
-  id                 Int                @id @default(autoincrement())
+  id                 Int               @id @default(autoincrement())
   type               SalesType
   quantity           Int
-  unitPrice          Decimal            @db.Decimal(12, 2)
-  totalAmount        Decimal            @db.Decimal(12, 2)
-  currency           CurrencyCode       @default(KRW)
+  unitPrice          Decimal           @db.Decimal(12, 2)
+  totalAmount        Decimal           @db.Decimal(12, 2)
+  currency           CurrencyCode      @default(KRW)
   saleDate           DateTime
   description        String?
   matchId            Int?
   seatZoneId         Int?
-  status             SalesRecordStatus  @default(COMPLETED)
+  status             SalesRecordStatus @default(COMPLETED)
   channel            SalesChannel?
   createdById        Int
-  createdAt          DateTime           @default(now())
+  createdAt          DateTime          @default(now())
   deletedAt          DateTime?
-  updatedAt          DateTime           @updatedAt
+  updatedAt          DateTime          @updatedAt
   updatedById        Int?
   ticketSerialNumber String?
   refundedFromId     Int?
 
-  createdBy    User         @relation("SalesRecordCreator", fields: [createdById], references: [id])
-  updatedBy    User?        @relation("SalesRecordUpdater", fields: [updatedById], references: [id])
-  match        Match?       @relation(fields: [matchId], references: [id])
-  seatZone     SeatZone?    @relation(fields: [seatZoneId], references: [id])
-  refundedFrom SalesRecord? @relation("RefundChain", fields: [refundedFromId], references: [id])
+  createdBy    User          @relation("SalesRecordCreator", fields: [createdById], references: [id])
+  updatedBy    User?         @relation("SalesRecordUpdater", fields: [updatedById], references: [id])
+  match        Match?        @relation(fields: [matchId], references: [id])
+  seatZone     SeatZone?     @relation(fields: [seatZoneId], references: [id])
+  refundedFrom SalesRecord?  @relation("RefundChain", fields: [refundedFromId], references: [id])
   refunds      SalesRecord[] @relation("RefundChain")
 }
 
@@ -3258,14 +3284,14 @@ model FacilityInventoryItem {
 }
 
 model FacilityReservation {
-  id           Int                 @id @default(autoincrement())
+  id           Int          @id @default(autoincrement())
   facilityZone FacilityZone
   title        String
   startTime    DateTime
   endTime      DateTime
   notes        String?
   reservedById Int
-  createdAt    DateTime            @default(now())
+  createdAt    DateTime     @default(now())
 
   reservedBy User @relation("FacilityReservations", fields: [reservedById], references: [id])
 }
@@ -3278,8 +3304,8 @@ model Fan {
   joinedAt  DateTime @default(now())
   createdAt DateTime @default(now())
 
-  memberships   FanMembership[]
-  purchases     FanPurchase[]
+  memberships FanMembership[]
+  purchases   FanPurchase[]
 }
 
 enum MembershipTier {
@@ -3302,14 +3328,14 @@ model FanMembership {
 }
 
 model FanPurchase {
-  id           Int          @id @default(autoincrement())
-  fanId        Int
-  matchId      Int?
-  saleType     SalesType
-  quantity     Int
-  totalAmount  Decimal      @db.Decimal(12, 2)
-  seatZone     String?
-  purchasedAt  DateTime     @default(now())
+  id          Int       @id @default(autoincrement())
+  fanId       Int
+  matchId     Int?
+  saleType    SalesType
+  quantity    Int
+  totalAmount Decimal   @db.Decimal(12, 2)
+  seatZone    String?
+  purchasedAt DateTime  @default(now())
 
   fan   Fan    @relation(fields: [fanId], references: [id])
   match Match? @relation(fields: [matchId], references: [id])
@@ -3323,7 +3349,7 @@ model SeatZone {
   matchId   Int
   soldCount Int    @default(0)
 
-  match        Match        @relation(fields: [matchId], references: [id])
+  match        Match         @relation(fields: [matchId], references: [id])
   salesRecords SalesRecord[]
 }
 
@@ -3470,9 +3496,9 @@ model PlanReport {
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
 
-  department  Department  @relation(fields: [departmentId], references: [id])
-  createdBy   User        @relation("PlanReportCreatedBy", fields: [createdById], references: [id])
-  approvedBy  User?       @relation("PlanReportApprovedBy", fields: [approvedById], references: [id])
+  department      Department         @relation(fields: [departmentId], references: [id])
+  createdBy       User               @relation("PlanReportCreatedBy", fields: [createdById], references: [id])
+  approvedBy      User?              @relation("PlanReportApprovedBy", fields: [approvedById], references: [id])
   reviews         PlanReview[]
   jobPosting      JobPosting?
   survey          HiringNeedsSurvey? @relation(fields: [surveyId], references: [id])
@@ -3613,13 +3639,13 @@ enum SettlementStatus {
 }
 
 model DepartmentReviewerConfig {
-  id                   Int        @id @default(autoincrement())
+  id                   Int      @id @default(autoincrement())
   subjectDepartmentId  Int
   reviewerDepartmentId Int
-  createdAt            DateTime   @default(now())
+  createdAt            DateTime @default(now())
 
-  subjectDepartment    Department @relation("SubjectDept", fields: [subjectDepartmentId], references: [id], onDelete: Cascade)
-  reviewerDepartment   Department @relation("ReviewerDept", fields: [reviewerDepartmentId], references: [id], onDelete: Cascade)
+  subjectDepartment  Department @relation("SubjectDept", fields: [subjectDepartmentId], references: [id], onDelete: Cascade)
+  reviewerDepartment Department @relation("ReviewerDept", fields: [reviewerDepartmentId], references: [id], onDelete: Cascade)
 
   @@unique([subjectDepartmentId, reviewerDepartmentId])
 }
@@ -3680,7 +3706,7 @@ model PreventiveSchedule {
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
 
-  partner             Partner?           @relation(fields: [partnerId], references: [id])
+  partner             Partner?             @relation(fields: [partnerId], references: [id])
   maintenanceRequests MaintenanceRequest[]
 }
 
@@ -3696,16 +3722,16 @@ model FacilityAccessLog {
 }
 
 model EquipmentDisposalVerification {
-  id            Int       @id @default(autoincrement())
-  equipmentId   Int       @unique
+  id            Int                        @id @default(autoincrement())
+  equipmentId   Int                        @unique
   requestedById Int
   verifiedById  Int?
   verifiedAt    DateTime?
   photoUrl      String?
-  checklistOk   Boolean   @default(false)
-  notes         String?   @db.Text
+  checklistOk   Boolean                    @default(false)
+  notes         String?                    @db.Text
   status        DisposalVerificationStatus @default(PENDING)
-  createdAt     DateTime  @default(now())
+  createdAt     DateTime                   @default(now())
 
   equipment   EquipmentUnit @relation(fields: [equipmentId], references: [id])
   requestedBy User          @relation("DisposalRequestedBy", fields: [requestedById], references: [id])
@@ -3723,7 +3749,7 @@ model SponsorshipClause {
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 
-  sponsorship     Sponsorship           @relation(fields: [sponsorshipId], references: [id], onDelete: Cascade)
+  sponsorship     Sponsorship          @relation(fields: [sponsorshipId], references: [id], onDelete: Cascade)
   appliedPayments SponsorshipPayment[]
 
   @@index([sponsorshipId])
@@ -3794,11 +3820,11 @@ model MonthlySettlementReport {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  season           Season @relation(fields: [seasonId], references: [id])
-  createdBy        User   @relation("SettlementCreator", fields: [createdById], references: [id])
-  firstSubmittedBy User?  @relation("SettlementFirstSubmitter", fields: [firstSubmittedById], references: [id])
-  firstApprover    User?  @relation("SettlementFirstApprover", fields: [firstApproverId], references: [id])
-  approver         User?  @relation("SettlementApprover", fields: [approverId], references: [id])
+  season             Season              @relation(fields: [seasonId], references: [id])
+  createdBy          User                @relation("SettlementCreator", fields: [createdById], references: [id])
+  firstSubmittedBy   User?               @relation("SettlementFirstSubmitter", fields: [firstSubmittedById], references: [id])
+  firstApprover      User?               @relation("SettlementFirstApprover", fields: [firstApproverId], references: [id])
+  approver           User?               @relation("SettlementApprover", fields: [approverId], references: [id])
   revenueAdjustments RevenueAdjustment[] @relation("MonthlyAdj")
 
   @@unique([seasonId, year, month])
@@ -3820,20 +3846,20 @@ model AccountCode {
 }
 
 model RevenueAdjustment {
-  id                Int           @id @default(autoincrement())
+  id                Int          @id @default(autoincrement())
   financialReportId Int?
   monthlyReportId   Int?
   field             RevenueField
   delta             Int
   memo              String?
   createdById       Int
-  createdAt         DateTime      @default(now())
-  ledgerEntryId     Int?          @unique
+  createdAt         DateTime     @default(now())
+  ledgerEntryId     Int?         @unique
 
-  financialReport  FinancialReport?         @relation("SeasonAdj", fields: [financialReportId], references: [id])
-  monthlyReport    MonthlySettlementReport? @relation("MonthlyAdj", fields: [monthlyReportId], references: [id])
-  ledgerEntry      LedgerEntry?             @relation(fields: [ledgerEntryId], references: [id])
-  createdBy        User                     @relation("AdjCreator", fields: [createdById], references: [id])
+  financialReport FinancialReport?         @relation("SeasonAdj", fields: [financialReportId], references: [id])
+  monthlyReport   MonthlySettlementReport? @relation("MonthlyAdj", fields: [monthlyReportId], references: [id])
+  ledgerEntry     LedgerEntry?             @relation(fields: [ledgerEntryId], references: [id])
+  createdBy       User                     @relation("AdjCreator", fields: [createdById], references: [id])
 }
 
 enum OverrideStatus {
