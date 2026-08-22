@@ -19,23 +19,6 @@ export class BudgetAutomationRepository {
     });
   }
 
-  getFinancialReports(seasonIds: number[]) {
-    return this.prisma.financialReport.findMany({
-      where: { seasonId: { in: seasonIds } },
-      select: {
-        seasonId: true,
-        plannedRevenueTicket: true,
-        plannedRevenueSponsorship: true,
-        plannedRevenueBroadcast: true,
-        plannedRevenueMerchandise: true,
-        plannedRevenueSubsidy: true,
-        plannedRevenueParentCompany: true,
-        plannedRevenueAcademyFee: true,
-        plannedRevenueOther: true,
-      },
-    });
-  }
-
   getExpenseActualsByCategory(seasonIds: number[]) {
     return this.prisma.operatingExpense.groupBy({
       by: ["seasonId", "category"],
