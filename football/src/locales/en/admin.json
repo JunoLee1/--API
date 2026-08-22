@@ -480,6 +480,8 @@
     "totalOperatingBudget": "Total Operating Budget",
     "contingencyReserve": "Contingency Reserve",
     "discretionaryPool": "Discretionary Pool",
+    "playerSalaryBudget": "Player Salary Budget",
+    "actual": "Actual",
     "categoriesSection": "Category Settings",
     "mandatoryMinimum": "Min. Allocation",
     "tiers": "Tiers (name / cost / value score)",

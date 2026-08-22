@@ -1,6 +1,6 @@
 # Megan Medical Workflow Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Enforce medical team authority boundaries (matchAvailable gate, securityLevel access control, allowedActivities guard), add rehab load tracking, automate youth expense payerType, and extend the ReturnChecklist with a load recovery criterion.
 
@@ -34,7 +34,7 @@
 - Modify: `apps/api/prisma/schema.prisma` (InjuryReport model)
 - Create: `apps/api/prisma/migrations/20260812100000_megan_injury_report_fields/migration.sql`
 
-- [ ] **Step 1: Add fields to schema**
+- [x] **Step 1: Add fields to schema**
 
 In `apps/api/prisma/schema.prisma`, find the InjuryReport model (currently ends with `medicalOpinion` and `securityLevel` fields). Add two fields after `securityLevel`:
 
@@ -55,7 +55,7 @@ model InjuryReport {
   // ... rest unchanged
 ```
 
-- [ ] **Step 2: Create migration file**
+- [x] **Step 2: Create migration file**
 
 Create directory `apps/api/prisma/migrations/20260812100000_megan_injury_report_fields/` and write `migration.sql`:
 
@@ -64,7 +64,7 @@ ALTER TABLE "InjuryReport" ADD COLUMN "allowedActivities" TEXT;
 ALTER TABLE "InjuryReport" ADD COLUMN "rehabLoadPercentage" INTEGER;
 ```
 
-- [ ] **Step 3: Apply migration**
+- [x] **Step 3: Apply migration**
 
 ```bash
 cd apps/api && npx prisma migrate dev --name megan_injury_report_fields
@@ -72,7 +72,7 @@ cd apps/api && npx prisma migrate dev --name megan_injury_report_fields
 
 Expected: `The following migration(s) have been applied` or `Already in sync`.
 
-- [ ] **Step 4: Regenerate Prisma client**
+- [x] **Step 4: Regenerate Prisma client**
 
 ```bash
 cd apps/api && npx prisma generate
@@ -80,7 +80,7 @@ cd apps/api && npx prisma generate
 
 Expected: `Generated Prisma Client`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/20260812100000_megan_injury_report_fields/
@@ -95,7 +95,7 @@ git commit -m "feat(injury): add allowedActivities and rehabLoadPercentage to In
 - Modify: `apps/api/src/injury/dto/injury.dto.ts`
 - Modify: `apps/api/src/injury/injury.repo.ts`
 
-- [ ] **Step 1: Add fields to DTO**
+- [x] **Step 1: Add fields to DTO**
 
 In `apps/api/src/injury/dto/injury.dto.ts`, update `UpsertInjuryReportDto`:
 
@@ -114,7 +114,7 @@ export interface UpsertInjuryReportDto {
 }
 ```
 
-- [ ] **Step 2: Add fields to INJURY_REPORT_SELECT**
+- [x] **Step 2: Add fields to INJURY_REPORT_SELECT**
 
 In `apps/api/src/injury/injury.repo.ts`, update `INJURY_REPORT_SELECT` (around line 22):
 
@@ -150,7 +150,7 @@ const INJURY_REPORT_SELECT = {
 } as const;
 ```
 
-- [ ] **Step 3: Update upsertReport data object**
+- [x] **Step 3: Update upsertReport data object**
 
 In `apps/api/src/injury/injury.repo.ts`, `upsertReport` method (around line 157), update the `data` object:
 
@@ -177,7 +177,7 @@ upsertReport(injuryId: number, dto: UpsertInjuryReportDto, userId: number) {
 }
 ```
 
-- [ ] **Step 4: Run existing tests to verify nothing broke**
+- [x] **Step 4: Run existing tests to verify nothing broke**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="injury" --no-coverage
@@ -185,7 +185,7 @@ cd apps/api && npx jest --testPathPattern="injury" --no-coverage
 
 Expected: All existing injury tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/injury/dto/injury.dto.ts apps/api/src/injury/injury.repo.ts
@@ -203,7 +203,7 @@ git commit -m "feat(injury): wire allowedActivities and rehabLoadPercentage thro
 
 Rule: `PRIVATE` reports are readable only by ADMIN or COACHING_STAFF with `coachingRole` MEDICAL or MEDICAL_DIRECTOR.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `apps/api/__test__/injury/injury.service.test.ts`:
 
@@ -273,7 +273,7 @@ describe("InjuryService — securityLevel gate", () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="injury.service" --no-coverage
@@ -281,7 +281,7 @@ cd apps/api && npx jest --testPathPattern="injury.service" --no-coverage
 
 Expected: FAIL — `getReport` does not accept a second argument.
 
-- [ ] **Step 3: Update InjuryService.getReport**
+- [x] **Step 3: Update InjuryService.getReport**
 
 In `apps/api/src/injury/injury.service.ts`, replace the `getReport` method:
 
@@ -304,7 +304,7 @@ async getReport(injuryId: number, requester: { role: string; coachingRole: strin
 }
 ```
 
-- [ ] **Step 4: Update InjuryController.getReport to pass user context**
+- [x] **Step 4: Update InjuryController.getReport to pass user context**
 
 In `apps/api/src/injury/injury.controller.ts`, update `getReport`:
 
@@ -322,7 +322,7 @@ getReport = async (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 5: Run tests to verify passing**
+- [x] **Step 5: Run tests to verify passing**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="injury" --no-coverage
@@ -330,7 +330,7 @@ cd apps/api && npx jest --testPathPattern="injury" --no-coverage
 
 Expected: All tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/injury/injury.service.ts apps/api/src/injury/injury.controller.ts apps/api/__test__/injury/injury.service.test.ts
@@ -350,7 +350,7 @@ Rules:
 - `allowedActivities` can only be set by MEDICAL/MEDICAL_DIRECTOR; others' value is silently dropped
 - When `matchAvailable=true` is saved and `medicalSignedAt` is null, the response includes `_warning: "MATCH_AVAILABLE_WITHOUT_MEDICAL_CLEARANCE"`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Append to `apps/api/__test__/injury/injury.service.test.ts`:
 
@@ -424,7 +424,7 @@ describe("InjuryService — matchAvailable soft gate", () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="injury.service" --no-coverage
@@ -432,7 +432,7 @@ cd apps/api && npx jest --testPathPattern="injury.service" --no-coverage
 
 Expected: FAIL — `saveReport` does not accept the fourth argument.
 
-- [ ] **Step 3: Update InjuryService.saveReport**
+- [x] **Step 3: Update InjuryService.saveReport**
 
 In `apps/api/src/injury/injury.service.ts`, replace the `saveReport` method:
 
@@ -463,7 +463,7 @@ async saveReport(
 }
 ```
 
-- [ ] **Step 4: Update InjuryController.saveReport to pass user context**
+- [x] **Step 4: Update InjuryController.saveReport to pass user context**
 
 In `apps/api/src/injury/injury.controller.ts`, update `saveReport`:
 
@@ -484,7 +484,7 @@ saveReport = async (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 5: Run all injury tests**
+- [x] **Step 5: Run all injury tests**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="injury" --no-coverage
@@ -492,7 +492,7 @@ cd apps/api && npx jest --testPathPattern="injury" --no-coverage
 
 Expected: All tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/injury/injury.service.ts apps/api/src/injury/injury.controller.ts apps/api/__test__/injury/injury.service.test.ts
@@ -509,7 +509,7 @@ git commit -m "feat(injury): allowedActivities write guard + matchAvailable soft
 
 Currently `updateStatus(→ RETURNED)` notifies only coaching staff. Add medical staff notification so Megan's team knows a player has returned to full training.
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 Append to `apps/api/__test__/injury/injury.service.test.ts`:
 
@@ -545,7 +545,7 @@ describe("InjuryService — RETURNED notification", () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="injury.service" --no-coverage
@@ -553,7 +553,7 @@ cd apps/api && npx jest --testPathPattern="injury.service" --no-coverage
 
 Expected: FAIL — `createForMedicalStaff` not called.
 
-- [ ] **Step 3: Update updateStatus in InjuryService**
+- [x] **Step 3: Update updateStatus in InjuryService**
 
 In `apps/api/src/injury/injury.service.ts`, update the `RETURNED` branch inside `updateStatus`:
 
@@ -570,7 +570,7 @@ In `apps/api/src/injury/injury.service.ts`, update the `RETURNED` branch inside 
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="injury" --no-coverage
@@ -578,7 +578,7 @@ cd apps/api && npx jest --testPathPattern="injury" --no-coverage
 
 Expected: All tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/injury/injury.service.ts apps/api/__test__/injury/injury.service.test.ts
@@ -596,7 +596,7 @@ git commit -m "feat(injury): notify medical staff when player status becomes RET
 
 Rule: if the expense references a YOUTH player (via `playerId` or `injuryId → injury.playerId`), auto-set `payerType = 'CLUB'`.
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 Create `apps/api/__test__/medical-expense/medical-expense.service.test.ts`:
 
@@ -679,7 +679,7 @@ describe("MedicalExpenseService — youth auto payerType", () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="medical-expense.service" --no-coverage
@@ -687,7 +687,7 @@ cd apps/api && npx jest --testPathPattern="medical-expense.service" --no-coverag
 
 Expected: FAIL — `findPlayerLevel` does not exist on repo.
 
-- [ ] **Step 3: Add findPlayerLevel to MedicalExpenseRepository**
+- [x] **Step 3: Add findPlayerLevel to MedicalExpenseRepository**
 
 In `apps/api/src/medical-expense/medical-expense.repo.ts`, add after `findById`:
 
@@ -700,7 +700,7 @@ findPlayerLevel(playerId: string) {
 }
 ```
 
-- [ ] **Step 4: Update MedicalExpenseService.create**
+- [x] **Step 4: Update MedicalExpenseService.create**
 
 In `apps/api/src/medical-expense/medical-expense.service.ts`, replace the `create` method:
 
@@ -726,7 +726,7 @@ async create(data: {
 }
 ```
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="medical-expense" --no-coverage
@@ -734,7 +734,7 @@ cd apps/api && npx jest --testPathPattern="medical-expense" --no-coverage
 
 Expected: All 3 tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/medical-expense/medical-expense.repo.ts apps/api/src/medical-expense/medical-expense.service.ts apps/api/__test__/medical-expense/medical-expense.service.test.ts
@@ -752,7 +752,7 @@ Add a 6th criterion to `ReturnChecklist`: rehab load has reached ≥80% of pre-i
 
 The component currently receives `assessment: InjuryAssessment`. The `report` (InjuryReport) has `rehabLoadPercentage`. Update the component to receive both.
 
-- [ ] **Step 1: Locate ReturnChecklist call in InjuryDetailPage**
+- [x] **Step 1: Locate ReturnChecklist call in InjuryDetailPage**
 
 The component is called at line 544:
 ```tsx
@@ -761,7 +761,7 @@ The component is called at line 544:
 
 And the report data is available in the parent component as `report` (the InjuryReport object loaded from the API).
 
-- [ ] **Step 2: Update ReturnChecklist signature and criteria**
+- [x] **Step 2: Update ReturnChecklist signature and criteria**
 
 In `football/src/pages/injuries/InjuryDetailPage.tsx`, replace the `ReturnChecklist` function (around line 68):
 
@@ -811,7 +811,7 @@ function ReturnChecklist({
 }
 ```
 
-- [ ] **Step 3: Update ReturnChecklist call site to pass rehabLoadPercentage**
+- [x] **Step 3: Update ReturnChecklist call site to pass rehabLoadPercentage**
 
 Find the call at line 544 and update it. The parent component should have `report` in scope (the `InjuryReport` object):
 
@@ -819,7 +819,7 @@ Find the call at line 544 and update it. The parent component should have `repor
 <ReturnChecklist assessment={assessment} rehabLoadPercentage={report?.rehabLoadPercentage ?? null} />
 ```
 
-- [ ] **Step 4: Add i18n key**
+- [x] **Step 4: Add i18n key**
 
 In the medical translation file (check `football/src/locales/ko/medical.json` or equivalent), add:
 
@@ -835,7 +835,7 @@ Find the existing translation file location first:
 find /Users/juno/work/football/football/src -name "*.json" | xargs grep -l "returnReadiness" 2>/dev/null
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/pages/injuries/InjuryDetailPage.tsx
@@ -851,13 +851,13 @@ git commit -m "feat(injury-ui): add rehabLoadPercentage criterion to ReturnCheck
 
 Display `allowedActivities` as a read-only text area for all roles; editable textarea only for MEDICAL/MEDICAL_DIRECTOR. The current user's role is available via `useAuth()` hook (check existing usage in the file).
 
-- [ ] **Step 1: Find how user role is accessed in InjuryDetailPage**
+- [x] **Step 1: Find how user role is accessed in InjuryDetailPage**
 
 ```bash
 grep -n "useAuth\|user\.role\|coachingRole\|isMedical" /Users/juno/work/football/football/src/pages/injuries/InjuryDetailPage.tsx | head -10
 ```
 
-- [ ] **Step 2: Add allowedActivities state to the report form section**
+- [x] **Step 2: Add allowedActivities state to the report form section**
 
 In `InjuryDetailPage.tsx`, in the section where `matchAvailable` state is declared (around line 209), add:
 
@@ -877,7 +877,7 @@ And in the save handler (around line 255), include in the payload:
 allowedActivities: allowedActivities || undefined,
 ```
 
-- [ ] **Step 3: Add allowedActivities field to the report form JSX**
+- [x] **Step 3: Add allowedActivities field to the report form JSX**
 
 Find the report form section (where `matchAvailable` Select is rendered, around line 422) and add after the matchAvailable field:
 
@@ -907,7 +907,7 @@ const isMedical = user?.role === 'ADMIN' ||
   (user?.role === 'COACHING_STAFF' && (user?.coachingRole === 'MEDICAL' || user?.coachingRole === 'MEDICAL_DIRECTOR'))
 ```
 
-- [ ] **Step 4: Add i18n keys**
+- [x] **Step 4: Add i18n keys**
 
 In the medical translation file, add:
 ```json
@@ -916,7 +916,7 @@ In the medical translation file, add:
 "fieldAllowedActivitiesEmpty": "지정된 활동 제한 없음"
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/pages/injuries/InjuryDetailPage.tsx
@@ -932,7 +932,7 @@ git commit -m "feat(injury-ui): add allowedActivities display and medical-only e
 
 When the API returns `_warning: "MATCH_AVAILABLE_WITHOUT_MEDICAL_CLEARANCE"` after saving, or when the loaded report has `matchAvailable=true` and `medicalSignedAt=null`, show a yellow warning banner.
 
-- [ ] **Step 1: Add warning state**
+- [x] **Step 1: Add warning state**
 
 In the report state section of `InjuryDetailPage.tsx`, add:
 
@@ -951,7 +951,7 @@ const result = await injuryApi.saveReport(injuryId, payload)
 setMatchAvailableWarning(result._warning === 'MATCH_AVAILABLE_WITHOUT_MEDICAL_CLEARANCE')
 ```
 
-- [ ] **Step 2: Render the warning banner**
+- [x] **Step 2: Render the warning banner**
 
 In the JSX, right after the matchAvailable Select field (around line 430), add:
 
@@ -964,14 +964,14 @@ In the JSX, right after the matchAvailable Select field (around line 430), add:
 )}
 ```
 
-- [ ] **Step 3: Add i18n key**
+- [x] **Step 3: Add i18n key**
 
 In the medical translation file, add:
 ```json
 "matchAvailableWarning": "의무팀 서명 없이 경기 출전 가능으로 표시되어 있습니다. 의무팀 확인을 권장합니다."
 ```
 
-- [ ] **Step 4: Run full test suite**
+- [x] **Step 4: Run full test suite**
 
 ```bash
 cd apps/api && npx jest --no-coverage
@@ -979,7 +979,7 @@ cd apps/api && npx jest --no-coverage
 
 Expected: All tests pass (no regressions).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/pages/injuries/InjuryDetailPage.tsx

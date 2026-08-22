@@ -860,6 +860,8 @@ model User {
   confirmedPayrolls        PayrollRun[]              @relation("PayrollRunConfirmer")
   secondApprovedPayrolls   PayrollRun[]              @relation("PayrollRunSecondApprover")
   budgetOverrideLogs       BudgetOverrideLog[]       @relation("BudgetOverrideLogCreator")
+  budgetOverrideReviews    BudgetOverrideLog[]       @relation("BudgetOverrideLogReviewer")
+  revenueLogChanges        FinancialReportRevenueLog[] @relation("RevenueLogChanger")
   operatingExpenses        OperatingExpense[]        @relation("OperatingExpenseCreator")
   paidExpenses             OperatingExpense[]        @relation("OperatingExpensePayer")
   createdPostings          JobPosting[]              @relation("JobPostingCreator")
@@ -2422,12 +2424,14 @@ model FinancialReport {
   revenueOther         Float    @default(0)
   totalOperatingBudget Int?
   contingencyReserve   Int?     @default(0)
+  playerSalaryBudget   Int?
   note                 String?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
   season               Season   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
   budgetCategoryPlans  BudgetCategoryPlan[]
   overrideLogs         BudgetOverrideLog[]
+  revenueLogs          FinancialReportRevenueLog[]
   revenueAdjustments   RevenueAdjustment[] @relation("SeasonAdj")
 }
 
@@ -2545,8 +2549,13 @@ model BudgetOverrideLog {
   reason            String
   createdById       Int
   createdAt         DateTime          @default(now())
+  status            OverrideStatus    @default(PENDING)
+  reviewedById      Int?
+  reviewedAt        DateTime?
+  reviewNote        String?
   financialReport   FinancialReport   @relation(fields: [financialReportId], references: [id], onDelete: Cascade)
   createdBy         User              @relation("BudgetOverrideLogCreator", fields: [createdById], references: [id])
+  reviewedBy        User?             @relation("BudgetOverrideLogReviewer", fields: [reviewedById], references: [id])
 }
 
 model OperatingExpense {
@@ -3792,4 +3801,22 @@ model RevenueAdjustment {
   monthlyReport    MonthlySettlementReport? @relation("MonthlyAdj", fields: [monthlyReportId], references: [id])
   ledgerEntry      LedgerEntry?             @relation(fields: [ledgerEntryId], references: [id])
   createdBy        User                     @relation("AdjCreator", fields: [createdById], references: [id])
+}
+
+enum OverrideStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model FinancialReportRevenueLog {
+  id                Int             @id @default(autoincrement())
+  financialReportId Int
+  field             String
+  oldValue          Float
+  newValue          Float
+  changedById       Int
+  createdAt         DateTime        @default(now())
+  report            FinancialReport @relation(fields: [financialReportId], references: [id], onDelete: Cascade)
+  changedBy         User            @relation("RevenueLogChanger", fields: [changedById], references: [id])
 }

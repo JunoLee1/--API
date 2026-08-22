@@ -46,6 +46,7 @@ export class OpsReportService {
       presentResults,
       totalNotifications, readNotifications,
       ticketResult,
+      totalSettlements, approvedSettlements,
     ] = await Promise.all([
       // AcademyFee uses year/month fields, not createdAt, for period filtering
       this.prisma.academyFee.count({ where: { year, month } }),
@@ -86,15 +87,38 @@ export class OpsReportService {
         _sum: { totalAmount: true },
         _count: { id: true },
       }),
+      // MonthlySettlementReport uses year/month fields for period filtering
+      this.prisma.monthlySettlementReport.count({ where: { seasonId, year, month } }),
+      this.prisma.monthlySettlementReport.count({ where: { seasonId, year, month, status: "APPROVED" } }),
     ]);
+
+    // If no academy fee billing records exist for the requested month,
+    // fall back to the most recent month that has data
+    let effectiveTotalFees = totalFees;
+    let effectivePaidFees = paidFees;
+    let effectiveDelinquentFees = delinquentFees;
+    if (totalFees === 0) {
+      const latest = await this.prisma.academyFee.findFirst({
+        where: { year: { lte: year }, month: { lte: month } },
+        orderBy: [{ year: "desc" }, { month: "desc" }],
+        select: { year: true, month: true },
+      });
+      if (latest) {
+        [effectiveTotalFees, effectivePaidFees, effectiveDelinquentFees] = await Promise.all([
+          this.prisma.academyFee.count({ where: { year: latest.year, month: latest.month } }),
+          this.prisma.academyFee.count({ where: { year: latest.year, month: latest.month, status: "PAID" } }),
+          this.prisma.academyFee.count({ where: { year: latest.year, month: latest.month, status: { in: ["OVERDUE", "LOCKED"] } } }),
+        ]);
+      }
+    }
 
     const totalSessions = sessions.length;
     const rate = (num: number, den: number) => den === 0 ? 0 : Math.round((num / den) * 1000) / 10;
 
     return {
-      feeCollectionRate: rate(paidFees, totalFees),
-      feeDelinquencyRate: rate(delinquentFees, totalFees),
-      monthlySettlementRate: rate(paidFees, totalFees),
+      feeCollectionRate: rate(effectivePaidFees, effectiveTotalFees),
+      feeDelinquencyRate: rate(effectiveDelinquentFees, effectiveTotalFees),
+      monthlySettlementRate: rate(approvedSettlements, totalSettlements),
       budgetExecutionRate: rate(totalActualSpend, totalBudgetCeiling),
       overrideCount,
       registrationRate: rate(approvedRegistrations, totalRegistrations),

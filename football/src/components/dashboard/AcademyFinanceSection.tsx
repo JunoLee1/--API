@@ -1,14 +1,19 @@
 import { useTranslation } from 'react-i18next'
 import type { AcademyFinanceStats } from '@/types/academy-fee'
 
-interface Props { data: AcademyFinanceStats }
+interface Props { data: AcademyFinanceStats; year?: number; month?: number }
 
-export function AcademyFinanceSection({ data }: Props) {
+export function AcademyFinanceSection({ data, year, month }: Props) {
   const { t } = useTranslation('common')
 
   return (
     <div className="space-y-3">
-      <h3 className="text-lg font-semibold">{t('dashboard.academyFinance.title')}</h3>
+      <h3 className="text-lg font-semibold">
+        {t('dashboard.academyFinance.title')}
+        {year && month && (
+          <span className="ml-2 text-sm font-normal text-muted-foreground">{year}년 {month}월</span>
+        )}
+      </h3>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="rounded-lg border p-4 text-center">
           <p className="text-2xl font-bold text-green-600">{data.monthlyCollectionRate}%</p>

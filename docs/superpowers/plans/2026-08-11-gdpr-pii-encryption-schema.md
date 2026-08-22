@@ -1,6 +1,6 @@
 # GDPR PII Encryption Schema (PR A) Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Encrypt `emergencyContact*` and `dateOfBirth` fields in Player table, add `Injury.retainUntil` (7-year retention), and `User.suspendedAt` timestamp via a two-step migration with a backfill script.
 
@@ -29,7 +29,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: Add fields to schema**
+- [x] **Step 1: Add fields to schema**
 
 In `schema.prisma`, find `model Player` and add after the existing `emergencyContactRelation String?` line:
 
@@ -56,7 +56,7 @@ In `schema.prisma`, find `model Injury` and add after `dataRetentionReason Strin
   retainUntil DateTime?
 ```
 
-- [ ] **Step 2: Generate migration (do NOT use `db push`)**
+- [x] **Step 2: Generate migration (do NOT use `db push`)**
 
 ```bash
 cd apps/api && npx prisma migrate dev --name add-pii-encryption-columns
@@ -64,7 +64,7 @@ cd apps/api && npx prisma migrate dev --name add-pii-encryption-columns
 
 Expected output: `Your database is now in sync with your schema.` and a new folder in `prisma/migrations/`.
 
-- [ ] **Step 3: Verify migration applied**
+- [x] **Step 3: Verify migration applied**
 
 ```bash
 cd apps/api && npx prisma studio
@@ -72,7 +72,7 @@ cd apps/api && npx prisma studio
 
 Open Player table and confirm the 8 new columns exist (all nullable). Close Studio.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/
@@ -87,7 +87,7 @@ git commit -m "feat(schema): add PII encryption columns — Player emergency con
 - Modify: `apps/api/src/player/player.repo.ts`
 - Create: `apps/api/__test__/player/player.encryption.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `apps/api/__test__/player/player.encryption.test.ts`:
 
@@ -184,7 +184,7 @@ describe("PlayerRepository — encryption on write", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 cd apps/api && npx jest __test__/player/player.encryption.test.ts --no-coverage
@@ -192,7 +192,7 @@ cd apps/api && npx jest __test__/player/player.encryption.test.ts --no-coverage
 
 Expected: 3 failures — `emergencyContactNameEncrypted is undefined` etc.
 
-- [ ] **Step 3: Update player.repo.ts write path**
+- [x] **Step 3: Update player.repo.ts write path**
 
 At top of `apps/api/src/player/player.repo.ts`, add import:
 
@@ -266,7 +266,7 @@ update(id: string, data: UpdatePlayerDto) {
 }
 ```
 
-- [ ] **Step 4: Run tests — verify they pass**
+- [x] **Step 4: Run tests — verify they pass**
 
 ```bash
 cd apps/api && npx jest __test__/player/player.encryption.test.ts --no-coverage
@@ -274,7 +274,7 @@ cd apps/api && npx jest __test__/player/player.encryption.test.ts --no-coverage
 
 Expected: 3 passing.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/player/player.repo.ts apps/api/__test__/player/player.encryption.test.ts
@@ -289,7 +289,7 @@ git commit -m "feat(player): encrypt PII fields on write — emergency contacts 
 - Modify: `apps/api/src/player/player.repo.ts`
 - Modify: `apps/api/__test__/player/player.encryption.test.ts`
 
-- [ ] **Step 1: Add failing test for read path**
+- [x] **Step 1: Add failing test for read path**
 
 Append to `apps/api/__test__/player/player.encryption.test.ts`:
 
@@ -330,7 +330,7 @@ describe("PlayerRepository — encrypted field selection on read", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 cd apps/api && npx jest __test__/player/player.encryption.test.ts --no-coverage
@@ -338,7 +338,7 @@ cd apps/api && npx jest __test__/player/player.encryption.test.ts --no-coverage
 
 Expected: 3 new failures.
 
-- [ ] **Step 3: Update PLAYER_SELECT and findById in player.repo.ts**
+- [x] **Step 3: Update PLAYER_SELECT and findById in player.repo.ts**
 
 Replace `PLAYER_SELECT` constant (remove `dateOfBirth: true`, add encrypted dob fields):
 
@@ -412,7 +412,7 @@ findById(id: string, includePrivate = false) {
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```bash
 cd apps/api && npx jest __test__/player/player.encryption.test.ts --no-coverage
@@ -420,7 +420,7 @@ cd apps/api && npx jest __test__/player/player.encryption.test.ts --no-coverage
 
 Expected: all 6 passing.
 
-- [ ] **Step 5: Run full test suite to catch regressions**
+- [x] **Step 5: Run full test suite to catch regressions**
 
 ```bash
 cd apps/api && npx jest --no-coverage 2>&1 | tail -20
@@ -428,7 +428,7 @@ cd apps/api && npx jest --no-coverage 2>&1 | tail -20
 
 Fix any TypeScript errors related to missing `dateOfBirth` field (callers expecting `player.dateOfBirth` will now get `undefined` — service layer in Task 4 will restore it as decrypted string).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/player/player.repo.ts apps/api/__test__/player/player.encryption.test.ts
@@ -443,7 +443,7 @@ git commit -m "feat(player): select encrypted PII fields on read, remove plainte
 - Modify: `apps/api/src/player/player.service.ts`
 - Modify: `apps/api/__test__/player/player.encryption.test.ts`
 
-- [ ] **Step 1: Add failing test for service decryption**
+- [x] **Step 1: Add failing test for service decryption**
 
 Append to `apps/api/__test__/player/player.encryption.test.ts`:
 
@@ -496,7 +496,7 @@ describe("PlayerService — decrypt on read", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 cd apps/api && npx jest __test__/player/player.encryption.test.ts --no-coverage -t "decrypt on read"
@@ -504,7 +504,7 @@ cd apps/api && npx jest __test__/player/player.encryption.test.ts --no-coverage 
 
 Expected: 2 failures.
 
-- [ ] **Step 3: Update player.service.ts**
+- [x] **Step 3: Update player.service.ts**
 
 Add import at top of `apps/api/src/player/player.service.ts`:
 
@@ -556,7 +556,7 @@ async getPlayerById(id: string, includePrivate = false) {
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```bash
 cd apps/api && npx jest __test__/player/player.encryption.test.ts --no-coverage
@@ -564,13 +564,13 @@ cd apps/api && npx jest __test__/player/player.encryption.test.ts --no-coverage
 
 Expected: all 8 passing.
 
-- [ ] **Step 5: Run full test suite**
+- [x] **Step 5: Run full test suite**
 
 ```bash
 cd apps/api && npx jest --no-coverage 2>&1 | tail -20
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/player/player.service.ts apps/api/__test__/player/player.encryption.test.ts
@@ -584,7 +584,7 @@ git commit -m "feat(player): decrypt PII fields in service layer after findById"
 **Files:**
 - Create: `apps/api/prisma/scripts/encrypt-pii.ts`
 
-- [ ] **Step 1: Create the script directory and file**
+- [x] **Step 1: Create the script directory and file**
 
 ```bash
 mkdir -p apps/api/prisma/scripts
@@ -653,7 +653,7 @@ async function main() {
 main().catch((e) => { console.error(e); process.exit(1); });
 ```
 
-- [ ] **Step 2: Add script to package.json**
+- [x] **Step 2: Add script to package.json**
 
 In `apps/api/package.json`, add to `"scripts"`:
 
@@ -661,7 +661,7 @@ In `apps/api/package.json`, add to `"scripts"`:
 "script:encrypt-pii": "tsx prisma/scripts/encrypt-pii.ts"
 ```
 
-- [ ] **Step 3: Verify script imports resolve (dry run)**
+- [x] **Step 3: Verify script imports resolve (dry run)**
 
 ```bash
 cd apps/api && npx tsx --noEmit prisma/scripts/encrypt-pii.ts 2>&1 | head -5
@@ -669,7 +669,7 @@ cd apps/api && npx tsx --noEmit prisma/scripts/encrypt-pii.ts 2>&1 | head -5
 
 Expected: error about `PHONE_ENCRYPTION_KEY not set` (not an import error) — this confirms the module resolves correctly.
 
-- [ ] **Step 4: Run the script against dev DB**
+- [x] **Step 4: Run the script against dev DB**
 
 ```bash
 cd apps/api && PHONE_ENCRYPTION_KEY=$(grep PHONE_ENCRYPTION_KEY .env | cut -d= -f2) npx tsx prisma/scripts/encrypt-pii.ts
@@ -677,7 +677,7 @@ cd apps/api && PHONE_ENCRYPTION_KEY=$(grep PHONE_ENCRYPTION_KEY .env | cut -d= -
 
 Expected: `Done. Encrypted PII for N players.`
 
-- [ ] **Step 5: Spot-check encrypted data**
+- [x] **Step 5: Spot-check encrypted data**
 
 ```bash
 cd apps/api && npx prisma studio
@@ -685,7 +685,7 @@ cd apps/api && npx prisma studio
 
 Open Player table. Verify `dateOfBirthEncrypted` and `dateOfBirthIv` are populated for records that had `dateOfBirth`. Close Studio.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/prisma/scripts/encrypt-pii.ts apps/api/package.json
@@ -700,7 +700,7 @@ git commit -m "feat(scripts): add encrypt-pii backfill script for Player PII fie
 - Modify: `apps/api/src/safeguard/safeguard.repo.ts`
 - Create: `apps/api/__test__/safeguard/safeguard.repo.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `apps/api/__test__/safeguard/safeguard.repo.test.ts`:
 
@@ -755,7 +755,7 @@ describe("SafeguardRepository", () => {
 });
 ```
 
-- [ ] **Step 2: Read safeguard.repo.ts to confirm method names**
+- [x] **Step 2: Read safeguard.repo.ts to confirm method names**
 
 ```bash
 cat apps/api/src/safeguard/safeguard.repo.ts
@@ -763,7 +763,7 @@ cat apps/api/src/safeguard/safeguard.repo.ts
 
 Confirm the unsuspend method name (may be `unsuspendUser` or `reinstateUser`). Update the test if needed.
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 ```bash
 cd apps/api && npx jest __test__/safeguard/safeguard.repo.test.ts --no-coverage
@@ -771,7 +771,7 @@ cd apps/api && npx jest __test__/safeguard/safeguard.repo.test.ts --no-coverage
 
 Expected: failures about `suspendedAt` not being set.
 
-- [ ] **Step 4: Update safeguard.repo.ts**
+- [x] **Step 4: Update safeguard.repo.ts**
 
 In `apps/api/src/safeguard/safeguard.repo.ts`, find `suspendUser()` and add `suspendedAt: new Date()`:
 
@@ -796,7 +796,7 @@ unsuspendUser(userId: number) {
 }
 ```
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 ```bash
 cd apps/api && npx jest __test__/safeguard/safeguard.repo.test.ts --no-coverage
@@ -804,7 +804,7 @@ cd apps/api && npx jest __test__/safeguard/safeguard.repo.test.ts --no-coverage
 
 Expected: 2 passing.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/safeguard/safeguard.repo.ts apps/api/__test__/safeguard/safeguard.repo.test.ts
@@ -820,7 +820,7 @@ git commit -m "feat(safeguard): set suspendedAt timestamp when suspending users 
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: Remove plaintext fields from schema**
+- [x] **Step 1: Remove plaintext fields from schema**
 
 In `schema.prisma`, find `model Player` and **remove** these lines:
 
@@ -831,7 +831,7 @@ In `schema.prisma`, find `model Player` and **remove** these lines:
   dateOfBirth              DateTime
 ```
 
-- [ ] **Step 2: Generate drop migration**
+- [x] **Step 2: Generate drop migration**
 
 ```bash
 cd apps/api && npx prisma migrate dev --name drop-plaintext-pii-columns
@@ -839,7 +839,7 @@ cd apps/api && npx prisma migrate dev --name drop-plaintext-pii-columns
 
 Expected: migration generated. Review the generated SQL in `prisma/migrations/` to confirm it contains `DROP COLUMN` for the 4 removed fields and nothing else destructive.
 
-- [ ] **Step 3: Run full test suite to catch any remaining plaintext references**
+- [x] **Step 3: Run full test suite to catch any remaining plaintext references**
 
 ```bash
 cd apps/api && npx jest --no-coverage 2>&1 | tail -30
@@ -847,7 +847,7 @@ cd apps/api && npx jest --no-coverage 2>&1 | tail -30
 
 Fix any TypeScript compile errors from callers that still reference `player.emergencyContactName` (plaintext) or `player.dateOfBirth` (DateTime). These should now use the decrypted string returned by the service.
 
-- [ ] **Step 4: Final commit**
+- [x] **Step 4: Final commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/

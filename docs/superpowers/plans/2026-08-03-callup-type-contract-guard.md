@@ -1,6 +1,6 @@
 # Callup Type + Contract Guard Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Add `CallupType (TRAINING | OFFICIAL)` to the PlayerCallup model, enforce OFFICIAL callups require an active player contract, and gate TRAINING approvals to GM/TD/HEAD_COACH while OFFICIAL remains GM-only.
 
@@ -30,7 +30,7 @@
 
 Context: `PlayerCallup` model is around line 1780. `PlayerCallupStatus` enum is at line 1671. Add a new `CallupType` enum right after `PlayerCallupStatus`, then add the field to the model.
 
-- [ ] **Step 1: Add `CallupType` enum after `PlayerCallupStatus`**
+- [x] **Step 1: Add `CallupType` enum after `PlayerCallupStatus`**
 
 Find this block in schema.prisma:
 ```prisma
@@ -51,7 +51,7 @@ enum CallupType {
 }
 ```
 
-- [ ] **Step 2: Add `callupType` field to `PlayerCallup` model**
+- [x] **Step 2: Add `callupType` field to `PlayerCallup` model**
 
 In the `PlayerCallup` model, after the `status` field line, add:
 ```prisma
@@ -65,7 +65,7 @@ So the model looks like:
   youthCoachConfirmed Boolean            @default(false)
 ```
 
-- [ ] **Step 3: Push schema to DB**
+- [x] **Step 3: Push schema to DB**
 
 ```bash
 cd apps/api && npx prisma db push
@@ -73,7 +73,7 @@ cd apps/api && npx prisma db push
 
 Expected: `Your database is now in sync with your Prisma schema.`
 
-- [ ] **Step 4: Verify generated client has the new enum**
+- [x] **Step 4: Verify generated client has the new enum**
 
 ```bash
 grep -n "CallupType\|TRAINING\|OFFICIAL" apps/api/src/generated/enums.ts | head -10
@@ -81,7 +81,7 @@ grep -n "CallupType\|TRAINING\|OFFICIAL" apps/api/src/generated/enums.ts | head 
 
 Expected: lines containing `CallupType`, `TRAINING`, `OFFICIAL`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/src/generated/
@@ -96,7 +96,7 @@ git commit -m "feat: add CallupType enum (TRAINING|OFFICIAL) to PlayerCallup sch
 - Modify: `apps/api/src/player-callup/dto/player-callup.dto.ts`
 - Modify: `apps/api/src/player-callup/player-callup.repo.ts`
 
-- [ ] **Step 1: Write the failing test — repo creates TRAINING callup**
+- [x] **Step 1: Write the failing test — repo creates TRAINING callup**
 
 In `apps/api/__test__/player-callup/player-callup.service.test.ts`, add to the existing `describe('PlayerCallupRepository')` block:
 
@@ -116,7 +116,7 @@ it('TRAINING 콜업 생성 시 callupType=TRAINING 반환', async () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 cd apps/api && npx jest __test__/player-callup --testNamePattern="TRAINING 콜업 생성"
@@ -124,7 +124,7 @@ cd apps/api && npx jest __test__/player-callup --testNamePattern="TRAINING 콜�
 
 Expected: FAIL — `callupType` not in DTO/SELECT yet
 
-- [ ] **Step 3: Update `CreateCallupDto`**
+- [x] **Step 3: Update `CreateCallupDto`**
 
 Replace the entire content of `apps/api/src/player-callup/dto/player-callup.dto.ts`:
 
@@ -148,7 +148,7 @@ export interface CallupListQuery {
 }
 ```
 
-- [ ] **Step 4: Update repo SELECT and `create()`, add `findActiveContract()`**
+- [x] **Step 4: Update repo SELECT and `create()`, add `findActiveContract()`**
 
 Replace the full content of `apps/api/src/player-callup/player-callup.repo.ts`:
 
@@ -283,7 +283,7 @@ export class PlayerCallupRepository {
 }
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 ```bash
 cd apps/api && npx jest __test__/player-callup --testNamePattern="TRAINING 콜업 생성"
@@ -291,7 +291,7 @@ cd apps/api && npx jest __test__/player-callup --testNamePattern="TRAINING 콜�
 
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/player-callup/dto/player-callup.dto.ts \
@@ -317,7 +317,7 @@ Key rules to implement:
   - TRAINING: status update only, no `updatePlayerTeam`
 - `confirmYouth()` / `confirmMedical()`: guard against TRAINING callups (throw `INVALID_CALLUP_TYPE`)
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Add to `apps/api/__test__/player-callup/player-callup.service.test.ts`:
 
@@ -420,7 +420,7 @@ describe('PlayerCallupService — contract guard', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 cd apps/api && npx jest __test__/player-callup --testNamePattern="contract guard"
@@ -428,7 +428,7 @@ cd apps/api && npx jest __test__/player-callup --testNamePattern="contract guard
 
 Expected: FAIL — service doesn't branch on callupType yet
 
-- [ ] **Step 3: Update `player-callup.service.ts`**
+- [x] **Step 3: Update `player-callup.service.ts`**
 
 Replace the full content of `apps/api/src/player-callup/player-callup.service.ts`:
 
@@ -630,7 +630,7 @@ export class PlayerCallupService {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 cd apps/api && npx jest __test__/player-callup --testNamePattern="contract guard"
@@ -638,7 +638,7 @@ cd apps/api && npx jest __test__/player-callup --testNamePattern="contract guard
 
 Expected: PASS (3/3)
 
-- [ ] **Step 5: Run full callup test suite**
+- [x] **Step 5: Run full callup test suite**
 
 ```bash
 cd apps/api && npx jest __test__/player-callup
@@ -646,7 +646,7 @@ cd apps/api && npx jest __test__/player-callup
 
 Expected: All existing tests still pass
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/player-callup/player-callup.service.ts \
@@ -665,7 +665,7 @@ Context: The service already enforces type-specific logic. The controller just n
 
 We allow: GM, TD, HEAD_COACH. The service enforces the rest.
 
-- [ ] **Step 1: Update `approve` handler in controller**
+- [x] **Step 1: Update `approve` handler in controller**
 
 In `apps/api/src/player-callup/player-callup.controller.ts`, replace the `approve` handler:
 
@@ -682,7 +682,7 @@ approve = async (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 2: Check TypeScript compiles**
+- [x] **Step 2: Check TypeScript compiles**
 
 ```bash
 cd apps/api && npx tsc --noEmit
@@ -690,7 +690,7 @@ cd apps/api && npx tsc --noEmit
 
 Expected: no errors
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/player-callup/player-callup.controller.ts
@@ -703,7 +703,7 @@ git commit -m "feat: allow TD and HEAD_COACH to approve callups (TRAINING type)"
 
 **Files:** (none changed)
 
-- [ ] **Step 1: Run all callup tests**
+- [x] **Step 1: Run all callup tests**
 
 ```bash
 cd apps/api && npx jest __test__/player-callup -v
@@ -711,7 +711,7 @@ cd apps/api && npx jest __test__/player-callup -v
 
 Expected: All pass
 
-- [ ] **Step 2: Run full test suite**
+- [x] **Step 2: Run full test suite**
 
 ```bash
 cd apps/api && npx jest
@@ -719,7 +719,7 @@ cd apps/api && npx jest
 
 Expected: No regressions
 
-- [ ] **Step 3: Check TypeScript**
+- [x] **Step 3: Check TypeScript**
 
 ```bash
 cd apps/api && npx tsc --noEmit

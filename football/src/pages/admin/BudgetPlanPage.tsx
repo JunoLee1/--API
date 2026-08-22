@@ -61,6 +61,7 @@ export function BudgetPlanPage() {
 
   const [totalBudget, setTotalBudget] = useState('')
   const [contingency, setContingency] = useState('')
+  const [playerSalaryBudget, setPlayerSalaryBudget] = useState('')
   const [categories, setCategories] = useState<Record<OperatingCategory, CategoryRow>>(defaultCategories)
 
   const [overrideCategory, setOverrideCategory] = useState<OperatingCategory>('TRAVEL')
@@ -84,6 +85,7 @@ export function BudgetPlanPage() {
           setPlan(p)
           setTotalBudget(p.totalOperatingBudget?.toString() ?? '')
           setContingency(p.contingencyReserve?.toString() ?? '0')
+          setPlayerSalaryBudget(p.playerSalaryBudget?.toString() ?? '')
           const newCats = defaultCategories()
           for (const cp of p.budgetCategoryPlans) {
             newCats[cp.category] = {
@@ -113,9 +115,11 @@ export function BudgetPlanPage() {
     if (!seasonId) return
     setSaving(true)
     try {
+      const psb = parseInt(playerSalaryBudget, 10)
       const payload: UpsertBudgetPlanPayload = {
         totalOperatingBudget: parseInt(totalBudget, 10),
         contingencyReserve: parseInt(contingency, 10) || 0,
+        playerSalaryBudget: isNaN(psb) ? undefined : psb,
         categories: ALL_OPERATING_CATEGORIES.map((cat) => ({
           category: cat,
           mandatoryMinimum: parseInt(categories[cat].mandatoryMinimum, 10) || 0,
@@ -176,6 +180,7 @@ export function BudgetPlanPage() {
       setPlan(p)
       setTotalBudget(p.totalOperatingBudget?.toString() ?? '')
       setContingency(p.contingencyReserve?.toString() ?? '0')
+      setPlayerSalaryBudget(p.playerSalaryBudget?.toString() ?? '')
       const newCats = defaultCategories()
       for (const cp of p.budgetCategoryPlans) {
         newCats[cp.category] = {
@@ -251,6 +256,23 @@ export function BudgetPlanPage() {
             <span className={`font-semibold ${discretionaryPool() < 0 ? 'text-destructive' : 'text-primary'}`}>
               {fmt(discretionaryPool())}
             </span>
+          </div>
+          <div className="border rounded-lg p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>{t('budget.playerSalaryBudget')}</Label>
+              {plan?.actuals?.['PLAYER_SALARY'] != null && (
+                <Badge variant="outline" className="text-xs">
+                  {t('budget.actual')}: {fmt(plan.actuals['PLAYER_SALARY'])}
+                  {playerSalaryBudget && !isNaN(parseInt(playerSalaryBudget, 10)) && (
+                    <span className={`ml-1 ${plan.actuals['PLAYER_SALARY'] > parseInt(playerSalaryBudget, 10) ? 'text-destructive' : 'text-green-600'}`}>
+                      {plan.actuals['PLAYER_SALARY'] > parseInt(playerSalaryBudget, 10) ? '▲' : '▼'}{' '}
+                      {fmt(Math.abs(plan.actuals['PLAYER_SALARY'] - parseInt(playerSalaryBudget, 10)))}
+                    </span>
+                  )}
+                </Badge>
+              )}
+            </div>
+            <CurrencyInput value={playerSalaryBudget} onChange={setPlayerSalaryBudget} placeholder="0" />
           </div>
         </section>
 

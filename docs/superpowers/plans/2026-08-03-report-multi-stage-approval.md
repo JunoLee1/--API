@@ -1,6 +1,6 @@
 # Report Multi-Stage Approval Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 보고서 타입별 다단계 결재 구조 구현 — HR(3단계), ASSET/FINANCIAL(2단계), 나머지(현행 유지)
 
@@ -51,7 +51,7 @@
 - Modify: `apps/api/prisma/schema.prisma`
 - Create: `apps/api/prisma/migrations/20260803_report_multi_stage/migration.sql`
 
-- [ ] **Step 1: FrontOfficeRole enum에 3개 추가**
+- [x] **Step 1: FrontOfficeRole enum에 3개 추가**
 
 `schema.prisma` line 53 `FrontOfficeRole` 블록 끝에 추가:
 ```prisma
@@ -72,7 +72,7 @@ enum FrontOfficeRole {
 }
 ```
 
-- [ ] **Step 2: ReportStatus enum에 2개 추가**
+- [x] **Step 2: ReportStatus enum에 2개 추가**
 
 `schema.prisma` line 1285 `ReportStatus` 블록:
 ```prisma
@@ -86,7 +86,7 @@ enum ReportStatus {
 }
 ```
 
-- [ ] **Step 3: Report 모델에 단계별 검토자 필드 추가**
+- [x] **Step 3: Report 모델에 단계별 검토자 필드 추가**
 
 `schema.prisma` Report 모델 (`reviewedAt DateTime?` 아래에 추가):
 ```prisma
@@ -119,7 +119,7 @@ model Report {
 }
 ```
 
-- [ ] **Step 4: User 모델에 역관계 2개 추가**
+- [x] **Step 4: User 모델에 역관계 2개 추가**
 
 `schema.prisma` User 모델의 `reviewedReports` 아래에:
 ```prisma
@@ -127,7 +127,7 @@ model Report {
   secondReviewedReports    Report[]                @relation("ReportSecondReviewer")
 ```
 
-- [ ] **Step 5: 마이그레이션 SQL 파일 생성**
+- [x] **Step 5: 마이그레이션 SQL 파일 생성**
 
 ```bash
 mkdir -p apps/api/prisma/migrations/20260803_report_multi_stage
@@ -148,7 +148,7 @@ ALTER TABLE "Report" ADD COLUMN "secondReviewerId" INTEGER REFERENCES "User"("id
 ALTER TABLE "Report" ADD COLUMN "secondReviewedAt" TIMESTAMP(3);
 ```
 
-- [ ] **Step 6: DB에 직접 적용 후 마이그레이션 마킹**
+- [x] **Step 6: DB에 직접 적용 후 마이그레이션 마킹**
 
 ```bash
 psql -U postgres -d football -f apps/api/prisma/migrations/20260803_report_multi_stage/migration.sql
@@ -158,7 +158,7 @@ npx prisma generate
 
 Expected output: `Migration 20260803_report_multi_stage marked as applied.` + `✔ Generated Prisma Client`
 
-- [ ] **Step 7: 커밋**
+- [x] **Step 7: 커밋**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/20260803_report_multi_stage/
@@ -172,7 +172,7 @@ git commit -m "feat(schema): add multi-stage report approval fields and new FO r
 **Files:**
 - Modify: `apps/api/src/report/report.repo.ts`
 
-- [ ] **Step 1: reportInclude에 firstReviewer, secondReviewer 추가**
+- [x] **Step 1: reportInclude에 firstReviewer, secondReviewer 추가**
 
 ```typescript
 const reportInclude = {
@@ -183,7 +183,7 @@ const reportInclude = {
 } as const;
 ```
 
-- [ ] **Step 2: approve() 시그니처 변경 — nextStatus 파라미터 추가**
+- [x] **Step 2: approve() 시그니처 변경 — nextStatus 파라미터 추가**
 
 ```typescript
 approve(id: number, reviewerId: number, nextStatus: "FIRST_APPROVED" | "SECOND_APPROVED" | "APPROVED") {
@@ -203,7 +203,7 @@ approve(id: number, reviewerId: number, nextStatus: "FIRST_APPROVED" | "SECOND_A
 }
 ```
 
-- [ ] **Step 3: findAll()에 HR_STAFF/ASSET_STAFF/FINANCE_STAFF 처리 추가**
+- [x] **Step 3: findAll()에 HR_STAFF/ASSET_STAFF/FINANCE_STAFF 처리 추가**
 
 파라미터에 `isHrStaff`, `isAssetStaff`, `isFinanceStaff` 추가:
 ```typescript
@@ -240,7 +240,7 @@ findAll(
 }
 ```
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add apps/api/src/report/report.repo.ts
@@ -254,7 +254,7 @@ git commit -m "feat(report): update repo for multi-stage approval and new staff 
 **Files:**
 - Modify: `apps/api/src/report/report.service.ts`
 
-- [ ] **Step 1: list() 파라미터 확장**
+- [x] **Step 1: list() 파라미터 확장**
 
 ```typescript
 list(
@@ -273,7 +273,7 @@ list(
 }
 ```
 
-- [ ] **Step 2: approve() 다음 상태 계산 로직 추가**
+- [x] **Step 2: approve() 다음 상태 계산 로직 추가**
 
 ```typescript
 async approve(id: number, reviewerId: number) {
@@ -308,7 +308,7 @@ async approve(id: number, reviewerId: number) {
 }
 ```
 
-- [ ] **Step 3: reject() — REJECTED 후 author 알림 유지, 상태 체크 확장**
+- [x] **Step 3: reject() — REJECTED 후 author 알림 유지, 상태 체크 확장**
 
 ```typescript
 async reject(id: number, reviewerId: number, reason: string) {
@@ -343,7 +343,7 @@ async reject(id: number, reviewerId: number, reason: string) {
 }
 ```
 
-- [ ] **Step 4: submit() — NOT_SUBMITTED 체크 제거 (DRAFT 및 REJECTED 에서 제출 허용)**
+- [x] **Step 4: submit() — NOT_SUBMITTED 체크 제거 (DRAFT 및 REJECTED 에서 제출 허용)**
 
 `submit()` 내부의 상태 체크가 `report.status !== "DRAFT" && report.status !== "REJECTED"` 이어야 함. 현재 service.ts의 update()에 이미 있으므로 submit()에서는 authorId 체크만:
 ```typescript
@@ -356,7 +356,7 @@ async submit(id: number, userId: number) {
 }
 ```
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add apps/api/src/report/report.service.ts
@@ -370,7 +370,7 @@ git commit -m "feat(report): multi-stage approval logic in service layer"
 **Files:**
 - Modify: `apps/api/src/report/report.controller.ts`
 
-- [ ] **Step 1: 헬퍼 함수 추가**
+- [x] **Step 1: 헬퍼 함수 추가**
 
 기존 헬퍼 아래에:
 ```typescript
@@ -385,7 +385,7 @@ function isFinanceStaff(req: Request): boolean {
 }
 ```
 
-- [ ] **Step 2: list() 핸들러 — 새 역할 파라미터 전달**
+- [x] **Step 2: list() 핸들러 — 새 역할 파라미터 전달**
 
 ```typescript
 list = async (req: Request, res: Response, next: NextFunction) => {
@@ -414,7 +414,7 @@ list = async (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 3: get() 핸들러 — 새 역할 열람 권한 추가**
+- [x] **Step 3: get() 핸들러 — 새 역할 열람 권한 추가**
 
 ```typescript
 get = async (req: Request, res: Response, next: NextFunction) => {
@@ -438,7 +438,7 @@ get = async (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 4: create() 핸들러 — 새 역할 타입 제한 업데이트**
+- [x] **Step 4: create() 핸들러 — 새 역할 타입 제한 업데이트**
 
 ```typescript
 create = async (req: Request, res: Response, next: NextFunction) => {
@@ -472,7 +472,7 @@ create = async (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 5: approve() 핸들러 — 단계별 권한 체크**
+- [x] **Step 5: approve() 핸들러 — 단계별 권한 체크**
 
 ```typescript
 approve = async (req: Request, res: Response, next: NextFunction) => {
@@ -509,7 +509,7 @@ approve = async (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 6: reject() 핸들러 — 단계별 권한 체크**
+- [x] **Step 6: reject() 핸들러 — 단계별 권한 체크**
 
 ```typescript
 reject = async (req: Request, res: Response, next: NextFunction) => {
@@ -546,7 +546,7 @@ reject = async (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 7: 타입 체크 후 커밋**
+- [x] **Step 7: 타입 체크 후 커밋**
 
 ```bash
 cd apps/api && npx tsc --noEmit
@@ -566,7 +566,7 @@ git commit -m "feat(report): stage-aware approve/reject permissions in controlle
 **Files:**
 - Create: `apps/api/__test__/report/report.service.test.ts`
 
-- [ ] **Step 1: 테스트 파일 생성**
+- [x] **Step 1: 테스트 파일 생성**
 
 ```typescript
 import 'dotenv/config';
@@ -677,7 +677,7 @@ describe('HR 보고서 반려 후 재제출', () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 (seed 후)**
+- [x] **Step 2: 테스트 실행 (seed 후)**
 
 ```bash
 cd apps/api && npx jest __test__/report/report.service.test.ts --runInBand
@@ -685,7 +685,7 @@ cd apps/api && npx jest __test__/report/report.service.test.ts --runInBand
 
 Expected: 모든 테스트 PASS (seed Task 7 완료 후 실행 가능)
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add apps/api/__test__/report/report.service.test.ts
@@ -701,7 +701,7 @@ git commit -m "test(report): add multi-stage approval integration tests"
 - Modify: `football/src/locales/ko/report.json`
 - Modify: `football/src/locales/en/report.json`
 
-- [ ] **Step 1: report.ts 타입 업데이트**
+- [x] **Step 1: report.ts 타입 업데이트**
 
 ```typescript
 export type ReportType = 'PERFORMANCE' | 'MEDICAL' | 'TRAINING' | 'HR' | 'FINANCIAL' | 'ASSET'
@@ -751,7 +751,7 @@ export const REPORT_STATUS_STYLE: Record<ReportStatus, string> = {
 }
 ```
 
-- [ ] **Step 2: ko/report.json — 새 상태 번역 추가**
+- [x] **Step 2: ko/report.json — 새 상태 번역 추가**
 
 `status` 블록:
 ```json
@@ -765,7 +765,7 @@ export const REPORT_STATUS_STYLE: Record<ReportStatus, string> = {
 }
 ```
 
-- [ ] **Step 3: en/report.json — 새 상태 번역 추가**
+- [x] **Step 3: en/report.json — 새 상태 번역 추가**
 
 ```json
 "status": {
@@ -778,7 +778,7 @@ export const REPORT_STATUS_STYLE: Record<ReportStatus, string> = {
 }
 ```
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add football/src/types/report.ts football/src/locales/ko/report.json football/src/locales/en/report.json
@@ -795,7 +795,7 @@ git commit -m "feat(report-fe): add new statuses and staff roles to types and i1
 - Modify: `football/src/pages/reports/ReportFormPage.tsx`
 - Modify: `football/src/layouts/AppShell.tsx`
 
-- [ ] **Step 1: ReportDetailPage — canApprove 다단계 로직**
+- [x] **Step 1: ReportDetailPage — canApprove 다단계 로직**
 
 `ReportDetailPage.tsx` line 77 아래 전체 교체:
 ```typescript
@@ -831,7 +831,7 @@ const isAuthor = report?.authorId === user?.id
 const canSubmit = isAuthor && (report?.status === 'DRAFT' || report?.status === 'REJECTED')
 ```
 
-- [ ] **Step 2: ReportDetailPage — submit 버튼 조건 수정**
+- [x] **Step 2: ReportDetailPage — submit 버튼 조건 수정**
 
 ```tsx
 {canSubmit && (
@@ -839,7 +839,7 @@ const canSubmit = isAuthor && (report?.status === 'DRAFT' || report?.status === 
 )}
 ```
 
-- [ ] **Step 3: ReportDetailPage — 결재 이력 표시 추가**
+- [x] **Step 3: ReportDetailPage — 결재 이력 표시 추가**
 
 `report.reviewedAt && report.reviewer` 블록 아래에 단계별 이력 추가:
 ```tsx
@@ -863,13 +863,13 @@ const canSubmit = isAuthor && (report?.status === 'DRAFT' || report?.status === 
 )}
 ```
 
-- [ ] **Step 4: ReportsPage — FO_CREATE_ROLES 업데이트**
+- [x] **Step 4: ReportsPage — FO_CREATE_ROLES 업데이트**
 
 ```typescript
 const FO_CREATE_ROLES = ['GM', 'HR_MANAGER', 'HR_STAFF', 'FINANCE_MANAGER', 'FINANCE_STAFF', 'ASSET_MANAGER', 'ASSET_STAFF']
 ```
 
-- [ ] **Step 5: ReportFormPage — 타입 필터 업데이트**
+- [x] **Step 5: ReportFormPage — 타입 필터 업데이트**
 
 ```typescript
 const TYPES = ALL_TYPES.filter((tp) => {
@@ -880,7 +880,7 @@ const TYPES = ALL_TYPES.filter((tp) => {
 })
 ```
 
-- [ ] **Step 6: AppShell — /reports 네비 frontOfficeRoles 업데이트**
+- [x] **Step 6: AppShell — /reports 네비 frontOfficeRoles 업데이트**
 
 ```typescript
 {
@@ -893,7 +893,7 @@ const TYPES = ALL_TYPES.filter((tp) => {
 },
 ```
 
-- [ ] **Step 7: ko/report.json에 결재 이력 레이블 추가**
+- [x] **Step 7: ko/report.json에 결재 이력 레이블 추가**
 
 `detail` 블록에:
 ```json
@@ -901,14 +901,14 @@ const TYPES = ALL_TYPES.filter((tp) => {
 "secondApprovedAtLabel": "2차 승인일"
 ```
 
-- [ ] **Step 8: en/report.json에 결재 이력 레이블 추가**
+- [x] **Step 8: en/report.json에 결재 이력 레이블 추가**
 
 ```json
 "firstApprovedAtLabel": "1st Approved At",
 "secondApprovedAtLabel": "2nd Approved At"
 ```
 
-- [ ] **Step 9: 커밋**
+- [x] **Step 9: 커밋**
 
 ```bash
 git add football/src/pages/reports/ football/src/layouts/AppShell.tsx football/src/locales/
@@ -922,7 +922,7 @@ git commit -m "feat(report-fe): multi-stage approve UI, approval trail, nav visi
 **Files:**
 - Modify: `apps/api/prisma/seed.ts`
 
-- [ ] **Step 1: 신규 staff 계정 추가 (seedRecruitment 함수 앞)**
+- [x] **Step 1: 신규 staff 계정 추가 (seedRecruitment 함수 앞)**
 
 `seed.ts`의 `async function seedReports()` 내부 `existing` 체크 전에 신규 계정 upsert:
 
@@ -960,7 +960,7 @@ async function seedStaffAccounts() {
 }
 ```
 
-- [ ] **Step 2: seedReports()에 중간 단계 보고서 추가**
+- [x] **Step 2: seedReports()에 중간 단계 보고서 추가**
 
 `existing > 0` 체크 제거하고, 타입별 기존 보고서가 있으면 스킵하는 방식으로 변경:
 ```typescript
@@ -1008,14 +1008,14 @@ async function seedReports() {
 }
 ```
 
-- [ ] **Step 3: main()에 seedStaffAccounts() 호출 추가**
+- [x] **Step 3: main()에 seedStaffAccounts() 호출 추가**
 
 `seedRecruitment()` 호출 전에:
 ```typescript
 await seedStaffAccounts();
 ```
 
-- [ ] **Step 4: console.log 요약 업데이트**
+- [x] **Step 4: console.log 요약 업데이트**
 
 `console.log("✅ Seed complete")` 블록에:
 ```typescript
@@ -1024,7 +1024,7 @@ console.log(`     FRONT_OFFICE: asset.staff@club.com (ASSET_STAFF)`);
 console.log(`     FRONT_OFFICE: finance.staff@club.com (FINANCE_STAFF)`);
 ```
 
-- [ ] **Step 5: 기존 보고서 삭제 후 시드 실행**
+- [x] **Step 5: 기존 보고서 삭제 후 시드 실행**
 
 ```bash
 psql -U postgres -d football -c 'DELETE FROM "Report";'
@@ -1037,7 +1037,7 @@ Expected 출력:
 - Reports: 12개 (HR×5, ASSET×3, FINANCIAL×2, TRAINING×1, PERFORMANCE×1)
 ```
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add apps/api/prisma/seed.ts
@@ -1051,7 +1051,7 @@ git commit -m "feat(seed): add HR/ASSET/FINANCE staff accounts and multi-stage r
 **Files:**
 - Modify: `football/src/pages/auth/LoginPage.tsx`
 
-- [ ] **Step 1: DEV_ACCOUNTS에 staff 계정 추가**
+- [x] **Step 1: DEV_ACCOUNTS에 staff 계정 추가**
 
 `기본` 그룹에 추가:
 ```typescript
@@ -1060,7 +1060,7 @@ git commit -m "feat(seed): add HR/ASSET/FINANCE staff accounts and multi-stage r
 { label: '재무직원', email: 'finance.staff@club.com' },
 ```
 
-- [ ] **Step 2: 커밋**
+- [x] **Step 2: 커밋**
 
 ```bash
 git add football/src/pages/auth/LoginPage.tsx

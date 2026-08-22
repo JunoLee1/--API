@@ -62,8 +62,8 @@ export const dashboardApi = {
     api.get<DashboardStats>(`/dashboard/stats${teamType ? `?teamType=${teamType}` : ''}`),
   youthDevelopment: () =>
     api.get<YouthDevelopmentStats>('/dashboard/youth-development'),
-  academyFinance: () =>
-    api.get<AcademyFinanceStats>('/dashboard/academy-finance'),
+  academyFinance: (year?: number, month?: number) =>
+    api.get<AcademyFinanceStats>(`/dashboard/academy-finance${year && month ? `?year=${year}&month=${month}` : ''}`),
   getCoachDashboard: () => api.get<CoachDashboard>('/dashboard/coach'),
   getFinance: (params: { seasonId?: number; year?: number; month?: number }) => {
     const parts: string[] = []

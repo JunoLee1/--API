@@ -20,6 +20,9 @@ const reviewInclude = {
 
 const reportInclude = {
   author: { select: authorSelect },
+  reviewer: { select: authorSelect },
+  firstReviewer: { select: authorSelect },
+  secondReviewer: { select: authorSelect },
   department: { select: { id: true, name: true, category: true } },
   ...reviewInclude,
 } as const;
@@ -33,21 +36,30 @@ export class ReportRepository {
     isHeadCoach: boolean = false,
     filters: { type?: string; status?: string } = {},
     deptCategories: string[] = [],
+    isHrStaff: boolean = false,
+    isAssetStaff: boolean = false,
+    isFinanceStaff: boolean = false,
   ) {
     const roleWhere = isGM
       ? {}
       : isHeadCoach
         ? { OR: [{ authorId: userId }, { type: "TRAINING" as const }] }
-        : deptCategories.length > 0
-          ? {
-              OR: [
-                { authorId: userId },
-                ...(deptCategories.includes("HR") ? [{ type: "HR" as const }] : []),
-                ...(deptCategories.includes("FINANCE") ? [{ type: "FINANCIAL" as const }] : []),
-                ...(deptCategories.includes("COMPLIANCE") ? [{ type: "ASSET" as const }] : []),
-              ],
-            }
-          : { authorId: userId };
+        : isHrStaff
+          ? { OR: [{ authorId: userId }, { type: "HR" as const }] }
+          : isAssetStaff
+            ? { OR: [{ authorId: userId }, { type: "ASSET" as const }] }
+            : isFinanceStaff
+              ? { OR: [{ authorId: userId }, { type: "FINANCIAL" as const }] }
+              : deptCategories.length > 0
+                ? {
+                    OR: [
+                      { authorId: userId },
+                      ...(deptCategories.includes("HR") ? [{ type: "HR" as const }] : []),
+                      ...(deptCategories.includes("FINANCE") ? [{ type: "FINANCIAL" as const }] : []),
+                      ...(deptCategories.includes("COMPLIANCE") ? [{ type: "ASSET" as const }] : []),
+                    ],
+                  }
+                : { authorId: userId };
 
     const filterWhere = {
       ...(filters.type && { type: filters.type as any }),
@@ -145,6 +157,30 @@ export class ReportRepository {
         data: { status: "REJECTED", rejectionReason: reason, reviewedAt: new Date() },
         include: reportInclude,
       });
+    });
+  }
+
+  approve(id: number, reviewerId: number, nextStatus: "FIRST_APPROVED" | "SECOND_APPROVED" | "APPROVED") {
+    const now = new Date();
+    const data =
+      nextStatus === "FIRST_APPROVED"
+        ? { status: nextStatus, firstReviewerId: reviewerId, firstReviewedAt: now }
+        : nextStatus === "SECOND_APPROVED"
+          ? { status: nextStatus, secondReviewerId: reviewerId, secondReviewedAt: now }
+          : { status: nextStatus as "APPROVED", reviewerId, reviewedAt: now };
+
+    return this.prisma.report.update({
+      where: { id },
+      data,
+      include: reportInclude,
+    });
+  }
+
+  rejectDirect(id: number, reviewerId: number, reason: string) {
+    return this.prisma.report.update({
+      where: { id },
+      data: { status: "REJECTED", rejectionReason: reason, reviewerId, reviewedAt: new Date() },
+      include: reportInclude,
     });
   }
 

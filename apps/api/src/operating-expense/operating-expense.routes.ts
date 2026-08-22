@@ -27,6 +27,7 @@ router.patch("/:id/pay", auth, checkWriteFinance, async (req: Request, res: Resp
     res.json(result);
   } catch (err) { next(err); }
 });
+router.patch("/:id", auth, controller.update);
 router.delete("/:id", auth, checkWriteFinance, controller.delete);
 
 export default router;

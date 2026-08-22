@@ -50,6 +50,20 @@ export class OperatingExpenseController {
     } catch (err) { next(err); }
   };
 
+  update = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id: userId } = requireUser(req);
+      const id = Number(req.params["id"]);
+      const body = req.body as { amount?: number; category?: OperatingCategory; note?: string };
+      const data: { amount?: number; category?: OperatingCategory; note?: string } = {};
+      if (body.amount !== undefined) data.amount = body.amount;
+      if (body.category !== undefined) data.category = body.category;
+      if (body.note !== undefined) data.note = body.note;
+      const result = await this.service.update(id, userId, data);
+      res.json(result);
+    } catch (err) { next(err); }
+  };
+
   delete = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, frontOfficeRole, id: userId } = requireUser(req);

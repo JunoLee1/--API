@@ -1,6 +1,6 @@
 # Certification Management System Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** UEFA 클럽 라이선싱 기준을 충족하는 통합 인증 관리 시스템 — 선수·코치·스태프·시설·클럽 5개 도메인의 22개 certType을 단일 폴리모픽 모델로 관리하며, 2단계 승인 워크플로우와 만료 자동 알림을 제공한다.
 
@@ -33,7 +33,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: enum 3개 추가**
+- [x] **Step 1: enum 3개 추가**
 
 `schema.prisma` 파일에서 기존 enum 블록 다음에 아래를 추가한다.
 
@@ -84,7 +84,7 @@ enum CertStatus {
 }
 ```
 
-- [ ] **Step 2: Certification 모델 추가**
+- [x] **Step 2: Certification 모델 추가**
 
 `schema.prisma`에 `// ─── 인증 관리` 블록을 새로 추가한다.
 
@@ -150,7 +150,7 @@ model CertificationReminderLog {
 }
 ```
 
-- [ ] **Step 3: User 모델에 back-relation 3개 추가**
+- [x] **Step 3: User 모델에 back-relation 3개 추가**
 
 `User` 모델 relation 블록에 아래 3줄 추가:
 
@@ -160,7 +160,7 @@ model CertificationReminderLog {
   certSecondApprovals   Certification[] @relation("CertSecondApprover")
 ```
 
-- [ ] **Step 4: Player / Coach / StaffRecord back-relation 추가**
+- [x] **Step 4: Player / Coach / StaffRecord back-relation 추가**
 
 `Player` 모델:
 ```prisma
@@ -177,7 +177,7 @@ model CertificationReminderLog {
   certifications  Certification[] @relation("StaffCertifications")
 ```
 
-- [ ] **Step 5: 스키마 검증**
+- [x] **Step 5: 스키마 검증**
 
 ```bash
 cd apps/api && npx prisma validate
@@ -185,7 +185,7 @@ cd apps/api && npx prisma validate
 
 Expected: "The schema at `prisma/schema.prisma` is valid"
 
-- [ ] **Step 6: 마이그레이션 생성 및 적용**
+- [x] **Step 6: 마이그레이션 생성 및 적용**
 
 ```bash
 cd apps/api && npx prisma migrate dev --name add_certification_management
@@ -193,7 +193,7 @@ cd apps/api && npx prisma migrate dev --name add_certification_management
 
 Expected: `migrations/YYYYMMDD_add_certification_management/migration.sql` 생성 + DB 적용 완료
 
-- [ ] **Step 7: Prisma 클라이언트 재생성**
+- [x] **Step 7: Prisma 클라이언트 재생성**
 
 ```bash
 cd apps/api && npx prisma generate
@@ -201,7 +201,7 @@ cd apps/api && npx prisma generate
 
 Expected: `src/generated/` 업데이트, 오류 없음
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add apps/api/prisma/
@@ -215,7 +215,7 @@ git commit -m "feat(cert): add Certification schema with polymorphic FK and Remi
 **Files:**
 - Create: `apps/api/src/certification/dto/certification.dto.ts`
 
-- [ ] **Step 1: DTO 파일 작성**
+- [x] **Step 1: DTO 파일 작성**
 
 ```typescript
 import type { CertificationType, CertEntityType, CertStatus, FacilityZone } from "../../../generated/enums";
@@ -258,7 +258,7 @@ export interface CertificationListQuery {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/certification/
@@ -272,7 +272,7 @@ git commit -m "feat(cert): add certification DTOs"
 **Files:**
 - Create: `apps/api/src/certification/certification.repo.ts`
 
-- [ ] **Step 1: repo 파일 작성**
+- [x] **Step 1: repo 파일 작성**
 
 ```typescript
 import type { PrismaClient } from "../../generated/client";
@@ -414,7 +414,7 @@ export class CertificationRepository {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/certification/certification.repo.ts
@@ -428,7 +428,7 @@ git commit -m "feat(cert): add CertificationRepository"
 **Files:**
 - Create: `apps/api/src/certification/certification.service.ts`
 
-- [ ] **Step 1: service 파일 작성**
+- [x] **Step 1: service 파일 작성**
 
 ```typescript
 import { AppError } from "../../lib/appError";
@@ -566,7 +566,7 @@ export class CertificationService {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/certification/certification.service.ts
@@ -580,7 +580,7 @@ git commit -m "feat(cert): add CertificationService with certType approver mappi
 **Files:**
 - Create: `apps/api/src/certification/certification.service.test.ts`
 
-- [ ] **Step 1: 테스트 헬퍼 작성**
+- [x] **Step 1: 테스트 헬퍼 작성**
 
 ```typescript
 import { CertificationService } from "./certification.service";
@@ -617,7 +617,7 @@ const makeService = (repo: CertificationRepository) =>
   new CertificationService(repo, undefined as any);
 ```
 
-- [ ] **Step 2: submit 테스트**
+- [x] **Step 2: submit 테스트**
 
 ```typescript
 describe("CertificationService.submit", () => {
@@ -651,7 +651,7 @@ describe("CertificationService.submit", () => {
 });
 ```
 
-- [ ] **Step 3: approve 테스트**
+- [x] **Step 3: approve 테스트**
 
 ```typescript
 describe("CertificationService.approve", () => {
@@ -671,7 +671,7 @@ describe("CertificationService.approve", () => {
 });
 ```
 
-- [ ] **Step 4: gmApprove 테스트**
+- [x] **Step 4: gmApprove 테스트**
 
 ```typescript
 describe("CertificationService.gmApprove", () => {
@@ -691,7 +691,7 @@ describe("CertificationService.gmApprove", () => {
 });
 ```
 
-- [ ] **Step 5: reject / suspend / cancel 테스트**
+- [x] **Step 5: reject / suspend / cancel 테스트**
 
 ```typescript
 describe("CertificationService.reject", () => {
@@ -717,7 +717,7 @@ describe("CertificationService.update", () => {
 });
 ```
 
-- [ ] **Step 6: 테스트 실행**
+- [x] **Step 6: 테스트 실행**
 
 ```bash
 cd apps/api && npx jest src/certification/certification.service.test.ts --no-coverage
@@ -725,7 +725,7 @@ cd apps/api && npx jest src/certification/certification.service.test.ts --no-cov
 
 Expected: 전체 PASS, 0 failures
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add apps/api/src/certification/certification.service.test.ts
@@ -739,7 +739,7 @@ git commit -m "test(cert): add CertificationService unit tests"
 **Files:**
 - Create: `apps/api/src/certification/certification.controller.ts`
 
-- [ ] **Step 1: 권한 헬퍼 함수 정의**
+- [x] **Step 1: 권한 헬퍼 함수 정의**
 
 ```typescript
 import { Request, Response, NextFunction } from "express";
@@ -777,7 +777,7 @@ const isCertFirstApprover = (req: Request, certType: CertificationType): boolean
 };
 ```
 
-- [ ] **Step 2: CertificationController 클래스 작성**
+- [x] **Step 2: CertificationController 클래스 작성**
 
 ```typescript
 export class CertificationController {
@@ -865,7 +865,7 @@ export class CertificationController {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/certification/certification.controller.ts
@@ -879,7 +879,7 @@ git commit -m "feat(cert): add CertificationController with certType-aware appro
 **Files:**
 - Create: `apps/api/src/certification/certification.routes.ts`
 
-- [ ] **Step 1: routes 파일 작성**
+- [x] **Step 1: routes 파일 작성**
 
 ```typescript
 import { Router } from "express";
@@ -924,7 +924,7 @@ router.post("/:id/upload", auth, upload.single("file"), async (req, res, next) =
 export default router;
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/certification/certification.routes.ts
@@ -943,7 +943,7 @@ git commit -m "feat(cert): add certification routes with file upload"
 2. 30일 이내 만료 인증을 EXPIRING_SOON으로 전환
 3. reminderDays 기준으로 알림 발송 (CertificationReminderLog로 중복 방지)
 
-- [ ] **Step 1: job 파일 작성**
+- [x] **Step 1: job 파일 작성**
 
 ```typescript
 import cron from "node-cron";
@@ -1054,7 +1054,7 @@ export function startCertStatusSyncJob() {
 
 > **Note:** `notifService.createNotification` 시그니처는 프로젝트의 NotificationService 구현에 맞게 조정하세요. 기존 `notifyFacilityEmergency` 패턴을 참고할 것.
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/jobs/certStatusSync.ts
@@ -1068,7 +1068,7 @@ git commit -m "feat(cert): add certStatusSync daily job with escalation logic"
 **Files:**
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: import 추가**
+- [x] **Step 1: import 추가**
 
 `apiRouter.ts`의 import 블록에 추가:
 
@@ -1077,7 +1077,7 @@ import certificationRouter from "./certification/certification.routes";
 import { startCertStatusSyncJob } from "./jobs/certStatusSync";
 ```
 
-- [ ] **Step 2: 라우터 등록**
+- [x] **Step 2: 라우터 등록**
 
 기존 `apiRouter.use("/facility", facilityRouter);` 다음에 추가:
 
@@ -1085,7 +1085,7 @@ import { startCertStatusSyncJob } from "./jobs/certStatusSync";
 apiRouter.use("/certification", certificationRouter);
 ```
 
-- [ ] **Step 3: job 시작**
+- [x] **Step 3: job 시작**
 
 기존 job 시작 코드 블록 다음에 추가:
 
@@ -1093,7 +1093,7 @@ apiRouter.use("/certification", certificationRouter);
 startCertStatusSyncJob();
 ```
 
-- [ ] **Step 4: 빌드 확인**
+- [x] **Step 4: 빌드 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit
@@ -1101,7 +1101,7 @@ cd apps/api && npx tsc --noEmit
 
 Expected: 오류 없음
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/apiRouter.ts
@@ -1116,7 +1116,7 @@ git commit -m "feat(cert): register certification router and sync job"
 - Create: `football/src/types/certification.ts`
 - Create: `football/src/services/certificationApi.ts`
 
-- [ ] **Step 1: FE 타입 파일 작성**
+- [x] **Step 1: FE 타입 파일 작성**
 
 ```typescript
 // football/src/types/certification.ts
@@ -1189,7 +1189,7 @@ export const CERT_STATUS_COLOR: Record<CertStatus, string> = {
 };
 ```
 
-- [ ] **Step 2: FE API 서비스 작성**
+- [x] **Step 2: FE API 서비스 작성**
 
 ```typescript
 // football/src/services/certificationApi.ts
@@ -1281,7 +1281,7 @@ export const certificationApi = {
 };
 ```
 
-- [ ] **Step 3: FE 빌드 확인**
+- [x] **Step 3: FE 빌드 확인**
 
 ```bash
 cd football && npx tsc --noEmit
@@ -1289,7 +1289,7 @@ cd football && npx tsc --noEmit
 
 Expected: 오류 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/types/certification.ts football/src/services/certificationApi.ts
@@ -1300,7 +1300,7 @@ git commit -m "feat(cert): add FE types and API service"
 
 ## Task 11: 통합 검증
 
-- [ ] **Step 1: 전체 빌드 확인**
+- [x] **Step 1: 전체 빌드 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit && echo "API OK"
@@ -1309,7 +1309,7 @@ cd football  && npx tsc --noEmit && echo "FE OK"
 
 Expected: 두 줄 모두 OK
 
-- [ ] **Step 2: 전체 테스트 실행**
+- [x] **Step 2: 전체 테스트 실행**
 
 ```bash
 cd apps/api && npx jest --no-coverage
@@ -1317,7 +1317,7 @@ cd apps/api && npx jest --no-coverage
 
 Expected: 기존 테스트 + cert 테스트 모두 PASS
 
-- [ ] **Step 3: 서버 기동 후 smoke test**
+- [x] **Step 3: 서버 기동 후 smoke test**
 
 ```bash
 # 서버 기동
@@ -1337,7 +1337,7 @@ curl -s http://localhost:3000/api/certification?entityType=PLAYER \
 
 Expected: `"DRAFT"` / 1 이상
 
-- [ ] **Step 4: 최종 Commit**
+- [x] **Step 4: 최종 Commit**
 
 ```bash
 git add -A

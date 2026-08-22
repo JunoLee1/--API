@@ -1,6 +1,6 @@
 # Demo Account PII Masking Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 데모 계정(`isDemo: true`)이 사용자 관리 / 감사 로그 조회 시 `email`, `username`을 부분 마스킹해서 반환하도록 백엔드에서 처리한다.
 
@@ -15,7 +15,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: schema.prisma User 모델에 `isDemo` 필드 추가**
+- [x] **Step 1: schema.prisma User 모델에 `isDemo` 필드 추가**
 
 `apps/api/prisma/schema.prisma`의 User 모델에서 `isOutOfOffice` 다음 줄에 추가:
 
@@ -42,7 +42,7 @@ model User {
 }
 ```
 
-- [ ] **Step 2: 마이그레이션 실행**
+- [x] **Step 2: 마이그레이션 실행**
 
 ```bash
 cd apps/api && npx prisma migrate dev --name add_is_demo_to_user
@@ -50,7 +50,7 @@ cd apps/api && npx prisma migrate dev --name add_is_demo_to_user
 
 Expected: `✔ Your database is now in sync with your schema.`
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/
@@ -65,7 +65,7 @@ git commit -m "feat: add isDemo flag to User model"
 - Create: `apps/api/src/lib/maskPii.ts`
 - Create: `apps/api/__test__/lib/maskPii.test.ts`
 
-- [ ] **Step 1: 실패하는 테스트 작성**
+- [x] **Step 1: 실패하는 테스트 작성**
 
 `apps/api/__test__/lib/maskPii.test.ts`:
 
@@ -106,7 +106,7 @@ describe("maskUsername", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 ```bash
 cd apps/api && npx jest __test__/lib/maskPii.test.ts --no-coverage
@@ -114,7 +114,7 @@ cd apps/api && npx jest __test__/lib/maskPii.test.ts --no-coverage
 
 Expected: FAIL — `Cannot find module '../../src/lib/maskPii'`
 
-- [ ] **Step 3: `maskPii.ts` 구현**
+- [x] **Step 3: `maskPii.ts` 구현**
 
 `apps/api/src/lib/maskPii.ts`:
 
@@ -133,7 +133,7 @@ export function maskUsername(username: string): string {
 }
 ```
 
-- [ ] **Step 4: 테스트 통과 확인**
+- [x] **Step 4: 테스트 통과 확인**
 
 ```bash
 cd apps/api && npx jest __test__/lib/maskPii.test.ts --no-coverage
@@ -141,7 +141,7 @@ cd apps/api && npx jest __test__/lib/maskPii.test.ts --no-coverage
 
 Expected: PASS (모든 테스트)
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add apps/api/src/lib/maskPii.ts apps/api/__test__/lib/maskPii.test.ts
@@ -157,7 +157,7 @@ git commit -m "feat: add maskEmail and maskUsername PII utilities"
 - Modify: `apps/api/src/auth/auth.repo.ts`
 - Modify: `apps/api/src/auth/auth.service.ts`
 
-- [ ] **Step 1: `Express.User`에 `isDemo` 추가**
+- [x] **Step 1: `Express.User`에 `isDemo` 추가**
 
 `apps/api/src/lib/express.d.ts`:
 
@@ -182,7 +182,7 @@ declare global {
 }
 ```
 
-- [ ] **Step 2: `auth.repo.ts` — `findByEmail` select에 `isDemo` 추가**
+- [x] **Step 2: `auth.repo.ts` — `findByEmail` select에 `isDemo` 추가**
 
 `apps/api/src/auth/auth.repo.ts`의 `findByEmail`:
 
@@ -199,7 +199,7 @@ findByEmail(email: string) {
 }
 ```
 
-- [ ] **Step 3: `auth.service.ts` — `generateTokens` 호출에 `isDemo` 포함**
+- [x] **Step 3: `auth.service.ts` — `generateTokens` 호출에 `isDemo` 포함**
 
 `apps/api/src/auth/auth.service.ts`의 `login` 메서드에서:
 
@@ -215,7 +215,7 @@ const tokens = generateTokens({
 });
 ```
 
-- [ ] **Step 4: 타입 에러 없는지 확인**
+- [x] **Step 4: 타입 에러 없는지 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit
@@ -223,7 +223,7 @@ cd apps/api && npx tsc --noEmit
 
 Expected: 에러 없음
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add apps/api/src/lib/express.d.ts apps/api/src/auth/auth.repo.ts apps/api/src/auth/auth.service.ts
@@ -237,7 +237,7 @@ git commit -m "feat: include isDemo in JWT payload"
 **Files:**
 - Modify: `apps/api/src/admin/admin.repo.ts`
 
-- [ ] **Step 1: `USER_SELECT`에 `isDemo` 추가**
+- [x] **Step 1: `USER_SELECT`에 `isDemo` 추가**
 
 `apps/api/src/admin/admin.repo.ts`의 `USER_SELECT`:
 
@@ -259,7 +259,7 @@ export const USER_SELECT = {
 } as const;
 ```
 
-- [ ] **Step 2: `setDemo()` 메서드 추가**
+- [x] **Step 2: `setDemo()` 메서드 추가**
 
 `AdminRepository` 클래스에 추가:
 
@@ -273,7 +273,7 @@ setDemo(id: number, isDemo: boolean) {
 }
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add apps/api/src/admin/admin.repo.ts
@@ -289,7 +289,7 @@ git commit -m "feat: add isDemo to USER_SELECT and setDemo repo method"
 - Modify: `apps/api/__test__/admin/admin.service.test.ts`
 - Modify: `apps/api/src/admin/dto/admin.dto.ts`
 
-- [ ] **Step 1: `admin.dto.ts`에 `SetDemoDto` 추가**
+- [x] **Step 1: `admin.dto.ts`에 `SetDemoDto` 추가**
 
 `apps/api/src/admin/dto/admin.dto.ts`:
 
@@ -299,7 +299,7 @@ export interface SetDemoDto {
 }
 ```
 
-- [ ] **Step 2: 실패하는 테스트 작성**
+- [x] **Step 2: 실패하는 테스트 작성**
 
 `apps/api/__test__/admin/admin.service.test.ts`에 추가 (기존 코드 유지, 아래 블록 맨 끝에 추가):
 
@@ -396,7 +396,7 @@ describe("AdminService - setDemoStatus", () => {
 });
 ```
 
-- [ ] **Step 3: 테스트 실패 확인**
+- [x] **Step 3: 테스트 실패 확인**
 
 ```bash
 cd apps/api && npx jest __test__/admin/admin.service.test.ts --no-coverage
@@ -404,7 +404,7 @@ cd apps/api && npx jest __test__/admin/admin.service.test.ts --no-coverage
 
 Expected: FAIL — `listUsers` 시그니처 불일치, `setDemoStatus` 없음 등
 
-- [ ] **Step 4: `AdminService` 구현 수정**
+- [x] **Step 4: `AdminService` 구현 수정**
 
 `apps/api/src/admin/admin.service.ts`를 아래로 교체:
 
@@ -527,7 +527,7 @@ export class AdminService {
 }
 ```
 
-- [ ] **Step 5: 테스트 통과 확인**
+- [x] **Step 5: 테스트 통과 확인**
 
 ```bash
 cd apps/api && npx jest __test__/admin/admin.service.test.ts --no-coverage
@@ -535,7 +535,7 @@ cd apps/api && npx jest __test__/admin/admin.service.test.ts --no-coverage
 
 Expected: PASS (모든 테스트)
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add apps/api/src/admin/admin.service.ts apps/api/__test__/admin/admin.service.test.ts apps/api/src/admin/dto/admin.dto.ts
@@ -550,7 +550,7 @@ git commit -m "feat: apply PII masking in AdminService for demo accounts"
 - Modify: `apps/api/src/admin/admin.controller.ts`
 - Modify: `apps/api/src/admin/admin.routes.ts`
 
-- [ ] **Step 1: controller에 `isDemo` 전달 + `setDemoStatus` 핸들러 추가**
+- [x] **Step 1: controller에 `isDemo` 전달 + `setDemoStatus` 핸들러 추가**
 
 `apps/api/src/admin/admin.controller.ts`:
 
@@ -702,7 +702,7 @@ export class AdminController {
 }
 ```
 
-- [ ] **Step 2: `admin.routes.ts`에 demo 엔드포인트 추가**
+- [x] **Step 2: `admin.routes.ts`에 demo 엔드포인트 추가**
 
 `apps/api/src/admin/admin.routes.ts`:
 
@@ -732,7 +732,7 @@ router.delete("/users/:id", auth, controller.deleteUser);
 export default router;
 ```
 
-- [ ] **Step 3: 타입 에러 없는지 확인**
+- [x] **Step 3: 타입 에러 없는지 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit
@@ -740,7 +740,7 @@ cd apps/api && npx tsc --noEmit
 
 Expected: 에러 없음
 
-- [ ] **Step 4: 전체 테스트 통과 확인**
+- [x] **Step 4: 전체 테스트 통과 확인**
 
 ```bash
 cd apps/api && npx jest --no-coverage
@@ -748,7 +748,7 @@ cd apps/api && npx jest --no-coverage
 
 Expected: PASS (전체)
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add apps/api/src/admin/admin.controller.ts apps/api/src/admin/admin.routes.ts

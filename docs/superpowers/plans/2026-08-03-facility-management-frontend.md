@@ -1,6 +1,6 @@
 # Facility Management Frontend Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Build the facility management UI (inspections + maintenance requests) for FACILITY_MANAGER and FACILITY_STAFF roles.
 
@@ -33,7 +33,7 @@
 - Create: `football/src/types/facility.ts`
 - Create: `football/src/services/facility.service.ts`
 
-- [ ] **Step 1: Create types file**
+- [x] **Step 1: Create types file**
 
 ```typescript
 // football/src/types/facility.ts
@@ -145,7 +145,7 @@ export const STATUS_STYLE: Record<MaintenanceStatus, string> = {
 }
 ```
 
-- [ ] **Step 2: Create service file**
+- [x] **Step 2: Create service file**
 
 ```typescript
 // football/src/services/facility.service.ts
@@ -192,7 +192,7 @@ export const facilityApi = {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/types/facility.ts football/src/services/facility.service.ts
@@ -209,7 +209,7 @@ git commit -m "feat(facility): add types and API service"
 - Modify: `football/src/locales/ko/common.json` (line 74, inside `nav.item`)
 - Modify: `football/src/locales/en/common.json` (inside `nav.item`)
 
-- [ ] **Step 1: Create Korean locale**
+- [x] **Step 1: Create Korean locale**
 
 ```json
 // football/src/locales/ko/facility.json
@@ -306,7 +306,7 @@ git commit -m "feat(facility): add types and API service"
 }
 ```
 
-- [ ] **Step 2: Create English locale**
+- [x] **Step 2: Create English locale**
 
 ```json
 // football/src/locales/en/facility.json
@@ -403,7 +403,7 @@ git commit -m "feat(facility): add types and API service"
 }
 ```
 
-- [ ] **Step 3: Add nav label to ko/common.json**
+- [x] **Step 3: Add nav label to ko/common.json**
 
 In `football/src/locales/ko/common.json`, inside `"nav" > "item"`, add after `"recruitment": "채용 관리"`:
 
@@ -411,7 +411,7 @@ In `football/src/locales/ko/common.json`, inside `"nav" > "item"`, add after `"r
 "facilityMgmt": "시설 관리"
 ```
 
-- [ ] **Step 4: Add nav label to en/common.json**
+- [x] **Step 4: Add nav label to en/common.json**
 
 In `football/src/locales/en/common.json`, inside `"nav" > "item"`, add after the `"recruitment"` entry:
 
@@ -419,7 +419,7 @@ In `football/src/locales/en/common.json`, inside `"nav" > "item"`, add after the
 "facilityMgmt": "Facility"
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/locales/
@@ -433,7 +433,7 @@ git commit -m "feat(facility): add facility locale files (ko + en)"
 **Files:**
 - Create: `football/src/pages/facility/FacilityPage.tsx`
 
-- [ ] **Step 1: Create the page**
+- [x] **Step 1: Create the page**
 
 ```tsx
 // football/src/pages/facility/FacilityPage.tsx
@@ -1006,7 +1006,7 @@ export function FacilityPage() {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add football/src/pages/facility/FacilityPage.tsx
@@ -1022,7 +1022,7 @@ git commit -m "feat(facility): add FacilityPage with inspections and maintenance
 - Modify: `football/src/App.tsx`
 - Modify: `football/src/layouts/AppShell.tsx`
 
-- [ ] **Step 1: Register facility namespace in i18n.ts**
+- [x] **Step 1: Register facility namespace in i18n.ts**
 
 Add these imports near the top of `football/src/i18n.ts` (after `import koAdmin`):
 
@@ -1033,7 +1033,7 @@ import enFacility from './locales/en/facility.json';
 
 Add `facility: koFacility` inside the `ko` resources object, and `facility: enFacility` inside the `en` resources object.
 
-- [ ] **Step 2: Add route in App.tsx**
+- [x] **Step 2: Add route in App.tsx**
 
 Find the existing `<Route path="/equipment" element={<EquipmentPage />} />` line. Add after it:
 
@@ -1047,7 +1047,7 @@ Also add the import at the top of the file near other page imports:
 import { FacilityPage } from '@/pages/facility/FacilityPage'
 ```
 
-- [ ] **Step 3: Add nav item in AppShell.tsx**
+- [x] **Step 3: Add nav item in AppShell.tsx**
 
 Find the equipment nav item (around line 371-377):
 
@@ -1076,7 +1076,7 @@ Add the facility nav item **after** this block:
 
 `Building2` is already imported (used by `/admin/departments` and `/admin/partners`).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/i18n.ts football/src/App.tsx football/src/layouts/AppShell.tsx
@@ -1087,7 +1087,7 @@ git commit -m "feat(facility): wire route, nav item, and i18n namespace"
 
 ### Task 5: PR
 
-- [ ] **Step 1: Push and open PR**
+- [x] **Step 1: Push and open PR**
 
 ```bash
 git push origin HEAD
@@ -1096,7 +1096,7 @@ gh pr create \
   --body "시설관리팀(FACILITY_MANAGER, FACILITY_STAFF)을 위한 시설 점검 및 유지보수 요청 UI 추가"
 ```
 
-- [ ] **Step 2: Merge**
+- [x] **Step 2: Merge**
 
 ```bash
 gh pr merge --squash --delete-branch

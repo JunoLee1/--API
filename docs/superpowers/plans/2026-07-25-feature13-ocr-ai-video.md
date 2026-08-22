@@ -1,6 +1,6 @@
 # Feature 13: OCR 경기 기록지 + AI 영상 요약 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 경기 기록지 이미지를 Claude Vision으로 OCR 분석해 Match에 저장하고, 훈련 영상에 Claude AI 요약을 생성해 저장한다.
 
@@ -63,7 +63,7 @@ const result = await api.postForm<{ statSheetRaw: StatSheetData }>(`/matches/${i
 - Create: `apps/api/prisma/migrations/20260725000003_feature13_ai/migration.sql`
 - Modify: `apps/api/prisma/schema.prisma`
 
-- [ ] **Step 1: 마이그레이션 폴더 및 SQL 파일 생성**
+- [x] **Step 1: 마이그레이션 폴더 및 SQL 파일 생성**
 
 `apps/api/prisma/migrations/20260725000003_feature13_ai/migration.sql`:
 ```sql
@@ -75,7 +75,7 @@ ALTER TABLE "Match" ADD COLUMN "statSheetImagePath" TEXT;
 ALTER TABLE "TrainingVideo" ADD COLUMN "aiSummary" TEXT;
 ```
 
-- [ ] **Step 2: schema.prisma 수정**
+- [x] **Step 2: schema.prisma 수정**
 
 `apps/api/prisma/schema.prisma`의 `model Match` 블록에 마지막 관계 필드 전에 추가:
 ```prisma
@@ -88,7 +88,7 @@ ALTER TABLE "TrainingVideo" ADD COLUMN "aiSummary" TEXT;
   aiSummary    String?
 ```
 
-- [ ] **Step 3: 마이그레이션 실행**
+- [x] **Step 3: 마이그레이션 실행**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -99,7 +99,7 @@ npx prisma generate
 
 Expected: `Environment variables loaded from .env` + `Generated Prisma Client` — 에러 없음.
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 cd /Users/juno/work/football
@@ -115,7 +115,7 @@ git commit -m "feat(db): Match.statSheetRaw + TrainingVideo.aiSummary 필드 추
 - Modify: `apps/api/package.json` (npm install)
 - Create: `apps/api/src/lib/claude.ts`
 
-- [ ] **Step 1: SDK 설치**
+- [x] **Step 1: SDK 설치**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -124,7 +124,7 @@ npm install @anthropic-ai/sdk
 
 Expected: `added 1 package` — 에러 없음.
 
-- [ ] **Step 2: `src/lib/claude.ts` 생성**
+- [x] **Step 2: `src/lib/claude.ts` 생성**
 
 ```typescript
 import Anthropic from "@anthropic-ai/sdk";
@@ -138,7 +138,7 @@ export const anthropic = new Anthropic({
 });
 ```
 
-- [ ] **Step 3: TypeScript 빌드 체크**
+- [x] **Step 3: TypeScript 빌드 체크**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | grep -v "country.repo.ts" | grep -v "monthlyAttendanceCheck" | head -20
@@ -146,7 +146,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | grep -v "countr
 
 Expected: 출력 없음 (에러 없음).
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 cd /Users/juno/work/football
@@ -166,7 +166,7 @@ git commit -m "feat(ai): Anthropic SDK 설치 + claude.ts 헬퍼"
 
 ### match.repo.ts
 
-- [ ] **Step 1: `updateStatSheet` 메서드 추가**
+- [x] **Step 1: `updateStatSheet` 메서드 추가**
 
 `apps/api/src/match/match.repo.ts`의 `MatchRepository` 클래스 마지막에 추가:
 ```typescript
@@ -193,7 +193,7 @@ git commit -m "feat(ai): Anthropic SDK 설치 + claude.ts 헬퍼"
 
 ### match.service.ts
 
-- [ ] **Step 2: `uploadStatSheet` 메서드 추가**
+- [x] **Step 2: `uploadStatSheet` 메서드 추가**
 
 `apps/api/src/match/match.service.ts` 상단 imports에 추가:
 ```typescript
@@ -269,7 +269,7 @@ JSON만 반환하고 다른 텍스트는 포함하지 마세요.`,
 
 ### match.controller.ts
 
-- [ ] **Step 3: `uploadStatSheet` 핸들러 추가**
+- [x] **Step 3: `uploadStatSheet` 핸들러 추가**
 
 `apps/api/src/match/match.controller.ts`의 `MatchController` 클래스 마지막에 추가:
 ```typescript
@@ -294,7 +294,7 @@ JSON만 반환하고 다른 텍스트는 포함하지 마세요.`,
 
 ### match.routes.ts
 
-- [ ] **Step 4: multer + 라우트 추가**
+- [x] **Step 4: multer + 라우트 추가**
 
 `apps/api/src/match/match.routes.ts` 맨 위 imports에 추가:
 ```typescript
@@ -330,7 +330,7 @@ const uploadStatSheet = multer({
 router.post("/:id/stat-sheet", auth, uploadStatSheet.single("image"), controller.uploadStatSheet);
 ```
 
-- [ ] **Step 5: TypeScript 빌드 체크**
+- [x] **Step 5: TypeScript 빌드 체크**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | grep -v "country.repo.ts" | grep -v "monthlyAttendanceCheck" | head -20
@@ -338,7 +338,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | grep -v "countr
 
 Expected: 출력 없음.
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 cd /Users/juno/work/football
@@ -358,7 +358,7 @@ git commit -m "feat(match): OCR 스탯 시트 업로드 엔드포인트 추가"
 
 ### video.repo.ts
 
-- [ ] **Step 1: `updateAiSummary` 메서드 추가**
+- [x] **Step 1: `updateAiSummary` 메서드 추가**
 
 `apps/api/src/video/video.repo.ts`의 `VideoRepository` 클래스 마지막에 추가:
 ```typescript
@@ -373,7 +373,7 @@ git commit -m "feat(match): OCR 스탯 시트 업로드 엔드포인트 추가"
 
 ### video.service.ts
 
-- [ ] **Step 2: `generateAiSummary` 메서드 추가**
+- [x] **Step 2: `generateAiSummary` 메서드 추가**
 
 `apps/api/src/video/video.service.ts` 상단 imports에 추가:
 ```typescript
@@ -437,7 +437,7 @@ URL: ${video.url}
 
 ### video.controller.ts
 
-- [ ] **Step 3: `generateAiSummary` 핸들러 추가**
+- [x] **Step 3: `generateAiSummary` 핸들러 추가**
 
 `apps/api/src/video/video.controller.ts`의 `VideoController` 클래스 마지막에 추가:
 ```typescript
@@ -455,14 +455,14 @@ URL: ${video.url}
 
 ### video.routes.ts
 
-- [ ] **Step 4: 라우트 추가**
+- [x] **Step 4: 라우트 추가**
 
 `apps/api/src/video/video.routes.ts`에서 `router.delete("/:id", ...)` 줄 아래에 추가:
 ```typescript
 router.post("/:id/ai-summary", auth, controller.generateAiSummary);
 ```
 
-- [ ] **Step 5: TypeScript 빌드 체크**
+- [x] **Step 5: TypeScript 빌드 체크**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | grep -v "country.repo.ts" | grep -v "monthlyAttendanceCheck" | head -20
@@ -470,7 +470,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | grep -v "countr
 
 Expected: 출력 없음.
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 cd /Users/juno/work/football
@@ -490,7 +490,7 @@ git commit -m "feat(video): AI 요약 생성 엔드포인트 추가"
 
 ### types/match.ts
 
-- [ ] **Step 1: `StatSheetData` 인터페이스 + `MatchDetail` 필드 추가**
+- [x] **Step 1: `StatSheetData` 인터페이스 + `MatchDetail` 필드 추가**
 
 `football/src/types/match.ts`에 `export interface ShotEvent {` 줄 **위에** 추가:
 ```typescript
@@ -531,7 +531,7 @@ export interface MatchDetail extends Match {
 
 ### services/match.service.ts
 
-- [ ] **Step 2: import + `uploadStatSheet` 추가**
+- [x] **Step 2: import + `uploadStatSheet` 추가**
 
 `football/src/services/match.service.ts` 상단에 import 추가:
 ```typescript
@@ -552,7 +552,7 @@ import type { StatSheetData } from '@/types/match'
 
 ### types/video.ts
 
-- [ ] **Step 3: `TrainingVideo`에 `aiSummary` 추가**
+- [x] **Step 3: `TrainingVideo`에 `aiSummary` 추가**
 
 `football/src/types/video.ts`의 `TrainingVideo` 인터페이스에 `createdAt` 아래 추가:
 ```typescript
@@ -561,7 +561,7 @@ import type { StatSheetData } from '@/types/match'
 
 ### services/video.service.ts
 
-- [ ] **Step 4: `generateAiSummary` 추가**
+- [x] **Step 4: `generateAiSummary` 추가**
 
 `football/src/services/video.service.ts`의 `videoApi` 객체 마지막에 추가:
 ```typescript
@@ -569,7 +569,7 @@ import type { StatSheetData } from '@/types/match'
     api.post<{ id: number; aiSummary: string }>(`/videos/${id}/ai-summary`),
 ```
 
-- [ ] **Step 5: TypeScript 빌드 체크**
+- [x] **Step 5: TypeScript 빌드 체크**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep -v "country.repo.ts" | grep -v "monthlyAttendanceCheck" | head -20
@@ -577,7 +577,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep -v "countr
 
 Expected: 출력 없음.
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 cd /Users/juno/work/football
@@ -597,7 +597,7 @@ MatchDetailPage는 1010줄짜리 파일. 주요 구조:
 - 메인 리턴의 `<div className="flex-1 overflow-auto p-6">` 안에 `<div className="max-w-4xl mx-auto space-y-4">` — line 742
 - 이 div 내부 마지막 닫는 `</div>` (line ~989) **전에** 스탯 시트 섹션 추가
 
-- [ ] **Step 1: import 추가**
+- [x] **Step 1: import 추가**
 
 `MatchDetailPage.tsx` 상단 imports에 추가:
 ```typescript
@@ -608,7 +608,7 @@ import type { StatSheetData } from '@/types/match'
 
 (기존 `import { useEffect, useState } from 'react'` 줄을 `import { useEffect, useState, useRef } from 'react'`로 수정)
 
-- [ ] **Step 2: `MatchDetailPage` 컴포넌트 상태 + 핸들러 추가**
+- [x] **Step 2: `MatchDetailPage` 컴포넌트 상태 + 핸들러 추가**
 
 `const [deletingShot, setDeletingShot] = useState<number | null>(null)` 줄 아래에 추가:
 ```typescript
@@ -634,7 +634,7 @@ import type { StatSheetData } from '@/types/match'
   }
 ```
 
-- [ ] **Step 3: 스탯 시트 섹션 추가**
+- [x] **Step 3: 스탯 시트 섹션 추가**
 
 `MatchDetailPage` 리턴의 `<div className="max-w-4xl mx-auto space-y-4">` 블록 내부,
 마지막 `</div>` (line ~989) **직전**에 아래 JSX 추가:
@@ -680,7 +680,7 @@ import type { StatSheetData } from '@/types/match'
           )}
 ```
 
-- [ ] **Step 4: `StatSheetDisplay` 컴포넌트 추가**
+- [x] **Step 4: `StatSheetDisplay` 컴포넌트 추가**
 
 `export function MatchDetailPage()` 줄 **바로 위**(line ~632)에 추가:
 ```tsx
@@ -736,7 +736,7 @@ function StatSheetDisplay({
 }
 ```
 
-- [ ] **Step 5: TypeScript 빌드 체크**
+- [x] **Step 5: TypeScript 빌드 체크**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep -v "country.repo.ts" | grep -v "monthlyAttendanceCheck" | head -20
@@ -744,7 +744,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep -v "countr
 
 Expected: 출력 없음.
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 cd /Users/juno/work/football
@@ -761,7 +761,7 @@ git commit -m "feat(fe): MatchDetailPage OCR 스탯 시트 업로드 + 표시"
 
 TrainingVideoPage는 테이블 레이아웃. 각 row는 `<TableRow key={v.id}>`. 영상 제목 아래에 요약이 있으면 italic muted 텍스트로 표시, 없으면 COACHING_STAFF/ADMIN에게 "AI 요약" 버튼 표시.
 
-- [ ] **Step 1: import 추가**
+- [x] **Step 1: import 추가**
 
 `TrainingVideoPage.tsx` 상단 imports에 추가:
 ```typescript
@@ -774,14 +774,14 @@ Lucide import에 `Sparkles` 추가:
 import { Plus, ExternalLink, Trash2, Sparkles } from 'lucide-react'
 ```
 
-- [ ] **Step 2: 상태 추가**
+- [x] **Step 2: 상태 추가**
 
 `const [filterTag, setFilterTag] = useState('')` 줄 아래에 추가:
 ```typescript
   const [generatingSummaryId, setGeneratingSummaryId] = useState<number | null>(null)
 ```
 
-- [ ] **Step 3: `handleGenerateSummary` 핸들러 추가**
+- [x] **Step 3: `handleGenerateSummary` 핸들러 추가**
 
 `const handleDelete = async ...` 함수 아래에 추가:
 ```typescript
@@ -799,7 +799,7 @@ import { Plus, ExternalLink, Trash2, Sparkles } from 'lucide-react'
   }
 ```
 
-- [ ] **Step 4: 테이블 행에 AI 요약 표시 + 버튼 추가**
+- [x] **Step 4: 테이블 행에 AI 요약 표시 + 버튼 추가**
 
 기존 테이블의 제목 셀 (`<TableCell className="font-medium">`) 내용을 아래로 교체:
 ```tsx
@@ -826,7 +826,7 @@ import { Plus, ExternalLink, Trash2, Sparkles } from 'lucide-react'
                   </TableCell>
 ```
 
-- [ ] **Step 5: TypeScript 빌드 체크**
+- [x] **Step 5: TypeScript 빌드 체크**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep -v "country.repo.ts" | grep -v "monthlyAttendanceCheck" | head -20
@@ -834,7 +834,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | grep -v "countr
 
 Expected: 출력 없음.
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 cd /Users/juno/work/football
@@ -846,7 +846,7 @@ git commit -m "feat(fe): TrainingVideoPage AI 요약 생성 버튼 + 표시"
 
 ## 최종 확인
 
-- [ ] **전체 빌드 체크**
+- [x] **전체 빌드 체크**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | grep -v "country.repo.ts" | grep -v "monthlyAttendanceCheck" | head -20

@@ -1,6 +1,6 @@
 # 스폰서십 등록 폼 국내/해외 구분 재설계 구현 계획
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 스폰서 등록·수정 폼 최상단에 국내/해외 라디오 토글을 추가하고, 선택에 따라 사업자등록번호·주소(카카오 API) 또는 TAX ID·해외주소 필드를 조건부 노출하며 신규 필드를 DB에 저장한다.
 
@@ -39,7 +39,7 @@ FE
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma:2706-2714`
 
-- [ ] **Step 1: `Sponsorship` 모델에 7개 필드 추가**
+- [x] **Step 1: `Sponsorship` 모델에 7개 필드 추가**
 
 `ukSwiftBic String?` 바로 아래에 다음 블록을 삽입한다.
 
@@ -58,7 +58,7 @@ FE
 
 결과: `attachedContract` 관계 선언 바로 위에 위치해야 한다.
 
-- [ ] **Step 2: 마이그레이션 실행**
+- [x] **Step 2: 마이그레이션 실행**
 
 ```bash
 cd apps/api
@@ -68,7 +68,7 @@ npx prisma migrate dev --name add_sponsorship_region_fields
 Expected: `The following migration(s) have been created and applied:` 메시지 출력.  
 `apps/api/prisma/migrations/20260815000001_add_sponsorship_region_fields/migration.sql` 파일 생성됨.
 
-- [ ] **Step 3: Prisma 클라이언트 재생성 확인**
+- [x] **Step 3: Prisma 클라이언트 재생성 확인**
 
 마이그레이션이 자동으로 `prisma generate`를 실행한다. 확인:
 
@@ -78,7 +78,7 @@ grep -n "isOverseas" apps/api/src/generated/client/index.d.ts | head -3
 
 Expected: `isOverseas` 필드가 포함된 타입 정의 출력.
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 cd ../..
@@ -95,7 +95,7 @@ git commit -m "feat(db): add sponsorship region fields (isOverseas, address, tax
 - Modify: `apps/api/src/sponsorship/dto/sponsorship.dto.ts`
 - Modify: `apps/api/src/sponsorship/sponsorship.repo.ts`
 
-- [ ] **Step 1: 실패하는 테스트 작성**
+- [x] **Step 1: 실패하는 테스트 작성**
 
 `apps/api/src/sponsorship/sponsorship.service.test.ts` 신규 파일:
 
@@ -175,7 +175,7 @@ describe("SponsorshipService.create — region fields", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실패 확인**
+- [x] **Step 2: 테스트 실패 확인**
 
 ```bash
 cd apps/api
@@ -184,7 +184,7 @@ npx jest sponsorship.service.test --no-coverage
 
 Expected: FAIL — `businessRegNumber` / `taxId` 등이 repo.create 에 포함되지 않아 expect 실패.
 
-- [ ] **Step 3: DTO 확장**
+- [x] **Step 3: DTO 확장**
 
 `apps/api/src/sponsorship/dto/sponsorship.dto.ts`의 `CreateSponsorshipDto` 인터페이스에 추가:
 
@@ -250,7 +250,7 @@ export interface UpdateSponsorshipDto {
 }
 ```
 
-- [ ] **Step 4: Repo `create()` 에 신규 필드 추가**
+- [x] **Step 4: Repo `create()` 에 신규 필드 추가**
 
 `apps/api/src/sponsorship/sponsorship.repo.ts` `create()` 메서드의 `data` 객체에 추가.  
 기존 `...(data.ukSwiftBic && { ukSwiftBic: data.ukSwiftBic }),` 뒤에:
@@ -267,7 +267,7 @@ export interface UpdateSponsorshipDto {
 
 `update()` 는 `...data` 스프레드를 사용하므로 변경 불필요 — 새 필드가 자동으로 전달된다.
 
-- [ ] **Step 5: 테스트 통과 확인**
+- [x] **Step 5: 테스트 통과 확인**
 
 ```bash
 npx jest sponsorship.service.test --no-coverage
@@ -275,7 +275,7 @@ npx jest sponsorship.service.test --no-coverage
 
 Expected: PASS — 2 tests.
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 cd ../..
@@ -292,7 +292,7 @@ git commit -m "feat(sponsorship): extend DTO and repo to support region fields"
 - Modify: `football/src/locales/ko/sponsorship.json`
 - Modify: `football/src/locales/en/sponsorship.json`
 
-- [ ] **Step 1: `Sponsorship` 인터페이스에 신규 필드 추가**
+- [x] **Step 1: `Sponsorship` 인터페이스에 신규 필드 추가**
 
 `football/src/types/sponsorship.ts`의 `Sponsorship` 인터페이스에서 `// 영국 계좌` 블록 뒤에 추가:
 
@@ -309,7 +309,7 @@ git commit -m "feat(sponsorship): extend DTO and repo to support region fields"
   overseasAddress: string | null
 ```
 
-- [ ] **Step 2: `CreateSponsorshipDto` + `UpdateSponsorshipDto` 확장**
+- [x] **Step 2: `CreateSponsorshipDto` + `UpdateSponsorshipDto` 확장**
 
 `CreateSponsorshipDto` 에서 `ukSwiftBic?: string` 뒤에 추가:
 
@@ -325,7 +325,7 @@ git commit -m "feat(sponsorship): extend DTO and repo to support region fields"
 
 `UpdateSponsorshipDto` 에도 동일 7개 optional 필드 추가.
 
-- [ ] **Step 3: 한국어 i18n 키 추가**
+- [x] **Step 3: 한국어 i18n 키 추가**
 
 `football/src/locales/ko/sponsorship.json` 의 `"form"` 객체에 추가:
 
@@ -349,7 +349,7 @@ git commit -m "feat(sponsorship): extend DTO and repo to support region fields"
     "saved": "스폰서 정보가 저장되었습니다."
 ```
 
-- [ ] **Step 4: 영어 i18n 키 추가**
+- [x] **Step 4: 영어 i18n 키 추가**
 
 `football/src/locales/en/sponsorship.json` 의 `"form"` 객체에 추가:
 
@@ -373,7 +373,7 @@ git commit -m "feat(sponsorship): extend DTO and repo to support region fields"
     "saved": "Sponsor info saved."
 ```
 
-- [ ] **Step 5: TypeScript 빌드 확인**
+- [x] **Step 5: TypeScript 빌드 확인**
 
 ```bash
 cd football
@@ -382,7 +382,7 @@ npx tsc --noEmit 2>&1 | grep -i sponsorship | head -10
 
 Expected: 오류 없음.
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 cd ..
@@ -397,7 +397,7 @@ git commit -m "feat(sponsorship): extend FE types and i18n for region fields"
 **Files:**
 - Create: `football/src/components/DaumPostcodeDialog.tsx`
 
-- [ ] **Step 1: react-daum-postcode 설치**
+- [x] **Step 1: react-daum-postcode 설치**
 
 ```bash
 cd football
@@ -406,7 +406,7 @@ npm install react-daum-postcode
 
 Expected: `added N packages` 메시지.
 
-- [ ] **Step 2: 컴포넌트 작성**
+- [x] **Step 2: 컴포넌트 작성**
 
 `football/src/components/DaumPostcodeDialog.tsx`:
 
@@ -446,7 +446,7 @@ export function DaumPostcodeDialog({ open, onOpenChange, onComplete }: DaumPostc
 }
 ```
 
-- [ ] **Step 3: TypeScript 확인**
+- [x] **Step 3: TypeScript 확인**
 
 ```bash
 npx tsc --noEmit 2>&1 | grep DaumPostcode | head -5
@@ -454,7 +454,7 @@ npx tsc --noEmit 2>&1 | grep DaumPostcode | head -5
 
 Expected: 오류 없음.
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 cd ..
@@ -469,7 +469,7 @@ git commit -m "feat(sponsorship): add DaumPostcodeDialog component"
 **Files:**
 - Modify: `football/src/pages/sponsorship/SponsorshipPage.tsx`
 
-- [ ] **Step 1: import 추가**
+- [x] **Step 1: import 추가**
 
 `SponsorshipPage.tsx` 상단 import 블록에 추가:
 
@@ -479,7 +479,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { DaumPostcodeDialog } from '@/components/DaumPostcodeDialog'
 ```
 
-- [ ] **Step 2: 신규 state 추가**
+- [x] **Step 2: 신규 state 추가**
 
 `CreateSponsorshipDialog` 함수 내에서 기존 `const [saving, setSaving] = useState(false)` 위에 추가:
 
@@ -494,7 +494,7 @@ import { DaumPostcodeDialog } from '@/components/DaumPostcodeDialog'
   const [showPostcode, setShowPostcode] = useState(false)
 ```
 
-- [ ] **Step 3: `reset()` 함수 업데이트**
+- [x] **Step 3: `reset()` 함수 업데이트**
 
 기존 `reset` 함수 전체를 교체:
 
@@ -523,7 +523,7 @@ import { DaumPostcodeDialog } from '@/components/DaumPostcodeDialog'
   }
 ```
 
-- [ ] **Step 4: `handleSave()` — DTO 업데이트**
+- [x] **Step 4: `handleSave()` — DTO 업데이트**
 
 `handleSave` 내 `const dto: CreateSponsorshipDto = { ... }` 블록 전체를 교체:
 
@@ -552,7 +552,7 @@ import { DaumPostcodeDialog } from '@/components/DaumPostcodeDialog'
     }
 ```
 
-- [ ] **Step 5: 폼 JSX 교체**
+- [x] **Step 5: 폼 JSX 교체**
 
 `<div className="space-y-4">` 내부의 기존 모든 필드(스폰서명~영국계좌)를 다음 구조로 교체:
 
@@ -735,7 +735,7 @@ import { DaumPostcodeDialog } from '@/components/DaumPostcodeDialog'
 
 DialogContent의 `className="max-w-lg"` 를 `className="max-w-lg max-h-[90vh] overflow-y-auto"` 로 변경 (폼이 길어지므로).
 
-- [ ] **Step 6: TypeScript 확인**
+- [x] **Step 6: TypeScript 확인**
 
 ```bash
 cd football
@@ -744,7 +744,7 @@ npx tsc --noEmit 2>&1 | grep -i "SponsorshipPage\|CreateSponsorship" | head -10
 
 Expected: 오류 없음.
 
-- [ ] **Step 7: 커밋**
+- [x] **Step 7: 커밋**
 
 ```bash
 cd ..
@@ -761,7 +761,7 @@ git commit -m "feat(sponsorship): redesign CreateSponsorshipDialog with domestic
 
 > 참고: `BankEditDialog` 컴포넌트를 파일 내에서 재설계한다 (컴포넌트명 자체는 내부 변경 최소화를 위해 유지 가능하나, 타이틀/저장 메시지 키만 변경).
 
-- [ ] **Step 1: import 추가**
+- [x] **Step 1: import 추가**
 
 `SponsorshipDetailPage.tsx` 상단에 추가:
 
@@ -771,7 +771,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { DaumPostcodeDialog } from '@/components/DaumPostcodeDialog'
 ```
 
-- [ ] **Step 2: BankEditDialog — 신규 state 추가**
+- [x] **Step 2: BankEditDialog — 신규 state 추가**
 
 `BankEditDialog` 함수 내 기존 `const [form, setForm] = useState({ ... })` 를 개별 state로 분리하고 신규 필드 추가:
 
@@ -796,7 +796,7 @@ function BankEditDialog({ open, onOpenChange, sponsorship, onSaved }: BankEditDi
   const [saving, setSaving] = useState(false)
 ```
 
-- [ ] **Step 3: `useEffect` 동기화 업데이트**
+- [x] **Step 3: `useEffect` 동기화 업데이트**
 
 기존 `useEffect`의 `setForm(...)` 블록 전체를 교체:
 
@@ -821,7 +821,7 @@ function BankEditDialog({ open, onOpenChange, sponsorship, onSaved }: BankEditDi
   }, [open, sponsorship])
 ```
 
-- [ ] **Step 4: `handleSave()` 업데이트**
+- [x] **Step 4: `handleSave()` 업데이트**
 
 기존 `handleSave` 전체를 교체:
 
@@ -856,7 +856,7 @@ function BankEditDialog({ open, onOpenChange, sponsorship, onSaved }: BankEditDi
   }
 ```
 
-- [ ] **Step 5: Dialog JSX 교체**
+- [x] **Step 5: Dialog JSX 교체**
 
 기존 `const field = (...)` 헬퍼 함수 정의 전체를 삭제한다.  
 그런 다음 `return (` 이하 `<Dialog>` 반환문 전체를 아래 구조로 교체:
@@ -988,7 +988,7 @@ function BankEditDialog({ open, onOpenChange, sponsorship, onSaved }: BankEditDi
   )
 ```
 
-- [ ] **Step 6: TypeScript 확인**
+- [x] **Step 6: TypeScript 확인**
 
 ```bash
 cd football
@@ -997,7 +997,7 @@ npx tsc --noEmit 2>&1 | grep -i "SponsorshipDetailPage\|BankEditDialog" | head -
 
 Expected: 오류 없음.
 
-- [ ] **Step 7: 전체 BE 테스트 확인**
+- [x] **Step 7: 전체 BE 테스트 확인**
 
 ```bash
 cd ../apps/api
@@ -1006,7 +1006,7 @@ npx jest --no-coverage 2>&1 | tail -5
 
 Expected: `Tests: N passed, N total` — 실패 없음.
 
-- [ ] **Step 8: 커밋**
+- [x] **Step 8: 커밋**
 
 ```bash
 cd ../..

@@ -1,6 +1,6 @@
 # Sponsorship Management Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Sponsorship + SponsorshipPayment CRUD API 구현, 스폰서십 생성 시 paymentSchedule 기반 납부 일정 자동 생성, OVERDUE 상태 읽기 시 계산.
 
@@ -30,7 +30,7 @@
 - Create: `apps/api/src/sponsorship/dto/sponsorship.dto.ts`
 - Create: `apps/api/src/sponsorship/sponsorship.repo.ts`
 
-- [ ] **Step 1: sponsorship.dto.ts 작성**
+- [x] **Step 1: sponsorship.dto.ts 작성**
 
 ```ts
 import type { SponsorType, PaymentSchedule } from "../../generated/enums";
@@ -60,7 +60,7 @@ export interface SponsorshipListQuery {
 }
 ```
 
-- [ ] **Step 2: sponsorship.repo.ts 작성**
+- [x] **Step 2: sponsorship.repo.ts 작성**
 
 ```ts
 import type { PrismaClient } from "../../generated/client";
@@ -141,7 +141,7 @@ export class SponsorshipRepository {
 }
 ```
 
-- [ ] **Step 3: TypeScript 체크**
+- [x] **Step 3: TypeScript 체크**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -150,7 +150,7 @@ npx tsc --noEmit 2>&1 | grep "sponsorship" | head -20
 
 Expected: 에러 없음
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 cd /Users/juno/work/football
@@ -166,7 +166,7 @@ git commit -m "feat: add Sponsorship DTO and repository"
 - Test: `apps/api/__test__/sponsorship/sponsorship.service.test.ts`
 - Create: `apps/api/src/sponsorship/sponsorship.service.ts`
 
-- [ ] **Step 1: 테스트 파일 작성**
+- [x] **Step 1: 테스트 파일 작성**
 
 Create `apps/api/__test__/sponsorship/sponsorship.service.test.ts`:
 
@@ -351,7 +351,7 @@ describe("SponsorshipService.markPaid", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 — 실패 확인**
+- [x] **Step 2: 테스트 실행 — 실패 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -360,7 +360,7 @@ npx jest __test__/sponsorship --no-coverage 2>&1 | tail -10
 
 Expected: FAIL (구현 파일 없음)
 
-- [ ] **Step 3: sponsorship.service.ts 구현**
+- [x] **Step 3: sponsorship.service.ts 구현**
 
 Create `apps/api/src/sponsorship/sponsorship.service.ts`:
 
@@ -448,7 +448,7 @@ export class SponsorshipService {
 }
 ```
 
-- [ ] **Step 4: 테스트 실행 — 통과 확인**
+- [x] **Step 4: 테스트 실행 — 통과 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -457,7 +457,7 @@ npx jest __test__/sponsorship --no-coverage 2>&1 | tail -15
 
 Expected: 12개 테스트 모두 PASS
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 cd /Users/juno/work/football
@@ -474,7 +474,7 @@ git commit -m "feat: add SponsorshipService with payment auto-generation and OVE
 - Create: `apps/api/src/sponsorship/sponsorship.routes.ts`
 - Modify: `apps/api/src/apiRouter.ts`
 
-- [ ] **Step 1: sponsorship.controller.ts 작성**
+- [x] **Step 1: sponsorship.controller.ts 작성**
 
 ```ts
 import { Request, Response, NextFunction } from "express";
@@ -534,7 +534,7 @@ export class SponsorshipController {
 }
 ```
 
-- [ ] **Step 2: sponsorship.routes.ts 작성**
+- [x] **Step 2: sponsorship.routes.ts 작성**
 
 ```ts
 import { Router } from "express";
@@ -561,7 +561,7 @@ router.patch("/:id/payments/:paymentId", auth, controller.markPaid);
 export default router;
 ```
 
-- [ ] **Step 3: apiRouter.ts에 등록**
+- [x] **Step 3: apiRouter.ts에 등록**
 
 `apps/api/src/apiRouter.ts` 마지막 import 다음에 추가:
 ```ts
@@ -573,7 +573,7 @@ import sponsorshipRouter from "./sponsorship/sponsorship.routes";
 apiRouter.use("/sponsorships", sponsorshipRouter);
 ```
 
-- [ ] **Step 4: TypeScript 빌드 확인**
+- [x] **Step 4: TypeScript 빌드 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -582,7 +582,7 @@ npx tsc --noEmit 2>&1 | grep "sponsorship" | head -20
 
 Expected: 에러 없음
 
-- [ ] **Step 5: 전체 테스트 실행**
+- [x] **Step 5: 전체 테스트 실행**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -591,7 +591,7 @@ npx jest __test__/sponsorship --no-coverage 2>&1 | tail -10
 
 Expected: 10개 테스트 PASS
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 cd /Users/juno/work/football
@@ -603,14 +603,14 @@ git commit -m "feat: wire up sponsorship routes and controller"
 
 ## 완료 체크리스트
 
-- [ ] `GET /api/sponsorships` — type 필터 작동
-- [ ] `POST /api/sponsorships` MONTHLY 3개월 → 3개 Payment 자동 생성
-- [ ] `POST /api/sponsorships` QUARTERLY/ANNUAL 날짜 계산 정확
-- [ ] `GET /api/sponsorships/:id` — payments 포함, OVERDUE 계산
-- [ ] `GET /api/sponsorships/:id/payments` — OVERDUE 계산
-- [ ] `PATCH /api/sponsorships/:id/payments/:paymentId` → PAID, paidAt 설정
-- [ ] 이미 PAID → 409
-- [ ] 다른 sponsorship의 payment → 404
-- [ ] ADMIN/FINANCE_MANAGER 외 쓰기 → 403
-- [ ] 12개 유닛 테스트 통과
-- [ ] tsc 에러 없음
+- [x] `GET /api/sponsorships` — type 필터 작동
+- [x] `POST /api/sponsorships` MONTHLY 3개월 → 3개 Payment 자동 생성
+- [x] `POST /api/sponsorships` QUARTERLY/ANNUAL 날짜 계산 정확
+- [x] `GET /api/sponsorships/:id` — payments 포함, OVERDUE 계산
+- [x] `GET /api/sponsorships/:id/payments` — OVERDUE 계산
+- [x] `PATCH /api/sponsorships/:id/payments/:paymentId` → PAID, paidAt 설정
+- [x] 이미 PAID → 409
+- [x] 다른 sponsorship의 payment → 404
+- [x] ADMIN/FINANCE_MANAGER 외 쓰기 → 403
+- [x] 12개 유닛 테스트 통과
+- [x] tsc 에러 없음

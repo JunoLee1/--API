@@ -1,6 +1,6 @@
 # Fan & Ticketing Persona Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Resolve 4 open criticals from 박성준 & Jordan personas — complimentary ticket per-match limit, refund↔original bidirectional link, zone soldCount tracking, and auto LedgerEntry for UNIFORM/OTHER sales.
 
@@ -28,7 +28,7 @@
 - Modify: `apps/api/prisma/schema.prisma`
 - Create: `apps/api/prisma/migrations/20260812300003_fan_ticket_persona/migration.sql`
 
-- [ ] **Step 1: Add complimentaryTicketLimit to ClubSettings**
+- [x] **Step 1: Add complimentaryTicketLimit to ClubSettings**
 
 In `apps/api/prisma/schema.prisma`, find `ClubSettings` and add:
 
@@ -46,7 +46,7 @@ model ClubSettings {
 
 (If `maintenanceCostLimit` is not yet present — add both together.)
 
-- [ ] **Step 2: Add refundedFromId to SalesRecord**
+- [x] **Step 2: Add refundedFromId to SalesRecord**
 
 Find `SalesRecord` model and add after `updatedById`:
 
@@ -62,7 +62,7 @@ model SalesRecord {
 }
 ```
 
-- [ ] **Step 3: Add soldCount to SeatZone**
+- [x] **Step 3: Add soldCount to SeatZone**
 
 Find `SeatZone` model and add:
 
@@ -80,7 +80,7 @@ model SeatZone {
 }
 ```
 
-- [ ] **Step 4: Create migration SQL**
+- [x] **Step 4: Create migration SQL**
 
 ```bash
 mkdir -p apps/api/prisma/migrations/20260812300003_fan_ticket_persona
@@ -111,7 +111,7 @@ SET "soldCount" = COALESCE((
 ), 0);
 ```
 
-- [ ] **Step 5: Apply migration**
+- [x] **Step 5: Apply migration**
 
 ```bash
 cd apps/api
@@ -122,7 +122,7 @@ npx prisma generate
 
 Expected: `Migration 20260812300003_fan_ticket_persona marked as applied`
 
-- [ ] **Step 6: Commit schema**
+- [x] **Step 6: Commit schema**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/20260812300003_fan_ticket_persona/
@@ -137,7 +137,7 @@ git commit -m "feat(schema): fan-ticket persona — complimentaryTicketLimit, Sa
 - Modify: `apps/api/src/sales/sales.service.ts`
 - Modify: `apps/api/__test__/sales/sales.service.test.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 In `apps/api/__test__/sales/sales.service.test.ts`, add:
 
@@ -168,7 +168,7 @@ describe('create — COMPLIMENTARY limit', () => {
 });
 ```
 
-- [ ] **Step 2: Run to confirm fail**
+- [x] **Step 2: Run to confirm fail**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="sales.service" --no-coverage 2>&1 | tail -15
@@ -176,7 +176,7 @@ cd apps/api && npx jest --testPathPattern="sales.service" --no-coverage 2>&1 | t
 
 Expected: FAIL.
 
-- [ ] **Step 3: Add COMPLIMENTARY limit check in sales.service.ts**
+- [x] **Step 3: Add COMPLIMENTARY limit check in sales.service.ts**
 
 In the `create` method inside the `$transaction`, after the existing COMPLIMENTARY description check (JO6), add before the `salesRecord.create` call:
 
@@ -204,7 +204,7 @@ if ((dto.type as string) === "COMPLIMENTARY" && dto.matchId) {
 }
 ```
 
-- [ ] **Step 4: Run test to confirm pass**
+- [x] **Step 4: Run test to confirm pass**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="sales.service" --no-coverage 2>&1 | tail -10
@@ -212,7 +212,7 @@ cd apps/api && npx jest --testPathPattern="sales.service" --no-coverage 2>&1 | t
 
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/sales/sales.service.ts apps/api/__test__/sales/sales.service.test.ts
@@ -227,7 +227,7 @@ git commit -m "feat(sales): complimentary ticket per-match limit from ClubSettin
 - Modify: `apps/api/src/sales/sales.service.ts`
 - Modify: `apps/api/__test__/sales/sales.service.test.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 In `apps/api/__test__/sales/sales.service.test.ts`, add:
 
@@ -260,7 +260,7 @@ describe('create — soldCount', () => {
 });
 ```
 
-- [ ] **Step 2: Run to confirm fail**
+- [x] **Step 2: Run to confirm fail**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="sales.service" --no-coverage 2>&1 | tail -15
@@ -268,7 +268,7 @@ cd apps/api && npx jest --testPathPattern="sales.service" --no-coverage 2>&1 | t
 
 Expected: FAIL — no `seatZone.update` call.
 
-- [ ] **Step 3: Add soldCount increment in sales.service.ts**
+- [x] **Step 3: Add soldCount increment in sales.service.ts**
 
 In the `create` method, inside the `$transaction`, after `tx.salesRecord.create(...)`, add:
 
@@ -282,7 +282,7 @@ if (dto.seatZoneId) {
 }
 ```
 
-- [ ] **Step 4: Also decrement on cancel/delete**
+- [x] **Step 4: Also decrement on cancel/delete**
 
 In the `delete` (cancel) method, inside the `$transaction`, after soft-deleting the SalesRecord, add:
 
@@ -296,7 +296,7 @@ if (existing.seatZoneId) {
 }
 ```
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="sales.service" --no-coverage 2>&1 | tail -10
@@ -304,7 +304,7 @@ cd apps/api && npx jest --testPathPattern="sales.service" --no-coverage 2>&1 | t
 
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/sales/sales.service.ts apps/api/__test__/sales/sales.service.test.ts
@@ -319,7 +319,7 @@ git commit -m "feat(sales): SeatZone.soldCount auto-increment/decrement on ticke
 - Modify: `apps/api/src/sales/sales.service.ts`
 - Modify: `apps/api/__test__/sales/sales.service.test.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 In `apps/api/__test__/sales/sales.service.test.ts`, add:
 
@@ -350,7 +350,7 @@ describe('delete (cancel) — refundedFromId', () => {
 });
 ```
 
-- [ ] **Step 2: Run to confirm fail**
+- [x] **Step 2: Run to confirm fail**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="sales.service" --no-coverage 2>&1 | tail -15
@@ -358,7 +358,7 @@ cd apps/api && npx jest --testPathPattern="sales.service" --no-coverage 2>&1 | t
 
 Expected: FAIL — `status: 'REFUNDED'` not set.
 
-- [ ] **Step 3: Update delete method in sales.service.ts**
+- [x] **Step 3: Update delete method in sales.service.ts**
 
 In the `delete` method, find the `salesRecord.update` call inside `$transaction` and add `status: 'REFUNDED'`:
 
@@ -384,7 +384,7 @@ If you need to create a *new* refund SalesRecord pointing back via `refundedFrom
 
 The simpler path (status=REFUNDED + `deletedAt`) satisfies "duplicate refund detection" since a REFUNDED+deleted record cannot be refunded twice.
 
-- [ ] **Step 4: Run test to confirm pass**
+- [x] **Step 4: Run test to confirm pass**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="sales.service" --no-coverage 2>&1 | tail -10
@@ -392,7 +392,7 @@ cd apps/api && npx jest --testPathPattern="sales.service" --no-coverage 2>&1 | t
 
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/api/src/sales/sales.service.ts apps/api/__test__/sales/sales.service.test.ts
@@ -407,7 +407,7 @@ git commit -m "feat(sales): set status=REFUNDED on cancel for duplicate-refund p
 - Modify: `apps/api/src/sales/sales.service.ts`
 - Modify: `apps/api/__test__/sales/sales.service.test.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 In `apps/api/__test__/sales/sales.service.test.ts`, add:
 
@@ -441,7 +441,7 @@ describe('create — UNIFORM ledger entry', () => {
 });
 ```
 
-- [ ] **Step 2: Run to confirm fail**
+- [x] **Step 2: Run to confirm fail**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="sales.service" --no-coverage 2>&1 | tail -15
@@ -449,7 +449,7 @@ cd apps/api && npx jest --testPathPattern="sales.service" --no-coverage 2>&1 | t
 
 Expected: FAIL — no LedgerEntry created for UNIFORM.
 
-- [ ] **Step 3: Add LedgerEntry creation for UNIFORM and OTHER in sales.service.ts**
+- [x] **Step 3: Add LedgerEntry creation for UNIFORM and OTHER in sales.service.ts**
 
 In the `create` method, find the existing `if (dto.type === "TICKET" || dto.type === "VIP_TICKET")` block and add an `else if` clause after the existing COMPLIMENTARY block:
 
@@ -476,7 +476,7 @@ In the `create` method, find the existing `if (dto.type === "TICKET" || dto.type
 
 Note: `MERCHANDISE_SALES` and `OTHER_INCOME` must exist in the `LedgerCategory` enum. Check `apps/api/prisma/schema.prisma` for the enum. If they don't exist, add them via a separate one-line migration or use an existing applicable category (e.g., `TICKET_SALES` with a description override is acceptable as a fallback — update the category name to match what's in the enum).
 
-- [ ] **Step 4: Run test to confirm pass**
+- [x] **Step 4: Run test to confirm pass**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="sales.service" --no-coverage 2>&1 | tail -10
@@ -484,7 +484,7 @@ cd apps/api && npx jest --testPathPattern="sales.service" --no-coverage 2>&1 | t
 
 Expected: PASS
 
-- [ ] **Step 5: Run full test suite**
+- [x] **Step 5: Run full test suite**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="sales" --no-coverage 2>&1 | tail -15
@@ -492,7 +492,7 @@ cd apps/api && npx jest --testPathPattern="sales" --no-coverage 2>&1 | tail -15
 
 Expected: All PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/sales/sales.service.ts apps/api/__test__/sales/sales.service.test.ts

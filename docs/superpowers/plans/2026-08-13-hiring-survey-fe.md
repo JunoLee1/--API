@@ -1,6 +1,6 @@
 # HR 채용 연간 계획 워크플로우 — 프론트엔드 구현 플랜
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 채용 수요 조사 생성·응답·마감 + 채용 계획 항목 편집 + 채용공고 연결 프론트엔드 구현
 
@@ -34,7 +34,7 @@ football/src/App.tsx                                                     ← 수
 **Files:**
 - Create: `football/src/types/hiring-survey.ts`
 
-- [ ] **Step 1: 타입 파일 작성**
+- [x] **Step 1: 타입 파일 작성**
 
 `football/src/types/hiring-survey.ts`:
 ```typescript
@@ -92,7 +92,7 @@ export interface HiringPlanItem {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add football/src/types/hiring-survey.ts
@@ -106,7 +106,7 @@ git commit -m "feat(fe): add hiring-survey type definitions"
 **Files:**
 - Create: `football/src/services/hiring-survey.service.ts`
 
-- [ ] **Step 1: 서비스 파일 작성**
+- [x] **Step 1: 서비스 파일 작성**
 
 `football/src/services/hiring-survey.service.ts`:
 ```typescript
@@ -157,7 +157,7 @@ export const hiringSurveyApi = {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add football/src/services/hiring-survey.service.ts
@@ -171,7 +171,7 @@ git commit -m "feat(fe): add hiring-survey API service"
 **Files:**
 - Create: `football/src/pages/admin/recruitment/HiringSurveyListPage.tsx`
 
-- [ ] **Step 1: 페이지 작성**
+- [x] **Step 1: 페이지 작성**
 
 `football/src/pages/admin/recruitment/HiringSurveyListPage.tsx`:
 ```tsx
@@ -303,7 +303,7 @@ export function HiringSurveyListPage() {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add football/src/pages/admin/recruitment/HiringSurveyListPage.tsx
@@ -317,7 +317,7 @@ git commit -m "feat(fe): add HiringSurveyListPage with create form"
 **Files:**
 - Create: `football/src/pages/admin/recruitment/HiringSurveyDetailPage.tsx`
 
-- [ ] **Step 1: 페이지 작성**
+- [x] **Step 1: 페이지 작성**
 
 `football/src/pages/admin/recruitment/HiringSurveyDetailPage.tsx`:
 ```tsx
@@ -409,7 +409,7 @@ export function HiringSurveyDetailPage() {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add football/src/pages/admin/recruitment/HiringSurveyDetailPage.tsx
@@ -423,7 +423,7 @@ git commit -m "feat(fe): add HiringSurveyDetailPage with response status and clo
 **Files:**
 - Create: `football/src/pages/admin/recruitment/HiringSurveyRespondPage.tsx`
 
-- [ ] **Step 1: 페이지 작성**
+- [x] **Step 1: 페이지 작성**
 
 `football/src/pages/admin/recruitment/HiringSurveyRespondPage.tsx`:
 ```tsx
@@ -547,7 +547,7 @@ export function HiringSurveyRespondPage() {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add football/src/pages/admin/recruitment/HiringSurveyRespondPage.tsx
@@ -561,7 +561,7 @@ git commit -m "feat(fe): add HiringSurveyRespondPage for dept head response"
 **Files:**
 - Create: `football/src/pages/finance/PlanReportHiringItemsPage.tsx`
 
-- [ ] **Step 1: 페이지 작성**
+- [x] **Step 1: 페이지 작성**
 
 `football/src/pages/finance/PlanReportHiringItemsPage.tsx`:
 ```tsx
@@ -728,7 +728,7 @@ export function PlanReportHiringItemsPage() {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add football/src/pages/finance/PlanReportHiringItemsPage.tsx
@@ -742,7 +742,7 @@ git commit -m "feat(fe): add PlanReportHiringItemsPage for editing plan items"
 **Files:**
 - Modify: `football/src/pages/admin/recruitment/JobPostingListPage.tsx`
 
-- [ ] **Step 1: HiringPlanItem 타입 import 및 상태 추가**
+- [x] **Step 1: HiringPlanItem 타입 import 및 상태 추가**
 
 `JobPostingListPage.tsx`의 상단 imports에 추가:
 ```typescript
@@ -770,7 +770,7 @@ const handlePlanReportChange = async (planReportId: number) => {
 }
 ```
 
-- [ ] **Step 2: hiringPlanItemId 드롭다운 추가**
+- [x] **Step 2: hiringPlanItemId 드롭다운 추가**
 
 공고 생성 폼의 `planReportId` Select 아래에 추가:
 ```tsx
@@ -797,7 +797,7 @@ const handlePlanReportChange = async (planReportId: number) => {
 )}
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/pages/admin/recruitment/JobPostingListPage.tsx
@@ -811,7 +811,7 @@ git commit -m "feat(fe): add hiringPlanItemId selector to JobPosting form"
 **Files:**
 - Modify: `football/src/App.tsx`
 
-- [ ] **Step 1: import 추가**
+- [x] **Step 1: import 추가**
 
 ```typescript
 import { HiringSurveyListPage } from './pages/admin/recruitment/HiringSurveyListPage'
@@ -820,7 +820,7 @@ import { HiringSurveyRespondPage } from './pages/admin/recruitment/HiringSurveyR
 import { PlanReportHiringItemsPage } from './pages/finance/PlanReportHiringItemsPage'
 ```
 
-- [ ] **Step 2: 라우트 추가**
+- [x] **Step 2: 라우트 추가**
 
 기존 recruitment 관련 라우트 근처에 추가:
 ```tsx
@@ -830,11 +830,11 @@ import { PlanReportHiringItemsPage } from './pages/finance/PlanReportHiringItems
 <Route path="/finance/plan-reports/:id/hiring-items" element={<PlanReportHiringItemsPage />} />
 ```
 
-- [ ] **Step 3: 네비게이션 링크 추가**
+- [x] **Step 3: 네비게이션 링크 추가**
 
 사이드바 또는 채용 메뉴에서 "채용 수요 조사" 링크를 `/admin/recruitment/surveys`로 추가. (사이드바 컴포넌트 경로는 프로젝트 구조 따라 확인)
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/App.tsx
@@ -845,7 +845,7 @@ git commit -m "feat(fe): register hiring-survey routes in App.tsx"
 
 ## 최종 확인
 
-- [ ] **빌드 오류 없는지 확인**
+- [x] **빌드 오류 없는지 확인**
 
 ```bash
 cd football
@@ -854,7 +854,7 @@ npm run build
 
 Expected: 오류 없이 빌드 완료
 
-- [ ] **개발 서버에서 골든 패스 수동 테스트**
+- [x] **개발 서버에서 골든 패스 수동 테스트**
 
 1. HR_MANAGER로 로그인 → `/admin/recruitment/surveys` 접근
 2. "새 조사" → 제목·마감일·대상 부서 입력 후 생성

@@ -1,6 +1,6 @@
 # Wage Cap Simulation Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Contract 생성 시 활성 시즌의 임금상한을 체크하여 0~10% 초과는 경고 토스트, 10% 초과는 생성 차단한다.
 
@@ -36,7 +36,7 @@
 - Create: `apps/api/src/contract/wage-cap.service.ts`
 - Create: `apps/api/__test__/contract/wage-cap.service.test.ts`
 
-- [ ] **Step 1: 테스트 파일 작성**
+- [x] **Step 1: 테스트 파일 작성**
 
 ```typescript
 // apps/api/__test__/contract/wage-cap.service.test.ts
@@ -115,7 +115,7 @@ describe("WageCapService.check", () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행 — 실패 확인**
+- [x] **Step 2: 테스트 실행 — 실패 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -124,7 +124,7 @@ npx jest __test__/contract/wage-cap.service.test.ts --no-coverage 2>&1 | tail -1
 
 Expected: `FAIL` with "Cannot find module '../../src/contract/wage-cap.service'"
 
-- [ ] **Step 3: wage-cap.service.ts 작성**
+- [x] **Step 3: wage-cap.service.ts 작성**
 
 ```typescript
 // apps/api/src/contract/wage-cap.service.ts
@@ -178,7 +178,7 @@ export class WageCapService {
 }
 ```
 
-- [ ] **Step 4: 테스트 실행 — 통과 확인**
+- [x] **Step 4: 테스트 실행 — 통과 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api
@@ -187,7 +187,7 @@ npx jest __test__/contract/wage-cap.service.test.ts --no-coverage 2>&1 | tail -1
 
 Expected: `PASS` with 8 tests passing
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -203,7 +203,7 @@ git commit -m "feat(wage-cap): WageCapService - FIXED 임금상한 계산 로직
 - Modify: `apps/api/src/contract/contract.service.ts`
 - Modify: `apps/api/src/contract/contract.routes.ts`
 
-- [ ] **Step 1: contract.service.ts 수정**
+- [x] **Step 1: contract.service.ts 수정**
 
 `ContractService` 클래스에 `WageCapService`를 두 번째 생성자 파라미터로 추가하고 `createContract`를 아래와 같이 수정:
 
@@ -287,7 +287,7 @@ export class ContractService {
 }
 ```
 
-- [ ] **Step 2: contract.routes.ts 수정**
+- [x] **Step 2: contract.routes.ts 수정**
 
 `WageCapService`를 import하고 `ContractService` 생성자에 두 번째 인자로 전달:
 
@@ -306,7 +306,7 @@ const service = new ContractService(repo, wageCapService);
 
 읽은 후 해당 라인을 위 코드로 교체하면 됨.
 
-- [ ] **Step 3: TypeScript 확인**
+- [x] **Step 3: TypeScript 확인**
 
 ```bash
 cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -20
@@ -314,7 +314,7 @@ cd /Users/juno/work/football/apps/api && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 에러 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 cd /Users/juno/work/football
@@ -330,7 +330,7 @@ git commit -m "feat(wage-cap): Contract 생성 시 임금상한 체크 연결"
 - Modify: `football/src/services/contract.service.ts`
 - Modify: `football/src/pages/contracts/ContractsPage.tsx`
 
-- [ ] **Step 1: contract.service.ts 반환 타입 확장**
+- [x] **Step 1: contract.service.ts 반환 타입 확장**
 
 `football/src/services/contract.service.ts`를 읽어 `contractApi.create`의 반환 타입을 수정:
 
@@ -351,7 +351,7 @@ export interface ContractCreateResult extends ContractDetail {
 
 `ContractCreateResult` 인터페이스는 파일 상단 `import` 아래에 추가한다.
 
-- [ ] **Step 2: ContractsPage.tsx에서 경고 처리**
+- [x] **Step 2: ContractsPage.tsx에서 경고 처리**
 
 `ContractsPage.tsx` 의 계약 생성 핸들러를 찾아 아래와 같이 수정. `await contractApi.create(...)` 결과를 변수에 담고 `wageCapWarning` 유무에 따라 분기:
 
@@ -375,7 +375,7 @@ if (result.wageCapWarning) {
 onSaved()
 ```
 
-- [ ] **Step 3: TypeScript 확인**
+- [x] **Step 3: TypeScript 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -20
@@ -383,7 +383,7 @@ cd /Users/juno/work/football/football && npx tsc --noEmit 2>&1 | head -20
 
 Expected: 에러 없음
 
-- [ ] **Step 4: Vite 빌드 확인**
+- [x] **Step 4: Vite 빌드 확인**
 
 ```bash
 cd /Users/juno/work/football/football && npx vite build 2>&1 | grep -E "error|✓ built"
@@ -391,7 +391,7 @@ cd /Users/juno/work/football/football && npx vite build 2>&1 | grep -E "error|�
 
 Expected: `✓ built in ...`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 cd /Users/juno/work/football

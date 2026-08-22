@@ -1,6 +1,6 @@
 # Facility & Equipment Persona Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Resolve 5 open TR/KD criticals from Trevor & 김동욱 personas — configurable maintenance cost threshold, preventive inspection scheduling cron, reservation audit logging, disposal accountability, and vendor/partner linkage on maintenance requests.
 
@@ -36,7 +36,7 @@
 - Modify: `apps/api/prisma/schema.prisma`
 - Create: `apps/api/prisma/migrations/20260812300001_facility_persona/migration.sql`
 
-- [ ] **Step 1: Update ClubSettings in schema**
+- [x] **Step 1: Update ClubSettings in schema**
 
 In `apps/api/prisma/schema.prisma`, find the `ClubSettings` model and add the new field:
 
@@ -51,7 +51,7 @@ model ClubSettings {
 }
 ```
 
-- [ ] **Step 2: Update MaintenanceRequest in schema**
+- [x] **Step 2: Update MaintenanceRequest in schema**
 
 Find `MaintenanceRequest` and add `partnerId` after `createdById`:
 
@@ -73,7 +73,7 @@ Also add to the `Partner` model (find it and append):
 maintenanceRequests MaintenanceRequest[] @relation("MaintenancePartner")
 ```
 
-- [ ] **Step 3: Update EquipmentUnit in schema**
+- [x] **Step 3: Update EquipmentUnit in schema**
 
 Find `EquipmentUnit` and add disposal fields after `sanitationStatus`:
 
@@ -95,7 +95,7 @@ Also add to `User` model:
 disposedEquipmentUnits EquipmentUnit[] @relation("EquipmentDisposer")
 ```
 
-- [ ] **Step 4: Create migration directory and SQL**
+- [x] **Step 4: Create migration directory and SQL**
 
 ```bash
 mkdir -p apps/api/prisma/migrations/20260812300001_facility_persona
@@ -117,7 +117,7 @@ ALTER TABLE "EquipmentUnit" ADD CONSTRAINT "EquipmentUnit_disposedById_fkey"
   FOREIGN KEY ("disposedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 ```
 
-- [ ] **Step 5: Apply migration without shadow DB**
+- [x] **Step 5: Apply migration without shadow DB**
 
 ```bash
 cd apps/api
@@ -128,7 +128,7 @@ npx prisma generate
 
 Expected: `Migration 20260812300001_facility_persona marked as applied`
 
-- [ ] **Step 6: Commit schema**
+- [x] **Step 6: Commit schema**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/20260812300001_facility_persona/
@@ -144,7 +144,7 @@ git commit -m "feat(schema): facility persona — ClubSettings.maintenanceCostLi
 - Modify: `apps/api/src/facility/maintenance/maintenance.repo.ts`
 - Modify: `apps/api/__test__/facility/maintenance.service.test.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 In `apps/api/__test__/facility/maintenance.service.test.ts`, add inside the describe block:
 
@@ -173,7 +173,7 @@ describe('submitToFinance', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to confirm it fails**
+- [x] **Step 2: Run test to confirm it fails**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="maintenance.service" --no-coverage 2>&1 | tail -20
@@ -181,7 +181,7 @@ cd apps/api && npx jest --testPathPattern="maintenance.service" --no-coverage 2>
 
 Expected: FAIL — `maintenanceCostLimit` not yet read from DB.
 
-- [ ] **Step 3: Update maintenance.service.ts**
+- [x] **Step 3: Update maintenance.service.ts**
 
 Find `submitToFinance` and replace the hardcoded check:
 
@@ -206,7 +206,7 @@ async submitToFinance(id: number, userId: number) {
 }
 ```
 
-- [ ] **Step 4: Run test to confirm it passes**
+- [x] **Step 4: Run test to confirm it passes**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="maintenance.service" --no-coverage 2>&1 | tail -10
@@ -214,7 +214,7 @@ cd apps/api && npx jest --testPathPattern="maintenance.service" --no-coverage 2>
 
 Expected: PASS
 
-- [ ] **Step 5: Add partnerId to maintenance DTO**
+- [x] **Step 5: Add partnerId to maintenance DTO**
 
 In `apps/api/src/facility/maintenance/dto/maintenance.dto.ts`, add to `CreateMaintenanceDto`:
 
@@ -225,7 +225,7 @@ export class CreateMaintenanceDto {
 }
 ```
 
-- [ ] **Step 6: Update maintenance.repo.ts SELECT to include partner**
+- [x] **Step 6: Update maintenance.repo.ts SELECT to include partner**
 
 In `apps/api/src/facility/maintenance/maintenance.repo.ts`, find the `MAINTENANCE_SELECT` constant (or equivalent) and add:
 
@@ -235,7 +235,7 @@ partner: { select: { id: true, name: true } },
 
 And in the create/update data, pass `partnerId` if provided.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add apps/api/src/facility/maintenance/ apps/api/__test__/facility/maintenance.service.test.ts
@@ -251,7 +251,7 @@ git commit -m "feat(maintenance): dynamic cost threshold from ClubSettings + par
 - Modify: `apps/api/src/equipment/dto/equipment.dto.ts`
 - Create: `apps/api/__test__/equipment/equipment.retire.test.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 Create `apps/api/__test__/equipment/equipment.retire.test.ts`:
 
@@ -288,7 +288,7 @@ describe('retireUnit', () => {
 });
 ```
 
-- [ ] **Step 2: Run to confirm fail**
+- [x] **Step 2: Run to confirm fail**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="equipment.retire" --no-coverage 2>&1 | tail -10
@@ -296,7 +296,7 @@ cd apps/api && npx jest --testPathPattern="equipment.retire" --no-coverage 2>&1 
 
 Expected: FAIL — `retireUnit` not found or missing disposal check.
 
-- [ ] **Step 3: Add RetireUnitDto**
+- [x] **Step 3: Add RetireUnitDto**
 
 In `apps/api/src/equipment/dto/equipment.dto.ts`, add:
 
@@ -307,7 +307,7 @@ export class RetireUnitDto {
 }
 ```
 
-- [ ] **Step 4: Update equipment.service.ts retireUnit**
+- [x] **Step 4: Update equipment.service.ts retireUnit**
 
 Find or add `retireUnit` in `apps/api/src/equipment/equipment.service.ts`:
 
@@ -329,7 +329,7 @@ async retireUnit(unitId: number, dto: RetireUnitDto, actorId: number) {
 
 Update `retireUnit` in the repo to write the new fields.
 
-- [ ] **Step 5: Run test to confirm pass**
+- [x] **Step 5: Run test to confirm pass**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="equipment.retire" --no-coverage 2>&1 | tail -10
@@ -337,7 +337,7 @@ cd apps/api && npx jest --testPathPattern="equipment.retire" --no-coverage 2>&1 
 
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/equipment/ apps/api/__test__/equipment/equipment.retire.test.ts
@@ -353,7 +353,7 @@ git commit -m "feat(equipment): require disposedById/disposalNote on RETIRED tra
 - Modify: `apps/api/src/server.ts`
 - Create: `apps/api/__test__/jobs/inspectionDueAlert.test.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 Create `apps/api/__test__/jobs/inspectionDueAlert.test.ts`:
 
@@ -401,7 +401,7 @@ describe('runInspectionDueAlert', () => {
 });
 ```
 
-- [ ] **Step 2: Run to confirm fail**
+- [x] **Step 2: Run to confirm fail**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="inspectionDueAlert" --no-coverage 2>&1 | tail -10
@@ -409,7 +409,7 @@ cd apps/api && npx jest --testPathPattern="inspectionDueAlert" --no-coverage 2>&
 
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Create inspectionDueAlert.ts**
+- [x] **Step 3: Create inspectionDueAlert.ts**
 
 Create `apps/api/src/jobs/inspectionDueAlert.ts`:
 
@@ -461,7 +461,7 @@ export function startInspectionDueCron() {
 }
 ```
 
-- [ ] **Step 4: Run test to confirm pass**
+- [x] **Step 4: Run test to confirm pass**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="inspectionDueAlert" --no-coverage 2>&1 | tail -10
@@ -469,7 +469,7 @@ cd apps/api && npx jest --testPathPattern="inspectionDueAlert" --no-coverage 2>&
 
 Expected: PASS
 
-- [ ] **Step 5: Register cron in server.ts**
+- [x] **Step 5: Register cron in server.ts**
 
 In `apps/api/src/server.ts`, find where `sponsorshipExpiryAlert` is registered and add below it:
 
@@ -479,7 +479,7 @@ import { startInspectionDueCron } from './jobs/inspectionDueAlert';
 startInspectionDueCron();
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/api/src/jobs/inspectionDueAlert.ts apps/api/src/server.ts apps/api/__test__/jobs/inspectionDueAlert.test.ts
@@ -493,7 +493,7 @@ git commit -m "feat(jobs): inspection due alert cron — 7-day warning for equip
 **Files:**
 - Modify: `apps/api/src/facility/reservation/reservation.controller.ts`
 
-- [ ] **Step 1: Update reservation.controller.ts**
+- [x] **Step 1: Update reservation.controller.ts**
 
 Find the `create` and `delete` handlers in `apps/api/src/facility/reservation/reservation.controller.ts` and add audit logging:
 
@@ -517,7 +517,7 @@ void writeAuditLog({
 }).catch(console.error);
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add apps/api/src/facility/reservation/reservation.controller.ts
@@ -531,7 +531,7 @@ git commit -m "feat(reservation): audit log on create/delete (TR7)"
 **Files:**
 - Modify: `apps/api/src/facility/inspection/inspection.service.ts`
 
-- [ ] **Step 1: Auto-calculate nextInspectionDue when inspection completed**
+- [x] **Step 1: Auto-calculate nextInspectionDue when inspection completed**
 
 In `apps/api/src/facility/inspection/inspection.service.ts`, find the `update` method (or wherever inspection result is set). When `result` transitions to a terminal state (e.g., `PASS` or `FAIL`), auto-update the inspected unit's `nextInspectionDue`:
 
@@ -550,7 +550,7 @@ if (updated.result !== 'PENDING' && updated.equipmentUnitId && updated.equipment
 
 Adjust field names to match the actual inspection model (check if `equipmentUnitId` exists; if not, this step may not apply and can be skipped).
 
-- [ ] **Step 2: Run all facility tests**
+- [x] **Step 2: Run all facility tests**
 
 ```bash
 cd apps/api && npx jest --testPathPattern="facility|equipment|inspection|inspectionDue" --no-coverage 2>&1 | tail -20
@@ -558,7 +558,7 @@ cd apps/api && npx jest --testPathPattern="facility|equipment|inspection|inspect
 
 Expected: All PASS
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/facility/inspection/inspection.service.ts

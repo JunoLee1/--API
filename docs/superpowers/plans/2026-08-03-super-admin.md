@@ -1,6 +1,6 @@
 # Super Admin 전사 계정 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** `SUPER_ADMIN` 역할을 가진 전사 계정이 팀을 선택해 해당 팀 데이터를 ADMIN 권한으로 관리할 수 있게 한다.
 
@@ -35,7 +35,7 @@
 **Files:**
 - Modify: `apps/api/prisma/schema.prisma:14-21`
 
-- [ ] **Step 1: schema.prisma 수정**
+- [x] **Step 1: schema.prisma 수정**
 
 ```prisma
 // apps/api/prisma/schema.prisma
@@ -50,7 +50,7 @@ enum Role {
 }
 ```
 
-- [ ] **Step 2: migration 생성**
+- [x] **Step 2: migration 생성**
 
 ```bash
 cd apps/api
@@ -59,7 +59,7 @@ npx prisma migrate dev --name add_super_admin_role
 
 Expected: `20260803_add_super_admin_role` 마이그레이션 파일 생성, Prisma Client 재생성
 
-- [ ] **Step 3: TypeScript 빌드 확인**
+- [x] **Step 3: TypeScript 빌드 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit
@@ -67,7 +67,7 @@ cd apps/api && npx tsc --noEmit
 
 Expected: 오류 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/prisma/schema.prisma apps/api/prisma/migrations/
@@ -82,7 +82,7 @@ git commit -m "feat(super-admin): add SUPER_ADMIN to Role enum"
 - Create: `apps/api/src/lib/authMiddleware.ts`
 - Create: `apps/api/src/lib/permissions.ts`
 
-- [ ] **Step 1: authMiddleware.ts 작성**
+- [x] **Step 1: authMiddleware.ts 작성**
 
 ```typescript
 // apps/api/src/lib/authMiddleware.ts
@@ -108,7 +108,7 @@ export const auth = (req: Request, res: Response, next: NextFunction) => {
 };
 ```
 
-- [ ] **Step 2: permissions.ts 작성**
+- [x] **Step 2: permissions.ts 작성**
 
 ```typescript
 // apps/api/src/lib/permissions.ts
@@ -116,7 +116,7 @@ export const isSuperAdmin = (user: Express.User): boolean =>
   user.role === "SUPER_ADMIN";
 ```
 
-- [ ] **Step 3: TypeScript 확인**
+- [x] **Step 3: TypeScript 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit
@@ -124,7 +124,7 @@ cd apps/api && npx tsc --noEmit
 
 Expected: 오류 없음
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/src/lib/authMiddleware.ts apps/api/src/lib/permissions.ts
@@ -140,7 +140,7 @@ git commit -m "feat(super-admin): add shared authMiddleware with teamId injectio
 
 각 파일의 `const auth = passport.authenticate("accessToken", { session: false });` 줄을 삭제하고 파일 상단에 import를 추가한다. `passport` import가 해당 목적으로만 쓰였다면 그 import도 제거한다.
 
-- [ ] **Step 1: 스크립트로 일괄 교체**
+- [x] **Step 1: 스크립트로 일괄 교체**
 
 ```bash
 cd /Users/juno/work/football
@@ -173,7 +173,7 @@ for f in $(grep -rl 'from "passport"' apps/api/src/ | grep '\.routes\.ts$'); do
 done
 ```
 
-- [ ] **Step 2: passport import 단독 사용 여부 확인 후 정리**
+- [x] **Step 2: passport import 단독 사용 여부 확인 후 정리**
 
 ```bash
 # passport를 auth 외 다른 목적으로 쓰는 파일 찾기 (auth.routes.ts 등은 제외하지 말 것)
@@ -182,7 +182,7 @@ grep -rn "passport\." apps/api/src/ | grep '\.routes\.ts' | grep -v 'authMiddlew
 
 위 결과에서 `passport.` 참조가 남은 파일은 직접 열어 확인한다. `passport` import가 auth 목적으로만 있었다면 해당 import 줄도 제거한다.
 
-- [ ] **Step 3: TypeScript 빌드로 누락/중복 확인**
+- [x] **Step 3: TypeScript 빌드로 누락/중복 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit 2>&1 | head -50
@@ -190,7 +190,7 @@ cd apps/api && npx tsc --noEmit 2>&1 | head -50
 
 Expected: 오류 없음. 오류가 있으면 해당 파일을 수동으로 수정한다.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/src/
@@ -204,7 +204,7 @@ git commit -m "refactor(super-admin): replace local auth constant with shared au
 **Files:**
 - Modify: `apps/api/src/team/team.controller.ts:5-6`
 
-- [ ] **Step 1: canManage 함수 수정**
+- [x] **Step 1: canManage 함수 수정**
 
 현재 코드 (`apps/api/src/team/team.controller.ts` 상단):
 ```typescript
@@ -222,13 +222,13 @@ const canManage = (role: string, foRole: string | null | undefined) =>
   (role === "FRONT_OFFICE" && foRole === "GM");
 ```
 
-- [ ] **Step 2: TypeScript 확인**
+- [x] **Step 2: TypeScript 확인**
 
 ```bash
 cd apps/api && npx tsc --noEmit
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/team/team.controller.ts
@@ -242,7 +242,7 @@ git commit -m "feat(super-admin): allow SUPER_ADMIN to access team management"
 **Files:**
 - Modify: `football/src/types/auth.ts:1`
 
-- [ ] **Step 1: Role 타입과 ROLE_LABEL 수정**
+- [x] **Step 1: Role 타입과 ROLE_LABEL 수정**
 
 ```typescript
 // football/src/types/auth.ts
@@ -261,13 +261,13 @@ export const ROLE_LABEL: Record<Role, string> = {
 }
 ```
 
-- [ ] **Step 2: TypeScript 확인**
+- [x] **Step 2: TypeScript 확인**
 
 ```bash
 cd football && npx tsc --noEmit
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/types/auth.ts
@@ -283,7 +283,7 @@ git commit -m "feat(super-admin): add SUPER_ADMIN to FE Role type"
 
 SUPER_ADMIN이 팀을 선택하면 `localStorage.setItem('superAdminTeamId', String(teamId))`로 저장한다. 모든 API 요청에서 이 값을 읽어 헤더에 추가한다.
 
-- [ ] **Step 1: doFetch 함수에 헤더 주입 추가**
+- [x] **Step 1: doFetch 함수에 헤더 주입 추가**
 
 현재:
 ```typescript
@@ -314,7 +314,7 @@ async function doFetch(method: HttpMethod, path: string, body?: unknown): Promis
 }
 ```
 
-- [ ] **Step 2: `requestForm` 함수도 동일하게 수정**
+- [x] **Step 2: `requestForm` 함수도 동일하게 수정**
 
 ```typescript
 async function requestForm<T>(method: 'POST' | 'PATCH', path: string, form: FormData): Promise<T> {
@@ -325,13 +325,13 @@ async function requestForm<T>(method: 'POST' | 'PATCH', path: string, form: Form
 }
 ```
 
-- [ ] **Step 3: TypeScript 확인**
+- [x] **Step 3: TypeScript 확인**
 
 ```bash
 cd football && npx tsc --noEmit
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add football/src/services/api.ts
@@ -345,7 +345,7 @@ git commit -m "feat(super-admin): inject X-Team-Id header from localStorage in a
 **Files:**
 - Create: `football/src/services/team.service.ts`
 
-- [ ] **Step 1: 파일 작성**
+- [x] **Step 1: 파일 작성**
 
 ```typescript
 // football/src/services/team.service.ts
@@ -365,13 +365,13 @@ export const teamApi = {
 }
 ```
 
-- [ ] **Step 2: TypeScript 확인**
+- [x] **Step 2: TypeScript 확인**
 
 ```bash
 cd football && npx tsc --noEmit
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/services/team.service.ts
@@ -387,7 +387,7 @@ git commit -m "feat(super-admin): add team API service"
 
 이 페이지는 SUPER_ADMIN이 로그인 후 진입하는 팀 선택 화면이다. 팀을 선택하면 `localStorage.setItem('superAdminTeamId', String(team.id))`로 저장하고 `window.location.href = '/'`로 대시보드로 이동한다.
 
-- [ ] **Step 1: 파일 작성**
+- [x] **Step 1: 파일 작성**
 
 ```typescript
 // football/src/pages/team-select/TeamSelectPage.tsx
@@ -456,13 +456,13 @@ export function TeamSelectPage() {
 }
 ```
 
-- [ ] **Step 2: TypeScript 확인**
+- [x] **Step 2: TypeScript 확인**
 
 ```bash
 cd football && npx tsc --noEmit
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add football/src/pages/team-select/TeamSelectPage.tsx
@@ -478,14 +478,14 @@ git commit -m "feat(super-admin): add TeamSelectPage"
 
 SUPER_ADMIN이 `superAdminTeamId`를 선택하지 않은 채 다른 페이지에 접근하면 `/team-select`로 리디렉트한다.
 
-- [ ] **Step 1: TeamSelectPage import 추가**
+- [x] **Step 1: TeamSelectPage import 추가**
 
 ```typescript
 // App.tsx 상단 imports에 추가
 import { TeamSelectPage } from '@/pages/team-select/TeamSelectPage'
 ```
 
-- [ ] **Step 2: SUPER_ADMIN guard 컴포넌트 추가**
+- [x] **Step 2: SUPER_ADMIN guard 컴포넌트 추가**
 
 `App.tsx`의 `<Routes>` 바깥에 아래 컴포넌트를 추가한다:
 
@@ -503,7 +503,7 @@ function SuperAdminGuard({ user, children }: { user: UserDto | null; children: R
 }
 ```
 
-- [ ] **Step 3: /team-select 라우트 추가 + guard 적용**
+- [x] **Step 3: /team-select 라우트 추가 + guard 적용**
 
 기존 라우팅 구조에서 `<AppShell>` 내부의 보호된 라우트들을 `<SuperAdminGuard>` 로 감싼다:
 
@@ -521,7 +521,7 @@ function SuperAdminGuard({ user, children }: { user: UserDto | null; children: R
 
 `user` 는 `App.tsx`에서 `useCurrentUser()`로 가져온 값을 사용한다. App.tsx가 현재 `user`를 어떻게 관리하는지 확인 후 그 변수를 전달한다.
 
-- [ ] **Step 4: TypeScript 확인**
+- [x] **Step 4: TypeScript 확인**
 
 ```bash
 cd football && npx tsc --noEmit
@@ -529,7 +529,7 @@ cd football && npx tsc --noEmit
 
 Expected: 오류 없음
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add football/src/App.tsx
@@ -545,7 +545,7 @@ git commit -m "feat(super-admin): add /team-select route and SUPER_ADMIN redirec
 
 SUPER_ADMIN만 보이는 팀 전환 드롭다운을 사이드바 상단 로고 아래에 추가한다. 팀 전환 시 `localStorage.setItem('superAdminTeamId', String(newTeamId))`후 `window.location.reload()`.
 
-- [ ] **Step 1: Select 컴포넌트 및 teamApi import 추가**
+- [x] **Step 1: Select 컴포넌트 및 teamApi import 추가**
 
 ```typescript
 // AppShell.tsx 상단에 추가
@@ -559,7 +559,7 @@ import {
 } from '@/components/ui/select'
 ```
 
-- [ ] **Step 2: AppShell 컴포넌트 내 state 추가**
+- [x] **Step 2: AppShell 컴포넌트 내 state 추가**
 
 `AppShell` 함수 내에 아래를 추가한다:
 
@@ -581,7 +581,7 @@ const handleTeamSwitch = (teamId: string) => {
 }
 ```
 
-- [ ] **Step 3: 사이드바 헤더 아래에 드롭다운 삽입**
+- [x] **Step 3: 사이드바 헤더 아래에 드롭다운 삽입**
 
 데스크탑 사이드바의 로고 `<div>` 바로 아래에 추가한다 (현재 `AppShell.tsx:681` 근처):
 
@@ -610,11 +610,11 @@ const handleTeamSwitch = (teamId: string) => {
 )}
 ```
 
-- [ ] **Step 4: 모바일 사이드바(Sheet)에도 동일하게 추가**
+- [x] **Step 4: 모바일 사이드바(Sheet)에도 동일하게 추가**
 
 AppShell의 모바일 Sheet 사이드바에도 동일한 드롭다운 블록을 추가한다. Sheet 내부에서 데스크탑과 동일한 위치를 찾아 삽입.
 
-- [ ] **Step 5: nav 항목 필터링 — SUPER_ADMIN은 모든 항목 표시**
+- [x] **Step 5: nav 항목 필터링 — SUPER_ADMIN은 모든 항목 표시**
 
 SUPER_ADMIN은 특정 role/frontOfficeRole 제한 없이 모든 nav 항목을 볼 수 있어야 한다.
 
@@ -631,13 +631,13 @@ if (user.role === 'SUPER_ADMIN') return true   // 모든 항목 표시
 if (!item.roles.includes(user.role)) return false
 ```
 
-- [ ] **Step 6: TypeScript 확인**
+- [x] **Step 6: TypeScript 확인**
 
 ```bash
 cd football && npx tsc --noEmit
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add football/src/layouts/AppShell.tsx
@@ -650,13 +650,13 @@ git commit -m "feat(super-admin): add team switcher dropdown in AppShell sidebar
 
 **Files:** 없음 (git 작업만)
 
-- [ ] **Step 1: 브랜치 push**
+- [x] **Step 1: 브랜치 push**
 
 ```bash
 git push -u origin feat/super-admin
 ```
 
-- [ ] **Step 2: PR 생성**
+- [x] **Step 2: PR 생성**
 
 ```bash
 gh pr create \
@@ -670,14 +670,14 @@ gh pr create \
 - 팀 미선택 시 /team-select 강제 리디렉트
 
 ## Test plan
-- [ ] SUPER_ADMIN 계정 생성 후 로그인 → /team-select 리디렉트 확인
-- [ ] 팀 선택 후 대시보드 진입 → 해당 팀 데이터 표시 확인
-- [ ] 사이드바 드롭다운으로 팀 전환 → reload 후 새 팀 데이터 확인
-- [ ] 일반 ADMIN/FRONT_OFFICE 계정은 /team-select 미노출 확인
-- [ ] GET /teams: SUPER_ADMIN은 전체 팀 조회 가능 확인"
+- [x] SUPER_ADMIN 계정 생성 후 로그인 → /team-select 리디렉트 확인
+- [x] 팀 선택 후 대시보드 진입 → 해당 팀 데이터 표시 확인
+- [x] 사이드바 드롭다운으로 팀 전환 → reload 후 새 팀 데이터 확인
+- [x] 일반 ADMIN/FRONT_OFFICE 계정은 /team-select 미노출 확인
+- [x] GET /teams: SUPER_ADMIN은 전체 팀 조회 가능 확인"
 ```
 
-- [ ] **Step 3: 머지**
+- [x] **Step 3: 머지**
 
 PR 검토 후 머지
 

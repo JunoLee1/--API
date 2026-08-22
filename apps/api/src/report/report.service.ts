@@ -10,8 +10,17 @@ export class ReportService {
     private notifRepo: NotificationRepository,
   ) {}
 
-  list(userId: number, isGM: boolean, isHeadCoach: boolean = false, filters: { type?: string; status?: string } = {}, deptCategories: string[] = []) {
-    return this.repo.findAll(userId, isGM, isHeadCoach, filters, deptCategories);
+  list(
+    userId: number,
+    isGM: boolean,
+    isHeadCoach: boolean = false,
+    filters: { type?: string; status?: string } = {},
+    deptCategories: string[] = [],
+    isHrStaff: boolean = false,
+    isAssetStaff: boolean = false,
+    isFinanceStaff: boolean = false,
+  ) {
+    return this.repo.findAll(userId, isGM, isHeadCoach, filters, deptCategories, isHrStaff, isAssetStaff, isFinanceStaff);
   }
 
   async get(id: number) {
@@ -38,13 +47,16 @@ export class ReportService {
     if (report.authorId !== userId) throw new AppError(403, "FORBIDDEN");
     if (report.status !== "DRAFT" && report.status !== "REJECTED") throw new AppError(409, "INVALID_STATUS");
 
-    // Auto-assign reviewers based on ReviewRuleSet
-    const rules = await this.repo.findRulesByType(report.type);
+    // HR/ASSET/FINANCIAL use hardcoded multi-stage approve flow (no ReviewRuleSet)
+    const hardcodedTypes = ["HR", "ASSET", "FINANCIAL"];
     let reviewerDeptIds: number[] = [];
-    if (rules.length > 0) {
-      const categories = rules.map((r) => r.reviewerCategory as string);
-      const depts = await this.repo.findDeptsByCategory(categories);
-      reviewerDeptIds = depts.map((d) => d.id);
+    if (!hardcodedTypes.includes(report.type)) {
+      const rules = await this.repo.findRulesByType(report.type);
+      if (rules.length > 0) {
+        const categories = rules.map((r) => r.reviewerCategory as string);
+        const depts = await this.repo.findDeptsByCategory(categories);
+        reviewerDeptIds = depts.map((d) => d.id);
+      }
     }
 
     const submitted = await this.repo.submitWithReviews(id, reviewerDeptIds);
@@ -105,6 +117,69 @@ export class ReportService {
       .catch(console.error);
 
     return result;
+  }
+
+  async approve(id: number, reviewerId: number) {
+    const report = await this.repo.findById(id);
+    if (!report) throw new AppError(404, "REPORT_NOT_FOUND");
+    if (report.authorId === reviewerId) throw new AppError(403, "SELF_APPROVAL_FORBIDDEN");
+
+    const nextStatus = ((): "FIRST_APPROVED" | "SECOND_APPROVED" | "APPROVED" => {
+      switch (report.type) {
+        case "HR":
+          if (report.status === "SUBMITTED") return "FIRST_APPROVED";
+          if (report.status === "FIRST_APPROVED") return "SECOND_APPROVED";
+          return "APPROVED";
+        case "ASSET":
+        case "FINANCIAL":
+          if (report.status === "SUBMITTED") return "FIRST_APPROVED";
+          return "APPROVED";
+        default:
+          return "APPROVED";
+      }
+    })();
+
+    const approved = await this.repo.approve(id, reviewerId, nextStatus);
+
+    await writeAuditLog({
+      actorId: reviewerId,
+      action: "REPORT_APPROVED",
+      targetId: id,
+      detail: { title: report.title, nextStatus },
+    });
+
+    return approved;
+  }
+
+  async reject(id: number, reviewerId: number, reason: string) {
+    if (!reason?.trim()) throw new AppError(400, "REJECTION_REASON_REQUIRED");
+    const report = await this.repo.findById(id);
+    if (!report) throw new AppError(404, "REPORT_NOT_FOUND");
+    const approvableStatuses = ["SUBMITTED", "FIRST_APPROVED", "SECOND_APPROVED"];
+    if (!approvableStatuses.includes(report.status)) throw new AppError(409, "INVALID_STATUS");
+
+    const rejected = await this.repo.rejectDirect(id, reviewerId, reason.trim());
+
+    await writeAuditLog({
+      actorId: reviewerId,
+      action: "REPORT_REJECTED",
+      targetId: id,
+      detail: { title: report.title, reason: reason.trim() },
+    });
+
+    void this.notifRepo
+      .createForUser(
+        report.authorId,
+        "REPORT_REJECTED",
+        () => ({
+          title: "보고서가 반려됐습니다",
+          body: `"${report.title}" 보고서가 반려됐습니다. 사유: ${reason.trim()}`,
+        }),
+        id,
+      )
+      .catch(console.error);
+
+    return rejected;
   }
 
   listRuleSets() {

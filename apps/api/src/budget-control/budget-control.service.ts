@@ -44,6 +44,7 @@ export class BudgetControlService {
     const header = await this.repo.findById(id);
     if (!header) throw new AppError(404, "BUDGET_NOT_FOUND");
     if (header.status !== "SUBMITTED") throw new AppError(400, "BUDGET_NOT_SUBMITTED");
+    if (header.createdById === approverId) throw new AppError(403, "SELF_APPROVAL_FORBIDDEN");
     const result = await this.repo.updateStatus(id, "APPROVED", approverId);
     await writeAuditLog({ actorId: approverId, action: "BUDGET_APPROVED", targetId: id });
     return result;
@@ -136,6 +137,7 @@ export class BudgetControlService {
     const adj = header.adjustments.find(a => a.id === adjId);
     if (!adj) throw new AppError(404, "ADJUSTMENT_NOT_FOUND");
     if (adj.status !== "PENDING") throw new AppError(400, "ADJUSTMENT_NOT_PENDING");
+    if (adj.createdById === approverId) throw new AppError(403, "SELF_APPROVAL_FORBIDDEN");
     const result = await this.repo.updateAdjustmentStatus(adjId, "APPROVED", approverId);
     await writeAuditLog({ actorId: approverId, action: "BUDGET_ADJUSTMENT_APPROVED", targetId: adjId, detail: { headerId } });
     return result;
