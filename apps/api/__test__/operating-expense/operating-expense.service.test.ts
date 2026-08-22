@@ -1,7 +1,7 @@
 import { OperatingExpenseService, APPROVAL_THRESHOLD } from "../../src/operating-expense/operating-expense.service";
 import { AppError } from "../../src/lib/appError";
-import type { OperatingExpenseRepository } from "../../src/operating-expense/operating-expense.repo";
-import type { NotificationRepository } from "../../src/notification/notification.repo";
+import { OperatingExpenseRepository } from "../../src/operating-expense/operating-expense.repo";
+import { NotificationRepository } from "../../src/notification/notification.repo";
 
 const makeLine = (overrides = {}) => ({
   id: 1, budgetHeaderId: 1, departmentId: null, category: "TRAVEL" as const,
