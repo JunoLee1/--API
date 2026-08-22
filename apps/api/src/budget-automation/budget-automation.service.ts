@@ -1,6 +1,7 @@
 // apps/api/src/budget-automation/budget-automation.service.ts
 
 import { OperatingCategory } from "../generated/client";
+import { getSeasonRevenueActuals } from "../lib/season-actuals";
 import { AppError } from "../lib/appError";
 import type { BudgetAutomationRepository } from "./budget-automation.repo";
 import {
@@ -53,20 +54,20 @@ export class BudgetAutomationService {
     const pastSeasonIds = pastSeasons.map((s) => s.id);
     const mostRecentSeasonId = pastSeasonIds[0]!;
 
-    const [financialReports, expenseRows, budgetLines] = await Promise.all([
-      this.repo.getFinancialReports(pastSeasonIds),
+    const [perSeasonActuals, expenseRows, budgetLines] = await Promise.all([
+      Promise.all(chronoSeasonIds.map((id) => getSeasonRevenueActuals(id))),
       this.repo.getExpenseActualsByCategory(pastSeasonIds),
       this.repo.getLatestApprovedBudgetLines(mostRecentSeasonId),
     ]);
 
-    const frMap = new Map(financialReports.map((fr) => [fr.seasonId, fr]));
+    // perSeasonActuals[i] corresponds to chronoSeasonIds[i] (oldest → newest)
 
     // ── Revenue predictions ────────────────────────────────────────────────
     const revenueByCat: Record<string, CategoryPrediction> = {};
     let revenueTotal = 0;
 
     for (const key of REVENUE_KEYS) {
-      const chronoValues = chronoSeasonIds.map((id) => Number(frMap.get(id)?.[key] ?? 0));
+      const chronoValues = perSeasonActuals.map((a) => Number(a[key] ?? 0));
       const { cagr, warning } = computeCagr(chronoValues);
       const base = chronoValues[chronoValues.length - 1] ?? 0;
       const predicted = predict(base, cagr, inflation, dto.revenueGoal);
