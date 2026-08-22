@@ -1,8 +1,9 @@
 import { AppError } from "../lib/appError";
 import { FinancialReportRepository, UpsertBudgetPlanDto, RevenueBreakdownDto, sumBreakdown } from "./financial-report.repo";
 import { KnapsackService } from "../budget/knapsack.service";
-import { OperatingCategory } from "../generated/client";
+import { OperatingCategory, SeasonStatus } from "../generated/client";
 import { getPrisma } from "../lib/prisma";
+import { getSeasonRevenueActuals } from "../lib/season-actuals";
 
 export class FinancialReportService {
   constructor(
@@ -168,100 +169,86 @@ export class FinancialReportService {
     return { totalOperatingBudget, contingencyReserve, categories, zeroCategories };
   }
 
-  async autoFillRevenueFromPrevSeason(seasonId: number) {
+  /**
+   * 타깃 시즌 startDate 이전에 종료된 CLOSED 시즌 중 최근 N개를 골라
+   * getSeasonRevenueActuals 로 필드별 평균을 계산 → repo.upsert 로 저장.
+   *
+   * @param seasonId 타깃 시즌
+   * @param lookback 조회할 최대 CLOSED 시즌 개수 (default 3)
+   * @throws AppError(400, "INVALID_LOOKBACK")   lookback < 1 또는 정수 아님
+   * @throws AppError(404, "SEASON_NOT_FOUND")   타깃 시즌 없음
+   * @throws AppError(404, "NO_PREV_SEASON")     CLOSED 시즌 0개
+   */
+  async autoFillRevenueFromPrevSeasons(seasonId: number, lookback = 3) {
+    if (!Number.isInteger(lookback) || lookback < 1) {
+      throw new AppError(400, "INVALID_LOOKBACK");
+    }
+
     const prisma = getPrisma();
-    const currentSeason = await prisma.season.findUnique({
+
+    const target = await prisma.season.findUnique({
       where: { id: seasonId },
-      select: { endDate: true },
+      select: { startDate: true },
     });
-    if (!currentSeason) throw new AppError(404, "SEASON_NOT_FOUND");
-    const prevSeason = await prisma.season.findFirst({
-      where: { endDate: { lt: currentSeason.endDate } },
+    if (!target) throw new AppError(404, "SEASON_NOT_FOUND");
+
+    // CLOSED 시즌 중 endDate < target.startDate, endDate 내림차순 최대 N개
+    const prevSeasons = await prisma.season.findMany({
+      where: {
+        status: SeasonStatus.CLOSED,
+        endDate: { lt: target.startDate },
+      },
       orderBy: { endDate: "desc" },
+      take: lookback,
       select: { id: true },
     });
-    if (!prevSeason) throw new AppError(404, "PREV_SEASON_NOT_FOUND");
-    return this.setFromPrevSeasonActuals(prevSeason.id, seasonId);
-  }
+    if (prevSeasons.length === 0) throw new AppError(404, "NO_PREV_SEASON");
 
-  async setFromPrevSeasonActuals(prevSeasonId: number, newSeasonId: number) {
-    const prisma = getPrisma();
+    // 각 시즌 actuals 를 병렬 조회
+    const actualsList = await Promise.all(
+      prevSeasons.map((s) => getSeasonRevenueActuals(s.id))
+    );
+    const n = actualsList.length;
 
-    // 전년도 시즌 날짜 범위 조회
-    const prevSeason = await prisma.season.findUnique({
-      where: { id: prevSeasonId },
-      select: { startDate: true, endDate: true },
-    });
-    if (!prevSeason) throw new AppError(404, "PREV_SEASON_NOT_FOUND");
-
-    // 1. 티켓 실수입 (TICKET + VIP_TICKET, 해당 시즌 경기 연결)
-    const ticketResult = await prisma.salesRecord.aggregate({
-      where: {
-        type: { in: ["TICKET", "VIP_TICKET"] as any[] },
-        match: { seasonId: prevSeasonId },
-        deletedAt: null,
-      } as any,
-      _sum: { totalAmount: true },
-    });
-    const plannedRevenueTicket = Number((ticketResult._sum as any).totalAmount ?? 0);
-
-    // 2. 유니폼/MD 실수입 (SalesRecord type=UNIFORM, saleDate 범위)
-    const uniformResult = await prisma.salesRecord.aggregate({
-      where: {
-        type: "UNIFORM",
-        saleDate: { gte: prevSeason.startDate, lte: prevSeason.endDate },
-        deletedAt: null,
-      } as any,
-      _sum: { totalAmount: true },
-    });
-    const plannedRevenueMerchandise = Number((uniformResult._sum as any).totalAmount ?? 0);
-
-    // 3-extra. 기타 판매 실수입 (SalesRecord type=OTHER, saleDate 범위)
-    const otherSalesResult = await prisma.salesRecord.aggregate({
-      where: {
-        type: "OTHER",
-        saleDate: { gte: prevSeason.startDate, lte: prevSeason.endDate },
-        deletedAt: null,
-      } as any,
-      _sum: { totalAmount: true },
-    });
-    const plannedRevenueOther = Number((otherSalesResult._sum as any).totalAmount ?? 0);
-
-    // 4. 스폰서십 실수입 (SponsorshipPayment status=PAID, paidAt 범위)
-    const sponsorResult = await prisma.sponsorshipPayment.aggregate({
-      where: {
-        status: "PAID",
-        paidAt: { gte: prevSeason.startDate, lte: prevSeason.endDate },
-      },
-      _sum: { amount: true },
-    });
-    const plannedRevenueSponsorship = Number(sponsorResult._sum.amount ?? 0);
-
-    // 5. 아카데미 회비 실수입 (LedgerEntry category=ACADEMY_FEE, 전년도 시즌 기간)
-    const academyFeeResult = await prisma.ledgerEntry.aggregate({
-      where: {
-        category: "ACADEMY_FEE",
-        type: "INCOME",
-        createdAt: { gte: prevSeason.startDate, lte: prevSeason.endDate },
-      },
-      _sum: { amountKrw: true },
-    });
-    const plannedRevenueAcademyFee = Number(academyFeeResult._sum.amountKrw ?? 0);
+    // 8개 필드별 평균 (반올림)
+    const avg = (pick: (a: (typeof actualsList)[number]) => number) =>
+      Math.round(actualsList.reduce((sum, a) => sum + pick(a), 0) / n);
 
     const breakdown: RevenueBreakdownDto = {
-      plannedRevenueTicket,
-      plannedRevenueSponsorship,
-      plannedRevenueMerchandise,
-      plannedRevenueAcademyFee,
-      plannedRevenueBroadcast: 0,     // 중계권 — 시스템 외부 데이터, 수동 입력
-      plannedRevenueSubsidy: 0,       // 지자체/정부 보조금 — 시스템 외부 데이터, 수동 입력
-      plannedRevenueParentCompany: 0, // 모기업 지원금 — 수동 입력
-      plannedRevenueOther,
+      plannedRevenueTicket:        avg((a) => a.plannedRevenueTicket),
+      plannedRevenueSponsorship:   avg((a) => a.plannedRevenueSponsorship),
+      plannedRevenueMerchandise:   avg((a) => a.plannedRevenueMerchandise),
+      plannedRevenueOther:         avg((a) => a.plannedRevenueOther),
+      plannedRevenueAcademyFee:    avg((a) => a.plannedRevenueAcademyFee),
+      plannedRevenueBroadcast:     0,
+      plannedRevenueSubsidy:       0,
+      plannedRevenueParentCompany: 0,
     };
 
     const total = sumBreakdown(breakdown);
+    const note = `최근 ${n}개 CLOSED 시즌 실적 평균 (요청 lookback=${lookback}, 시즌 ID=${prevSeasons.map((s) => s.id).join(",")})`;
+    return this.repo.upsert(seasonId, total, note, breakdown);
+  }
+
+  /**
+   * 지정한 단일 시즌(prevSeasonId)의 실적을 그대로 새 시즌으로 복사.
+   * `POST /:seasonId/from-prev-season` 에서 사용 (수동 override).
+   * N-시즌 평균은 autoFillRevenueFromPrevSeasons 사용.
+   *
+   * 하위 호환: 헬퍼는 SEASON_NOT_FOUND 를 던지지만 이 메서드는
+   * PREV_SEASON_NOT_FOUND 로 remap 해서 이전 컨트랙트 유지.
+   */
+  async setFromPrevSeasonActuals(prevSeasonId: number, newSeasonId: number) {
+    let actuals;
+    try {
+      actuals = await getSeasonRevenueActuals(prevSeasonId);
+    } catch (e: any) {
+      if (e?.code === "SEASON_NOT_FOUND") throw new AppError(404, "PREV_SEASON_NOT_FOUND");
+      throw e;
+    }
+    const breakdown: RevenueBreakdownDto = { ...actuals };
+    const total = sumBreakdown(breakdown);
     const note = `전년도(시즌 ${prevSeasonId}) 실적 기반 자동 생성`;
-    // total이 0일 수 있음 (집계 데이터 없는 경우) — repo.upsert 직접 호출로 0 허용
     return this.repo.upsert(newSeasonId, total, note, breakdown);
   }
 
