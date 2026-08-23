@@ -69,7 +69,7 @@ export function BudgetPlanPage() {
     if (!seasonId) return
     setSaving(true)
     try {
-      await budgetPlanApi.save(seasonId, draftToPayload(draft, categoryCodes))
+      await budgetPlanApi.save(seasonId, draftToPayload(draft))
       toast.success(t('budget.saved'))
       await reloadPlan(seasonId)
     } catch (err) {
@@ -78,6 +78,17 @@ export function BudgetPlanPage() {
       setSaving(false)
     }
   }
+
+  // Silent bulk save fired on wizard page navigation. Failures are swallowed
+  // by the wizard so the flow keeps moving; user-facing toasts only come from
+  // the final "완료 및 저장" submit above.
+  const handleAutoSave = useCallback(
+    async (draft: DraftBudgetPlan) => {
+      if (!seasonId) return
+      await budgetPlanApi.save(seasonId, draftToPayload(draft))
+    },
+    [seasonId]
+  )
 
   const handleAdvancedMutated = useCallback(async () => {
     if (!seasonId) return
@@ -116,6 +127,7 @@ export function BudgetPlanPage() {
         initialDraft={initialDraft}
         categories={categoryItems}
         onSubmit={handleSubmit}
+        onAutoSave={handleAutoSave}
         submitting={saving}
         renderAdvancedOnLastPage={() => (
           <BudgetAdvancedPanel
