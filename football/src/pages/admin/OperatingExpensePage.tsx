@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
-import { operatingExpenseApi } from '@/services/operating-expense.service'
+import { operatingExpenseApi, EXPENSE_COST_TYPE_LABEL, ALL_EXPENSE_COST_TYPES, type ExpenseCostType } from '@/services/operating-expense.service'
 import { seasonApi } from '@/services/season.service'
 import type { OperatingExpense, OperatingCategory } from '@/types/budget'
 import type { Season } from '@/types/season'
@@ -31,7 +31,13 @@ export function OperatingExpensePage() {
   const [expenses, setExpenses] = useState<OperatingExpense[]>([])
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
-  const [form, setForm] = useState({ category: 'TRAVEL' as OperatingCategory, amount: '', date: '', note: '' })
+  const [form, setForm] = useState({
+    category: 'TRAVEL' as OperatingCategory,
+    costType: 'VARIABLE' as ExpenseCostType,
+    amount: '',
+    date: '',
+    note: '',
+  })
   const [saving, setSaving] = useState(false)
 
   const load = async (sid: number) => {
@@ -71,13 +77,14 @@ export function OperatingExpensePage() {
       await operatingExpenseApi.create({
         seasonId,
         category: form.category,
+        costType: form.costType,
         amount: parseInt(form.amount, 10),
         date: form.date,
         note: form.note || undefined,
       })
       await load(seasonId)
       setCreateOpen(false)
-      setForm({ category: 'TRAVEL', amount: '', date: '', note: '' })
+      setForm({ category: 'TRAVEL', costType: 'VARIABLE', amount: '', date: '', note: '' })
       toast.success(t('operatingExpense.created'))
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t('operatingExpense.createFailed'))
@@ -175,6 +182,18 @@ export function OperatingExpensePage() {
               >
                 {formCategories.map((c) => (
                   <option key={c.code} value={c.code}>{c.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>비용 성격</Label>
+              <select
+                className="w-full border rounded px-3 py-1.5 text-sm"
+                value={form.costType}
+                onChange={(e) => setForm((p) => ({ ...p, costType: e.target.value as ExpenseCostType }))}
+              >
+                {ALL_EXPENSE_COST_TYPES.map((t) => (
+                  <option key={t} value={t}>{EXPENSE_COST_TYPE_LABEL[t]}</option>
                 ))}
               </select>
             </div>
