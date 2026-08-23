@@ -1,6 +1,16 @@
 import { FinancialReportService } from "../../src/financial-report/financial-report.service";
 import { KnapsackService } from "../../src/budget/knapsack.service";
 import type { FinancialReportRepository } from "../../src/financial-report/financial-report.repo";
+import type { ExpenseCategoryService } from "../../src/expense-category/expense-category.service";
+
+const makeCategoryService = (): ExpenseCategoryService => ({
+  listActive: jest.fn().mockResolvedValue([]),
+  listAll: jest.fn().mockResolvedValue([]),
+  resolveCategoryId: jest.fn(),
+  resolveCategoryCode: jest.fn(),
+  isValidCode: jest.fn().mockResolvedValue(true),
+  invalidateCache: jest.fn(),
+} as unknown as ExpenseCategoryService);
 
 const mockPrisma = {
   season: {
@@ -49,7 +59,7 @@ describe("FinancialReportService.autoFillRevenueFromPrevSeasons", () => {
       .mockResolvedValueOnce({ plannedRevenueTicket: 100, plannedRevenueSponsorship: 300, plannedRevenueMerchandise: 0,  plannedRevenueOther: 0,  plannedRevenueAcademyFee: 60,  ...ZERO_MANUAL });
 
     const repo = makeRepo();
-    const svc = new FinancialReportService(repo, new KnapsackService());
+    const svc = new FinancialReportService(repo, new KnapsackService(), makeCategoryService());
 
     await svc.autoFillRevenueFromPrevSeasons(99);
 
@@ -77,7 +87,7 @@ describe("FinancialReportService.autoFillRevenueFromPrevSeasons", () => {
     });
 
     const repo = makeRepo();
-    const svc = new FinancialReportService(repo, new KnapsackService());
+    const svc = new FinancialReportService(repo, new KnapsackService(), makeCategoryService());
     await svc.autoFillRevenueFromPrevSeasons(99, 3);
 
     const [, , noteArg, breakdownArg] = (repo.upsert as jest.Mock).mock.calls[0];
@@ -88,7 +98,7 @@ describe("FinancialReportService.autoFillRevenueFromPrevSeasons", () => {
   it("throws NO_PREV_SEASON when 0 CLOSED seasons exist", async () => {
     mockPrisma.season.findMany.mockResolvedValue([]);
     const repo = makeRepo();
-    const svc = new FinancialReportService(repo, new KnapsackService());
+    const svc = new FinancialReportService(repo, new KnapsackService(), makeCategoryService());
     await expect(svc.autoFillRevenueFromPrevSeasons(99)).rejects.toMatchObject({
       statusCode: 404, code: "NO_PREV_SEASON",
     });
@@ -98,7 +108,7 @@ describe("FinancialReportService.autoFillRevenueFromPrevSeasons", () => {
   it("throws SEASON_NOT_FOUND when target season missing", async () => {
     mockPrisma.season.findUnique.mockResolvedValue(null);
     const repo = makeRepo();
-    const svc = new FinancialReportService(repo, new KnapsackService());
+    const svc = new FinancialReportService(repo, new KnapsackService(), makeCategoryService());
     await expect(svc.autoFillRevenueFromPrevSeasons(99)).rejects.toMatchObject({
       statusCode: 404, code: "SEASON_NOT_FOUND",
     });
@@ -112,7 +122,7 @@ describe("FinancialReportService.autoFillRevenueFromPrevSeasons", () => {
     });
 
     const repo = makeRepo();
-    const svc = new FinancialReportService(repo, new KnapsackService());
+    const svc = new FinancialReportService(repo, new KnapsackService(), makeCategoryService());
     await svc.autoFillRevenueFromPrevSeasons(99, 5);
 
     expect(mockPrisma.season.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 5 }));
@@ -121,7 +131,7 @@ describe("FinancialReportService.autoFillRevenueFromPrevSeasons", () => {
 
   it("rejects invalid lookback (<1 or non-integer)", async () => {
     const repo = makeRepo();
-    const svc = new FinancialReportService(repo, new KnapsackService());
+    const svc = new FinancialReportService(repo, new KnapsackService(), makeCategoryService());
     await expect(svc.autoFillRevenueFromPrevSeasons(99, 0)).rejects.toMatchObject({
       statusCode: 400, code: "INVALID_LOOKBACK",
     });

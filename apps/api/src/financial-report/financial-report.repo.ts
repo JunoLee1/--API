@@ -1,4 +1,4 @@
-import { PrismaClient, OperatingCategory } from "../generated/client";
+import { PrismaClient } from "../generated/client";
 
 export interface RevenueBreakdownDto {
   plannedRevenueTicket?: number;
@@ -13,7 +13,7 @@ export interface RevenueBreakdownDto {
 
 // Category descriptor shared with services — code from wire, id from cache lookup.
 export interface CategoryRef {
-  code: OperatingCategory;
+  code: string;
   id: number;
 }
 
@@ -35,7 +35,6 @@ export interface UpsertBudgetPlanDto {
   contingencyReserve: number;
   playerSalaryBudget?: number;
   categories: {
-    category: OperatingCategory;
     categoryId: number;
     mandatoryMinimum: number;
     sortOrder: number;
@@ -136,16 +135,14 @@ export class FinancialReportRepository {
 
     for (const cat of dto.categories) {
       const plan = await this.prisma.budgetCategoryPlan.upsert({
-        where: { financialReportId_category: { financialReportId: report.id, category: cat.category } },
+        where: { financialReportId_categoryId: { financialReportId: report.id, categoryId: cat.categoryId } },
         create: {
           financialReportId: report.id,
-          category: cat.category,
           categoryId: cat.categoryId,
           mandatoryMinimum: cat.mandatoryMinimum,
           sortOrder: cat.sortOrder,
         },
         update: {
-          categoryId: cat.categoryId,
           mandatoryMinimum: cat.mandatoryMinimum,
           sortOrder: cat.sortOrder,
         },
@@ -211,14 +208,13 @@ export class FinancialReportRepository {
 
   async addOverrideLog(
     reportId: number,
-    category: OperatingCategory,
     categoryId: number,
     amount: number,
     reason: string,
     createdById: number
   ) {
     return this.prisma.budgetOverrideLog.create({
-      data: { financialReportId: reportId, category, categoryId, amount, reason, createdById },
+      data: { financialReportId: reportId, categoryId, amount, reason, createdById },
     });
   }
 
@@ -288,10 +284,9 @@ export class FinancialReportRepository {
         where: { status: "APPROVED", receiptDate: { gte: season.startDate, lte: season.endDate } },
         _sum: { totalAmount: true },
       }),
-      // Group by categoryId so the SPORTS_EQUIPMENT rename (EQUIPMENT → SPORTS_EQUIPMENT)
-      // aggregates correctly. Fall back to enum column when the FK is null.
+      // Group by categoryId (NOT NULL post-cutover); translate to code below.
       this.prisma.operatingExpense.groupBy({
-        by: ["categoryId", "category"],
+        by: ["categoryId"],
         where: { seasonId },
         _sum: { amount: true },
       }),
@@ -318,7 +313,8 @@ export class FinancialReportRepository {
       PLAYER_SALARY: Math.round(playerSalaryActual),
     };
     for (const row of operating) {
-      const code = (row.categoryId != null ? codeById.get(row.categoryId) : undefined) ?? row.category;
+      const code = codeById.get(row.categoryId);
+      if (!code) continue;
       result[code] = (result[code] ?? 0) + (row._sum?.amount ?? 0);
     }
     return result;

@@ -1,6 +1,5 @@
 // apps/api/src/budget-automation/budget-automation.service.ts
 
-import { OperatingCategory } from "../generated/client";
 import { getSeasonRevenueActuals } from "../lib/season-actuals";
 import { AppError } from "../lib/appError";
 import type { BudgetAutomationRepository } from "./budget-automation.repo";
@@ -85,19 +84,28 @@ export class BudgetAutomationService {
     }
 
     // ── Expense predictions ────────────────────────────────────────────────
+    // Translate categoryId → code up front so expenseMap / budgetByCat stay keyed by code.
+    const activeCategories = await this.categoryService.listActive();
+    const allCategories = await this.categoryService.listAll();
+    const codeById = new Map(allCategories.map((c) => [c.id, c.code]));
+
     const expenseMap: Record<string, Record<number, number>> = {};
     for (const row of expenseRows) {
-      const cat = row.category as string;
-      if (!expenseMap[cat]) expenseMap[cat] = {};
-      expenseMap[cat][row.seasonId] = Number(row._sum.amount ?? 0);
+      const code = codeById.get(row.categoryId);
+      if (!code) continue;
+      if (!expenseMap[code]) expenseMap[code] = {};
+      expenseMap[code][row.seasonId] = Number(row._sum.amount ?? 0);
     }
 
-    const budgetByCat = new Map(budgetLines.map((l) => [l.category as string, l.originalAmount]));
+    const budgetByCat = new Map<string, number>();
+    for (const l of budgetLines) {
+      const code = codeById.get(l.categoryId);
+      if (!code) continue;
+      budgetByCat.set(code, l.originalAmount);
+    }
 
     const expenseByCat: Record<string, CategoryPrediction> = {};
     let expenseTotal = 0;
-
-    const activeCategories = await this.categoryService.listActive();
 
     for (const catRow of activeCategories) {
       const cat = catRow.code;
@@ -151,7 +159,6 @@ export class BudgetAutomationService {
     const entries = Object.entries(previewResult.expense.byCategory) as [string, CategoryPrediction][];
     const lines = await Promise.all(
       entries.map(async ([cat, pred]) => ({
-        category: cat as OperatingCategory,
         categoryId: await this.categoryService.resolveCategoryId(cat),
         originalAmount: pred.predicted,
         year,

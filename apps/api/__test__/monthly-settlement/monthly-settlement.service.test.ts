@@ -43,7 +43,7 @@ const makeRepo = (overrides: Partial<MonthlySettlementRepository> = {}): Monthly
   ...overrides,
 } as unknown as MonthlySettlementRepository);
 
-const makePrisma = (overrides = {}) => ({
+const makePrisma = (overrides: any = {}) => ({
   ledgerEntry: {
     groupBy: jest.fn().mockResolvedValue([]),
   },
@@ -52,6 +52,15 @@ const makePrisma = (overrides = {}) => ({
   },
   budgetCategoryPlan: {
     findMany: jest.fn().mockResolvedValue([]),
+  },
+  expenseCategory: {
+    findMany: jest.fn().mockResolvedValue([]),
+  },
+  revenueAdjustment: {
+    aggregate: jest.fn().mockResolvedValue({ _sum: { delta: null } }),
+  },
+  monthlySettlementReport: {
+    update: jest.fn().mockResolvedValue({}),
   },
   ...overrides,
 } as any);
@@ -72,14 +81,20 @@ describe("MonthlySettlementService.generate", () => {
       },
       operatingExpense: {
         groupBy: jest.fn().mockResolvedValue([
-          { category: "SALARY", _sum: { amount: 800_000 } },
-          { category: "FACILITY", _sum: { amount: 200_000 } },
+          { categoryId: 1, _sum: { amount: 800_000 } },
+          { categoryId: 2, _sum: { amount: 200_000 } },
         ]),
       },
       budgetCategoryPlan: {
         findMany: jest.fn().mockResolvedValue([
-          { category: "SALARY", mandatoryMinimum: 700_000 },
-          { category: "FACILITY", mandatoryMinimum: 300_000 },
+          { categoryId: 1, mandatoryMinimum: 700_000 },
+          { categoryId: 2, mandatoryMinimum: 300_000 },
+        ]),
+      },
+      expenseCategory: {
+        findMany: jest.fn().mockResolvedValue([
+          { id: 1, code: "SALARY" },
+          { id: 2, code: "FACILITY" },
         ]),
       },
     });

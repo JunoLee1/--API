@@ -2509,15 +2509,6 @@ model UserDepartment {
 // Knapsack 운영비 예산 관리
 // ─────────────────────────────────────────────
 
-enum OperatingCategory {
-  MEDICAL
-  MEAL
-  TRAVEL
-  EQUIPMENT
-  SCOUTING
-  YOUTH
-}
-
 // ─────────────────────────────────────────────
 // Expense Category (table-backed, replacing OperatingCategory enum)
 // ─────────────────────────────────────────────
@@ -2558,20 +2549,19 @@ enum AdjustmentStatus {
 }
 
 model BudgetCategoryPlan {
-  id                Int               @id @default(autoincrement())
+  id                Int             @id @default(autoincrement())
   financialReportId Int
-  category          OperatingCategory
-  categoryId        Int?
-  mandatoryMinimum  Int               @default(0)
+  categoryId        Int
+  mandatoryMinimum  Int             @default(0)
   knapsackAllocated Int?
-  sortOrder         Int               @default(0)
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  financialReport   FinancialReport   @relation(fields: [financialReportId], references: [id], onDelete: Cascade)
-  expenseCategory   ExpenseCategory?  @relation(fields: [categoryId], references: [id])
+  sortOrder         Int             @default(0)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  financialReport   FinancialReport @relation(fields: [financialReportId], references: [id], onDelete: Cascade)
+  expenseCategory   ExpenseCategory @relation(fields: [categoryId], references: [id])
   tiers             BudgetTier[]
 
-  @@unique([financialReportId, category])
+  @@unique([financialReportId, categoryId])
 }
 
 model BudgetTier {
@@ -2588,41 +2578,39 @@ model BudgetTier {
 }
 
 model BudgetOverrideLog {
-  id                Int               @id @default(autoincrement())
+  id                Int             @id @default(autoincrement())
   financialReportId Int
-  category          OperatingCategory
-  categoryId        Int?
+  categoryId        Int
   amount            Int
   reason            String
   createdById       Int
-  createdAt         DateTime          @default(now())
-  status            OverrideStatus    @default(PENDING)
+  createdAt         DateTime        @default(now())
+  status            OverrideStatus  @default(PENDING)
   reviewedById      Int?
   reviewedAt        DateTime?
   reviewNote        String?
-  financialReport   FinancialReport   @relation(fields: [financialReportId], references: [id], onDelete: Cascade)
-  createdBy         User              @relation("BudgetOverrideLogCreator", fields: [createdById], references: [id])
-  reviewedBy        User?             @relation("BudgetOverrideLogReviewer", fields: [reviewedById], references: [id])
-  expenseCategory   ExpenseCategory?  @relation(fields: [categoryId], references: [id])
+  financialReport   FinancialReport @relation(fields: [financialReportId], references: [id], onDelete: Cascade)
+  createdBy         User            @relation("BudgetOverrideLogCreator", fields: [createdById], references: [id])
+  reviewedBy        User?           @relation("BudgetOverrideLogReviewer", fields: [reviewedById], references: [id])
+  expenseCategory   ExpenseCategory @relation(fields: [categoryId], references: [id])
 }
 
 model OperatingExpense {
-  id                 Int               @id @default(autoincrement())
+  id                 Int             @id @default(autoincrement())
   seasonId           Int
-  category           OperatingCategory
-  categoryId         Int?
+  categoryId         Int
   amount             Int
   date               DateTime
   note               String?
   createdById        Int
   paidAt             DateTime?
   paidById           Int?
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
   deletedAt          DateTime?
   deletionReason     String?
   accountCodeId      Int?
-  status             ExpenseStatus     @default(PENDING)
+  status             ExpenseStatus   @default(PENDING)
   budgetLineId       Int
   firstApprovedById  Int?
   firstApprovedAt    DateTime?
@@ -2634,16 +2622,16 @@ model OperatingExpense {
   cancelledById      Int?
   cancelledAt        DateTime?
   cancellationReason String?
-  season             Season            @relation(fields: [seasonId], references: [id])
-  createdBy          User              @relation("OperatingExpenseCreator", fields: [createdById], references: [id])
-  paidBy             User?             @relation("OperatingExpensePayer", fields: [paidById], references: [id])
-  accountCode        AccountCode?      @relation(fields: [accountCodeId], references: [id])
-  expenseCategory    ExpenseCategory?  @relation(fields: [categoryId], references: [id])
-  budgetLine         BudgetLine        @relation(fields: [budgetLineId], references: [id])
-  firstApprovedBy    User?             @relation("OperatingExpenseFirstApprover", fields: [firstApprovedById], references: [id])
-  approvedBy         User?             @relation("OperatingExpenseApprover", fields: [approvedById], references: [id])
-  rejectedBy         User?             @relation("OperatingExpenseRejecter", fields: [rejectedById], references: [id])
-  cancelledBy        User?             @relation("OperatingExpenseCanceller", fields: [cancelledById], references: [id])
+  season             Season          @relation(fields: [seasonId], references: [id])
+  createdBy          User            @relation("OperatingExpenseCreator", fields: [createdById], references: [id])
+  paidBy             User?           @relation("OperatingExpensePayer", fields: [paidById], references: [id])
+  accountCode        AccountCode?    @relation(fields: [accountCodeId], references: [id])
+  expenseCategory    ExpenseCategory @relation(fields: [categoryId], references: [id])
+  budgetLine         BudgetLine      @relation(fields: [budgetLineId], references: [id])
+  firstApprovedBy    User?           @relation("OperatingExpenseFirstApprover", fields: [firstApprovedById], references: [id])
+  approvedBy         User?           @relation("OperatingExpenseApprover", fields: [approvedById], references: [id])
+  rejectedBy         User?           @relation("OperatingExpenseRejecter", fields: [rejectedById], references: [id])
+  cancelledBy        User?           @relation("OperatingExpenseCanceller", fields: [cancelledById], references: [id])
 }
 
 // ─────────────────────────────────────────────
@@ -2676,8 +2664,7 @@ model BudgetLine {
   id                Int                @id @default(autoincrement())
   budgetHeaderId    Int
   departmentId      Int?
-  category          OperatingCategory
-  categoryId        Int?
+  categoryId        Int
   year              Int
   month             Int?
   originalAmount    Int                @default(0)
@@ -2686,7 +2673,7 @@ model BudgetLine {
   updatedAt         DateTime           @updatedAt
   budgetHeader      BudgetHeader       @relation(fields: [budgetHeaderId], references: [id], onDelete: Cascade)
   department        Department?        @relation(fields: [departmentId], references: [id])
-  expenseCategory   ExpenseCategory?   @relation(fields: [categoryId], references: [id])
+  expenseCategory   ExpenseCategory    @relation(fields: [categoryId], references: [id])
   operatingExpenses OperatingExpense[]
 }
 

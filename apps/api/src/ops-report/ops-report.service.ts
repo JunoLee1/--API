@@ -148,18 +148,22 @@ export class OpsReportService {
     const start = new Date(year, month - 1, 1);
     const end = new Date(year, month, 1);
 
-    const plans = await this.prisma.budgetCategoryPlan.findMany({
-      where: { financialReport: { seasonId } },
-      select: { category: true, mandatoryMinimum: true, knapsackAllocated: true },
-    });
+    const [plans, actualsByCategory, expenseCategories] = await Promise.all([
+      this.prisma.budgetCategoryPlan.findMany({
+        where: { financialReport: { seasonId } },
+        select: { categoryId: true, mandatoryMinimum: true, knapsackAllocated: true },
+      }),
+      this.prisma.operatingExpense.groupBy({
+        by: ["categoryId"],
+        where: { seasonId, date: { gte: start, lt: end } },
+        _sum: { amount: true },
+      }),
+      this.prisma.expenseCategory.findMany({ select: { id: true, code: true } }),
+    ]);
 
-    const actualsByCategory = await this.prisma.operatingExpense.groupBy({
-      by: ["category"],
-      where: { seasonId, date: { gte: start, lt: end } },
-      _sum: { amount: true },
-    });
+    const categoryCode = new Map(expenseCategories.map((c) => [c.id, c.code]));
     const actualsMap = new Map(
-      actualsByCategory.map((r) => [r.category, r._sum.amount ?? 0])
+      actualsByCategory.map((r) => [r.categoryId, r._sum?.amount ?? 0])
     );
 
     const snapshotData: Record<string, { budget: number; actual: number }> = {};
@@ -167,9 +171,11 @@ export class OpsReportService {
     let totalActual = 0;
 
     for (const plan of plans) {
+      const code = categoryCode.get(plan.categoryId);
+      if (!code) continue;
       const budget = plan.mandatoryMinimum + (plan.knapsackAllocated ?? 0);
-      const actual = actualsMap.get(plan.category) ?? 0;
-      snapshotData[plan.category] = { budget, actual };
+      const actual = actualsMap.get(plan.categoryId) ?? 0;
+      snapshotData[code] = { budget, actual };
       totalBudget += budget;
       totalActual += actual;
     }
@@ -354,20 +360,26 @@ export class OpsReportService {
   async getBudgetExecutionByCategory(seasonId: number, year: number, month: number) {
     const start = new Date(year, month - 1, 1);
     const end = new Date(year, month, 1);
-    const plans = await this.prisma.budgetCategoryPlan.findMany({
-      where: { financialReport: { seasonId } },
-      select: { category: true, mandatoryMinimum: true, knapsackAllocated: true },
-    });
-    const actuals = await this.prisma.operatingExpense.groupBy({
-      by: ["category"],
-      where: { seasonId, date: { gte: start, lt: end } },
-      _sum: { amount: true },
-    });
-    const actualsMap = new Map(actuals.map((a) => [a.category, a._sum.amount ?? 0]));
-    return plans.map((p) => {
+    const [plans, actuals, expenseCategories] = await Promise.all([
+      this.prisma.budgetCategoryPlan.findMany({
+        where: { financialReport: { seasonId } },
+        select: { categoryId: true, mandatoryMinimum: true, knapsackAllocated: true },
+      }),
+      this.prisma.operatingExpense.groupBy({
+        by: ["categoryId"],
+        where: { seasonId, date: { gte: start, lt: end } },
+        _sum: { amount: true },
+      }),
+      this.prisma.expenseCategory.findMany({ select: { id: true, code: true } }),
+    ]);
+    const categoryCode = new Map(expenseCategories.map((c) => [c.id, c.code]));
+    const actualsMap = new Map(actuals.map((a) => [a.categoryId, a._sum?.amount ?? 0]));
+    return plans.flatMap((p) => {
+      const code = categoryCode.get(p.categoryId);
+      if (!code) return [];
       const budget = p.mandatoryMinimum + (p.knapsackAllocated ?? 0);
-      const actual = actualsMap.get(p.category) ?? 0;
-      return { category: p.category, budget, actual, executionRate: budget === 0 ? 0 : Math.round((actual / budget) * 1000) / 10 };
+      const actual = actualsMap.get(p.categoryId) ?? 0;
+      return [{ category: code, budget, actual, executionRate: budget === 0 ? 0 : Math.round((actual / budget) * 1000) / 10 }];
     });
   }
 

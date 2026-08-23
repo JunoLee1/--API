@@ -1,4 +1,4 @@
-import { PrismaClient, OperatingCategory, ExpenseStatus } from "../generated/client";
+import { PrismaClient, ExpenseStatus } from "../generated/client";
 
 type Tx = Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
 
@@ -10,7 +10,7 @@ export class OperatingExpenseRepository {
       where: { seasonId, deletedAt: null },
       include: {
         createdBy: { select: { id: true, username: true } },
-        budgetLine: { select: { id: true, category: true, originalAmount: true, expenseCategory: { select: { code: true } } } },
+        budgetLine: { select: { id: true, originalAmount: true, expenseCategory: { select: { code: true } } } },
         expenseCategory: { select: { code: true } },
       },
       orderBy: { date: "desc" },
@@ -22,7 +22,7 @@ export class OperatingExpenseRepository {
       where: { id },
       include: {
         createdBy: { select: { id: true, username: true } },
-        budgetLine: { select: { id: true, category: true, originalAmount: true, budgetHeaderId: true, expenseCategory: { select: { code: true } } } },
+        budgetLine: { select: { id: true, originalAmount: true, budgetHeaderId: true, expenseCategory: { select: { code: true } } } },
         expenseCategory: { select: { code: true } },
       },
     });
@@ -34,7 +34,6 @@ export class OperatingExpenseRepository {
 
   async createWithBudgetCheck(data: {
     seasonId: number;
-    category: OperatingCategory;
     categoryId: number;
     amount: number;
     date: Date;
@@ -45,7 +44,7 @@ export class OperatingExpenseRepository {
     return this.prisma.$transaction(async (tx) => {
       const line = await tx.budgetLine.findUnique({ where: { id: data.budgetLineId } });
       if (!line) throw new Error("BUDGET_LINE_NOT_FOUND");
-      if (line.category !== data.category) throw new Error("CATEGORY_MISMATCH");
+      if (line.categoryId !== data.categoryId) throw new Error("CATEGORY_MISMATCH");
 
       const { _sum } = await tx.operatingExpense.aggregate({
         where: {
@@ -61,7 +60,6 @@ export class OperatingExpenseRepository {
       return tx.operatingExpense.create({
         data: {
           seasonId: data.seasonId,
-          category: data.category,
           categoryId: data.categoryId,
           amount: data.amount,
           date: data.date,
@@ -72,7 +70,7 @@ export class OperatingExpenseRepository {
         },
         include: {
           createdBy: { select: { id: true, username: true } },
-          budgetLine: { select: { id: true, category: true, originalAmount: true, expenseCategory: { select: { code: true } } } },
+          budgetLine: { select: { id: true, originalAmount: true, expenseCategory: { select: { code: true } } } },
           expenseCategory: { select: { code: true } },
         },
       });
@@ -100,24 +98,24 @@ export class OperatingExpenseRepository {
     return this.prisma.operatingExpense.update({ where: { id }, data });
   }
 
-  update(id: number, data: { amount?: number; category?: OperatingCategory; categoryId?: number; note?: string }) {
+  update(id: number, data: { amount?: number; categoryId?: number; note?: string }) {
     return this.prisma.operatingExpense.update({ where: { id }, data });
   }
 
-  async findBudgetPlan(seasonId: number, category: OperatingCategory) {
+  async findBudgetPlan(seasonId: number, categoryId: number) {
     const report = await this.prisma.financialReport.findUnique({
       where: { seasonId },
       include: {
-        budgetCategoryPlans: { where: { category } },
+        budgetCategoryPlans: { where: { categoryId } },
       },
     });
     if (!report) return null;
     return report.budgetCategoryPlans[0] ?? null;
   }
 
-  async sumSpendBySeasonAndCategory(seasonId: number, category: OperatingCategory) {
+  async sumSpendBySeasonAndCategory(seasonId: number, categoryId: number) {
     const result = await this.prisma.operatingExpense.aggregate({
-      where: { seasonId, category },
+      where: { seasonId, categoryId },
       _sum: { amount: true },
     });
     return result._sum.amount ?? 0;

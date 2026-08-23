@@ -2,16 +2,23 @@ import { OperatingExpenseService, APPROVAL_THRESHOLD } from "../../src/operating
 import { AppError } from "../../src/lib/appError";
 import { OperatingExpenseRepository } from "../../src/operating-expense/operating-expense.repo";
 import { NotificationRepository } from "../../src/notification/notification.repo";
+import type { ExpenseCategoryService } from "../../src/expense-category/expense-category.service";
+
+// Fixed test category ids matching the seed data.
+const CAT_IDS: Record<string, number> = {
+  MEDICAL: 1, MEAL: 2, TRAVEL: 3, SPORTS_EQUIPMENT: 4, SCOUTING: 5,
+  YOUTH: 6, IT_SECURITY: 7, FACILITY_EQUIPMENT: 8, STAFF_RECRUITMENT: 9,
+};
 
 const makeLine = (overrides = {}) => ({
-  id: 1, budgetHeaderId: 1, departmentId: null, category: "TRAVEL" as const,
+  id: 1, budgetHeaderId: 1, departmentId: null, categoryId: CAT_IDS["TRAVEL"]!,
   year: 2026, month: null, originalAmount: 5_000_000,
   note: null, createdAt: new Date(), updatedAt: new Date(),
   ...overrides,
 });
 
 const makeExpense = (overrides = {}) => ({
-  id: 1, seasonId: 1, category: "TRAVEL" as const, amount: 300_000,
+  id: 1, seasonId: 1, categoryId: CAT_IDS["TRAVEL"]!, amount: 300_000,
   date: new Date(), note: null, createdById: 10,
   status: "PENDING" as const, budgetLineId: 1,
   firstApprovedById: null, firstApprovedAt: null,
@@ -22,7 +29,8 @@ const makeExpense = (overrides = {}) => ({
   deletedAt: null, deletionReason: null, accountCodeId: null,
   createdAt: new Date(), updatedAt: new Date(),
   createdBy: { id: 10, username: "staff" },
-  budgetLine: { id: 1, category: "TRAVEL", originalAmount: 5_000_000, budgetHeaderId: 1 },
+  budgetLine: { id: 1, originalAmount: 5_000_000, budgetHeaderId: 1, expenseCategory: { code: "TRAVEL" } },
+  expenseCategory: { code: "TRAVEL" },
   ...overrides,
 });
 
@@ -43,12 +51,21 @@ const makeNotifRepo = (): NotificationRepository => ({
   createForUser: jest.fn().mockResolvedValue(undefined),
 } as unknown as NotificationRepository);
 
-const makeService = (repo = makeRepo(), notif = makeNotifRepo()) =>
-  new OperatingExpenseService(repo, notif);
+const makeCategoryService = (): ExpenseCategoryService => ({
+  listActive: jest.fn().mockResolvedValue([]),
+  listAll: jest.fn().mockResolvedValue([]),
+  resolveCategoryId: jest.fn(async (code: string) => CAT_IDS[code]!),
+  resolveCategoryCode: jest.fn(async (id: number) => Object.keys(CAT_IDS).find((k) => CAT_IDS[k] === id)!),
+  isValidCode: jest.fn(async (code: string) => code in CAT_IDS),
+  invalidateCache: jest.fn(),
+} as unknown as ExpenseCategoryService);
+
+const makeService = (repo = makeRepo(), notif = makeNotifRepo(), cat = makeCategoryService()) =>
+  new OperatingExpenseService(repo, notif, cat);
 
 describe("OperatingExpenseService.create", () => {
   const baseInput = {
-    seasonId: 1, category: "TRAVEL" as const, amount: 300_000,
+    seasonId: 1, category: "TRAVEL", amount: 300_000,
     date: "2026-08-22", createdById: 10, budgetLineId: 1,
   };
 
