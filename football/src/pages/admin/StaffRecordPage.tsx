@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import { validatePhone } from "@/lib/phone"
+import { maskPhone } from "@/lib/pii"
 import { staffRecordApi } from "@/services/staff-record.service"
 import { departmentApi } from "@/services/department.service"
 import type { StaffRecord } from "@/services/staff-record.service"
@@ -149,7 +150,7 @@ export function StaffRecordPage() {
                     : r.department.name
                   : "-"}
               </td>
-              <td className="py-2 pr-4 text-muted-foreground">{r.phone ?? "-"}</td>
+              <td className="py-2 pr-4 text-muted-foreground">{maskPhone(r.phone)}</td>
               <td className="py-2 pr-4">
                 <Badge variant={r.isActive ? "default" : "secondary"}>
                   {r.isActive ? t("staffRecord.active") : t("staffRecord.inactive")}
