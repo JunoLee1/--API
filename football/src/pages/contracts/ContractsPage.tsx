@@ -128,6 +128,7 @@ export function ContractsPage() {
   const { user } = useCurrentUser()
   const navigate = useNavigate()
   const { players, loading: playersLoading } = usePlayers()
+  const seniorPlayers = players.filter((p) => p.level !== 'YOUTH')
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>('')
   const [contracts, setContracts] = useState<ContractSummary[]>([])
   const [loadingContracts, setLoadingContracts] = useState(false)
@@ -161,7 +162,7 @@ export function ContractsPage() {
     }
   }
 
-  const selectedPlayer = players.find((p) => p.id === selectedPlayerId)
+  const selectedPlayer = seniorPlayers.find((p) => p.id === selectedPlayerId)
 
   return (
     <div className="flex flex-col h-full">
@@ -181,8 +182,8 @@ export function ContractsPage() {
               <SelectValue placeholder={t('contracts.playerSelectPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
-              {players.map((p) => (
-                <SelectItem key={p.id} value={p.id}>{p.playerName}</SelectItem>
+              {seniorPlayers.map((p) => (
+                <SelectItem key={p.id} value={p.id} label={p.playerName}>{p.playerName}</SelectItem>
               ))}
             </SelectContent>
           </Select>

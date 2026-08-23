@@ -114,7 +114,11 @@ function SelectItem({
   label,
   ...props
 }: SelectPrimitive.Item.Props) {
-  const resolvedLabel = label ?? (typeof children === "string" ? children : undefined);
+  const resolvedLabel = label ?? (
+    typeof children === "string" || typeof children === "number"
+      ? String(children)
+      : undefined
+  );
   return (
     <SelectPrimitive.Item
       data-slot="select-item"

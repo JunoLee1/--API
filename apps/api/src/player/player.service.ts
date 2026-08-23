@@ -10,8 +10,20 @@ import { decrypt } from "../lib/crypto";
 export class PlayerService {
   constructor(private repo: PlayerRepository, private mvRepo?: MarketValueRepository) {}
 
-  getPlayers(query: PlayerListQuery, clubId?: number | null) {
-    return this.repo.findAll(query, clubId);
+  async getPlayers(query: PlayerListQuery, clubId?: number | null) {
+    const rows = await this.repo.findAll(query, clubId);
+    return rows.map((row) => {
+      const { dateOfBirthEncrypted, dateOfBirthIv, ...rest } = row as typeof row & {
+        dateOfBirthEncrypted?: string | null;
+        dateOfBirthIv?: string | null;
+      };
+      return {
+        ...rest,
+        dateOfBirth: dateOfBirthEncrypted && dateOfBirthIv
+          ? decrypt(dateOfBirthEncrypted, dateOfBirthIv)
+          : null,
+      };
+    });
   }
 
   async getPlayerById(id: string, includePrivate = false) {

@@ -1517,6 +1517,39 @@ async function main() {
     },
   });
 
+  // Backfill encrypted DOB for every 1군 player. Player.dateOfBirth was moved
+  // to encrypted columns (dateOfBirthEncrypted/Iv) but the seeded players were
+  // left null, so the list endpoint returned null → frontend calcAge → NaN.
+  const playerDobs: Array<{ id: string; dob: string }> = [
+    { id: "player-001", dob: "1996-03-14" }, // 김민준 SENIOR ST
+    { id: "player-002", dob: "1991-09-02" }, // 이서준 VETERAN CAM
+    { id: "player-003", dob: "2002-05-20" }, // Carlos ROOKIE WING
+    { id: "player-004", dob: "1995-11-08" }, // 박지훈 SENIOR GK
+    { id: "player-005", dob: "1996-07-01" }, // 정현우 SENIOR CB
+    { id: "player-006", dob: "1990-12-25" }, // 최재원 VETERAN CB
+    { id: "player-007", dob: "1994-04-11" }, // 한동민 SENIOR LB
+    { id: "player-008", dob: "1996-08-19" }, // 오승환 SENIOR RB
+    { id: "player-009", dob: "1990-02-05" }, // 김태영 VETERAN CDM
+    { id: "player-010", dob: "1996-06-17" }, // 류현진 SENIOR CDM
+    { id: "player-011", dob: "1995-10-30" }, // 박상원 SENIOR LAM
+    { id: "player-012", dob: "1997-01-22" }, // 윤대성 SENIOR RAM
+    { id: "player-013", dob: "2003-02-19" }, // 이강인 ROOKIE WING
+    { id: "player-014", dob: "1992-08-04" }, // 황희찬 VETERAN SS
+    { id: "player-015", dob: "1991-03-27" }, // 조현우 VETERAN GK
+    { id: "player-016", dob: "1990-11-14" }, // 권창훈 VETERAN WING
+    { id: "player-017", dob: "1991-05-21" }, // 이재성 VETERAN CAM
+    { id: "player-018", dob: "1996-01-08" }, // 송민규 SENIOR ST
+    { id: "player-019", dob: "2003-09-15" }, // Mateus ROOKIE LDM
+    { id: "player-020", dob: "1990-06-10" }, // 김영권 VETERAN CB
+  ];
+  for (const { id, dob } of playerDobs) {
+    const enc = encryptPhone(dob);
+    await prisma.player.update({
+      where: { id },
+      data: { dateOfBirthEncrypted: enc.encrypted, dateOfBirthIv: enc.iv },
+    });
+  }
+
   // ── Contracts ─────────────────────────────────────────
   const contract1 = await prisma.contract.upsert({
     where: { id: 1 },

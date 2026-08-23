@@ -137,7 +137,7 @@ export default function BudgetAutoPage() {
             <Select value={targetSeasonId} onValueChange={setTargetSeasonId}>
               <SelectTrigger><SelectValue placeholder="시즌 선택" /></SelectTrigger>
               <SelectContent>
-                {seasons.map(s => <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>)}
+                {seasons.map(s => <SelectItem key={s.id} value={String(s.id)} label={s.name}>{s.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -146,7 +146,7 @@ export default function BudgetAutoPage() {
             <Select value={lookback} onValueChange={setLookback}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {['2','3','4','5'].map(v => <SelectItem key={v} value={v}>{v}시즌</SelectItem>)}
+                {['2','3','4','5'].map(v => <SelectItem key={v} value={v} label={`${v}시즌`}>{v}시즌</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -161,7 +161,7 @@ export default function BudgetAutoPage() {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {(Object.keys(GOAL_LABELS) as GoalWeight[]).map(g => (
-                  <SelectItem key={g} value={g}>{GOAL_LABELS[g]}</SelectItem>
+                  <SelectItem key={g} value={g} label={GOAL_LABELS[g]}>{GOAL_LABELS[g]}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -172,7 +172,7 @@ export default function BudgetAutoPage() {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {(Object.keys(GOAL_LABELS) as GoalWeight[]).map(g => (
-                  <SelectItem key={g} value={g}>{GOAL_LABELS[g]}</SelectItem>
+                  <SelectItem key={g} value={g} label={GOAL_LABELS[g]}>{GOAL_LABELS[g]}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -197,7 +197,7 @@ export default function BudgetAutoPage() {
                 >
                   <SelectTrigger><SelectValue placeholder="기본값 사용" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">기본값 사용</SelectItem>
+                    <SelectItem value="" label="기본값 사용">기본값 사용</SelectItem>
                     {(Object.keys(GOAL_LABELS) as GoalWeight[]).map(g => (
                       <SelectItem key={g} value={g}>{GOAL_LABELS[g]}</SelectItem>
                     ))}
