@@ -82,8 +82,8 @@ ADMIN이 생성·관리하는 클럽 내 팀 단위. 팀 구성은 구단마다 
 Recall 승인 권한: GM 전용.
 StaffRecord 쓰기 권한: GM 전용. 구단 운영 인사 데이터는 GM 소관.
 
-**GM (단장):**
-구단 운영 총괄. 예산 승인 및 선수 영입 최종 결정권 보유. 선수 계약·이적·리콜·코치 채용(최종 승인) 등 핵심 의사결정을 단독 수행하며, ERP 내 가장 넓은 쓰기 권한을 가진다.
+**GM (단장/구단주):**
+구단 소유주이자 운영 총괄. 계약·이적·리콜·코치 채용 최종 승인 등 굵직한 의사결정 담당. 일상 실무 결재(자산 신청, 부서 지출 승인 등)에는 관여하지 않으며 그런 흐름의 최종 승인자는 각 부서장 또는 ADMIN 이다. ERP 내 `isAdminLike()` 통과 및 가장 넓은 열람·override 권한.
 
 **TD (테크니컬 디렉터):**
 선수 스카우팅, 데이터 기반 전술 적합도 분석 및 영입 협상 담당. 유망주·이적 쓰기 권한 보유. 계약 생성·수정 권한 없음(최종 결정은 GM). 유소년 육성 현황 대시보드 접근 가능.
@@ -1234,9 +1234,24 @@ $$\text{Priority} = (\text{규정 위반 여부}) + (\text{부서별 목표 기�
 
 ## 부서 (Department)
 
-ERP 내 부서 마스터 데이터. StaffRecord(비로그인 직원)의 소속 부서를 FK로 참조한다.
+ERP 내 조직 부서. `parentId` 자기참조로 계층(상위 부서 → 하위팀) 지원. `headId`로 부서장 1명 지정.
 
-**필드:** `name: String @unique`, `isActive: Boolean`
+**필드:**
+- `name: String`, `isActive: Boolean`
+- `parentId: Int? → Department` (자기참조, 계층 구조)
+- `headId: Int? → User` (부서장, 단일)
+- `category: DepartmentCategory?` — 부서 성격 태그. 권한 파생(`canReadFinance` 등)에 사용
+- `clubId: Int? → Club`
+
+**DepartmentCategory enum:** `COMPLIANCE | PERFORMANCE | FINANCE | OPERATIONS | HR | MARKETING | LEGAL | MEDIA`
+
+**User ↔ Department:** many-to-many via `UserDepartment(userId, departmentId, role: MANAGER | MEMBER)`. 한 유저가 복수 부서 소속 가능. 부서장(`Department.headId`)은 소속과 별개로 1명 지정.
+
+**계층 활용:** 결재 워크플로우에서 leaf(하위) Department의 `headId`가 팀장, 그 부모 Department의 `headId`가 부서장 역할을 담당한다.
+
+**접근 권한 파생:** 소속 부서들의 `category` 목록으로 `canReadFinance(role, foRole, deptCategories)` 등이 판정된다. 예: `deptCategories.includes('FINANCE')`이면 재무 읽기 허용.
+
+**StaffRecord 참조:** 비로그인 직원의 소속 부서를 FK로 참조.
 
 **쓰기 권한:** ADMIN, GM (부서 생성·수정·삭제)
 **읽기 권한:** ADMIN, GM
