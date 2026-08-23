@@ -232,6 +232,44 @@ npx prisma generate      # 클라이언트 재생성
 
 ---
 
+## DB 백업 · 복원
+
+`db-backup` 서비스가 `prodrigestivill/postgres-backup-local` 로 매일 03:00 (컨테이너 로컬 타임) 에 `pg_dump` 를 실행해 `./backups/` 에 gzip 파일을 남깁니다. 볼륨은 호스트 디렉토리 마운트라 컨테이너를 지워도 남습니다.
+
+### 파일 레이아웃
+
+```
+backups/
+├── daily/     # 지난 7일
+├── weekly/    # 지난 4주
+├── monthly/   # 지난 6개월
+└── last/      # 각 주기별 가장 최근
+```
+
+보관 정책은 `docker-compose.yml` 의 `BACKUP_KEEP_*` 환경변수에서 조정.
+
+### 수동 백업
+
+```bash
+docker compose exec db-backup /backup.sh
+```
+
+### 복원
+
+```bash
+# 파일 경로 확인
+ls -lh backups/daily/
+
+# 컨테이너 안에서 gunzip → psql
+gunzip -c backups/daily/football-YYYY-MM-DD.sql.gz \
+  | docker compose exec -T db psql -U football -d football
+```
+
+> 운영 DB 로 복원할 땐 앱 컨테이너 먼저 stop 하고 진행하세요.
+> 오프사이트 복제 (S3, rsync 등) 는 별도 gap 으로 남겨둠.
+
+---
+
 ## 기여 가이드
 
 - 브랜치: `feat/<기능명>`
