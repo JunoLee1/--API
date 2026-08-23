@@ -7,3 +7,6 @@ graphify-out/
 # Root-level node artifacts (apps/api and football/ have their own .gitignore)
 node_modules/
 package-lock.json
+
+# Local DB backups (created by db-backup service)
+backups/
