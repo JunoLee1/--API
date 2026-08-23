@@ -7,13 +7,30 @@ import type { WageCapKPI } from '@/types/season'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { AvailableBudgetCard } from '@/components/finance/AvailableBudgetCard'
+import { CarryOverOverrideDialog } from '@/components/finance/CarryOverOverrideDialog'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 
 function fmt(n: number) {
   return n.toLocaleString('ko-KR') + '원'
 }
 
+/**
+ * Mirrors the backend's canWriteFinance predicate — Admin-like roles plus
+ * the FINANCE_MANAGER front-office role can mutate financial data (including
+ * the manual carryover override).
+ */
+function canWriteFinance(role: string, foRole: string | null | undefined): boolean {
+  return (
+    role === 'ADMIN' ||
+    role === 'CLUB_ADMIN' ||
+    (role === 'FRONT_OFFICE' && foRole === 'FINANCE_MANAGER')
+  )
+}
+
 export function FinancialReportPage() {
   const { t } = useTranslation('admin')
+  const { user } = useCurrentUser()
   const [activeSeason, setActiveSeason] = useState<{ id: number; name: string } | null>(null)
   const [report, setReport] = useState<FinancialReport | null>(null)
   const [kpi, setKpi] = useState<WageCapKPI | null>(null)
@@ -22,6 +39,9 @@ export function FinancialReportPage() {
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
   const [autoFilling, setAutoFilling] = useState(false)
+  const [overrideDialogOpen, setOverrideDialogOpen] = useState(false)
+
+  const canWrite = user ? canWriteFinance(user.role, user.frontOfficeRole) : false
 
   const fetchAll = async () => {
     try {
@@ -96,6 +116,18 @@ export function FinancialReportPage() {
     }
   }
 
+  const handleOverrideSubmit = async (amount: number, reason: string) => {
+    if (!activeSeason) return
+    try {
+      await financialReportApi.overrideCarryOver(activeSeason.id, { amount, reason })
+      toast.success('이월금이 수동 조정되었습니다')
+      void fetchAll()
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : '이월금 조정 실패')
+      throw err
+    }
+  }
+
   if (!activeSeason) {
     return (
       <div className="p-6">
@@ -124,6 +156,21 @@ export function FinancialReportPage() {
           ))}
         </div>
       )}
+
+      {kpi && (
+        <AvailableBudgetCard
+          kpi={kpi}
+          showOverrideButton={canWrite}
+          onOverride={() => setOverrideDialogOpen(true)}
+        />
+      )}
+
+      <CarryOverOverrideDialog
+        open={overrideDialogOpen}
+        onOpenChange={setOverrideDialogOpen}
+        currentAmount={kpi?.carryOverFromPrev?.amount ?? 0}
+        onSubmit={handleOverrideSubmit}
+      />
 
       <div className="space-y-3 border rounded-lg p-4">
         <h2 className="text-sm font-semibold">{t('financialReport.autoFillTitle')}</h2>
