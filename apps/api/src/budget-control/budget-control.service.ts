@@ -71,8 +71,8 @@ export class BudgetControlService {
 
     const available = approvedBudget + carryover + increase - decrease - commitment - actual;
 
-    const lineBreakdown = header.lines.map(line => {
-      const cat = line.category as string | null;
+    const lineBreakdown = header.lines.map((line: any) => {
+      const cat = line.expenseCategory?.code ?? null;
       const spent = cat ? (byCategory[cat] ?? 0) : 0;
       return {
         id: line.id,

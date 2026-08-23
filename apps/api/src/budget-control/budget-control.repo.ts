@@ -1,4 +1,4 @@
-import { PrismaClient, OperatingCategory } from "../generated/client";
+import { PrismaClient } from "../generated/client";
 import type { CreateBudgetHeaderDto, UpdateBudgetHeaderDto, CreateBudgetLineDto, UpdateBudgetLineDto, CreateAdjustmentDto } from "./dto/budget-control.dto";
 
 export class BudgetControlRepository {
@@ -29,7 +29,7 @@ export class BudgetControlRepository {
     return this.prisma.budgetHeader.findUnique({
       where: { id },
       include: {
-        lines: { include: { department: { select: { id: true, name: true } } } },
+        lines: { include: { department: { select: { id: true, name: true } }, expenseCategory: { select: { code: true } } } },
         adjustments: {
           include: {
             createdBy: { select: { id: true, username: true } },
@@ -60,12 +60,11 @@ export class BudgetControlRepository {
   }
 
   createLine(budgetHeaderId: number, dto: CreateBudgetLineDto & { categoryId: number }) {
-    const { category, ...rest } = dto;
+    const { category: _category, ...rest } = dto;
     return this.prisma.budgetLine.create({
       data: {
         budgetHeaderId,
         ...rest,
-        category: category as OperatingCategory,
       },
     });
   }
@@ -114,7 +113,7 @@ export class BudgetControlRepository {
   async sumCommitmentAndActual(seasonId: number) {
     const rows = await this.prisma.operatingExpense.findMany({
       where: { seasonId, deletedAt: null },
-      select: { category: true, amount: true, paidAt: true },
+      select: { amount: true, paidAt: true, expenseCategory: { select: { code: true } } },
     });
 
     let commitment = 0;
@@ -122,7 +121,7 @@ export class BudgetControlRepository {
     const byCategory: Record<string, number> = {};
 
     for (const row of rows) {
-      const cat = row.category as string;
+      const cat = row.expenseCategory.code;
       byCategory[cat] = (byCategory[cat] ?? 0) + row.amount;
       if (row.paidAt === null) commitment += row.amount;
       else actual += row.amount;

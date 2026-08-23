@@ -12,7 +12,7 @@ export class MonthlySettlementService {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 1);
 
-    const [revenueRows, expenseRows, budgetPlans] = await Promise.all([
+    const [revenueRows, expenseRows, budgetPlans, expenseCategories] = await Promise.all([
       this.prisma.ledgerEntry.groupBy({
         by: ["category"],
         where: {
@@ -23,7 +23,7 @@ export class MonthlySettlementService {
         _sum: { amountKrw: true },
       }),
       this.prisma.operatingExpense.groupBy({
-        by: ["category"],
+        by: ["categoryId"],
         where: {
           date: { gte: startDate, lt: endDate },
           deletedAt: null,
@@ -33,7 +33,10 @@ export class MonthlySettlementService {
       this.prisma.budgetCategoryPlan.findMany({
         where: { financialReport: { seasonId } },
       }),
+      this.prisma.expenseCategory.findMany({ select: { id: true, code: true } }),
     ]);
+
+    const categoryCode = new Map(expenseCategories.map((c) => [c.id, c.code]));
 
     const revenue: Record<string, number> = {};
     for (const row of revenueRows) {
@@ -42,14 +45,18 @@ export class MonthlySettlementService {
 
     const expenses: Record<string, number> = {};
     for (const row of expenseRows) {
-      expenses[row.category] = row._sum?.amount ?? 0;
+      const code = categoryCode.get(row.categoryId);
+      if (!code) continue;
+      expenses[code] = row._sum?.amount ?? 0;
     }
 
     const budgetComparison: Record<string, { budget: number; actual: number; variance: number }> = {};
     for (const plan of budgetPlans) {
-      const actual = expenses[plan.category] ?? 0;
+      const code = categoryCode.get(plan.categoryId);
+      if (!code) continue;
+      const actual = expenses[code] ?? 0;
       const budget = plan.mandatoryMinimum;
-      budgetComparison[plan.category] = {
+      budgetComparison[code] = {
         budget,
         actual,
         variance: actual - budget,

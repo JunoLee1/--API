@@ -1,4 +1,4 @@
-import { PrismaClient, OperatingCategory } from "../generated/client";
+import { PrismaClient } from "../generated/client";
 
 export class BudgetAutomationRepository {
   constructor(private prisma: PrismaClient) {}
@@ -20,8 +20,9 @@ export class BudgetAutomationRepository {
   }
 
   getExpenseActualsByCategory(seasonIds: number[]) {
+    // Aggregate by categoryId (post-cutover); callers translate id → code.
     return this.prisma.operatingExpense.groupBy({
-      by: ["seasonId", "category"],
+      by: ["seasonId", "categoryId"],
       where: {
         seasonId: { in: seasonIds },
         status: { in: ["APPROVED", "PAID"] },
@@ -34,7 +35,7 @@ export class BudgetAutomationRepository {
   async getLatestApprovedBudgetLines(seasonId: number) {
     const header = await this.prisma.budgetHeader.findFirst({
       where: { seasonId, status: { in: ["APPROVED", "LOCKED"] } },
-      include: { lines: { select: { category: true, originalAmount: true } } },
+      include: { lines: { select: { categoryId: true, originalAmount: true } } },
       orderBy: { createdAt: "desc" },
     });
     return header?.lines ?? [];
@@ -48,7 +49,7 @@ export class BudgetAutomationRepository {
       note?: string;
       createdById: number;
     },
-    lines: Array<{ category: OperatingCategory; categoryId: number; originalAmount: number; year: number }>
+    lines: Array<{ categoryId: number; originalAmount: number; year: number }>
   ) {
     return this.prisma.$transaction(async (tx) => {
       const header = await tx.budgetHeader.create({
@@ -63,7 +64,6 @@ export class BudgetAutomationRepository {
       await tx.budgetLine.createMany({
         data: lines.map((l) => ({
           budgetHeaderId: header.id,
-          category: l.category,
           categoryId: l.categoryId,
           originalAmount: l.originalAmount,
           year: l.year,

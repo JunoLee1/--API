@@ -1,7 +1,6 @@
 import { AppError } from "../lib/appError";
 import { OperatingExpenseRepository } from "./operating-expense.repo";
 import { NotificationRepository } from "../notification/notification.repo";
-import { OperatingCategory } from "../generated/client";
 import { ExpenseCategoryService } from "../expense-category/expense-category.service";
 import { canReadFinance, canWriteFinance } from "../lib/permissions";
 
@@ -16,14 +15,14 @@ export class OperatingExpenseService {
 
   async list(seasonId: number) {
     const rows = await this.repo.findBySeasonId(seasonId);
-    // Dual-read: prefer FK-backed code, fallback to enum column during transition.
+    // categoryId is NOT NULL post-cutover, so expenseCategory relation is always present.
     return rows.map((r) => ({
       ...r,
-      category: (r.expenseCategory?.code ?? r.category) as string,
+      category: r.expenseCategory.code,
       budgetLine: r.budgetLine
         ? {
             ...r.budgetLine,
-            category: (r.budgetLine.expenseCategory?.code ?? r.budgetLine.category) as string,
+            category: r.budgetLine.expenseCategory.code,
           }
         : r.budgetLine,
     }));
@@ -50,11 +49,13 @@ export class OperatingExpenseService {
     let expense;
     try {
       expense = await this.repo.createWithBudgetCheck({
-        ...data,
-        category: data.category as OperatingCategory,
+        seasonId: data.seasonId,
         categoryId,
+        amount: data.amount,
         date: new Date(data.date),
         note: data.note ?? null,
+        createdById: data.createdById,
+        budgetLineId: data.budgetLineId,
       });
     } catch (err: any) {
       if (err.message === "BUDGET_EXCEEDED") throw new AppError(409, "BUDGET_EXCEEDED");
@@ -63,13 +64,14 @@ export class OperatingExpenseService {
       throw err;
     }
 
+    const categoryCode = expense.expenseCategory.code;
     await this.notifRepo.createForFinanceStaff(
       "EXPENSE_PENDING",
       (lang) => ({
         title: lang === "en" ? "New Expense Request" : "지출 기안 접수",
         body: lang === "en"
-          ? `₩${expense.amount.toLocaleString()} ${expense.category} expense pending approval.`
-          : `₩${expense.amount.toLocaleString()} ${expense.category} 지출 기안이 결재 대기 중입니다.`,
+          ? `₩${expense.amount.toLocaleString()} ${categoryCode} expense pending approval.`
+          : `₩${expense.amount.toLocaleString()} ${categoryCode} 지출 기안이 결재 대기 중입니다.`,
       }),
       expense.id,
     );
@@ -91,13 +93,14 @@ export class OperatingExpenseService {
       firstApprovedAt: new Date(),
     });
 
+    const categoryCode = expense.expenseCategory.code;
     await this.notifRepo.createForFinanceManager(
       "EXPENSE_FIRST_APPROVED",
       (lang) => ({
         title: lang === "en" ? "Expense Awaiting Final Approval" : "지출 기안 최종 결재 대기",
         body: lang === "en"
-          ? `₩${expense.amount.toLocaleString()} ${expense.category} expense requires your approval.`
-          : `₩${expense.amount.toLocaleString()} ${expense.category} 기안이 최종 결재를 기다립니다.`,
+          ? `₩${expense.amount.toLocaleString()} ${categoryCode} expense requires your approval.`
+          : `₩${expense.amount.toLocaleString()} ${categoryCode} 기안이 최종 결재를 기다립니다.`,
       }),
       expense.id,
     );
@@ -124,14 +127,15 @@ export class OperatingExpenseService {
       approvedAt: new Date(),
     });
 
+    const categoryCode = expense.expenseCategory.code;
     await this.notifRepo.createForUser(
       expense.createdById,
       "EXPENSE_APPROVED",
       (lang) => ({
         title: lang === "en" ? "Expense Approved" : "지출 기안 승인",
         body: lang === "en"
-          ? `Your ₩${expense.amount.toLocaleString()} ${expense.category} expense has been approved.`
-          : `₩${expense.amount.toLocaleString()} ${expense.category} 지출 기안이 승인됐습니다.`,
+          ? `Your ₩${expense.amount.toLocaleString()} ${categoryCode} expense has been approved.`
+          : `₩${expense.amount.toLocaleString()} ${categoryCode} 지출 기안이 승인됐습니다.`,
       }),
       expense.id,
     );
@@ -206,14 +210,15 @@ export class OperatingExpenseService {
       paidById,
     });
 
+    const categoryCode = expense.expenseCategory.code;
     await this.notifRepo.createForUser(
       expense.createdById,
       "EXPENSE_PAID",
       (lang) => ({
         title: lang === "en" ? "Expense Paid" : "지출 지급 완료",
         body: lang === "en"
-          ? `₩${expense.amount.toLocaleString()} ${expense.category} expense has been paid.`
-          : `₩${expense.amount.toLocaleString()} ${expense.category} 지출이 지급됐습니다.`,
+          ? `₩${expense.amount.toLocaleString()} ${categoryCode} expense has been paid.`
+          : `₩${expense.amount.toLocaleString()} ${categoryCode} 지출이 지급됐습니다.`,
       }),
       expense.id,
     );
@@ -227,27 +232,29 @@ export class OperatingExpenseService {
     if (expense.createdById !== userId) throw new AppError(403, "FORBIDDEN");
 
     const newAmount = data.amount ?? expense.amount;
-    const newCategory = (data.category ?? expense.category) as OperatingCategory;
     if (newAmount <= 0) throw new AppError(400, "INVALID_AMOUNT");
 
     if (data.category !== undefined && !(await this.categoryService.isValidCode(data.category))) {
       throw new AppError(400, "INVALID_CATEGORY");
     }
 
+    const newCategoryId = data.category !== undefined
+      ? await this.categoryService.resolveCategoryId(data.category)
+      : expense.categoryId;
+
     if (data.amount !== undefined && data.amount > expense.amount) {
-      const plan = await this.repo.findBudgetPlan(expense.seasonId, newCategory);
+      const plan = await this.repo.findBudgetPlan(expense.seasonId, newCategoryId);
       if (!plan) throw new AppError(400, "BUDGET_PLAN_NOT_FOUND");
       const ceiling = plan.mandatoryMinimum + (plan.knapsackAllocated ?? 0);
-      const currentSpend = await this.repo.sumSpendBySeasonAndCategory(expense.seasonId, newCategory);
+      const currentSpend = await this.repo.sumSpendBySeasonAndCategory(expense.seasonId, newCategoryId);
       const additional = data.amount - expense.amount;
       if (currentSpend + additional > ceiling) throw new AppError(400, "BUDGET_EXCEEDED");
     }
 
-    const payload: { amount?: number; category?: OperatingCategory; categoryId?: number; note?: string } = {};
+    const payload: { amount?: number; categoryId?: number; note?: string } = {};
     if (data.amount !== undefined) payload.amount = data.amount;
     if (data.category !== undefined) {
-      payload.category = data.category as OperatingCategory;
-      payload.categoryId = await this.categoryService.resolveCategoryId(data.category);
+      payload.categoryId = newCategoryId;
     }
     if (data.note !== undefined) payload.note = data.note;
 

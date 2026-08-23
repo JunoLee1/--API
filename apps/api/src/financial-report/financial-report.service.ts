@@ -1,7 +1,7 @@
 import { AppError } from "../lib/appError";
 import { FinancialReportRepository, UpsertBudgetPlanDto, RevenueBreakdownDto, sumBreakdown } from "./financial-report.repo";
 import { KnapsackService } from "../budget/knapsack.service";
-import { OperatingCategory, SeasonStatus } from "../generated/client";
+import { SeasonStatus } from "../generated/client";
 import { getPrisma } from "../lib/prisma";
 import { getSeasonRevenueActuals } from "../lib/season-actuals";
 import { ExpenseCategoryService } from "../expense-category/expense-category.service";
@@ -71,7 +71,6 @@ export class FinancialReportService {
       ...(dto.playerSalaryBudget !== undefined ? { playerSalaryBudget: dto.playerSalaryBudget } : {}),
       categories: await Promise.all(
         dto.categories.map(async (c, catIdx) => ({
-          category: c.category as OperatingCategory,
           categoryId: await this.categoryService.resolveCategoryId(c.category),
           mandatoryMinimum: c.mandatoryMinimum,
           sortOrder: c.sortOrder ?? catIdx,
@@ -108,7 +107,7 @@ export class FinancialReportService {
       .filter((c) => c.tiers.length > 0)
       .map((c) => ({
         categoryPlanId: c.id,
-        category: c.category,
+        category: c.expenseCategory?.code ?? "",
         tiers: c.tiers.map((t) => ({ tierId: t.id, cost: t.cost, value: t.value })),
       }));
 
@@ -133,7 +132,7 @@ export class FinancialReportService {
       throw new AppError(400, "INVALID_CATEGORY");
     }
     const categoryId = await this.categoryService.resolveCategoryId(category);
-    return this.repo.addOverrideLog(plan.id, category as OperatingCategory, categoryId, amount, reason, createdById);
+    return this.repo.addOverrideLog(plan.id, categoryId, amount, reason, createdById);
   }
 
   async getPayrollByMonth(seasonId: number) {
@@ -192,7 +191,6 @@ export class FinancialReportService {
       const actual = prevActuals[c.code] ?? 0;
       if (actual === 0) zeroCategories.push(c.code);
       return {
-        category: c.code as OperatingCategory,
         categoryId: c.id,
         mandatoryMinimum: Math.round(actual * (1 + growthRate)),
         sortOrder: idx,
@@ -210,7 +208,13 @@ export class FinancialReportService {
       categories,
     });
 
-    return { totalOperatingBudget, contingencyReserve, categories, zeroCategories };
+    // Callers rely on `category` code strings in the response; enrich in-memory.
+    const responseCategories = activeCategories.map((c, idx) => ({
+      category: c.code,
+      mandatoryMinimum: categories[idx]!.mandatoryMinimum,
+    }));
+
+    return { totalOperatingBudget, contingencyReserve, categories: responseCategories, zeroCategories };
   }
 
   /**
@@ -346,10 +350,9 @@ export class FinancialReportService {
         where: { status: "CONFIRMED", month: { gte: startDate, lte: endDate } },
         _sum: { grossPay: true },
       }),
-      // 운영비 카테고리별 — group by (categoryId, category) so the SPORTS_EQUIPMENT
-      // rename aggregates correctly; translate to code strings below.
+      // 운영비 카테고리별 — group by categoryId (NOT NULL post-cutover); translate to code below.
       prisma.operatingExpense.groupBy({
-        by: ["categoryId", "category"],
+        by: ["categoryId"],
         where: { seasonId },
         _sum: { amount: true },
       }),
@@ -382,7 +385,8 @@ export class FinancialReportService {
     const codeById = new Map(activeCats.map((c) => [c.id, c.code]));
     for (const row of operatingGroups) {
       const amt = row._sum.amount ?? 0;
-      const code = (row.categoryId != null ? codeById.get(row.categoryId) : undefined) ?? row.category;
+      const code = codeById.get(row.categoryId);
+      if (!code) continue;
       operatingByCategory[code] = (operatingByCategory[code] ?? 0) + amt;
       totalOperating += amt;
     }
@@ -472,10 +476,9 @@ export class FinancialReportService {
       this.getBudgetPlan(seasonId),
       this.repo.getActuals(seasonId),
     ]);
-    // Prefer the ExpenseCategory FK code when available; fall back to enum column
-    // during dual-state period until migration B removes the enum.
+    // Category code comes from the ExpenseCategory FK (relation always present post-cutover).
     const comparison = plan.budgetCategoryPlans.map((c) => {
-      const code = c.expenseCategory?.code ?? c.category;
+      const code = c.expenseCategory?.code ?? "";
       return {
         category: code,
         mandatoryMinimum: c.mandatoryMinimum,
@@ -486,7 +489,7 @@ export class FinancialReportService {
     });
     if (plan.playerSalaryBudget != null) {
       comparison.push({
-        category: "PLAYER_SALARY" as any,
+        category: "PLAYER_SALARY",
         mandatoryMinimum: plan.playerSalaryBudget,
         knapsackAllocated: null,
         actual: actuals?.["PLAYER_SALARY"] ?? 0,
@@ -496,7 +499,7 @@ export class FinancialReportService {
     // Rewrite budgetCategoryPlans to expose `category` as the code string too.
     const remappedBudgetCategoryPlans = plan.budgetCategoryPlans.map((c) => ({
       ...c,
-      category: (c.expenseCategory?.code ?? c.category) as any,
+      category: c.expenseCategory?.code ?? "",
     }));
     return { ...plan, budgetCategoryPlans: remappedBudgetCategoryPlans, actuals, comparison };
   }

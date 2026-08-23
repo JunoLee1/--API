@@ -1,4 +1,4 @@
-import type { BudgetPlan, UpsertBudgetPlanPayload, OperatingCategory } from '@/types/budget'
+import type { BudgetPlan, UpsertBudgetPlanPayload } from '@/types/budget'
 
 // ----- Draft state (form-friendly, all strings) -----
 
@@ -87,9 +87,8 @@ export function draftToPayload(draft: DraftBudgetPlan): UpsertBudgetPlanPayload 
     contingencyReserve: parseInt(draft.contingency, 10) || 0,
     playerSalaryBudget: draft.playerSalaryBudget && !isNaN(psb) ? psb : undefined,
     categories: draft.categories.map<UpsertBudgetPlanPayload['categories'][number]>((c, catIdx) => {
-      const cat: OperatingCategory = c.code
       return {
-        category: cat,
+        category: c.code,
         mandatoryMinimum: parseInt(c.data.mandatoryMinimum, 10) || 0,
         sortOrder: catIdx,
         tiers: c.data.tiers
