@@ -17,9 +17,10 @@ import {
 import { dashboardApi } from '@/services/dashboard.service'
 import type { FinanceDashboard, TrendEntry } from '@/services/dashboard.service'
 import { seasonApi } from '@/services/season.service'
-import type { Season } from '@/types/season'
+import type { Season, WageCapKPI } from '@/types/season'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { AvailableBudgetCard } from '@/components/finance/AvailableBudgetCard'
 import {
   Select,
   SelectContent,
@@ -75,6 +76,7 @@ export default function DashboardCharts() {
   const [year, setYear] = useState<number>(new Date().getFullYear())
   const [month, setMonth] = useState<number>(new Date().getMonth() + 1)
   const [data, setData] = useState<FinanceDashboard | null>(null)
+  const [wageCapKpi, setWageCapKpi] = useState<WageCapKPI | null>(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -83,6 +85,10 @@ export default function DashboardCharts() {
       const active = list.find((s) => s.status === 'ACTIVE')
       if (active) setSelectedSeasonId(active.id)
     }).catch(() => toast.error('시즌 목록을 불러오지 못했습니다'))
+    // WageCapKPI is always sourced from the currently active season on the
+    // backend (`/seasons/active/wage-cap-kpi`) — no need to refetch when the
+    // dashboard's season filter changes.
+    seasonApi.getWageCapKPI().then(setWageCapKpi).catch(() => setWageCapKpi(null))
   }, [])
 
   useEffect(() => {
@@ -286,6 +292,9 @@ export default function DashboardCharts() {
             )}
           </CardContent>
         </Card>
+
+        {/* Available budget KPI (4th card): active season's 총 가용 예산. */}
+        {wageCapKpi && <AvailableBudgetCard kpi={wageCapKpi} />}
       </div>
 
       {/* BarLineChart */}
