@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { maskPhone } from '@/lib/pii'
 
 const STATUS_LABEL: Record<string, string> = {
   APPLIED: '지원', SCREENING: '서류검토', INTERVIEW_1: '1차면접',
@@ -256,7 +257,7 @@ export function ApplicationDetailPage() {
         </div>
         <div className="text-sm text-muted-foreground space-x-4">
           <span>{app.email}</span>
-          {app.phone && <span>{app.phone}</span>}
+          {app.phone && <span>{maskPhone(app.phone)}</span>}
           <span className="text-xs">{app.posting.title}</span>
         </div>
       </div>

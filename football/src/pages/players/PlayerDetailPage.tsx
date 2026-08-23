@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { getCountryName } from '@/lib/countryName'
+import { maskDateOfBirth } from '@/lib/pii'
 import { playerApi } from '@/services/player.service'
 import { teamApi } from '@/services/team.service'
 import type { PlayerDetail, PlayerStatus, PositionZone, MarketValueEntry } from '@/types/player'
@@ -374,7 +375,7 @@ export function PlayerDetailPage() {
                 <div className="rounded-lg border bg-card p-5">
                   <h3 className="text-sm font-semibold text-foreground mb-1">{t('detailPage.physicalTitle')}</h3>
                   <Separator className="mb-1" />
-                  <StatRow label={t('detailPage.dob')} value={formatDate(player.dateOfBirth)} />
+                  <StatRow label={t('detailPage.dob')} value={maskDateOfBirth(player.dateOfBirth)} />
                   <Separator />
                   <StatRow label={t('detailPage.age')} value={t('detailPage.ageValue', { age: calcAge(player.dateOfBirth) })} />
                   <Separator />
