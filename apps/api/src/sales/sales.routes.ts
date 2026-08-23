@@ -39,12 +39,12 @@ router.patch("/:id",                auth, checkWriteFinance, ctrl.update);
 router.delete("/:id",               auth, checkWriteFinance, ctrl.delete);
 router.post("/:id/cancel",          auth, checkWriteFinance, ctrl.cancel);
 
-router.get("/fans/membership-stats", auth, fanCtrl.membershipStats);
-router.get("/fans/:id",              auth, fanCtrl.getById);
-router.get("/fans",                  auth, fanCtrl.list);
+router.get("/fans/membership-stats", auth, checkReadFinance,  fanCtrl.membershipStats);
+router.get("/fans/:id",              auth, checkReadFinance,  fanCtrl.getById);
+router.get("/fans",                  auth, checkReadFinance,  fanCtrl.list);
 router.post("/fans",                 auth, checkWriteFinance, fanCtrl.create);
-router.post("/fans/:id/memberships", auth, fanCtrl.createMembership);
-router.get("/seat-zones/:matchId",   auth, fanCtrl.getSeatZones);
-router.post("/seat-zones",           auth, fanCtrl.createSeatZone);
+router.post("/fans/:id/memberships", auth, checkWriteFinance, fanCtrl.createMembership);
+router.get("/seat-zones/:matchId",   auth, checkReadFinance,  fanCtrl.getSeatZones);
+router.post("/seat-zones",           auth, checkWriteFinance, fanCtrl.createSeatZone);
 
 export default router;
