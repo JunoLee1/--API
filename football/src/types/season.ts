@@ -12,6 +12,7 @@ export interface Season {
 }
 
 export interface WageCapKPI {
+  // Existing fields (backwards-compat).
   wageCapType: WageCapType | null
   wageCapValue: number | null
   totalRevenue: number | null
@@ -19,6 +20,20 @@ export interface WageCapKPI {
   totalPayroll: number
   percentUsed: number | null
   remaining: number | null
+  // New available-budget breakdown. Optional on the client type so older
+  // API responses still deserialize cleanly; the current server always emits
+  // these fields via findActiveWithKPI.
+  revenue?: { planned: number; actual: number }
+  carryOverFromPrev?: {
+    amount: number
+    isAutoCalculated: boolean
+    overriddenAt: string | null
+    overriddenById: number | null
+    overrideReason: string | null
+  }
+  playerSalary?: { planned: number; actual: number }
+  staffSalary?: { planned: number; actual: number }
+  availableBudget?: { planned: number; actual: number }
 }
 
 export const SEASON_STATUS_LABEL: Record<SeasonStatus, string> = {
