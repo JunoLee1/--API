@@ -51,7 +51,15 @@ export interface UpsertBudgetPlanPayload {
   categories: {
     category: OperatingCategory
     mandatoryMinimum: number
-    tiers: { name: string; cost: number; value: number }[]
+    /** Position within the wizard (0-indexed). Preserves user D&D order. */
+    sortOrder: number
+    tiers: {
+      name: string
+      cost: number
+      value: number
+      /** Position within the category (0-indexed). Preserves user D&D order. */
+      sortOrder: number
+    }[]
   }[]
 }
 
