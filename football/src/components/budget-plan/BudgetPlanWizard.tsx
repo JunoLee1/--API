@@ -1,4 +1,4 @@
-import { useState, useMemo, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { BudgetSummaryPage } from './BudgetSummaryPage'
@@ -9,9 +9,14 @@ const CATEGORIES_PER_PAGE = 5
 
 interface Props {
   initialDraft: DraftBudgetPlan
-  /** Category codes+labels in canonical (sortOrder) order */
+  /** Category codes+labels in canonical (sortOrder) order. Used only for the
+   * label lookup — the wizard's page slicing follows the draft's own order so
+   * drag-and-drop reordering is preserved across page navigations. */
   categories: CategoryPageItem[]
   onSubmit: (final: DraftBudgetPlan) => Promise<void>
+  /** Optional silent auto-save invoked whenever the user navigates between
+   * wizard pages. Failures are swallowed so the flow keeps moving. */
+  onAutoSave?: (draft: DraftBudgetPlan) => Promise<void>
   submitting?: boolean
   /**
    * Optional slot rendered under the category editors on the *last* wizard
@@ -26,19 +31,34 @@ export function BudgetPlanWizard({
   initialDraft,
   categories,
   onSubmit,
+  onAutoSave,
   submitting,
   renderAdvancedOnLastPage,
 }: Props) {
   const [draft, setDraft] = useState<DraftBudgetPlan>(initialDraft)
   const [pageIndex, setPageIndex] = useState(0)
+  const [autoSaving, setAutoSaving] = useState(false)
 
+  // Fast lookup for canonical labels; the draft only carries codes.
+  const labelByCode = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const c of categories) m.set(c.code, c.label)
+    return m
+  }, [categories])
+
+  // Slice pages from the draft's own order so drag-and-drop reordering is
+  // visible after the user navigates away and back.
   const categoryPages = useMemo<CategoryPageItem[][]>(() => {
+    const all: CategoryPageItem[] = draft.categories.map((c) => ({
+      code: c.code,
+      label: labelByCode.get(c.code) ?? c.code,
+    }))
     const pages: CategoryPageItem[][] = []
-    for (let i = 0; i < categories.length; i += CATEGORIES_PER_PAGE) {
-      pages.push(categories.slice(i, i + CATEGORIES_PER_PAGE))
+    for (let i = 0; i < all.length; i += CATEGORIES_PER_PAGE) {
+      pages.push(all.slice(i, i + CATEGORIES_PER_PAGE))
     }
     return pages
-  }, [categories])
+  }, [draft.categories, labelByCode])
 
   // Summary page + N category pages. When no categories exist at all we still
   // show at least the summary page.
@@ -46,8 +66,24 @@ export function BudgetPlanWizard({
   const isLast = pageIndex === totalPages - 1
   const isFirst = pageIndex === 0
 
-  const goNext = () => setPageIndex((i) => Math.min(i + 1, totalPages - 1))
-  const goPrev = () => setPageIndex((i) => Math.max(i - 1, 0))
+  const withAutoSave = async (advance: () => void) => {
+    if (onAutoSave) {
+      setAutoSaving(true)
+      try {
+        await onAutoSave(draft)
+      } catch {
+        // Silent — auto-save failure must not block wizard navigation.
+      } finally {
+        setAutoSaving(false)
+      }
+    }
+    advance()
+  }
+
+  const goNext = () =>
+    withAutoSave(() => setPageIndex((i) => Math.min(i + 1, totalPages - 1)))
+  const goPrev = () =>
+    withAutoSave(() => setPageIndex((i) => Math.max(i - 1, 0)))
   const submit = async () => {
     await onSubmit(draft)
   }
@@ -59,6 +95,11 @@ export function BudgetPlanWizard({
         <span className="font-medium">{pageIndex + 1}</span>
         <span>/</span>
         <span>{totalPages}</span>
+        {autoSaving && (
+          <span className="text-xs text-primary animate-pulse" role="status">
+            저장 중...
+          </span>
+        )}
         <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
           <div
             className="h-full bg-primary transition-all"
@@ -83,17 +124,21 @@ export function BudgetPlanWizard({
 
       {/* Navigation */}
       <div className="flex justify-between pt-2">
-        <Button variant="outline" onClick={goPrev} disabled={isFirst}>
+        <Button
+          variant="outline"
+          onClick={goPrev}
+          disabled={isFirst || autoSaving}
+        >
           <ArrowLeft className="h-4 w-4 mr-1" />
           이전
         </Button>
         {isLast ? (
-          <Button onClick={submit} disabled={submitting}>
+          <Button onClick={submit} disabled={submitting || autoSaving}>
             <Check className="h-4 w-4 mr-1" />
             {submitting ? '저장 중...' : '완료 및 저장'}
           </Button>
         ) : (
-          <Button onClick={goNext}>
+          <Button onClick={goNext} disabled={autoSaving}>
             다음
             <ArrowRight className="h-4 w-4 ml-1" />
           </Button>
