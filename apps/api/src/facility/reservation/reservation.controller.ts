@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { ReservationRepository } from "./reservation.repo";
 import { requireUser } from "../../lib/authMiddleware";
 import { AppError } from "../../lib/appError";
+import { isAdminLike } from "../../lib/permissions";
 import { getPrisma } from "../../lib/prisma";
 import { writeAuditLog } from "../../lib/auditLog";
 
@@ -47,15 +48,17 @@ export class ReservationController {
       const user = requireUser(req);
       const id = Number(req.params["id"]);
       const existing = await this.repo.findById(id);
-      await this.repo.delete(id);
-      if (existing) {
-        void writeAuditLog({
-          actorId: user.id,
-          action: 'FACILITY_RESERVATION_DELETED',
-          targetId: id,
-          detail: { facilityZone: existing.facilityZone, title: existing.title },
-        }).catch(console.error);
+      if (!existing) throw new AppError(404, "RESERVATION_NOT_FOUND");
+      if (existing.reservedBy.id !== user.id && !isAdminLike(user.role)) {
+        throw new AppError(403, "FORBIDDEN");
       }
+      await this.repo.delete(id);
+      void writeAuditLog({
+        actorId: user.id,
+        action: 'FACILITY_RESERVATION_DELETED',
+        targetId: id,
+        detail: { facilityZone: existing.facilityZone, title: existing.title },
+      }).catch(console.error);
       res.status(204).send();
     } catch (err) { next(err); }
   };
