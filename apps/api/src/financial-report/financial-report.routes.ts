@@ -54,5 +54,6 @@ router.post("/:seasonId/budget/override/:logId/reject",        auth, controller.
 router.post("/:seasonId/budget/auto-generate", auth, controller.autoGenerateBudget);
 router.get("/:seasonId/payroll/monthly",        auth, controller.getPayrollByMonth);
 router.get("/:seasonId/revenue-log",            auth, controller.getRevenueLogs);
+router.patch("/:seasonId/carryover",            auth, controller.overrideCarryOver);
 
 export default router;

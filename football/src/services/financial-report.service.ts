@@ -88,6 +88,15 @@ export const financialReportApi = {
 
   getPnL: (seasonId: number) =>
     api.get<PnL>(`/financial-reports/${seasonId}/pl`),
+
+  overrideCarryOver: (seasonId: number, payload: { amount: number; reason: string }) =>
+    api.patch<{
+      seasonId: number
+      carryOverFromPrev: number
+      carryOverOverriddenById: number | null
+      carryOverOverriddenAt: string | null
+      carryOverOverrideReason: string | null
+    }>(`/financial-reports/${seasonId}/carryover`, payload),
 }
 
 export const budgetPlanApi = {

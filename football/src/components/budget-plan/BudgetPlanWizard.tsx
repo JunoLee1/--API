@@ -1,9 +1,12 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { BudgetSummaryPage } from './BudgetSummaryPage'
 import { BudgetCategoryPage, type CategoryPageItem } from './BudgetCategoryPage'
 import type { DraftBudgetPlan } from './types'
+import { AvailableBudgetCard } from '@/components/finance/AvailableBudgetCard'
+import { seasonApi } from '@/services/season.service'
+import type { WageCapKPI } from '@/types/season'
 
 const CATEGORIES_PER_PAGE = 5
 
@@ -38,6 +41,12 @@ export function BudgetPlanWizard({
   const [draft, setDraft] = useState<DraftBudgetPlan>(initialDraft)
   const [pageIndex, setPageIndex] = useState(0)
   const [autoSaving, setAutoSaving] = useState(false)
+  // Read-only 참고 카드용 KPI — 편성 상한이 아닌 정보 표시 목적.
+  const [wageCapKpi, setWageCapKpi] = useState<WageCapKPI | null>(null)
+
+  useEffect(() => {
+    seasonApi.getWageCapKPI().then(setWageCapKpi).catch(() => setWageCapKpi(null))
+  }, [])
 
   // Fast lookup for canonical labels; the draft only carries codes.
   const labelByCode = useMemo(() => {
@@ -121,6 +130,16 @@ export function BudgetPlanWizard({
 
       {/* Advanced features live on the last page, below the editors */}
       {isLast && renderAdvancedOnLastPage?.(draft)}
+
+      {/* Read-only 가용 예산 참고 카드 — 편성 상한이 아닌 정보 표시 목적. */}
+      {isLast && wageCapKpi && (
+        <div className="space-y-1">
+          <div className="text-xs text-muted-foreground px-1">
+            참고: 이 값은 편성 상한이 아니며 정보 표시입니다
+          </div>
+          <AvailableBudgetCard kpi={wageCapKpi} />
+        </div>
+      )}
 
       {/* Navigation */}
       <div className="flex justify-between pt-2">

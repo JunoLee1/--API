@@ -2,6 +2,8 @@ import { SeasonStatus } from "../generated/client";
 import { AppError } from "../lib/appError";
 import { SeasonRepository } from "./season.repo";
 import { CreateSeasonDto, SetWageCapDto } from "./dto/season.dto";
+import { getPrisma } from "../lib/prisma";
+import { applyCarryOverToNextSeason } from "../lib/season-carryover";
 
 export class SeasonService {
   constructor(private repo: SeasonRepository) {}
@@ -52,7 +54,18 @@ export class SeasonService {
       throw new AppError(400, "SEASON_NOT_ACTIVE");
     }
 
-    return await this.repo.updateStatus(id, SeasonStatus.CLOSED);
+    const closed = await this.repo.updateStatus(id, SeasonStatus.CLOSED);
+    // Best-effort auto-carryover: compute this season's approved net income
+    // and write it into the next chronological season's FinancialReport. A
+    // failure here (missing next season, DB blip) must not fail the close
+    // itself — the value can still be entered manually via the override
+    // endpoint. Manual overrides on the next season are never overwritten.
+    try {
+      await applyCarryOverToNextSeason(getPrisma(), id);
+    } catch (err) {
+      console.warn(`[closeSeason] carryover 자동 적용 실패 (seasonId=${id})`, err);
+    }
+    return closed;
   }
 
   async setWageCap(id: number, dto: SetWageCapDto) {
