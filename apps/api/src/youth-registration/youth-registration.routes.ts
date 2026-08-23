@@ -1,6 +1,8 @@
 import { auth } from "../lib/authMiddleware";
 import crypto from "crypto";
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
+import { AppError } from "../lib/appError";
+import { canReadHR, canWriteHR } from "../lib/permissions";
 import { YouthRegistrationController } from "./youth-registration.controller";
 import { YouthRegistrationService } from "./youth-registration.service";
 import { YouthRegistrationRepository } from "./youth-registration.repo";
@@ -42,12 +44,28 @@ const inviteAdapter = {
 const service = new YouthRegistrationService(repo, notifRepo, inviteAdapter);
 const controller = new YouthRegistrationController(service);
 
+const checkReadHR = (req: Request, _res: Response, next: NextFunction) => {
+  const { role, frontOfficeRole } = req.user!;
+  if (!canReadHR(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
+  next();
+};
 
-router.get("/", auth, controller.getAll);
-router.get("/:id", auth, controller.getById);
-router.post("/", auth, controller.create);
-router.patch("/:id/reject", auth, controller.reject);
-router.patch("/:id/contract", auth, controller.contract);
-router.patch("/:id/guardian-approve", auth, controller.guardianApprove);
+const checkWriteHR = (req: Request, _res: Response, next: NextFunction) => {
+  const { role, frontOfficeRole } = req.user!;
+  if (!canWriteHR(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
+  next();
+};
+
+const checkGuardian = (req: Request, _res: Response, next: NextFunction) => {
+  if (req.user?.role !== "GUARDIAN") return next(new AppError(403, "FORBIDDEN"));
+  next();
+};
+
+router.get("/", auth, checkReadHR, controller.getAll);
+router.get("/:id", auth, checkReadHR, controller.getById);
+router.post("/", auth, checkWriteHR, controller.create);
+router.patch("/:id/reject", auth, checkWriteHR, controller.reject);
+router.patch("/:id/contract", auth, checkWriteHR, controller.contract);
+router.patch("/:id/guardian-approve", auth, checkGuardian, controller.guardianApprove);
 
 export default router;
