@@ -1564,6 +1564,45 @@ async function main() {
     create: { contractId: contract1.id, amount: BigInt(5_000_000_000) },
   });
 
+  // Contracts for remaining 15 senior-team players (p5, p7~p20).
+  // Salary by position × level; p7 is RELEASED so its contract is TERMINATED.
+  const restContracts: Array<{
+    id: number; playerId: string; salary: number;
+    startYear: number; years: number; status?: "ACTIVE" | "TERMINATED";
+  }> = [
+    { id: 6,  playerId: "player-005", salary: 50_000_000, startYear: 2025, years: 3 }, // 정현우 CB SENIOR
+    { id: 7,  playerId: "player-007", salary: 45_000_000, startYear: 2023, years: 2, status: "TERMINATED" }, // 한동민 RELEASED
+    { id: 8,  playerId: "player-008", salary: 50_000_000, startYear: 2025, years: 3 }, // 오승환 RB SENIOR
+    { id: 9,  playerId: "player-009", salary: 80_000_000, startYear: 2024, years: 4 }, // 김태영 CDM VETERAN
+    { id: 10, playerId: "player-010", salary: 55_000_000, startYear: 2025, years: 3 }, // 류현진 CDM SENIOR
+    { id: 11, playerId: "player-011", salary: 55_000_000, startYear: 2025, years: 3 }, // 박상원 LAM SENIOR
+    { id: 12, playerId: "player-012", salary: 55_000_000, startYear: 2026, years: 3 }, // 윤대성 RAM SENIOR
+    { id: 13, playerId: "player-013", salary: 30_000_000, startYear: 2026, years: 2 }, // 이강인 WING ROOKIE
+    { id: 14, playerId: "player-014", salary: 100_000_000, startYear: 2024, years: 4 }, // 황희찬 SS VETERAN
+    { id: 15, playerId: "player-015", salary: 65_000_000, startYear: 2024, years: 3 }, // 조현우 GK VETERAN
+    { id: 16, playerId: "player-016", salary: 100_000_000, startYear: 2024, years: 3 }, // 권창훈 WING VETERAN
+    { id: 17, playerId: "player-017", salary: 80_000_000, startYear: 2025, years: 4 }, // 이재성 CAM VETERAN
+    { id: 18, playerId: "player-018", salary: 60_000_000, startYear: 2025, years: 3 }, // 송민규 ST SENIOR
+    { id: 19, playerId: "player-019", salary: 28_000_000, startYear: 2026, years: 2 }, // Mateus LDM ROOKIE
+    { id: 20, playerId: "player-020", salary: 70_000_000, startYear: 2025, years: 3 }, // 김영권 CB VETERAN
+  ];
+
+  for (const c of restContracts) {
+    await prisma.contract.upsert({
+      where: { id: c.id },
+      update: {},
+      create: {
+        id: c.id,
+        playerId: c.playerId,
+        startDate: new Date(`${c.startYear}-01-01`),
+        endDate: new Date(`${c.startYear + c.years - 1}-12-31`),
+        salary: c.salary,
+        status: c.status ?? "ACTIVE",
+        managedById: frontOffice.id,
+      },
+    });
+  }
+
   // ── Match 데이터 전체 클린 리셋 (idempotent) ─────────────
   await prisma.salesRecord.deleteMany();
   await prisma.seatZone.deleteMany();
