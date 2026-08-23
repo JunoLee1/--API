@@ -2555,6 +2555,7 @@ model BudgetCategoryPlan {
   categoryId        Int?
   mandatoryMinimum  Int               @default(0)
   knapsackAllocated Int?
+  sortOrder         Int               @default(0)
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   financialReport   FinancialReport   @relation(fields: [financialReportId], references: [id], onDelete: Cascade)
@@ -2571,6 +2572,7 @@ model BudgetTier {
   cost           Int
   value          Int
   isSelected     Boolean            @default(false)
+  sortOrder      Int                @default(0)
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
   categoryPlan   BudgetCategoryPlan @relation(fields: [categoryPlanId], references: [id], onDelete: Cascade)
