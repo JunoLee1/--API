@@ -7,11 +7,12 @@ import { NotificationRepository } from "../notification/notification.repo";
 import { getPrisma } from "../lib/prisma";
 import { canWriteFinance } from "../lib/permissions";
 import { AppError } from "../lib/appError";
+import { expenseCategoryService } from "../expense-category/expense-category.routes";
 
 const router = Router();
 const repo = new OperatingExpenseRepository(getPrisma());
 const notifRepo = new NotificationRepository(getPrisma());
-const service = new OperatingExpenseService(repo, notifRepo);
+const service = new OperatingExpenseService(repo, notifRepo, expenseCategoryService);
 const controller = new OperatingExpenseController(service);
 
 const checkWriteFinance = (req: Request, res: Response, next: NextFunction) => {

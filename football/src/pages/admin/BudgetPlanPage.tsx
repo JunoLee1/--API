@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { budgetPlanApi } from '@/services/financial-report.service'
 import { seasonApi } from '@/services/season.service'
 import type { BudgetPlan, UpsertBudgetPlanPayload, OperatingCategory } from '@/types/budget'
-import { ALL_OPERATING_CATEGORIES, OPERATING_CATEGORY_LABEL } from '@/types/budget'
+import { useExpenseCategories } from '@/hooks/useExpenseCategories'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -30,9 +30,9 @@ const defaultTiers = (): TierRow[] => [
   { name: 'Premium', cost: '', value: '' },
 ]
 
-const defaultCategories = () =>
+const buildDefaultCategories = (codes: string[]): Record<OperatingCategory, CategoryRow> =>
   Object.fromEntries(
-    ALL_OPERATING_CATEGORIES.map((c) => [c, { mandatoryMinimum: '', tiers: defaultTiers() }])
+    codes.map((c) => [c, { mandatoryMinimum: '', tiers: defaultTiers() }])
   ) as Record<OperatingCategory, CategoryRow>
 
 type CurrencyInputProps = Omit<ComponentProps<typeof Input>, 'onChange'> & {
@@ -53,6 +53,9 @@ function CurrencyInput({ value, onChange, type = 'text', ...props }: CurrencyInp
 
 export function BudgetPlanPage() {
   const { t } = useTranslation('admin')
+  const { rows: allCategories, labelOf, loading: catLoading } = useExpenseCategories()
+  const catCodes = allCategories.map((c) => c.code)
+
   const [seasonId, setSeasonId] = useState<number | null>(null)
   const [plan, setPlan] = useState<BudgetPlan | null>(null)
   const [loading, setLoading] = useState(true)
@@ -62,7 +65,7 @@ export function BudgetPlanPage() {
   const [totalBudget, setTotalBudget] = useState('')
   const [contingency, setContingency] = useState('')
   const [playerSalaryBudget, setPlayerSalaryBudget] = useState('')
-  const [categories, setCategories] = useState<Record<OperatingCategory, CategoryRow>>(defaultCategories)
+  const [categories, setCategories] = useState<Record<OperatingCategory, CategoryRow>>({} as Record<OperatingCategory, CategoryRow>)
 
   const [overrideCategory, setOverrideCategory] = useState<OperatingCategory>('TRAVEL')
   const [overrideAmount, setOverrideAmount] = useState('')
@@ -75,18 +78,19 @@ export function BudgetPlanPage() {
   const [zeroWarnings, setZeroWarnings] = useState<string[]>([])
 
   useEffect(() => {
+    if (catLoading || catCodes.length === 0) return
     void (async () => {
       try {
         const season = await seasonApi.active()
         if (!season) { setLoading(false); return }
         setSeasonId(season.id)
         const p = await budgetPlanApi.get(season.id).catch(() => null)
+        const newCats = buildDefaultCategories(catCodes)
         if (p) {
           setPlan(p)
           setTotalBudget(p.totalOperatingBudget?.toString() ?? '')
           setContingency(p.contingencyReserve?.toString() ?? '0')
           setPlayerSalaryBudget(p.playerSalaryBudget?.toString() ?? '')
-          const newCats = defaultCategories()
           for (const cp of p.budgetCategoryPlans) {
             newCats[cp.category] = {
               mandatoryMinimum: cp.mandatoryMinimum.toString(),
@@ -95,18 +99,18 @@ export function BudgetPlanPage() {
                 : defaultTiers(),
             }
           }
-          setCategories(newCats)
         }
+        setCategories(newCats)
       } catch { toast.error(t('budget.loadFailed')) }
       finally { setLoading(false) }
     })()
-  }, [])
+  }, [catLoading, catCodes.length])
 
   const discretionaryPool = () => {
     const total = parseInt(totalBudget, 10) || 0
     const cont = parseInt(contingency, 10) || 0
-    const mandatory = ALL_OPERATING_CATEGORIES.reduce(
-      (s, c) => s + (parseInt(categories[c].mandatoryMinimum, 10) || 0), 0
+    const mandatory = catCodes.reduce(
+      (s, c) => s + (parseInt(categories[c]?.mandatoryMinimum ?? '', 10) || 0), 0
     )
     return total - cont - mandatory
   }
@@ -120,10 +124,10 @@ export function BudgetPlanPage() {
         totalOperatingBudget: parseInt(totalBudget, 10),
         contingencyReserve: parseInt(contingency, 10) || 0,
         playerSalaryBudget: isNaN(psb) ? undefined : psb,
-        categories: ALL_OPERATING_CATEGORIES.map((cat) => ({
+        categories: catCodes.map((cat) => ({
           category: cat,
-          mandatoryMinimum: parseInt(categories[cat].mandatoryMinimum, 10) || 0,
-          tiers: categories[cat].tiers
+          mandatoryMinimum: parseInt(categories[cat]?.mandatoryMinimum ?? '', 10) || 0,
+          tiers: (categories[cat]?.tiers ?? [])
             .filter((tier) => tier.cost && tier.value)
             .map((tier) => ({ name: tier.name, cost: parseInt(tier.cost, 10), value: parseInt(tier.value, 10) })),
         })),
@@ -181,7 +185,7 @@ export function BudgetPlanPage() {
       setTotalBudget(p.totalOperatingBudget?.toString() ?? '')
       setContingency(p.contingencyReserve?.toString() ?? '0')
       setPlayerSalaryBudget(p.playerSalaryBudget?.toString() ?? '')
-      const newCats = defaultCategories()
+      const newCats = buildDefaultCategories(catCodes)
       for (const cp of p.budgetCategoryPlans) {
         newCats[cp.category] = {
           mandatoryMinimum: cp.mandatoryMinimum.toString(),
@@ -235,7 +239,7 @@ export function BudgetPlanPage() {
         {zeroWarnings.length > 0 && (
           <div className="rounded-md bg-yellow-50 border border-yellow-200 px-4 py-2 text-sm text-yellow-800">
             {t('budget.zeroCategoriesWarning')}{' '}
-            {zeroWarnings.map((c) => OPERATING_CATEGORY_LABEL[c as OperatingCategory]).join(', ')}
+            {zeroWarnings.map((c) => labelOf(c)).join(', ')}
           </div>
         )}
 
@@ -278,13 +282,14 @@ export function BudgetPlanPage() {
 
         <section className="space-y-4">
           <h2 className="text-sm font-semibold">{t('budget.categoriesSection')}</h2>
-          {ALL_OPERATING_CATEGORIES.map((cat) => {
+          {catCodes.map((cat) => {
             const catPlan = plan?.budgetCategoryPlans.find((c) => c.category === cat)
             const actual = plan?.actuals?.[cat] ?? 0
+            const catRow = categories[cat] ?? { mandatoryMinimum: '', tiers: defaultTiers() }
             return (
               <div key={cat} className="border rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-sm">{OPERATING_CATEGORY_LABEL[cat]}</span>
+                  <span className="font-medium text-sm">{labelOf(cat)}</span>
                   {catPlan?.knapsackAllocated != null && (
                     <Badge variant="outline" className="text-xs">
                       배분: {fmt(catPlan.knapsackAllocated)} | 실적: {fmt(actual)}
@@ -295,14 +300,14 @@ export function BudgetPlanPage() {
                   <Label className="text-xs">{t('budget.mandatoryMinimum')}</Label>
                   <CurrencyInput
                     className="h-7 text-sm"
-                    value={categories[cat].mandatoryMinimum}
-                    onChange={(v) => setCategories((p) => ({ ...p, [cat]: { ...p[cat], mandatoryMinimum: v } }))}
+                    value={catRow.mandatoryMinimum}
+                    onChange={(v) => setCategories((p) => ({ ...p, [cat]: { ...(p[cat] ?? { tiers: defaultTiers() }), mandatoryMinimum: v } }))}
                     placeholder="0"
                   />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">{t('budget.tiers')}</Label>
-                  {categories[cat].tiers.map((tier, i) => {
+                  {catRow.tiers.map((tier, i) => {
                     const planTier = catPlan?.tiers[i]
                     return (
                       <div key={i} className={`grid grid-cols-3 gap-2 p-2 rounded ${planTier?.isSelected ? 'bg-primary/10 border border-primary/30' : ''}`}>
@@ -333,8 +338,8 @@ export function BudgetPlanPage() {
               value={overrideCategory}
               onChange={(e) => setOverrideCategory(e.target.value as OperatingCategory)}
             >
-              {ALL_OPERATING_CATEGORIES.map((c) => (
-                <option key={c} value={c}>{OPERATING_CATEGORY_LABEL[c]}</option>
+              {allCategories.map((c) => (
+                <option key={c.code} value={c.code}>{c.label}</option>
               ))}
             </select>
             <CurrencyInput placeholder={t('budget.overrideAmount')} value={overrideAmount} onChange={setOverrideAmount} />
@@ -355,7 +360,7 @@ export function BudgetPlanPage() {
               <TableBody>
                 {plan!.overrideLogs.map((log) => (
                   <TableRow key={log.id}>
-                    <TableCell className="text-xs">{OPERATING_CATEGORY_LABEL[log.category]}</TableCell>
+                    <TableCell className="text-xs">{labelOf(log.category)}</TableCell>
                     <TableCell className="text-xs tabular-nums">{fmt(log.amount)}</TableCell>
                     <TableCell className="text-xs">{log.reason}</TableCell>
                     <TableCell className="text-xs tabular-nums">{new Date(log.createdAt).toLocaleDateString('ko-KR')}</TableCell>

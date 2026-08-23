@@ -1,4 +1,4 @@
-import { PrismaClient } from "../generated/client";
+import { PrismaClient, OperatingCategory } from "../generated/client";
 import type { CreateBudgetHeaderDto, UpdateBudgetHeaderDto, CreateBudgetLineDto, UpdateBudgetLineDto, CreateAdjustmentDto } from "./dto/budget-control.dto";
 
 export class BudgetControlRepository {
@@ -59,8 +59,15 @@ export class BudgetControlRepository {
     return this.prisma.budgetHeader.update({ where: { id }, data });
   }
 
-  createLine(budgetHeaderId: number, dto: CreateBudgetLineDto) {
-    return this.prisma.budgetLine.create({ data: { budgetHeaderId, ...dto } });
+  createLine(budgetHeaderId: number, dto: CreateBudgetLineDto & { categoryId: number }) {
+    const { category, ...rest } = dto;
+    return this.prisma.budgetLine.create({
+      data: {
+        budgetHeaderId,
+        ...rest,
+        category: category as OperatingCategory,
+      },
+    });
   }
 
   updateLine(lineId: number, data: UpdateBudgetLineDto) {

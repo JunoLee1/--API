@@ -6,10 +6,11 @@ import { getPrisma } from "../lib/prisma";
 import { BudgetAutomationRepository } from "./budget-automation.repo";
 import { BudgetAutomationService } from "./budget-automation.service";
 import type { BudgetPreviewRequestDto, BudgetApplyRequestDto } from "./dto/budget-automation.dto";
+import { expenseCategoryService } from "../expense-category/expense-category.routes";
 
 const router = Router();
 const repo = new BudgetAutomationRepository(getPrisma());
-const service = new BudgetAutomationService(repo);
+const service = new BudgetAutomationService(repo, expenseCategoryService);
 
 const checkRead = (req: Request, res: Response, next: NextFunction) => {
   const { role, frontOfficeRole } = req.user!;

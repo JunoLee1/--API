@@ -64,6 +64,7 @@ import formationSnapshotRouter from "./formation-snapshot/formation-snapshot.rou
 import certificationRouter from "./certification/certification.routes";
 import budgetControlRouter from "./budget-control/budget-control.routes";
 import budgetAutomationRouter from "./budget-automation/budget-automation.routes";
+import expenseCategoryRouter from "./expense-category/expense-category.routes";
 import { monthlySettlementRouter } from "./monthly-settlement/monthly-settlement.routes";
 import { revenueAdjustmentRouter } from "./revenue-adjustment/revenue-adjustment.routes";
 import { accountCodeRouter } from "./account-code/account-code.routes";
@@ -140,6 +141,7 @@ apiRouter.use("/formation-snapshots", formationSnapshotRouter);
 apiRouter.use("/certification", certificationRouter);
 apiRouter.use("/budget-control", budgetControlRouter);
 apiRouter.use("/budget-automation", budgetAutomationRouter);
+apiRouter.use("/expense-categories", expenseCategoryRouter);
 apiRouter.use("/monthly-settlement", monthlySettlementRouter);
 apiRouter.use("/revenue-adjustment", revenueAdjustmentRouter);
 apiRouter.use("/account-codes", accountCodeRouter);

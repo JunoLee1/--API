@@ -1,17 +1,10 @@
-export type OperatingCategory = 'MEDICAL' | 'MEAL' | 'TRAVEL' | 'EQUIPMENT' | 'SCOUTING' | 'YOUTH'
+// Category set is now DB-backed via ExpenseCategory table (ADR-0012).
+// Runtime source of truth: useExpenseCategories() hook fetching /expense-categories.
+// This type is intentionally widened to string — union literals are no longer available
+// at compile time.
+import type { ExpenseCategoryCode } from './expense-category'
 
-export const OPERATING_CATEGORY_LABEL: Record<OperatingCategory, string> = {
-  MEDICAL: '의료·재활',
-  MEAL: '식대',
-  TRAVEL: '이동·숙박',
-  EQUIPMENT: '장비·유니폼',
-  SCOUTING: '스카우팅·영입',
-  YOUTH: '유소년 개발',
-}
-
-export const ALL_OPERATING_CATEGORIES: OperatingCategory[] = [
-  'MEDICAL', 'MEAL', 'TRAVEL', 'EQUIPMENT', 'SCOUTING', 'YOUTH',
-]
+export type OperatingCategory = ExpenseCategoryCode
 
 export interface BudgetTier {
   id: number

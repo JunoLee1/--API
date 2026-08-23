@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { operatingExpenseApi } from '@/services/operating-expense.service'
 import { seasonApi } from '@/services/season.service'
 import type { OperatingExpense, OperatingCategory } from '@/types/budget'
-import { OPERATING_CATEGORY_LABEL, ALL_OPERATING_CATEGORIES } from '@/types/budget'
 import type { Season } from '@/types/season'
+import { useExpenseCategories } from '@/hooks/useExpenseCategories'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,14 +18,14 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 
-const FORM_CATEGORIES = ALL_OPERATING_CATEGORIES.filter((c) => c !== 'MEDICAL')
-
 function fmt(n: number) {
   return n.toLocaleString('ko-KR') + '원'
 }
 
 export function OperatingExpensePage() {
   const { t } = useTranslation('admin')
+  const { rows: allCategories, labelOf } = useExpenseCategories()
+  const formCategories = allCategories.filter((c) => c.code !== 'MEDICAL')
   const [seasons, setSeasons] = useState<Season[]>([])
   const [seasonId, setSeasonId] = useState<number | null>(null)
   const [expenses, setExpenses] = useState<OperatingExpense[]>([])
@@ -146,7 +146,7 @@ export function OperatingExpensePage() {
               {expenses.map((e) => (
                 <TableRow key={e.id}>
                   <TableCell className="tabular-nums text-sm">{new Date(e.date).toLocaleDateString('ko-KR')}</TableCell>
-                  <TableCell className="text-sm">{OPERATING_CATEGORY_LABEL[e.category]}</TableCell>
+                  <TableCell className="text-sm">{labelOf(e.category)}</TableCell>
                   <TableCell className="tabular-nums font-medium text-sm">{fmt(e.amount)}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{e.note ?? '—'}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{e.createdBy.username}</TableCell>
@@ -173,8 +173,8 @@ export function OperatingExpensePage() {
                 value={form.category}
                 onChange={(e) => setForm((p) => ({ ...p, category: e.target.value as OperatingCategory }))}
               >
-                {FORM_CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{OPERATING_CATEGORY_LABEL[c]}</option>
+                {formCategories.map((c) => (
+                  <option key={c.code} value={c.code}>{c.label}</option>
                 ))}
               </select>
             </div>

@@ -1,5 +1,3 @@
-import { OperatingCategory } from "../../generated/client";
-
 export type GoalWeight = "AGGRESSIVE" | "MAINTAIN" | "CONSERVATIVE";
 
 export const GOAL_MULTIPLIER: Record<GoalWeight, number> = {
@@ -27,7 +25,8 @@ export interface BudgetPreviewRequestDto {
   inflation?: number;      // default 0.03
   revenueGoal: GoalWeight;
   expenseGoal: GoalWeight;
-  categoryOverrides?: Partial<Record<OperatingCategory, GoalWeight>>;
+  // key = ExpenseCategory code string
+  categoryOverrides?: Record<string, GoalWeight>;
 }
 
 export interface BudgetApplyRequestDto extends BudgetPreviewRequestDto {
@@ -51,7 +50,7 @@ export interface BudgetPreviewResponse {
   };
   expense: {
     total: number;
-    byCategory: Record<OperatingCategory, CategoryPrediction>;
+    byCategory: Record<string, CategoryPrediction>;
   };
   parameters: {
     targetSeasonId: number;
@@ -59,7 +58,7 @@ export interface BudgetPreviewResponse {
     inflation: number;
     revenueGoal: GoalWeight;
     expenseGoal: GoalWeight;
-    categoryOverrides: Partial<Record<OperatingCategory, GoalWeight>>;
+    categoryOverrides: Record<string, GoalWeight>;
     seasonsUsed: number;
   };
 }

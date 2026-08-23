@@ -6,10 +6,11 @@ import { getPrisma } from "../lib/prisma";
 import { BudgetControlRepository } from "./budget-control.repo";
 import { BudgetControlService } from "./budget-control.service";
 import { BudgetControlController } from "./budget-control.controller";
+import { expenseCategoryService } from "../expense-category/expense-category.routes";
 
 const router = Router();
 const repo = new BudgetControlRepository(getPrisma());
-const service = new BudgetControlService(repo);
+const service = new BudgetControlService(repo, expenseCategoryService);
 const controller = new BudgetControlController(service);
 
 const checkRead = (req: Request, res: Response, next: NextFunction) => {

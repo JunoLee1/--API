@@ -48,7 +48,7 @@ export class BudgetAutomationRepository {
       note?: string;
       createdById: number;
     },
-    lines: Array<{ category: OperatingCategory; originalAmount: number; year: number }>
+    lines: Array<{ category: OperatingCategory; categoryId: number; originalAmount: number; year: number }>
   ) {
     return this.prisma.$transaction(async (tx) => {
       const header = await tx.budgetHeader.create({
@@ -64,6 +64,7 @@ export class BudgetAutomationRepository {
         data: lines.map((l) => ({
           budgetHeaderId: header.id,
           category: l.category,
+          categoryId: l.categoryId,
           originalAmount: l.originalAmount,
           year: l.year,
         })),
