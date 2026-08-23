@@ -7,6 +7,8 @@ import { getSeasonRevenueActuals } from "../lib/season-actuals";
 import { ExpenseCategoryService } from "../expense-category/expense-category.service";
 
 // Wire-format DTO (from controller) — category is a code string.
+// `sortOrder` on both categories and tiers preserves the user-controlled
+// drag-and-drop order set in the BudgetPlanPage wizard.
 export interface UpsertBudgetPlanRequest {
   totalOperatingBudget: number;
   contingencyReserve: number;
@@ -14,7 +16,8 @@ export interface UpsertBudgetPlanRequest {
   categories: {
     category: string;
     mandatoryMinimum: number;
-    tiers: { name: string; cost: number; value: number }[];
+    sortOrder?: number;
+    tiers: { name: string; cost: number; value: number; sortOrder?: number }[];
   }[];
 }
 
@@ -60,17 +63,24 @@ export class FinancialReportService {
   async upsertBudgetPlan(seasonId: number, dto: UpsertBudgetPlanRequest) {
     if (dto.totalOperatingBudget <= 0) throw new AppError(400, "INVALID_BUDGET");
     if (dto.contingencyReserve < 0) throw new AppError(400, "INVALID_CONTINGENCY");
-    // Resolve code → id for each category
+    // Resolve code → id for each category. Fall back to array position for
+    // sortOrder when the client omits it (older payloads pre-wizard).
     const resolved: UpsertBudgetPlanDto = {
       totalOperatingBudget: dto.totalOperatingBudget,
       contingencyReserve: dto.contingencyReserve,
       ...(dto.playerSalaryBudget !== undefined ? { playerSalaryBudget: dto.playerSalaryBudget } : {}),
       categories: await Promise.all(
-        dto.categories.map(async (c) => ({
+        dto.categories.map(async (c, catIdx) => ({
           category: c.category as OperatingCategory,
           categoryId: await this.categoryService.resolveCategoryId(c.category),
           mandatoryMinimum: c.mandatoryMinimum,
-          tiers: c.tiers,
+          sortOrder: c.sortOrder ?? catIdx,
+          tiers: c.tiers.map((t, tierIdx) => ({
+            name: t.name,
+            cost: t.cost,
+            value: t.value,
+            sortOrder: t.sortOrder ?? tierIdx,
+          })),
         }))
       ),
     };
@@ -178,14 +188,15 @@ export class FinancialReportService {
     const activeCategories = await this.categoryService.listActive();
     const zeroCategories: string[] = [];
 
-    const categories = activeCategories.map((c) => {
+    const categories = activeCategories.map((c, idx) => {
       const actual = prevActuals[c.code] ?? 0;
       if (actual === 0) zeroCategories.push(c.code);
       return {
         category: c.code as OperatingCategory,
         categoryId: c.id,
         mandatoryMinimum: Math.round(actual * (1 + growthRate)),
-        tiers: [] as { name: string; cost: number; value: number }[],
+        sortOrder: idx,
+        tiers: [] as { name: string; cost: number; value: number; sortOrder: number }[],
       };
     });
 

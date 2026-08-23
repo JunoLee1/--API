@@ -38,7 +38,8 @@ export interface UpsertBudgetPlanDto {
     category: OperatingCategory;
     categoryId: number;
     mandatoryMinimum: number;
-    tiers: { name: string; cost: number; value: number }[];
+    sortOrder: number;
+    tiers: { name: string; cost: number; value: number; sortOrder: number }[];
   }[];
 }
 
@@ -111,10 +112,12 @@ export class FinancialReportRepository {
           category: cat.category,
           categoryId: cat.categoryId,
           mandatoryMinimum: cat.mandatoryMinimum,
+          sortOrder: cat.sortOrder,
         },
         update: {
           categoryId: cat.categoryId,
           mandatoryMinimum: cat.mandatoryMinimum,
+          sortOrder: cat.sortOrder,
         },
         select: { id: true },
       });
@@ -122,7 +125,13 @@ export class FinancialReportRepository {
       await this.prisma.budgetTier.deleteMany({ where: { categoryPlanId: plan.id } });
       if (cat.tiers.length > 0) {
         await this.prisma.budgetTier.createMany({
-          data: cat.tiers.map((t) => ({ categoryPlanId: plan.id, name: t.name, cost: t.cost, value: t.value })),
+          data: cat.tiers.map((t) => ({
+            categoryPlanId: plan.id,
+            name: t.name,
+            cost: t.cost,
+            value: t.value,
+            sortOrder: t.sortOrder,
+          })),
         });
       }
     }
@@ -136,10 +145,10 @@ export class FinancialReportRepository {
       include: {
         budgetCategoryPlans: {
           include: {
-            tiers: { orderBy: { cost: "asc" } },
+            tiers: { orderBy: { sortOrder: "asc" } },
             expenseCategory: { select: { code: true, label: true, sortOrder: true } },
           },
-          orderBy: { category: "asc" },
+          orderBy: { sortOrder: "asc" },
         },
         overrideLogs: {
           include: { expenseCategory: { select: { code: true } } },
