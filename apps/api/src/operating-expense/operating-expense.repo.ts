@@ -1,4 +1,4 @@
-import { PrismaClient, ExpenseStatus } from "../generated/client";
+import { PrismaClient, ExpenseStatus, ExpenseCostType } from "../generated/client";
 
 type Tx = Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
 
@@ -32,9 +32,20 @@ export class OperatingExpenseRepository {
     return this.prisma.budgetLine.findUnique({ where: { id: budgetLineId } });
   }
 
+  findBudgetLinesForSeasonCategory(seasonId: number, categoryId: number) {
+    return this.prisma.budgetLine.findMany({
+      where: {
+        categoryId,
+        budgetHeader: { seasonId, status: "APPROVED" },
+      },
+      select: { id: true, departmentId: true, originalAmount: true },
+    });
+  }
+
   async createWithBudgetCheck(data: {
     seasonId: number;
     categoryId: number;
+    costType?: ExpenseCostType;
     amount: number;
     date: Date;
     note?: string | null;
@@ -61,6 +72,7 @@ export class OperatingExpenseRepository {
         data: {
           seasonId: data.seasonId,
           categoryId: data.categoryId,
+          ...(data.costType && { costType: data.costType }),
           amount: data.amount,
           date: data.date,
           note: data.note ?? null,

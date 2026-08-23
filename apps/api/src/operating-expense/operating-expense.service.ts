@@ -31,11 +31,12 @@ export class OperatingExpenseService {
   async create(data: {
     seasonId: number;
     category: string;
+    costType?: "FIXED" | "VARIABLE" | "CONTINGENCY";
     amount: number;
     date: string;
     note?: string;
     createdById: number;
-    budgetLineId: number;
+    budgetLineId?: number;
   }) {
     if (data.amount <= 0) throw new AppError(400, "INVALID_AMOUNT");
     if (!(await this.categoryService.isValidCode(data.category))) {
@@ -43,19 +44,32 @@ export class OperatingExpenseService {
     }
     const categoryId = await this.categoryService.resolveCategoryId(data.category);
 
-    const line = await this.repo.findBudgetLine(data.budgetLineId);
-    if (!line) throw new AppError(404, "BUDGET_LINE_NOT_FOUND");
+    // Resolve budget line: caller may pass an explicit id, otherwise auto-match by
+    // (season, category). If exactly one line matches, use it. Zero → 400 asks the
+    // planner to create the line; more than one → 400 asks the caller to disambiguate
+    // (typically by picking the department-scoped line in the UI).
+    let budgetLineId = data.budgetLineId;
+    if (budgetLineId === undefined) {
+      const candidates = await this.repo.findBudgetLinesForSeasonCategory(data.seasonId, categoryId);
+      if (candidates.length === 0) throw new AppError(400, "BUDGET_LINE_NOT_FOUND");
+      if (candidates.length > 1) throw new AppError(400, "BUDGET_LINE_AMBIGUOUS");
+      budgetLineId = candidates[0]!.id;
+    } else {
+      const line = await this.repo.findBudgetLine(budgetLineId);
+      if (!line) throw new AppError(404, "BUDGET_LINE_NOT_FOUND");
+    }
 
     let expense;
     try {
       expense = await this.repo.createWithBudgetCheck({
         seasonId: data.seasonId,
         categoryId,
+        ...(data.costType && { costType: data.costType }),
         amount: data.amount,
         date: new Date(data.date),
         note: data.note ?? null,
         createdById: data.createdById,
-        budgetLineId: data.budgetLineId,
+        budgetLineId,
       });
     } catch (err: any) {
       if (err.message === "BUDGET_EXCEEDED") throw new AppError(409, "BUDGET_EXCEEDED");

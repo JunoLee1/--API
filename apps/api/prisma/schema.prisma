@@ -2595,22 +2595,29 @@ model BudgetOverrideLog {
   expenseCategory   ExpenseCategory @relation(fields: [categoryId], references: [id])
 }
 
+enum ExpenseCostType {
+  FIXED // 고정지출비 — 매월 정기 지출 (임대료, 구독료 등)
+  VARIABLE // 변동비 — 발생 시점·금액이 다변화 (일회성 구매, 이동경비 등)
+  CONTINGENCY // 예비비 — 예상 밖 긴급 지출 (사고, 시설 파손 등)
+}
+
 model OperatingExpense {
-  id                 Int             @id @default(autoincrement())
+  id                 Int              @id @default(autoincrement())
   seasonId           Int
   categoryId         Int
+  costType           ExpenseCostType?
   amount             Int
   date               DateTime
   note               String?
   createdById        Int
   paidAt             DateTime?
   paidById           Int?
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
   deletedAt          DateTime?
   deletionReason     String?
   accountCodeId      Int?
-  status             ExpenseStatus   @default(PENDING)
+  status             ExpenseStatus    @default(PENDING)
   budgetLineId       Int
   firstApprovedById  Int?
   firstApprovedAt    DateTime?
@@ -2622,16 +2629,16 @@ model OperatingExpense {
   cancelledById      Int?
   cancelledAt        DateTime?
   cancellationReason String?
-  season             Season          @relation(fields: [seasonId], references: [id])
-  createdBy          User            @relation("OperatingExpenseCreator", fields: [createdById], references: [id])
-  paidBy             User?           @relation("OperatingExpensePayer", fields: [paidById], references: [id])
-  accountCode        AccountCode?    @relation(fields: [accountCodeId], references: [id])
-  expenseCategory    ExpenseCategory @relation(fields: [categoryId], references: [id])
-  budgetLine         BudgetLine      @relation(fields: [budgetLineId], references: [id])
-  firstApprovedBy    User?           @relation("OperatingExpenseFirstApprover", fields: [firstApprovedById], references: [id])
-  approvedBy         User?           @relation("OperatingExpenseApprover", fields: [approvedById], references: [id])
-  rejectedBy         User?           @relation("OperatingExpenseRejecter", fields: [rejectedById], references: [id])
-  cancelledBy        User?           @relation("OperatingExpenseCanceller", fields: [cancelledById], references: [id])
+  season             Season           @relation(fields: [seasonId], references: [id])
+  createdBy          User             @relation("OperatingExpenseCreator", fields: [createdById], references: [id])
+  paidBy             User?            @relation("OperatingExpensePayer", fields: [paidById], references: [id])
+  accountCode        AccountCode?     @relation(fields: [accountCodeId], references: [id])
+  expenseCategory    ExpenseCategory  @relation(fields: [categoryId], references: [id])
+  budgetLine         BudgetLine       @relation(fields: [budgetLineId], references: [id])
+  firstApprovedBy    User?            @relation("OperatingExpenseFirstApprover", fields: [firstApprovedById], references: [id])
+  approvedBy         User?            @relation("OperatingExpenseApprover", fields: [approvedById], references: [id])
+  rejectedBy         User?            @relation("OperatingExpenseRejecter", fields: [rejectedById], references: [id])
+  cancelledBy        User?            @relation("OperatingExpenseCanceller", fields: [cancelledById], references: [id])
 }
 
 // ─────────────────────────────────────────────

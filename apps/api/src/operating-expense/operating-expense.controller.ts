@@ -31,19 +31,20 @@ export class OperatingExpenseController {
     try {
       const { role, frontOfficeRole, id: userId } = requireUser(req);
       if (!canCreate(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
-      const { seasonId, category, amount, date, note, budgetLineId } = req.body as {
+      const { seasonId, category, costType, amount, date, note, budgetLineId } = req.body as {
         seasonId: number;
         category: string;
+        costType?: "FIXED" | "VARIABLE" | "CONTINGENCY";
         amount: number;
         date: string;
         note?: string;
-        budgetLineId: number;
+        budgetLineId?: number;
       };
-      if (!budgetLineId) throw new AppError(400, "BUDGET_LINE_ID_REQUIRED");
       const expense = await this.service.create({
         seasonId, category, amount, date,
+        ...(costType !== undefined && { costType }),
         ...(note !== undefined && { note }),
-        budgetLineId,
+        ...(budgetLineId !== undefined && { budgetLineId }),
         createdById: userId,
       });
       res.status(201).json(expense);
