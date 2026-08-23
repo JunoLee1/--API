@@ -2,6 +2,8 @@ import { BudgetControlService } from "../../src/budget-control/budget-control.se
 import { AppError } from "../../src/lib/appError";
 import type { BudgetControlRepository } from "../../src/budget-control/budget-control.repo";
 
+jest.mock("../../src/lib/auditLog", () => ({ writeAuditLog: jest.fn().mockResolvedValue(undefined) }));
+
 const makeHeader = (overrides = {}) => ({
   id: 1, seasonId: 1, version: 1, status: "DRAFT", name: "2026시즌", totalBudget: 100_000_000,
   note: null, createdById: 1, approvedById: null, approvedAt: null, createdAt: new Date(), updatedAt: new Date(),
@@ -21,6 +23,7 @@ const makeRepo = (overrides: Partial<BudgetControlRepository> = {}): BudgetContr
   createAdjustment: jest.fn().mockResolvedValue({}),
   updateAdjustmentStatus: jest.fn().mockResolvedValue({}),
   sumApprovedAdjustments: jest.fn().mockResolvedValue([]),
+  sumCommitmentAndActual: jest.fn().mockResolvedValue({ commitment: 0, actual: 0, byCategory: {} }),
   ...overrides,
 } as unknown as BudgetControlRepository);
 
