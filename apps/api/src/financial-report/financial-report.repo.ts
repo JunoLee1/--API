@@ -96,6 +96,36 @@ export class FinancialReportRepository {
     return this.prisma.financialReport.findUnique({ where: { seasonId } });
   }
 
+  async upsertFinancialReportCarryOver(
+    seasonId: number,
+    data: { amount: number; overriddenById: number; reason: string },
+  ) {
+    return this.prisma.financialReport.upsert({
+      where: { seasonId },
+      create: {
+        seasonId,
+        totalRevenue: 0,
+        carryOverFromPrev: data.amount,
+        carryOverOverriddenById: data.overriddenById,
+        carryOverOverriddenAt: new Date(),
+        carryOverOverrideReason: data.reason,
+      },
+      update: {
+        carryOverFromPrev: data.amount,
+        carryOverOverriddenById: data.overriddenById,
+        carryOverOverriddenAt: new Date(),
+        carryOverOverrideReason: data.reason,
+      },
+      select: {
+        seasonId: true,
+        carryOverFromPrev: true,
+        carryOverOverriddenById: true,
+        carryOverOverriddenAt: true,
+        carryOverOverrideReason: true,
+      },
+    });
+  }
+
   async upsertBudgetPlan(seasonId: number, dto: UpsertBudgetPlanDto) {
     const report = await this.prisma.financialReport.upsert({
       where: { seasonId },

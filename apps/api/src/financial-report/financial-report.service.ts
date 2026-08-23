@@ -433,6 +433,28 @@ export class FinancialReportService {
     };
   }
 
+  /**
+   * Manually override the carryOverFromPrev value on a season's
+   * FinancialReport. The write always sets `carryOverOverriddenById`/
+   * `-At`/`-Reason` so `applyCarryOverToNextSeason` will subsequently
+   * skip this row and not clobber the user's number.
+   */
+  async overrideCarryOver(
+    seasonId: number,
+    dto: { amount: number; reason: string },
+    userId: number,
+  ) {
+    if (!dto.reason?.trim()) throw new AppError(400, "REASON_REQUIRED");
+    if (typeof dto.amount !== "number" || !Number.isFinite(dto.amount)) {
+      throw new AppError(400, "INVALID_AMOUNT");
+    }
+    return this.repo.upsertFinancialReportCarryOver(seasonId, {
+      amount: dto.amount,
+      overriddenById: userId,
+      reason: dto.reason.trim(),
+    });
+  }
+
   async getReportWithLedger(seasonId: number) {
     const report = await this.repo.findBySeasonId(seasonId);
     if (!report) throw new AppError(404, "FINANCIAL_REPORT_NOT_FOUND");

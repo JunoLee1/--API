@@ -203,4 +203,15 @@ export class FinancialReportController {
       res.status(200).json(data);
     } catch (err) { next(err); }
   };
+
+  overrideCarryOver = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole, id: userId } = requireUser(req);
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const seasonId = Number(req.params["seasonId"]);
+      const { amount, reason } = req.body as { amount: number; reason: string };
+      const result = await this.service.overrideCarryOver(seasonId, { amount, reason }, userId);
+      res.status(200).json(result);
+    } catch (err) { next(err); }
+  };
 }
