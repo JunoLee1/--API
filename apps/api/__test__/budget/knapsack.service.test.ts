@@ -99,7 +99,7 @@ describe("KnapsackService.solve", () => {
       { categoryPlanId: 1, category: "MEDICAL",   tiers: [{ tierId: 1, cost: 3_000_000, value: 10 }, { tierId: 2, cost: 5_000_000, value: 15 }] },
       { categoryPlanId: 2, category: "MEAL",       tiers: [{ tierId: 3, cost: 2_000_000, value: 7  }, { tierId: 4, cost: 3_000_000, value: 9  }] },
       { categoryPlanId: 3, category: "TRAVEL",     tiers: [{ tierId: 5, cost: 4_000_000, value: 8  }, { tierId: 6, cost: 7_000_000, value: 12 }] },
-      { categoryPlanId: 4, category: "EQUIPMENT",  tiers: [{ tierId: 7, cost: 2_000_000, value: 6  }] },
+      { categoryPlanId: 4, category: "SPORTS_EQUIPMENT",  tiers: [{ tierId: 7, cost: 2_000_000, value: 6  }] },
       { categoryPlanId: 5, category: "SCOUTING",   tiers: [{ tierId: 8, cost: 3_000_000, value: 9  }, { tierId: 9, cost: 6_000_000, value: 14 }] },
       { categoryPlanId: 6, category: "YOUTH",      tiers: [{ tierId: 10, cost: 2_000_000, value: 5 }] },
     ];
