@@ -87,7 +87,16 @@ export function OperatingExpensePage() {
       setForm({ category: 'TRAVEL', costType: 'VARIABLE', amount: '', date: '', note: '' })
       toast.success(t('operatingExpense.created'))
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('operatingExpense.createFailed'))
+      const code = err instanceof Error ? err.message : ''
+      const msg =
+        code === 'BUDGET_LINE_NOT_FOUND'
+          ? '해당 시즌·카테고리에 예산 라인이 없습니다. 예산 관리에서 계획을 먼저 만들어주세요.'
+          : code === 'BUDGET_LINE_AMBIGUOUS'
+          ? '해당 카테고리에 예산 라인이 여러 개입니다. 부서별 라인을 UI에서 선택해주세요.'
+          : code === 'BUDGET_EXCEEDED'
+          ? '예산을 초과합니다.'
+          : code || t('operatingExpense.createFailed')
+      toast.error(msg)
     } finally { setSaving(false) }
   }
 

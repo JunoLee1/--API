@@ -83,8 +83,9 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown): Pro
     }
 
     if (!res.ok) {
-      const error = await res.json().catch(() => ({ message: i18n.t('common:loginPage.apiError.serverError') }))
-      throw new Error((error as { message: string }).message)
+      const error = await res.json().catch(() => ({ code: 'SERVER_ERROR' }))
+      const body = error as { code?: string; message?: string }
+      throw new Error(body.code ?? body.message ?? i18n.t('common:loginPage.apiError.serverError'))
     }
 
     if (res.status === 204) {
@@ -120,8 +121,9 @@ async function requestForm<T>(method: 'POST' | 'PATCH', path: string, form: Form
     }
     if (res.status === 401 && !skipRefresh) { forceLogout(); throw new Error(i18n.t('common:loginPage.apiError.authExpired')) }
     if (!res.ok) {
-      const error = await res.json().catch(() => ({ message: i18n.t('common:loginPage.apiError.serverError') }))
-      throw new Error((error as { message: string }).message)
+      const error = await res.json().catch(() => ({ code: 'SERVER_ERROR' }))
+      const body = error as { code?: string; message?: string }
+      throw new Error(body.code ?? body.message ?? i18n.t('common:loginPage.apiError.serverError'))
     }
     if (res.status === 204) return undefined as T
     return (await res.json()) as T
