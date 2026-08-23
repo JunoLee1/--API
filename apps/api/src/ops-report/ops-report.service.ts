@@ -1,4 +1,5 @@
 import { PrismaClient } from "../generated/client";
+import { AppError } from "../lib/appError";
 import { OpsReportRepository, OpsSnapshotData } from "./ops-report.repo";
 
 export interface NoticeUnreadDrillRow {
@@ -457,24 +458,38 @@ export class OpsReportService {
   }
 
   async getSponsorshipVsBudget(seasonId: number) {
-    const report = await (this.prisma.financialReport as any).findFirst({
-      where: { seasonId },
-      select: {
-        totalRevenue: true,
-        plannedRevenueTicket: true,
-        plannedRevenueSponsorship: true,
-        plannedRevenueBroadcast: true,
-        plannedRevenueMerchandise: true,
-        plannedRevenueSubsidy: true,
-        plannedRevenueParentCompany: true,
-        plannedRevenueAcademyFee: true,
-        plannedRevenueOther: true,
-      },
+    const season = await this.prisma.season.findUnique({
+      where: { id: seasonId },
+      select: { startDate: true, endDate: true },
     });
-    const sponsorshipTotal = await this.prisma.sponsorshipPayment.aggregate({
-      where: { status: "PAID" },
-      _sum: { amount: true },
-    });
+    if (!season) throw new AppError(404, "SEASON_NOT_FOUND");
+
+    const [report, sponsorshipTotal] = await Promise.all([
+      (this.prisma.financialReport as any).findFirst({
+        where: { seasonId },
+        select: {
+          totalRevenue: true,
+          plannedRevenueTicket: true,
+          plannedRevenueSponsorship: true,
+          plannedRevenueBroadcast: true,
+          plannedRevenueMerchandise: true,
+          plannedRevenueSubsidy: true,
+          plannedRevenueParentCompany: true,
+          plannedRevenueAcademyFee: true,
+          plannedRevenueOther: true,
+        },
+      }),
+      // Scope to season window — mirrors getSeasonRevenueActuals (season-actuals.ts).
+      // Without this, the coverage rate mixes PAID payments from every season since
+      // launch and the number is meaningless once more than one season exists.
+      this.prisma.sponsorshipPayment.aggregate({
+        where: {
+          status: "PAID",
+          paidAt: { gte: season.startDate, lte: season.endDate },
+        },
+        _sum: { amount: true },
+      }),
+    ]);
     const collected = Number(sponsorshipTotal._sum.amount ?? 0);
     const plannedRevenue = report?.totalRevenue ?? 0;
     return {
