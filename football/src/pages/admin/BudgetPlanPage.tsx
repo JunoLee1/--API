@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { budgetPlanApi } from '@/services/financial-report.service'
@@ -7,6 +7,7 @@ import type { BudgetPlan } from '@/types/budget'
 import { useExpenseCategories } from '@/hooks/useExpenseCategories'
 import { BudgetPlanWizard } from '@/components/budget-plan/BudgetPlanWizard'
 import type { CategoryPageItem } from '@/components/budget-plan/BudgetCategoryPage'
+import { BudgetAdvancedPanel } from '@/components/budget-plan/BudgetAdvancedPanel'
 import {
   serverToDraft,
   draftToPayload,
@@ -16,17 +17,31 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 export function BudgetPlanPage() {
   const { t } = useTranslation('admin')
-  const { rows: categoryRows, loading: catLoading } = useExpenseCategories()
+  const { rows: categoryRows, loading: catLoading, labelOf } = useExpenseCategories()
 
   const [seasonId, setSeasonId] = useState<number | null>(null)
+  const [plan, setPlan] = useState<BudgetPlan | null>(null)
   const [initialDraft, setInitialDraft] = useState<DraftBudgetPlan | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  // Increment after every server reload so the wizard remounts with a fresh
+  // draft (its internal useState is seeded from initialDraft only on mount).
+  const [reloadCounter, setReloadCounter] = useState(0)
 
   const categoryCodes = useMemo(() => categoryRows.map((c) => c.code), [categoryRows])
   const categoryItems = useMemo<CategoryPageItem[]>(
     () => categoryRows.map((c) => ({ code: c.code, label: c.label })),
     [categoryRows]
+  )
+
+  const reloadPlan = useCallback(
+    async (sid: number) => {
+      const p = await budgetPlanApi.get(sid).catch(() => null)
+      setPlan(p)
+      setInitialDraft(serverToDraft(p, categoryCodes))
+      setReloadCounter((n) => n + 1)
+    },
+    [categoryCodes]
   )
 
   useEffect(() => {
@@ -39,8 +54,7 @@ export function BudgetPlanPage() {
           return
         }
         setSeasonId(season.id)
-        const p: BudgetPlan | null = await budgetPlanApi.get(season.id).catch(() => null)
-        setInitialDraft(serverToDraft(p, categoryCodes))
+        await reloadPlan(season.id)
       } catch {
         toast.error(t('budget.loadFailed'))
       } finally {
@@ -49,7 +63,7 @@ export function BudgetPlanPage() {
     })()
     // Deliberately re-run when category list finishes loading so serverToDraft
     // has the correct code list to seed empty entries.
-  }, [catLoading, categoryCodes, t])
+  }, [catLoading, reloadPlan, t])
 
   const handleSubmit = async (draft: DraftBudgetPlan) => {
     if (!seasonId) return
@@ -57,15 +71,18 @@ export function BudgetPlanPage() {
     try {
       await budgetPlanApi.save(seasonId, draftToPayload(draft, categoryCodes))
       toast.success(t('budget.saved'))
-      // Reload so subsequent edits start from persisted state.
-      const p = await budgetPlanApi.get(seasonId)
-      setInitialDraft(serverToDraft(p, categoryCodes))
+      await reloadPlan(seasonId)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t('budget.saveFailed'))
     } finally {
       setSaving(false)
     }
   }
+
+  const handleAdvancedMutated = useCallback(async () => {
+    if (!seasonId) return
+    await reloadPlan(seasonId)
+  }, [seasonId, reloadPlan])
 
   if (loading || catLoading) {
     return (
@@ -95,11 +112,20 @@ export function BudgetPlanPage() {
         </p>
       </div>
       <BudgetPlanWizard
-        key={seasonId + ':' + (initialDraft.totalBudget || '')}
+        key={`${seasonId}:${reloadCounter}`}
         initialDraft={initialDraft}
         categories={categoryItems}
         onSubmit={handleSubmit}
         submitting={saving}
+        renderAdvancedOnLastPage={() => (
+          <BudgetAdvancedPanel
+            seasonId={seasonId}
+            plan={plan}
+            categories={categoryRows}
+            labelOf={labelOf}
+            onServerMutated={handleAdvancedMutated}
+          />
+        )}
       />
     </div>
   )
