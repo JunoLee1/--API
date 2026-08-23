@@ -711,6 +711,121 @@ async function seedRecruitment() {
   console.log(`   - HR Manager: hr@club.com / Password1!`);
 }
 
+const SALARY_TABLE: Record<string, number> = {
+  ADMIN: 150_000_000,
+  GM: 200_000_000,
+  TD: 130_000_000,
+  FINANCE_MANAGER: 120_000_000,
+  HR_MANAGER: 120_000_000,
+  ASSET_MANAGER: 110_000_000,
+  FACILITY_MANAGER: 100_000_000,
+  SCOUT: 80_000_000,
+  FINANCE_STAFF: 65_000_000,
+  HR_STAFF: 60_000_000,
+  ASSET_STAFF: 60_000_000,
+  FACILITY_STAFF: 55_000_000,
+  HEAD_COACH: 250_000_000,
+  MEDICAL_DIRECTOR: 130_000_000,
+  ASSISTANT_COACH: 120_000_000,
+  ATTACKING_COACH: 100_000_000,
+  DEFENSIVE_COACH: 100_000_000,
+  GOALKEEPER_COACH: 95_000_000,
+  PHYSICAL_COACH: 90_000_000,
+  SET_PIECE_COACH: 90_000_000,
+  MEDICAL: 80_000_000,
+};
+
+function resolveBaseSalary(
+  role: string,
+  coachingRole: string | null,
+  frontOfficeRole: string | null,
+): number {
+  if (role === "ADMIN") return SALARY_TABLE["ADMIN"]!;
+  if (role === "GM") return SALARY_TABLE["GM"]!;
+  if (frontOfficeRole && SALARY_TABLE[frontOfficeRole]) return SALARY_TABLE[frontOfficeRole]!;
+  if (coachingRole && SALARY_TABLE[coachingRole]) return SALARY_TABLE[coachingRole]!;
+  return 50_000_000; // fallback
+}
+
+async function seedStaffSalaries() {
+  const staffUsers = await prisma.user.findMany({
+    where: { role: { in: ["ADMIN", "GM", "FRONT_OFFICE", "COACHING_STAFF"] } },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      role: true,
+      coachingRole: true,
+      frontOfficeRole: true,
+    },
+    orderBy: { id: "asc" },
+  });
+
+  const effectiveFrom = new Date("2026-01-01");
+  const monthsToSeed = [0, 1, 2, 3, 4, 5]; // Jan~Jun 2026
+
+  for (const user of staffUsers) {
+    const baseSalary = resolveBaseSalary(user.role, user.coachingRole, user.frontOfficeRole);
+
+    // 1. StaffRecord upsert (email unique key)
+    const roleLabel = user.frontOfficeRole ?? user.coachingRole ?? user.role;
+    const staffRecord = user.email
+      ? await prisma.staffRecord.upsert({
+          where: { email: user.email },
+          update: {},
+          create: {
+            name: user.username ?? user.email,
+            role: roleLabel ?? "STAFF",
+            email: user.email,
+            isActive: true,
+            createdById: 1, // admin id
+          },
+        })
+      : null;
+
+    // 2. StaffSalary — userId + effectiveTo null 기준으로 중복 방지
+    let staffSalary = await prisma.staffSalary.findFirst({
+      where: { userId: user.id, effectiveTo: null },
+    });
+    if (!staffSalary) {
+      staffSalary = await prisma.staffSalary.create({
+        data: {
+          userId: user.id,
+          staffRecordId: staffRecord?.id,
+          baseSalary,
+          country: "KR",
+          effectiveFrom,
+        },
+      });
+    }
+
+    // 3. PayrollRun 6개월치 (Jan~Jun 2026 CONFIRMED, locked)
+    for (const m of monthsToSeed) {
+      const month = new Date(Date.UTC(2026, m, 1));
+      const gross = Math.round(baseSalary / 12);
+      const ded = Math.round(gross * 0.15);
+      const net = gross - ded;
+      await prisma.payrollRun.upsert({
+        where: {
+          staffSalaryId_month: { staffSalaryId: staffSalary.id, month },
+        },
+        update: {},
+        create: {
+          staffSalaryId: staffSalary.id,
+          month,
+          grossPay: gross,
+          totalDeductions: ded,
+          netPay: net,
+          status: "CONFIRMED",
+          isLocked: true,
+        },
+      });
+    }
+  }
+
+  console.log(`[seed] Staff salaries seeded for ${staffUsers.length} users`);
+}
+
 async function main() {
   console.log("🌱 Seeding...");
 
@@ -2514,6 +2629,9 @@ async function main() {
 
   // ── 2025 유소년 회비 (전년도 실적) ────────────────────
   await seedAcademyFees2025(admin.id);
+
+  // ── Staff Salaries + Payroll (2026 Jan~Jun) ───────────
+  await seedStaffSalaries();
 
   console.log("✅ Seed complete");
   console.log(`   - Countries: 2`);
