@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { budgetPlanApi } from '@/services/financial-report.service'
 import { seasonApi } from '@/services/season.service'
 import type { BudgetPlan } from '@/types/budget'
+import type { WageCapKPI } from '@/types/season'
 import { useExpenseCategories } from '@/hooks/useExpenseCategories'
 import { BudgetPlanWizard } from '@/components/budget-plan/BudgetPlanWizard'
 import type { CategoryPageItem } from '@/components/budget-plan/BudgetCategoryPage'
 import { BudgetAdvancedPanel } from '@/components/budget-plan/BudgetAdvancedPanel'
+import { AvailableBudgetCard } from '@/components/finance/AvailableBudgetCard'
 import {
   serverToDraft,
   draftToPayload,
@@ -22,6 +25,7 @@ export function BudgetPlanPage() {
   const [seasonId, setSeasonId] = useState<number | null>(null)
   const [plan, setPlan] = useState<BudgetPlan | null>(null)
   const [initialDraft, setInitialDraft] = useState<DraftBudgetPlan | null>(null)
+  const [kpi, setKpi] = useState<WageCapKPI | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   // Increment after every server reload so the wizard remounts with a fresh
@@ -55,6 +59,9 @@ export function BudgetPlanPage() {
         }
         setSeasonId(season.id)
         await reloadPlan(season.id)
+        // KPI is a nice-to-have. Failing to load it must not block the wizard,
+        // so swallow the error and leave the card unrendered.
+        await seasonApi.getWageCapKPI().then(setKpi).catch(() => {})
       } catch {
         toast.error(t('budget.loadFailed'))
       } finally {
@@ -119,9 +126,14 @@ export function BudgetPlanPage() {
       <div>
         <h1 className="text-2xl font-semibold">{t('budget.title')}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          시즌 예산과 카테고리별 옵션을 단계별로 편집합니다
+          시즌 카테고리별 배분 계획을 설정합니다. 세부 지출 라인은{' '}
+          <Link to="/finance/budget" className="underline underline-offset-2">
+            예산 관리
+          </Link>
+          에서 관리하세요.
         </p>
       </div>
+      {kpi && <AvailableBudgetCard kpi={kpi} />}
       <BudgetPlanWizard
         key={`${seasonId}:${reloadCounter}`}
         initialDraft={initialDraft}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
@@ -115,10 +115,19 @@ export default function BudgetListPage() {
 
   return (
     <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">{t('budget.title')}</h1>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">{t('budget.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            부서·월별 세부 예산 라인과 실적을 관리합니다. 시즌 카테고리별 배분 계획은{' '}
+            <Link to="/admin/budget-plan" className="underline underline-offset-2">
+              운영비 예산
+            </Link>
+            에서 설정하세요.
+          </p>
+        </div>
         {canWrite && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 shrink-0">
             <Button variant="outline" size="sm" onClick={() => navigate('/finance/budget/auto')}>
               자동 산출
             </Button>
