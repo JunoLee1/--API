@@ -925,6 +925,7 @@ model User {
   settlementsFirstApproved  MonthlySettlementReport[]       @relation("SettlementFirstApprover")
   settlementsApproved       MonthlySettlementReport[]       @relation("SettlementApprover")
   revenueAdjustments        RevenueAdjustment[]             @relation("AdjCreator")
+  carryOverOverrides        FinancialReport[]               @relation("CarryOverOverrider")
 }
 
 model Season {
@@ -2440,9 +2441,17 @@ model FinancialReport {
   contingencyReserve          Int?                        @default(0)
   playerSalaryBudget          Int?
   note                        String?
+  // 전년도 이월금 (auto-computed from prev season's approved MonthlySettlementReport
+  // net income at closeSeason time, or manually overridden via
+  // PATCH /financial-reports/:seasonId/carryover).
+  carryOverFromPrev           Float                       @default(0)
+  carryOverOverriddenById     Int?
+  carryOverOverriddenAt       DateTime?
+  carryOverOverrideReason     String?
   createdAt                   DateTime                    @default(now())
   updatedAt                   DateTime                    @updatedAt
   season                      Season                      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  carryOverOverriddenBy       User?                       @relation("CarryOverOverrider", fields: [carryOverOverriddenById], references: [id])
   budgetCategoryPlans         BudgetCategoryPlan[]
   overrideLogs                BudgetOverrideLog[]
   revenueLogs                 FinancialReportRevenueLog[]
