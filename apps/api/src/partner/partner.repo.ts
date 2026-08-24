@@ -17,19 +17,13 @@ const CONTRACT_SELECT = {
 export class PartnerRepository {
   constructor(private prisma: PrismaClient) {}
 
-  async findAll(type?: PartnerType, page = 1, pageSize = 10) {
+  findAll(type?: PartnerType) {
     const where = type ? { type } : {};
-    const [data, total] = await this.prisma.$transaction([
-      this.prisma.partner.findMany({
-        where,
-        select: { ...PARTNER_SELECT, contracts: { select: CONTRACT_SELECT, orderBy: { createdAt: "desc" }, take: 1 } },
-        orderBy: { name: "asc" },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-      }),
-      this.prisma.partner.count({ where }),
-    ]);
-    return { data, total, page, totalPages: Math.ceil(total / pageSize) };
+    return this.prisma.partner.findMany({
+      where,
+      select: { ...PARTNER_SELECT, contracts: { select: CONTRACT_SELECT, orderBy: { createdAt: "desc" }, take: 1 } },
+      orderBy: { name: "asc" },
+    });
   }
 
   findByName(name: string, excludeId?: number) {
