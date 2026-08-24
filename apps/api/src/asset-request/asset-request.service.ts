@@ -125,17 +125,14 @@ export class AssetRequestService {
       detail: { type: request.type, expectedAmount: request.expectedAmount },
     }).catch(console.error);
 
-    // Notify the leader (leaf dept.head). We don't yet have a dedicated
-    // NotificationType enum value — Task 5 will add one. For now use
-    // FINANCE_SUBMIT_REQUIRED as a stand-in generic "action required".
+    // Notify the leader (leaf dept.head).
     // Fire-and-forget: a notif insert failure must not roll back the caller
     // (the status change already committed). Matches injury/player-callup convention.
     const leaderId = request.department.headId;
     if (leaderId && leaderId !== userId) {
-      // TODO(Task 5): swap for a dedicated `ASSET_REQUEST_LEADER_PENDING` enum.
       void this.notifRepo.createForUser(
         leaderId,
-        "FINANCE_SUBMIT_REQUIRED",
+        "ASSET_REQUEST_SUBMITTED",
         (lang) => ({
           title: lang === "en" ? "Asset Request Awaiting Your Approval" : "자산 신청 결재 대기",
           body:
@@ -203,11 +200,10 @@ export class AssetRequestService {
 
     const deptHeadId = request.department.parent?.headId;
     if (deptHeadId && deptHeadId !== reviewerId) {
-      // TODO(Task 5): dedicated `ASSET_REQUEST_DEPT_HEAD_PENDING` enum.
       // Fire-and-forget — notif failure must not roll back the caller.
       void this.notifRepo.createForUser(
         deptHeadId,
-        "FINANCE_SUBMIT_REQUIRED",
+        "ASSET_REQUEST_LEADER_APPROVED",
         (lang) => ({
           title: lang === "en" ? "Asset Request Awaiting Dept-Head Approval" : "자산 신청 부서장 결재 대기",
           body:
@@ -247,11 +243,10 @@ export class AssetRequestService {
       detail: { reason: trimmed, requesterId: request.requesterId },
     }).catch(console.error);
 
-    // TODO(Task 5): dedicated `ASSET_REQUEST_LEADER_REJECTED` enum.
     // Fire-and-forget — notif failure must not roll back the caller.
     void this.notifRepo.createForUser(
       request.requesterId,
-      "FINANCE_SUBMIT_REQUIRED",
+      "ASSET_REQUEST_LEADER_REJECTED",
       (lang) => ({
         title: lang === "en" ? "Asset Request Rejected by Leader" : "자산 신청 팀장 반려",
         body:
@@ -358,7 +353,7 @@ export class AssetRequestService {
     // Notify finance (they will execute payment) + requester.
     // Fire-and-forget — the tx has committed; a notif failure must not 500 the caller.
     void this.notifRepo.createForFinanceStaff(
-      "FINANCE_SUBMIT_REQUIRED",
+      "ASSET_REQUEST_APPROVED",
       (lang) => ({
         title: lang === "en" ? "Asset Request Approved (Payment Pending)" : "자산 신청 승인 (지급 대기)",
         body:
@@ -370,7 +365,7 @@ export class AssetRequestService {
     ).catch(console.error);
     void this.notifRepo.createForUser(
       request.requesterId,
-      "FINANCE_SUBMIT_REQUIRED",
+      "ASSET_REQUEST_APPROVED",
       (lang) => ({
         title: lang === "en" ? "Asset Request Approved" : "자산 신청 승인",
         body:
@@ -412,7 +407,7 @@ export class AssetRequestService {
     // Fire-and-forget — notif failure must not roll back the caller.
     void this.notifRepo.createForUser(
       request.requesterId,
-      "FINANCE_SUBMIT_REQUIRED",
+      "ASSET_REQUEST_REJECTED",
       (lang) => ({
         title: lang === "en" ? "Asset Request Rejected" : "자산 신청 반려",
         body:
@@ -499,6 +494,23 @@ export class AssetRequestService {
       targetId: id,
       detail: { type: request.type, requesterId: request.requesterId },
     }).catch(console.error);
+
+    // Notify the requester that their asset is ready to collect / installed.
+    // Fire-and-forget — status change already committed.
+    if (request.requesterId !== userId) {
+      void this.notifRepo.createForUser(
+        request.requesterId,
+        "ASSET_REQUEST_FULFILLED",
+        (lang) => ({
+          title: lang === "en" ? "Asset Request Fulfilled" : "자산 신청 지급 완료",
+          body:
+            lang === "en"
+              ? `Your asset request #${id} has been fulfilled.`
+              : `자산 신청 #${id}이 지급 완료 처리됐습니다.`,
+        }),
+        id,
+      ).catch(console.error);
+    }
 
     return updated;
   }
