@@ -81,6 +81,21 @@ export const NOTIFICATION_ROUTES: Record<string, string> = {
   FEE_ACCOUNT_LOCKED: '/academy-fees',
   // Safety
   SAFEGUARD_EMERGENCY: '/safeguard-reports',
+  // Recruitment / Hiring
+  HIRING_SURVEY_OPEN: '/admin/recruitment/surveys',
+  HIRING_SURVEY_DEADLINE_REMINDER: '/admin/recruitment/surveys',
+  HIRING_SURVEY_CLOSED: '/admin/recruitment/surveys',
+  HIRING_PLAN_APPROVED: '/admin/recruitment',
+  JOB_POSTING_DRAFT_CREATED: '/admin/recruitment/postings',
+  INTERVIEW_SCHEDULED: '/admin/recruitment/applications',
+  ONBOARDED: '/admin/recruitment/applications',
+  // Asset Request
+  ASSET_REQUEST_SUBMITTED: '/asset/approval',
+  ASSET_REQUEST_LEADER_APPROVED: '/asset/approval',
+  ASSET_REQUEST_LEADER_REJECTED: '/asset/request',
+  ASSET_REQUEST_APPROVED: '/asset/request',
+  ASSET_REQUEST_REJECTED: '/asset/request',
+  ASSET_REQUEST_FULFILLED: '/asset/request',
 }
 
 export const notificationApi = {
