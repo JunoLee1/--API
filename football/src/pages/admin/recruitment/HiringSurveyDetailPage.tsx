@@ -4,12 +4,14 @@ import { toast } from 'sonner'
 import { hiringSurveyApi } from '@/services/hiring-survey.service'
 import type { HiringNeedsSurvey } from '@/types/hiring-survey'
 import { PRIORITY_LABELS } from '@/types/hiring-survey'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
 export function HiringSurveyDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { user } = useCurrentUser()
   const [survey, setSurvey] = useState<HiringNeedsSurvey | null>(null)
   const [closing, setClosing] = useState(false)
 
@@ -21,6 +23,14 @@ export function HiringSurveyDetailPage() {
 
   const respondedDeptIds = new Set(survey.responses.map((r) => r.departmentId))
   const deadlineDays = Math.ceil((new Date(survey.deadlineAt).getTime() - Date.now()) / 86400000)
+
+  // 현재 유저가 target 부서의 head 이면서 아직 미응답이면 응답 CTA 노출
+  const myDeptAsHead = user?.id
+    ? survey.targetDepartments.find(
+        (t) => t.department.headId === user.id && !respondedDeptIds.has(t.departmentId),
+      )
+    : undefined
+  const canRespond = survey.status === 'OPEN' && !!myDeptAsHead
 
   const handleClose = async () => {
     if (!confirm('조사를 마감하면 계획 항목이 자동 생성됩니다. 계속하시겠습니까?')) return
@@ -50,11 +60,18 @@ export function HiringSurveyDetailPage() {
             )}
           </p>
         </div>
-        {survey.status === 'OPEN' && (
-          <Button variant="destructive" onClick={() => void handleClose()} disabled={closing}>
-            지금 마감
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {canRespond && (
+            <Button onClick={() => navigate(`/admin/recruitment/surveys/${survey.id}/respond`)}>
+              {myDeptAsHead?.department.name} 응답하기
+            </Button>
+          )}
+          {survey.status === 'OPEN' && (
+            <Button variant="destructive" onClick={() => void handleClose()} disabled={closing}>
+              지금 마감
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-2">
