@@ -81,7 +81,7 @@ describe('PlanReportService.update', () => {
     const plan = makePlan({ status: 'APPROVED' })
     const repo = makeRepo({ findById: jest.fn().mockResolvedValue(plan) })
     const service = new PlanReportService(repo)
-    await expect(service.update(1, { title: '변경' })).rejects.toThrow(new AppError(409, 'CANNOT_MODIFY_APPROVED_PLAN'))
+    await expect(service.update(1, { title: '변경' }, 1, 'ADMIN')).rejects.toThrow(new AppError(409, 'CANNOT_MODIFY_APPROVED_PLAN'))
   })
 })
 
@@ -197,14 +197,14 @@ describe('PlanReportService.submitResult', () => {
   it('결과 내용이 없으면 400을 던진다', async () => {
     const repo = makeRepo()
     const service = new PlanReportService(repo)
-    await expect(service.submitResult(1, 1, '')).rejects.toThrow(new AppError(400, 'RESULT_CONTENT_REQUIRED'))
+    await expect(service.submitResult(1, 1, '', 'ADMIN')).rejects.toThrow(new AppError(400, 'RESULT_CONTENT_REQUIRED'))
   })
 
   it('APPROVED가 아닌 계획에 결과보고하면 409를 던진다', async () => {
     const plan = makePlan({ status: 'REVIEWING' })
     const repo = makeRepo({ findById: jest.fn().mockResolvedValue(plan) })
     const service = new PlanReportService(repo)
-    await expect(service.submitResult(1, 1, '결과')).rejects.toThrow(new AppError(409, 'PLAN_NOT_APPROVED'))
+    await expect(service.submitResult(1, 1, '결과', 'ADMIN')).rejects.toThrow(new AppError(409, 'PLAN_NOT_APPROVED'))
   })
 
   it('vaultPath가 있으면 vault note를 업데이트한다', async () => {
@@ -212,7 +212,7 @@ describe('PlanReportService.submitResult', () => {
     const plan = makePlan({ status: 'APPROVED', vaultPath: '/vault/2026/plan.md' })
     const repo = makeRepo({ findById: jest.fn().mockResolvedValue(plan) })
     const service = new PlanReportService(repo)
-    await service.submitResult(1, 1, '결과 완료')
+    await service.submitResult(1, 1, '결과 완료', 'ADMIN')
     expect(appendResultToVaultNote).toHaveBeenCalledWith('/vault/2026/plan.md', expect.objectContaining({ content: '결과 완료' }))
   })
 })

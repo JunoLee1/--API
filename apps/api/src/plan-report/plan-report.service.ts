@@ -1,5 +1,5 @@
 import { AppError } from '../lib/appError'
-import { canApprovePlan } from '../lib/permissions'
+import { canApprovePlan, isAdminLike } from '../lib/permissions'
 import { writeAuditLog } from '../lib/auditLog'
 import { PlanReportRepository, ReviewerDeptMap } from './plan-report.repo'
 import { CreatePlanReportDto, ListPlanReportQuery, UpdatePlanReportDto } from './dto/plan-report.dto'
@@ -38,9 +38,12 @@ export class PlanReportService {
     return this.repo.create(dto, createdById)
   }
 
-  async update(id: number, dto: UpdatePlanReportDto) {
+  async update(id: number, dto: UpdatePlanReportDto, userId: number, userRole: string) {
     const plan = await this.getById(id)
     if (plan.status === 'APPROVED') throw new AppError(409, 'CANNOT_MODIFY_APPROVED_PLAN')
+    if (plan.createdBy.id !== userId && plan.department.headId !== userId && !isAdminLike(userRole)) {
+      throw new AppError(403, 'FORBIDDEN')
+    }
     return this.repo.update(id, dto)
   }
 
@@ -99,10 +102,13 @@ export class PlanReportService {
     return this.repo.findApprovedHrReports()
   }
 
-  async submitResult(id: number, userId: number, resultContent: string) {
+  async submitResult(id: number, userId: number, resultContent: string, userRole: string) {
     if (!resultContent?.trim()) throw new AppError(400, 'RESULT_CONTENT_REQUIRED')
     const plan = await this.getById(id)
     if (plan.status !== 'APPROVED') throw new AppError(409, 'PLAN_NOT_APPROVED')
+    if (plan.createdBy.id !== userId && plan.department.headId !== userId && !isAdminLike(userRole)) {
+      throw new AppError(403, 'FORBIDDEN')
+    }
 
     const updated = await this.repo.submitResult(id, resultContent)
 
