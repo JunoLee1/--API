@@ -64,7 +64,29 @@ export class HiringSurveyService {
       throw new AppError(400, 'INVALID_QUARTER')
     }
 
-    return this.repo.upsertResponse(surveyId, target.departmentId, userId, dto)
+    const response = await this.repo.upsertResponse(surveyId, target.departmentId, userId, dto)
+
+    // 모든 target 부서가 응답 완료 시 HR 매니저에게 알림
+    const respondedDeptIds = new Set(survey.responses.map((r) => r.departmentId))
+    respondedDeptIds.add(target.departmentId)
+    const allResponded = survey.targetDepartments.every((t) =>
+      respondedDeptIds.has(t.departmentId),
+    )
+    if (allResponded) {
+      void this.notifRepo.createForHrManager(
+        'HIRING_SURVEY_ALL_RESPONDED',
+        (lang) => ({
+          title: lang === 'en' ? 'Hiring survey — all departments responded' : '채용 수요 조사 응답 완료',
+          body:
+            lang === 'en'
+              ? `"${survey.title}" — all ${survey.targetDepartments.length} target departments have responded. Ready to close.`
+              : `"${survey.title}" — 대상 ${survey.targetDepartments.length}개 부서 응답 완료. 조사 마감 준비됨.`,
+        }),
+        survey.id,
+      ).catch(console.error)
+    }
+
+    return response
   }
 
   async close(surveyId: number, closedByUserId: number) {

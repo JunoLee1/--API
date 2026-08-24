@@ -85,6 +85,7 @@ export const NOTIFICATION_ROUTES: Record<string, string> = {
   HIRING_SURVEY_OPEN: '/admin/recruitment/surveys',
   HIRING_SURVEY_DEADLINE_REMINDER: '/admin/recruitment/surveys',
   HIRING_SURVEY_CLOSED: '/admin/recruitment/surveys',
+  HIRING_SURVEY_ALL_RESPONDED: '/admin/recruitment/surveys',
   HIRING_PLAN_APPROVED: '/admin/recruitment',
   JOB_POSTING_DRAFT_CREATED: '/admin/recruitment/postings',
   INTERVIEW_SCHEDULED: '/admin/recruitment/applications',
