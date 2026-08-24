@@ -25,8 +25,7 @@ export class PartnerController {
       if (rawType && !Object.values(PartnerType).includes(rawType as PartnerType)) {
         throw new AppError(400, "INVALID_PARTNER_TYPE");
       }
-      const page = Math.max(1, Number(req.query["page"]) || 1);
-      res.status(200).json(await this.service.list(rawType as PartnerType | undefined, page));
+      res.status(200).json(await this.service.list(rawType as PartnerType | undefined));
     } catch (err) { next(err); }
   };
 

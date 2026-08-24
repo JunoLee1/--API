@@ -6,8 +6,8 @@ import { CreatePartnerDto, UpdatePartnerDto, CreatePartnerContractDto, UpdatePar
 export class PartnerService {
   constructor(private repo: PartnerRepository) {}
 
-  list(type?: PartnerType, page = 1) {
-    return this.repo.findAll(type, page);
+  list(type?: PartnerType) {
+    return this.repo.findAll(type);
   }
 
   async getById(id: number) {
