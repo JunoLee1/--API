@@ -42,6 +42,38 @@ export class OperatingExpenseRepository {
     });
   }
 
+  /**
+   * Look up an APPROVED BudgetLine matching (season, category, departmentId).
+   * Used by AssetRequest dept-head approval to auto-match a line. Pass
+   * `departmentId: null` explicitly to look up club-wide lines. If more than one
+   * line exists for the tuple (year vs monthly split), the most specific (monthly
+   * for current month, else year-only) wins.
+   */
+  async findBudgetLineForSeasonCategoryDept(params: {
+    seasonId: number;
+    categoryId: number;
+    departmentId: number | null;
+    date?: Date;
+  }) {
+    const date = params.date ?? new Date();
+    const candidates = await this.prisma.budgetLine.findMany({
+      where: {
+        categoryId: params.categoryId,
+        departmentId: params.departmentId,
+        year: date.getFullYear(),
+        budgetHeader: { seasonId: params.seasonId, status: "APPROVED" },
+      },
+      select: { id: true, originalAmount: true, month: true, year: true, departmentId: true },
+    });
+    if (candidates.length === 0) return null;
+    const currentMonth = date.getMonth() + 1;
+    const monthly = candidates.find((c) => c.month === currentMonth);
+    if (monthly) return monthly;
+    const yearOnly = candidates.find((c) => c.month === null);
+    if (yearOnly) return yearOnly;
+    return candidates[0] ?? null;
+  }
+
   async createWithBudgetCheck(data: {
     seasonId: number;
     categoryId: number;

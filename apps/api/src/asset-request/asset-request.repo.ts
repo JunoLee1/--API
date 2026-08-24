@@ -1,0 +1,170 @@
+import {
+  PrismaClient,
+  AssetRequestStatus,
+  AssetRequestApprovalStage,
+  AssetRequestApprovalAction,
+} from "../generated/client";
+import { CreateAssetRequestDto } from "./dto/asset-request.dto";
+
+const detailInclude = {
+  requester: { select: { id: true, username: true, nickname: true } },
+  department: {
+    select: {
+      id: true,
+      name: true,
+      headId: true,
+      parent: { select: { id: true, name: true, headId: true } },
+    },
+  },
+  expenseCategory: { select: { id: true, code: true, label: true } },
+  equipmentItem: { select: { id: true, name: true, category: true } },
+  softwareLicense: { select: { id: true, name: true, vendor: true } },
+  operatingExpense: {
+    select: { id: true, status: true, amount: true, budgetLineId: true },
+  },
+  approvals: {
+    orderBy: { createdAt: "asc" as const },
+    include: {
+      reviewer: { select: { id: true, username: true, nickname: true } },
+    },
+  },
+} as const;
+
+const listInclude = {
+  requester: { select: { id: true, username: true, nickname: true } },
+  department: { select: { id: true, name: true, headId: true, parentId: true } },
+  expenseCategory: { select: { id: true, code: true, label: true } },
+} as const;
+
+export class AssetRequestRepository {
+  constructor(private prisma: PrismaClient) {}
+
+  create(dto: CreateAssetRequestDto, requesterId: number, departmentId: number) {
+    return this.prisma.assetRequest.create({
+      data: {
+        requesterId,
+        departmentId,
+        type: dto.type,
+        status: "DRAFT",
+        expenseCategoryId: dto.expenseCategoryId,
+        expectedAmount: dto.expectedAmount,
+        justification: dto.justification,
+        ...(dto.equipmentItemId !== undefined && { equipmentItemId: dto.equipmentItemId }),
+        ...(dto.softwareLicenseId !== undefined && { softwareLicenseId: dto.softwareLicenseId }),
+        ...(dto.customName !== undefined && { customName: dto.customName }),
+        ...(dto.customDescription !== undefined && { customDescription: dto.customDescription }),
+        ...(dto.neededBy !== undefined && { neededBy: new Date(dto.neededBy) }),
+      },
+      include: listInclude,
+    });
+  }
+
+  findById(id: number) {
+    return this.prisma.assetRequest.findUnique({
+      where: { id },
+      include: detailInclude,
+    });
+  }
+
+  findByRequester(requesterId: number, status?: AssetRequestStatus) {
+    return this.prisma.assetRequest.findMany({
+      where: { requesterId, ...(status !== undefined && { status }) },
+      include: listInclude,
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  findByDepartment(departmentId: number, status?: AssetRequestStatus) {
+    return this.prisma.assetRequest.findMany({
+      where: { departmentId, ...(status !== undefined && { status }) },
+      include: listInclude,
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  /**
+   * SUBMITTED requests where the user is the leaf department's head (팀장).
+   */
+  findPendingForLeader(userId: number) {
+    return this.prisma.assetRequest.findMany({
+      where: {
+        status: "SUBMITTED",
+        department: { headId: userId },
+      },
+      include: listInclude,
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  /**
+   * LEADER_APPROVED requests where the user is the parent department's head (부서장).
+   */
+  findPendingForDeptHead(userId: number) {
+    return this.prisma.assetRequest.findMany({
+      where: {
+        status: "LEADER_APPROVED",
+        department: { parent: { headId: userId } },
+      },
+      include: listInclude,
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  findAll(status?: AssetRequestStatus) {
+    return this.prisma.assetRequest.findMany({
+      where: status !== undefined ? { status } : {},
+      include: listInclude,
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  updateStatus(
+    id: number,
+    patch: { status: AssetRequestStatus; operatingExpenseId?: number },
+  ) {
+    return this.prisma.assetRequest.update({
+      where: { id },
+      data: {
+        status: patch.status,
+        ...(patch.operatingExpenseId !== undefined && {
+          operatingExpenseId: patch.operatingExpenseId,
+        }),
+      },
+      include: detailInclude,
+    });
+  }
+
+  addApproval(
+    id: number,
+    data: {
+      stage: AssetRequestApprovalStage;
+      action: AssetRequestApprovalAction;
+      reviewerId: number;
+      reason?: string;
+    },
+  ) {
+    return this.prisma.assetRequestApproval.create({
+      data: {
+        assetRequestId: id,
+        stage: data.stage,
+        action: data.action,
+        reviewerId: data.reviewerId,
+        ...(data.reason !== undefined && { reason: data.reason }),
+      },
+    });
+  }
+
+  linkEquipmentItem(id: number, equipmentItemId: number) {
+    return this.prisma.assetRequest.update({
+      where: { id },
+      data: { equipmentItemId },
+    });
+  }
+
+  linkSoftwareLicense(id: number, softwareLicenseId: number) {
+    return this.prisma.assetRequest.update({
+      where: { id },
+      data: { softwareLicenseId },
+    });
+  }
+}
