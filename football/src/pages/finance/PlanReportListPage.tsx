@@ -65,9 +65,9 @@ export function PlanReportListPage() {
             <SelectValue>{filterType ? TEMPLATE_TYPE_LABELS[filterType as PlanTemplateType] : t('planReport.filter.allType')}</SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">{t('planReport.filter.allType')}</SelectItem>
+            <SelectItem value="" label={t('planReport.filter.allType')}>{t('planReport.filter.allType')}</SelectItem>
             {PLAN_TEMPLATE_TYPES.map(type => (
-              <SelectItem key={type} value={type}>{TEMPLATE_TYPE_LABELS[type]}</SelectItem>
+              <SelectItem key={type} value={type} label={TEMPLATE_TYPE_LABELS[type]}>{TEMPLATE_TYPE_LABELS[type]}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -76,9 +76,9 @@ export function PlanReportListPage() {
             <SelectValue>{filterStatus ? t(`planReport.status.${filterStatus}`) : t('planReport.filter.allStatus')}</SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">{t('planReport.filter.allStatus')}</SelectItem>
+            <SelectItem value="" label={t('planReport.filter.allStatus')}>{t('planReport.filter.allStatus')}</SelectItem>
             {(['DRAFT', 'REVIEWING', 'APPROVED', 'REJECTED'] as const).map(v => (
-              <SelectItem key={v} value={v}>{t(`planReport.status.${v}`)}</SelectItem>
+              <SelectItem key={v} value={v} label={t(`planReport.status.${v}`)}>{t(`planReport.status.${v}`)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
