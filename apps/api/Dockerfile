@@ -6,7 +6,7 @@ COPY . .
 ARG DATABASE_URL=postgresql://x:x@localhost:5432/x
 ENV DATABASE_URL=$DATABASE_URL
 RUN npx prisma generate
-RUN NODE_OPTIONS=--max-old-space-size=2048 npm run build
+RUN NODE_OPTIONS=--max-old-space-size=4096 npm run build
 
 FROM node:20-alpine
 WORKDIR /app
