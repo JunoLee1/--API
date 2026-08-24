@@ -6,6 +6,8 @@ import {
 } from "../generated/client";
 import { CreateAssetRequestDto } from "./dto/asset-request.dto";
 
+type Tx = Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
+
 const detailInclude = {
   requester: { select: { id: true, username: true, nickname: true } },
   department: {
@@ -121,8 +123,10 @@ export class AssetRequestRepository {
   updateStatus(
     id: number,
     patch: { status: AssetRequestStatus; operatingExpenseId?: number },
+    tx?: Tx,
   ) {
-    return this.prisma.assetRequest.update({
+    const client = tx ?? this.prisma;
+    return client.assetRequest.update({
       where: { id },
       data: {
         status: patch.status,
@@ -142,8 +146,10 @@ export class AssetRequestRepository {
       reviewerId: number;
       reason?: string;
     },
+    tx?: Tx,
   ) {
-    return this.prisma.assetRequestApproval.create({
+    const client = tx ?? this.prisma;
+    return client.assetRequestApproval.create({
       data: {
         assetRequestId: id,
         stage: data.stage,

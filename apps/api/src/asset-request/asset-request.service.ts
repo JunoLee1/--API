@@ -128,10 +128,12 @@ export class AssetRequestService {
     // Notify the leader (leaf dept.head). We don't yet have a dedicated
     // NotificationType enum value — Task 5 will add one. For now use
     // FINANCE_SUBMIT_REQUIRED as a stand-in generic "action required".
+    // Fire-and-forget: a notif insert failure must not roll back the caller
+    // (the status change already committed). Matches injury/player-callup convention.
     const leaderId = request.department.headId;
     if (leaderId && leaderId !== userId) {
       // TODO(Task 5): swap for a dedicated `ASSET_REQUEST_LEADER_PENDING` enum.
-      await this.notifRepo.createForUser(
+      void this.notifRepo.createForUser(
         leaderId,
         "FINANCE_SUBMIT_REQUIRED",
         (lang) => ({
@@ -142,7 +144,7 @@ export class AssetRequestService {
               : `자산 신청 #${id} (₩${request.expectedAmount.toLocaleString()})이 팀장 결재를 기다립니다.`,
         }),
         id,
-      );
+      ).catch(console.error);
     }
 
     return updated;
@@ -181,12 +183,16 @@ export class AssetRequestService {
     if (request.department.headId !== reviewerId) throw new AppError(403, "NOT_LEADER");
     if (request.requesterId === reviewerId) throw new AppError(403, "SELF_APPROVAL_FORBIDDEN");
 
-    await this.repo.addApproval(id, {
-      stage: "LEADER",
-      action: "APPROVED",
-      reviewerId,
+    // Approval row + status transition must be atomic — a failed status update
+    // must not leave an approval row hanging with no matching state change.
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await this.repo.addApproval(
+        id,
+        { stage: "LEADER", action: "APPROVED", reviewerId },
+        tx,
+      );
+      return this.repo.updateStatus(id, { status: "LEADER_APPROVED" }, tx);
     });
-    const updated = await this.repo.updateStatus(id, { status: "LEADER_APPROVED" });
 
     writeAuditLog({
       actorId: reviewerId,
@@ -198,7 +204,8 @@ export class AssetRequestService {
     const deptHeadId = request.department.parent?.headId;
     if (deptHeadId && deptHeadId !== reviewerId) {
       // TODO(Task 5): dedicated `ASSET_REQUEST_DEPT_HEAD_PENDING` enum.
-      await this.notifRepo.createForUser(
+      // Fire-and-forget — notif failure must not roll back the caller.
+      void this.notifRepo.createForUser(
         deptHeadId,
         "FINANCE_SUBMIT_REQUIRED",
         (lang) => ({
@@ -209,7 +216,7 @@ export class AssetRequestService {
               : `자산 신청 #${id} (₩${request.expectedAmount.toLocaleString()})이 부서장 결재를 기다립니다.`,
         }),
         id,
-      );
+      ).catch(console.error);
     }
 
     return updated;
@@ -241,7 +248,8 @@ export class AssetRequestService {
     }).catch(console.error);
 
     // TODO(Task 5): dedicated `ASSET_REQUEST_LEADER_REJECTED` enum.
-    await this.notifRepo.createForUser(
+    // Fire-and-forget — notif failure must not roll back the caller.
+    void this.notifRepo.createForUser(
       request.requesterId,
       "FINANCE_SUBMIT_REQUIRED",
       (lang) => ({
@@ -252,7 +260,7 @@ export class AssetRequestService {
             : `자산 신청 #${id}이 팀장에 의해 반려됐습니다: ${trimmed}`,
       }),
       id,
-    );
+    ).catch(console.error);
 
     return updated;
   }
@@ -290,40 +298,51 @@ export class AssetRequestService {
     }
     if (!budgetLine) throw new AppError(400, "BUDGET_LINE_NOT_FOUND");
 
-    // Create the OperatingExpense with budget check. BUDGET_EXCEEDED propagates
-    // as 409; other errors bubble through unchanged.
+    // Atomic block: OperatingExpense creation + approval row + status update
+    // must all commit together. Without this, a failure between the expense
+    // insert and the status update would leave a dangling OperatingExpense
+    // with no AssetRequest pointer back to it. BUDGET_EXCEEDED and friends
+    // still propagate as their mapped AppError codes.
+    // NOTE: OperatingExpense.departmentId is a separate column (Task 2 addition)
+    // but createWithBudgetCheck doesn't yet accept it — the department tag is
+    // implicit via the BudgetLine.departmentId. Backfill left for a follow-up.
+    let updated;
     let expense;
     try {
-      expense = await this.expenseRepo.createWithBudgetCheck({
-        seasonId: season.id,
-        categoryId: request.expenseCategoryId,
-        costType: "VARIABLE",
-        amount: request.expectedAmount,
-        date: now,
-        note: `Asset request #${id}`,
-        createdById: reviewerId,
-        budgetLineId: budgetLine.id,
+      const result = await this.prisma.$transaction(async (tx) => {
+        const createdExpense = await this.expenseRepo.createWithBudgetCheck(
+          {
+            seasonId: season.id,
+            categoryId: request.expenseCategoryId,
+            costType: "VARIABLE",
+            amount: request.expectedAmount,
+            date: now,
+            note: `Asset request #${id}`,
+            createdById: reviewerId,
+            budgetLineId: budgetLine.id,
+          },
+          tx,
+        );
+        await this.repo.addApproval(
+          id,
+          { stage: "DEPT_HEAD", action: "APPROVED", reviewerId },
+          tx,
+        );
+        const updatedRequest = await this.repo.updateStatus(
+          id,
+          { status: "APPROVED", operatingExpenseId: createdExpense.id },
+          tx,
+        );
+        return { expense: createdExpense, updated: updatedRequest };
       });
+      expense = result.expense;
+      updated = result.updated;
     } catch (err: any) {
       if (err?.message === "BUDGET_EXCEEDED") throw new AppError(409, "BUDGET_EXCEEDED");
       if (err?.message === "BUDGET_LINE_NOT_FOUND") throw new AppError(400, "BUDGET_LINE_NOT_FOUND");
       if (err?.message === "CATEGORY_MISMATCH") throw new AppError(400, "CATEGORY_MISMATCH");
       throw err;
     }
-
-    // Attach the operating expense to the request and mark APPROVED.
-    // NOTE: OperatingExpense.departmentId is a separate column (Task 2 addition)
-    // but createWithBudgetCheck doesn't yet accept it — the department tag is
-    // implicit via the BudgetLine.departmentId. Backfill left for a follow-up.
-    await this.repo.addApproval(id, {
-      stage: "DEPT_HEAD",
-      action: "APPROVED",
-      reviewerId,
-    });
-    const updated = await this.repo.updateStatus(id, {
-      status: "APPROVED",
-      operatingExpenseId: expense.id,
-    });
 
     writeAuditLog({
       actorId: reviewerId,
@@ -337,7 +356,8 @@ export class AssetRequestService {
     }).catch(console.error);
 
     // Notify finance (they will execute payment) + requester.
-    await this.notifRepo.createForFinanceStaff(
+    // Fire-and-forget — the tx has committed; a notif failure must not 500 the caller.
+    void this.notifRepo.createForFinanceStaff(
       "FINANCE_SUBMIT_REQUIRED",
       (lang) => ({
         title: lang === "en" ? "Asset Request Approved (Payment Pending)" : "자산 신청 승인 (지급 대기)",
@@ -347,8 +367,8 @@ export class AssetRequestService {
             : `자산 신청 #${id} 승인 완료. ₩${request.expectedAmount.toLocaleString()} 지급 대기 중입니다.`,
       }),
       id,
-    );
-    await this.notifRepo.createForUser(
+    ).catch(console.error);
+    void this.notifRepo.createForUser(
       request.requesterId,
       "FINANCE_SUBMIT_REQUIRED",
       (lang) => ({
@@ -359,7 +379,7 @@ export class AssetRequestService {
             : `자산 신청 #${id} (₩${request.expectedAmount.toLocaleString()})이 승인됐습니다.`,
       }),
       id,
-    );
+    ).catch(console.error);
 
     return updated;
   }
@@ -389,7 +409,8 @@ export class AssetRequestService {
       detail: { reason: trimmed, requesterId: request.requesterId },
     }).catch(console.error);
 
-    await this.notifRepo.createForUser(
+    // Fire-and-forget — notif failure must not roll back the caller.
+    void this.notifRepo.createForUser(
       request.requesterId,
       "FINANCE_SUBMIT_REQUIRED",
       (lang) => ({
@@ -400,7 +421,7 @@ export class AssetRequestService {
             : `자산 신청 #${id}이 반려됐습니다: ${trimmed}`,
       }),
       id,
-    );
+    ).catch(console.error);
 
     return updated;
   }

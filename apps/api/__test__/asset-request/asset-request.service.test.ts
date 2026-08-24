@@ -116,6 +116,10 @@ const makePrisma = (overrides: Partial<any> = {}): PrismaClient =>
     softwareLicense: {
       create: jest.fn().mockResolvedValue({ id: 88, name: "Custom License" }),
     },
+    // approve() / leaderApprove() wrap DB writes in $transaction; the tx client
+    // is passed through to repo methods as an optional param but the mocked
+    // repos in these tests ignore that arg, so a passthrough tx is enough.
+    $transaction: jest.fn().mockImplementation(async (fn: any) => fn({})),
     ...overrides,
   } as unknown as PrismaClient);
 
@@ -270,7 +274,12 @@ describe("AssetRequestService.leaderApprove", () => {
     });
     const result = await makeService(repo, makeExpenseRepo(), notif).leaderApprove(1, LEADER);
     expect(result.status).toBe("LEADER_APPROVED");
-    expect(repo.addApproval).toHaveBeenCalledWith(1, { stage: "LEADER", action: "APPROVED", reviewerId: LEADER });
+    // addApproval now receives an optional tx passthrough as its 3rd arg
+    expect(repo.addApproval).toHaveBeenCalledWith(
+      1,
+      { stage: "LEADER", action: "APPROVED", reviewerId: LEADER },
+      expect.anything(),
+    );
     expect(notif.createForUser).toHaveBeenCalledWith(DEPT_HEAD, expect.any(String), expect.any(Function), 1);
   });
 
@@ -346,15 +355,23 @@ describe("AssetRequestService.approve", () => {
     const notif = makeNotifRepo();
     const result = await makeService(repo, expenseRepo, notif).approve(1, DEPT_HEAD);
     expect(result.status).toBe("APPROVED");
-    expect(expenseRepo.createWithBudgetCheck).toHaveBeenCalledWith(expect.objectContaining({
-      seasonId: ACTIVE_SEASON_ID,
-      categoryId: CAT_ID,
-      amount: 500_000,
-      budgetLineId: BUDGET_LINE_ID,
-      createdById: DEPT_HEAD,
-      costType: "VARIABLE",
-    }));
-    expect(repo.updateStatus).toHaveBeenCalledWith(1, { status: "APPROVED", operatingExpenseId: 42 });
+    // createWithBudgetCheck / updateStatus now receive an optional tx passthrough as their last arg
+    expect(expenseRepo.createWithBudgetCheck).toHaveBeenCalledWith(
+      expect.objectContaining({
+        seasonId: ACTIVE_SEASON_ID,
+        categoryId: CAT_ID,
+        amount: 500_000,
+        budgetLineId: BUDGET_LINE_ID,
+        createdById: DEPT_HEAD,
+        costType: "VARIABLE",
+      }),
+      expect.anything(),
+    );
+    expect(repo.updateStatus).toHaveBeenCalledWith(
+      1,
+      { status: "APPROVED", operatingExpenseId: 42 },
+      expect.anything(),
+    );
     expect(notif.createForFinanceStaff).toHaveBeenCalled();
     expect(notif.createForUser).toHaveBeenCalledWith(REQUESTER, expect.any(String), expect.any(Function), 1);
   });

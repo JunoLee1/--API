@@ -74,22 +74,25 @@ export class OperatingExpenseRepository {
     return candidates[0] ?? null;
   }
 
-  async createWithBudgetCheck(data: {
-    seasonId: number;
-    categoryId: number;
-    costType?: ExpenseCostType;
-    amount: number;
-    date: Date;
-    note?: string | null;
-    createdById: number;
-    budgetLineId: number;
-  }) {
-    return this.prisma.$transaction(async (tx) => {
-      const line = await tx.budgetLine.findUnique({ where: { id: data.budgetLineId } });
+  async createWithBudgetCheck(
+    data: {
+      seasonId: number;
+      categoryId: number;
+      costType?: ExpenseCostType;
+      amount: number;
+      date: Date;
+      note?: string | null;
+      createdById: number;
+      budgetLineId: number;
+    },
+    tx?: Tx,
+  ) {
+    const run = async (client: Tx) => {
+      const line = await client.budgetLine.findUnique({ where: { id: data.budgetLineId } });
       if (!line) throw new Error("BUDGET_LINE_NOT_FOUND");
       if (line.categoryId !== data.categoryId) throw new Error("CATEGORY_MISMATCH");
 
-      const { _sum } = await tx.operatingExpense.aggregate({
+      const { _sum } = await client.operatingExpense.aggregate({
         where: {
           budgetLineId: data.budgetLineId,
           deletedAt: null,
@@ -100,7 +103,7 @@ export class OperatingExpenseRepository {
       const used = _sum.amount ?? 0;
       if (used + data.amount > line.originalAmount) throw new Error("BUDGET_EXCEEDED");
 
-      return tx.operatingExpense.create({
+      return client.operatingExpense.create({
         data: {
           seasonId: data.seasonId,
           categoryId: data.categoryId,
@@ -118,7 +121,9 @@ export class OperatingExpenseRepository {
           expenseCategory: { select: { code: true } },
         },
       });
-    });
+    };
+    if (tx) return run(tx);
+    return this.prisma.$transaction(run);
   }
 
   updateStatus(
