@@ -33,6 +33,33 @@ describe("generatePaymentDates", () => {
     expect(dates[0]).toEqual(new Date("2026-01-01"));
     expect(dates[1]).toEqual(new Date("2027-01-01"));
   });
+
+  // Regression for Bug #326: naive Date.setMonth on the 31st rolled Jan 31 →
+  // Mar 3 (Feb has no 31st), skipping February and drifting every iteration.
+  test("MONTHLY on Jan 31 clamps to end-of-month and does not skip Feb", () => {
+    const start = new Date("2026-01-31");
+    const end = new Date("2026-06-30");
+    const dates = generatePaymentDates(start, end, "MONTHLY");
+    expect(dates).toHaveLength(6);
+    expect(dates[0]).toEqual(new Date("2026-01-31"));
+    expect(dates[1]).toEqual(new Date("2026-02-28"));
+    expect(dates[2]).toEqual(new Date("2026-03-31"));
+    expect(dates[3]).toEqual(new Date("2026-04-30"));
+    expect(dates[4]).toEqual(new Date("2026-05-31"));
+    expect(dates[5]).toEqual(new Date("2026-06-30"));
+  });
+
+  test("QUARTERLY starting Nov 30 preserves 30th where possible", () => {
+    const start = new Date("2026-11-30");
+    const end = new Date("2027-11-30");
+    const dates = generatePaymentDates(start, end, "QUARTERLY");
+    expect(dates).toHaveLength(5);
+    expect(dates[0]).toEqual(new Date("2026-11-30"));
+    expect(dates[1]).toEqual(new Date("2027-02-28")); // Feb has no 30
+    expect(dates[2]).toEqual(new Date("2027-05-30"));
+    expect(dates[3]).toEqual(new Date("2027-08-30"));
+    expect(dates[4]).toEqual(new Date("2027-11-30"));
+  });
 });
 
 // ── SponsorshipService 테스트 ──────────────────────────────────────

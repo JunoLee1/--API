@@ -9,13 +9,22 @@ import type { PaymentSchedule } from "../generated/enums";
 import type { LedgerService } from "../ledger/ledger.service";
 
 export function generatePaymentDates(start: Date, end: Date, schedule: PaymentSchedule): Date[] {
+  // Advance by preserving the original day-of-month and clamping to the last
+  // day of the target month when it doesn't exist. Naive setMonth() rolls
+  // Jan 31 → Mar 3 (Feb has no 31st) and then drifts forward every iteration.
+  const anchorDay = start.getUTCDate();
   const dates: Date[] = [];
-  const current = new Date(start);
-  while (current <= end) {
-    dates.push(new Date(current));
-    if (schedule === "MONTHLY") current.setMonth(current.getMonth() + 1);
-    else if (schedule === "QUARTERLY") current.setMonth(current.getMonth() + 3);
-    else current.setFullYear(current.getFullYear() + 1);
+  let step = 0;
+  const monthsPerStep = schedule === "MONTHLY" ? 1 : schedule === "QUARTERLY" ? 3 : 12;
+  while (true) {
+    const targetYear = start.getUTCFullYear() + Math.floor((start.getUTCMonth() + monthsPerStep * step) / 12);
+    const targetMonth = (start.getUTCMonth() + monthsPerStep * step) % 12;
+    const lastDayOfTargetMonth = new Date(Date.UTC(targetYear, targetMonth + 1, 0)).getUTCDate();
+    const day = Math.min(anchorDay, lastDayOfTargetMonth);
+    const candidate = new Date(Date.UTC(targetYear, targetMonth, day));
+    if (candidate > end) break;
+    dates.push(candidate);
+    step++;
   }
   return dates;
 }
