@@ -89,10 +89,16 @@ export function BudgetPlanPage() {
   // Silent bulk save fired on wizard page navigation. Failures are swallowed
   // by the wizard so the flow keeps moving; user-facing toasts only come from
   // the final "완료 및 저장" submit above.
+  //
+  // Skip when totalOperatingBudget is not yet set — the backend rejects <= 0
+  // with 400 INVALID_BUDGET, and there is nothing to persist for an empty
+  // draft anyway. Real submit still runs through handleSubmit above.
   const handleAutoSave = useCallback(
     async (draft: DraftBudgetPlan) => {
       if (!seasonId) return
-      await budgetPlanApi.save(seasonId, draftToPayload(draft))
+      const payload = draftToPayload(draft)
+      if (payload.totalOperatingBudget <= 0) return
+      await budgetPlanApi.save(seasonId, payload)
     },
     [seasonId]
   )
