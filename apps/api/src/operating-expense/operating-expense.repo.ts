@@ -42,22 +42,57 @@ export class OperatingExpenseRepository {
     });
   }
 
-  async createWithBudgetCheck(data: {
+  /**
+   * Look up an APPROVED BudgetLine matching (season, category, departmentId).
+   * Used by AssetRequest dept-head approval to auto-match a line. Pass
+   * `departmentId: null` explicitly to look up club-wide lines. If more than one
+   * line exists for the tuple (year vs monthly split), the most specific (monthly
+   * for current month, else year-only) wins.
+   */
+  async findBudgetLineForSeasonCategoryDept(params: {
     seasonId: number;
     categoryId: number;
-    costType?: ExpenseCostType;
-    amount: number;
-    date: Date;
-    note?: string | null;
-    createdById: number;
-    budgetLineId: number;
+    departmentId: number | null;
+    date?: Date;
   }) {
-    return this.prisma.$transaction(async (tx) => {
-      const line = await tx.budgetLine.findUnique({ where: { id: data.budgetLineId } });
+    const date = params.date ?? new Date();
+    const candidates = await this.prisma.budgetLine.findMany({
+      where: {
+        categoryId: params.categoryId,
+        departmentId: params.departmentId,
+        year: date.getFullYear(),
+        budgetHeader: { seasonId: params.seasonId, status: "APPROVED" },
+      },
+      select: { id: true, originalAmount: true, month: true, year: true, departmentId: true },
+    });
+    if (candidates.length === 0) return null;
+    const currentMonth = date.getMonth() + 1;
+    const monthly = candidates.find((c) => c.month === currentMonth);
+    if (monthly) return monthly;
+    const yearOnly = candidates.find((c) => c.month === null);
+    if (yearOnly) return yearOnly;
+    return candidates[0] ?? null;
+  }
+
+  async createWithBudgetCheck(
+    data: {
+      seasonId: number;
+      categoryId: number;
+      costType?: ExpenseCostType;
+      amount: number;
+      date: Date;
+      note?: string | null;
+      createdById: number;
+      budgetLineId: number;
+    },
+    tx?: Tx,
+  ) {
+    const run = async (client: Tx) => {
+      const line = await client.budgetLine.findUnique({ where: { id: data.budgetLineId } });
       if (!line) throw new Error("BUDGET_LINE_NOT_FOUND");
       if (line.categoryId !== data.categoryId) throw new Error("CATEGORY_MISMATCH");
 
-      const { _sum } = await tx.operatingExpense.aggregate({
+      const { _sum } = await client.operatingExpense.aggregate({
         where: {
           budgetLineId: data.budgetLineId,
           deletedAt: null,
@@ -68,7 +103,7 @@ export class OperatingExpenseRepository {
       const used = _sum.amount ?? 0;
       if (used + data.amount > line.originalAmount) throw new Error("BUDGET_EXCEEDED");
 
-      return tx.operatingExpense.create({
+      return client.operatingExpense.create({
         data: {
           seasonId: data.seasonId,
           categoryId: data.categoryId,
@@ -86,7 +121,9 @@ export class OperatingExpenseRepository {
           expenseCategory: { select: { code: true } },
         },
       });
-    });
+    };
+    if (tx) return run(tx);
+    return this.prisma.$transaction(run);
   }
 
   updateStatus(

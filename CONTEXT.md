@@ -1554,6 +1554,55 @@ MEDICAL | MEAL | TRAVEL | EQUIPMENT | SCOUTING | YOUTH
 
 ---
 
+## 자산 신청 워크플로우 (Asset Request)
+
+일반 직원이 소프트웨어 라이선스 또는 하드웨어 자산을 신청하고 팀장 → 부서장 2단계 결재로 처리하는 부서 자율 결재 워크플로우. `Equipment`·`SoftwareLicense`의 관리 부서 top-down CRUD 채널과 재무팀 내부 결재(`OperatingExpense`)와는 별개의 흐름이며, 승인 시점에 실적 지출로 즉시 반영되어 부서 잔여예산 대시보드에 실시간 연결된다.
+
+**상태머신:**
+```
+DRAFT → SUBMITTED → LEADER_APPROVED → APPROVED → FULFILLED
+           ↓             ↓                ↓
+        CANCELLED   LEADER_REJECTED   REJECTED
+```
+
+- `DRAFT`: 신청자가 임시 저장한 상태.
+- `SUBMITTED`: 신청자가 제출. 팀장 결재 대기.
+- `LEADER_APPROVED`: 팀장 승인. 부서장 결재 대기.
+- `APPROVED`: 부서장 승인. 트랜잭션 내에서 `OperatingExpense(status=APPROVED)` 자동 생성.
+- `FULFILLED`: 관리 부서가 자산 조달·등록 완료.
+- `CANCELLED`: 신청자가 SUBMITTED 이전에 자발적으로 취소.
+- `LEADER_REJECTED` / `REJECTED`: 팀장 또는 부서장이 반려. 종결 상태. 재신청은 신규 `AssetRequest`로 처리한다 (역방향 전환 없음).
+
+**결재 계층 (`Department` 계층 재사용):**
+- 팀장 = 신청자 소속 leaf `Department.head`
+- 부서장 = 그 상위 `parent.head`
+- GM / ADMIN은 workflow 외부. audit log 열람만 담당.
+- 신청자와 dept.head가 동일인인 케이스(작은 부서 흔함)는 서비스 레이어에서 self-approval을 명시 차단한다.
+
+**핵심 필드 (AssetRequest):**
+- `type: AssetRequestType` — HARDWARE / SOFTWARE
+- `equipmentItemId?` / `softwareLicenseId?` — 마스터 FK (하이브리드)
+- `customName?` / `customDescription?` — 마스터에 없는 신규 자산 자유 입력
+- `expenseCategoryId` — 신청자가 명시 선택 (필수, ExpenseCategory 마스터에서 dropdown)
+- `expectedAmount` — 예상 총액 (SW 구독은 연 총액)
+- `justification` — 신청 사유 (필수, 감사 기록용)
+- `departmentId` — 신청자 소속 leaf Department
+
+**AssetRequestApproval (감사 이력):** stage(`LEADER` \| `DEPT_HEAD`) × action(`APPROVED` \| `REJECTED`) 조합으로 각 단계 결정이 1행씩 자동 축적된다. `@@unique([assetRequestId, stage])` 제약으로 stage당 결정 1개만 허용 — action 제외해서 APPROVED/REJECTED 모순 기록을 DB에서 차단.
+
+**APPROVED 시점 부작용:** 부서장 승인 처리에서 `OperatingExpenseRepository.createWithBudgetCheck()`를 호출해 `OperatingExpense(status=APPROVED, departmentId=신청자leaf)`를 트랜잭션 내에서 자동 생성한다. 재무 결재(SUBMITTED → APPROVED)는 skip되며, 재무팀은 실지급(PAID) 실행과 사후 감사만 처리한다.
+
+**예산 검증:**
+- BudgetLine 매칭: `(status=APPROVED, seasonId=active, categoryId=선택, departmentId=신청자leaf)` 우선 → `departmentId=null` 전사 공용 fallback. 둘 다 실패 시 `BUDGET_LINE_NOT_FOUND` 400.
+- `BUDGET_EXCEEDED`는 부서장 승인 시점에 차단한다. SUBMITTED·LEADER_APPROVED는 통과시키며 approve 호출에서 검증한다. 초과 시 신청자는 취소하거나 예비비 배정 후 재승인 요청으로 처리한다.
+
+**롤업 태깅:** `OperatingExpense.departmentId Int?` 필드에 신청자 leaf 부서를 태그하여 상위 부서 조회 시 leaf 부서들 합산 pull 집계로 롤업을 표시한다 (부서 롤업 대시보드는 Task 7 후속).
+
+**쓰기 권한 (신청·상태 전환):** 로그인 유저 전원(신청), leaf dept.head(LEADER 단계), parent dept.head(DEPT_HEAD 단계)
+**읽기 권한:** 신청자 본인, 결재 라인 유저, GM, ADMIN, FINANCE_MANAGER
+
+---
+
 ## 구단 장비 자산 관리 (Equipment Asset Management)
 
 구단 보유 훈련 장비(GPS 조끼, 심박계, 볼 등)에 고유 자산 번호를 부여하고 대여·반납·점검·수리 이력을 관리한다. 현재 ERP에 별도 모델 없음 — 향후 `EquipmentAsset` 모델로 구현 예정.

@@ -65,6 +65,8 @@
       "reportApproval": "Reports",
       "equipment": "Equipment",
       "assetInventory": "Inventory & Licenses",
+      "assetRequest": "Asset Request",
+      "assetRequestApproval": "Asset Approvals",
       "partnerMgmt": "Partners",
       "userMgmt": "Users",
       "teamMgmt": "Teams",

@@ -47,6 +47,8 @@ import {
   type LucideIcon,
   Menu,
   Boxes,
+  ClipboardCheck,
+  FilePlus2,
   Package,
   PieChart,
   Receipt,
@@ -121,6 +123,22 @@ const SUBSECTION_ICON: Record<NavSubSection, LucideIcon> = {
 
 const NAV_ITEMS: NavItem[] = [
   { to: '/dashboard', label: 'nav.item.dashboard', icon: BarChart3, end: true, roles: ['ADMIN', 'SUPER_ADMIN', 'GM', 'FRONT_OFFICE', 'COACHING_STAFF', 'AGENT'] },
+  // 자산 신청 워크플로우 — 신청은 모든 스태프, 결재함은 항상 표시 (백엔드가 pending 목록 필터).
+  // 결재 대기가 없으면 페이지에서 empty-state 노출 (Task 6 spec §Step 6).
+  {
+    to: '/asset/request',
+    label: 'nav.item.assetRequest',
+    icon: FilePlus2,
+    end: true,
+    roles: ['ADMIN', 'GM', 'FRONT_OFFICE', 'COACHING_STAFF'],
+  },
+  {
+    to: '/asset/approval',
+    label: 'nav.item.assetRequestApproval',
+    icon: ClipboardCheck,
+    end: true,
+    roles: ['ADMIN', 'GM', 'FRONT_OFFICE', 'COACHING_STAFF'],
+  },
   {
     to: '/guardian-portal',
     label: 'nav.item.guardianPortal',

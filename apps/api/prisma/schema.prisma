@@ -350,6 +350,12 @@ enum NotificationType {
   TRAINING_HIGH_PERFORMANCE_PLAYER
   TRAINING_HIGH_PERFORMANCE_SELF
   PARTNER_CONTACT_FOLLOWUP
+  ASSET_REQUEST_SUBMITTED
+  ASSET_REQUEST_LEADER_APPROVED
+  ASSET_REQUEST_LEADER_REJECTED
+  ASSET_REQUEST_APPROVED
+  ASSET_REQUEST_REJECTED
+  ASSET_REQUEST_FULFILLED
 }
 
 enum DepreciationMethod {
@@ -926,6 +932,8 @@ model User {
   settlementsApproved       MonthlySettlementReport[]       @relation("SettlementApprover")
   revenueAdjustments        RevenueAdjustment[]             @relation("AdjCreator")
   carryOverOverrides        FinancialReport[]               @relation("CarryOverOverrider")
+  assetRequests             AssetRequest[]                  @relation("AssetRequestRequester")
+  assetRequestApprovals     AssetRequestApproval[]          @relation("AssetRequestReviewer")
 }
 
 model Season {
@@ -1618,10 +1626,11 @@ model EquipmentItem {
   lowStockThreshold   Int?
   partnerId           Int?
 
-  units       EquipmentUnit[]
-  assignments EquipmentAssignment[]
-  partner     Partner?              @relation(fields: [partnerId], references: [id])
-  loans       EquipmentLoan[]
+  units         EquipmentUnit[]
+  assignments   EquipmentAssignment[]
+  partner       Partner?              @relation(fields: [partnerId], references: [id])
+  loans         EquipmentLoan[]
+  assetRequests AssetRequest[]
 }
 
 model EquipmentUnit {
@@ -2459,32 +2468,34 @@ model FinancialReport {
 }
 
 model Department {
-  id              Int                        @id @default(autoincrement())
-  name            String
-  clubId          Int?
-  isActive        Boolean                    @default(true)
-  createdAt       DateTime                   @default(now())
-  updatedAt       DateTime                   @updatedAt
-  category        DepartmentCategory?
-  parentId        Int?
-  headId          Int?
-  club            Club?                      @relation(fields: [clubId], references: [id])
-  parent          Department?                @relation("DepartmentHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
-  children        Department[]               @relation("DepartmentHierarchy")
-  head            User?                      @relation("DepartmentHead", fields: [headId], references: [id], onDelete: SetNull)
-  staffRecords    StaffRecord[]
-  postings        JobPosting[]
-  members         UserDepartment[]
-  ibiConfigs      DepartmentIbiConfig[]
-  planReports     PlanReport[]
-  subjectConfigs  DepartmentReviewerConfig[] @relation("SubjectDept")
-  reviewerConfigs DepartmentReviewerConfig[] @relation("ReviewerDept")
-  planReviews     PlanReview[]               @relation("PlanReviewerDept")
-  reportReviews   ReportReview[]             @relation("ReportReviewerDept")
-  reports         Report[]
-  surveyTargets   SurveyTargetDept[]         @relation("SurveyTargetDept")
-  surveyResponses SurveyResponse[]           @relation("SurveyResponse")
-  budgetLines     BudgetLine[]
+  id                Int                        @id @default(autoincrement())
+  name              String
+  clubId            Int?
+  isActive          Boolean                    @default(true)
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+  category          DepartmentCategory?
+  parentId          Int?
+  headId            Int?
+  club              Club?                      @relation(fields: [clubId], references: [id])
+  parent            Department?                @relation("DepartmentHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children          Department[]               @relation("DepartmentHierarchy")
+  head              User?                      @relation("DepartmentHead", fields: [headId], references: [id], onDelete: SetNull)
+  staffRecords      StaffRecord[]
+  postings          JobPosting[]
+  members           UserDepartment[]
+  ibiConfigs        DepartmentIbiConfig[]
+  planReports       PlanReport[]
+  subjectConfigs    DepartmentReviewerConfig[] @relation("SubjectDept")
+  reviewerConfigs   DepartmentReviewerConfig[] @relation("ReviewerDept")
+  planReviews       PlanReview[]               @relation("PlanReviewerDept")
+  reportReviews     ReportReview[]             @relation("ReportReviewerDept")
+  reports           Report[]
+  surveyTargets     SurveyTargetDept[]         @relation("SurveyTargetDept")
+  surveyResponses   SurveyResponse[]           @relation("SurveyResponse")
+  budgetLines       BudgetLine[]
+  assetRequests     AssetRequest[]
+  operatingExpenses OperatingExpense[]
 
   @@unique([name, clubId])
 }
@@ -2526,6 +2537,7 @@ model ExpenseCategory {
   budgetCategoryPlans BudgetCategoryPlan[]
   budgetLines         BudgetLine[]
   budgetOverrideLogs  BudgetOverrideLog[]
+  assetRequests       AssetRequest[]
 }
 
 enum BudgetStatus {
@@ -2629,6 +2641,7 @@ model OperatingExpense {
   cancelledById      Int?
   cancelledAt        DateTime?
   cancellationReason String?
+  departmentId       Int?
   season             Season           @relation(fields: [seasonId], references: [id])
   createdBy          User             @relation("OperatingExpenseCreator", fields: [createdById], references: [id])
   paidBy             User?            @relation("OperatingExpensePayer", fields: [paidById], references: [id])
@@ -2639,6 +2652,8 @@ model OperatingExpense {
   approvedBy         User?            @relation("OperatingExpenseApprover", fields: [approvedById], references: [id])
   rejectedBy         User?            @relation("OperatingExpenseRejecter", fields: [rejectedById], references: [id])
   cancelledBy        User?            @relation("OperatingExpenseCanceller", fields: [cancelledById], references: [id])
+  department         Department?      @relation(fields: [departmentId], references: [id])
+  assetRequests      AssetRequest[]
 }
 
 // ─────────────────────────────────────────────
@@ -3197,7 +3212,8 @@ model SoftwareLicense {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  createdBy User @relation("SoftwareLicenseCreator", fields: [createdById], references: [id])
+  createdBy     User           @relation("SoftwareLicenseCreator", fields: [createdById], references: [id])
+  assetRequests AssetRequest[]
 }
 
 model LedgerEntry {
@@ -3883,4 +3899,86 @@ model FinancialReportRevenueLog {
   createdAt         DateTime        @default(now())
   report            FinancialReport @relation(fields: [financialReportId], references: [id], onDelete: Cascade)
   changedBy         User            @relation("RevenueLogChanger", fields: [changedById], references: [id])
+}
+
+// ─────────────────────────────────────────────
+// Asset Request Workflow
+// ─────────────────────────────────────────────
+
+enum AssetRequestStatus {
+  DRAFT
+  SUBMITTED
+  LEADER_APPROVED
+  LEADER_REJECTED
+  APPROVED
+  REJECTED
+  CANCELLED
+  FULFILLED
+}
+
+enum AssetRequestType {
+  SOFTWARE
+  HARDWARE
+}
+
+enum AssetRequestApprovalStage {
+  LEADER // 팀장 (신청자 dept.head)
+  DEPT_HEAD // 부서장 (parent dept.head)
+}
+
+enum AssetRequestApprovalAction {
+  APPROVED
+  REJECTED
+}
+
+model AssetRequest {
+  id           Int                @id @default(autoincrement())
+  requesterId  Int
+  departmentId Int
+  type         AssetRequestType
+  status       AssetRequestStatus @default(DRAFT)
+
+  // hybrid payload — one of equipmentItemId/softwareLicenseId/customName required
+  equipmentItemId   Int?
+  softwareLicenseId Int?
+  customName        String?
+  customDescription String?
+
+  expenseCategoryId Int
+  expectedAmount    Int
+  neededBy          DateTime?
+  justification     String
+
+  operatingExpenseId Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  requester        User                   @relation("AssetRequestRequester", fields: [requesterId], references: [id])
+  department       Department             @relation(fields: [departmentId], references: [id])
+  expenseCategory  ExpenseCategory        @relation(fields: [expenseCategoryId], references: [id])
+  equipmentItem    EquipmentItem?         @relation(fields: [equipmentItemId], references: [id])
+  softwareLicense  SoftwareLicense?       @relation(fields: [softwareLicenseId], references: [id])
+  operatingExpense OperatingExpense?      @relation(fields: [operatingExpenseId], references: [id])
+  approvals        AssetRequestApproval[]
+
+  @@index([requesterId, status])
+  @@index([departmentId, status])
+  @@index([status, createdAt])
+}
+
+model AssetRequestApproval {
+  id             Int                        @id @default(autoincrement())
+  assetRequestId Int
+  stage          AssetRequestApprovalStage
+  action         AssetRequestApprovalAction
+  reviewerId     Int
+  reason         String?
+  createdAt      DateTime                   @default(now())
+
+  assetRequest AssetRequest @relation(fields: [assetRequestId], references: [id], onDelete: Cascade)
+  reviewer     User         @relation("AssetRequestReviewer", fields: [reviewerId], references: [id])
+
+  @@unique([assetRequestId, stage])
+  @@index([assetRequestId, stage])
 }
