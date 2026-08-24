@@ -65,11 +65,16 @@ ALTER TABLE "BudgetOverrideLog"  DROP COLUMN "category";
 -- from the Prisma schema without a corresponding migration. These tables
 -- (DepartmentAnnualPlan / DepartmentBudgetItem / DepartmentKpiItem) were
 -- created by migration 20260809000001_add_department_annual_plan and are
--- no longer part of the schema — production already dropped them out of
--- band, so on that env these DROPs are no-ops (IF EXISTS is safe).
-DROP TABLE IF EXISTS "DepartmentBudgetItem";
-DROP TABLE IF EXISTS "DepartmentKpiItem";
-DROP TABLE IF EXISTS "DepartmentAnnualPlan";
+-- no longer part of the schema.
+-- CASCADE handles stale FKs from earlier PlanReview schema which pointed
+-- planId → DepartmentAnnualPlan before it was re-pointed to PlanReport
+-- (the old FK constraint blocked the drop on any DB where PlanReview was
+-- created before the re-point, e.g. production servers migrated from an
+-- earlier release). IF EXISTS keeps this a no-op when the tables were
+-- already removed out of band.
+DROP TABLE IF EXISTS "DepartmentBudgetItem" CASCADE;
+DROP TABLE IF EXISTS "DepartmentKpiItem" CASCADE;
+DROP TABLE IF EXISTS "DepartmentAnnualPlan" CASCADE;
 
 -- Drop the enum type.
 DROP TYPE "OperatingCategory";
