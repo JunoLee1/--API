@@ -205,9 +205,11 @@ model AssetRequestApproval {
   reviewer       User                         @relation("AssetRequestReviewer", fields: [reviewerId], references: [id])
 
   @@index([assetRequestId, stage])
-  @@unique([assetRequestId, stage, action])  // 동일 단계 중복 방지
+  @@unique([assetRequestId, stage])  // 동일 단계 중복 방지 — action 제외로 모순된 승인 DB 차단
 }
 ```
+
+> Note: unique on `[assetRequestId, stage]` — one decision per stage. `action` intentionally excluded so DB rejects contradictory approvals.
 
 - [ ] **Step 4: `OperatingExpense.departmentId Int?` + relation 추가** (Q2-iii c)
 ```prisma
@@ -504,7 +506,7 @@ gh pr create --title "feat(asset-request): 2-stage department approval workflow"
 2. **OperatingExpense.departmentId 마이그레이션 nullable로 시작** — 기존 데이터 backfill 없음 (자산 승인으로 생성되는 신규 지출만 태그).
 3. **BudgetLine 매칭 실패 사전 안내** — 신청 접수(SUBMITTED) 시점에 preview API로 예상 BudgetLine 표시하면 신청자 UX 개선 (Task 6 Step 1에서 검토).
 4. **Self-approval 차단 로직 필수** — 신청자가 dept.head 겸직인 케이스(작은 부서에서 흔함) 반드시 테스트.
-5. **AssetRequestApproval unique(assetRequestId, stage, action)** 제약으로 동일 단계 중복 방지. 반려 후 재승인 케이스는 상태머신 자체가 막음(LEADER_REJECTED → SUBMITTED 전환 없음).
+5. **AssetRequestApproval unique(assetRequestId, stage)** 제약으로 stage당 결정 1개만 허용 — `action` 제외해서 APPROVED/REJECTED 모순 기록 DB 차단. 반려 후 재승인 케이스는 상태머신 자체가 막음(LEADER_REJECTED → SUBMITTED 전환 없음).
 
 ---
 

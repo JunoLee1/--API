@@ -3973,6 +3973,6 @@ model AssetRequestApproval {
   assetRequest AssetRequest @relation(fields: [assetRequestId], references: [id], onDelete: Cascade)
   reviewer     User         @relation("AssetRequestReviewer", fields: [reviewerId], references: [id])
 
-  @@unique([assetRequestId, stage, action])
+  @@unique([assetRequestId, stage])
   @@index([assetRequestId, stage])
 }
