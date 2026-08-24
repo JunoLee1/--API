@@ -93,6 +93,36 @@ async function seedHrSubDepartments() {
   console.log('HR sub-departments seeded: HRM, HRD, 노무·총무');
 }
 
+/**
+ * Assign leaf-department heads for HRM / HRD / 노무·총무.
+ *
+ * Runs AFTER seedStaffAccounts so hr.staff@club.com exists. Without leaf-
+ * dept heads, the AssetRequest 2-stage approval workflow (LEADER =
+ * dept.head, DEPT_HEAD = parent dept.head) cannot be exercised end-to-end
+ * — the LEADER stage would have no reviewer.
+ *
+ * Idempotent: updates existing departments by id, safe to re-run.
+ */
+async function seedHrLeafDepartmentHeads() {
+  const hrStaff = await prisma.user.findUnique({ where: { email: 'hr.staff@club.com' } });
+  if (!hrStaff) {
+    console.warn('⚠️  hr.staff@club.com not found; skipping leaf dept head assignment');
+    return;
+  }
+
+  const leafNames = ['HRM (인사관리)', 'HRD (인재개발)', '노무·총무'];
+  for (const name of leafNames) {
+    const leafDept = await prisma.department.findFirst({ where: { name, clubId: null } });
+    if (!leafDept) continue;
+    await prisma.department.update({
+      where: { id: leafDept.id },
+      data: { headId: hrStaff.id },
+    });
+  }
+
+  console.log('Leaf HR dept heads assigned: HRM/HRD/노무·총무 → hr.staff@club.com');
+}
+
 async function seedStaffAccounts() {
   const hashed = await bcrypt.hash('Password1!', 10);
   const korea = await prisma.country.findUniqueOrThrow({ where: { id: 1 } });
@@ -2686,6 +2716,9 @@ async function main() {
 
   // ── Staff Accounts ────────────────────────────────────
   await seedStaffAccounts();
+
+  // ── Leaf HR Dept Heads (needs hr.staff from seedStaffAccounts) ──
+  await seedHrLeafDepartmentHeads();
 
   // ── Recruitment ───────────────────────────────────────
   await seedRecruitment();
