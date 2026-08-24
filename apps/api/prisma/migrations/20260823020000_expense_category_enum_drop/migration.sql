@@ -61,5 +61,15 @@ ALTER TABLE "BudgetCategoryPlan" DROP COLUMN "category";
 ALTER TABLE "BudgetLine"         DROP COLUMN "category";
 ALTER TABLE "BudgetOverrideLog"  DROP COLUMN "category";
 
+-- Drop orphan tables that referenced OperatingCategory but were removed
+-- from the Prisma schema without a corresponding migration. These tables
+-- (DepartmentAnnualPlan / DepartmentBudgetItem / DepartmentKpiItem) were
+-- created by migration 20260809000001_add_department_annual_plan and are
+-- no longer part of the schema — production already dropped them out of
+-- band, so on that env these DROPs are no-ops (IF EXISTS is safe).
+DROP TABLE IF EXISTS "DepartmentBudgetItem";
+DROP TABLE IF EXISTS "DepartmentKpiItem";
+DROP TABLE IF EXISTS "DepartmentAnnualPlan";
+
 -- Drop the enum type.
 DROP TYPE "OperatingCategory";
