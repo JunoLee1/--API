@@ -29,7 +29,7 @@ export class PlanReportController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      res.json(await this.service.update(Number(req.params.id), req.body))
+      res.json(await this.service.update(Number(req.params.id), req.body, req.user!.id, req.user!.role))
     } catch (e) { next(e) }
   }
 
@@ -59,7 +59,7 @@ export class PlanReportController {
 
   submitResult = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      res.json(await this.service.submitResult(Number(req.params.id), req.user!.id, req.body.resultContent))
+      res.json(await this.service.submitResult(Number(req.params.id), req.user!.id, req.body.resultContent, req.user!.role))
     } catch (e) { next(e) }
   }
 
