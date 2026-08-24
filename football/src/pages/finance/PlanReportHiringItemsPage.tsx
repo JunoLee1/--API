@@ -97,15 +97,15 @@ export function PlanReportHiringItemsPage() {
                   <Select value={editForm.quarter ?? String(item.quarter ?? '')} onValueChange={(v) => setEditForm({ ...editForm, quarter: v as '' | '1' | '2' | '3' | '4' })}>
                     <SelectTrigger className="w-32"><SelectValue placeholder={t('hiringItems.timing')} /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">{t('hiringItems.annual')}</SelectItem>
-                      {(['1','2','3','4'] as const).map((q) => <SelectItem key={q} value={q}>Q{q}</SelectItem>)}
+                      <SelectItem value="" label={t('hiringItems.annual')}>{t('hiringItems.annual')}</SelectItem>
+                      {(['1','2','3','4'] as const).map((q) => <SelectItem key={q} value={q} label={`Q${q}`}>Q{q}</SelectItem>)}
                     </SelectContent>
                   </Select>
                   <Select value={editForm.priority ?? item.priority} onValueChange={(v) => setEditForm({ ...editForm, priority: v as SurveyPriority })}>
                     <SelectTrigger className="w-24"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {(Object.keys(PRIORITY_LABELS) as SurveyPriority[]).map((p) => (
-                        <SelectItem key={p} value={p}>{PRIORITY_LABELS[p]}</SelectItem>
+                        <SelectItem key={p} value={p} label={PRIORITY_LABELS[p]}>{PRIORITY_LABELS[p]}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -143,15 +143,15 @@ export function PlanReportHiringItemsPage() {
           <Select value={newForm.quarter} onValueChange={(v) => setNewForm({ ...newForm, quarter: v as '' | '1' | '2' | '3' | '4' })}>
             <SelectTrigger className="w-28"><SelectValue placeholder={t('hiringItems.timing')} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{t('hiringItems.annual')}</SelectItem>
-              {(['1','2','3','4'] as const).map((q) => <SelectItem key={q} value={q}>Q{q}</SelectItem>)}
+              <SelectItem value="" label={t('hiringItems.annual')}>{t('hiringItems.annual')}</SelectItem>
+              {(['1','2','3','4'] as const).map((q) => <SelectItem key={q} value={q} label={`Q${q}`}>Q{q}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={newForm.priority} onValueChange={(v) => setNewForm({ ...newForm, priority: v as SurveyPriority })}>
             <SelectTrigger className="w-24"><SelectValue /></SelectTrigger>
             <SelectContent>
               {(Object.keys(PRIORITY_LABELS) as SurveyPriority[]).map((p) => (
-                <SelectItem key={p} value={p}>{PRIORITY_LABELS[p]}</SelectItem>
+                <SelectItem key={p} value={p} label={PRIORITY_LABELS[p]}>{PRIORITY_LABELS[p]}</SelectItem>
               ))}
             </SelectContent>
           </Select>

@@ -919,6 +919,13 @@ async function main() {
     await prisma.country.upsert({ where: { id: c.id }, update: {}, create: c });
   }
 
+  // ── Club Settings (singleton — plan-report submit uses reviewerDeptMap etc.)
+  await prisma.clubSettings.upsert({
+    where: { id: 1 },
+    create: {},   // all fields have defaults
+    update: {},
+  });
+
   // ── Departments ───────────────────────────────────────
   await seedDepartments();
 

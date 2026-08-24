@@ -149,7 +149,13 @@ export class PlanReportRepository {
   }
 
   getClubSettings() {
-    return this.prisma.clubSettings.findUniqueOrThrow({ where: { id: 1 } })
+    // Lazy-create the singleton row on first access — every field has a default,
+    // so `create: {}` is safe. Prevents 500 on submit() when seed didn't preload.
+    return this.prisma.clubSettings.upsert({
+      where: { id: 1 },
+      create: {},
+      update: {},
+    })
   }
 
   findByIdLight(id: number) {

@@ -80,11 +80,11 @@ export function HiringSurveyRespondPage() {
           <Select value={form.quarter} onValueChange={(v) => setForm({ ...form, quarter: v as '' | '1' | '2' | '3' | '4' })}>
             <SelectTrigger><SelectValue placeholder="연간 통합" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="">연간 통합</SelectItem>
-              <SelectItem value="1">Q1 (1~3월)</SelectItem>
-              <SelectItem value="2">Q2 (4~6월)</SelectItem>
-              <SelectItem value="3">Q3 (7~9월)</SelectItem>
-              <SelectItem value="4">Q4 (10~12월)</SelectItem>
+              <SelectItem value="" label="연간 통합">연간 통합</SelectItem>
+              <SelectItem value="1" label="Q1 (1~3월)">Q1 (1~3월)</SelectItem>
+              <SelectItem value="2" label="Q2 (4~6월)">Q2 (4~6월)</SelectItem>
+              <SelectItem value="3" label="Q3 (7~9월)">Q3 (7~9월)</SelectItem>
+              <SelectItem value="4" label="Q4 (10~12월)">Q4 (10~12월)</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -94,7 +94,7 @@ export function HiringSurveyRespondPage() {
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               {(Object.keys(PRIORITY_LABELS) as SurveyPriority[]).map((p) => (
-                <SelectItem key={p} value={p}>{PRIORITY_LABELS[p]}</SelectItem>
+                <SelectItem key={p} value={p} label={PRIORITY_LABELS[p]}>{PRIORITY_LABELS[p]}</SelectItem>
               ))}
             </SelectContent>
           </Select>

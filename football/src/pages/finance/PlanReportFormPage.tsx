@@ -114,7 +114,7 @@ export function PlanReportFormPage() {
           <Select value={form.templateType} onValueChange={v => { set('templateType', v as PlanTemplateType); set('extraFields', {}) }}>
             <SelectTrigger><SelectValue>{TEMPLATE_TYPE_LABELS[form.templateType]}</SelectValue></SelectTrigger>
             <SelectContent>
-              {PLAN_TEMPLATE_TYPES.map(type => <SelectItem key={type} value={type}>{TEMPLATE_TYPE_LABELS[type]}</SelectItem>)}
+              {PLAN_TEMPLATE_TYPES.map(type => <SelectItem key={type} value={type} label={TEMPLATE_TYPE_LABELS[type]}>{TEMPLATE_TYPE_LABELS[type]}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -129,7 +129,7 @@ export function PlanReportFormPage() {
           <Select value={String(form.departmentId)} onValueChange={v => set('departmentId', Number(v))}>
             <SelectTrigger><SelectValue>{departments.find(d => d.id === form.departmentId)?.name || t('planReport.fields.departmentSelect')}</SelectValue></SelectTrigger>
             <SelectContent>
-              {departments.map(d => <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>)}
+              {departments.map(d => <SelectItem key={d.id} value={String(d.id)} label={d.name}>{d.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
