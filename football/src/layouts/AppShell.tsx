@@ -381,6 +381,16 @@ const NAV_ITEMS: NavItem[] = [
     anyDeptCategory: true,
   },
   {
+    to: '/reports/approval',
+    label: 'nav.item.reportApprovalInbox',
+    icon: ClipboardCheck,
+    section: 'nav.section.docApproval',
+    end: true,
+    roles: ['ADMIN', 'GM', 'FRONT_OFFICE', 'COACHING_STAFF'],
+    frontOfficeRoles: ['HR_MANAGER', 'ASSET_MANAGER', 'FINANCE_MANAGER'],
+    coachingRoles: ['HEAD_COACH'],
+  },
+  {
     to: '/finance/plan-reports',
     label: 'nav.item.planReports',
     icon: ClipboardList,

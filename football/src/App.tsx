@@ -55,6 +55,7 @@ import { ContractDetailPage } from '@/pages/contracts/ContractDetailPage'
 import { ReportsPage } from '@/pages/reports/ReportsPage'
 import { ReportFormPage } from '@/pages/reports/ReportFormPage'
 import { ReportDetailPage } from '@/pages/reports/ReportDetailPage'
+import { ReportApprovalPage } from '@/pages/reports/ReportApprovalPage'
 import { MedicalExpensesPage } from '@/pages/medical-expense/MedicalExpensesPage'
 import { HiringRoundsPage } from '@/pages/coaches/HiringRoundsPage'
 import { CoachListPage } from '@/pages/coaches/CoachListPage'
@@ -204,6 +205,7 @@ function App() {
             <Route path="/me" element={<MePage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/reports/new" element={<ReportFormPage />} />
+            <Route path="/reports/approval" element={<ReportApprovalPage />} />
             <Route path="/reports/monthly/:year/:month" element={<MonthlySettlementDetailPage />} />
             <Route path="/reports/:id" element={<ReportDetailPage />} />
             <Route path="/medical-expenses" element={<MedicalExpensesPage />} />
