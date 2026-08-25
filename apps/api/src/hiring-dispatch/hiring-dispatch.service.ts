@@ -131,12 +131,10 @@ export class HiringDispatchService {
       },
     }).catch(console.error);
 
-    // TODO(Task 5): swap for HIRING_DISPATCH_CREATED once NotificationType
-    // enum values ship. Using HIRING_PLAN_APPROVED as a placeholder — the
-    // finance reviewer needs to see the queue land immediately.
+    // Finance reviewer needs to see the queue land immediately.
     void this.notifRepo
       .createForFinanceManager(
-        "HIRING_PLAN_APPROVED",
+        "HIRING_DISPATCH_CREATED",
         (lang) => ({
           title:
             lang === "en"
@@ -235,10 +233,9 @@ export class HiringDispatchService {
     }).catch(console.error);
 
     // Notify the executive layer — Q4: DISPATCH_APPROVED owner = isAdminLike.
-    // TODO(Task 5): swap placeholder type for HIRING_DISPATCH_BUDGET_REVERIFIED.
     void this.notifRepo
       .createForGM(
-        "HIRING_PLAN_APPROVED",
+        "HIRING_DISPATCH_BUDGET_REVERIFIED",
         (lang) => ({
           title:
             lang === "en"
@@ -293,11 +290,10 @@ export class HiringDispatchService {
 
     // Q11-2 B: Application status stays OFFERED. We only notify the HR
     // requester so they can decide whether to resubmit.
-    // TODO(Task 5): swap placeholder for HIRING_DISPATCH_REJECTED.
     void this.notifRepo
       .createForUser(
         dispatch.createdById,
-        "HIRING_PLAN_APPROVED",
+        "HIRING_DISPATCH_REJECTED",
         (lang) => ({
           title:
             lang === "en" ? "Hiring Dispatch Rejected (Budget)" : "발령 요청 예산 반려",
@@ -340,10 +336,9 @@ export class HiringDispatchService {
     }).catch(console.error);
 
     // Notify HR — Stage 3 owner (Q4: HR_MANAGER).
-    // TODO(Task 5): swap placeholder for HIRING_DISPATCH_DISPATCH_APPROVED.
     void this.notifRepo
       .createForHrManager(
-        "HIRING_PLAN_APPROVED",
+        "HIRING_DISPATCH_DISPATCH_APPROVED",
         (lang) => ({
           title:
             lang === "en" ? "Hiring Dispatch Ready to Execute" : "발령 요청 실행 대기",
@@ -385,11 +380,10 @@ export class HiringDispatchService {
       detail: { reason: trimmed },
     }).catch(console.error);
 
-    // TODO(Task 5): swap placeholder for HIRING_DISPATCH_REJECTED.
     void this.notifRepo
       .createForUser(
         dispatch.createdById,
-        "HIRING_PLAN_APPROVED",
+        "HIRING_DISPATCH_REJECTED",
         (lang) => ({
           title:
             lang === "en"
@@ -546,8 +540,6 @@ export class HiringDispatchService {
 
     // Fire-and-forget notifs (Q9-C). Ordering doesn't matter — a notif
     // failure must not roll back the dispatch that just committed.
-    // TODO(Task 5): swap placeholders for HIRING_DISPATCH_DISPATCHED /
-    //                HIRING_DISPATCH_PERMISSION_REQUESTED.
 
     // Team lead (신청 팀장) = department.headId.
     const leadId = dispatch.department.headId;
@@ -555,7 +547,7 @@ export class HiringDispatchService {
       void this.notifRepo
         .createForUser(
           leadId,
-          "HIRING_PLAN_APPROVED",
+          "HIRING_DISPATCH_DISPATCHED",
           (lang) => ({
             title:
               lang === "en" ? "New Team Member Dispatched" : "새 팀원 발령 완료",
@@ -574,7 +566,7 @@ export class HiringDispatchService {
     if (dispatch.permissionNotes && dispatch.permissionNotes.trim()) {
       void this.notifRepo
         .createForHrManager(
-          "HIRING_PLAN_APPROVED",
+          "HIRING_DISPATCH_PERMISSION_REQUESTED",
           (lang) => ({
             title:
               lang === "en"
@@ -596,7 +588,7 @@ export class HiringDispatchService {
       void this.notifRepo
         .createForUser(
           result.createdUserId,
-          "HIRING_PLAN_APPROVED",
+          "HIRING_DISPATCH_DISPATCHED",
           (lang) => ({
             title:
               lang === "en"
@@ -649,6 +641,26 @@ export class HiringDispatchService {
       targetId: id,
       detail: { previousStatus: dispatch.status, reason: trimmed },
     }).catch(console.error);
+
+    // Notify the requester (createdBy) — cancelation may be initiated by
+    // another HR / admin, so the original requester needs to see it.
+    if (dispatch.createdById !== userId) {
+      void this.notifRepo
+        .createForUser(
+          dispatch.createdById,
+          "HIRING_DISPATCH_CANCELLED",
+          (lang) => ({
+            title:
+              lang === "en" ? "Hiring Dispatch Cancelled" : "발령 요청 취소",
+            body:
+              lang === "en"
+                ? `Hiring dispatch #${id} was cancelled: ${trimmed}`
+                : `발령 요청 #${id}이 취소됐습니다: ${trimmed}`,
+          }),
+          id,
+        )
+        .catch(console.error);
+    }
 
     return updated;
   }
