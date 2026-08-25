@@ -1328,6 +1328,26 @@ ERP 내 조직 부서. `parentId` 자기참조로 계층(상위 부서 → 하�
 | 인사팀 – 근태 및 복무 관리 | 직원 및 선수단 근태 모니터링, 규정 위반 시 태그업(Tag-up) 프로세스 및 징계·페널티 연동 |
 | 인사팀 – 급여 및 복리후생 | 임직원 월급 집행, 4대 보험 및 복리후생 제도 운영 관리 |
 
+### 팀원 CRUD (2026-08-25)
+
+`Department.headId` 인 유저 (+ `ADMIN | SUPER_ADMIN | GM` escape hatch) 만 자기 leaf dept 의 팀원을 UI 로 관리 가능. ADR 0016 참조.
+
+**엔드포인트 6개:** `list / add / updateRole / remove / transfer / updateHead`
+
+**DeptRole** 은 조직도 표현 전용 — `LEADER | DEPUTY | MANAGER | SENIOR | MEMBER | INTERN` 6-value (기존 `MANAGER | MEMBER` 유지, backfill 불필요). 승인 권한은 항상 `Department.headId` 로 판정하며 두 필드 sync 는 필수 아님.
+
+**팀장 승계:** 부서장(`parent.headId`) 또는 admin 만 가능. 팀장 본인 자기 임명 불가.
+
+**신규 유저 create 제외:** 신규 유저 생성은 `HiringDispatch` 담당 (승인 skip 위험). 팀원 CRUD 는 기존 유저 assign 만 허용.
+
+**Self-approval 3-block:** role change / remove / head 자기 임명 모두 서비스 레이어에서 차단.
+
+**단독 소속 remove → `MUST_TRANSFER` 400:** 해당 부서가 유일한 소속인 경우 remove 대신 강제 이관 유도 (무소속 유저 방지).
+
+**Transfer:** `prisma.$transaction` 으로 `UserDepartment.delete + create` 원자적 처리.
+
+**Audit log (fire-and-forget):** `TEAM_MEMBER_ADDED | TEAM_MEMBER_REMOVED | TEAM_MEMBER_TRANSFERRED | TEAM_MEMBER_ROLE_CHANGED | DEPARTMENT_HEAD_CHANGED` 5 actions.
+
 ---
 
 ## 직원 기록 (StaffRecord)
