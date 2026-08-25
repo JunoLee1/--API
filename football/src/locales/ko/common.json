@@ -428,6 +428,7 @@
     "headUpdateSuccess": "팀장이 변경되었습니다.",
     "empty": "팀원이 없습니다.",
     "confirmRemove": "{{name}}을(를) 팀에서 제거하시겠습니까?",
+    "confirmRoleChange": "{{name}}의 역할을 {{role}}(으)로 변경하시겠습니까?",
     "col": {
       "name": "이름",
       "email": "이메일",

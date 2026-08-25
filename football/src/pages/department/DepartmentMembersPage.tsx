@@ -43,24 +43,6 @@ import { isAdminLike } from '@/lib/permissions'
 
 const DEPT_ROLES: DeptRole[] = ['LEADER', 'DEPUTY', 'MANAGER', 'SENIOR', 'MEMBER', 'INTERN']
 
-const DEPT_ROLE_LABEL_KO: Record<DeptRole, string> = {
-  LEADER: '팀장',
-  DEPUTY: '부팀장',
-  MANAGER: '책임',
-  SENIOR: '선임',
-  MEMBER: '팀원',
-  INTERN: '인턴',
-}
-
-const DEPT_ROLE_LABEL_EN: Record<DeptRole, string> = {
-  LEADER: 'Leader',
-  DEPUTY: 'Deputy',
-  MANAGER: 'Manager',
-  SENIOR: 'Senior',
-  MEMBER: 'Member',
-  INTERN: 'Intern',
-}
-
 // ---- Error code mapping ----
 
 function messageForCode(code: string, t: (k: string) => string): string {
@@ -76,11 +58,10 @@ function messageForCode(code: string, t: (k: string) => string): string {
 export function DepartmentMembersPage() {
   const { deptId: deptIdParam } = useParams<{ deptId: string }>()
   const deptId = Number(deptIdParam)
-  const { t, i18n } = useTranslation('common')
+  const { t } = useTranslation('common')
   const { user } = useCurrentUser()
 
-  const roleLabel = (r: DeptRole) =>
-    i18n.language === 'en' ? DEPT_ROLE_LABEL_EN[r] : DEPT_ROLE_LABEL_KO[r]
+  const roleLabel = (r: DeptRole) => t(`deptMember.role.${r}`)
 
   // ---- state ----
   const [dept, setDept] = useState<Department | null>(null)
@@ -127,9 +108,11 @@ export function DepartmentMembersPage() {
   useEffect(() => { void fetchMembers() }, [deptId])
 
   // ---- permission helpers ----
+  // Management authority is granted via Department.headId (승인 권한), NOT UserDepartment.role.
+  // LEADER/DEPUTY are 조직도 labels only — they do not confer management rights by themselves.
   const canManage = !!user && (
     isAdminLike(user.role) ||
-    members.some(m => m.userId === user.id && (m.role === 'LEADER' || m.role === 'DEPUTY'))
+    dept?.headId === user.id
   )
 
   const headMember = dept?.headId != null
@@ -161,6 +144,7 @@ export function DepartmentMembersPage() {
 
   // ---- update role inline ----
   const handleRoleChange = async (m: Member, role: DeptRole) => {
+    if (!confirm(t('deptMember.confirmRoleChange', { name: m.user.name, role: roleLabel(role) }))) return
     try {
       await departmentMemberApi.updateRole(deptId, m.userId, role)
       void fetchMembers()

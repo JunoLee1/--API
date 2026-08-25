@@ -428,6 +428,7 @@
     "headUpdateSuccess": "Head updated.",
     "empty": "No members.",
     "confirmRemove": "Remove {{name}} from the team?",
+    "confirmRoleChange": "Change {{name}}'s role to {{role}}?",
     "col": {
       "name": "Name",
       "email": "Email",
