@@ -94,6 +94,7 @@ import { LedgerPage } from '@/pages/finance/LedgerPage'
 import { PlanReportListPage } from '@/pages/finance/PlanReportListPage'
 import { PlanReportFormPage } from '@/pages/finance/PlanReportFormPage'
 import { PlanReportDetailPage } from '@/pages/finance/PlanReportDetailPage'
+import { PlanReportApprovalPage } from '@/pages/plan-report/PlanReportApprovalPage'
 import { DepartmentReviewConfigPage } from '@/pages/admin/DepartmentReviewConfigPage'
 import { ReviewRuleSetPage } from '@/pages/admin/ReviewRuleSetPage'
 import MonthlySettlementDetailPage from '@/pages/reports/MonthlySettlementDetailPage'
@@ -244,6 +245,7 @@ function App() {
             <Route path="/finance/plan-reports/new" element={<PlanReportFormPage />} />
             <Route path="/finance/plan-reports/:id/edit" element={<PlanReportFormPage />} />
             <Route path="/finance/plan-reports/:id" element={<PlanReportDetailPage />} />
+            <Route path="/finance/plan-reports/approval" element={<PlanReportApprovalPage />} />
             <Route path="/finance/budget" element={<BudgetListPage />} />
             <Route path="/finance/budget/auto" element={<BudgetAutoPage />} />
             <Route path="/finance/budget/:id" element={<BudgetDetailPage />} />

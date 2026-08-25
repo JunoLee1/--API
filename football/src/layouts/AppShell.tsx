@@ -97,7 +97,7 @@ interface NavItem {
   label: string
   icon: LucideIcon
   end?: boolean
-  section?: 'nav.section.playerMgmt' | 'nav.section.contractTransfer' | 'nav.section.injuryMedical' | 'nav.section.training' | 'nav.section.matchAnalysis' | 'nav.section.youth' | 'nav.section.coachingStaff' | 'nav.section.management'
+  section?: 'nav.section.playerMgmt' | 'nav.section.contractTransfer' | 'nav.section.injuryMedical' | 'nav.section.training' | 'nav.section.matchAnalysis' | 'nav.section.youth' | 'nav.section.coachingStaff' | 'nav.section.management' | 'nav.section.docApproval'
   subSection?: NavSubSection
   roles?: Role[]
   coachingRoles?: CoachingRole[]
@@ -387,6 +387,15 @@ const NAV_ITEMS: NavItem[] = [
     section: 'nav.section.docApproval',
     roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
     frontOfficeRoles: ['TD', 'HR_MANAGER', 'FINANCE_MANAGER', 'FINANCE_STAFF', 'ASSET_MANAGER'],
+  },
+  {
+    to: '/finance/plan-reports/approval',
+    label: 'nav.item.planReportApproval',
+    icon: ClipboardCheck,
+    section: 'nav.section.docApproval',
+    end: true,
+    roles: ['ADMIN', 'GM', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['TD', 'HR_MANAGER', 'FINANCE_MANAGER', 'ASSET_MANAGER'],
   },
 
   // 관리 > 인사
