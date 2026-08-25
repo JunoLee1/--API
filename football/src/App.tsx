@@ -98,6 +98,7 @@ import { DepartmentReviewConfigPage } from '@/pages/admin/DepartmentReviewConfig
 import { ReviewRuleSetPage } from '@/pages/admin/ReviewRuleSetPage'
 import MonthlySettlementDetailPage from '@/pages/reports/MonthlySettlementDetailPage'
 import PayrollPage from '@/pages/admin/PayrollPage'
+import { DepartmentMembersPage } from '@/pages/department/DepartmentMembersPage'
 
 function RootRedirect() {
   const { user, loading } = useCurrentUser()
@@ -249,6 +250,7 @@ function App() {
             <Route path="/finance/dashboard" element={<DashboardCharts />} />
             <Route path="/settings/account-codes" element={<AccountCodesPage />} />
             <Route path="/admin/payroll" element={<PayrollPage />} />
+            <Route path="/departments/:deptId/members" element={<DepartmentMembersPage />} />
             <Route path="/player/me" element={<PlayerMeRedirect />} />
           </Route>
 

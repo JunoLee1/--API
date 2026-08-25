@@ -10,6 +10,8 @@ import { useApiPending } from '@/lib/useApiPending'
 import { authApi } from '@/services/auth.service'
 import i18n from '@/i18n'
 import { notificationApi } from '@/services/notification.service'
+import { departmentApi, type Department } from '@/services/department.service'
+import { isAdminLike } from '@/lib/permissions'
 import { NotificationPopover } from '@/components/common/NotificationPopover'
 import { connectSocket, disconnectSocket } from '@/lib/socket'
 import { usePlayerNotification } from '@/hooks/usePlayerNotification'
@@ -707,6 +709,8 @@ export function AppShell() {
   const apiPending = useApiPending()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [ledDepts, setLedDepts] = useState<Department[]>([])
+  const [allDepts, setAllDepts] = useState<Department[]>([])
   const [openSection, setOpenSection] = useState<string | null>(() => {
     const found = NAV_ITEMS.find((item) => {
       if (!item.section) return false
@@ -770,6 +774,19 @@ export function AppShell() {
     return () => disconnectSocket()
   }, [user])
 
+  useEffect(() => {
+    if (!user) {
+      setLedDepts([])
+      setAllDepts([])
+      return
+    }
+    departmentApi.list()
+      .then((depts) => {
+        setAllDepts(depts)
+        setLedDepts(depts.filter(d => d.headId === user.id))
+      })
+      .catch(() => null)
+  }, [user])
 
   usePlayerNotification(refreshUnread)
   usePartnerNotification(user?.role)
@@ -996,6 +1013,48 @@ export function AppShell() {
         aria-busy={apiPending}
       >
         {renderNavGroups(onNavClick)}
+        {/* 팀원 관리: 팀장 본인 부서별 링크 / 관리자 fallback 링크 */}
+        {user && ledDepts.length > 0 && (
+          <div className="pt-3 space-y-1">
+            {ledDepts.map((d) => (
+              <NavLink
+                key={d.id}
+                to={`/departments/${d.id}/members`}
+                end
+                onClick={onNavClick}
+                className={({ isActive }) =>
+                  `flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors ${
+                    isActive
+                      ? 'bg-accent text-accent-foreground font-medium'
+                      : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                  }`
+                }
+              >
+                <Users className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                <span className="flex-1">{t('nav.item.myTeamMembers')} · {d.name}</span>
+              </NavLink>
+            ))}
+          </div>
+        )}
+        {user && isAdminLike(user.role) && ledDepts.length === 0 && allDepts.length > 0 && (
+          <div className="pt-3 space-y-1">
+            <NavLink
+              to={`/departments/${allDepts[0].id}/members`}
+              end
+              onClick={onNavClick}
+              className={({ isActive }) =>
+                `flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors ${
+                  isActive
+                    ? 'bg-accent text-accent-foreground font-medium'
+                    : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                }`
+              }
+            >
+              <Users className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              <span className="flex-1">{t('nav.item.myTeamMembers')}</span>
+            </NavLink>
+          </div>
+        )}
       </nav>
 
       <div className="border-t p-3">
@@ -1094,6 +1153,46 @@ export function AppShell() {
           aria-busy={apiPending}
         >
           {renderNavGroups()}
+          {/* 팀원 관리: 팀장 본인 부서별 링크 / 관리자 fallback 링크 */}
+          {user && ledDepts.length > 0 && (
+            <div className="pt-3 space-y-1">
+              {ledDepts.map((d) => (
+                <NavLink
+                  key={d.id}
+                  to={`/departments/${d.id}/members`}
+                  end
+                  className={({ isActive }) =>
+                    `flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors ${
+                      isActive
+                        ? 'bg-accent text-accent-foreground font-medium'
+                        : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                    }`
+                  }
+                >
+                  <Users className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  <span className="flex-1">{t('nav.item.myTeamMembers')} · {d.name}</span>
+                </NavLink>
+              ))}
+            </div>
+          )}
+          {user && isAdminLike(user.role) && ledDepts.length === 0 && allDepts.length > 0 && (
+            <div className="pt-3 space-y-1">
+              <NavLink
+                to={`/departments/${allDepts[0].id}/members`}
+                end
+                className={({ isActive }) =>
+                  `flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors ${
+                    isActive
+                      ? 'bg-accent text-accent-foreground font-medium'
+                      : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                  }`
+                }
+              >
+                <Users className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                <span className="flex-1">{t('nav.item.myTeamMembers')}</span>
+              </NavLink>
+            </div>
+          )}
         </nav>
 
         <div className="border-t p-3">

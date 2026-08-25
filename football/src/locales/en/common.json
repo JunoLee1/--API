@@ -105,7 +105,8 @@
       "guardianPortal": "My Child",
       "myProfile": "My Profile",
       "myInjuries": "My Injuries",
-      "myAttendance": "My Attendance"
+      "myAttendance": "My Attendance",
+      "myTeamMembers": "Team Members"
     }
   },
   "action": {
@@ -403,6 +404,63 @@
       "injuredCount": "{{count}} injured",
       "nextMatch": "Next Match",
       "noUpcoming": "No upcoming matches"
+    }
+  },
+  "deptMember": {
+    "head": "Head",
+    "noHead": "Not assigned",
+    "headBadge": "Head",
+    "changeHead": "Change Head",
+    "addMember": "Add Member",
+    "transfer": "Transfer",
+    "transferTitle": "Transfer {{name}}",
+    "targetDept": "Target Department",
+    "targetDeptPlaceholder": "Select a department",
+    "userId": "User ID",
+    "userIdPlaceholder": "Enter numeric user ID",
+    "newHeadUserId": "New Head User ID",
+    "newHeadPlaceholder": "Leave blank to clear head",
+    "clearHeadHint": "Leave blank to remove the current head.",
+    "loadFailed": "Failed to load team members.",
+    "addSuccess": "Member added.",
+    "removeSuccess": "Member removed.",
+    "transferSuccess": "Member transferred.",
+    "headUpdateSuccess": "Head updated.",
+    "empty": "No members.",
+    "confirmRemove": "Remove {{name}} from the team?",
+    "confirmRoleChange": "Change {{name}}'s role to {{role}}?",
+    "col": {
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "actions": "Actions"
+    },
+    "role": {
+      "LEADER": "Leader",
+      "DEPUTY": "Deputy",
+      "MANAGER": "Manager",
+      "SENIOR": "Senior",
+      "MEMBER": "Member",
+      "INTERN": "Intern"
+    },
+    "error": {
+      "generic": "Request failed.",
+      "userIdRequired": "Please enter a user ID.",
+      "targetDeptRequired": "Please select a target department.",
+      "NOT_LEADER": "You do not have leader permissions.",
+      "SELF_ROLE_CHANGE_FORBIDDEN": "You cannot change your own role.",
+      "SELF_REMOVAL_FORBIDDEN": "You cannot remove yourself from the team.",
+      "SELF_TRANSFER_FORBIDDEN": "You cannot transfer yourself.",
+      "SELF_HEAD_APPOINTMENT_FORBIDDEN": "You cannot appoint yourself as head.",
+      "FORBIDDEN": "Access denied.",
+      "MUST_TRANSFER": "Member must be transferred before removal.",
+      "ALREADY_MEMBER": "Already a member of this department.",
+      "SAME_DEPARTMENT": "Cannot transfer to the same department.",
+      "INVALID_BODY": "Invalid input.",
+      "USER_NOT_FOUND": "User not found.",
+      "NOT_MEMBER": "Not a member of this department.",
+      "TARGET_DEPT_NOT_FOUND": "Target department not found.",
+      "DEPARTMENT_NOT_FOUND": "Department not found."
     }
   }
 }

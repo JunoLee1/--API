@@ -2514,8 +2514,12 @@ model Department {
 }
 
 enum DeptRole {
-  MANAGER
-  MEMBER
+  LEADER // 신규 - 팀장급 (조직도 label; 승인 권한은 Department.headId)
+  DEPUTY // 신규 - 부팀장 / 대행
+  MANAGER // 기존 - 실무 관리자
+  SENIOR // 신규 - 선임 개별 기여자
+  MEMBER // 기존 - 팀원
+  INTERN // 신규 - 인턴
 }
 
 model UserDepartment {

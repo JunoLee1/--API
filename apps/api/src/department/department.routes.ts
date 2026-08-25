@@ -17,4 +17,11 @@ router.get("/:id", auth, controller.get);
 router.patch("/:id", auth, controller.update);
 router.delete("/:id", auth, controller.delete);
 
+router.get("/:deptId/members", auth, controller.listMembers);
+router.post("/:deptId/members", auth, controller.addMember);
+router.patch("/:deptId/members/:userId", auth, controller.updateMemberRole);
+router.delete("/:deptId/members/:userId", auth, controller.removeMember);
+router.post("/:deptId/members/:userId/transfer", auth, controller.transferMember);
+router.patch("/:deptId/head", auth, controller.updateHead);
+
 export default router;
