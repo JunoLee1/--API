@@ -105,7 +105,8 @@
       "guardianPortal": "내 자녀 정보",
       "myProfile": "내 프로필",
       "myInjuries": "내 부상 기록",
-      "myAttendance": "내 출결 현황"
+      "myAttendance": "내 출결 현황",
+      "myTeamMembers": "팀원 관리"
     }
   },
   "action": {
@@ -403,6 +404,62 @@
       "injuredCount": "부상 {{count}}명",
       "nextMatch": "다음 경기",
       "noUpcoming": "예정 경기 없음"
+    }
+  },
+  "deptMember": {
+    "head": "팀장",
+    "noHead": "지정 없음",
+    "headBadge": "팀장",
+    "changeHead": "팀장 변경",
+    "addMember": "팀원 추가",
+    "transfer": "이관",
+    "transferTitle": "{{name}} 이관",
+    "targetDept": "대상 부서",
+    "targetDeptPlaceholder": "부서를 선택하세요",
+    "userId": "사용자 ID",
+    "userIdPlaceholder": "숫자 ID를 입력하세요",
+    "newHeadUserId": "새 팀장 사용자 ID",
+    "newHeadPlaceholder": "비우면 팀장 해제",
+    "clearHeadHint": "비워두면 팀장이 해제됩니다.",
+    "loadFailed": "팀원 목록을 불러오지 못했습니다.",
+    "addSuccess": "팀원이 추가되었습니다.",
+    "removeSuccess": "팀원이 제거되었습니다.",
+    "transferSuccess": "팀원이 이관되었습니다.",
+    "headUpdateSuccess": "팀장이 변경되었습니다.",
+    "empty": "팀원이 없습니다.",
+    "confirmRemove": "{{name}}을(를) 팀에서 제거하시겠습니까?",
+    "col": {
+      "name": "이름",
+      "email": "이메일",
+      "role": "역할",
+      "actions": "작업"
+    },
+    "role": {
+      "LEADER": "팀장",
+      "DEPUTY": "부팀장",
+      "MANAGER": "책임",
+      "SENIOR": "선임",
+      "MEMBER": "팀원",
+      "INTERN": "인턴"
+    },
+    "error": {
+      "generic": "요청에 실패했습니다.",
+      "userIdRequired": "사용자 ID를 입력해주세요.",
+      "targetDeptRequired": "대상 부서를 선택해주세요.",
+      "NOT_LEADER": "팀장 권한이 없습니다.",
+      "SELF_ROLE_CHANGE_FORBIDDEN": "자신의 역할은 변경할 수 없습니다.",
+      "SELF_REMOVAL_FORBIDDEN": "자신을 팀에서 제거할 수 없습니다.",
+      "SELF_TRANSFER_FORBIDDEN": "자신을 이관할 수 없습니다.",
+      "SELF_HEAD_APPOINTMENT_FORBIDDEN": "자신을 팀장으로 지정할 수 없습니다.",
+      "FORBIDDEN": "권한이 없습니다.",
+      "MUST_TRANSFER": "팀원 이관이 필요합니다.",
+      "ALREADY_MEMBER": "이미 팀원입니다.",
+      "SAME_DEPARTMENT": "같은 부서로는 이관할 수 없습니다.",
+      "INVALID_BODY": "입력값이 올바르지 않습니다.",
+      "USER_NOT_FOUND": "사용자를 찾을 수 없습니다.",
+      "NOT_MEMBER": "팀원이 아닙니다.",
+      "TARGET_DEPT_NOT_FOUND": "대상 부서를 찾을 수 없습니다.",
+      "DEPARTMENT_NOT_FOUND": "부서를 찾을 수 없습니다."
     }
   }
 }
