@@ -4,7 +4,7 @@ import type {
   EquipmentManagerStats, TacticalAnalystStats, HeadCoachStats,
   SpecialistCoachStats, MedicalStats, MedicalDirectorStats,
   PlayerStats, AgentStats, DashboardStats,
-  HrManagerStats, FinanceManagerStats, AssetManagerStats,
+  HrManagerStats, FinanceManagerStats, AssetManagerStats, FacilityManagerStats,
 } from '@/types/dashboard'
 
 export interface StatCardConfig {
@@ -174,7 +174,7 @@ export function getDashboardConfig(user: UserDto, teamCtx: 'FIRST_TEAM' | 'YOUTH
         showTicketRevenue: true,
       }
     }
-    if (frontOfficeRole === 'ASSET_MANAGER') {
+    if (frontOfficeRole === 'ASSET_MANAGER' || frontOfficeRole === 'ASSET_STAFF') {
       return {
         statCards: [
           { label: 'dashboard.stat.lowStockEquipmentCount', getValue: (s) => (s as AssetManagerStats).lowStockEquipmentCount, unit: 'dashboard.stat.unit.item', highlight: true },
@@ -184,6 +184,19 @@ export function getDashboardConfig(user: UserDto, teamCtx: 'FIRST_TEAM' | 'YOUTH
         showActionQueue: false,
         showSchedule: false,
         recentFeedTitle: 'dashboard.recentFeed.recentAssignments',
+        showRanking: false,
+        showMedicalSection: false,
+        showYouthDevelopment: false,
+      }
+    }
+    if (frontOfficeRole === 'FACILITY_MANAGER' || frontOfficeRole === 'FACILITY_STAFF') {
+      return {
+        statCards: [
+          { label: 'dashboard.stat.openMaintenanceCount', getValue: (s) => (s as FacilityManagerStats).openMaintenanceCount, unit: 'dashboard.stat.unit.case', highlight: true },
+          { label: 'dashboard.stat.lowStockInventoryCount', getValue: (s) => (s as FacilityManagerStats).lowStockInventoryCount, unit: 'dashboard.stat.unit.item', highlight: true },
+        ],
+        showActionQueue: false,
+        showSchedule: false,
         showRanking: false,
         showMedicalSection: false,
         showYouthDevelopment: false,

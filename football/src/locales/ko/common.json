@@ -223,6 +223,8 @@
       "expiringContractCount": "만료 임박 계약",
       "injuredPlayerCount": "부상 선수",
       "lowStockEquipmentCount": "재고 부족 장비",
+      "openMaintenanceCount": "미처리 유지보수",
+      "lowStockInventoryCount": "재고 부족 시설자재",
       "activeTransferCount": "진행 중 이적",
       "prospectCount": "등록된 Prospect",
       "totalActiveContractCount": "전체 활성 계약",

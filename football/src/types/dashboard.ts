@@ -54,6 +54,11 @@ export interface AssetManagerStats {
   activeEquipmentLoanCount: number
 }
 
+export interface FacilityManagerStats {
+  openMaintenanceCount: number
+  lowStockInventoryCount: number
+}
+
 export interface MedicalDashboardStats {
   currentInjuredCount: number
   weekNewInjuryCount: number
@@ -113,6 +118,10 @@ export type DashboardStats =
   | MedicalDirectorStats
   | PlayerStats
   | AgentStats
+  | HrManagerStats
+  | FinanceManagerStats
+  | AssetManagerStats
+  | FacilityManagerStats
 
 export interface PlayerPdiEntry {
   playerId: string
