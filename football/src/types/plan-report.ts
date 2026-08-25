@@ -1,5 +1,5 @@
 export type PlanStatus = 'DRAFT' | 'REVIEWING' | 'APPROVED' | 'REJECTED'
-export type ReviewStatus = 'PENDING' | 'CONFIRMED'
+export type ReviewStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED'
 export type PlanTemplateType = 'GENERAL' | 'HR' | 'MARKETING' | 'GOODS' | 'SQUAD' | 'MEDICAL' | 'IT'
 export type ApproverLevel = 'HEAD' | 'GM' | 'ADMIN'
 
