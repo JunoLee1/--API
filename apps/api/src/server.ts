@@ -36,6 +36,7 @@ import { startSponsorshipExpiryAlertJob } from "./jobs/sponsorshipExpiryAlert";
 import { startHiringSurveyReminderJob } from "./jobs/hiringSurveyReminder";
 import { startInspectionDueCron } from "./jobs/inspectionDueAlert";
 import { startOpexPurgeJob } from "./jobs/opexPurge";
+import { startMedicalEmergencyOverdueEscalationJob } from "./jobs/medicalEmergencyOverdueEscalation";
 
 const app = express();
 
@@ -101,3 +102,4 @@ startSponsorshipExpiryAlertJob();
 startHiringSurveyReminderJob();
 startInspectionDueCron();
 startOpexPurgeJob();
+startMedicalEmergencyOverdueEscalationJob();
