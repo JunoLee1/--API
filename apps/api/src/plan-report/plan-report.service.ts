@@ -61,7 +61,25 @@ export class PlanReportService {
       settings.planApprovalLimit
     )
 
-    return this.repo.submit(id, reviewerDeptIds, requiredApproverLevel)
+    const result = await this.repo.submit(id, reviewerDeptIds, requiredApproverLevel)
+
+    if (this.notifRepo) {
+      for (const deptId of reviewerDeptIds) {
+        void this.notifRepo
+          .createForDepartmentHead(
+            deptId,
+            'PLAN_REPORT_REVIEW_REQUESTED',
+            () => ({
+              title: '기획보고서 리뷰 요청',
+              body: `"${plan.title}" 기획보고서에 대한 부서 리뷰가 요청됐습니다.`,
+            }),
+            id,
+          )
+          .catch(console.error)
+      }
+    }
+
+    return result
   }
 
   async approve(id: number, userId: number, userRole: string) {

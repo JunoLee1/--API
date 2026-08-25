@@ -109,6 +109,25 @@ export class NotificationRepository {
     return this.createForWhere({ role: "COACHING_STAFF", coachingRole: "PHYSICAL_COACH" }, type, getMsg, entityId);
   }
 
+  /**
+   * 특정 부서의 부서장(headId user)에게 알림.
+   * 결재함 자동 라우팅용 — PlanReport.reviewerDept 등에서 사용.
+   * 부서장이 없으면(headId=null) no-op.
+   */
+  async createForDepartmentHead(
+    deptId: number,
+    type: string,
+    getMsg: MsgFactory,
+    entityId?: number
+  ) {
+    const dept = await this.prisma.department.findUnique({
+      where: { id: deptId },
+      select: { headId: true },
+    });
+    if (!dept?.headId) return;
+    return this.createForUser(dept.headId, type, getMsg, entityId);
+  }
+
   async createForUser(userId: number, type: string, getMsg: MsgFactory, entityId?: number) {
     const userRecord = await this.prisma.user.findUnique({
       where: { id: userId },
