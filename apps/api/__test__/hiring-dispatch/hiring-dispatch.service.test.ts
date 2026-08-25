@@ -1,0 +1,667 @@
+import { HiringDispatchService } from "../../src/hiring-dispatch/hiring-dispatch.service";
+import { AppError } from "../../src/lib/appError";
+import type { HiringDispatchRepository } from "../../src/hiring-dispatch/hiring-dispatch.repo";
+import type { NotificationRepository } from "../../src/notification/notification.repo";
+import type { PrismaClient } from "../../src/generated/client";
+import type { CreateHiringDispatchDto } from "../../src/hiring-dispatch/dto/hiring-dispatch.dto";
+
+jest.mock("../../src/lib/auditLog", () => ({
+  writeAuditLog: jest.fn().mockResolvedValue(undefined),
+}));
+jest.mock("../../src/lib/crypto", () => ({
+  encrypt: jest.fn(() => ({ encrypted: "enc", iv: "iv" })),
+}));
+jest.mock("../../src/lib/hash", () => ({
+  hashPassword: jest.fn().mockResolvedValue("hashed"),
+}));
+
+const HR_ID = 100;
+// Second HR user so the "execute the dispatch" reviewer isn't the requester
+// (self-approval is blocked at every stage — Q4). Different real user, same role.
+const HR_EXECUTOR = 101;
+const FINANCE_ID = 200;
+const EXEC_ID = 300;
+const OUTSIDER = 999;
+const DEPT_ID = 10;
+const DEPT_HEAD = 50;
+const APPLICATION_ID = 555;
+const HIRING_PLAN_HEADCOUNT = 3;
+const NEW_USER_ID = 700;
+const PHONE_ID = 800;
+
+// A canonical dispatch row shaped for `findById`'s detailInclude.
+const makeDispatch = (overrides: Partial<any> = {}) => ({
+  id: 1,
+  applicationId: APPLICATION_ID,
+  candidateName: "홍길동",
+  candidateEmail: "hong@example.com",
+  jobTitle: "Software Engineer",
+  jobGrade: "ASSOCIATE" as const,
+  employmentType: "FULL_TIME" as const,
+  departmentId: DEPT_ID,
+  reportsToUserId: null,
+  monthlySalary: 5_000_000n,
+  startDate: new Date("2026-09-01"),
+  targetRole: "FRONT_OFFICE",
+  targetFrontOfficeRole: null,
+  targetCoachingRole: null,
+  permissionNotes: null,
+  status: "CREATED" as const,
+  createdUserId: null,
+  createdById: HR_ID,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  application: {
+    id: APPLICATION_ID,
+    applicantName: "홍길동",
+    email: "hong@example.com",
+    status: "OFFERED",
+    postingId: 40,
+    posting: {
+      id: 40,
+      title: "SW Engineer",
+      headcount: 5,
+      hiringPlanItemId: 88,
+      hiringPlanItem: {
+        id: 88,
+        roleTitle: "SW Engineer",
+        headcount: HIRING_PLAN_HEADCOUNT,
+      },
+    },
+  },
+  department: {
+    id: DEPT_ID,
+    name: "개발팀",
+    headId: DEPT_HEAD,
+    parentId: null,
+    parent: null,
+  },
+  createdBy: { id: HR_ID, username: "hr", nickname: "HR" },
+  createdUser: null,
+  reportsToUser: null,
+  approvals: [],
+  onboarding: null,
+  ...overrides,
+});
+
+const makeRepo = (overrides: Partial<HiringDispatchRepository> = {}): HiringDispatchRepository =>
+  ({
+    create: jest.fn().mockImplementation(async (dto, createdById) =>
+      makeDispatch({
+        candidateName: dto.candidateName,
+        candidateEmail: dto.candidateEmail,
+        createdById,
+        applicationId: dto.applicationId ?? null,
+      }),
+    ),
+    findById: jest.fn().mockResolvedValue(null),
+    findByCreator: jest.fn().mockResolvedValue([]),
+    findByDepartment: jest.fn().mockResolvedValue([]),
+    findAll: jest.fn().mockResolvedValue([]),
+    findPendingForBudget: jest.fn().mockResolvedValue([]),
+    findPendingForDispatch: jest.fn().mockResolvedValue([]),
+    findPendingForExecution: jest.fn().mockResolvedValue([]),
+    updateStatus: jest.fn().mockImplementation(async (id, patch) =>
+      makeDispatch({ id, status: patch.status, createdUserId: patch.createdUserId ?? null }),
+    ),
+    addApproval: jest.fn().mockResolvedValue({}),
+    countDeptMembers: jest.fn().mockResolvedValue(0),
+    findUserByEmail: jest.fn().mockResolvedValue(null),
+    createPhoneNumber: jest.fn().mockResolvedValue({ id: PHONE_ID }),
+    createUser: jest.fn().mockResolvedValue({
+      id: NEW_USER_ID,
+      email: "hong@example.com",
+      username: "홍길동",
+      nickname: "홍길동#1",
+      role: "FRONT_OFFICE",
+    }),
+    createUserDepartment: jest.fn().mockResolvedValue({}),
+    createStaffRecord: jest.fn().mockResolvedValue({ id: 900 }),
+    createOnboarding: jest.fn().mockResolvedValue({ id: 999 }),
+    ...overrides,
+  } as unknown as HiringDispatchRepository);
+
+const makeNotifRepo = (): NotificationRepository =>
+  ({
+    createForUser: jest.fn().mockResolvedValue(undefined),
+    createForHrManager: jest.fn().mockResolvedValue(undefined),
+    createForFinanceManager: jest.fn().mockResolvedValue(undefined),
+    createForGM: jest.fn().mockResolvedValue(undefined),
+  } as unknown as NotificationRepository);
+
+const makePrisma = (overrides: Partial<any> = {}): PrismaClient =>
+  ({
+    jobApplication: {
+      findUnique: jest.fn().mockResolvedValue({ id: APPLICATION_ID, status: "OFFERED" }),
+    },
+    // Passthrough tx — mocked repos ignore the tx arg, so an empty object is enough.
+    $transaction: jest.fn().mockImplementation(async (fn: any) => fn({})),
+    ...overrides,
+  } as unknown as PrismaClient);
+
+const makeService = (
+  repo = makeRepo(),
+  notif = makeNotifRepo(),
+  prisma = makePrisma(),
+) => new HiringDispatchService(repo, notif, prisma);
+
+const baseCreateDto: CreateHiringDispatchDto = {
+  applicationId: APPLICATION_ID,
+  candidateName: "홍길동",
+  candidateEmail: "hong@example.com",
+  jobTitle: "Software Engineer",
+  jobGrade: "ASSOCIATE",
+  employmentType: "FULL_TIME",
+  departmentId: DEPT_ID,
+  monthlySalary: 5_000_000,
+  startDate: "2026-09-01",
+  targetRole: "FRONT_OFFICE",
+};
+
+// ────────────────────────────────────────────
+// create
+// ────────────────────────────────────────────
+
+describe("HiringDispatchService.create", () => {
+  it("creates dispatch from an OFFERED Application", async () => {
+    const repo = makeRepo();
+    const result = await makeService(repo).create(baseCreateDto, HR_ID, "FRONT_OFFICE", "HR_MANAGER");
+    expect(result.status).toBe("CREATED");
+    expect(repo.create).toHaveBeenCalledWith(baseCreateDto, HR_ID);
+  });
+
+  it("creates Application-free dispatch when caller is HR_MANAGER", async () => {
+    const repo = makeRepo();
+    const dto: CreateHiringDispatchDto = { ...baseCreateDto };
+    delete (dto as any).applicationId;
+    const result = await makeService(repo).create(dto, HR_ID, "FRONT_OFFICE", "HR_MANAGER");
+    expect(result.status).toBe("CREATED");
+    expect(repo.create).toHaveBeenCalled();
+  });
+
+  it("creates Application-free dispatch when caller is ADMIN", async () => {
+    const repo = makeRepo();
+    const dto: CreateHiringDispatchDto = { ...baseCreateDto };
+    delete (dto as any).applicationId;
+    const result = await makeService(repo).create(dto, EXEC_ID, "ADMIN", null);
+    expect(result.status).toBe("CREATED");
+  });
+
+  it("throws 400 APPLICATION_NOT_OFFERED when application status is not OFFERED", async () => {
+    const prisma = makePrisma({
+      jobApplication: {
+        findUnique: jest.fn().mockResolvedValue({ id: APPLICATION_ID, status: "APPLIED" }),
+      },
+    });
+    await expect(
+      makeService(makeRepo(), makeNotifRepo(), prisma).create(
+        baseCreateDto,
+        HR_ID,
+        "FRONT_OFFICE",
+        "HR_MANAGER",
+      ),
+    ).rejects.toThrow(new AppError(400, "APPLICATION_NOT_OFFERED"));
+  });
+
+  it("throws 400 APPLICATION_NOT_FOUND when application is missing", async () => {
+    const prisma = makePrisma({
+      jobApplication: { findUnique: jest.fn().mockResolvedValue(null) },
+    });
+    await expect(
+      makeService(makeRepo(), makeNotifRepo(), prisma).create(
+        baseCreateDto,
+        HR_ID,
+        "FRONT_OFFICE",
+        "HR_MANAGER",
+      ),
+    ).rejects.toThrow(new AppError(400, "APPLICATION_NOT_FOUND"));
+  });
+
+  it("throws 403 HR_ONLY_FOR_FREE_FORM when non-HR opens Application-free dispatch", async () => {
+    const dto: CreateHiringDispatchDto = { ...baseCreateDto };
+    delete (dto as any).applicationId;
+    await expect(
+      makeService().create(dto, OUTSIDER, "COACHING_STAFF", null),
+    ).rejects.toThrow(new AppError(403, "HR_ONLY_FOR_FREE_FORM"));
+  });
+
+  it("throws 400 MISSING_REQUIRED_FIELD when jobTitle is blank", async () => {
+    const dto: CreateHiringDispatchDto = { ...baseCreateDto, jobTitle: "" };
+    await expect(
+      makeService().create(dto, HR_ID, "FRONT_OFFICE", "HR_MANAGER"),
+    ).rejects.toThrow(new AppError(400, "MISSING_REQUIRED_FIELD"));
+  });
+
+  it("throws 400 INVALID_SALARY on negative monthlySalary", async () => {
+    const dto: CreateHiringDispatchDto = { ...baseCreateDto, monthlySalary: -1 };
+    await expect(
+      makeService().create(dto, HR_ID, "FRONT_OFFICE", "HR_MANAGER"),
+    ).rejects.toThrow(new AppError(400, "INVALID_SALARY"));
+  });
+});
+
+// ────────────────────────────────────────────
+// budgetReverify
+// ────────────────────────────────────────────
+
+describe("HiringDispatchService.budgetReverify", () => {
+  it("CREATED → BUDGET_REVERIFIED for FINANCE_MANAGER (TO within limit)", async () => {
+    const notif = makeNotifRepo();
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "CREATED" })),
+      countDeptMembers: jest.fn().mockResolvedValue(1), // 1 + 1 < 3
+    });
+    const result = await makeService(repo, notif).budgetReverify(
+      1,
+      FINANCE_ID,
+      "FRONT_OFFICE",
+      "FINANCE_MANAGER",
+      {},
+    );
+    expect(result.status).toBe("BUDGET_REVERIFIED");
+    expect(repo.addApproval).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ stage: "BUDGET_REVIEW", action: "APPROVED", reviewerId: FINANCE_ID }),
+      expect.anything(),
+    );
+    expect(notif.createForGM).toHaveBeenCalled();
+  });
+
+  it("throws 400 TO_EXCEEDED when member+1 > headcount and no override", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "CREATED" })),
+      countDeptMembers: jest.fn().mockResolvedValue(HIRING_PLAN_HEADCOUNT), // 3 + 1 > 3
+    });
+    await expect(
+      makeService(repo).budgetReverify(1, FINANCE_ID, "FRONT_OFFICE", "FINANCE_MANAGER", {}),
+    ).rejects.toThrow(new AppError(400, "TO_EXCEEDED"));
+  });
+
+  it("succeeds when TO exceeded but toOverride is true", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "CREATED" })),
+      countDeptMembers: jest.fn().mockResolvedValue(HIRING_PLAN_HEADCOUNT),
+    });
+    const result = await makeService(repo).budgetReverify(
+      1,
+      FINANCE_ID,
+      "FRONT_OFFICE",
+      "FINANCE_MANAGER",
+      { toOverride: true },
+    );
+    expect(result.status).toBe("BUDGET_REVERIFIED");
+    // Override flag must be preserved in the approval reason JSON.
+    expect(repo.addApproval).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ reason: expect.stringContaining("toOverride") }),
+      expect.anything(),
+    );
+  });
+
+  it("skips TO check for Application-free dispatch (no HiringPlanItem)", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(
+        makeDispatch({
+          status: "CREATED",
+          applicationId: null,
+          application: null,
+        }),
+      ),
+      // Would trip TO_EXCEEDED if applicationId were present:
+      countDeptMembers: jest.fn().mockResolvedValue(HIRING_PLAN_HEADCOUNT),
+    });
+    const result = await makeService(repo).budgetReverify(
+      1,
+      FINANCE_ID,
+      "FRONT_OFFICE",
+      "FINANCE_MANAGER",
+      {},
+    );
+    expect(result.status).toBe("BUDGET_REVERIFIED");
+    expect(repo.countDeptMembers).not.toHaveBeenCalled();
+  });
+
+  it("throws 400 INVALID_STATUS when not CREATED", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "BUDGET_REVERIFIED" })),
+    });
+    await expect(
+      makeService(repo).budgetReverify(1, FINANCE_ID, "FRONT_OFFICE", "FINANCE_MANAGER", {}),
+    ).rejects.toThrow(new AppError(400, "INVALID_STATUS"));
+  });
+
+  it("throws 403 NOT_FINANCE_MANAGER for non-finance reviewer", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "CREATED" })),
+    });
+    await expect(
+      makeService(repo).budgetReverify(1, OUTSIDER, "PLAYER", null, {}),
+    ).rejects.toThrow(new AppError(403, "NOT_FINANCE_MANAGER"));
+  });
+
+  it("throws 403 SELF_APPROVAL_FORBIDDEN when reviewer is the creator", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "CREATED", createdById: FINANCE_ID })),
+    });
+    await expect(
+      makeService(repo).budgetReverify(1, FINANCE_ID, "FRONT_OFFICE", "FINANCE_MANAGER", {}),
+    ).rejects.toThrow(new AppError(403, "SELF_APPROVAL_FORBIDDEN"));
+  });
+});
+
+// ────────────────────────────────────────────
+// budgetReject
+// ────────────────────────────────────────────
+
+describe("HiringDispatchService.budgetReject", () => {
+  it("CREATED → REJECTED with reason", async () => {
+    const notif = makeNotifRepo();
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "CREATED" })),
+    });
+    const result = await makeService(repo, notif).budgetReject(
+      1,
+      FINANCE_ID,
+      "FRONT_OFFICE",
+      "FINANCE_MANAGER",
+      "예산 부족",
+    );
+    expect(result.status).toBe("REJECTED");
+    expect(repo.addApproval).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ stage: "BUDGET_REVIEW", action: "REJECTED", reason: "예산 부족" }),
+      expect.anything(),
+    );
+    expect(notif.createForUser).toHaveBeenCalledWith(
+      HR_ID,
+      expect.any(String),
+      expect.any(Function),
+      1,
+    );
+  });
+
+  it("throws 400 REASON_REQUIRED when reason is blank", async () => {
+    await expect(
+      makeService().budgetReject(1, FINANCE_ID, "FRONT_OFFICE", "FINANCE_MANAGER", "  "),
+    ).rejects.toThrow(new AppError(400, "REASON_REQUIRED"));
+  });
+
+  it("throws 400 INVALID_STATUS when not CREATED", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "BUDGET_REVERIFIED" })),
+    });
+    await expect(
+      makeService(repo).budgetReject(1, FINANCE_ID, "FRONT_OFFICE", "FINANCE_MANAGER", "reason"),
+    ).rejects.toThrow(new AppError(400, "INVALID_STATUS"));
+  });
+});
+
+// ────────────────────────────────────────────
+// dispatchApprove
+// ────────────────────────────────────────────
+
+describe("HiringDispatchService.dispatchApprove", () => {
+  it("BUDGET_REVERIFIED → DISPATCH_APPROVED for ADMIN", async () => {
+    const notif = makeNotifRepo();
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "BUDGET_REVERIFIED" })),
+    });
+    const result = await makeService(repo, notif).dispatchApprove(1, EXEC_ID, "ADMIN");
+    expect(result.status).toBe("DISPATCH_APPROVED");
+    expect(repo.addApproval).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ stage: "DISPATCH_APPROVAL", action: "APPROVED" }),
+      expect.anything(),
+    );
+    expect(notif.createForHrManager).toHaveBeenCalled();
+  });
+
+  it("throws 403 NOT_EXECUTIVE for FRONT_OFFICE role", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "BUDGET_REVERIFIED" })),
+    });
+    await expect(
+      makeService(repo).dispatchApprove(1, OUTSIDER, "FRONT_OFFICE"),
+    ).rejects.toThrow(new AppError(403, "NOT_EXECUTIVE"));
+  });
+
+  it("throws 403 SELF_APPROVAL_FORBIDDEN when executive is the creator", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "BUDGET_REVERIFIED", createdById: EXEC_ID })),
+    });
+    await expect(
+      makeService(repo).dispatchApprove(1, EXEC_ID, "ADMIN"),
+    ).rejects.toThrow(new AppError(403, "SELF_APPROVAL_FORBIDDEN"));
+  });
+
+  it("throws 400 INVALID_STATUS when not BUDGET_REVERIFIED", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "CREATED" })),
+    });
+    await expect(
+      makeService(repo).dispatchApprove(1, EXEC_ID, "ADMIN"),
+    ).rejects.toThrow(new AppError(400, "INVALID_STATUS"));
+  });
+});
+
+// ────────────────────────────────────────────
+// dispatchReject
+// ────────────────────────────────────────────
+
+describe("HiringDispatchService.dispatchReject", () => {
+  it("BUDGET_REVERIFIED → REJECTED with reason", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "BUDGET_REVERIFIED" })),
+    });
+    const result = await makeService(repo).dispatchReject(1, EXEC_ID, "ADMIN", "예산 재검토");
+    expect(result.status).toBe("REJECTED");
+  });
+
+  it("throws 400 REASON_REQUIRED when reason is blank", async () => {
+    await expect(
+      makeService().dispatchReject(1, EXEC_ID, "ADMIN", ""),
+    ).rejects.toThrow(new AppError(400, "REASON_REQUIRED"));
+  });
+});
+
+// ────────────────────────────────────────────
+// dispatch (HR execution — the $transaction)
+// ────────────────────────────────────────────
+
+describe("HiringDispatchService.dispatch", () => {
+  it("DISPATCH_APPROVED → ONBOARDING; creates User + UserDept + StaffRecord + Onboarding", async () => {
+    const notif = makeNotifRepo();
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "DISPATCH_APPROVED" })),
+    });
+    const result = await makeService(repo, notif).dispatch(
+      1,
+      HR_EXECUTOR,
+      "FRONT_OFFICE",
+      "HR_MANAGER",
+    );
+    expect(result.status).toBe("ONBOARDING");
+    expect(result.createdUserId).toBe(NEW_USER_ID);
+    // All five provisioning writes must happen inside the tx.
+    expect(repo.createPhoneNumber).toHaveBeenCalled();
+    expect(repo.createUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: "hong@example.com",
+        role: "FRONT_OFFICE",
+        phoneNumberId: PHONE_ID,
+      }),
+      expect.anything(),
+    );
+    expect(repo.createUserDepartment).toHaveBeenCalledWith(
+      { userId: NEW_USER_ID, departmentId: DEPT_ID },
+      expect.anything(),
+    );
+    expect(repo.createStaffRecord).toHaveBeenCalledWith(
+      expect.objectContaining({ email: "hong@example.com", departmentId: DEPT_ID }),
+      expect.anything(),
+    );
+    expect(repo.createOnboarding).toHaveBeenCalledWith(
+      expect.objectContaining({ hiringDispatchId: 1, userId: NEW_USER_ID }),
+      expect.anything(),
+    );
+    expect(repo.addApproval).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ stage: "EXECUTION", action: "APPROVED", reviewerId: HR_EXECUTOR }),
+      expect.anything(),
+    );
+    // Team lead notif + candidate OTP notif (permissionNotes is null so no HR notif).
+    expect(notif.createForUser).toHaveBeenCalledWith(
+      DEPT_HEAD,
+      expect.any(String),
+      expect.any(Function),
+      1,
+    );
+    expect(notif.createForUser).toHaveBeenCalledWith(
+      NEW_USER_ID,
+      expect.any(String),
+      expect.any(Function),
+      1,
+    );
+  });
+
+  it("notifies HR when permissionNotes are set", async () => {
+    const notif = makeNotifRepo();
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(
+        makeDispatch({ status: "DISPATCH_APPROVED", permissionNotes: "GA admin 권한 필요" }),
+      ),
+    });
+    await makeService(repo, notif).dispatch(1, HR_EXECUTOR, "FRONT_OFFICE", "HR_MANAGER");
+    expect(notif.createForHrManager).toHaveBeenCalled();
+  });
+
+  it("throws 400 EMAIL_ALREADY_IN_USE before opening the tx", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "DISPATCH_APPROVED" })),
+      findUserByEmail: jest.fn().mockResolvedValue({ id: 42 }),
+    });
+    await expect(
+      makeService(repo).dispatch(1, HR_EXECUTOR, "FRONT_OFFICE", "HR_MANAGER"),
+    ).rejects.toThrow(new AppError(400, "EMAIL_ALREADY_IN_USE"));
+    expect(repo.createUser).not.toHaveBeenCalled();
+  });
+
+  it("throws 403 NOT_HR_MANAGER for non-HR reviewer", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "DISPATCH_APPROVED" })),
+    });
+    await expect(
+      makeService(repo).dispatch(1, OUTSIDER, "PLAYER", null),
+    ).rejects.toThrow(new AppError(403, "NOT_HR_MANAGER"));
+  });
+
+  it("throws 403 SELF_APPROVAL_FORBIDDEN when HR is the creator", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(
+        makeDispatch({ status: "DISPATCH_APPROVED", createdById: HR_ID }),
+      ),
+    });
+    await expect(
+      makeService(repo).dispatch(1, HR_ID, "FRONT_OFFICE", "HR_MANAGER"),
+    ).rejects.toThrow(new AppError(403, "SELF_APPROVAL_FORBIDDEN"));
+  });
+
+  it("throws 400 INVALID_STATUS when not DISPATCH_APPROVED", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "BUDGET_REVERIFIED" })),
+    });
+    await expect(
+      makeService(repo).dispatch(1, HR_ID, "FRONT_OFFICE", "HR_MANAGER"),
+    ).rejects.toThrow(new AppError(400, "INVALID_STATUS"));
+  });
+});
+
+// ────────────────────────────────────────────
+// cancel
+// ────────────────────────────────────────────
+
+describe("HiringDispatchService.cancel", () => {
+  it("cancels a CREATED dispatch", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "CREATED" })),
+    });
+    const result = await makeService(repo).cancel(
+      1,
+      HR_ID,
+      "FRONT_OFFICE",
+      "HR_MANAGER",
+      "CANDIDATE_WITHDREW",
+    );
+    expect(result.status).toBe("CANCELLED");
+  });
+
+  it("cancels a BUDGET_REVERIFIED dispatch", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "BUDGET_REVERIFIED" })),
+    });
+    const result = await makeService(repo).cancel(
+      1,
+      HR_ID,
+      "FRONT_OFFICE",
+      "HR_MANAGER",
+      "OTHER",
+    );
+    expect(result.status).toBe("CANCELLED");
+  });
+
+  it("throws 400 INVALID_STATUS when DISPATCH_APPROVED", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "DISPATCH_APPROVED" })),
+    });
+    await expect(
+      makeService(repo).cancel(1, HR_ID, "FRONT_OFFICE", "HR_MANAGER", "OTHER"),
+    ).rejects.toThrow(new AppError(400, "INVALID_STATUS"));
+  });
+
+  it("throws 403 NOT_HR_MANAGER for non-HR caller", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "CREATED" })),
+    });
+    await expect(
+      makeService(repo).cancel(1, OUTSIDER, "PLAYER", null, "OTHER"),
+    ).rejects.toThrow(new AppError(403, "NOT_HR_MANAGER"));
+  });
+
+  it("throws 400 REASON_REQUIRED when reason blank", async () => {
+    await expect(
+      makeService().cancel(1, HR_ID, "FRONT_OFFICE", "HR_MANAGER", "  "),
+    ).rejects.toThrow(new AppError(400, "REASON_REQUIRED"));
+  });
+});
+
+// ────────────────────────────────────────────
+// complete
+// ────────────────────────────────────────────
+
+describe("HiringDispatchService.complete", () => {
+  it("ONBOARDING → COMPLETED for HR_MANAGER", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "ONBOARDING" })),
+    });
+    const result = await makeService(repo).complete(1, HR_ID, "FRONT_OFFICE", "HR_MANAGER");
+    expect(result.status).toBe("COMPLETED");
+  });
+
+  it("throws 400 INVALID_STATUS when not ONBOARDING", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "DISPATCH_APPROVED" })),
+    });
+    await expect(
+      makeService(repo).complete(1, HR_ID, "FRONT_OFFICE", "HR_MANAGER"),
+    ).rejects.toThrow(new AppError(400, "INVALID_STATUS"));
+  });
+
+  it("throws 403 NOT_HR_MANAGER for non-HR caller", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "ONBOARDING" })),
+    });
+    await expect(
+      makeService(repo).complete(1, OUTSIDER, "PLAYER", null),
+    ).rejects.toThrow(new AppError(403, "NOT_HR_MANAGER"));
+  });
+});
