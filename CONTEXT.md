@@ -1232,6 +1232,67 @@ $$\text{Priority} = (\text{규정 위반 여부}) + (\text{부서별 목표 기�
 
 ---
 
+## 채용 발령 (Hiring Dispatch)
+
+최종합격(`JobApplication.status = OFFERED`) 이후 실제 `User` 계정 생성까지의 공백을 메우는 발령 워크플로우. 재무 최종 재검증 → 임원 발령 승인 → HR 실행(User + UserDepartment + StaffRecord + Onboarding 원자적 생성) → 온보딩 → 완료의 3-stage 결재 흐름을 하나의 `HiringDispatch` 도메인으로 통합한다. JobApplication 없이 시작되는 임원 스카웃·계약직 즉시 채용도 first-class로 지원한다.
+
+**상태머신:**
+```
+CREATED → BUDGET_REVERIFIED → DISPATCH_APPROVED → DISPATCHED → ONBOARDING → COMPLETED
+    ↓            ↓                    ↓
+CANCELLED    REJECTED             REJECTED
+```
+
+- `CREATED`: HR이 신규 발령을 개시. Application 기반이면 OFFERED 검증 후 create, 없으면 candidateName/Email 직접 입력.
+- `BUDGET_REVERIFIED`: 재무팀 매니저가 TO·예산·offer 재검증 통과. warning override flag는 approval row에 이력 보존.
+- `DISPATCH_APPROVED`: 임원(GM/ADMIN)이 발령 최종 승인.
+- `DISPATCHED`: HR이 실행 개시. 아래 $transaction 진입 순간.
+- `ONBOARDING`: $transaction 커밋 완료. 기존 Onboarding 흐름(OTP 이메일 + MFA)으로 자동 진입.
+- `COMPLETED`: Onboarding 완료. 수동 API로 종결(자동 완료는 후속 작업).
+- `CANCELLED`: HR이 CREATED / BUDGET_REVERIFIED 단계에서만 취소 가능. 사퇴·후보 철회 등 사유(reason 필수). DISPATCH_APPROVED 이후 롤백은 별건 절차.
+- `REJECTED`: 재무 또는 임원 stage에서 반려. HiringDispatch REJECTED 되어도 `JobApplication.status`는 OFFERED 그대로 유지 — HR이 상황 판단 후 재제출 or 별건 처리.
+
+**3-stage 결재 매핑 (Q4):**
+- **BUDGET_REVIEW** — `frontOfficeRole = FINANCE_MANAGER` 또는 `isAdminLike(role)`
+- **DISPATCH_APPROVAL** — `isAdminLike(role)` (임원: ADMIN / SUPER_ADMIN / GM)
+- **EXECUTION** — `frontOfficeRole = HR_MANAGER` 또는 `isAdminLike(role)`
+- 각 stage self-approval 차단. `@@unique([dispatchId, stage])` — stage당 결정 1행만 허용(action은 unique key에서 제외해 APPROVED/REJECTED 모순 DB에서 차단).
+
+**HiringDispatch 핵심 필드:**
+- `applicationId Int? @unique` — 기본 흐름은 non-null(OFFERED 검증), Application-free 흐름은 null.
+- `candidateName / candidateEmail` — Application 없어도 발령 대상자 식별 가능.
+- `jobTitle String`, `jobGrade JobGrade`(INTERN | JUNIOR | ASSOCIATE | MANAGER | DIRECTOR | EXECUTIVE), `employmentType EmploymentType`(FULL_TIME | PART_TIME | CONTRACT | INTERN | ADVISOR)
+- `departmentId Int` — leaf 부서. 코스트센터 = 부서(Q8 A). 별도 costCenterCode 필드 없음.
+- `reportsToUserId Int?` — 조직도 상 리포팅 라인.
+- `monthlySalary BigInt`, `startDate DateTime`
+- `targetRole Role` / `targetFrontOfficeRole FrontOfficeRole?` / `targetCoachingRole CoachingRole?` — 실행 시 생성될 User에 부여할 role trio.
+- `permissionNotes String?` — 팀장이 발령 요청 시 서술한 특수 권한 부여 필요 사항. EXECUTION 알림에 HR로 전달돼 발령 후 수동 후속 처리(상시 access request 채널은 non-goal).
+- `createdUserId Int? @unique` — EXECUTION 성공 시 생성된 User FK. 실행 전에는 null.
+
+**HiringDispatchApproval:** stage(`BUDGET_REVIEW` | `DISPATCH_APPROVAL` | `EXECUTION`) × action(`APPROVED` | `REJECTED`) × reviewerId × reason 감사 이력. 재무팀의 TO override / offer mismatch override 결정은 `reason` 자유텍스트에 보존.
+
+**EXECUTION $transaction 순서 (Q6):**
+1. PhoneNumber create (User FK 사전 확보; candidate phoneNumber 스펙 부재 → placeholder `000-0000-0000` seed, 온보딩에서 사용자 교체).
+2. `User.create({ email, username, nickname: candidateName#dispatchId, role, frontOfficeRole?, coachingRole?, phoneNumberId, nationalityId: 1(KR seed), dateOfBirth: 2000-01-01 })` — 임시 password + OTP는 tx 진입 전 생성.
+3. `UserDepartment.create({ userId, departmentId, role: MEMBER })`.
+4. `StaffRecord.create({ userId, name, role: jobTitle, email, departmentId, startDate })`.
+5. `Onboarding.create({ hiringDispatchId, userId, otpCode, otpExpiresAt })` — Q11-1 b: `applicationId`는 null.
+6. `HiringDispatchApproval.create({ stage: EXECUTION, action: APPROVED })` + `HiringDispatch.update({ status: ONBOARDING, createdUserId })`.
+
+email 중복(`User.email @unique`)은 tx 진입 전 pre-check로 `EMAIL_ALREADY_IN_USE` 400 반환 — dangling PhoneNumber 방지. tx 커밋 이후 alarm(팀장 + HR permissionNotes 있으면 + candidate OTP)은 fire-and-forget.
+
+**Onboarding dual reference (Q11-1 b):** `Onboarding.applicationId Int? @unique` + `Onboarding.hiringDispatchId Int? @unique` 둘 다 nullable. 하나만 non-null이어야 함(app-level XOR — Prisma CHECK 미지원). Application 기반 발령은 `hiringDispatchId`가 채워지고 `applicationId`는 null.
+
+**Q10 D 재검증 현황:**
+- **TO 초과** — `HiringPlanItem.headcount` vs 부서 현재 인원 + 1. 초과 시 `toOverride=true` 없으면 400 `TO_EXCEEDED`. Application-free는 HiringPlanItem 참조 없어 skip.
+- **예산 잔액** — `Department.monthlyLaborBudget` 필드 부재 → 현재 skip (TODO).
+- **Offer 일치** — `JobApplication.offeredSalary` 필드 부재 → 현재 skip (TODO).
+
+**쓰기 권한:** HR_MANAGER(create / dispatch / cancel / complete), FINANCE_MANAGER(budget-reverify / budget-reject), GM·ADMIN(dispatch-approve / dispatch-reject), 각 stage self-approval 차단.
+**읽기 권한:** 결재 라인 유저, GM, ADMIN, HR_MANAGER, FINANCE_MANAGER.
+
+---
+
 ## 부서 (Department)
 
 ERP 내 조직 부서. `parentId` 자기참조로 계층(상위 부서 → 하위팀) 지원. `headId`로 부서장 1명 지정.
