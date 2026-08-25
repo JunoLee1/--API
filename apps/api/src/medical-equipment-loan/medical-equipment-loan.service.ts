@@ -310,7 +310,7 @@ export async function rejectLoan(
       if (ledger.operatingExpenseId) {
         await tx.operatingExpense.update({
           where: { id: ledger.operatingExpenseId },
-          data: { status: "REJECTED" },
+          data: { status: "CANCELLED" },
         });
       }
     }
