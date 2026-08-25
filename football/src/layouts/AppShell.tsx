@@ -241,6 +241,14 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'COACHING_STAFF'],
     coachingRoles: ['MEDICAL', 'MEDICAL_DIRECTOR'],
   },
+  {
+    to: '/medical/equipment-loan',
+    label: 'nav.item.medicalEquipmentLoan',
+    icon: Package,
+    section: 'nav.section.injuryMedical',
+    roles: ['ADMIN', 'COACHING_STAFF'],
+    coachingRoles: ['MEDICAL', 'MEDICAL_DIRECTOR'],
+  },
 
   // 훈련
   {
