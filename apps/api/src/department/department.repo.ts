@@ -1,5 +1,7 @@
 import { PrismaClient } from "../generated/client";
-import type { DepartmentCategory } from "../generated/enums";
+import type { DepartmentCategory, DeptRole } from "../generated/enums";
+
+type TxClient = Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
 
 export class DepartmentRepository {
   constructor(private prisma: PrismaClient) {}
@@ -54,5 +56,70 @@ export class DepartmentRepository {
 
   delete(id: number) {
     return this.prisma.department.delete({ where: { id } });
+  }
+
+  // ── Member CRUD ────────────────────────────────────────────
+
+  findMembers(deptId: number) {
+    return this.prisma.userDepartment.findMany({
+      where: { departmentId: deptId },
+      include: { user: true },
+      orderBy: { joinedAt: "asc" },
+    });
+  }
+
+  findMember(deptId: number, userId: number) {
+    return this.prisma.userDepartment.findUnique({
+      where: { userId_departmentId: { userId, departmentId: deptId } },
+    });
+  }
+
+  findUserById(userId: number) {
+    return this.prisma.user.findUnique({ where: { id: userId } });
+  }
+
+  addMember(deptId: number, userId: number, role: DeptRole, tx?: TxClient) {
+    const client = tx ?? this.prisma;
+    return client.userDepartment.create({
+      data: { departmentId: deptId, userId, role },
+    });
+  }
+
+  updateMemberRole(deptId: number, userId: number, role: DeptRole, tx?: TxClient) {
+    const client = tx ?? this.prisma;
+    return client.userDepartment.update({
+      where: { userId_departmentId: { userId, departmentId: deptId } },
+      data: { role },
+    });
+  }
+
+  removeMember(deptId: number, userId: number, tx?: TxClient) {
+    const client = tx ?? this.prisma;
+    return client.userDepartment.delete({
+      where: { userId_departmentId: { userId, departmentId: deptId } },
+    });
+  }
+
+  transferMember(fromDeptId: number, toDeptId: number, userId: number, toRole: DeptRole) {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.userDepartment.delete({
+        where: { userId_departmentId: { userId, departmentId: fromDeptId } },
+      });
+      await tx.userDepartment.create({
+        data: { departmentId: toDeptId, userId, role: toRole },
+      });
+    });
+  }
+
+  countUserDepartments(userId: number) {
+    return this.prisma.userDepartment.count({ where: { userId } });
+  }
+
+  updateHead(deptId: number, newHeadId: number | null, tx?: TxClient) {
+    const client = tx ?? this.prisma;
+    return client.department.update({
+      where: { id: deptId },
+      data: { headId: newHeadId },
+    });
   }
 }
