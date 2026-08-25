@@ -100,3 +100,27 @@ export function canApprovePlan(userRole: string, requiredLevel: string | null): 
       return false
   }
 }
+
+/**
+ * 의무기기 대여 요청 가능 여부
+ * CoachRole MEDICAL / MEDICAL_DIRECTOR 또는 isAdminLike
+ */
+export function canRequestMedicalEquipmentLoan(user: {
+  role: string;
+  coachRole?: string | null;
+}): boolean {
+  if (isAdminLike(user.role)) return true;
+  return user.coachRole === "MEDICAL" || user.coachRole === "MEDICAL_DIRECTOR";
+}
+
+/**
+ * 의무기기 대여 승인 가능 여부 (일반 + 사후 승인)
+ * CoachRole MEDICAL_DIRECTOR 또는 isAdminLike
+ */
+export function canApproveMedicalEquipmentLoan(user: {
+  role: string;
+  coachRole?: string | null;
+}): boolean {
+  if (isAdminLike(user.role)) return true;
+  return user.coachRole === "MEDICAL_DIRECTOR";
+}
