@@ -94,6 +94,8 @@
       "reviewRuleSets": "Approval Rule Sets",
       "recruitment": "Recruitment",
       "hiringSurvey": "Hiring Survey",
+      "hiringDispatch": "Hiring Dispatch",
+      "hiringDispatchApproval": "Dispatch Approvals",
       "facilityMgmt": "Facility",
       "leagueMgmt": "League Management",
       "budgetControl": "Budget Control",

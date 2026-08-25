@@ -346,6 +346,13 @@ enum NotificationType {
   HIRING_SURVEY_CLOSED
   HIRING_SURVEY_ALL_RESPONDED
   HIRING_PLAN_APPROVED
+  HIRING_DISPATCH_CREATED
+  HIRING_DISPATCH_BUDGET_REVERIFIED
+  HIRING_DISPATCH_DISPATCH_APPROVED
+  HIRING_DISPATCH_DISPATCHED
+  HIRING_DISPATCH_REJECTED
+  HIRING_DISPATCH_CANCELLED
+  HIRING_DISPATCH_PERMISSION_REQUESTED
   INJURY_REHABILITATING_STARTED
   INJURY_REPORT_UPDATED
   TRAINING_HIGH_PERFORMANCE_PLAYER
@@ -935,6 +942,10 @@ model User {
   carryOverOverrides        FinancialReport[]               @relation("CarryOverOverrider")
   assetRequests             AssetRequest[]                  @relation("AssetRequestRequester")
   assetRequestApprovals     AssetRequestApproval[]          @relation("AssetRequestReviewer")
+  createdDispatches         HiringDispatch[]                @relation("DispatchCreator")
+  createdDispatchUser       HiringDispatch?                 @relation("DispatchCreatedUser")
+  reportsToDispatches       HiringDispatch[]                @relation("DispatchReportsTo")
+  dispatchApprovals         HiringDispatchApproval[]        @relation("DispatchReviewer")
 }
 
 model Season {
@@ -2497,6 +2508,7 @@ model Department {
   budgetLines       BudgetLine[]
   assetRequests     AssetRequest[]
   operatingExpenses OperatingExpense[]
+  hiringDispatches  HiringDispatch[]
 
   @@unique([name, clubId])
 }
@@ -2805,6 +2817,7 @@ model JobApplication {
   interviews              Interview[]
   referenceCheck          ReferenceCheck?
   onboarding              Onboarding?
+  hiringDispatch          HiringDispatch?
   referenceCheckConsent   Boolean?
   referenceCheckConsentAt DateTime?
   dataRetentionDeadline   DateTime?
@@ -2863,18 +2876,20 @@ model ReferenceCheck {
 }
 
 model Onboarding {
-  id              Int       @id @default(autoincrement())
-  applicationId   Int       @unique
-  userId          Int?      @unique
-  otpCode         String
-  otpExpiresAt    DateTime
-  emailVerifiedAt DateTime?
-  mfaRegisteredAt DateTime?
-  completedAt     DateTime?
-  createdAt       DateTime  @default(now())
+  id               Int       @id @default(autoincrement())
+  applicationId    Int?      @unique
+  hiringDispatchId Int?      @unique
+  userId           Int?      @unique
+  otpCode          String
+  otpExpiresAt     DateTime
+  emailVerifiedAt  DateTime?
+  mfaRegisteredAt  DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime  @default(now())
 
-  application JobApplication @relation(fields: [applicationId], references: [id])
-  user        User?          @relation("OnboardingUser", fields: [userId], references: [id])
+  application    JobApplication? @relation(fields: [applicationId], references: [id])
+  hiringDispatch HiringDispatch? @relation(fields: [hiringDispatchId], references: [id])
+  user           User?           @relation("OnboardingUser", fields: [userId], references: [id])
 }
 
 // ─────────────────────────────────────────────
@@ -3982,4 +3997,97 @@ model AssetRequestApproval {
 
   @@unique([assetRequestId, stage])
   @@index([assetRequestId, stage])
+}
+
+// ─────────────────────────────────────────────
+// 채용 파견 (HiringDispatch) - 4단계 후속 워크플로우
+// ─────────────────────────────────────────────
+
+enum HiringDispatchStatus {
+  CREATED
+  BUDGET_REVERIFIED
+  DISPATCH_APPROVED
+  DISPATCHED
+  ONBOARDING
+  COMPLETED
+  REJECTED
+  CANCELLED
+}
+
+enum HiringDispatchStage {
+  BUDGET_REVIEW
+  DISPATCH_APPROVAL
+  EXECUTION
+}
+
+enum HiringDispatchAction {
+  APPROVED
+  REJECTED
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERN
+  ADVISOR
+}
+
+enum JobGrade {
+  INTERN
+  JUNIOR
+  ASSOCIATE
+  MANAGER
+  DIRECTOR
+  EXECUTIVE
+}
+
+model HiringDispatch {
+  id                    Int                  @id @default(autoincrement())
+  applicationId         Int?                 @unique
+  candidateName         String
+  candidateEmail        String
+  jobTitle              String
+  jobGrade              JobGrade
+  employmentType        EmploymentType
+  departmentId          Int
+  reportsToUserId       Int?
+  monthlySalary         BigInt
+  startDate             DateTime
+  targetRole            Role
+  targetFrontOfficeRole FrontOfficeRole?
+  targetCoachingRole    CoachingRole?
+  permissionNotes       String?
+  status                HiringDispatchStatus @default(CREATED)
+  createdUserId         Int?                 @unique
+  createdById           Int
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  application   JobApplication?          @relation(fields: [applicationId], references: [id])
+  department    Department               @relation(fields: [departmentId], references: [id])
+  reportsToUser User?                    @relation("DispatchReportsTo", fields: [reportsToUserId], references: [id])
+  createdUser   User?                    @relation("DispatchCreatedUser", fields: [createdUserId], references: [id])
+  createdBy     User                     @relation("DispatchCreator", fields: [createdById], references: [id])
+  approvals     HiringDispatchApproval[]
+  onboarding    Onboarding?
+
+  @@index([status, createdAt])
+  @@index([departmentId, status])
+}
+
+model HiringDispatchApproval {
+  id         Int                  @id @default(autoincrement())
+  dispatchId Int
+  stage      HiringDispatchStage
+  action     HiringDispatchAction
+  reviewerId Int
+  reason     String?
+  createdAt  DateTime             @default(now())
+
+  dispatch HiringDispatch @relation(fields: [dispatchId], references: [id], onDelete: Cascade)
+  reviewer User           @relation("DispatchReviewer", fields: [reviewerId], references: [id])
+
+  @@unique([dispatchId, stage])
+  @@index([dispatchId, stage])
 }

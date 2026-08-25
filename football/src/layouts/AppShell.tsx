@@ -446,6 +446,27 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'FRONT_OFFICE'],
     frontOfficeRoles: ['HR_MANAGER'],
   },
+  // 채용 발령: HR 이 요청을 생성하고 재무·임원·HR 3단계 결재를 거쳐 실행됨.
+  // 리스트 페이지는 HR/관리자가 요청을 생성하는 곳, 결재함은 재무/임원/HR 어느
+  // 단계든 참여 가능한 사용자에게 노출 (백엔드가 pending 목록 필터).
+  {
+    to: '/hiring',
+    label: 'nav.item.hiringDispatch',
+    icon: UserPlus,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.hr',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['HR_MANAGER'],
+  },
+  {
+    to: '/hiring/approval',
+    label: 'nav.item.hiringDispatchApproval',
+    icon: ClipboardCheck,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.hr',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['FINANCE_MANAGER', 'HR_MANAGER'],
+  },
 
   // 관리 > 재무
   {

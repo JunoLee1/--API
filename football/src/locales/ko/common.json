@@ -94,6 +94,8 @@
       "reviewRuleSets": "결재 룰셋",
       "recruitment": "채용 관리",
       "hiringSurvey": "채용 수요 조사",
+      "hiringDispatch": "채용 발령",
+      "hiringDispatchApproval": "발령 결재함",
       "facilityMgmt": "시설 관리",
       "leagueMgmt": "리그 관리",
       "budgetControl": "예산 관리",

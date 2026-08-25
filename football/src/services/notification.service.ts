@@ -90,6 +90,14 @@ export const NOTIFICATION_ROUTES: Record<string, string> = {
   JOB_POSTING_DRAFT_CREATED: '/admin/recruitment/postings',
   INTERVIEW_SCHEDULED: '/admin/recruitment/applications',
   ONBOARDED: '/admin/recruitment/applications',
+  // Hiring Dispatch
+  HIRING_DISPATCH_CREATED: '/hiring/approval',
+  HIRING_DISPATCH_BUDGET_REVERIFIED: '/hiring/approval',
+  HIRING_DISPATCH_DISPATCH_APPROVED: '/hiring/approval',
+  HIRING_DISPATCH_DISPATCHED: '/hiring',
+  HIRING_DISPATCH_REJECTED: '/hiring',
+  HIRING_DISPATCH_CANCELLED: '/hiring',
+  HIRING_DISPATCH_PERMISSION_REQUESTED: '/hiring/approval',
   // Asset Request
   ASSET_REQUEST_SUBMITTED: '/asset/approval',
   ASSET_REQUEST_LEADER_APPROVED: '/asset/approval',
