@@ -118,7 +118,7 @@ function CreateInspectionDialog({ open, onOpenChange, onSaved }: CreateInspectio
             <Select value={zone} onValueChange={(v) => setZone(v as FacilityZone)}>
               <SelectTrigger><SelectValue>{t(`zone.${zone}`)}</SelectValue></SelectTrigger>
               <SelectContent>
-                {ZONES.map((z) => <SelectItem key={z} value={z}>{t(`zone.${z}`)}</SelectItem>)}
+                {ZONES.map((z) => <SelectItem key={z} value={z} label={t(`zone.${z}`)}>{t(`zone.${z}`)}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -127,7 +127,7 @@ function CreateInspectionDialog({ open, onOpenChange, onSaved }: CreateInspectio
             <Select value={type} onValueChange={(v) => setType(v as InspectionType)}>
               <SelectTrigger><SelectValue>{t(`inspectionType.${type}`)}</SelectValue></SelectTrigger>
               <SelectContent>
-                {INSPECTION_TYPES.map((tp) => <SelectItem key={tp} value={tp}>{t(`inspectionType.${tp}`)}</SelectItem>)}
+                {INSPECTION_TYPES.map((tp) => <SelectItem key={tp} value={tp} label={t(`inspectionType.${tp}`)}>{t(`inspectionType.${tp}`)}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -136,7 +136,7 @@ function CreateInspectionDialog({ open, onOpenChange, onSaved }: CreateInspectio
             <Select value={result} onValueChange={(v) => setResult(v as InspectionResult)}>
               <SelectTrigger><SelectValue>{t(`result.${result}`)}</SelectValue></SelectTrigger>
               <SelectContent>
-                {RESULTS.map((r) => <SelectItem key={r} value={r}>{t(`result.${r}`)}</SelectItem>)}
+                {RESULTS.map((r) => <SelectItem key={r} value={r} label={t(`result.${r}`)}>{t(`result.${r}`)}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -227,7 +227,7 @@ function CreateMaintenanceDialog({ open, onOpenChange, onSaved }: CreateMaintena
             <Select value={priority} onValueChange={(v) => setPriority(v as MaintenancePriority)}>
               <SelectTrigger><SelectValue>{t(`priority.${priority}`)}</SelectValue></SelectTrigger>
               <SelectContent>
-                {PRIORITIES.map((p) => <SelectItem key={p} value={p}>{t(`priority.${p}`)}</SelectItem>)}
+                {PRIORITIES.map((p) => <SelectItem key={p} value={p} label={t(`priority.${p}`)}>{t(`priority.${p}`)}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -347,8 +347,8 @@ function UpdateMaintenanceDialog({ request, onOpenChange, onSaved, isFacilityMan
                 <Select value={nextStatus} onValueChange={(v) => setNextStatus(v as MaintenanceStatus)}>
                   <SelectTrigger><SelectValue>{t(`status.${nextStatus}`)}</SelectValue></SelectTrigger>
                   <SelectContent>
-                    {status === 'OPEN' && <SelectItem value="IN_PROGRESS">{t('status.IN_PROGRESS')}</SelectItem>}
-                    <SelectItem value="PENDING_APPROVAL">{t('status.PENDING_APPROVAL')}</SelectItem>
+                    {status === 'OPEN' && <SelectItem value="IN_PROGRESS" label={t('status.IN_PROGRESS')}>{t('status.IN_PROGRESS')}</SelectItem>}
+                    <SelectItem value="PENDING_APPROVAL" label={t('status.PENDING_APPROVAL')}>{t('status.PENDING_APPROVAL')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -492,8 +492,8 @@ export function FacilityPage() {
                     <SelectValue>{zoneFilter ? t(`zone.${zoneFilter}`) : t('inspections.filterAll')}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{t('inspections.filterAll')}</SelectItem>
-                    {ZONES.map((z) => <SelectItem key={z} value={z}>{t(`zone.${z}`)}</SelectItem>)}
+                    <SelectItem value="" label={t('inspections.filterAll')}>{t('inspections.filterAll')}</SelectItem>
+                    {ZONES.map((z) => <SelectItem key={z} value={z} label={t(`zone.${z}`)}>{t(`zone.${z}`)}</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as InspectionType | '')}>
@@ -501,8 +501,8 @@ export function FacilityPage() {
                     <SelectValue>{typeFilter ? t(`inspectionType.${typeFilter}`) : t('inspections.filterAll')}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{t('inspections.filterAll')}</SelectItem>
-                    {INSPECTION_TYPES.map((tp) => <SelectItem key={tp} value={tp}>{t(`inspectionType.${tp}`)}</SelectItem>)}
+                    <SelectItem value="" label={t('inspections.filterAll')}>{t('inspections.filterAll')}</SelectItem>
+                    {INSPECTION_TYPES.map((tp) => <SelectItem key={tp} value={tp} label={t(`inspectionType.${tp}`)}>{t(`inspectionType.${tp}`)}</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <Select value={resultFilter} onValueChange={(v) => setResultFilter(v as InspectionResult | '')}>
@@ -510,8 +510,8 @@ export function FacilityPage() {
                     <SelectValue>{resultFilter ? t(`result.${resultFilter}`) : t('inspections.filterAll')}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{t('inspections.filterAll')}</SelectItem>
-                    {RESULTS.map((r) => <SelectItem key={r} value={r}>{t(`result.${r}`)}</SelectItem>)}
+                    <SelectItem value="" label={t('inspections.filterAll')}>{t('inspections.filterAll')}</SelectItem>
+                    {RESULTS.map((r) => <SelectItem key={r} value={r} label={t(`result.${r}`)}>{t(`result.${r}`)}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -572,8 +572,8 @@ export function FacilityPage() {
                     <SelectValue>{statusFilter ? t(`status.${statusFilter}`) : t('maintenance.filterAll')}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{t('maintenance.filterAll')}</SelectItem>
-                    {STATUSES.map((s) => <SelectItem key={s} value={s}>{t(`status.${s}`)}</SelectItem>)}
+                    <SelectItem value="" label={t('maintenance.filterAll')}>{t('maintenance.filterAll')}</SelectItem>
+                    {STATUSES.map((s) => <SelectItem key={s} value={s} label={t(`status.${s}`)}>{t(`status.${s}`)}</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <Select value={priorityFilter} onValueChange={(v) => setPriorityFilter(v as MaintenancePriority | '')}>
@@ -581,8 +581,8 @@ export function FacilityPage() {
                     <SelectValue>{priorityFilter ? t(`priority.${priorityFilter}`) : t('maintenance.filterAll')}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{t('maintenance.filterAll')}</SelectItem>
-                    {PRIORITIES.map((p) => <SelectItem key={p} value={p}>{t(`priority.${p}`)}</SelectItem>)}
+                    <SelectItem value="" label={t('maintenance.filterAll')}>{t('maintenance.filterAll')}</SelectItem>
+                    {PRIORITIES.map((p) => <SelectItem key={p} value={p} label={t(`priority.${p}`)}>{t(`priority.${p}`)}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
