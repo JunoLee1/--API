@@ -1499,6 +1499,37 @@ FACILITY_MANAGER가 일상·정기 점검 결과를 기록하는 단위. "이상
 
 GM 인수인계서에 항목만 존재하고 내용이 공란. 담당자 확인 후 설계 예정. 모델 미정.
 
+### 의무기기 대여 (Medical Equipment Loan)
+
+**별도 모델:** `MedicalEquipmentLoanLedger` — `EquipmentLoan` 1:1 FK. 의무팀 전용 워크플로우 (응급/파트너 할인/예산 포함).
+
+**상태 머신:**
+- **일반 경로:** DRAFT → APPROVED → ISSUED → RETURNED (or REJECTED)
+- **응급 fast-rent:** EMERGENCY_ISSUED → EMERGENCY_PENDING_POST_APPROVAL → EMERGENCY_RESOLVED → RETURNED (or EMERGENCY_REJECTED)
+
+**응급 fast-rent 특징 (Grill Q2, Q9):**
+- 요청자 self-flag with `emergencyReason` (필수)
+- 즉시 지급 (예산 체크 skip)
+- D+1 09:00 SLA 팀장 사후 승인 — 미승인 시 부서장 escalate
+- 즉시 반납 요구 알림 지원
+
+**파트너 할인 (Grill Q4, Q5):**
+- `EquipmentItem.partnerId` 기반 자동 조회
+- 우선순위: `Sponsorship` (ACTIVE, contractEnd > now) [무상] > `PartnerContract` (ACTIVE + discountRate)
+- `overrideReason` 필수로 팀장 수동 override 가능
+- Sponsorship이 PartnerContract 없이 단독 존재할 수 있음 (gap 관리: 팀장 override)
+
+**회계 일관성 (Grill Q6):**
+- `finalCost=0` (무상) 이어도 `OperatingExpense(amount=0)` 기록 필수
+- 응급 경로: 사후 승인 시 budgetLineId backfill로 예산 라인 연결
+
+**권한 제어:**
+- `canRequestMedicalEquipmentLoan`: CoachRole `MEDICAL` / `MEDICAL_DIRECTOR` or admin
+- `canApproveMedicalEquipmentLoan`: CoachRole `MEDICAL_DIRECTOR` or admin
+- 자기 자신 승인 불가 (admin 제외) — DB 제약 불가, 서비스 레이어 검증
+
+**관련 ADR:** 0018 (의무기기 대여 워크플로우 + Grill Q1~Q10 결정)
+
 ---
 
 ## 급여 관리 (Payroll Management)

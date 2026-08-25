@@ -99,6 +99,8 @@ import { ReviewRuleSetPage } from '@/pages/admin/ReviewRuleSetPage'
 import MonthlySettlementDetailPage from '@/pages/reports/MonthlySettlementDetailPage'
 import PayrollPage from '@/pages/admin/PayrollPage'
 import { DepartmentMembersPage } from '@/pages/department/DepartmentMembersPage'
+import { MedicalEquipmentLoanPage } from '@/pages/medical/MedicalEquipmentLoanPage'
+import { MedicalEquipmentLoanDetailPage } from '@/pages/medical/MedicalEquipmentLoanDetailPage'
 
 function RootRedirect() {
   const { user, loading } = useCurrentUser()
@@ -251,6 +253,8 @@ function App() {
             <Route path="/settings/account-codes" element={<AccountCodesPage />} />
             <Route path="/admin/payroll" element={<PayrollPage />} />
             <Route path="/departments/:deptId/members" element={<DepartmentMembersPage />} />
+            <Route path="/medical/equipment-loan" element={<MedicalEquipmentLoanPage />} />
+            <Route path="/medical/equipment-loan/:id" element={<MedicalEquipmentLoanDetailPage />} />
             <Route path="/player/me" element={<PlayerMeRedirect />} />
           </Route>
 

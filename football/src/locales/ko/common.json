@@ -45,6 +45,7 @@
       "injuryStatus": "부상 현황",
       "injuryStats": "부상 통계",
       "medicalExpenses": "의료비 결재",
+      "medicalEquipmentLoan": "의무기기 대여 대장",
       "trainingSchedule": "훈련 일정",
       "attendance": "출석 현황",
       "trainingResults": "훈련 결과",
