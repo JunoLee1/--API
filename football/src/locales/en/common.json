@@ -223,6 +223,8 @@
       "expiringContractCount": "Expiring Contracts",
       "injuredPlayerCount": "Injured Players",
       "lowStockEquipmentCount": "Low Stock Items",
+      "openMaintenanceCount": "Open Maintenance",
+      "lowStockInventoryCount": "Low Stock Inventory",
       "activeTransferCount": "Active Transfers",
       "prospectCount": "Prospects",
       "totalActiveContractCount": "Active Contracts",
