@@ -2,7 +2,7 @@ import { AppError } from '../lib/appError'
 import { NotificationRepository } from '../notification/notification.repo'
 import { PlanReportRepository } from '../plan-report/plan-report.repo'
 import { HiringSurveyRepository } from './hiring-survey.repo'
-import type { CreateHiringSurveyDto, CreateSurveyResponseDto } from './dto/hiring-survey.dto'
+import type { CreateHiringSurveyDto, CreateSurveyResponseDto, UpdateHiringSurveyDraftDto } from './dto/hiring-survey.dto'
 
 export class HiringSurveyService {
   constructor(
@@ -138,6 +138,93 @@ export class HiringSurveyService {
     ).catch(console.error)
 
     return planReport
+  }
+
+  async updateDraft(id: number, dto: UpdateHiringSurveyDraftDto) {
+    const survey = await this.getById(id)
+    if (survey.status !== 'DRAFT') throw new AppError(409, 'SURVEY_NOT_DRAFT')
+
+    const data: { title?: string; deadlineAt?: Date; targetDeptIds?: number[] } = {}
+    if (dto.title !== undefined) {
+      if (!dto.title.trim()) throw new AppError(400, 'TITLE_REQUIRED')
+      data.title = dto.title
+    }
+    if (dto.deadlineAt !== undefined) {
+      data.deadlineAt = new Date(dto.deadlineAt)
+    }
+    if (dto.targetDeptIds !== undefined) {
+      if (dto.targetDeptIds.length === 0) throw new AppError(400, 'TARGET_DEPTS_REQUIRED')
+      data.targetDeptIds = dto.targetDeptIds
+    }
+
+    return this.repo.updateDraft(id, data)
+  }
+
+  async open(id: number) {
+    const survey = await this.getById(id)
+    if (survey.status !== 'DRAFT') throw new AppError(409, 'SURVEY_NOT_DRAFT')
+    if (survey.targetDepartments.length === 0) throw new AppError(409, 'TARGET_DEPTS_REQUIRED')
+    if (survey.deadlineAt < new Date()) throw new AppError(409, 'DEADLINE_IN_PAST')
+
+    const opened = await this.repo.openDraft(id)
+
+    // 대상 부서장들에게 HIRING_SURVEY_OPEN 알림 (기존 create() flow 와 동일)
+    const headIds = survey.targetDepartments
+      .map((t) => t.department.headId)
+      .filter((hid): hid is number => hid !== null)
+
+    await Promise.all(
+      headIds.map((userId) =>
+        this.notifRepo.create({
+          userId,
+          type: 'HIRING_SURVEY_OPEN',
+          title: '채용 수요 조사 참여 요청',
+          body: `"${survey.title}" 채용 수요 조사에 응답해 주세요. 마감일: ${survey.deadlineAt.toLocaleDateString('ko-KR')}`,
+          entityId: survey.id,
+        })
+      )
+    )
+
+    return opened
+  }
+
+  async deleteDraft(id: number) {
+    const survey = await this.getById(id)
+    if (survey.status !== 'DRAFT') throw new AppError(409, 'SURVEY_NOT_DRAFT')
+    await this.repo.deleteDraft(id)
+  }
+
+  async createQuarterlyDraft(args: {
+    title: string
+    deadlineAt: Date
+    targetDeptIds: number[]
+    systemUserId: number
+  }) {
+    if (!args.title?.trim()) throw new AppError(400, 'TITLE_REQUIRED')
+    if (!args.deadlineAt) throw new AppError(400, 'DEADLINE_REQUIRED')
+    if (!args.targetDeptIds || args.targetDeptIds.length === 0) {
+      throw new AppError(400, 'TARGET_DEPTS_REQUIRED')
+    }
+
+    const draft = await this.repo.createDraft({
+      title: args.title,
+      deadlineAt: args.deadlineAt,
+      targetDeptIds: args.targetDeptIds,
+      createdById: args.systemUserId,
+    })
+
+    void this.notifRepo
+      .createForHrManager(
+        'HIRING_SURVEY_DRAFT_CREATED',
+        () => ({
+          title: '채용 수요 조사 자동 초안 생성',
+          body: `"${draft.title}" 초안이 자동 생성됐습니다. 검토 후 open 해 주세요.`,
+        }),
+        draft.id,
+      )
+      .catch(console.error)
+
+    return draft
   }
 
   async getParticipationRate(surveyId: number) {

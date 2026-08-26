@@ -83,4 +83,52 @@ export class HiringSurveyRepository {
   findResponsesBySurvey(surveyId: number) {
     return this.prisma.surveyResponse.findMany({ where: { surveyId } })
   }
+
+  createDraft(data: { title: string; deadlineAt: Date; targetDeptIds: number[]; createdById: number }) {
+    return this.prisma.hiringNeedsSurvey.create({
+      data: {
+        title: data.title,
+        deadlineAt: data.deadlineAt,
+        status: 'DRAFT',
+        createdById: data.createdById,
+        targetDepartments: {
+          create: data.targetDeptIds.map((departmentId) => ({ departmentId })),
+        },
+      },
+      include: SURVEY_INCLUDE,
+    })
+  }
+
+  updateDraft(id: number, data: { title?: string; deadlineAt?: Date; targetDeptIds?: number[] }) {
+    return this.prisma.$transaction(async (tx) => {
+      if (data.targetDeptIds !== undefined) {
+        await tx.surveyTargetDept.deleteMany({ where: { surveyId: id } })
+        await tx.surveyTargetDept.createMany({
+          data: data.targetDeptIds.map((departmentId) => ({ surveyId: id, departmentId })),
+        })
+      }
+      return tx.hiringNeedsSurvey.update({
+        where: { id },
+        data: {
+          ...(data.title !== undefined && { title: data.title }),
+          ...(data.deadlineAt !== undefined && { deadlineAt: data.deadlineAt }),
+        },
+        include: SURVEY_INCLUDE,
+      })
+    })
+  }
+
+  openDraft(id: number) {
+    return this.prisma.hiringNeedsSurvey.update({
+      where: { id },
+      data: { status: 'OPEN' },
+      include: SURVEY_INCLUDE,
+    })
+  }
+
+  deleteDraft(id: number) {
+    return this.prisma.hiringNeedsSurvey.delete({
+      where: { id },
+    })
+  }
 }

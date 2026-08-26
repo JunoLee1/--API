@@ -339,6 +339,7 @@ enum NotificationType {
   FACILITY_MAINTENANCE_RESOLVED
   EQUIPMENT_INSPECTION_DUE
   PAYROLL_CONFIRMED
+  /// Deprecated: kept for legacy notification records (pre-#360). No new emissions — replaced by HIRING_SURVEY_DRAFT_CREATED.
   JOB_POSTING_DRAFT_CREATED
   PAYROLL_SECOND_APPROVED
   IT_ASSET_EXPIRY_SOON
@@ -357,6 +358,7 @@ enum NotificationType {
   HIRING_SURVEY_DEADLINE_REMINDER
   HIRING_SURVEY_CLOSED
   HIRING_SURVEY_ALL_RESPONDED
+  HIRING_SURVEY_DRAFT_CREATED
   HIRING_PLAN_APPROVED
   PLAN_REPORT_REVIEW_REQUESTED
   HIRING_DISPATCH_CREATED
@@ -2498,6 +2500,7 @@ model ClubSettings {
   maintenanceCostLimit     Int    @default(1000000)
   complimentaryTicketLimit Int    @default(10)
   reviewerDeptMap          Json?
+  autoSurveyTopN           Int?   @default(3)
 }
 
 model StaffRecord {
@@ -3576,6 +3579,7 @@ enum PlanStatus {
 }
 
 enum SurveyStatus {
+  DRAFT
   OPEN
   CLOSED
 }
