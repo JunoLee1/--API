@@ -30,3 +30,9 @@ export interface UpdateHiringPlanItemDto {
   priority?: SurveyPriority
   estimatedBudget?: number | null
 }
+
+export interface UpdateHiringSurveyDraftDto {
+  title?: string
+  deadlineAt?: string
+  targetDeptIds?: number[]
+}

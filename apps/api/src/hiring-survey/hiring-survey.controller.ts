@@ -35,4 +35,22 @@ export class HiringSurveyController {
   getParticipationRate = async (req: Request, res: Response) => {
     res.json(await this.service.getParticipationRate(Number(req.params.id)))
   }
+
+  updateDraft = async (req: Request, res: Response) => {
+    const id = Number(req.params.id)
+    const result = await this.service.updateDraft(id, req.body)
+    res.json(result)
+  }
+
+  open = async (req: Request, res: Response) => {
+    const id = Number(req.params.id)
+    const result = await this.service.open(id)
+    res.json(result)
+  }
+
+  deleteDraft = async (req: Request, res: Response) => {
+    const id = Number(req.params.id)
+    await this.service.deleteDraft(id)
+    res.status(204).send()
+  }
 }

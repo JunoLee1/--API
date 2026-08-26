@@ -30,5 +30,8 @@ router.get('/:id/participation-rate', auth, requireHR, controller.getParticipati
 router.get('/:id', auth, controller.get)
 router.post('/:id/respond', auth, controller.submitResponse)
 router.post('/:id/close', auth, requireHR, controller.close)
+router.patch('/:id', auth, requireHR, controller.updateDraft)
+router.post('/:id/open', auth, requireHR, controller.open)
+router.delete('/:id', auth, requireHR, controller.deleteDraft)
 
 export default router
