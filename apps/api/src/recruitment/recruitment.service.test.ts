@@ -131,6 +131,10 @@ describe("RecruitmentService.createPosting", () => {
       title: "2026 상반기 채용 계획",
       jobPostings: [], // 이제 array — schema 변경 후 필드 이름
     }),
+    findHiringPlanItemById: jest.fn().mockResolvedValue({
+      id: 500,
+      planReportId: 1,
+    }),
     ...overrides,
   });
 
@@ -150,6 +154,7 @@ describe("RecruitmentService.createPosting", () => {
     description: "수비진 강화를 위한 코치 채용",
     departmentId: 10,
     headcount: 3,
+    hiringPlanItemId: 500,
   } as any;
 
   it("PlanReport 에 이미 JobPosting 이 있어도 새 posting 생성 가능해야 함 (다중 role 지원)", async () => {
@@ -222,6 +227,55 @@ describe("RecruitmentService.createPosting", () => {
     await expect(svc.createPosting(validDto, 42)).rejects.toMatchObject({
       statusCode: 404,
       message: "PLAN_REPORT_NOT_FOUND",
+    });
+  });
+
+  it("hiringPlanItemId 없으면 400 HIRING_PLAN_ITEM_REQUIRED", async () => {
+    const svc = makeSvcWithPlanRepo();
+    // validDto 는 hiringPlanItemId 포함, 이 테스트는 제외 후 전송
+    const dtoWithoutItem = { ...validDto, hiringPlanItemId: undefined } as any;
+    await expect(svc.createPosting(dtoWithoutItem, 42)).rejects.toMatchObject({
+      statusCode: 400,
+      message: "HIRING_PLAN_ITEM_REQUIRED",
+    });
+  });
+
+  it("hiringPlanItemId 가 존재하지 않으면 404 HIRING_PLAN_ITEM_NOT_FOUND", async () => {
+    const svc = makeSvcWithPlanRepo({
+      findByIdLight: jest.fn().mockResolvedValue({
+        id: 1,
+        status: "APPROVED",
+        templateType: "HR",
+        departmentId: 10,
+        title: "test",
+        jobPostings: [],
+      }),
+      findHiringPlanItemById: jest.fn().mockResolvedValue(null),
+    });
+    await expect(svc.createPosting(validDto, 42)).rejects.toMatchObject({
+      statusCode: 404,
+      message: "HIRING_PLAN_ITEM_NOT_FOUND",
+    });
+  });
+
+  it("hiringPlanItemId 가 다른 planReport 소속이면 400 HIRING_PLAN_ITEM_MISMATCH", async () => {
+    const svc = makeSvcWithPlanRepo({
+      findByIdLight: jest.fn().mockResolvedValue({
+        id: 1,
+        status: "APPROVED",
+        templateType: "HR",
+        departmentId: 10,
+        title: "test",
+        jobPostings: [],
+      }),
+      findHiringPlanItemById: jest.fn().mockResolvedValue({
+        id: 500,
+        planReportId: 999, // ← 다른 계획서 소속
+      }),
+    });
+    await expect(svc.createPosting(validDto, 42)).rejects.toMatchObject({
+      statusCode: 400,
+      message: "HIRING_PLAN_ITEM_MISMATCH",
     });
   });
 });

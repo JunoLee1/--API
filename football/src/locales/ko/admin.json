@@ -725,7 +725,11 @@
     "reinstateFailed": "복원에 실패했습니다.",
     "reinstateBtn": "거절 취소",
     "reinstating": "복원 중...",
-    "fillRate": "충원 현황"
+    "fillRate": "충원 현황",
+    "hiringItemRequired": "채용 계획 항목을 선택해 주세요.",
+    "hiringItemLink": "채용 계획 항목 연결 *",
+    "hiringItemPlaceholder": "항목을 선택해 주세요",
+    "hiringItemsEmptyWarning": "이 계획보고서에는 채용 계획 항목이 없습니다. 다른 보고서를 선택해 주세요."
   },
   "payroll": {
     "title": "급여 관리",

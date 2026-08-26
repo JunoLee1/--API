@@ -99,6 +99,10 @@ export function JobPostingListPage() {
       toast.error(t('recruitment.planReportRequired'))
       return
     }
+    if (!selectedHiringItemId) {
+      toast.error(t('recruitment.hiringItemRequired'))
+      return
+    }
     if (!form.description.trim()) {
       toast.error(t('recruitment.requiredFields'))
       return
@@ -232,15 +236,18 @@ export function JobPostingListPage() {
                 rows={4}
               />
             </div>
+            {selectedReportId !== null && hiringItems.length === 0 && (
+              <p className="text-xs text-destructive">{t('recruitment.hiringItemsEmptyWarning')}</p>
+            )}
             {hiringItems.length > 0 && (
               <div className="space-y-1.5">
-                <Label>채용 계획 항목 연결 (선택)</Label>
+                <Label>{t('recruitment.hiringItemLink')}</Label>
                 <select
                   className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
                   value={selectedHiringItemId ?? ''}
                   onChange={(e) => setSelectedHiringItemId(e.target.value ? Number(e.target.value) : undefined)}
                 >
-                  <option value="">연결 안 함</option>
+                  <option value="">{t('recruitment.hiringItemPlaceholder')}</option>
                   {hiringItems.map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.roleTitle} · {item.headcount}명 · {PRIORITY_LABELS[item.priority]}
@@ -258,7 +265,11 @@ export function JobPostingListPage() {
                 onChange={(e) => setForm((p) => ({ ...p, headcount: e.target.value }))}
               />
             </div>
-            <Button className="w-full" onClick={() => void handleCreate()} disabled={saving}>
+            <Button
+              className="w-full"
+              onClick={() => void handleCreate()}
+              disabled={saving || (selectedReportId !== null && hiringItems.length === 0)}
+            >
               {saving ? t('recruitment.saving') : t('recruitment.save')}
             </Button>
           </div>
