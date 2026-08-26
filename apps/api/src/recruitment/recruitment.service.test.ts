@@ -499,3 +499,113 @@ describe("RecruitmentService.completeMfa (HiringPlanItem status)", () => {
     expect(mockHiringPlanItem.updateMany).not.toHaveBeenCalled();
   });
 });
+
+describe("RecruitmentService.bulkCreatePostingsFromPlanReport", () => {
+  const planReportData = {
+    id: 1,
+    title: "2026 Q4 채용 계획",
+    status: "APPROVED",
+    templateType: "HR",
+    departmentId: 10,
+    jobPostings: [],
+  };
+
+  const items = [
+    { id: 101, planReportId: 1, roleTitle: "수비코치", headcount: 2, priority: "HIGH", status: "PLANNED", quarter: 4, estimatedBudget: 50000000 },
+    { id: 102, planReportId: 1, roleTitle: "GK코치", headcount: 1, priority: "MEDIUM", status: "IN_PROGRESS", quarter: 4, estimatedBudget: 30000000 },
+    { id: 103, planReportId: 1, roleTitle: "물리치료사", headcount: 2, priority: "HIGH", status: "PLANNED", quarter: 4, estimatedBudget: 40000000 },
+    { id: 104, planReportId: 1, roleTitle: "취소된 role", headcount: 1, priority: "LOW", status: "CANCELLED", quarter: 4, estimatedBudget: 20000000 },
+    { id: 105, planReportId: 1, roleTitle: "완료된 role", headcount: 1, priority: "LOW", status: "FULFILLED", quarter: 4, estimatedBudget: 20000000 },
+  ];
+
+  const makeSvcWithBulkContext = (
+    listHiringPlanItemsResult = items,
+    createPostingResults = [{ id: 500 }, { id: 501 }],
+  ) => {
+    const repo = makeRepo({
+      createPosting: jest.fn()
+        .mockResolvedValueOnce(createPostingResults[0])
+        .mockResolvedValueOnce(createPostingResults[1]),
+    });
+    const planRepo = {
+      findByIdLight: jest.fn().mockResolvedValue(planReportData),
+      findHiringPlanItemById: jest.fn().mockImplementation((id) => {
+        const item = items.find(i => i.id === id);
+        return Promise.resolve(item ?? null);
+      }),
+      listHiringPlanItems: jest.fn().mockResolvedValue(listHiringPlanItemsResult),
+      updateHiringPlanItemStatus: jest.fn().mockResolvedValue({}),
+    } as any;
+    const svc = new RecruitmentService(repo, undefined, planRepo);
+    return { svc, repo, planRepo };
+  };
+
+  it("PLANNED 상태 item 들만 posting 생성, 나머지는 skip", async () => {
+    const { svc, planRepo } = makeSvcWithBulkContext();
+
+    const result = await svc.bulkCreatePostingsFromPlanReport(1, 42);
+
+    // 2개 PLANNED (101, 103) → posting 생성
+    expect(result.created).toHaveLength(2);
+    // 3개 non-PLANNED (102 IN_PROGRESS, 104 CANCELLED, 105 FULFILLED) → skip
+    expect(result.skipped).toHaveLength(3);
+    expect(result.skipped.map((s: any) => s.id).sort()).toEqual([102, 104, 105]);
+    expect(result.skipped.map((s: any) => s.status).sort()).toEqual(["CANCELLED", "FULFILLED", "IN_PROGRESS"]);
+
+    // listHiringPlanItems 는 planReportId 기준 조회 (status filter 없이 전체)
+    expect(planRepo.listHiringPlanItems).toHaveBeenCalledWith(1);
+  });
+
+  it("생성된 posting 은 default title/description 갖고, hiringPlanItemId 자동 연결", async () => {
+    const { svc, repo } = makeSvcWithBulkContext();
+
+    await svc.bulkCreatePostingsFromPlanReport(1, 42);
+
+    const calls = (repo.createPosting as jest.Mock).mock.calls;
+    expect(calls).toHaveLength(2);
+    // 첫 posting (id 101, 수비코치)
+    expect(calls[0][0]).toMatchObject({
+      planReportId: 1,
+      hiringPlanItemId: 101,
+      title: "2026 Q4 채용 계획 - 수비코치",
+      headcount: 2,
+      departmentId: 10,
+      createdById: 42,
+    });
+    expect(calls[0][0].description).toContain("수비코치");
+    expect(calls[0][0].description).toContain("2"); // headcount
+  });
+
+  it("planReport 없으면 404 PLAN_REPORT_NOT_FOUND", async () => {
+    const { svc } = makeSvcWithBulkContext();
+    const planRepo = {
+      findByIdLight: jest.fn().mockResolvedValue(null),
+      listHiringPlanItems: jest.fn(),
+    } as any;
+    const svcNoReport = new RecruitmentService(makeRepo(), undefined, planRepo);
+
+    await expect(svcNoReport.bulkCreatePostingsFromPlanReport(999, 42))
+      .rejects.toMatchObject({ statusCode: 404, message: "PLAN_REPORT_NOT_FOUND" });
+  });
+
+  it("planReport 가 HR 이 아니거나 승인 안 됨 시 409", async () => {
+    const planRepo = {
+      findByIdLight: jest.fn().mockResolvedValue({ ...planReportData, templateType: "GENERAL" }),
+      listHiringPlanItems: jest.fn(),
+    } as any;
+    const svc = new RecruitmentService(makeRepo(), undefined, planRepo);
+
+    await expect(svc.bulkCreatePostingsFromPlanReport(1, 42))
+      .rejects.toMatchObject({ statusCode: 409, message: "PLAN_REPORT_NOT_HR_TYPE" });
+  });
+
+  it("모든 item 이 non-PLANNED 이면 created 는 빈 배열, skipped 만 반환 (에러 아님)", async () => {
+    const allNonPlanned = items.filter(i => i.status !== "PLANNED");
+    const { svc } = makeSvcWithBulkContext(allNonPlanned);
+
+    const result = await svc.bulkCreatePostingsFromPlanReport(1, 42);
+
+    expect(result.created).toHaveLength(0);
+    expect(result.skipped).toHaveLength(3);
+  });
+});

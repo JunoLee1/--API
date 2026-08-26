@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express'
 import type { PlanReportService } from './plan-report.service'
 import { PlanReportRepository } from './plan-report.repo'
+import type { RecruitmentService } from '../recruitment/recruitment.service'
 import { HiringPlanItemStatus } from '../generated/enums'
 import path from 'path'
 
@@ -10,6 +11,7 @@ export class PlanReportController {
   constructor(
     private service: PlanReportService,
     private repo: PlanReportRepository,
+    private recruitmentService: RecruitmentService,
   ) {}
 
   list = async (req: Request, res: Response, next: NextFunction) => {
@@ -114,6 +116,15 @@ export class PlanReportController {
       const itemId = Number(req.params.itemId)
       const result = await this.service.cancelHiringPlanItem(itemId, planReportId, req.user!.id)
       res.json(result)
+    } catch (e) { next(e) }
+  }
+
+  publishPostings = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const planReportId = Number(req.params.id)
+      const actorId = req.user!.id
+      const result = await this.recruitmentService.bulkCreatePostingsFromPlanReport(planReportId, actorId)
+      res.status(201).json(result)
     } catch (e) { next(e) }
   }
 }
