@@ -691,7 +691,11 @@
     "reinstateFailed": "Failed to restore applicant status.",
     "reinstateBtn": "Undo Rejection",
     "reinstating": "Restoring...",
-    "fillRate": "Fill Rate"
+    "fillRate": "Fill Rate",
+    "hiringItemRequired": "Please select a hiring plan item.",
+    "hiringItemLink": "Hiring Plan Item Link *",
+    "hiringItemPlaceholder": "Select an item",
+    "hiringItemsEmptyWarning": "This plan report has no hiring plan items. Please choose another report."
   },
   "financialReport": {
     "title": "Financial Report",

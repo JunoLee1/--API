@@ -165,6 +165,13 @@ export class PlanReportRepository {
     })
   }
 
+  findHiringPlanItemById(id: number) {
+    return this.prisma.hiringPlanItem.findUnique({
+      where: { id },
+      select: { id: true, planReportId: true },
+    })
+  }
+
   findApprovedHrReports() {
     return this.prisma.planReport.findMany({
       where: {
