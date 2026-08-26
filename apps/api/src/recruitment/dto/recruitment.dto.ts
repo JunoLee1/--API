@@ -57,6 +57,8 @@ export interface UpdateInterviewDto {
   scoreCulture?: number;
   comment?: string;
   result?: InterviewResult;
+  overrideThreshold?: boolean;
+  overrideReason?: string;
 }
 
 export interface CreateReferenceCheckDto {

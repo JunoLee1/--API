@@ -2502,6 +2502,7 @@ model ClubSettings {
   complimentaryTicketLimit Int    @default(10)
   reviewerDeptMap          Json?
   autoSurveyTopN           Int?   @default(3)
+  interviewPassThreshold   Int    @default(3)
 }
 
 model StaffRecord {
@@ -2850,6 +2851,8 @@ enum InterviewResult {
   PENDING
   PASS
   FAIL
+  HOLD
+  WAITLIST
 }
 
 enum ScreeningResult {

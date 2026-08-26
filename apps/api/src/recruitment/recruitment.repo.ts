@@ -396,4 +396,67 @@ export class RecruitmentRepository {
       _count: true,
     });
   }
+
+  // --- ClubSettings + Waitlist helpers (fix #366) ---
+
+  getClubSettings() {
+    return this.prisma.clubSettings.findFirst();
+  }
+
+  findWaitlistedInterviews(postingId: number) {
+    return this.prisma.interview.findMany({
+      where: {
+        result: "WAITLIST",
+        application: { postingId },
+      },
+      include: {
+        application: {
+          select: { id: true, applicantName: true, email: true, status: true, postingId: true },
+        },
+      },
+    });
+  }
+
+  findWaitlistedInterviewByApplication(applicationId: number) {
+    return this.prisma.interview.findFirst({
+      where: {
+        applicationId,
+        result: "WAITLIST",
+      },
+    });
+  }
+
+  async findTopWaitlistForPosting(postingId: number) {
+    const rows = await this.prisma.interview.findMany({
+      where: {
+        result: "WAITLIST",
+        application: { postingId, status: { not: "REJECTED" } },
+      },
+      include: {
+        application: {
+          select: { id: true, applicantName: true, email: true, status: true, postingId: true },
+        },
+      },
+    });
+    // Sort by score sum desc in JS (Prisma doesn't support computed ORDER BY easily).
+    const sorted = rows.sort((a, b) => {
+      const sumA = (a.scoreSkill ?? 0) + (a.scoreComm ?? 0) + (a.scoreCulture ?? 0);
+      const sumB = (b.scoreSkill ?? 0) + (b.scoreComm ?? 0) + (b.scoreCulture ?? 0);
+      return sumB - sumA;
+    });
+    return sorted[0] ?? null;
+  }
+
+  findAllWaitlistedInterviews() {
+    return this.prisma.interview.findMany({
+      where: { result: "WAITLIST" },
+    });
+  }
+
+  updateInterviewResult(id: number, result: "PENDING" | "PASS" | "FAIL" | "HOLD" | "WAITLIST") {
+    return this.prisma.interview.update({
+      where: { id },
+      data: { result },
+    });
+  }
 }

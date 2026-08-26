@@ -4,11 +4,15 @@ import { SeasonController } from "./season.controller";
 import { SeasonService } from "./season.service";
 import { SeasonRepository } from "./season.repo";
 import { getPrisma } from "../lib/prisma";
+import { RecruitmentService } from "../recruitment/recruitment.service";
+import { RecruitmentRepository } from "../recruitment/recruitment.repo";
 
 const router = Router();
 const prisma = getPrisma();
 const repo = new SeasonRepository(prisma);
-const service = new SeasonService(repo);
+// Fix #366: wire RecruitmentService so closeSeason can expire remaining waitlists.
+const recruitmentService = new RecruitmentService(new RecruitmentRepository(prisma));
+const service = new SeasonService(repo, recruitmentService);
 const controller = new SeasonController(service);
 
 

@@ -45,11 +45,28 @@ export async function sendGuardianInjuryEmail(
 export async function sendApplicationStatusEmail(
   to: string,
   applicantName: string,
-  status: "REJECTED" | "OFFERED",
+  status: "REJECTED" | "OFFERED" | "WAITLIST" | "WAITLIST_EXPIRED",
 ): Promise<void> {
-  const messages = {
-    REJECTED: { subject: "[FC Seoul ERP] 채용 지원 결과 안내", body: `${applicantName}님, 지원해 주셔서 감사합니다. 아쉽게도 이번 전형에서 합격하지 못하셨습니다.` },
-    OFFERED: { subject: "[FC Seoul ERP] 채용 제안 안내", body: `${applicantName}님, 축하합니다! 채용 제안을 드리게 되어 기쁩니다. 담당자가 곧 연락드릴 예정입니다.` },
+  const messages: Record<
+    "REJECTED" | "OFFERED" | "WAITLIST" | "WAITLIST_EXPIRED",
+    { subject: string; body: string }
+  > = {
+    REJECTED: {
+      subject: "[FC Seoul ERP] 채용 지원 결과 안내",
+      body: `${applicantName}님, 지원해 주셔서 감사합니다. 아쉽게도 이번 전형에서 합격하지 못하셨습니다.`,
+    },
+    OFFERED: {
+      subject: "[FC Seoul ERP] 채용 제안 안내",
+      body: `${applicantName}님, 축하합니다! 채용 제안을 드리게 되어 기쁩니다. 담당자가 곧 연락드릴 예정입니다.`,
+    },
+    WAITLIST: {
+      subject: "[FC Seoul ERP] 채용 대기(Waitlist) 등록 안내",
+      body: `${applicantName}님, 서류/면접 결과가 우수하여 채용 대기(waitlist) 명단에 등록되었습니다. 자리가 나면 즉시 연락드리겠습니다.`,
+    },
+    WAITLIST_EXPIRED: {
+      subject: "[FC Seoul ERP] 채용 대기(Waitlist) 만료 안내",
+      body: `${applicantName}님, 아쉽게도 시즌 마감으로 인해 waitlist 가 종료되었습니다. 향후 다른 기회에 지원 부탁드립니다.`,
+    },
   };
   const { subject, body } = messages[status];
   await transporter.sendMail({
