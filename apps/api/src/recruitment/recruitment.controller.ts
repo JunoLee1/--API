@@ -312,4 +312,28 @@ export class RecruitmentController {
       next(err);
     }
   };
+
+  getInterviewerScoreAggregate = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole, coachingRole } = requireUser(req);
+      if (!canRead(role, frontOfficeRole, coachingRole)) throw new AppError(403, "FORBIDDEN");
+      const applicationId = Number(req.params["id"]);
+      const round = req.params["round"] as InterviewRound;
+      res.json(await this.service.getInterviewerScoreAggregate(applicationId, round));
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  finalizeInterviewScore = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = requireUser(req);
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const applicationId = Number(req.params["id"]);
+      const round = req.params["round"] as InterviewRound;
+      res.json(await this.service.finalizeInterviewScore(applicationId, round));
+    } catch (err) {
+      next(err);
+    }
+  };
 }
