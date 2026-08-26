@@ -140,6 +140,17 @@ export class PlanReportService {
 
     return updated
   }
+
+  async cancelHiringPlanItem(id: number, planReportId: number, actorId: number) {
+    const item = await this.repo.findHiringPlanItemById(id)
+    if (!item) throw new AppError(404, 'HIRING_PLAN_ITEM_NOT_FOUND')
+    if (item.planReportId !== planReportId) throw new AppError(400, 'HIRING_PLAN_ITEM_MISMATCH')
+    if (item.status === 'CANCELLED') throw new AppError(409, 'HIRING_PLAN_ITEM_ALREADY_CANCELLED')
+
+    const result = await this.repo.cancelHiringPlanItem(id)
+    await writeAuditLog({ actorId, action: 'HIRING_PLAN_ITEM_CANCELLED', targetId: id })
+    return result
+  }
 }
 
 function resolveApproverLevel(

@@ -3590,6 +3590,13 @@ enum SurveyPriority {
   LOW
 }
 
+enum HiringPlanItemStatus {
+  PLANNED
+  IN_PROGRESS
+  FULFILLED
+  CANCELLED
+}
+
 model PlanReport {
   id                    Int              @id @default(autoincrement())
   title                 String
@@ -3682,16 +3689,19 @@ model SurveyResponse {
 }
 
 model HiringPlanItem {
-  id               Int            @id @default(autoincrement())
+  id               Int                  @id @default(autoincrement())
   planReportId     Int
-  surveyResponseId Int?           @unique
+  surveyResponseId Int?                 @unique
   roleTitle        String
   headcount        Int
   quarter          Int?
   priority         SurveyPriority
   estimatedBudget  Int?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  status           HiringPlanItemStatus @default(PLANNED)
+  fulfilledCount   Int                  @default(0)
+  fulfilledAt      DateTime?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
 
   planReport     PlanReport      @relation(fields: [planReportId], references: [id], onDelete: Cascade)
   surveyResponse SurveyResponse? @relation(fields: [surveyResponseId], references: [id])

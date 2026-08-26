@@ -61,8 +61,17 @@ export class RecruitmentService {
     const hiringPlanItem = await this.planReportRepo.findHiringPlanItemById(dto.hiringPlanItemId);
     if (!hiringPlanItem) throw new AppError(404, "HIRING_PLAN_ITEM_NOT_FOUND");
     if (hiringPlanItem.planReportId !== dto.planReportId) throw new AppError(400, "HIRING_PLAN_ITEM_MISMATCH");
+    if (hiringPlanItem.status === "FULFILLED") throw new AppError(409, "HIRING_PLAN_ITEM_ALREADY_FULFILLED");
+    if (hiringPlanItem.status === "CANCELLED") throw new AppError(409, "HIRING_PLAN_ITEM_CANCELLED");
 
-    return this.repo.createPosting({ ...dto, createdById });
+    const posting = await this.repo.createPosting({ ...dto, createdById });
+
+    // 첫 JobPosting 생성 시 PLANNED → IN_PROGRESS 전이 (idempotent)
+    if (hiringPlanItem.status === "PLANNED") {
+      await this.planReportRepo.updateHiringPlanItemStatus(dto.hiringPlanItemId, "IN_PROGRESS");
+    }
+
+    return posting;
   }
 
   async updatePosting(id: number, dto: UpdateJobPostingDto) {
@@ -264,6 +273,35 @@ export class RecruitmentService {
             createdById: application.offeredById ?? 1,
             employmentStartDate: new Date(),
           } as any,
+        });
+      }
+
+      // HiringPlanItem fulfilledCount 증가 + FULFILLED 전이 (posting 이 hiringPlanItemId 를 가진 경우만).
+      // $transaction 으로 원자성 보장 — increment 와 FULFILLED 전이가 함께 성공하거나 함께 실패.
+      // updateMany where: { status: "IN_PROGRESS" } 로 CANCELLED race 방어 (CANCELLED 를 FULFILLED 로 덮어쓰지 않음).
+      const hiringPlanItemId = application.posting?.hiringPlanItemId;
+      if (hiringPlanItemId && this.planReportRepo) {
+        await prisma.$transaction(async (tx) => {
+          // IN_PROGRESS 인 경우만 진행 — PLANNED/FULFILLED/CANCELLED 는 skip
+          const item = await tx.hiringPlanItem.findUnique({
+            where: { id: hiringPlanItemId },
+            select: { id: true, headcount: true, fulfilledCount: true, status: true },
+          });
+          if (!item || item.status !== "IN_PROGRESS") return;
+
+          const updated = await tx.hiringPlanItem.update({
+            where: { id: hiringPlanItemId },
+            data: { fulfilledCount: { increment: 1 } },
+            select: { fulfilledCount: true, headcount: true },
+          });
+
+          if (updated.fulfilledCount >= updated.headcount) {
+            // guard: 다른 트랜잭션이 CANCELLED 로 바꿨으면 여기서 no-op
+            await tx.hiringPlanItem.updateMany({
+              where: { id: hiringPlanItemId, status: "IN_PROGRESS" },
+              data: { status: "FULFILLED", fulfilledAt: new Date() },
+            });
+          }
         });
       }
     }
