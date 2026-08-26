@@ -1,6 +1,12 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals'
+
+jest.mock('../../src/lib/auditLog', () => ({
+  writeAuditLog: jest.fn().mockResolvedValue(undefined),
+}))
+
 import { PlanReportService } from '../../src/plan-report/plan-report.service'
 import { PlanReportRepository } from '../../src/plan-report/plan-report.repo'
+import { writeAuditLog } from '../../src/lib/auditLog'
 
 const mockRepo = {
   findById: jest.fn(),
@@ -139,5 +145,89 @@ describe('PlanReportRepository.findApprovedHrReports', () => {
     })
     // legacy "no HiringPlanItems" 절도 유지되어야 함
     expect(call.where.OR).toContainEqual({ hiringPlanItems: { none: {} } })
+  })
+})
+
+describe('PlanReportService.cancelHiringPlanItem', () => {
+  const ACTOR_ID = 42
+  const makeCtx = (repoOverrides: any = {}) => {
+    const repo = {
+      findHiringPlanItemById: jest.fn(),
+      cancelHiringPlanItem: jest.fn(),
+      ...repoOverrides,
+    } as any
+    return { svc: new PlanReportService(repo), repo }
+  }
+
+  test('DRAFT/IN_PROGRESS item cancel 성공', async () => {
+    const { svc, repo } = makeCtx({
+      findHiringPlanItemById: jest.fn().mockResolvedValue({
+        id: 500, planReportId: 1, status: 'IN_PROGRESS',
+      }),
+      cancelHiringPlanItem: jest.fn().mockResolvedValue({ id: 500, status: 'CANCELLED' }),
+    })
+    const result = await svc.cancelHiringPlanItem(500, 1, ACTOR_ID)
+    expect(repo.cancelHiringPlanItem).toHaveBeenCalledWith(500)
+    expect(result.status).toBe('CANCELLED')
+    expect(writeAuditLog).toHaveBeenCalledWith({
+      actorId: ACTOR_ID,
+      action: 'HIRING_PLAN_ITEM_CANCELLED',
+      targetId: 500,
+    })
+  })
+
+  test('없는 item → 404 HIRING_PLAN_ITEM_NOT_FOUND', async () => {
+    const { svc } = makeCtx({
+      findHiringPlanItemById: jest.fn().mockResolvedValue(null),
+    })
+    await expect(svc.cancelHiringPlanItem(999, 1, ACTOR_ID))
+      .rejects.toMatchObject({ statusCode: 404, message: 'HIRING_PLAN_ITEM_NOT_FOUND' })
+  })
+
+  test('다른 planReport 소속 → 400 HIRING_PLAN_ITEM_MISMATCH', async () => {
+    const { svc } = makeCtx({
+      findHiringPlanItemById: jest.fn().mockResolvedValue({
+        id: 500, planReportId: 999, status: 'PLANNED',
+      }),
+    })
+    await expect(svc.cancelHiringPlanItem(500, 1, ACTOR_ID))
+      .rejects.toMatchObject({ statusCode: 400, message: 'HIRING_PLAN_ITEM_MISMATCH' })
+  })
+
+  test('이미 CANCELLED → 409 HIRING_PLAN_ITEM_ALREADY_CANCELLED', async () => {
+    const { svc } = makeCtx({
+      findHiringPlanItemById: jest.fn().mockResolvedValue({
+        id: 500, planReportId: 1, status: 'CANCELLED',
+      }),
+    })
+    await expect(svc.cancelHiringPlanItem(500, 1, ACTOR_ID))
+      .rejects.toMatchObject({ statusCode: 409, message: 'HIRING_PLAN_ITEM_ALREADY_CANCELLED' })
+  })
+})
+
+describe('PlanReportRepository.listHiringPlanItems (status filter)', () => {
+  const makePrismaMock = () => ({
+    hiringPlanItem: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+  } as any)
+
+  test('status filter 없으면 planReportId 만 매칭', async () => {
+    const prisma = makePrismaMock()
+    const repo = new PlanReportRepository(prisma)
+    await repo.listHiringPlanItems(1)
+    const call = (prisma.hiringPlanItem.findMany as jest.Mock).mock.calls[0][0]
+    expect(call.where).toEqual({ planReportId: 1 })
+  })
+
+  test('status filter 있으면 status: { in: [...] } 추가', async () => {
+    const prisma = makePrismaMock()
+    const repo = new PlanReportRepository(prisma)
+    await repo.listHiringPlanItems(1, ['PLANNED', 'IN_PROGRESS'])
+    const call = (prisma.hiringPlanItem.findMany as jest.Mock).mock.calls[0][0]
+    expect(call.where).toEqual({
+      planReportId: 1,
+      status: { in: ['PLANNED', 'IN_PROGRESS'] },
+    })
   })
 })

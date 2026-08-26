@@ -1,5 +1,6 @@
 import type { PrismaClient } from '../generated/client'
 import { Prisma } from '../generated/client'
+import type { HiringPlanItemStatus } from '../generated/enums'
 import type {
   CreatePlanReportDto,
   UpdatePlanReportDto,
@@ -168,7 +169,32 @@ export class PlanReportRepository {
   findHiringPlanItemById(id: number) {
     return this.prisma.hiringPlanItem.findUnique({
       where: { id },
-      select: { id: true, planReportId: true },
+      select: { id: true, planReportId: true, status: true, headcount: true, fulfilledCount: true },
+    })
+  }
+
+  updateHiringPlanItemStatus(id: number, status: HiringPlanItemStatus, fulfilledAt?: Date) {
+    return this.prisma.hiringPlanItem.update({
+      where: { id },
+      data: {
+        status,
+        ...(fulfilledAt !== undefined && { fulfilledAt }),
+      },
+    })
+  }
+
+  incrementFulfilledCount(id: number) {
+    return this.prisma.hiringPlanItem.update({
+      where: { id },
+      data: { fulfilledCount: { increment: 1 } },
+      select: { id: true, headcount: true, fulfilledCount: true, status: true },
+    })
+  }
+
+  cancelHiringPlanItem(id: number) {
+    return this.prisma.hiringPlanItem.update({
+      where: { id },
+      data: { status: 'CANCELLED' },
     })
   }
 
@@ -219,9 +245,12 @@ export class PlanReportRepository {
     })
   }
 
-  listHiringPlanItems(planReportId: number) {
+  listHiringPlanItems(planReportId: number, statusFilter?: HiringPlanItemStatus[]) {
     return this.prisma.hiringPlanItem.findMany({
-      where: { planReportId },
+      where: {
+        planReportId,
+        ...(statusFilter && statusFilter.length > 0 && { status: { in: statusFilter } }),
+      },
       include: { surveyResponse: { select: { id: true, departmentId: true } } },
       orderBy: { createdAt: 'asc' },
     })

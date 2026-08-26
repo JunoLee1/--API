@@ -2,6 +2,30 @@ import bcrypt from "bcrypt";
 import { RecruitmentService } from "./recruitment.service";
 import type { RecruitmentRepository } from "./recruitment.repo";
 
+// Shared mock functions so tests can access + reset them between runs.
+const mockHiringPlanItem = {
+  findUnique: jest.fn(),
+  update: jest.fn(),
+  updateMany: jest.fn(),
+};
+
+jest.mock("../lib/prisma", () => ({
+  getPrisma: () => ({
+    staffRecord: {
+      findFirst: jest.fn().mockResolvedValue(null),
+      create: jest.fn().mockResolvedValue({}),
+    },
+    referenceCheck: {
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
+    hiringPlanItem: mockHiringPlanItem,
+    // Passthrough tx — inner callback receives the same prisma-like object.
+    $transaction: jest.fn().mockImplementation(async (fn: any) => fn({
+      hiringPlanItem: mockHiringPlanItem,
+    })),
+  }),
+}));
+
 const fakeApp = {
   id: 1, status: "OFFERED", applicantName: "테스트", posting: null,
   applicationDate: new Date(), updatedAt: new Date(),
@@ -134,7 +158,9 @@ describe("RecruitmentService.createPosting", () => {
     findHiringPlanItemById: jest.fn().mockResolvedValue({
       id: 500,
       planReportId: 1,
+      status: "PLANNED",
     }),
+    updateHiringPlanItemStatus: jest.fn().mockResolvedValue({}),
     ...overrides,
   });
 
@@ -271,11 +297,205 @@ describe("RecruitmentService.createPosting", () => {
       findHiringPlanItemById: jest.fn().mockResolvedValue({
         id: 500,
         planReportId: 999, // ← 다른 계획서 소속
+        status: "PLANNED",
       }),
     });
     await expect(svc.createPosting(validDto, 42)).rejects.toMatchObject({
       statusCode: 400,
       message: "HIRING_PLAN_ITEM_MISMATCH",
     });
+  });
+
+  it("첫 JobPosting 생성 시 HiringPlanItem status 를 IN_PROGRESS 로 전이", async () => {
+    const updateHiringPlanItemStatus = jest.fn().mockResolvedValue({});
+    const svc = new RecruitmentService(
+      makeRepo({
+        createPosting: jest.fn().mockResolvedValue({ id: 101, title: "test" }) as any,
+      }),
+      undefined,
+      makePlanReportRepo({
+        findByIdLight: jest.fn().mockResolvedValue({
+          id: 1,
+          status: "APPROVED",
+          templateType: "HR",
+          departmentId: 10,
+          title: "test",
+          jobPostings: [],
+        }),
+        findHiringPlanItemById: jest.fn().mockResolvedValue({
+          id: 500,
+          planReportId: 1,
+          status: "PLANNED",
+        }),
+        updateHiringPlanItemStatus,
+      }),
+    );
+
+    await svc.createPosting({ ...validDto, hiringPlanItemId: 500 }, 42);
+
+    expect(updateHiringPlanItemStatus).toHaveBeenCalledWith(500, "IN_PROGRESS");
+  });
+
+  it("이미 IN_PROGRESS 인 HiringPlanItem 은 status 재 update 안 함 (idempotent)", async () => {
+    const updateHiringPlanItemStatus = jest.fn().mockResolvedValue({});
+    const svc = new RecruitmentService(
+      makeRepo({
+        createPosting: jest.fn().mockResolvedValue({ id: 101, title: "test" }) as any,
+      }),
+      undefined,
+      makePlanReportRepo({
+        findByIdLight: jest.fn().mockResolvedValue({
+          id: 1, status: "APPROVED", templateType: "HR",
+          departmentId: 10, title: "test", jobPostings: [],
+        }),
+        findHiringPlanItemById: jest.fn().mockResolvedValue({
+          id: 500, planReportId: 1, status: "IN_PROGRESS",
+        }),
+        updateHiringPlanItemStatus,
+      }),
+    );
+
+    await svc.createPosting({ ...validDto, hiringPlanItemId: 500 }, 42);
+
+    expect(updateHiringPlanItemStatus).not.toHaveBeenCalled();
+  });
+
+  it("HiringPlanItem status === 'FULFILLED' 이면 409 HIRING_PLAN_ITEM_ALREADY_FULFILLED", async () => {
+    const svc = makeSvcWithPlanRepo({
+      findByIdLight: jest.fn().mockResolvedValue({
+        id: 1, status: "APPROVED", templateType: "HR",
+        departmentId: 10, title: "test", jobPostings: [],
+      }),
+      findHiringPlanItemById: jest.fn().mockResolvedValue({
+        id: 500, planReportId: 1, status: "FULFILLED",
+      }),
+    });
+
+    await expect(svc.createPosting({ ...validDto, hiringPlanItemId: 500 }, 42))
+      .rejects.toMatchObject({ statusCode: 409, message: "HIRING_PLAN_ITEM_ALREADY_FULFILLED" });
+  });
+
+  it("HiringPlanItem status === 'CANCELLED' 이면 409 HIRING_PLAN_ITEM_CANCELLED", async () => {
+    const svc = makeSvcWithPlanRepo({
+      findByIdLight: jest.fn().mockResolvedValue({
+        id: 1, status: "APPROVED", templateType: "HR",
+        departmentId: 10, title: "test", jobPostings: [],
+      }),
+      findHiringPlanItemById: jest.fn().mockResolvedValue({
+        id: 500, planReportId: 1, status: "CANCELLED",
+      }),
+    });
+
+    await expect(svc.createPosting({ ...validDto, hiringPlanItemId: 500 }, 42))
+      .rejects.toMatchObject({ statusCode: 409, message: "HIRING_PLAN_ITEM_CANCELLED" });
+  });
+});
+
+describe("RecruitmentService.completeMfa (HiringPlanItem status)", () => {
+  beforeEach(() => {
+    mockHiringPlanItem.findUnique.mockReset();
+    mockHiringPlanItem.update.mockReset();
+    mockHiringPlanItem.updateMany.mockReset();
+  });
+
+  const makeMfaCtx = (
+    repoOverrides: any = {},
+    planRepoOverrides: any = {},
+    txItemState: any = { id: 500, headcount: 3, fulfilledCount: 0, status: "IN_PROGRESS" },
+    txUpdateResult: any = { fulfilledCount: 1, headcount: 3 },
+  ) => {
+    const repo = makeRepo({
+      findOnboardingByApplication: jest.fn().mockResolvedValue({
+        id: 1, applicationId: 1, userId: 1,
+        otpCode: "hash", otpExpiresAt: new Date(Date.now() + 60_000),
+        emailVerifiedAt: new Date(),
+        mfaRegisteredAt: null,
+      }),
+      markMfaRegistered: jest.fn().mockResolvedValue({ mfaRegisteredAt: new Date() }),
+      findApplicationById: jest.fn().mockResolvedValue({
+        id: 1,
+        applicantName: "테스트",
+        offeredById: 42,
+        posting: {
+          id: 100,
+          title: "Coach",
+          hiringPlanItemId: 500,
+        },
+      }),
+      completeOnboarding: jest.fn().mockResolvedValue({}),
+      ...repoOverrides,
+    });
+    const planRepo = {
+      findHiringPlanItemById: jest.fn().mockResolvedValue({
+        id: 500, planReportId: 1, headcount: 3, fulfilledCount: 0, status: "IN_PROGRESS",
+      }),
+      incrementFulfilledCount: jest.fn().mockResolvedValue({ id: 500, headcount: 3, fulfilledCount: 1, status: "IN_PROGRESS" }),
+      updateHiringPlanItemStatus: jest.fn().mockResolvedValue({}),
+      ...planRepoOverrides,
+    } as any;
+    mockHiringPlanItem.findUnique.mockResolvedValue(txItemState);
+    mockHiringPlanItem.update.mockResolvedValue(txUpdateResult);
+    mockHiringPlanItem.updateMany.mockResolvedValue({ count: 1 });
+    return { svc: new RecruitmentService(repo, undefined, planRepo), repo, planRepo };
+  };
+
+  it("Application 온보딩 완료 시 HiringPlanItem.fulfilledCount 증가 (tx 안에서 update)", async () => {
+    const { svc } = makeMfaCtx();
+    await svc.completeMfa(1);
+    expect(mockHiringPlanItem.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 500 },
+        data: { fulfilledCount: { increment: 1 } },
+      }),
+    );
+  });
+
+  it("fulfilledCount 가 headcount 도달 시 FULFILLED 로 전이 (updateMany with IN_PROGRESS guard)", async () => {
+    const { svc } = makeMfaCtx(
+      {},
+      {},
+      { id: 500, headcount: 3, fulfilledCount: 2, status: "IN_PROGRESS" },
+      { fulfilledCount: 3, headcount: 3 },
+    );
+    await svc.completeMfa(1);
+    expect(mockHiringPlanItem.updateMany).toHaveBeenCalledWith({
+      where: { id: 500, status: "IN_PROGRESS" },
+      data: { status: "FULFILLED", fulfilledAt: expect.any(Date) },
+    });
+  });
+
+  it("fulfilledCount < headcount 이면 FULFILLED 전이 skip", async () => {
+    const { svc } = makeMfaCtx(
+      {},
+      {},
+      { id: 500, headcount: 3, fulfilledCount: 0, status: "IN_PROGRESS" },
+      { fulfilledCount: 1, headcount: 3 },
+    );
+    await svc.completeMfa(1);
+    expect(mockHiringPlanItem.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("posting 에 hiringPlanItemId 없으면 (legacy) tx 자체 skip", async () => {
+    const { svc } = makeMfaCtx({
+      findApplicationById: jest.fn().mockResolvedValue({
+        id: 1, applicantName: "테스트", offeredById: 42,
+        posting: { id: 100, title: "Coach", hiringPlanItemId: null },
+      }),
+    });
+    await svc.completeMfa(1);
+    expect(mockHiringPlanItem.findUnique).not.toHaveBeenCalled();
+    expect(mockHiringPlanItem.update).not.toHaveBeenCalled();
+    expect(mockHiringPlanItem.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("HiringPlanItem 이 이미 CANCELLED 이면 fulfilledCount 증가 skip", async () => {
+    const { svc } = makeMfaCtx(
+      {},
+      {},
+      { id: 500, headcount: 3, fulfilledCount: 0, status: "CANCELLED" },
+    );
+    await svc.completeMfa(1);
+    expect(mockHiringPlanItem.update).not.toHaveBeenCalled();
+    expect(mockHiringPlanItem.updateMany).not.toHaveBeenCalled();
   });
 });

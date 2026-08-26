@@ -49,6 +49,7 @@ router.post('/upload', auth, upload.single('file'), controller.uploadAttachment)
 router.get('/:id/hiring-items', auth, checkReadHR, controller.listHiringItems)
 router.post('/:id/hiring-items', auth, checkWriteHR, controller.createHiringItem)
 router.patch('/:id/hiring-items/:itemId', auth, checkWriteHR, controller.updateHiringItem)
+router.patch('/:id/hiring-items/:itemId/cancel', auth, checkWriteHR, controller.cancelHiringItem)
 router.delete('/:id/hiring-items/:itemId', auth, checkWriteHR, controller.deleteHiringItem)
 
 export default router

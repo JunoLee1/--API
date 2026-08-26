@@ -1,7 +1,10 @@
 import type { Request, Response, NextFunction } from 'express'
 import type { PlanReportService } from './plan-report.service'
 import { PlanReportRepository } from './plan-report.repo'
+import { HiringPlanItemStatus } from '../generated/enums'
 import path from 'path'
+
+const HIRING_PLAN_ITEM_STATUSES = Object.values(HiringPlanItemStatus) as string[]
 
 export class PlanReportController {
   constructor(
@@ -71,7 +74,11 @@ export class PlanReportController {
 
   listHiringItems = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const items = await this.repo.listHiringPlanItems(Number(req.params.id))
+      const statusParam = req.query.status
+      const statusFilter = typeof statusParam === 'string'
+        ? (statusParam.split(',').filter(s => HIRING_PLAN_ITEM_STATUSES.includes(s)) as HiringPlanItemStatus[])
+        : undefined
+      const items = await this.repo.listHiringPlanItems(Number(req.params.id), statusFilter)
       res.json(items)
     } catch (e) { next(e) }
   }
@@ -98,6 +105,15 @@ export class PlanReportController {
     try {
       await this.repo.deleteHiringPlanItem(Number(req.params.itemId), Number(req.params.id))
       res.status(204).send()
+    } catch (e) { next(e) }
+  }
+
+  cancelHiringItem = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const planReportId = Number(req.params.id)
+      const itemId = Number(req.params.itemId)
+      const result = await this.service.cancelHiringPlanItem(itemId, planReportId, req.user!.id)
+      res.json(result)
     } catch (e) { next(e) }
   }
 }

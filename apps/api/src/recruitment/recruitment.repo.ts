@@ -21,7 +21,7 @@ const POSTING_INCLUDE = {
 } as const;
 
 const APPLICATION_INCLUDE = {
-  posting: { select: { id: true, title: true } },
+  posting: { select: { id: true, title: true, hiringPlanItemId: true } },
   offeredBy: { select: { id: true, username: true } },
   interviews: { orderBy: { round: "asc" as const } },
   referenceCheck: true,
