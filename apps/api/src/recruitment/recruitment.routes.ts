@@ -45,6 +45,8 @@ router.post("/applications/:id/interviews", auth, controller.scheduleInterview);
 router.patch("/applications/:id/interviews/:round", auth, controller.updateInterview);
 router.post("/interviews/:id/scores", auth, controller.addInterviewerScore);
 router.get("/interviews/:id/scores", auth, controller.getInterviewerScores);
+router.get("/applications/:id/interviews/:round/aggregate", auth, controller.getInterviewerScoreAggregate);
+router.post("/applications/:id/interviews/:round/finalize-score", auth, controller.finalizeInterviewScore);
 
 // Reference check
 router.post("/applications/:id/reference-check", auth, controller.createReferenceCheck);

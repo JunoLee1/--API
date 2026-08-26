@@ -360,4 +360,12 @@ export class RecruitmentRepository {
       include: { interviewer: { select: { id: true, nickname: true } } },
     });
   }
+
+  aggregateInterviewerScores(interviewId: number) {
+    return this.prisma.interviewerScore.aggregate({
+      where: { interviewId },
+      _avg: { scoreSkill: true, scoreComm: true, scoreCulture: true },
+      _count: true,
+    });
+  }
 }

@@ -609,3 +609,121 @@ describe("RecruitmentService.bulkCreatePostingsFromPlanReport", () => {
     expect(result.skipped).toHaveLength(3);
   });
 });
+
+describe("RecruitmentService.getInterviewerScoreAggregate", () => {
+  const interview = {
+    id: 100,
+    applicationId: 1,
+    round: "ROUND_1",
+    scoreSkill: null,
+    scoreComm: null,
+    scoreCulture: null,
+  };
+
+  const makeSvcWithAggCtx = (aggregateResult: any = null, findInterviewResult: any = interview) => {
+    const repo = makeRepo({
+      findInterview: jest.fn().mockResolvedValue(findInterviewResult),
+      aggregateInterviewerScores: jest.fn().mockResolvedValue(aggregateResult),
+      updateInterview: jest.fn().mockResolvedValue({}),
+    });
+    return { svc: new RecruitmentService(repo), repo };
+  };
+
+  it("3명 면접관 (5, 7, 9) 평균 → scoreSkill=7 (반올림), method=AVG, count=3", async () => {
+    const { svc } = makeSvcWithAggCtx({
+      _avg: { scoreSkill: 7.0, scoreComm: 6.5, scoreCulture: 8.0 },
+      _count: 3,
+    });
+    const result = await svc.getInterviewerScoreAggregate(1, "ROUND_1");
+    expect(result).toEqual({
+      scoreSkill: 7,
+      scoreComm: 7,      // 6.5 → 7 (round)
+      scoreCulture: 8,
+      method: "AVG",
+      count: 3,
+    });
+  });
+
+  it("0 scores → 400 NO_INTERVIEWER_SCORES_YET", async () => {
+    const { svc } = makeSvcWithAggCtx({
+      _avg: { scoreSkill: null, scoreComm: null, scoreCulture: null },
+      _count: 0,
+    });
+    await expect(svc.getInterviewerScoreAggregate(1, "ROUND_1"))
+      .rejects.toMatchObject({ statusCode: 400, message: "NO_INTERVIEWER_SCORES_YET" });
+  });
+
+  it("Interview 없으면 404 INTERVIEW_NOT_FOUND", async () => {
+    const { svc } = makeSvcWithAggCtx(null, null);
+    await expect(svc.getInterviewerScoreAggregate(1, "ROUND_1"))
+      .rejects.toMatchObject({ statusCode: 404, message: "INTERVIEW_NOT_FOUND" });
+  });
+
+  it("일부 카테고리 null 이면 그 값만 null 반환 (다른 카테고리는 정상 평균)", async () => {
+    const { svc } = makeSvcWithAggCtx({
+      _avg: { scoreSkill: 7.0, scoreComm: null, scoreCulture: 8.0 },
+      _count: 2,
+    });
+    const result = await svc.getInterviewerScoreAggregate(1, "ROUND_1");
+    expect(result).toEqual({
+      scoreSkill: 7,
+      scoreComm: null,
+      scoreCulture: 8,
+      method: "AVG",
+      count: 2,
+    });
+  });
+});
+
+describe("RecruitmentService.finalizeInterviewScore", () => {
+  const interview = {
+    id: 100,
+    applicationId: 1,
+    round: "ROUND_1",
+    scoreSkill: null,
+    scoreComm: null,
+    scoreCulture: null,
+  };
+
+  const makeSvcFinalize = (aggregateResult: any = null, findInterviewResult: any = interview, updateResult: any = {}) => {
+    const repo = makeRepo({
+      findInterview: jest.fn().mockResolvedValue(findInterviewResult),
+      aggregateInterviewerScores: jest.fn().mockResolvedValue(aggregateResult),
+      updateInterview: jest.fn().mockResolvedValue(updateResult),
+    });
+    return { svc: new RecruitmentService(repo), repo };
+  };
+
+  it("aggregate 결과로 Interview.score* 업데이트", async () => {
+    const { svc, repo } = makeSvcFinalize({
+      _avg: { scoreSkill: 7.0, scoreComm: 6.5, scoreCulture: 8.0 },
+      _count: 3,
+    }, interview, { id: 100, scoreSkill: 7, scoreComm: 7, scoreCulture: 8 });
+
+    const result = await svc.finalizeInterviewScore(1, "ROUND_1");
+
+    expect(repo.updateInterview).toHaveBeenCalledWith(1, "ROUND_1", {
+      scoreSkill: 7,
+      scoreComm: 7,
+      scoreCulture: 8,
+    });
+    expect(result.scoreSkill).toBe(7);
+  });
+
+  it("0 scores → 400 NO_INTERVIEWER_SCORES_YET (Interview 업데이트 안 함)", async () => {
+    const { svc, repo } = makeSvcFinalize({
+      _avg: { scoreSkill: null, scoreComm: null, scoreCulture: null },
+      _count: 0,
+    });
+    await expect(svc.finalizeInterviewScore(1, "ROUND_1"))
+      .rejects.toMatchObject({ statusCode: 400, message: "NO_INTERVIEWER_SCORES_YET" });
+    expect(repo.updateInterview).not.toHaveBeenCalled();
+  });
+
+  it("Interview 없으면 404 INTERVIEW_NOT_FOUND", async () => {
+    const { svc, repo } = makeSvcFinalize(null, null);
+    await expect(svc.finalizeInterviewScore(1, "ROUND_1"))
+      .rejects.toMatchObject({ statusCode: 404, message: "INTERVIEW_NOT_FOUND" });
+    expect(repo.updateInterview).not.toHaveBeenCalled();
+  });
+});

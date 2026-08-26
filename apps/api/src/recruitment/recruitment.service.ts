@@ -372,4 +372,34 @@ export class RecruitmentService {
   getInterviewerScores(interviewId: number) {
     return this.repo.getInterviewerScores(interviewId);
   }
+
+  async getInterviewerScoreAggregate(applicationId: number, round: InterviewRound) {
+    const interview = await this.repo.findInterview(applicationId, round);
+    if (!interview) throw new AppError(404, "INTERVIEW_NOT_FOUND");
+
+    const agg = await this.repo.aggregateInterviewerScores(interview.id);
+    if (!agg || agg._count === 0) {
+      throw new AppError(400, "NO_INTERVIEWER_SCORES_YET");
+    }
+
+    const round1 = (v: number | null | undefined) => (v == null ? null : Math.round(v));
+    return {
+      scoreSkill: round1(agg._avg.scoreSkill),
+      scoreComm: round1(agg._avg.scoreComm),
+      scoreCulture: round1(agg._avg.scoreCulture),
+      method: "AVG" as const,
+      count: agg._count,
+    };
+  }
+
+  async finalizeInterviewScore(applicationId: number, round: InterviewRound) {
+    const aggregate = await this.getInterviewerScoreAggregate(applicationId, round);
+    // Null values pass through but are filtered out by repo.updateInterview (`!= null` guard),
+    // so partial-null aggregates only update the categories that have scores.
+    return this.repo.updateInterview(applicationId, round, {
+      scoreSkill: aggregate.scoreSkill as number,
+      scoreComm: aggregate.scoreComm as number,
+      scoreCulture: aggregate.scoreCulture as number,
+    });
+  }
 }
