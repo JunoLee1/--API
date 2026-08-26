@@ -4,9 +4,13 @@ import { SeasonRepository } from "./season.repo";
 import { CreateSeasonDto, SetWageCapDto } from "./dto/season.dto";
 import { getPrisma } from "../lib/prisma";
 import { applyCarryOverToNextSeason } from "../lib/season-carryover";
+import type { RecruitmentService } from "../recruitment/recruitment.service";
 
 export class SeasonService {
-  constructor(private repo: SeasonRepository) {}
+  constructor(
+    private repo: SeasonRepository,
+    private recruitmentService?: RecruitmentService,
+  ) {}
 
   async createSeason(data: CreateSeasonDto) {
     return await this.repo.create({
@@ -65,6 +69,16 @@ export class SeasonService {
     } catch (err) {
       console.warn(`[closeSeason] carryover 자동 적용 실패 (seasonId=${id})`, err);
     }
+
+    // Fix #366: best-effort waitlist expire. Failure must not fail the close.
+    if (this.recruitmentService) {
+      try {
+        await this.recruitmentService.expireAllWaitlists();
+      } catch (err) {
+        console.warn(`[closeSeason] waitlist expire 자동 처리 실패 (seasonId=${id})`, err);
+      }
+    }
+
     return closed;
   }
 

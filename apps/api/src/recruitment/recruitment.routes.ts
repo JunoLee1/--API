@@ -58,4 +58,8 @@ router.post("/applications/:id/onboarding", auth, controller.startOnboarding);
 router.post("/applications/:id/onboarding/verify-email", controller.verifyEmail);
 router.post("/applications/:id/onboarding/complete-mfa", controller.completeMfa);
 
+// Waitlist (fix #366)
+router.get("/postings/:id/waitlist", auth, controller.getPostingWaitlist);
+router.post("/applications/:id/promote-from-waitlist", auth, controller.promoteFromWaitlist);
+
 export default router;

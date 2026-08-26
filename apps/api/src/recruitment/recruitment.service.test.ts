@@ -9,6 +9,10 @@ const mockHiringPlanItem = {
   updateMany: jest.fn(),
 };
 
+const mockInterview = {
+  updateMany: jest.fn(),
+};
+
 jest.mock("../lib/prisma", () => ({
   getPrisma: () => ({
     staffRecord: {
@@ -19,11 +23,19 @@ jest.mock("../lib/prisma", () => ({
       findUnique: jest.fn().mockResolvedValue(null),
     },
     hiringPlanItem: mockHiringPlanItem,
+    interview: mockInterview,
+    auditLog: {
+      create: jest.fn().mockResolvedValue({}),
+    },
     // Passthrough tx — inner callback receives the same prisma-like object.
     $transaction: jest.fn().mockImplementation(async (fn: any) => fn({
       hiringPlanItem: mockHiringPlanItem,
     })),
   }),
+}));
+
+jest.mock("../lib/email", () => ({
+  sendApplicationStatusEmail: jest.fn().mockResolvedValue(undefined),
 }));
 
 const fakeApp = {
@@ -815,5 +827,198 @@ describe("RecruitmentService.reinstateApplication (with screeningResult reset)",
     await svc.reinstateApplication(1, 42);
 
     expect(repo.reinstateApplication).toHaveBeenCalledWith(1, 42);
+  });
+});
+
+// ─────────────────────────────────────────────────────────
+// Interview threshold + HOLD/WAITLIST tests (fix #366)
+// ─────────────────────────────────────────────────────────
+
+describe("RecruitmentService.updateInterview (threshold policy)", () => {
+  const makeInterviewWithSettings = (
+    interviewOverride: any = {},
+    settings: any = { interviewPassThreshold: 3 },
+  ) => {
+    const repo = makeRepo({
+      findInterview: jest.fn().mockResolvedValue({
+        id: 100, applicationId: 1, round: "ROUND_1",
+        scoreSkill: null, scoreComm: null, scoreCulture: null,
+        result: "PENDING",
+        ...interviewOverride,
+      }),
+      getClubSettings: jest.fn().mockResolvedValue(settings),
+      updateInterview: jest.fn().mockResolvedValue({}),
+    } as any);
+    return { svc: new RecruitmentService(repo), repo };
+  };
+
+  it("PASS 결정 시 세 점수 모두 threshold >= 3 이면 성공", async () => {
+    const { svc, repo } = makeInterviewWithSettings();
+    await svc.updateInterview(1, "ROUND_1" as any, {
+      result: "PASS", scoreSkill: 3, scoreComm: 4, scoreCulture: 5,
+    });
+    expect(repo.updateInterview).toHaveBeenCalled();
+  });
+
+  it("PASS 결정 시 threshold 미달 (score < 3) → 400 INTERVIEW_SCORE_BELOW_THRESHOLD", async () => {
+    const { svc } = makeInterviewWithSettings();
+    await expect(
+      svc.updateInterview(1, "ROUND_1" as any, {
+        result: "PASS", scoreSkill: 2, scoreComm: 4, scoreCulture: 5,
+      }),
+    ).rejects.toMatchObject({ statusCode: 400, message: "INTERVIEW_SCORE_BELOW_THRESHOLD" });
+  });
+
+  it("PASS + threshold 미달 + overrideThreshold=true + overrideReason → 성공 + audit log", async () => {
+    const { svc, repo } = makeInterviewWithSettings();
+    await svc.updateInterview(1, "ROUND_1" as any, {
+      result: "PASS", scoreSkill: 2, scoreComm: 4, scoreCulture: 5,
+      overrideThreshold: true, overrideReason: "특별 상황",
+    } as any);
+    expect(repo.updateInterview).toHaveBeenCalled();
+  });
+
+  it("PASS + threshold 미달 + overrideThreshold=true + overrideReason 없음 → 400 OVERRIDE_REASON_REQUIRED", async () => {
+    const { svc } = makeInterviewWithSettings();
+    await expect(
+      svc.updateInterview(1, "ROUND_1" as any, {
+        result: "PASS", scoreSkill: 2, scoreComm: 4, scoreCulture: 5,
+        overrideThreshold: true,
+      } as any),
+    ).rejects.toMatchObject({ statusCode: 400, message: "OVERRIDE_REASON_REQUIRED" });
+  });
+
+  it("HOLD 결정은 threshold 검증 skip (자유롭게 세팅)", async () => {
+    const { svc, repo } = makeInterviewWithSettings();
+    await svc.updateInterview(1, "ROUND_1" as any, {
+      result: "HOLD" as any, scoreSkill: 2, scoreComm: 2, scoreCulture: 2,
+    });
+    expect(repo.updateInterview).toHaveBeenCalled();
+  });
+
+  it("WAITLIST 결정도 threshold 검증 skip", async () => {
+    const { svc, repo } = makeInterviewWithSettings();
+    await svc.updateInterview(1, "ROUND_1" as any, {
+      result: "WAITLIST" as any, scoreSkill: 3, scoreComm: 3, scoreCulture: 3,
+    });
+    expect(repo.updateInterview).toHaveBeenCalled();
+  });
+
+  it("FAIL 은 항상 threshold 검증 skip", async () => {
+    const { svc, repo } = makeInterviewWithSettings();
+    await svc.updateInterview(1, "ROUND_1" as any, {
+      result: "FAIL", scoreSkill: 1, scoreComm: 1, scoreCulture: 1,
+    });
+    expect(repo.updateInterview).toHaveBeenCalled();
+  });
+});
+
+describe("RecruitmentService.getWaitlistForPosting", () => {
+  it("WAITLIST result 인 Interview 들을 score 총합 desc 로 정렬", async () => {
+    const repo = makeRepo({
+      findPostingById: jest.fn().mockResolvedValue({ id: 100, title: "test" }),
+      findWaitlistedInterviews: jest.fn().mockResolvedValue([
+        { id: 1, applicationId: 10, scoreSkill: 4, scoreComm: 4, scoreCulture: 4, application: { id: 10, applicantName: "A" } }, // 12
+        { id: 2, applicationId: 20, scoreSkill: 5, scoreComm: 5, scoreCulture: 5, application: { id: 20, applicantName: "B" } }, // 15
+      ]),
+    } as any);
+    const svc = new RecruitmentService(repo);
+    const result = await svc.getWaitlistForPosting(100);
+    expect(result[0].applicationId).toBe(20); // 15 first
+    expect(result[1].applicationId).toBe(10); // 12 second
+  });
+
+  it("posting 존재하지 않으면 404 JOB_POSTING_NOT_FOUND", async () => {
+    const repo = makeRepo({
+      findPostingById: jest.fn().mockResolvedValue(null),
+    } as any);
+    const svc = new RecruitmentService(repo);
+    await expect(svc.getWaitlistForPosting(999))
+      .rejects.toMatchObject({ statusCode: 404, message: "JOB_POSTING_NOT_FOUND" });
+  });
+});
+
+describe("RecruitmentService.promoteFromWaitlist", () => {
+  beforeEach(() => {
+    mockInterview.updateMany.mockReset();
+    mockInterview.updateMany.mockResolvedValue({ count: 1 });
+  });
+
+  it("WAITLIST top candidate 을 offer 로 promote", async () => {
+    const app = { id: 10, applicantName: "A", email: "a@test.com", status: "INTERVIEW_2", posting: { id: 100 } };
+    const repo = makeRepo({
+      findApplicationById: jest.fn().mockResolvedValue(app),
+      findWaitlistedInterviewByApplication: jest.fn().mockResolvedValue({
+        id: 1, applicationId: 10, scoreSkill: 5, scoreComm: 5, scoreCulture: 5, result: "WAITLIST",
+      }),
+      offerApplication: jest.fn().mockResolvedValue({ id: 10, status: "OFFERED" }),
+    } as any);
+    const svc = new RecruitmentService(repo);
+    const result = await svc.promoteFromWaitlist(10, 42);
+    expect((repo as any).offerApplication).toHaveBeenCalledWith(10, 42, 42);
+    expect(result.status).toBe("OFFERED");
+  });
+
+  it("Application 이 waitlist Interview 없으면 400 NOT_WAITLISTED", async () => {
+    const app = { id: 10, applicantName: "A", email: "a@test.com", posting: { id: 100 } };
+    const repo = makeRepo({
+      findApplicationById: jest.fn().mockResolvedValue(app),
+      findWaitlistedInterviewByApplication: jest.fn().mockResolvedValue(null),
+    } as any);
+    const svc = new RecruitmentService(repo);
+    await expect(svc.promoteFromWaitlist(10, 42))
+      .rejects.toMatchObject({ statusCode: 400, message: "NOT_WAITLISTED" });
+  });
+});
+
+describe("RecruitmentService.rejectApplication (auto-promote hook)", () => {
+  beforeEach(() => {
+    mockInterview.updateMany.mockReset();
+    mockInterview.updateMany.mockResolvedValue({ count: 1 });
+  });
+
+  it("OFFERED 상태 application 이 REJECTED 로 전환 시 같은 posting waitlist top 자동 offer", async () => {
+    const rejectingApp = {
+      id: 1, status: "OFFERED", email: "r@test.com", applicantName: "R",
+      posting: { id: 100 }, postingId: 100,
+    };
+    const promotedApp = {
+      id: 20, status: "INTERVIEW_2", email: "t@test.com", applicantName: "T",
+      posting: { id: 100 },
+    };
+    const waitlistTop = {
+      id: 2, applicationId: 20, scoreSkill: 5, scoreComm: 5, scoreCulture: 5,
+      application: { id: 20, applicantName: "T", email: "t@test.com", status: "INTERVIEW_2", postingId: 100 },
+    };
+    const offerApp = jest.fn().mockResolvedValue({ id: 20, status: "OFFERED" });
+    const repo = makeRepo({
+      findApplicationById: jest.fn()
+        .mockResolvedValueOnce(rejectingApp) // getApplication in rejectApplication
+        .mockResolvedValueOnce(rejectingApp) // raw fetch for email
+        .mockResolvedValueOnce(promotedApp), // for promote notification
+      rejectApplication: jest.fn().mockResolvedValue({ id: 1, status: "REJECTED" }),
+      findTopWaitlistForPosting: jest.fn().mockResolvedValue(waitlistTop),
+      offerApplication: offerApp,
+    } as any);
+    const svc = new RecruitmentService(repo);
+    await svc.rejectApplication(1, 42);
+    expect(offerApp).toHaveBeenCalledWith(20, expect.any(Number), expect.any(Number));
+  });
+
+  it("OFFERED 가 아닌 상태 (SCREENING) 는 waitlist auto-promote 없음", async () => {
+    const rejectingApp = {
+      id: 1, status: "SCREENING", email: "r@test.com", applicantName: "R",
+      posting: { id: 100 }, postingId: 100,
+    };
+    const offerApp = jest.fn();
+    const repo = makeRepo({
+      findApplicationById: jest.fn().mockResolvedValue(rejectingApp),
+      rejectApplication: jest.fn().mockResolvedValue({ id: 1, status: "REJECTED" }),
+      findTopWaitlistForPosting: jest.fn(),
+      offerApplication: offerApp,
+    } as any);
+    const svc = new RecruitmentService(repo);
+    await svc.rejectApplication(1, 42);
+    expect(offerApp).not.toHaveBeenCalled();
   });
 });

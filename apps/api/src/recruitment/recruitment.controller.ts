@@ -348,4 +348,28 @@ export class RecruitmentController {
       next(err);
     }
   };
+
+  // --- Waitlist (fix #366) ---
+
+  getPostingWaitlist = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = requireUser(req);
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const postingId = Number(req.params["id"]);
+      res.json(await this.service.getWaitlistForPosting(postingId));
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  promoteFromWaitlist = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole, id: actorId } = requireUser(req);
+      if (!canApprove(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const applicationId = Number(req.params["id"]);
+      res.json(await this.service.promoteFromWaitlist(applicationId, actorId));
+    } catch (err) {
+      next(err);
+    }
+  };
 }

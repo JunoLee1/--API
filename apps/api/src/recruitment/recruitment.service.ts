@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import { RecruitmentRepository } from "./recruitment.repo";
 import { PlanReportRepository } from "../plan-report/plan-report.repo";
 import { AppError } from "../lib/appError";
+import { writeAuditLog } from "../lib/auditLog";
 import { maskEmail, maskPhone } from "../lib/maskPii";
 import { getPrisma } from "../lib/prisma";
 import { NotificationRepository } from "../notification/notification.repo";
@@ -184,12 +185,50 @@ export class RecruitmentService {
   async rejectApplication(id: number, actorId?: number) {
     const app = await this.getApplication(id);
     if (app.status === "REJECTED") throw new AppError(409, "APPLICATION_ALREADY_REJECTED");
+    const wasOffered = app.status === "OFFERED";
+    const postingId = (app as any).posting?.id ?? (app as any).postingId ?? null;
+
     const result = await this.repo.rejectApplication(id, actorId as number);
     // SJ6: email applicant on rejection — fetch raw (unmasked) record for email address
     const rawApp = await this.repo.findApplicationById(id);
     if (rawApp?.email) {
       void sendApplicationStatusEmail(rawApp.email, rawApp.applicantName, "REJECTED").catch(console.error);
     }
+
+    // Auto-promote from waitlist: only when OFFERED → REJECTED (headcount opens up).
+    if (wasOffered && postingId && (this.repo as any).findTopWaitlistForPosting) {
+      try {
+        const top = await (this.repo as any).findTopWaitlistForPosting(postingId);
+        if (top) {
+          // I3 fix: atomically consume the waitlist Interview (WAITLIST → PASS).
+          // If updateMany returns count=0, someone else already consumed it — silent skip
+          // in the auto-promote path (not user-driven, so no error surface).
+          // C1 fix: marks Interview as consumed so it no longer appears in waitlist queries.
+          const consumed = await getPrisma().interview.updateMany({
+            where: { id: top.id, result: "WAITLIST" },
+            data: { result: "PASS" },
+          });
+          if (consumed.count === 0) {
+            // Already consumed by a concurrent request — skip silently.
+          } else {
+            await this.repo.offerApplication(top.applicationId, actorId as number, actorId as number);
+            const promotedApp = await this.repo.findApplicationById(top.applicationId);
+            if (promotedApp?.email) {
+              void sendApplicationStatusEmail(promotedApp.email, promotedApp.applicantName, "OFFERED").catch(console.error);
+            }
+            void writeAuditLog({
+              actorId: actorId ?? 0,
+              action: "APPLICATION_AUTO_PROMOTED_FROM_WAITLIST",
+              targetId: top.applicationId,
+              detail: { triggeredByRejectionOf: id },
+            }).catch(console.error);
+          }
+        }
+      } catch (err) {
+        console.warn(`[auto-promote-waitlist] failed for posting=${postingId}:`, err);
+      }
+    }
+
     return result;
   }
 
@@ -257,6 +296,36 @@ export class RecruitmentService {
       const scoreCulture = dto.scoreCulture ?? existing.scoreCulture;
       if (scoreSkill == null || scoreComm == null || scoreCulture == null) {
         throw new AppError(400, "INTERVIEW_SCORES_REQUIRED");
+      }
+
+      // Fix #366: threshold policy applies only when confirming PASS.
+      if (dto.result === "PASS") {
+        const settings = (this.repo as any).getClubSettings
+          ? await (this.repo as any).getClubSettings()
+          : null;
+        const threshold = settings?.interviewPassThreshold ?? 3;
+        const belowThreshold =
+          scoreSkill < threshold || scoreComm < threshold || scoreCulture < threshold;
+
+        if (belowThreshold) {
+          if (!dto.overrideThreshold) {
+            throw new AppError(400, "INTERVIEW_SCORE_BELOW_THRESHOLD");
+          }
+          if (!dto.overrideReason?.trim()) {
+            throw new AppError(400, "OVERRIDE_REASON_REQUIRED");
+          }
+          // Override 승인: audit log 남김. actorId 는 controller 에서 전달받는 확장 여지.
+          void writeAuditLog({
+            actorId: 0,
+            action: "INTERVIEW_THRESHOLD_OVERRIDE",
+            targetId: existing.id,
+            detail: {
+              reason: dto.overrideReason,
+              scores: { scoreSkill, scoreComm, scoreCulture },
+              threshold,
+            },
+          }).catch(console.error);
+        }
       }
     }
 
@@ -417,5 +486,77 @@ export class RecruitmentService {
       scoreComm: aggregate.scoreComm as number,
       scoreCulture: aggregate.scoreCulture as number,
     });
+  }
+
+  // --- Waitlist (fix #366) ---
+
+  async getWaitlistForPosting(postingId: number) {
+    // I5 fix: 404 if posting doesn't exist (matches listApplications pattern).
+    await this.getPosting(postingId);
+    const waitlisted = await (this.repo as any).findWaitlistedInterviews(postingId);
+    return waitlisted
+      .map((iv: any) => ({
+        interviewId: iv.id,
+        applicationId: iv.applicationId,
+        scoreSum: (iv.scoreSkill ?? 0) + (iv.scoreComm ?? 0) + (iv.scoreCulture ?? 0),
+        application: iv.application,
+      }))
+      .sort((a: any, b: any) => b.scoreSum - a.scoreSum);
+  }
+
+  async promoteFromWaitlist(applicationId: number, actorId: number) {
+    const app = await this.getApplication(applicationId);
+
+    // C2 fix: status guard — reject terminal/already-offered states.
+    const nonPromotableStatuses = ["OFFERED", "ONBOARDED", "REJECTED"];
+    if (nonPromotableStatuses.includes(app.status)) {
+      throw new AppError(409, "APPLICATION_NOT_PROMOTABLE");
+    }
+
+    const waitlistedInterview = await (this.repo as any).findWaitlistedInterviewByApplication(applicationId);
+    if (!waitlistedInterview) throw new AppError(400, "NOT_WAITLISTED");
+
+    // I3 fix: atomically consume the waitlist Interview (WAITLIST → PASS) before offering.
+    // If updateMany returns count=0, a concurrent request already consumed it → 409.
+    // C1 fix: marks Interview as consumed so it no longer appears in waitlist queries.
+    const consumed = await getPrisma().interview.updateMany({
+      where: { id: waitlistedInterview.id, result: "WAITLIST" },
+      data: { result: "PASS" },
+    });
+    if (consumed.count === 0) {
+      throw new AppError(409, "WAITLIST_ALREADY_CONSUMED");
+    }
+
+    // Reuse offerApplication for actual state change + audit trail.
+    const result = await this.repo.offerApplication(applicationId, actorId, actorId);
+    // Fetch raw (unmasked) record to send notification email.
+    const rawApp = await this.repo.findApplicationById(applicationId);
+    if (rawApp?.email) {
+      void sendApplicationStatusEmail(rawApp.email, rawApp.applicantName, "OFFERED").catch(console.error);
+    }
+    void writeAuditLog({
+      actorId,
+      action: "APPLICATION_PROMOTED_FROM_WAITLIST",
+      targetId: applicationId,
+    }).catch(console.error);
+    return result;
+  }
+
+  /**
+   * closeSeason hook. Best-effort: 남은 모든 WAITLIST Interview 를 FAIL 처리 + 지원자 이메일 통보.
+   */
+  async expireAllWaitlists() {
+    const findAll = (this.repo as any).findAllWaitlistedInterviews;
+    const updateResult = (this.repo as any).updateInterviewResult;
+    if (typeof findAll !== "function" || typeof updateResult !== "function") return;
+
+    const allWaitlisted = await findAll.call(this.repo);
+    for (const iv of allWaitlisted) {
+      await updateResult.call(this.repo, iv.id, "FAIL");
+      const app = await this.repo.findApplicationById(iv.applicationId);
+      if (app?.email) {
+        void sendApplicationStatusEmail(app.email, app.applicantName, "WAITLIST_EXPIRED").catch(console.error);
+      }
+    }
   }
 }
