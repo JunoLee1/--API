@@ -15,6 +15,7 @@ import type {
   CreateReferenceCheckDto,
   UpdateReferenceCheckDto,
   VerifyOtpDto,
+  ScreenApplicationDto,
 } from "./dto/recruitment.dto";
 
 const canRead = (role: string, foRole: string | null | undefined, _coachRole: string | null | undefined) =>
@@ -143,6 +144,17 @@ export class RecruitmentController {
       const { role, frontOfficeRole, id: userId } = requireUser(req);
       if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.rejectApplication(Number(req.params["id"]), userId));
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  screenApplication = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole, id: userId } = requireUser(req);
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const dto = req.body as ScreenApplicationDto;
+      res.json(await this.service.screenApplication(Number(req.params["id"]), dto, userId));
     } catch (err) {
       next(err);
     }
