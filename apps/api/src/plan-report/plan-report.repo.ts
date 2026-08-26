@@ -161,13 +161,22 @@ export class PlanReportRepository {
   findByIdLight(id: number) {
     return this.prisma.planReport.findUnique({
       where: { id },
-      select: { id: true, status: true, templateType: true, departmentId: true, title: true, jobPosting: { select: { id: true } } },
+      select: { id: true, status: true, templateType: true, departmentId: true, title: true },
     })
   }
 
   findApprovedHrReports() {
     return this.prisma.planReport.findMany({
-      where: { status: 'APPROVED', templateType: 'HR', jobPosting: null },
+      where: {
+        status: 'APPROVED',
+        templateType: 'HR',
+        // "미완료 잔여" = HiringPlanItem 이 없거나(legacy), 또는 하나라도 JobPosting 연결 안 됨.
+        // headcount 단위 완료 추적은 out-of-scope (see #362 HiringPlanItem status tracking).
+        OR: [
+          { hiringPlanItems: { none: {} } },
+          { hiringPlanItems: { some: { jobPostings: { none: {} } } } },
+        ],
+      },
       select: { id: true, title: true, departmentId: true, department: { select: { id: true, name: true } }, approvedAt: true },
       orderBy: { approvedAt: 'desc' },
     })

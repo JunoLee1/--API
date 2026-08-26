@@ -1,5 +1,6 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals'
 import { PlanReportService } from '../../src/plan-report/plan-report.service'
+import { PlanReportRepository } from '../../src/plan-report/plan-report.repo'
 
 const mockRepo = {
   findById: jest.fn(),
@@ -82,5 +83,61 @@ describe('submit — GENERAL 예산 초과 시 GM 승인 레벨', () => {
       expect.any(Array),
       'GM'
     )
+  })
+})
+
+describe('PlanReportRepository.findApprovedHrReports', () => {
+  const makePrismaMock = (findManyResult: any[] = []) => ({
+    planReport: {
+      findMany: jest.fn().mockResolvedValue(findManyResult),
+    },
+  } as any)
+
+  test('HR + APPROVED + no HiringPlanItems 인 계획서 반환', async () => {
+    const prisma = makePrismaMock([
+      { id: 1, title: 'legacy plan', departmentId: 10, department: { id: 10, name: '코칭' }, approvedAt: new Date() },
+    ])
+    const repo = new PlanReportRepository(prisma)
+    const result = await repo.findApprovedHrReports()
+
+    expect(result).toHaveLength(1)
+    expect(prisma.planReport.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          status: 'APPROVED',
+          templateType: 'HR',
+          OR: expect.arrayContaining([
+            { hiringPlanItems: { none: {} } },
+            { hiringPlanItems: { some: { jobPostings: { none: {} } } } },
+          ]),
+        }),
+      }),
+    )
+  })
+
+  test('query 는 미완료 HiringPlanItem 조건을 포함해야 함 (regression)', async () => {
+    const prisma = makePrismaMock([])
+    const repo = new PlanReportRepository(prisma)
+    await repo.findApprovedHrReports()
+
+    const call = (prisma.planReport.findMany as jest.Mock).mock.calls[0][0] as any
+    // OR 안에 정확히 2개 조건이 있어야 함
+    expect(call.where.OR).toHaveLength(2)
+    expect(call.where.OR).toContainEqual({ hiringPlanItems: { none: {} } })
+    expect(call.where.OR).toContainEqual({ hiringPlanItems: { some: { jobPostings: { none: {} } } } })
+  })
+
+  test('fully-completed PlanReport 는 제외되어야 함 (regression: OR predicate 는 미완료 잔여 검사)', async () => {
+    const prisma = makePrismaMock([])
+    const repo = new PlanReportRepository(prisma)
+    await repo.findApprovedHrReports()
+
+    const call = (prisma.planReport.findMany as jest.Mock).mock.calls[0][0] as any
+    // "some HiringPlanItem 이 미연결 JobPosting" 절이 반드시 있어야 fully-completed 는 배제됨
+    expect(call.where.OR).toContainEqual({
+      hiringPlanItems: { some: { jobPostings: { none: {} } } },
+    })
+    // legacy "no HiringPlanItems" 절도 유지되어야 함
+    expect(call.where.OR).toContainEqual({ hiringPlanItems: { none: {} } })
   })
 })
