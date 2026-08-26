@@ -727,3 +727,93 @@ describe("RecruitmentService.finalizeInterviewScore", () => {
     expect(repo.updateInterview).not.toHaveBeenCalled();
   });
 });
+
+describe("RecruitmentService.screenApplication", () => {
+  const screeningApp = {
+    id: 1,
+    status: "SCREENING",
+    applicantName: "테스트",
+    email: "test@example.com",
+    phone: null,
+    posting: null,
+  };
+
+  const makeSvcWithScreen = (findApplicationResult: any = screeningApp) => {
+    const repo = makeRepo({
+      findApplicationById: jest.fn().mockResolvedValue(findApplicationResult),
+      screenApplication: jest.fn().mockResolvedValue({ id: 1, screeningResult: "PASS" }),
+    } as any);
+    return { svc: new RecruitmentService(repo), repo };
+  };
+
+  it("SCREENING 상태에서 PASS 결과 저장 성공", async () => {
+    const { svc, repo } = makeSvcWithScreen();
+    const result = await svc.screenApplication(1, { result: "PASS", notes: "우수" }, 42);
+    expect((repo as any).screenApplication).toHaveBeenCalledWith(1, {
+      screeningResult: "PASS",
+      screeningNotes: "우수",
+      screenedById: 42,
+      screenedAt: expect.any(Date),
+    });
+    expect(result.screeningResult).toBe("PASS");
+  });
+
+  it("SCREENING 상태 아니면 409 INVALID_STATUS_FOR_SCREEN", async () => {
+    const { svc } = makeSvcWithScreen({ ...screeningApp, status: "INTERVIEW_1" });
+    await expect(svc.screenApplication(1, { result: "PASS" } as any, 42))
+      .rejects.toMatchObject({ statusCode: 409, message: "INVALID_STATUS_FOR_SCREEN" });
+  });
+
+  it("FAIL 결과인데 notes 없으면 400 SCREENING_NOTES_REQUIRED_FOR_FAIL", async () => {
+    const { svc } = makeSvcWithScreen();
+    await expect(svc.screenApplication(1, { result: "FAIL" } as any, 42))
+      .rejects.toMatchObject({ statusCode: 400, message: "SCREENING_NOTES_REQUIRED_FOR_FAIL" });
+  });
+
+  it("FAIL 결과 + notes 있으면 저장 성공", async () => {
+    const { svc, repo } = makeSvcWithScreen();
+    await svc.screenApplication(1, { result: "FAIL", notes: "학력 요건 미달" }, 42);
+    expect((repo as any).screenApplication).toHaveBeenCalledWith(1, expect.objectContaining({
+      screeningResult: "FAIL",
+      screeningNotes: "학력 요건 미달",
+    }));
+  });
+
+  it("Application 없으면 404 JOB_APPLICATION_NOT_FOUND", async () => {
+    const { svc } = makeSvcWithScreen(null);
+    await expect(svc.screenApplication(1, { result: "PASS" } as any, 42))
+      .rejects.toMatchObject({ statusCode: 404, message: "JOB_APPLICATION_NOT_FOUND" });
+  });
+
+  it("PENDING 결과는 notes 없어도 저장 성공", async () => {
+    const { svc, repo } = makeSvcWithScreen();
+    await svc.screenApplication(1, { result: "PENDING" } as any, 42);
+    expect((repo as any).screenApplication).toHaveBeenCalledWith(1, expect.objectContaining({
+      screeningResult: "PENDING",
+    }));
+  });
+});
+
+describe("RecruitmentService.reinstateApplication (with screeningResult reset)", () => {
+  it("reinstate 시 repo.reinstateApplication 호출 (repo 단이 screeningResult 리셋 담당)", async () => {
+    const rejectedApp = {
+      id: 1,
+      status: "REJECTED",
+      previousStatus: "SCREENING",
+      screeningResult: "FAIL",
+      applicantName: "테스트",
+      email: null,
+      phone: null,
+      posting: null,
+    };
+    const repo = makeRepo({
+      findApplicationById: jest.fn().mockResolvedValue(rejectedApp),
+      reinstateApplication: jest.fn().mockResolvedValue({ id: 1, status: "SCREENING", screeningResult: "PENDING" }),
+    });
+    const svc = new RecruitmentService(repo);
+
+    await svc.reinstateApplication(1, 42);
+
+    expect(repo.reinstateApplication).toHaveBeenCalledWith(1, 42);
+  });
+});

@@ -147,6 +147,11 @@ export class RecruitmentRepository {
         rejectedAt: null,
         rejectionReason: null,
         dataRetentionDeadline: null,
+        // 재심사 강제: reinstate 시 screening 결과 초기화
+        screeningResult: "PENDING",
+        screeningNotes: null,
+        screenedById: null,
+        screenedAt: null,
       },
       include: APPLICATION_INCLUDE,
     });
@@ -155,6 +160,29 @@ export class RecruitmentRepository {
       action: "JOB_APPLICATION_STATUS_CHANGED",
       targetId: id,
       detail: { newStatus: app!.previousStatus, reinstated: true },
+    }).catch(console.error);
+    return result;
+  }
+
+  async screenApplication(
+    id: number,
+    data: {
+      screeningResult: "PENDING" | "PASS" | "FAIL";
+      screeningNotes: string | null;
+      screenedById: number;
+      screenedAt: Date;
+    },
+  ) {
+    const result = await this.prisma.jobApplication.update({
+      where: { id },
+      data,
+      include: APPLICATION_INCLUDE,
+    });
+    void writeAuditLog({
+      actorId: data.screenedById,
+      action: "JOB_APPLICATION_SCREENED",
+      targetId: id,
+      detail: { screeningResult: data.screeningResult },
     }).catch(console.error);
     return result;
   }

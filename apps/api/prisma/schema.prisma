@@ -917,6 +917,7 @@ model User {
   createdPostings           JobPosting[]                    @relation("JobPostingCreator")
   approvedPostings          JobPosting[]                    @relation("JobPostingApprover")
   applicationOffers         JobApplication[]                @relation("ApplicationOffer")
+  applicationScreenings     JobApplication[]                @relation("ApplicationScreener")
   onboarding                Onboarding?                     @relation("OnboardingUser")
   headedDepartments         Department[]                    @relation("DepartmentHead")
   departmentMemberships     UserDepartment[]
@@ -2851,6 +2852,12 @@ enum InterviewResult {
   FAIL
 }
 
+enum ScreeningResult {
+  PENDING
+  PASS
+  FAIL
+}
+
 enum ReferenceCheckResult {
   PENDING
   CLEAR
@@ -2896,6 +2903,10 @@ model JobApplication {
   previousStatus      JobApplicationStatus?
   offeredAt           DateTime?
   offeredById         Int?
+  screeningResult     ScreeningResult       @default(PENDING)
+  screeningNotes      String?
+  screenedById        Int?
+  screenedAt          DateTime?
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
   source              ApplicationSource     @default(DIRECT)
@@ -2903,6 +2914,7 @@ model JobApplication {
 
   posting                 JobPosting      @relation(fields: [postingId], references: [id])
   offeredBy               User?           @relation("ApplicationOffer", fields: [offeredById], references: [id])
+  screenedBy              User?           @relation("ApplicationScreener", fields: [screenedById], references: [id])
   interviews              Interview[]
   referenceCheck          ReferenceCheck?
   onboarding              Onboarding?

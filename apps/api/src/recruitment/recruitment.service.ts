@@ -17,6 +17,7 @@ import type {
   UpdateInterviewDto,
   CreateReferenceCheckDto,
   UpdateReferenceCheckDto,
+  ScreenApplicationDto,
 } from "./dto/recruitment.dto";
 import type { InterviewRound } from "../generated/enums";
 
@@ -163,6 +164,21 @@ export class RecruitmentService {
       throw new AppError(400, "INVALID_STATUS_TRANSITION");
     }
     return this.repo.updateApplication(id, dto);
+  }
+
+  async screenApplication(id: number, dto: ScreenApplicationDto, actorId: number) {
+    const app = await this.getApplication(id);
+    if (app.status !== "SCREENING") throw new AppError(409, "INVALID_STATUS_FOR_SCREEN");
+    if (dto.result === "FAIL" && !dto.notes?.trim()) {
+      throw new AppError(400, "SCREENING_NOTES_REQUIRED_FOR_FAIL");
+    }
+
+    return this.repo.screenApplication(id, {
+      screeningResult: dto.result,
+      screeningNotes: dto.notes ?? null,
+      screenedById: actorId,
+      screenedAt: new Date(),
+    });
   }
 
   async rejectApplication(id: number, actorId?: number) {

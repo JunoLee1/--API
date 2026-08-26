@@ -73,3 +73,8 @@ export interface UpdateReferenceCheckDto {
 export interface VerifyOtpDto {
   otp: string;
 }
+
+export interface ScreenApplicationDto {
+  result: "PENDING" | "PASS" | "FAIL";
+  notes?: string;
+}
