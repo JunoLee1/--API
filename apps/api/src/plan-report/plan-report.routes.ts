@@ -5,6 +5,8 @@ import { PlanReportController } from './plan-report.controller'
 import { PlanReportService } from './plan-report.service'
 import { PlanReportRepository } from './plan-report.repo'
 import { NotificationRepository } from '../notification/notification.repo'
+import { RecruitmentRepository } from '../recruitment/recruitment.repo'
+import { RecruitmentService } from '../recruitment/recruitment.service'
 import { auth } from '../lib/authMiddleware'
 import { AppError } from '../lib/appError'
 import { canReadHR, canWriteHR } from '../lib/permissions'
@@ -15,7 +17,9 @@ const prisma = getPrisma()
 const repo = new PlanReportRepository(prisma)
 const notifRepo = new NotificationRepository(prisma)
 const service = new PlanReportService(repo, notifRepo)
-const controller = new PlanReportController(service, repo)
+const recruitmentRepo = new RecruitmentRepository(prisma)
+const recruitmentService = new RecruitmentService(recruitmentRepo, notifRepo, repo)
+const controller = new PlanReportController(service, repo, recruitmentService)
 
 const upload = multer({
   storage: multer.diskStorage({
@@ -51,5 +55,6 @@ router.post('/:id/hiring-items', auth, checkWriteHR, controller.createHiringItem
 router.patch('/:id/hiring-items/:itemId', auth, checkWriteHR, controller.updateHiringItem)
 router.patch('/:id/hiring-items/:itemId/cancel', auth, checkWriteHR, controller.cancelHiringItem)
 router.delete('/:id/hiring-items/:itemId', auth, checkWriteHR, controller.deleteHiringItem)
+router.post('/:id/publish-postings', auth, checkWriteHR, controller.publishPostings)
 
 export default router

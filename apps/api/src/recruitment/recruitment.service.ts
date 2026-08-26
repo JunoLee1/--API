@@ -74,6 +74,50 @@ export class RecruitmentService {
     return posting;
   }
 
+  async bulkCreatePostingsFromPlanReport(planReportId: number, createdById: number) {
+    if (!this.planReportRepo) throw new AppError(500, "INTERNAL_ERROR");
+
+    const planReport = await this.planReportRepo.findByIdLight(planReportId);
+    if (!planReport) throw new AppError(404, "PLAN_REPORT_NOT_FOUND");
+    if (planReport.status !== "APPROVED") throw new AppError(409, "PLAN_REPORT_NOT_APPROVED");
+    if (planReport.templateType !== "HR") throw new AppError(409, "PLAN_REPORT_NOT_HR_TYPE");
+
+    const allItems = await this.planReportRepo.listHiringPlanItems(planReportId);
+
+    const created: any[] = [];
+    const skipped: { id: number; roleTitle: string; status: string }[] = [];
+
+    for (const item of allItems) {
+      if (item.status !== "PLANNED") {
+        skipped.push({ id: item.id, roleTitle: item.roleTitle, status: item.status });
+        continue;
+      }
+
+      // Auto-generate title + description
+      const title = `${planReport.title} - ${item.roleTitle}`;
+      const description = [
+        `역할: ${item.roleTitle}`,
+        `채용 인원: ${item.headcount}명`,
+        `우선순위: ${item.priority}`,
+        item.quarter ? `분기: Q${item.quarter}` : null,
+        item.estimatedBudget ? `예산: ${item.estimatedBudget.toLocaleString()}원` : null,
+      ].filter(Boolean).join(" · ");
+
+      const dto: CreateJobPostingDto = {
+        planReportId,
+        hiringPlanItemId: item.id,
+        title,
+        description,
+        headcount: item.headcount,
+      };
+      if (planReport.departmentId != null) dto.departmentId = planReport.departmentId;
+      const posting = await this.createPosting(dto, createdById);
+      created.push(posting);
+    }
+
+    return { created, skipped };
+  }
+
   async updatePosting(id: number, dto: UpdateJobPostingDto) {
     await this.getPosting(id);
     return this.repo.updatePosting(id, dto);
