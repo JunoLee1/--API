@@ -120,3 +120,108 @@ describe("RecruitmentService.verifyEmail", () => {
     });
   });
 });
+
+describe("RecruitmentService.createPosting", () => {
+  const makePlanReportRepo = (overrides: any = {}): any => ({
+    findByIdLight: jest.fn().mockResolvedValue({
+      id: 1,
+      status: "APPROVED",
+      templateType: "HR",
+      departmentId: 10,
+      title: "2026 상반기 채용 계획",
+      jobPostings: [], // 이제 array — schema 변경 후 필드 이름
+    }),
+    ...overrides,
+  });
+
+  const makeSvcWithPlanRepo = (
+    planRepoOverrides: any = {},
+    repoOverrides: Partial<RecruitmentRepository> = {},
+  ) =>
+    new RecruitmentService(
+      makeRepo(repoOverrides),
+      undefined,
+      makePlanReportRepo(planRepoOverrides),
+    );
+
+  const validDto = {
+    planReportId: 1,
+    title: "수비코치 채용",
+    description: "수비진 강화를 위한 코치 채용",
+    departmentId: 10,
+    headcount: 3,
+  } as any;
+
+  it("PlanReport 에 이미 JobPosting 이 있어도 새 posting 생성 가능해야 함 (다중 role 지원)", async () => {
+    const svc = makeSvcWithPlanRepo(
+      {
+        findByIdLight: jest.fn().mockResolvedValue({
+          id: 1,
+          status: "APPROVED",
+          templateType: "HR",
+          departmentId: 10,
+          title: "2026 상반기 채용 계획",
+          // 현재 code 는 .jobPosting (singular) 를 읽어 체크함 → 이 필드로 현재 버그 재현.
+          // fix 후에는 이 체크가 삭제되므로 두 필드 다 무시되고 posting 생성 성공.
+          jobPosting: { id: 100 },
+          jobPostings: [{ id: 100 }],
+        }),
+      },
+      {
+        createPosting: jest.fn().mockResolvedValue({ id: 101, title: "수비코치 채용" }),
+      },
+    );
+
+    await expect(svc.createPosting(validDto, 42)).resolves.toEqual({
+      id: 101,
+      title: "수비코치 채용",
+    });
+  });
+
+  it("PlanReport 승인 안 되면 409 PLAN_REPORT_NOT_APPROVED", async () => {
+    const svc = makeSvcWithPlanRepo({
+      findByIdLight: jest.fn().mockResolvedValue({
+        id: 1,
+        status: "DRAFT",
+        templateType: "HR",
+        departmentId: 10,
+        title: "test",
+        jobPostings: [],
+      }),
+    });
+
+    await expect(svc.createPosting(validDto, 42)).rejects.toMatchObject({
+      statusCode: 409,
+      message: "PLAN_REPORT_NOT_APPROVED",
+    });
+  });
+
+  it("PlanReport HR 타입 아니면 409 PLAN_REPORT_NOT_HR_TYPE", async () => {
+    const svc = makeSvcWithPlanRepo({
+      findByIdLight: jest.fn().mockResolvedValue({
+        id: 1,
+        status: "APPROVED",
+        templateType: "MARKETING",
+        departmentId: 10,
+        title: "test",
+        jobPostings: [],
+      }),
+    });
+
+    await expect(svc.createPosting(validDto, 42)).rejects.toMatchObject({
+      statusCode: 409,
+      message: "PLAN_REPORT_NOT_HR_TYPE",
+    });
+  });
+
+  it("PlanReport 없으면 404 PLAN_REPORT_NOT_FOUND", async () => {
+    const svc = makeSvcWithPlanRepo({
+      findByIdLight: jest.fn().mockResolvedValue(null),
+    });
+
+    await expect(svc.createPosting(validDto, 42)).rejects.toMatchObject({
+      statusCode: 404,
+      message: "PLAN_REPORT_NOT_FOUND",
+    });
+  });
+});

@@ -56,7 +56,6 @@ export class RecruitmentService {
     if (!planReport) throw new AppError(404, "PLAN_REPORT_NOT_FOUND");
     if (planReport.status !== "APPROVED") throw new AppError(409, "PLAN_REPORT_NOT_APPROVED");
     if (planReport.templateType !== "HR") throw new AppError(409, "PLAN_REPORT_NOT_HR_TYPE");
-    if (planReport.jobPosting) throw new AppError(409, "PLAN_REPORT_ALREADY_LINKED");
     return this.repo.createPosting({ ...dto, createdById });
   }
 

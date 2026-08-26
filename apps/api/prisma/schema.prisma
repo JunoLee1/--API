@@ -2869,7 +2869,7 @@ model JobPosting {
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
   budget           Int?
-  planReportId     Int?             @unique
+  planReportId     Int?
   hiringPlanItemId Int?
 
   department     Department?      @relation(fields: [departmentId], references: [id])
@@ -3624,7 +3624,7 @@ model PlanReport {
   createdBy       User               @relation("PlanReportCreatedBy", fields: [createdById], references: [id])
   approvedBy      User?              @relation("PlanReportApprovedBy", fields: [approvedById], references: [id])
   reviews         PlanReview[]
-  jobPosting      JobPosting?
+  jobPostings     JobPosting[]
   survey          HiringNeedsSurvey? @relation(fields: [surveyId], references: [id])
   hiringPlanItems HiringPlanItem[]
 }
