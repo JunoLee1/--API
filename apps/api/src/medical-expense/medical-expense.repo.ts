@@ -12,7 +12,7 @@ const expenseInclude = {
   leaderReviewer: { select: userSelect },
   adminReviewer: { select: userSelect },
   injury: { select: { id: true, bodyPart: true, playerId: true } },
-  player: { select: { id: true, playerName: true, position: true, dateOfBirth: true } },
+  player: { select: { id: true, playerName: true, position: true } },
 } as const;
 
 export class MedicalExpenseRepository {
