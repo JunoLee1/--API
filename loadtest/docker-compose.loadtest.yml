@@ -1,0 +1,58 @@
+# Load-balanced API stack for load testing.
+#
+# Purpose: run 2 API replicas behind nginx round-robin to validate that the
+# stateless (JWT) API tolerates a horizontal-scale deployment and to measure
+# per-replica distribution + fail-over behaviour.
+#
+# Prerequisites:
+#   - Docker Desktop running
+#   - Local Postgres reachable at host:5432 with `football` db + seed applied
+#     (default: existing `docker compose up db` from repo root or local pg)
+#   - `.env` at repo root providing DB_PASSWORD, JWT secrets, PHONE_ENCRYPTION_KEY
+#
+# Usage:
+#   # from repo root
+#   docker compose -f loadtest/docker-compose.loadtest.yml --env-file .env \
+#     up --build --scale api=2 -d
+#   # verify both replicas
+#   docker compose -f loadtest/docker-compose.loadtest.yml ps
+#   # run k6 against LB
+#   BASE_URL=http://localhost:3002/api SCENARIO=stress \
+#     docker run --rm -i --network host -v $PWD/loadtest:/scripts \
+#     grafana/k6 run /scripts/personas.k6.js
+#   # teardown
+#   docker compose -f loadtest/docker-compose.loadtest.yml down
+
+name: football-loadtest
+
+services:
+  api:
+    build:
+      context: ../apps/api
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://football:${DB_PASSWORD}@host.docker.internal:5432/football
+      PORT: 3001
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:5173}
+      JWT_ACCESS_TOKEN_SECRET: ${JWT_ACCESS_TOKEN_SECRET}
+      JWT_REFRESH_TOKEN_SECRET: ${JWT_REFRESH_TOKEN_SECRET}
+      PHONE_ENCRYPTION_KEY: ${PHONE_ENCRYPTION_KEY}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:3001/api/auth/session || exit 0"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "3002:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+    restart: unless-stopped
