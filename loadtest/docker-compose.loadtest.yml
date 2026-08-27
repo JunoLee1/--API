@@ -31,12 +31,14 @@ services:
       context: ../apps/api
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: postgresql://football:${DB_PASSWORD}@host.docker.internal:5432/football
+      # Default reuses the host dev DB (user `juno`, no password). Override via
+      # `.env` if you point at a dedicated loadtest DB.
+      DATABASE_URL: ${DATABASE_URL:-postgresql://juno@host.docker.internal:5432/football}
       PORT: 3001
       CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:5173}
-      JWT_ACCESS_TOKEN_SECRET: ${JWT_ACCESS_TOKEN_SECRET}
-      JWT_REFRESH_TOKEN_SECRET: ${JWT_REFRESH_TOKEN_SECRET}
-      PHONE_ENCRYPTION_KEY: ${PHONE_ENCRYPTION_KEY}
+      JWT_ACCESS_TOKEN_SECRET: ${JWT_ACCESS_TOKEN_SECRET:-JWT_ACCESS_SECRET}
+      JWT_REFRESH_TOKEN_SECRET: ${JWT_REFRESH_TOKEN_SECRET:-JWT_REFRESH_SECRET}
+      PHONE_ENCRYPTION_KEY: ${PHONE_ENCRYPTION_KEY:-1e21f788eee1f617dd8b3657a42ffb9c682ee2e0b62148885911a9d60d03a218}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped

@@ -251,11 +251,38 @@ function buildScenarios() {
     exec: 'writeWorkflow',
     tags: { scenario: 'write' },
   }
+  const extreme = {
+    executor: 'ramping-vus',
+    startVUs: 5,
+    stages: [
+      { duration: '30s', target: 100 },
+      { duration: '30s', target: 300 },
+      { duration: '60s', target: 500 },
+      { duration: '30s', target: 800 },
+      { duration: '15s', target: 0 },
+    ],
+    exec: 'readWorkflow',
+    tags: { scenario: 'extreme' },
+  }
+  const writeHeavy = {
+    executor: 'ramping-vus',
+    startVUs: 5,
+    stages: [
+      { duration: '30s', target: 50 },
+      { duration: '60s', target: 100 },
+      { duration: '30s', target: 200 },
+      { duration: '15s', target: 0 },
+    ],
+    exec: 'writeWorkflow',
+    tags: { scenario: 'writeHeavy' },
+  }
   if (SCENARIO === 'baseline') return { baseline }
   if (SCENARIO === 'stress') return { stress }
   if (SCENARIO === 'write') return { write }
   if (SCENARIO === 'mixed') return { baseline, write }
-  throw new Error(`Unknown SCENARIO: ${SCENARIO} (expected: baseline|stress|write|mixed)`)
+  if (SCENARIO === 'extreme') return { extreme }
+  if (SCENARIO === 'writeHeavy') return { writeHeavy }
+  throw new Error(`Unknown SCENARIO: ${SCENARIO} (expected: baseline|stress|extreme|write|writeHeavy|mixed)`)
 }
 
 // -----------------------------------------------------------------------------

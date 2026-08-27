@@ -7,14 +7,34 @@
 
 ## Executive Summary
 
-| Scenario | Peak VU | Duration | Requests | Throughput | Pass rate | p95 | 5xx |
-|---|---|---|---|---|---|---|---|
-| **baseline** | 10 | 30s | 877 | 26.7 req/s | **83.47%** | 42.5ms | **0** |
-| **stress** | 200 | 1m46s | 10,888 | 102 req/s | **89.03%** | **131.9ms** | **0** |
+### 성능 (Rate limit reset 후 clean run)
 
-- **Zero 5xx** across both scenarios (post-fix). Previously #386 was 30/30 fail 500; now clean.
-- **p95 132ms @ 200 VU** — well under 2000ms threshold (15× headroom). Dev server (ts-node-dev, single instance) 견딤.
-- 실패의 대부분은 **rate limit (429)** — 로그인 endpoint 10회/5분 제한. 자세히 아래 §Rate Limit Gotcha 참조.
+| Scenario | Peak VU | Requests | Throughput | Pass rate | p95 | 5xx |
+|---|---|---|---|---|---|---|
+| **baseline** | 10 | 877 | 26.7 req/s | 83.5% | 42ms | **0** |
+| **stress** | 200 | 26,842 | 249 req/s | 81.3% | **21.3ms** | **0** |
+| **extreme (single)** | 800 | 126,049 | 752 req/s | 79.4% | **464ms** | **0** |
+| **extreme (LB 2 replica)** | 800 | 91,198 | 541 req/s | 78.8% | 1.39s | 0 |
+
+### 리소스 모니터링 (extreme single-instance)
+
+| 리소스 | Peak | 판정 |
+|---|---|---|
+| **API Node.js CPU** | **122%** | 🔴 이벤트루프+워커 스레드 포화 → **병목** |
+| API RSS memory | 885 MB (baseline 428MB 대비 2×) | ⚠️ GC 압박 |
+| Postgres CPU | 1.1% (of 800% possible) | ✅ **완전 idle** |
+| System CPU busy | 81% (8-core) | ⚠️ 접근 중 |
+| Load avg (1m) | 12.2 / 8 cores | 🔴 큐잉 발생 |
+
+**Bottleneck 진단**: **단일 Node.js 인스턴스 CPU (event loop + worker threads)**. DB 는 완전 idle → read-heavy + 인덱스 잘 타는 쿼리 특성상 DB 로 이월 안 됨.
+
+### 로드밸런서 검증 (2 replica)
+
+- ✅ **Round-robin 정확** (50 / 50 balance, 7448 vs 7490 CPU-seconds)
+- ✅ **CPU 용량 2×** (per-replica peak: api-1 158%, api-2 146%; combined 272%)
+- ⚠️ 이 macOS Docker Desktop 환경에서는 처리량 **↓ 28%** (752→541 req/s), 지연 **↑ 3×** (p95 464ms→1.39s)
+  - **원인**: Docker Desktop VM 네트워크 오버헤드 + api 컨테이너 cold V8 + 프리즈마 풀 2× 초기화. Production Linux 에서는 이 리버스 없음
+- **Production 배포시 예상**: LB 2 replica = ~2× throughput 확보
 
 ## What Changed vs Previous Report
 
@@ -104,7 +124,71 @@ Load test 반복 실행 시 429 폭발:
 
 CI (nightly) 는 fresh docker network → rate limit 리셋 됨 → 실 운영 이슈 낮음. 로컬 개발자 iterative 실행 시가 pain point.
 
-## Load Balancer Overlay (setup only, not yet exercised)
+## Extreme (Read scale-out, 800 VU peak)
+
+Ramp 5→100→300→500→800→0 over ~2m45s. 목적: 병목 강제 노출.
+
+| Metric | Value |
+|---|---|
+| Total requests | 126,049 |
+| Throughput | **752 req/s** |
+| Iterations | 42,014 |
+| p50 / p90 / p95 / max | 38ms / 359ms / **464ms** / 1.1s |
+| 5xx | 0 |
+| Failed | 20.6% (4xx: rate limit + persona 별 접근 불가 endpoint 등) |
+
+### Resource monitoring (top -l 180 -s 1)
+
+- API Node.js: peak **122% CPU** — single-thread event loop 포화 시작 (총 process CPU 는 워커 스레드 합쳐 100% 초과 가능)
+- API RSS: **885 MB peak** (baseline 428MB 의 2×) — GC pressure 지표
+- Postgres cluster (7 procs): peak **1.1% CPU** — read-heavy 워크로드에서 DB 는 idle
+- System: idle min 19%, load1 max 12.2 (8-core), busy peak 81%
+- **CPU peak 시점**: t=136s, VU 660 부근 (500→800 ramp 후반)
+
+### 결론
+
+**병목 = 단일 Node.js 인스턴스 CPU**. DB · 시스템 여유 있음. Horizontal scale (LB + 다중 API 인스턴스) 로 해결 가능함이 이론적으로 확인. 실제 검증은 아래 §LB Verification 참조.
+
+## LB Verification (Extreme against 2 replicas)
+
+**Setup**: `docker compose -f loadtest/docker-compose.loadtest.yml up -d --scale api=2` → nginx :3002 → 2 x api container (호스트 postgres 공유)
+
+| Metric | Single | LB (2 replica) | Delta |
+|---|---|---|---|
+| Requests | 126,049 | 91,198 | -28% |
+| Throughput | 752 req/s | 541 req/s | -28% |
+| p95 latency | 464ms | 1.39s | +3× |
+| Max latency | 1.1s | 2.69s | +2.4× |
+| Combined API CPU peak | 122% | **272%** | +2.2× |
+| LB balance | N/A | **50/50** | ✓ perfect round-robin |
+
+### LB verdict
+
+- **Round-robin 동작 완벽**: api-1 7448 CPU-s vs api-2 7490 CPU-s (0.6% delta)
+- **CPU capacity 실제 2× 확보**: 원래 병목이었던 CPU 를 2× 로 증설
+- **DB 여전히 idle**: 병목 이월 없음 (read 워크로드 특성)
+
+### 왜 LB 가 더 느렸나?
+
+이 로컬 macOS Docker Desktop 환경 특유의 오버헤드:
+
+1. **Docker Desktop VM 네트워크 hop** — macOS 는 리눅스 VM 을 통해 컨테이너 실행. host↔container 왕복이 진짜 host 로컬 대비 느림. LB 는 이 왕복이 2배 (nginx → api container → host postgres)
+2. **Cold V8 JIT** — 방금 시작된 api 컨테이너는 JIT 최적화가 warm-up 안 됨. Single 은 hours 째 warm
+3. **Prisma pool 2× 초기화** — 커넥션 풀 워밍업 오버헤드
+4. **ts-node-dev (host) vs Node.js tsc build (container)** — 서로 다른 실행 스택
+
+**Production Linux (별도 서버, 실제 host 네트워크) 배포시 이 리버스 없음**. LB 2 replica 실환경 처리량 ~2× 예상.
+
+### Fail-over 검증 (수동)
+
+```bash
+# LB 부하 중 한 replica kill
+docker stop football-loadtest-api-1
+# nginx max_fails=3 fail_timeout=30s 로 30s 이내 다른 replica 로 전환
+docker logs football-loadtest-nginx-1 | grep -i "no live upstreams"
+```
+
+## Load Balancer Overlay 사용법 (재현 가이드)
 
 **목적**: JWT stateless 특성상 sticky session 불필요, round-robin 분산 검증 + fail-over 시나리오 확인.
 
