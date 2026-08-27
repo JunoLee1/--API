@@ -11,8 +11,12 @@ import { Badge } from '@/components/ui/badge'
 
 interface Dept { id: number; name: string }
 
-const STATUS_LABEL: Record<string, string> = { OPEN: '진행중', CLOSED: '마감' }
-const STATUS_COLOR: Record<string, string> = { OPEN: 'bg-green-100 text-green-700', CLOSED: 'bg-gray-100 text-gray-500' }
+const STATUS_LABEL: Record<string, string> = { DRAFT: '초안', OPEN: '진행중', CLOSED: '마감' }
+const STATUS_COLOR: Record<string, string> = {
+  DRAFT: 'bg-yellow-100 text-yellow-800',
+  OPEN: 'bg-green-100 text-green-700',
+  CLOSED: 'bg-gray-100 text-gray-500',
+}
 
 export function HiringSurveyListPage() {
   const navigate = useNavigate()
@@ -105,14 +109,24 @@ export function HiringSurveyListPage() {
           return (
             <div
               key={s.id}
-              onClick={() => navigate(`/admin/recruitment/surveys/${s.id}`)}
+              onClick={() =>
+                navigate(
+                  s.status === 'DRAFT'
+                    ? `/admin/recruitment/surveys/${s.id}/edit`
+                    : `/admin/recruitment/surveys/${s.id}`,
+                )
+              }
               className="border rounded-lg p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50"
             >
               <div>
                 <p className="font-medium">{s.title}</p>
                 <p className="text-sm text-gray-500">
                   응답 {respondedCount}/{totalCount}개 부서 ·{' '}
-                  {s.status === 'OPEN' ? `마감 D-${deadlineDays}일` : '마감됨'}
+                  {s.status === 'OPEN'
+                    ? `마감 D-${deadlineDays}일`
+                    : s.status === 'DRAFT'
+                      ? '초안 · open 대기'
+                      : '마감됨'}
                 </p>
               </div>
               <Badge className={STATUS_COLOR[s.status]}>{STATUS_LABEL[s.status]}</Badge>

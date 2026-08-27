@@ -39,9 +39,15 @@ export function NotificationsPage() {
 
   const handleItemClick = async (n: NotificationItem) => {
     if (!n.readAt) await handleMarkRead(n.id)
-    const base = NOTIFICATION_ROUTES[n.type]
-    if (!base) return
-    const target = n.entityId ? `${base}/${n.entityId}` : base
+    const route = NOTIFICATION_ROUTES[n.type]
+    if (!route) return
+    let target: string
+    if (typeof route === 'function') {
+      if (!n.entityId) return
+      target = route(n.entityId)
+    } else {
+      target = n.entityId ? `${route}/${n.entityId}` : route
+    }
     navigate(target)
   }
 

@@ -82,6 +82,7 @@ import { ApplicationDetailPage } from '@/pages/admin/recruitment/ApplicationDeta
 import { HiringSurveyListPage } from '@/pages/admin/recruitment/HiringSurveyListPage'
 import { HiringSurveyDetailPage } from '@/pages/admin/recruitment/HiringSurveyDetailPage'
 import { HiringSurveyRespondPage } from '@/pages/admin/recruitment/HiringSurveyRespondPage'
+import { HiringSurveyDraftEditPage } from '@/pages/admin/recruitment/HiringSurveyDraftEditPage'
 import { PlanReportHiringItemsPage } from '@/pages/finance/PlanReportHiringItemsPage'
 import DashboardCharts from '@/pages/finance/DashboardCharts'
 import BudgetListPage from '@/pages/finance/BudgetListPage'
@@ -237,8 +238,9 @@ function App() {
             <Route path="/admin/recruitment/postings/:id" element={<JobPostingDetailPage />} />
             <Route path="/admin/recruitment/applications/:id" element={<ApplicationDetailPage />} />
             <Route path="/admin/recruitment/surveys" element={<HiringSurveyListPage />} />
-            <Route path="/admin/recruitment/surveys/:id" element={<HiringSurveyDetailPage />} />
+            <Route path="/admin/recruitment/surveys/:id/edit" element={<HiringSurveyDraftEditPage />} />
             <Route path="/admin/recruitment/surveys/:id/respond" element={<HiringSurveyRespondPage />} />
+            <Route path="/admin/recruitment/surveys/:id" element={<HiringSurveyDetailPage />} />
             <Route path="/finance/plan-reports/:id/hiring-items" element={<PlanReportHiringItemsPage />} />
             <Route path="/admin/leagues" element={<LeaguePage />} />
             <Route path="/finance/ticket-sales" element={<TicketSalesPage />} />

@@ -53,10 +53,16 @@ export function NotificationPopover({ unreadCount, onUnreadCountChange, iconSize
 
   const handleItemClick = async (item: NotificationItem) => {
     if (!item.readAt) await handleMarkRead(item.id)
-    const base = NOTIFICATION_ROUTES[item.type]
+    const route = NOTIFICATION_ROUTES[item.type]
     setOpen(false)
-    if (!base) return
-    const target = item.entityId ? `${base}/${item.entityId}` : base
+    if (!route) return
+    let target: string
+    if (typeof route === 'function') {
+      if (!item.entityId) return
+      target = route(item.entityId)
+    } else {
+      target = item.entityId ? `${route}/${item.entityId}` : route
+    }
     navigate(target)
   }
 
