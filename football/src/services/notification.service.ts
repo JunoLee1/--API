@@ -10,7 +10,9 @@ export interface NotificationItem {
   entityId?: number
 }
 
-export const NOTIFICATION_ROUTES: Record<string, string> = {
+export type NotificationRoute = string | ((entityId: number) => string)
+
+export const NOTIFICATION_ROUTES: Record<string, NotificationRoute> = {
   // Contracts
   CONTRACT_EXPIRY: '/contracts',
   CONTRACT_EXPIRY_90D: '/contracts',
@@ -86,6 +88,7 @@ export const NOTIFICATION_ROUTES: Record<string, string> = {
   HIRING_SURVEY_DEADLINE_REMINDER: '/admin/recruitment/surveys',
   HIRING_SURVEY_CLOSED: '/admin/recruitment/surveys',
   HIRING_SURVEY_ALL_RESPONDED: '/admin/recruitment/surveys',
+  HIRING_SURVEY_DRAFT_CREATED: (entityId: number) => `/admin/recruitment/surveys/${entityId}/edit`,
   HIRING_PLAN_APPROVED: '/admin/recruitment',
   JOB_POSTING_DRAFT_CREATED: '/admin/recruitment/postings',
   INTERVIEW_SCHEDULED: '/admin/recruitment/applications',

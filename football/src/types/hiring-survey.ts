@@ -1,4 +1,4 @@
-export type SurveyStatus = 'OPEN' | 'CLOSED'
+export type SurveyStatus = 'DRAFT' | 'OPEN' | 'CLOSED'
 export type SurveyPriority = 'HIGH' | 'MEDIUM' | 'LOW'
 
 export const PRIORITY_LABELS: Record<SurveyPriority, string> = {
@@ -37,6 +37,12 @@ export interface HiringNeedsSurvey {
   targetDepartments: SurveyTargetDept[]
   responses: SurveyResponse[]
   createdAt: string
+}
+
+export interface UpdateHiringSurveyDraftDto {
+  title?: string
+  deadlineAt?: string
+  targetDeptIds?: number[]
 }
 
 export interface HiringPlanItem {
