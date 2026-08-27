@@ -13,6 +13,7 @@ export interface ReviewerDeptMap {
   legal?: number
   facility?: number
   privacy?: number
+  finance?: number
 }
 
 const PLAN_INCLUDE = {
