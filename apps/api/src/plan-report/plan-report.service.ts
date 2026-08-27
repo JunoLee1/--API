@@ -164,7 +164,7 @@ function resolveApproverLevel(
 }
 
 function resolveReviewerDeptIds(
-  plan: { hasNewStaff: boolean; hasContract: boolean; hasExternalLease: boolean; hasPersonalInfo: boolean },
+  plan: { templateType: string; hasNewStaff: boolean; hasContract: boolean; hasExternalLease: boolean; hasPersonalInfo: boolean },
   deptMap: ReviewerDeptMap
 ): number[] {
   const ids = new Set<number>()
@@ -180,6 +180,10 @@ function resolveReviewerDeptIds(
   if (plan.hasPersonalInfo) {
     if (deptMap.legal) ids.add(deptMap.legal)
     if (deptMap.privacy) ids.add(deptMap.privacy)
+  }
+  if (plan.templateType === 'HR') {
+    if (deptMap.finance) ids.add(deptMap.finance)
+    else console.warn('[plan-report] HR plan submitted but ClubSettings.reviewerDeptMap.finance is not configured; finance review skipped')
   }
   return Array.from(ids)
 }

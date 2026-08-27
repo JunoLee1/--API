@@ -27,6 +27,7 @@ const mockRepo = {
 
 const mockNotifRepo = {
   createForHrManager: jest.fn(),
+  createForDepartmentHead: jest.fn().mockResolvedValue(undefined),
 } as any
 
 const service = new PlanReportService(mockRepo, mockNotifRepo)
@@ -68,6 +69,51 @@ describe('submit — HR templateType은 항상 ADMIN 승인 레벨이어야 한�
       expect.any(Array),
       'ADMIN'
     )
+  })
+})
+
+describe('submit — HR templateType 은 재무팀을 reviewer 로 자동 포함 (#369)', () => {
+  test('HR + reviewerDeptMap.finance 설정됨 → reviewerDeptIds 에 finance 부서 id 포함', async () => {
+    mockRepo.findById.mockResolvedValue(makePlan({ templateType: 'HR' }))
+    mockRepo.getClubSettings.mockResolvedValue({
+      reviewerDeptMap: { finance: 55 },
+      planApprovalLimit: 5_000_000,
+    })
+    mockRepo.submit.mockResolvedValue({ id: 1, status: 'REVIEWING' })
+
+    await service.submit(1, 7)
+
+    const call = mockRepo.submit.mock.calls[0]
+    expect(call[1]).toContain(55)
+  })
+
+  test('GENERAL + reviewerDeptMap.finance 설정됨 → finance 부서 포함되지 않음', async () => {
+    mockRepo.findById.mockResolvedValue(makePlan({ templateType: 'GENERAL' }))
+    mockRepo.getClubSettings.mockResolvedValue({
+      reviewerDeptMap: { finance: 55 },
+      planApprovalLimit: 5_000_000,
+    })
+    mockRepo.submit.mockResolvedValue({ id: 1, status: 'REVIEWING' })
+
+    await service.submit(1, 7)
+
+    const call = mockRepo.submit.mock.calls[0]
+    expect(call[1]).not.toContain(55)
+  })
+
+  test('HR + reviewerDeptMap.finance 미설정 → finance skip + console.warn 호출', async () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+    mockRepo.findById.mockResolvedValue(makePlan({ templateType: 'HR' }))
+    mockRepo.getClubSettings.mockResolvedValue({
+      reviewerDeptMap: {},
+      planApprovalLimit: 5_000_000,
+    })
+    mockRepo.submit.mockResolvedValue({ id: 1, status: 'REVIEWING' })
+
+    await service.submit(1, 7)
+
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringMatching(/finance/i))
+    warnSpy.mockRestore()
   })
 })
 
