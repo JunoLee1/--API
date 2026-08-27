@@ -1,0 +1,139 @@
+name: Persona Load Test
+
+# 매일 UTC 03:00 (한국 12:00) 실행 + 수동 dispatch
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      vus:
+        description: 'Virtual users'
+        required: false
+        default: '10'
+      duration:
+        description: 'Test duration'
+        required: false
+        default: '30s'
+
+jobs:
+  loadtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: football
+          POSTGRES_PASSWORD: football
+          POSTGRES_DB: football
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://football:football@localhost:5432/football
+      JWT_ACCESS_SECRET: ci-access-secret-do-not-use-in-prod
+      JWT_REFRESH_SECRET: ci-refresh-secret-do-not-use-in-prod
+      PHONE_ENCRYPTION_KEY: 6c9b04a7b8f14a2c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c
+      CLIENT_ORIGIN: http://localhost:3000
+      NODE_ENV: test
+      PORT: '3001'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install API dependencies
+        working-directory: apps/api
+        run: pnpm install --frozen-lockfile
+
+      - name: Prisma generate
+        working-directory: apps/api
+        run: pnpm prisma generate
+
+      - name: Apply migrations
+        working-directory: apps/api
+        run: pnpm prisma migrate deploy
+
+      - name: Seed database
+        working-directory: apps/api
+        run: pnpm run seed
+
+      - name: Start API server (background)
+        working-directory: apps/api
+        run: |
+          nohup pnpm run dev > /tmp/api-server.log 2>&1 &
+          echo $! > /tmp/api-server.pid
+
+      - name: Wait for API server ready
+        run: |
+          for i in {1..30}; do
+            if curl -sf http://localhost:3001/api/health >/dev/null 2>&1; then
+              echo "API server ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API server failed to start"
+          cat /tmp/api-server.log || true
+          exit 1
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install -y k6
+
+      - name: Run persona load test
+        env:
+          BASE_URL: http://localhost:3001/api
+          VUS: ${{ github.event.inputs.vus || '10' }}
+          DURATION: ${{ github.event.inputs.duration || '30s' }}
+        run: |
+          k6 run loadtest/personas.k6.js \
+            --summary-export=loadtest/summary.json \
+            --out json=loadtest/results.json
+
+      - name: Stop API server
+        if: always()
+        run: |
+          if [ -f /tmp/api-server.pid ]; then
+            kill $(cat /tmp/api-server.pid) 2>/dev/null || true
+          fi
+
+      - name: Upload k6 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-results-${{ github.run_id }}
+          path: |
+            loadtest/summary.json
+            loadtest/results.json
+            /tmp/api-server.log
+          retention-days: 14
+
+      - name: Post summary to job log
+        if: always()
+        run: |
+          if [ -f loadtest/summary.json ]; then
+            echo "## k6 Load Test Summary" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            cat loadtest/summary.json | head -100 >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
