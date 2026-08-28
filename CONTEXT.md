@@ -1281,6 +1281,19 @@ CANCELLED    REJECTED             REJECTED
 
 email 중복(`User.email @unique`)은 tx 진입 전 pre-check로 `EMAIL_ALREADY_IN_USE` 400 반환 — dangling PhoneNumber 방지. tx 커밋 이후 alarm(팀장 + HR permissionNotes 있으면 + candidate OTP)은 fire-and-forget.
 
+**EXECUTION 진입 게이트 (2개):**
+- **필수 서류 검증** — `HiringDocument` 최신 row 가 `posting.requiredDocuments` 또는 `HiringDispatch.requiredDocuments` 를 모두 APPROVED 로 커버해야 통과 (`## 채용 서류 (HiringDocument)` 섹션 참조)
+- **근로계약 서명 검증** — 최신 non-CANCELLED `EmployeeContract.status = SIGNED` 여야 통과 (`## 근로계약 (EmployeeContract)` 섹션 참조). EC 부재 시 `CONTRACT_NOT_ISSUED`, non-SIGNED 시 `CONTRACT_NOT_SIGNED` 400. Override 없음.
+
+**Dispatch tx 안 원자적 사이드이펙트:**
+- User + UserDepartment + StaffRecord + Onboarding create (기존)
+- `populateOnboardingTasks(tx, onboardingId, departmentId, startDate)` — 부서 `OnboardingTemplate` 기반 `OnboardingTask` populate (`## 직무 온보딩` 섹션 참조). Template 없으면 skip. 실패 시 dispatch 전체 롤백.
+
+**Post-dispatch fire-and-forget hooks:**
+- 알림 발송 (팀장·HR·candidate)
+- `provisionNewEmployeeAssets(dispatchId)` — 부서 `DepartmentDefaultAssetKit` 기반 AssetRequest DRAFT 자동 생성 (자산 신청 워크플로우 섹션 참조). 실패해도 dispatch 롤백 안 함.
+- `notifyNewEmployeeTasksAssigned(dispatchId)` — 신입에게 `ONBOARDING_TASKS_ASSIGNED` 알림
+
 **Onboarding dual reference (Q11-1 b):** `Onboarding.applicationId Int? @unique` + `Onboarding.hiringDispatchId Int? @unique` 둘 다 nullable. 하나만 non-null이어야 함(app-level XOR — Prisma CHECK 미지원). Application 기반 발령은 `hiringDispatchId`가 채워지고 `applicationId`는 null.
 
 **Q10 D 재검증 현황:**
@@ -1290,6 +1303,163 @@ email 중복(`User.email @unique`)은 tx 진입 전 pre-check로 `EMAIL_ALREADY_
 
 **쓰기 권한:** HR_MANAGER(create / dispatch / cancel / complete), FINANCE_MANAGER(budget-reverify / budget-reject), GM·ADMIN(dispatch-approve / dispatch-reject), 각 stage self-approval 차단.
 **읽기 권한:** 결재 라인 유저, GM, ADMIN, HR_MANAGER, FINANCE_MANAGER.
+
+---
+
+## 근로계약 (EmployeeContract)
+
+직원 근로계약 문서 관리 도메인. `HiringDispatch` 별로 계약서 파일(원본·서명본) 과 서명 상태를 추적한다. **처우 협상 로그**, **외부 e-sign 통합**, **계약 갱신**, **퇴사(offboarding)** 는 각각 별도 후속 이슈로 분리 — 이 도메인은 계약 문서·상태 관리 스켈레톤에 한한다.
+
+**상태머신:**
+```
+DRAFT → ISSUED → SIGNED
+   ↓       ↓        ↓
+CANCELLED  (역방향 없음. 재발행은 신규 EC 생성 — append-only)
+```
+
+- `DRAFT`: HR 이 계약서 파일 준비 중 (create 시점)
+- `ISSUED`: HR 이 계약서 파일 업로드 완료, 지원자 서명 대기. `fileUrl` 필수
+- `SIGNED`: HR 이 오프라인 서명본 스캔·업로드 완료. `signedFileUrl`, `signedAt` 필수. 업로드 = 자동 SIGNED 마킹 (한 액션)
+- `CANCELLED`: 어느 상태에서든 취소 가능. `cancelReason` 필수. 재발행이 필요하면 신규 EC create
+
+**필드:**
+- `hiringDispatchId Int` — HiringDispatch FK (@unique 아님, 이력 append-only)
+- `fileUrl String?` / `fileName String?` — 원본 계약서 (ISSUED 부터 필수)
+- `signedFileUrl String?` / `signedFileName String?` — 서명본 (SIGNED 시 필수)
+- `createdById` — DRAFT create 실행자
+- `issuedById` / `issuedAt` — ISSUED 전환 감사
+- `signedAt` — 실제 지원자가 서명한 날짜 (HR 수동 입력)
+- `signedConfirmedById` / `signedConfirmedAt` — SIGNED 마킹 감사 (업로드한 HR)
+- `cancelledById` / `cancelledAt` / `cancelReason` — 취소 감사
+
+**HiringDispatch EXECUTION 게이트:** 최신 non-CANCELLED EC 가 `SIGNED` 여야 통과. `dispatch()` 안 `assertContractSigned()` 헬퍼가 검증. EC 부재 시 `CONTRACT_NOT_ISSUED` 400, non-SIGNED 시 `CONTRACT_NOT_SIGNED` 400 (`status`·`contractId` 함께 반환). Override 없음 — 계약 서명 없는 발령은 legal risk.
+
+**Append-only 이력 판정:** `(hiringDispatchId)` 별 최신 row 로 current 판정. 재발행 흐름:
+1. 기존 EC 를 `CANCELLED` 로 전환 (`cancelReason` 필수)
+2. 신규 EC create → DRAFT → ISSUED → SIGNED
+
+기존 EC 파일은 감사 목적으로 그대로 보존 (Contract 개정·HiringDocument 재업로드 선례 동일).
+
+**MVP 서명 방식:** HR 이 오프라인 서명본(종이 계약 스캔 또는 회사 방문 서명) 을 시스템에 업로드 = 자동 SIGNED 마킹. 외부 e-sign API·후보자 직접 서명 UI 는 후속 이슈.
+
+**권한:**
+- Create (DRAFT) / Issue (DRAFT→ISSUED) / Sign (ISSUED→SIGNED): HR_STAFF, HR_MANAGER, ADMIN
+- Cancel: HR_MANAGER, GM, ADMIN (법적 함의 있어 실무자 단독 결정 차단)
+- Read: 결재 라인 유저, HR_STAFF, HR_MANAGER, GM, ADMIN
+
+**후속 이슈 (스텁 예정):**
+- 처우 협상 로그 (`SalaryNegotiation`) — offer/counter/final 이력, HR·부서장·임원 승인
+- 외부 e-sign 통합 (DocuSign·모두사인 등) — 서비스 선정, webhook 수신
+- 계약 갱신 워크플로우 — 갱신 시점 알림, 신규 EC 생성 흐름
+- 퇴사 (offboarding) 워크플로우 — dispatch 반대 방향, User deactivation
+
+---
+
+## 직무 온보딩 (OnboardingTemplate + OnboardingTask)
+
+부서별 온보딩 콘텐츠 (오리엔테이션·교육·체크리스트) 를 템플릿으로 정의하고 신입 온보딩에 자동 populate 하는 도메인. 기존 `Onboarding` 은 **기술적 계정 활성화** (OTP + MFA) 만 담당했고, 이 도메인이 **직무 콘텐츠 완료** 를 별도 트랙으로 관리한다. 멘토 배정·자동 이벤트 감지 (첫 PR 머지 등) · 수습기간 (`ProbationReview` #375) 통합은 각각 후속 이슈로 분리.
+
+### OnboardingTemplate
+
+**부서 1:1** 매핑. `DepartmentDefaultAssetKit` 와 동일 패턴 (관리 UX 일관성).
+
+**필드:**
+- `departmentId Int @unique` — 부서 FK
+- `name String` — 표시명 (예: "재무팀 신입 온보딩")
+- `tasks Json` — `[{title, description?, dueDaysFromStart?, requiresVerification, optional}]` 배열 (max 100 요소)
+- `createdById / updatedById` — 감사
+
+**Template Task 필드 (JSON element):**
+- `title` — 필수 표시명
+- `description?` — 상세
+- `dueDaysFromStart?` — 입사일 (dispatch.startDate) 기준 N일 이내 (알림·정렬용)
+- `requiresVerification` — true 면 신입 self-report 후 HR/dept.head verify 필요
+- `optional` — false = 필수 완료, true = skip 허용
+
+**쓰기 권한:** Department.head (자기 부서), HR_MANAGER, HR_STAFF, ADMIN
+**읽기 권한:** ADMIN, HR_MANAGER, HR_STAFF (부서장 본인은 자기 부서만)
+
+### OnboardingTask
+
+신입 온보딩 시점에 template 을 스냅샷하여 populate 된 실제 task row. Template 수정 후에도 기존 Onboarding 은 영향 없음 (append-only 원칙).
+
+**상태머신:**
+```
+PENDING → SELF_REPORTED → DONE
+   ↓          ↓             (verify APPROVE)
+SKIPPED      PENDING (verify REJECT)
+```
+
+- `PENDING`: 초기 (populate 결과)
+- `SELF_REPORTED`: 신입이 self-report. `requiresVerification = true` 인 경우 중간 상태
+- `DONE`: 최종 완료. verify 불필요 시 self-report 즉시 DONE, 필요 시 APPROVED 후 DONE
+- `SKIPPED`: optional 태스크 skip. `skipReason` 필수
+- **역방향**: verify REJECT 시 SELF_REPORTED → PENDING 복귀 (verifyNotes 필수, 신입 재대응 후 다시 self-report)
+
+**필드:**
+- `onboardingId Int` — 상위 Onboarding FK
+- `title / description / dueDate / requiresVerification / optional / order` — template 에서 복사
+- `selfReportedAt`, `verifiedById / verifiedAt / verifyNotes`, `skipReason` — 감사 이력
+
+**자동 populate:** `HiringDispatch.dispatch()` `$transaction` 안, `Onboarding.create()` 직후 `populateOnboardingTasks()` 헬퍼 실행. 부서 template 없으면 skip (에러 없이 dispatch 성공).
+
+**콘텐츠 완료 판정:** `Onboarding.contentCompletedAt` 신설 필드. 모든 required (non-optional) task 가 DONE 또는 SKIPPED 상태 도달 시 fire-and-forget 훅이 자동 set. 기존 `Onboarding.completedAt` (OTP + MFA 완료 = 기술적 활성화) 와 의미 분리. HiringDispatch.COMPLETED 자동 전이는 **후속 이슈** (별도 semantics 정의 필요).
+
+**Self-verify 차단:** verify 액션은 `req.user.id !== onboarding.userId` 강제. 신입이 자기 task 를 스스로 verify 시 403 `CANNOT_SELF_VERIFY`.
+
+**권한:**
+- Task read: 본인, 결재 라인, HR, ADMIN
+- Task self-report / skip (본인 액션): 신입 본인 (`onboarding.userId`)
+- Task verify (APPROVE/REJECT): HR_STAFF, HR_MANAGER, Department.head, ADMIN (self-verify 차단)
+- Task skip (HR 대신): HR_STAFF, HR_MANAGER, Department.head, ADMIN
+
+**알림 4종:**
+- `ONBOARDING_TASKS_ASSIGNED` — populate 완료 시 신입 본인
+- `ONBOARDING_TASK_VERIFY_REQUESTED` — self-report 시 HR/dept.head
+- `ONBOARDING_TASK_VERIFIED` / `ONBOARDING_TASK_REJECTED` — verify 결과 신입 본인
+- `ONBOARDING_CONTENT_COMPLETED` — contentCompletedAt set 시 신입 + HR + dept.head
+
+**하위호환:** 이 도메인 도입 이전 생성된 Onboarding row 는 tasks = [] 유지 (backfill 안 함). 신규 dispatch 부터 자동 populate.
+
+**후속 이슈 (스텁 예정):**
+- `Mentorship` 모델 + 멘토 배정 워크플로우 (부서장 지정 or 라운드로빈)
+- 자동 이벤트 감지 (첫 PR 머지·훈련 참가 등 crossdomain 훅)
+- Due date 임박 알림 cron + 미완료 escalation
+- Task 완료 증빙 파일 첨부 (필요 시 HiringDocument 로 대체)
+- HiringDispatch.COMPLETED 자동 전이 hook (별도 논의)
+
+---
+
+## 채용 서류 (HiringDocument)
+
+지원자(또는 발령 대상자)가 제출하는 필수·부가 서류(신분증·통장사본·학력증명 등)를 취합·검토하는 도메인. `JobApplication.resumeUrl` 은 이력서 하나만 담당하며, 그 외 모든 채용 관련 서류는 `HiringDocument` 로 관리한다. **근로계약서(#371)는 별도 워크플로우** — `HiringDocument` 는 지원자가 제출하는 방향, 근로계약은 클럽이 발행·서명받는 역방향 흐름이라 관심사가 다르다.
+
+**필드:**
+- `applicationId Int?` / `hiringDispatchId Int?` — XOR (app-level 검증, Prisma CHECK 미지원). Application 이 있는 정식 지원 흐름과 Application-free 발령(임원 스카웃·계약직 즉시 채용) 둘 다 first-class 지원. Onboarding dual reference 와 동일 패턴 (ADR 0015 참조)
+- `docType: String` — 자유 문자열. `PlayerCallup.requiredDocuments String[]` 선례와 동일 방향. 클럽·직무별 서류가 크게 달라 enum 부적합. Trim 정규화 (앞뒤 공백 제거), case 는 그대로
+- `fileUrl: String` — `/uploads/<hash>` 상대 경로. 기존 multer + local `/uploads` (auth 미들웨어 보호) 인프라 재사용 (hr-report·medical-expense 등 11개 모듈 선례)
+- `status: PENDING | APPROVED | REJECTED` — HR 검토 결과. REJECTED 시 `reviewNotes` 필수
+- `uploadedById → User`, `reviewedById → User?`, `reviewedAt DateTime?`
+
+**필수 서류 리스트:**
+- `JobPosting.requiredDocuments String[] @default([])` — 정식 지원 흐름 (application-based dispatch)
+- `HiringDispatch.requiredDocuments String[] @default([])` — Application-free 발령 (HR 이 직접 입력)
+- 클럽 전역·부서별 기본값 없음 (posting 마다 명시적 정의, FE 템플릿 버튼으로 UX 보완)
+
+**재업로드 = Append-only:** REJECTED 후 재제출은 신규 row 생성 (Contract 개정: TERMINATE + 새 계약 생성 선례와 동일). 이전 파일·반려 사유 모두 감사 이력으로 보존. "current" 판정 = `(target, docType)` 별 최신 row.
+
+**HiringDispatch EXECUTION 게이트:** 발령 실행(`dispatch()`) 진입 조건에 "모든 required docType 의 최신 row 가 APPROVED" 강제. 재무·임원 결재 stage 는 서류와 무관하게 병행 진행 가능 — 서류 준비 리드타임과 결재 리드타임을 분리.
+- Gate 로직: `SELECT DISTINCT ON (docType) * WHERE (applicationId=? OR hiringDispatchId=?) ORDER BY docType, createdAt DESC` → APPROVED 필터 → required 커버리지 확인
+- Extra 서류 (required 외 제출) 는 게이트에 영향 없음. HR 참고 자료로 저장
+
+**권한:**
+- Upload: HR_STAFF, HR_MANAGER, ADMIN (MVP 는 HR 대리만 — 후보자 직접 upload 는 candidate portal 별도 이슈)
+- Review (APPROVE/REJECT): HR_STAFF, HR_MANAGER, ADMIN 동등. Self-review 허용 (일인 HR 팀 클럽 지원)
+- Read: 결재 라인 유저, HR_STAFF, HR_MANAGER, GM, ADMIN, FINANCE_MANAGER
+
+**보존·삭제:** `onDelete: Cascade` — JobApplication data retention 만료(`dataRetentionDeadline`) 시 서류 자동 삭제. 파일 자체 orphan cleanup 은 후속 cron 이슈.
+
+**만료 관리:** MVP 제외. 서류 만료(예: 건강진단서 6개월)는 HR 이 REJECT 로 수동 대응. 자동 알림·`expiryDate` 필드는 후속 이슈로 분리 (실제 반복 사례 관찰 후 도입).
 
 ---
 
@@ -1712,6 +1882,36 @@ DRAFT → SUBMITTED → LEADER_APPROVED → APPROVED → FULFILLED
 
 **쓰기 권한 (신청·상태 전환):** 로그인 유저 전원(신청), leaf dept.head(LEADER 단계), parent dept.head(DEPT_HEAD 단계)
 **읽기 권한:** 신청자 본인, 결재 라인 유저, GM, ADMIN, FINANCE_MANAGER
+
+### DepartmentDefaultAssetKit (부서 기본 자산 세트)
+
+부서별로 미리 정의된 신입 지급 자산 리스트. `HiringDispatch.dispatch()` 성공 후 이 kit 을 참조해 신입 계정으로 `AssetRequest` DRAFT 를 자동 생성한다. 온보딩 자산 지급 누락을 방지하는 목적.
+
+**필드:**
+- `departmentId Int @unique` — 부서 1 : kit 1
+- `assetItems Json` — `[{equipmentItemId: number, quantity: number, note?: string}]`
+- `defaultExpenseCategoryId Int` — 자동 생성 draft 의 `expenseCategoryId` 기본값 (신입 편집 가능)
+- `createdById / updatedById` — 감사 이력
+
+**쓰기 권한:** ADMIN, ASSET_MANAGER
+**읽기 권한:** ADMIN, ASSET_MANAGER, HR_MANAGER
+
+### 신입 자동 자산 프로비저닝 (provisionNewEmployeeAssets)
+
+`HiringDispatch.dispatch()` `$transaction` 커밋 이후 fire-and-forget 실행되는 hook. 부서 default kit 을 조회하여 각 항목에 대해 신입 계정 (`requesterId = createdUserId`) 으로 `AssetRequest.status = DRAFT` 를 자동 생성한다.
+
+**흐름:**
+1. `HiringDispatch.dispatch()` `$transaction` 커밋 성공
+2. `provisionNewEmployeeAssets(dispatchId).catch(err => log)` — dispatch 결과와 독립. Provisioning 실패해도 dispatch 롤백 안 함
+3. 부서 kit 조회. 없으면 skip
+4. 각 kit item 마다 `AssetRequest(status=DRAFT, isAutoProvisioned=true, provisionedFromDispatchId=dispatchId, requesterId=신입.userId, expectedAmount=0)` 생성
+5. `EquipmentItem.quantity` (또는 `trackedIndividually=true` 시 AVAILABLE unit count) 확인해 부족 항목은 ASSET_MANAGER 에게 `PROVISIONING_LOW_STOCK` 알림 (fire-and-forget)
+
+**재고 부족 처리:** Draft 는 재고와 무관하게 모두 생성 (신입에게 필요한 자산 리스트 노출이 목적). 실제 재고 확인·조달은 신청 → 결재 → FULFILLED 단계에서 처리 — 기존 AssetRequest 워크플로우와 동일 원칙. `WAITING_STOCK` 명시 상태 도입은 후속 이슈.
+
+**감사·추적:** `AssetRequest.isAutoProvisioned Boolean @default(false)` + `provisionedFromDispatchId Int?` — 자동 생성 여부와 어떤 dispatch 로부터 왔는지 역추적 가능. `onDelete: SetNull` 로 dispatch 삭제 시 request 는 유지.
+
+**신입 UX:** 로그인 후 AssetRequest 리스트에서 자동 생성 DRAFT 확인 → 필요 없는 항목 삭제, 금액·기타 정보 편집 → SUBMIT.
 
 ---
 
