@@ -928,6 +928,7 @@ model User {
   approvedPostings          JobPosting[]                    @relation("JobPostingApprover")
   applicationOffers         JobApplication[]                @relation("ApplicationOffer")
   applicationScreenings     JobApplication[]                @relation("ApplicationScreener")
+  jobApplicationOfferReviews JobApplicationOfferApproval[]  @relation("JobApplicationOfferReviewer")
   onboarding                Onboarding?                     @relation("OnboardingUser")
   headedDepartments         Department[]                    @relation("DepartmentHead")
   departmentMemberships     UserDepartment[]
@@ -2909,8 +2910,25 @@ enum JobApplicationStatus {
   INTERVIEW_1
   INTERVIEW_2
   REFERENCE_CHECK
+  OFFER_PENDING_LEADER
+  OFFER_PENDING_DEPT_HEAD
+  OFFER_PENDING_HR
+  OFFER_LEADER_REJECTED
+  OFFER_DEPT_HEAD_REJECTED
+  OFFER_HR_REJECTED
   OFFERED
   ONBOARDED
+  REJECTED
+}
+
+enum JobApplicationOfferApprovalStage {
+  LEADER
+  DEPT_HEAD
+  HR
+}
+
+enum JobApplicationOfferApprovalAction {
+  APPROVED
   REJECTED
 }
 
@@ -2998,6 +3016,7 @@ model JobApplication {
   onboarding              Onboarding?
   hiringDispatch          HiringDispatch?
   documents               HiringDocument[]
+  offerApprovals          JobApplicationOfferApproval[]
   referenceCheckConsent   Boolean?
   referenceCheckConsentAt DateTime?
   dataRetentionDeadline   DateTime?
@@ -3005,6 +3024,22 @@ model JobApplication {
 
   @@unique([postingId, externalApplicantId])
   @@unique([postingId, email])
+}
+
+model JobApplicationOfferApproval {
+  id            Int                                @id @default(autoincrement())
+  applicationId Int
+  stage         JobApplicationOfferApprovalStage
+  action        JobApplicationOfferApprovalAction
+  reviewerId    Int
+  reason        String?
+  createdAt     DateTime                           @default(now())
+
+  application JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  reviewer    User           @relation("JobApplicationOfferReviewer", fields: [reviewerId], references: [id])
+
+  @@unique([applicationId, stage])
+  @@index([applicationId, stage])
 }
 
 model Interview {

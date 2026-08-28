@@ -6,6 +6,7 @@ import type {
   InterviewRound,
   InterviewResult,
   ReferenceCheckResult,
+  OfferApprovalStage,
 } from '@/types/recruitment'
 
 export interface HeadcountProgressItem {
@@ -111,4 +112,33 @@ export const recruitmentApi = {
 
   headcountProgress: (): Promise<HeadcountProgressItem[]> =>
     api.get('/recruitment/headcount-progress'),
+
+  // --- Offer 3-stage approval (#370) ---
+
+  /**
+   * List applications pending my approval at the given stage.
+   *   LEADER    — I am the department LEADER (UserDepartment.role='LEADER')
+   *   DEPT_HEAD — I am the department head (Department.headId=me)
+   *   HR        — I have canWriteHR
+   */
+  listOfferApprovals: (stage: OfferApprovalStage): Promise<JobApplication[]> =>
+    api.get(`/recruitment/applications/offer-approvals/${stage}`),
+
+  offerLeaderApprove: (appId: number): Promise<JobApplication> =>
+    api.post(`/recruitment/applications/${appId}/offer-approval/leader-approve`, {}),
+
+  offerLeaderReject: (appId: number, reason: string): Promise<JobApplication> =>
+    api.post(`/recruitment/applications/${appId}/offer-approval/leader-reject`, { reason }),
+
+  offerDeptHeadApprove: (appId: number): Promise<JobApplication> =>
+    api.post(`/recruitment/applications/${appId}/offer-approval/dept-head-approve`, {}),
+
+  offerDeptHeadReject: (appId: number, reason: string): Promise<JobApplication> =>
+    api.post(`/recruitment/applications/${appId}/offer-approval/dept-head-reject`, { reason }),
+
+  offerHrApprove: (appId: number): Promise<JobApplication> =>
+    api.post(`/recruitment/applications/${appId}/offer-approval/hr-approve`, {}),
+
+  offerHrReject: (appId: number, reason: string): Promise<JobApplication> =>
+    api.post(`/recruitment/applications/${appId}/offer-approval/hr-reject`, { reason }),
 }

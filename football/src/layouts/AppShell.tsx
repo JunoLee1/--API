@@ -505,6 +505,18 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'FRONT_OFFICE'],
     frontOfficeRoles: ['FINANCE_MANAGER', 'HR_MANAGER'],
   },
+  // #370 — offer 3-stage approval (팀장/부서장/HR). Every FO user might be a
+  // team leader or department head, so we show the link broadly and let the
+  // backend filter the queue per stage. HR sees all three tabs; non-HR see
+  // empty tabs for stages they aren't assigned to.
+  {
+    to: '/recruitment/offer-approval',
+    label: 'nav.item.offerApproval',
+    icon: ClipboardCheck,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.hr',
+    roles: ['ADMIN', 'FRONT_OFFICE', 'COACHING_STAFF'],
+  },
 
   // 관리 > 재무
   {

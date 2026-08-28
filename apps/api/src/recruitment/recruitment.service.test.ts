@@ -13,6 +13,10 @@ const mockInterview = {
   updateMany: jest.fn(),
 };
 
+// #370 offer 3-stage approval — transactional path uses this mock to
+// simulate the final OFFERED write inside hrApprove (see recruitment.service).
+const mockJobApplicationUpdate = jest.fn().mockResolvedValue({});
+
 jest.mock("../lib/prisma", () => ({
   getPrisma: () => ({
     staffRecord: {
@@ -27,9 +31,11 @@ jest.mock("../lib/prisma", () => ({
     auditLog: {
       create: jest.fn().mockResolvedValue({}),
     },
-    // Passthrough tx — inner callback receives the same prisma-like object.
+    // Passthrough tx — inner callback receives a prisma-like object. Extra
+    // models added over time (offer 3-stage, etc) are appended here.
     $transaction: jest.fn().mockImplementation(async (fn: any) => fn({
       hiringPlanItem: mockHiringPlanItem,
+      jobApplication: { update: mockJobApplicationUpdate },
     })),
   }),
 }));
@@ -944,19 +950,24 @@ describe("RecruitmentService.promoteFromWaitlist", () => {
     mockInterview.updateMany.mockResolvedValue({ count: 1 });
   });
 
-  it("WAITLIST top candidate 을 offer 로 promote", async () => {
-    const app = { id: 10, applicantName: "A", email: "a@test.com", status: "INTERVIEW_2", posting: { id: 100 } };
+  it("WAITLIST top candidate 을 3-stage 승인 큐로 promote", async () => {
+    // #370: post-refactor, promote fires the same 3-stage flow as an
+    // HR-initiated offer instead of jumping to OFFERED directly.
+    const app = { id: 10, applicantName: "A", email: "a@test.com", status: "INTERVIEW_2", posting: { id: 100, department: { id: 5, headId: null } } };
+    const setStatus = jest.fn().mockResolvedValue({ id: 10, status: "OFFER_PENDING_HR" });
     const repo = makeRepo({
       findApplicationById: jest.fn().mockResolvedValue(app),
       findWaitlistedInterviewByApplication: jest.fn().mockResolvedValue({
         id: 1, applicationId: 10, scoreSkill: 5, scoreComm: 5, scoreCulture: 5, result: "WAITLIST",
       }),
-      offerApplication: jest.fn().mockResolvedValue({ id: 10, status: "OFFERED" }),
+      findDepartmentLeader: jest.fn().mockResolvedValue(null),
+      setApplicationStatus: setStatus,
     } as any);
     const svc = new RecruitmentService(repo);
     const result = await svc.promoteFromWaitlist(10, 42);
-    expect((repo as any).offerApplication).toHaveBeenCalledWith(10, 42, 42);
-    expect(result.status).toBe("OFFERED");
+    // No LEADER + no DEPT_HEAD → OFFER_PENDING_HR
+    expect(setStatus).toHaveBeenCalledWith(10, "OFFER_PENDING_HR", 42);
+    expect(result.status).toBe("OFFER_PENDING_HR");
   });
 
   it("Application 이 waitlist Interview 없으면 400 NOT_WAITLISTED", async () => {
@@ -977,32 +988,38 @@ describe("RecruitmentService.rejectApplication (auto-promote hook)", () => {
     mockInterview.updateMany.mockResolvedValue({ count: 1 });
   });
 
-  it("OFFERED 상태 application 이 REJECTED 로 전환 시 같은 posting waitlist top 자동 offer", async () => {
+  it("OFFERED 상태 application 이 REJECTED 로 전환 시 같은 posting waitlist top 자동 3-stage 승인 큐로 진입", async () => {
+    // #370: post-refactor the auto-promote path invokes `beginOfferApproval`
+    // (not repo.offerApplication) so the promoted candidate enters
+    // OFFER_PENDING_* — HR still owns the terminal OFFERED transition.
     const rejectingApp = {
       id: 1, status: "OFFERED", email: "r@test.com", applicantName: "R",
-      posting: { id: 100 }, postingId: 100,
+      posting: { id: 100, department: { id: 5, headId: null } }, postingId: 100,
     };
     const promotedApp = {
       id: 20, status: "INTERVIEW_2", email: "t@test.com", applicantName: "T",
-      posting: { id: 100 },
+      posting: { id: 100, department: { id: 5, headId: null } },
     };
     const waitlistTop = {
       id: 2, applicationId: 20, scoreSkill: 5, scoreComm: 5, scoreCulture: 5,
       application: { id: 20, applicantName: "T", email: "t@test.com", status: "INTERVIEW_2", postingId: 100 },
     };
-    const offerApp = jest.fn().mockResolvedValue({ id: 20, status: "OFFERED" });
+    const setStatus = jest.fn().mockResolvedValue({ id: 20, status: "OFFER_PENDING_HR" });
+    const findLeader = jest.fn().mockResolvedValue(null);
     const repo = makeRepo({
       findApplicationById: jest.fn()
         .mockResolvedValueOnce(rejectingApp) // getApplication in rejectApplication
         .mockResolvedValueOnce(rejectingApp) // raw fetch for email
-        .mockResolvedValueOnce(promotedApp), // for promote notification
+        .mockResolvedValueOnce(promotedApp), // beginOfferApproval's raw fetch
       rejectApplication: jest.fn().mockResolvedValue({ id: 1, status: "REJECTED" }),
       findTopWaitlistForPosting: jest.fn().mockResolvedValue(waitlistTop),
-      offerApplication: offerApp,
+      findDepartmentLeader: findLeader,
+      setApplicationStatus: setStatus,
     } as any);
     const svc = new RecruitmentService(repo);
     await svc.rejectApplication(1, 42);
-    expect(offerApp).toHaveBeenCalledWith(20, expect.any(Number), expect.any(Number));
+    // No LEADER + no DEPT_HEAD → skip straight to OFFER_PENDING_HR
+    expect(setStatus).toHaveBeenCalledWith(20, "OFFER_PENDING_HR", 42);
   });
 
   it("OFFERED 가 아닌 상태 (SCREENING) 는 waitlist auto-promote 없음", async () => {
@@ -1010,15 +1027,336 @@ describe("RecruitmentService.rejectApplication (auto-promote hook)", () => {
       id: 1, status: "SCREENING", email: "r@test.com", applicantName: "R",
       posting: { id: 100 }, postingId: 100,
     };
-    const offerApp = jest.fn();
+    const setStatus = jest.fn();
     const repo = makeRepo({
       findApplicationById: jest.fn().mockResolvedValue(rejectingApp),
       rejectApplication: jest.fn().mockResolvedValue({ id: 1, status: "REJECTED" }),
       findTopWaitlistForPosting: jest.fn(),
-      offerApplication: offerApp,
+      setApplicationStatus: setStatus,
     } as any);
     const svc = new RecruitmentService(repo);
     await svc.rejectApplication(1, 42);
-    expect(offerApp).not.toHaveBeenCalled();
+    expect(setStatus).not.toHaveBeenCalled();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// #370 — Offer 3-stage approval workflow (팀장 → 부서장 → HR)
+// Bottom-up, AssetRequest 패턴. Skip stages when LEADER / DEPT_HEAD absent.
+// ═══════════════════════════════════════════════════════════════════════
+
+describe("RecruitmentService.offerApplication (#370 — enters 3-stage flow)", () => {
+  it("LEADER 있으면 OFFER_PENDING_LEADER 로 전이 + 팀장에게 알림", async () => {
+    const app = {
+      id: 1, status: "REFERENCE_CHECK", applicantName: "지원자",
+      posting: { id: 100, department: { id: 5, headId: 200 } },
+    };
+    const setStatus = jest.fn().mockResolvedValue({ id: 1, status: "OFFER_PENDING_LEADER" });
+    const findLeader = jest.fn().mockResolvedValue(300); // leader userId
+    const repo = makeRepo({
+      findApplicationById: jest.fn().mockResolvedValue(app),
+      findDepartmentLeader: findLeader,
+      setApplicationStatus: setStatus,
+    } as any);
+    const notifRepo = { createForUser: jest.fn().mockResolvedValue({}), createForHrManager: jest.fn() } as any;
+    const svc = new RecruitmentService(repo, notifRepo);
+    const result = await svc.offerApplication(1, 42);
+    expect(setStatus).toHaveBeenCalledWith(1, "OFFER_PENDING_LEADER", 42);
+    expect(notifRepo.createForUser).toHaveBeenCalledWith(300, "OFFER_APPROVAL_REQUESTED_LEADER", expect.any(Function), 1);
+    expect(result.status).toBe("OFFER_PENDING_LEADER");
+  });
+
+  it("LEADER 없고 DEPT_HEAD 있으면 OFFER_PENDING_DEPT_HEAD 로 skip", async () => {
+    const app = {
+      id: 1, status: "REFERENCE_CHECK", applicantName: "지원자",
+      posting: { id: 100, department: { id: 5, headId: 200 } },
+    };
+    const setStatus = jest.fn().mockResolvedValue({ id: 1, status: "OFFER_PENDING_DEPT_HEAD" });
+    const repo = makeRepo({
+      findApplicationById: jest.fn().mockResolvedValue(app),
+      findDepartmentLeader: jest.fn().mockResolvedValue(null),
+      setApplicationStatus: setStatus,
+    } as any);
+    const notifRepo = { createForUser: jest.fn().mockResolvedValue({}), createForHrManager: jest.fn() } as any;
+    const svc = new RecruitmentService(repo, notifRepo);
+    await svc.offerApplication(1, 42);
+    expect(setStatus).toHaveBeenCalledWith(1, "OFFER_PENDING_DEPT_HEAD", 42);
+    // 부서장에게 알림
+    expect(notifRepo.createForUser).toHaveBeenCalledWith(200, "OFFER_APPROVAL_REQUESTED_DEPT_HEAD", expect.any(Function), 1);
+  });
+
+  it("LEADER 도 DEPT_HEAD 도 없으면 OFFER_PENDING_HR 로 직행 (HR 매니저에게 알림)", async () => {
+    const app = {
+      id: 1, status: "REFERENCE_CHECK", applicantName: "지원자",
+      posting: { id: 100, department: { id: 5, headId: null } },
+    };
+    const setStatus = jest.fn().mockResolvedValue({ id: 1, status: "OFFER_PENDING_HR" });
+    const repo = makeRepo({
+      findApplicationById: jest.fn().mockResolvedValue(app),
+      findDepartmentLeader: jest.fn().mockResolvedValue(null),
+      setApplicationStatus: setStatus,
+    } as any);
+    const notifRepo = { createForUser: jest.fn(), createForHrManager: jest.fn().mockResolvedValue({}) } as any;
+    const svc = new RecruitmentService(repo, notifRepo);
+    await svc.offerApplication(1, 42);
+    expect(setStatus).toHaveBeenCalledWith(1, "OFFER_PENDING_HR", 42);
+    expect(notifRepo.createForHrManager).toHaveBeenCalledWith("OFFER_APPROVAL_REQUESTED_HR", expect.any(Function), 1);
+  });
+
+  it("REFERENCE_CHECK 아니면 409 APPLICATION_NOT_IN_REFERENCE_CHECK", async () => {
+    const app = { id: 1, status: "INTERVIEW_1", applicantName: "지원자", posting: null };
+    const svc = new RecruitmentService(makeRepo({
+      findApplicationById: jest.fn().mockResolvedValue(app),
+    } as any));
+    await expect(svc.offerApplication(1, 42))
+      .rejects.toMatchObject({ statusCode: 409, message: "APPLICATION_NOT_IN_REFERENCE_CHECK" });
+  });
+});
+
+describe("RecruitmentService.leaderApprove (#370 — LEADER 단계)", () => {
+  const buildApp = (over: any = {}) => ({
+    id: 1, status: "OFFER_PENDING_LEADER", applicantName: "지원자", offeredById: 42,
+    posting: { id: 100, department: { id: 5, headId: 200 } },
+    ...over,
+  });
+
+  it("LEADER 승인 → DEPT_HEAD 있으면 OFFER_PENDING_DEPT_HEAD 로 전이 + 부서장 알림", async () => {
+    const app = buildApp();
+    const updateInTx = jest.fn().mockResolvedValue({ id: 1, status: "OFFER_PENDING_DEPT_HEAD" });
+    const addApproval = jest.fn().mockResolvedValue({});
+    const repo = makeRepo({
+      findApplicationById: jest.fn().mockResolvedValue(app),
+      findDepartmentLeader: jest.fn().mockResolvedValue(300),
+      addOfferApproval: addApproval,
+      updateApplicationStatusInTx: updateInTx,
+    } as any);
+    const notifRepo = { createForUser: jest.fn().mockResolvedValue({}), createForHrManager: jest.fn() } as any;
+    const svc = new RecruitmentService(repo, notifRepo);
+    const result = await svc.leaderApprove(1, 300);
+    expect(addApproval).toHaveBeenCalledWith(1, expect.objectContaining({ stage: "LEADER", action: "APPROVED", reviewerId: 300 }), expect.anything());
+    expect(updateInTx).toHaveBeenCalledWith(1, "OFFER_PENDING_DEPT_HEAD", expect.anything());
+    expect(notifRepo.createForUser).toHaveBeenCalledWith(200, "OFFER_APPROVAL_REQUESTED_DEPT_HEAD", expect.any(Function), 1);
+    expect(result.status).toBe("OFFER_PENDING_DEPT_HEAD");
+  });
+
+  it("LEADER 승인 → DEPT_HEAD 없으면 OFFER_PENDING_HR 로 skip", async () => {
+    const app = buildApp({ posting: { id: 100, department: { id: 5, headId: null } } });
+    const updateInTx = jest.fn().mockResolvedValue({ id: 1, status: "OFFER_PENDING_HR" });
+    const repo = makeRepo({
+      findApplicationById: jest.fn().mockResolvedValue(app),
+      findDepartmentLeader: jest.fn().mockResolvedValue(300),
+      addOfferApproval: jest.fn().mockResolvedValue({}),
+      updateApplicationStatusInTx: updateInTx,
+    } as any);
+    const notifRepo = { createForUser: jest.fn(), createForHrManager: jest.fn().mockResolvedValue({}) } as any;
+    const svc = new RecruitmentService(repo, notifRepo);
+    await svc.leaderApprove(1, 300);
+    expect(updateInTx).toHaveBeenCalledWith(1, "OFFER_PENDING_HR", expect.anything());
+    expect(notifRepo.createForHrManager).toHaveBeenCalledWith("OFFER_APPROVAL_REQUESTED_HR", expect.any(Function), 1);
+  });
+
+  it("리뷰어가 팀장이 아니면 403 NOT_LEADER", async () => {
+    const app = buildApp();
+    const repo = makeRepo({
+      findApplicationById: jest.fn().mockResolvedValue(app),
+      findDepartmentLeader: jest.fn().mockResolvedValue(300),
+    } as any);
+    const svc = new RecruitmentService(repo);
+    await expect(svc.leaderApprove(1, 999))
+      .rejects.toMatchObject({ statusCode: 403, message: "NOT_LEADER" });
+  });
+
+  it("팀장이 offer 를 initiate 한 본인이면 403 SELF_APPROVAL_FORBIDDEN", async () => {
+    // offeredById = 300 (leader 본인이 initiate). leaderApprove(300) 실행 시 self-approval.
+    const app = buildApp({ offeredById: 300 });
+    const repo = makeRepo({
+      findApplicationById: jest.fn().mockResolvedValue(app),
+      findDepartmentLeader: jest.fn().mockResolvedValue(300),
+    } as any);
+    const svc = new RecruitmentService(repo);
+    await expect(svc.leaderApprove(1, 300))
+      .rejects.toMatchObject({ statusCode: 403, message: "SELF_APPROVAL_FORBIDDEN" });
+  });
+
+  it("status 가 OFFER_PENDING_LEADER 아니면 409 INVALID_STATUS", async () => {
+    const app = buildApp({ status: "OFFER_PENDING_DEPT_HEAD" });
+    const repo = makeRepo({
+      findApplicationById: jest.fn().mockResolvedValue(app),
+    } as any);
+    const svc = new RecruitmentService(repo);
+    await expect(svc.leaderApprove(1, 300))
+      .rejects.toMatchObject({ statusCode: 409, message: "INVALID_STATUS" });
+  });
+});
+
+describe("RecruitmentService.leaderReject (#370 — 팀장 반려)", () => {
+  const buildApp = (over: any = {}) => ({
+    id: 1, status: "OFFER_PENDING_LEADER", applicantName: "지원자", offeredById: 42,
+    posting: { id: 100, department: { id: 5, headId: 200 } },
+    ...over,
+  });
+
+  it("팀장 반려 → OFFER_LEADER_REJECTED (terminal, 재승인 없음)", async () => {
+    const app = buildApp();
+    const updateInTx = jest.fn().mockResolvedValue({ id: 1, status: "OFFER_LEADER_REJECTED" });
+    const addApproval = jest.fn().mockResolvedValue({});
+    const repo = makeRepo({
+      findApplicationById: jest.fn().mockResolvedValue(app),
+      findDepartmentLeader: jest.fn().mockResolvedValue(300),
+      addOfferApproval: addApproval,
+      updateApplicationStatusInTx: updateInTx,
+    } as any);
+    const svc = new RecruitmentService(repo);
+    const result = await svc.leaderReject(1, 300, "예산 부족");
+    expect(addApproval).toHaveBeenCalledWith(1, expect.objectContaining({ stage: "LEADER", action: "REJECTED", reason: "예산 부족" }), expect.anything());
+    expect(updateInTx).toHaveBeenCalledWith(1, "OFFER_LEADER_REJECTED", expect.anything());
+    expect(result.status).toBe("OFFER_LEADER_REJECTED");
+  });
+
+  it("반려 사유 빠지면 400 REASON_REQUIRED", async () => {
+    const svc = new RecruitmentService(makeRepo());
+    await expect(svc.leaderReject(1, 300, ""))
+      .rejects.toMatchObject({ statusCode: 400, message: "REASON_REQUIRED" });
+    await expect(svc.leaderReject(1, 300, "   "))
+      .rejects.toMatchObject({ statusCode: 400, message: "REASON_REQUIRED" });
+  });
+});
+
+describe("RecruitmentService.deptHeadApprove (#370 — 부서장 단계)", () => {
+  it("부서장 승인 → OFFER_PENDING_HR 로 전이 + HR 매니저 알림", async () => {
+    const app = {
+      id: 1, status: "OFFER_PENDING_DEPT_HEAD", applicantName: "지원자", offeredById: 42,
+      posting: { id: 100, department: { id: 5, headId: 200 } },
+    };
+    const updateInTx = jest.fn().mockResolvedValue({ id: 1, status: "OFFER_PENDING_HR" });
+    const repo = makeRepo({
+      findApplicationById: jest.fn().mockResolvedValue(app),
+      addOfferApproval: jest.fn().mockResolvedValue({}),
+      updateApplicationStatusInTx: updateInTx,
+    } as any);
+    const notifRepo = { createForUser: jest.fn(), createForHrManager: jest.fn().mockResolvedValue({}) } as any;
+    const svc = new RecruitmentService(repo, notifRepo);
+    await svc.deptHeadApprove(1, 200);
+    expect(updateInTx).toHaveBeenCalledWith(1, "OFFER_PENDING_HR", expect.anything());
+    expect(notifRepo.createForHrManager).toHaveBeenCalledWith("OFFER_APPROVAL_REQUESTED_HR", expect.any(Function), 1);
+  });
+
+  it("부서장이 아니면 403 NOT_DEPT_HEAD", async () => {
+    const app = {
+      id: 1, status: "OFFER_PENDING_DEPT_HEAD", applicantName: "지원자", offeredById: 42,
+      posting: { id: 100, department: { id: 5, headId: 200 } },
+    };
+    const svc = new RecruitmentService(makeRepo({
+      findApplicationById: jest.fn().mockResolvedValue(app),
+    } as any));
+    await expect(svc.deptHeadApprove(1, 999))
+      .rejects.toMatchObject({ statusCode: 403, message: "NOT_DEPT_HEAD" });
+  });
+});
+
+describe("RecruitmentService.hrApprove (#370 — HR 최종 승인 = OFFERED)", () => {
+  beforeEach(() => {
+    mockJobApplicationUpdate.mockReset();
+    mockJobApplicationUpdate.mockResolvedValue({ id: 1, status: "OFFERED" });
+  });
+
+  it("HR 승인 → OFFERED 전이 + offeredById/offeredAt stamp + email 발송", async () => {
+    const app = {
+      id: 1, status: "OFFER_PENDING_HR", applicantName: "지원자",
+      email: "candidate@test.com", offeredById: 42,
+      posting: { id: 100, department: { id: 5, headId: 200 } },
+    };
+    const addApproval = jest.fn().mockResolvedValue({});
+    const repo = makeRepo({
+      findApplicationById: jest.fn().mockResolvedValue(app),
+      addOfferApproval: addApproval,
+    } as any);
+    const svc = new RecruitmentService(repo);
+    await svc.hrApprove(1, 500);
+    expect(addApproval).toHaveBeenCalledWith(1, expect.objectContaining({ stage: "HR", action: "APPROVED", reviewerId: 500 }), expect.anything());
+    expect(mockJobApplicationUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 1 },
+      data: expect.objectContaining({ status: "OFFERED", offeredById: 500 }),
+    }));
+    const { sendApplicationStatusEmail } = jest.requireMock("../lib/email");
+    expect(sendApplicationStatusEmail).toHaveBeenCalledWith("candidate@test.com", "지원자", "OFFERED");
+  });
+
+  it("HR 리뷰어가 offer initiator 본인이면 403 SELF_APPROVAL_FORBIDDEN", async () => {
+    // offeredById=500, hrApprove(500) → self approval
+    const app = {
+      id: 1, status: "OFFER_PENDING_HR", applicantName: "지원자",
+      email: "candidate@test.com", offeredById: 500,
+      posting: { id: 100, department: { id: 5, headId: 200 } },
+    };
+    const svc = new RecruitmentService(makeRepo({
+      findApplicationById: jest.fn().mockResolvedValue(app),
+    } as any));
+    await expect(svc.hrApprove(1, 500))
+      .rejects.toMatchObject({ statusCode: 403, message: "SELF_APPROVAL_FORBIDDEN" });
+  });
+
+  it("status 가 OFFER_PENDING_HR 아니면 409 INVALID_STATUS", async () => {
+    const app = {
+      id: 1, status: "OFFER_PENDING_LEADER", applicantName: "지원자", offeredById: 42,
+      posting: { id: 100, department: { id: 5, headId: 200 } },
+    };
+    const svc = new RecruitmentService(makeRepo({
+      findApplicationById: jest.fn().mockResolvedValue(app),
+    } as any));
+    await expect(svc.hrApprove(1, 500))
+      .rejects.toMatchObject({ statusCode: 409, message: "INVALID_STATUS" });
+  });
+});
+
+describe("RecruitmentService.hrReject (#370 — HR 반려)", () => {
+  it("HR 반려 → OFFER_HR_REJECTED (terminal)", async () => {
+    const app = {
+      id: 1, status: "OFFER_PENDING_HR", applicantName: "지원자", offeredById: 42,
+      posting: { id: 100, department: { id: 5, headId: 200 } },
+    };
+    const updateInTx = jest.fn().mockResolvedValue({ id: 1, status: "OFFER_HR_REJECTED" });
+    const repo = makeRepo({
+      findApplicationById: jest.fn().mockResolvedValue(app),
+      addOfferApproval: jest.fn().mockResolvedValue({}),
+      updateApplicationStatusInTx: updateInTx,
+    } as any);
+    const svc = new RecruitmentService(repo);
+    const result = await svc.hrReject(1, 500, "예산 초과");
+    expect(updateInTx).toHaveBeenCalledWith(1, "OFFER_HR_REJECTED", expect.anything());
+    expect(result.status).toBe("OFFER_HR_REJECTED");
+  });
+});
+
+describe("RecruitmentService.listOfferApprovalQueue (#370 — 결재함 조회)", () => {
+  it("stage=LEADER → repo.findApplicationsPendingLeader 호출", async () => {
+    const findPending = jest.fn().mockResolvedValue([]);
+    const repo = makeRepo({ findApplicationsPendingLeader: findPending } as any);
+    const svc = new RecruitmentService(repo);
+    await svc.listOfferApprovalQueue(42, "FRONT_OFFICE", null, "LEADER");
+    expect(findPending).toHaveBeenCalledWith(42);
+  });
+
+  it("stage=DEPT_HEAD → repo.findApplicationsPendingDeptHead 호출", async () => {
+    const findPending = jest.fn().mockResolvedValue([]);
+    const repo = makeRepo({ findApplicationsPendingDeptHead: findPending } as any);
+    const svc = new RecruitmentService(repo);
+    await svc.listOfferApprovalQueue(42, "FRONT_OFFICE", null, "DEPT_HEAD");
+    expect(findPending).toHaveBeenCalledWith(42);
+  });
+
+  it("stage=HR + canWriteHR → repo.findApplicationsPendingHr 호출", async () => {
+    const findPending = jest.fn().mockResolvedValue([]);
+    const repo = makeRepo({ findApplicationsPendingHr: findPending } as any);
+    const svc = new RecruitmentService(repo);
+    await svc.listOfferApprovalQueue(42, "FRONT_OFFICE", "HR_MANAGER", "HR");
+    expect(findPending).toHaveBeenCalledWith();
+  });
+
+  it("stage=HR + non-HR role → 403 FORBIDDEN (service-layer double-check)", async () => {
+    const repo = makeRepo({ findApplicationsPendingHr: jest.fn() } as any);
+    const svc = new RecruitmentService(repo);
+    await expect(svc.listOfferApprovalQueue(42, "FRONT_OFFICE", "FINANCE_MANAGER", "HR"))
+      .rejects.toMatchObject({ statusCode: 403, message: "FORBIDDEN" });
   });
 });
