@@ -973,8 +973,12 @@ model User {
   medicalLoansRequested     MedicalEquipmentLoanLedger[]    @relation("MedLoanRequestedBy")
   medicalLoansApproved      MedicalEquipmentLoanLedger[]    @relation("MedLoanApprovedBy")
   medicalLoansRejected      MedicalEquipmentLoanLedger[]    @relation("MedLoanRejectedBy")
-  uploadedHiringDocs        HiringDocument[]                @relation("HiringDocUploader")
-  reviewedHiringDocs        HiringDocument[]                @relation("HiringDocReviewer")
+  uploadedHiringDocs         HiringDocument[]                @relation("HiringDocUploader")
+  reviewedHiringDocs         HiringDocument[]                @relation("HiringDocReviewer")
+  createdEmployeeContracts   EmployeeContract[]              @relation("EmpContractCreator")
+  issuedEmployeeContracts    EmployeeContract[]              @relation("EmpContractIssuer")
+  signedEmployeeContracts    EmployeeContract[]              @relation("EmpContractSigner")
+  cancelledEmployeeContracts EmployeeContract[]              @relation("EmpContractCanceller")
 }
 
 model Season {
@@ -4196,14 +4200,15 @@ model HiringDispatch {
   // requiredDocuments is authoritative and this field is ignored by the gate.
   requiredDocuments     String[]             @default([])
 
-  application   JobApplication?          @relation(fields: [applicationId], references: [id])
-  department    Department               @relation(fields: [departmentId], references: [id])
-  reportsToUser User?                    @relation("DispatchReportsTo", fields: [reportsToUserId], references: [id])
-  createdUser   User?                    @relation("DispatchCreatedUser", fields: [createdUserId], references: [id])
-  createdBy     User                     @relation("DispatchCreator", fields: [createdById], references: [id])
-  approvals     HiringDispatchApproval[]
-  onboarding    Onboarding?
-  documents     HiringDocument[]
+  application       JobApplication?          @relation(fields: [applicationId], references: [id])
+  department        Department               @relation(fields: [departmentId], references: [id])
+  reportsToUser     User?                    @relation("DispatchReportsTo", fields: [reportsToUserId], references: [id])
+  createdUser       User?                    @relation("DispatchCreatedUser", fields: [createdUserId], references: [id])
+  createdBy         User                     @relation("DispatchCreator", fields: [createdById], references: [id])
+  approvals         HiringDispatchApproval[]
+  onboarding        Onboarding?
+  documents         HiringDocument[]
+  employeeContracts EmployeeContract[]
 
   @@index([status, createdAt])
   @@index([departmentId, status])
@@ -4224,7 +4229,6 @@ model HiringDispatchApproval {
   @@unique([dispatchId, stage])
   @@index([dispatchId, stage])
 }
-
 
 /**
  * Documents collected as part of the hiring workflow. XOR reference — either
@@ -4261,4 +4265,50 @@ model HiringDocument {
 
   @@index([applicationId, docType, createdAt(sort: Desc)])
   @@index([hiringDispatchId, docType, createdAt(sort: Desc)])
+}
+
+/**
+ * 근로계약 스켈레톤 (#371). 파일 + 상태 + 서명 감사 필드만 관리.
+ * `hiringDispatchId`는 @unique 아님 — 이력 append-only. 취소 후 재발행 시 새 row.
+ * 상태머신: DRAFT → ISSUED → SIGNED / CANCELLED (역방향 없음).
+ * HiringDispatch EXECUTION 게이트: 최신 non-CANCELLED EC 가 SIGNED 여야 통과.
+ */
+enum EmployeeContractStatus {
+  DRAFT
+  ISSUED
+  SIGNED
+  CANCELLED
+}
+
+model EmployeeContract {
+  id                  Int                    @id @default(autoincrement())
+  hiringDispatchId    Int
+  status              EmployeeContractStatus @default(DRAFT)
+
+  fileUrl             String?
+  fileName            String?
+  signedFileUrl       String?
+  signedFileName      String?
+
+  createdById         Int
+  issuedById          Int?
+  issuedAt            DateTime?
+  signedAt            DateTime?
+  signedConfirmedById Int?
+  signedConfirmedAt   DateTime?
+  cancelledById       Int?
+  cancelledAt         DateTime?
+  cancelReason        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  hiringDispatch    HiringDispatch @relation(fields: [hiringDispatchId], references: [id], onDelete: Cascade)
+  createdBy         User           @relation("EmpContractCreator", fields: [createdById], references: [id])
+  issuedBy          User?          @relation("EmpContractIssuer", fields: [issuedById], references: [id])
+  signedConfirmedBy User?          @relation("EmpContractSigner", fields: [signedConfirmedById], references: [id])
+  cancelledBy       User?          @relation("EmpContractCanceller", fields: [cancelledById], references: [id])
+
+  @@index([hiringDispatchId, createdAt(sort: Desc)])
+}
 }

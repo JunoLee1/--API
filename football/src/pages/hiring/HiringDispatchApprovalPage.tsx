@@ -35,6 +35,8 @@ import {
 } from '@/components/ui/dialog'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { CheckCircle2, ShieldCheck, XCircle } from 'lucide-react'
+import { EmployeeContractSection } from '@/components/employee-contract/EmployeeContractSection'
+import type { EmployeeContract } from '@/types/employee-contract'
 
 function fmtWon(n: string | number) {
   const num = typeof n === 'string' ? Number(n) : n
@@ -83,6 +85,18 @@ const STAGE_META: Record<
 }
 
 function messageForCode(code: string, fallback: string): string {
+  // #371 contract gate — same shape as MISSING_APPROVED_DOCS from #372.
+  if (code.startsWith('CONTRACT_NOT_SIGNED')) {
+    const parts = code.split(':')
+    const status = parts[1] ?? ''
+    if (status === 'DRAFT') {
+      return '계약서가 아직 발행되지 않았습니다. 발행 후 서명을 완료해주세요.'
+    }
+    if (status === 'ISSUED') {
+      return '계약서가 아직 서명되지 않았습니다. 서명본을 업로드해주세요.'
+    }
+    return '계약서 서명이 완료되지 않았습니다.'
+  }
   switch (code) {
     case 'INVALID_STATUS':
       return '이미 다른 결재가 진행된 요청입니다. 새로고침 후 다시 시도해주세요.'
@@ -102,6 +116,8 @@ function messageForCode(code: string, fallback: string): string {
       return '채용 계획(TO)을 초과합니다. 필요 시 "TO 초과 강제 승인"에 체크 후 재시도해주세요.'
     case 'OFFER_MISMATCH':
       return '오퍼 조건과 발령 조건이 다릅니다. 필요 시 "오퍼 불일치 강제 승인"에 체크 후 재시도해주세요.'
+    case 'CONTRACT_NOT_ISSUED':
+      return '발령을 실행하려면 먼저 근로계약서를 발행하고 서명을 완료해야 합니다.'
     case 'NOT_FOUND':
       return '요청을 찾을 수 없습니다.'
     case 'FORBIDDEN':
@@ -136,9 +152,16 @@ function ApprovalList({ stage }: ApprovalListProps) {
 
   const navigate = useNavigate()
 
+  // EXECUTION-stage only: latest active EmployeeContract for the detail row.
+  // Drives the disabled state on the "발령 실행" button so HR sees why they
+  // can't ship — the server-side gate (`assertContractSigned`) is the source
+  // of truth, this is a UX pre-check.
+  const [currentContract, setCurrentContract] = useState<EmployeeContract | null>(null)
+
   const openDetail = async (id: number) => {
     setDetailId(id)
     setDetail(null)
+    setCurrentContract(null)
     setDetailLoading(true)
     try {
       setDetail(await hiringDispatchApi.get(id))
@@ -457,6 +480,7 @@ function ApprovalList({ stage }: ApprovalListProps) {
           if (!o) {
             setDetailId(null)
             setDetail(null)
+            setCurrentContract(null)
           }
         }}
       >
@@ -576,6 +600,17 @@ function ApprovalList({ stage }: ApprovalListProps) {
                 </div>
               )}
 
+              {/* EmployeeContract 관리 — EXECUTION 단계에서만 노출. 다른
+                  단계에서는 계약이 아직 필요하지 않아 잡음이 된다. */}
+              {stage === 'EXECUTION' && (
+                <div className="border-t pt-3">
+                  <EmployeeContractSection
+                    dispatchId={detail.id}
+                    onCurrentChange={setCurrentContract}
+                  />
+                </div>
+              )}
+
               <div className="border-t pt-2 flex justify-end gap-2">
                 <Button
                   variant="outline"
@@ -596,19 +631,38 @@ function ApprovalList({ stage }: ApprovalListProps) {
                     <XCircle className="h-3 w-3 mr-1" />반려
                   </Button>
                 )}
-                <Button
-                  size="sm"
-                  onClick={() => openApprove(detail.id)}
-                  disabled={rowActingId === detail.id}
-                  title={
-                    stage === 'EXECUTION'
-                      ? '필수 서류가 모두 승인되지 않으면 실행 시 400 오류가 발생합니다.'
-                      : undefined
-                  }
-                >
-                  <ApproveIcon className="h-3 w-3 mr-1" />
-                  {meta.approveLabel}
-                </Button>
+                {/* EXECUTION 게이트 pre-check: server-side gates
+                    (`assertHiringDocsGate` #372 + `assertContractSigned` #371)
+                    are authoritative, but pre-checking here prevents obvious
+                    round-trips + surfaces the reason inline. */}
+                {stage === 'EXECUTION' && currentContract?.status !== 'SIGNED' ? (
+                  <Button
+                    size="sm"
+                    disabled
+                    title={
+                      currentContract == null
+                        ? '먼저 근로계약서를 발행하고 서명을 완료해주세요.'
+                        : `계약 상태: ${currentContract.status} — 서명 완료(SIGNED) 후 실행 가능합니다.`
+                    }
+                  >
+                    <ApproveIcon className="h-3 w-3 mr-1" />
+                    {meta.approveLabel}
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={() => openApprove(detail.id)}
+                    disabled={rowActingId === detail.id}
+                    title={
+                      stage === 'EXECUTION'
+                        ? '필수 서류가 모두 승인되지 않으면 실행 시 400 오류가 발생합니다.'
+                        : undefined
+                    }
+                  >
+                    <ApproveIcon className="h-3 w-3 mr-1" />
+                    {meta.approveLabel}
+                  </Button>
+                )}
               </div>
             </div>
           )}

@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { PrismaClient } from "../generated/client";
+import { EmployeeContractService } from "../employee-contract/employee-contract.service";
 import { AppError } from "../lib/appError";
 import { writeAuditLog } from "../lib/auditLog";
 import { encrypt } from "../lib/crypto";
@@ -37,10 +38,11 @@ export class HiringDispatchService {
     private repo: HiringDispatchRepository,
     private notifRepo: NotificationRepository,
     private prisma: PrismaClient,
-    // Optional so existing tests that don't touch EXECUTION gate still work
-    // without setup. Production wiring (hiring-dispatch.routes.ts) injects
-    // the singleton from hiring-document.routes.ts.
+    // Both optional so existing tests that don't touch EXECUTION gates still
+    // work without setup. Production wiring (hiring-dispatch.routes.ts) injects
+    // both singletons. When undefined, the respective gate is skipped.
     private documentService?: HiringDocumentService,
+    private employeeContractService?: EmployeeContractService,
   ) {}
 
   // ────────────────────────────────────────────
@@ -431,12 +433,19 @@ export class HiringDispatchService {
     if (!canDispatch) throw new AppError(403, "NOT_HR_MANAGER");
     if (dispatch.createdById === reviewerId) throw new AppError(403, "SELF_APPROVAL_FORBIDDEN");
 
-    // EXECUTION gate #1 (fix #372) — required hiring documents.
-    // Chained gates run before we touch the DB write side; each raises 400 on
-    // failure, keeping the dispatch in DISPATCH_APPROVED so HR can fix the
-    // preconditions and re-hit /dispatch. Followups #371 (contract signed)
-    // and #374 (task population) plug in here as additional gates.
+    // EXECUTION gates — each is a pure `await gate(x)` call so future gates
+    // (task population #374, etc.) drop in the same shape. Order matters
+    // only for the *first* failure message: docs → contract. Both raise 400
+    // on failure and keep dispatch in DISPATCH_APPROVED so HR can fix
+    // preconditions and re-hit /dispatch.
+    //
+    // #372 docs gate: latest row per (target, docType) must be APPROVED.
     await this.assertHiringDocsGate(dispatch);
+    // #371 contract gate: latest non-CANCELLED EmployeeContract must be SIGNED.
+    // Optional — skipped when `employeeContractService` isn't wired.
+    if (this.employeeContractService) {
+      await this.employeeContractService.assertContractSigned(dispatch.id);
+    }
 
     // Fail fast on email collision before we start the tx — the User.email
     // unique index would raise inside the tx anyway, but pre-check gives a

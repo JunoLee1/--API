@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { employeeContractService } from "../employee-contract/employee-contract.routes";
 import { auth } from "../lib/authMiddleware";
 import { hiringDocumentService } from "../hiring-document/hiring-document.routes";
 import { getPrisma } from "../lib/prisma";
@@ -11,9 +12,9 @@ const router = Router();
 const prisma = getPrisma();
 const repo = new HiringDispatchRepository(prisma);
 const notifRepo = new NotificationRepository(prisma);
-// hiringDocumentService is the shared singleton (see hiring-document.routes.ts);
-// injected here so EXECUTION `dispatch()` can call the required-docs gate.
-const service = new HiringDispatchService(repo, notifRepo, prisma, hiringDocumentService);
+// Inject both singletons so EXECUTION dispatch() can chain the required-docs
+// gate (from #372) and the contract-signed gate (from #371).
+const service = new HiringDispatchService(repo, notifRepo, prisma, hiringDocumentService, employeeContractService);
 const controller = new HiringDispatchController(service);
 
 router.get("/", auth, controller.list);
