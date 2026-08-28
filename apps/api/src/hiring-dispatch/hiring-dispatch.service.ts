@@ -10,6 +10,7 @@ import type { HiringDocumentService } from "../hiring-document/hiring-document.s
 import { NotificationRepository } from "../notification/notification.repo";
 import { HiringDispatchRepository } from "./hiring-dispatch.repo";
 import { populateOnboardingTasks } from "./populate-onboarding-tasks";
+import { provisionNewEmployeeAssets } from "./provision-assets";
 import {
   BudgetReverifyDto,
   CreateHiringDispatchDto,
@@ -650,6 +651,15 @@ export class HiringDispatchService {
         console.error,
       );
     }
+
+    // Auto-provision default asset kit as DRAFT AssetRequests for the new
+    // employee (#373). Fire-and-forget outside the dispatch tx (grill c1) —
+    // any failure here (kit-lookup / draft create / notif) must not roll
+    // back the dispatch that just committed. Runs even when createdUserId
+    // is null (defensive) — the helper checks and returns early.
+    void provisionNewEmployeeAssets(this.prisma, this.notifRepo, id).catch(
+      (err) => console.error("[provisionNewEmployeeAssets] failed", err),
+    );
 
     return result;
   }

@@ -354,7 +354,22 @@ export function AssetRequestPage() {
                       {fmtWon(r.expectedAmount)}
                     </TableCell>
                     <TableCell>
-                      <Badge className={STATUS_STYLE[r.status]}>{STATUS_LABEL[r.status]}</Badge>
+                      <div className="flex flex-col items-start gap-1">
+                        <Badge className={STATUS_STYLE[r.status]}>{STATUS_LABEL[r.status]}</Badge>
+                        {r.isAutoProvisioned && (
+                          <Badge
+                            variant="outline"
+                            className="border-blue-300 bg-blue-50 text-[10px] text-blue-700"
+                            title={
+                              r.provisionedFromDispatchId
+                                ? `발령 #${r.provisionedFromDispatchId} 로부터 자동 생성`
+                                : '신입 자동 프로비저닝'
+                            }
+                          >
+                            자동 프로비저닝
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell
                       className="text-right"
