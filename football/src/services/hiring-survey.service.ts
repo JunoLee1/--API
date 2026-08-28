@@ -1,8 +1,11 @@
 import { api } from './api'
 import type {
+  CreateSurveyResponseDto,
   HiringNeedsSurvey,
   HiringPlanItem,
+  SurveyResponse,
   UpdateHiringSurveyDraftDto,
+  UpdateSurveyResponseDto,
 } from '@/types/hiring-survey'
 
 export const hiringSurveyApi = {
@@ -24,18 +27,32 @@ export const hiringSurveyApi = {
   deleteDraft: (id: number): Promise<void> =>
     api.delete(`/hiring-surveys/${id}`),
 
-  respond: (
-    surveyId: number,
-    data: {
-      roleTitle: string
-      headcount: number
-      quarter?: number
-      priority: string
-      estimatedBudget?: number
-      reason: string
-    }
-  ): Promise<void> =>
+  /**
+   * 팀장 (LEADER role) creates/updates a DRAFT SurveyResponse for their dept.
+   * Payload must include departmentId — leader membership is verified server-side.
+   */
+  respond: (surveyId: number, data: CreateSurveyResponseDto): Promise<SurveyResponse> =>
     api.post(`/hiring-surveys/${surveyId}/respond`, data),
+
+  updateResponse: (
+    surveyId: number,
+    responseId: number,
+    data: UpdateSurveyResponseDto,
+  ): Promise<SurveyResponse> =>
+    api.patch(`/hiring-surveys/${surveyId}/responses/${responseId}`, data),
+
+  submitResponse: (surveyId: number, responseId: number): Promise<SurveyResponse> =>
+    api.post(`/hiring-surveys/${surveyId}/responses/${responseId}/submit`, {}),
+
+  approveResponse: (surveyId: number, responseId: number): Promise<SurveyResponse> =>
+    api.post(`/hiring-surveys/${surveyId}/responses/${responseId}/approve`, {}),
+
+  rejectResponse: (
+    surveyId: number,
+    responseId: number,
+    rejectionReason: string,
+  ): Promise<SurveyResponse> =>
+    api.post(`/hiring-surveys/${surveyId}/responses/${responseId}/reject`, { rejectionReason }),
 
   close: (surveyId: number): Promise<{ id: number }> =>
     api.post(`/hiring-surveys/${surveyId}/close`, {}),

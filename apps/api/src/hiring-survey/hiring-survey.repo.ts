@@ -1,5 +1,10 @@
 import type { PrismaClient } from '../generated/client'
-import type { CreateHiringSurveyDto, CreateSurveyResponseDto } from './dto/hiring-survey.dto'
+import type {
+  CreateHiringSurveyDto,
+  CreateSurveyResponseDto,
+  SurveyResponseStatus,
+  UpdateSurveyResponseDto,
+} from './dto/hiring-survey.dto'
 
 const SURVEY_INCLUDE = {
   createdBy: { select: { id: true, username: true } },
@@ -10,8 +15,16 @@ const SURVEY_INCLUDE = {
     include: {
       department: { select: { id: true, name: true } },
       submittedBy: { select: { id: true, username: true } },
+      approvedBy: { select: { id: true, username: true } },
     },
   },
+} as const
+
+const RESPONSE_INCLUDE = {
+  department: { select: { id: true, name: true, headId: true } },
+  submittedBy: { select: { id: true, username: true } },
+  approvedBy: { select: { id: true, username: true } },
+  survey: { select: { id: true, status: true, title: true } },
 } as const
 
 export class HiringSurveyRepository {
@@ -73,11 +86,91 @@ export class HiringSurveyRepository {
     submittedById: number,
     dto: CreateSurveyResponseDto,
   ) {
+    // On upsert we treat the row as a fresh DRAFT — clears any prior rejection
+    // metadata so a leader can restart cleanly. Approve/reject flow lives on
+    // setResponseStatus, which is the only path that touches status directly.
     return this.prisma.surveyResponse.upsert({
       where: { surveyId_departmentId: { surveyId, departmentId } },
-      create: { surveyId, departmentId, submittedById, ...dto },
-      update: { ...dto, submittedById },
+      create: { surveyId, departmentId, submittedById, ...dto, status: 'DRAFT' },
+      update: {
+        ...dto,
+        submittedById,
+        status: 'DRAFT',
+        rejectionReason: null,
+        approvedById: null,
+        approvedAt: null,
+      },
+      include: RESPONSE_INCLUDE,
     })
+  }
+
+  findResponseById(id: number) {
+    return this.prisma.surveyResponse.findUnique({
+      where: { id },
+      include: RESPONSE_INCLUDE,
+    })
+  }
+
+  updateResponse(id: number, dto: UpdateSurveyResponseDto) {
+    // Only whitelisted content fields — status transitions go through
+    // setResponseStatus so this method can't accidentally elevate state.
+    const data: Record<string, unknown> = {}
+    if (dto.roleTitle !== undefined) data.roleTitle = dto.roleTitle
+    if (dto.headcount !== undefined) data.headcount = dto.headcount
+    if (dto.quarter !== undefined) data.quarter = dto.quarter
+    if (dto.priority !== undefined) data.priority = dto.priority
+    if (dto.estimatedBudget !== undefined) data.estimatedBudget = dto.estimatedBudget
+    if (dto.reason !== undefined) data.reason = dto.reason
+    return this.prisma.surveyResponse.update({
+      where: { id },
+      data,
+      include: RESPONSE_INCLUDE,
+    })
+  }
+
+  setResponseStatus(
+    id: number,
+    patch: {
+      status: SurveyResponseStatus
+      rejectionReason?: string | null
+      approvedById?: number | null
+      approvedAt?: Date | null
+    },
+  ) {
+    const data: Record<string, unknown> = { status: patch.status }
+    if (patch.rejectionReason !== undefined) data.rejectionReason = patch.rejectionReason
+    if (patch.approvedById !== undefined) data.approvedById = patch.approvedById
+    if (patch.approvedAt !== undefined) data.approvedAt = patch.approvedAt
+    return this.prisma.surveyResponse.update({
+      where: { id },
+      data,
+      include: RESPONSE_INCLUDE,
+    })
+  }
+
+  /**
+   * Whether the given user holds the `LEADER` role in `UserDepartment` for the
+   * given department. Membership-based check for the "팀장" gate.
+   */
+  async isUserLeaderOfDepartment(userId: number, departmentId: number): Promise<boolean> {
+    const membership = await this.prisma.userDepartment.findFirst({
+      where: { userId, departmentId, role: 'LEADER' },
+      select: { userId: true },
+    })
+    return membership !== null
+  }
+
+  /**
+   * Every user ID that has the `LEADER` role in any of the given departments.
+   * Used to fan out HIRING_SURVEY_OPEN alongside the dept head.
+   */
+  async findLeaderUserIdsForDepartments(departmentIds: number[]): Promise<number[]> {
+    if (departmentIds.length === 0) return []
+    const rows = await this.prisma.userDepartment.findMany({
+      where: { departmentId: { in: departmentIds }, role: 'LEADER' },
+      select: { userId: true },
+    })
+    return Array.from(new Set(rows.map((r) => r.userId)))
   }
 
   findResponsesBySurvey(surveyId: number) {

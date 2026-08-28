@@ -389,6 +389,9 @@ enum NotificationType {
   MEDICAL_EQUIPMENT_LOAN_RETURN_REQUIRED // 응급 반려 시 즉시 반납 요구
   PROBATION_REVIEW_DUE_SOON // 수습 평가 D-7 → 부서장 알림 (cron)
   PROBATION_REVIEW_COMPLETED // 부서장 review 제출 → 대상 직원(있으면) 정보성 알림
+  SURVEY_RESPONSE_SUBMITTED // 팀장 draft → SUBMITTED → 부서장 알림
+  SURVEY_RESPONSE_APPROVED // 부서장 승인 → 팀장 알림
+  SURVEY_RESPONSE_REJECTED // 부서장 반려 → 팀장 알림 (rejectionReason 포함)
 }
 
 enum DepreciationMethod {
@@ -945,6 +948,7 @@ model User {
   confirmedReportReviews    ReportReview[]                  @relation("ReportReviewConfirmer")
   createdSurveys            HiringNeedsSurvey[]             @relation("SurveyCreatedBy")
   surveyResponses           SurveyResponse[]                @relation("SurveyResponseSubmitter")
+  approvedSurveyResponses   SurveyResponse[]                @relation("SurveyResponseApprover")
   disposedEquipmentUnits    EquipmentUnit[]                 @relation("EquipmentDisposer")
   formationSnapshots        FormationSnapshot[]             @relation("FormationSnapshotCreatedBy")
   periodLocks               LedgerPeriodLock[]              @relation("PeriodLockCreator")
@@ -3662,6 +3666,13 @@ enum SurveyStatus {
   CLOSED
 }
 
+enum SurveyResponseStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
 enum SurveyPriority {
   HIGH
   MEDIUM
@@ -3744,7 +3755,7 @@ model SurveyTargetDept {
 }
 
 model SurveyResponse {
-  id              Int            @id @default(autoincrement())
+  id              Int                  @id @default(autoincrement())
   surveyId        Int
   departmentId    Int
   roleTitle       String
@@ -3754,16 +3765,22 @@ model SurveyResponse {
   estimatedBudget Int?
   reason          String
   submittedById   Int
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  status          SurveyResponseStatus @default(DRAFT)
+  rejectionReason String?
+  approvedById    Int?
+  approvedAt      DateTime?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
 
   survey         HiringNeedsSurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
   department     Department        @relation("SurveyResponse", fields: [departmentId], references: [id])
   submittedBy    User              @relation("SurveyResponseSubmitter", fields: [submittedById], references: [id])
+  approvedBy     User?             @relation("SurveyResponseApprover", fields: [approvedById], references: [id])
   hiringPlanItem HiringPlanItem?
 
   @@unique([surveyId, departmentId])
   @@index([surveyId])
+  @@index([status])
 }
 
 model HiringPlanItem {
