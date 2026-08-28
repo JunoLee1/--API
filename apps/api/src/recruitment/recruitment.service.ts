@@ -216,6 +216,9 @@ export class RecruitmentService {
     }
 
     // Auto-promote from waitlist: only when OFFERED → REJECTED (headcount opens up).
+    // Grill Q3 b1: waitlist promote also traverses the 3-stage approval flow,
+    // so instead of straight-to-OFFERED we invoke `beginOfferApproval` on the
+    // promoted candidate. The applicant email is deferred until HR approves.
     if (wasOffered && postingId && (this.repo as any).findTopWaitlistForPosting) {
       try {
         const top = await (this.repo as any).findTopWaitlistForPosting(postingId);
@@ -231,11 +234,11 @@ export class RecruitmentService {
           if (consumed.count === 0) {
             // Already consumed by a concurrent request — skip silently.
           } else {
-            await this.repo.offerApplication(top.applicationId, actorId as number, actorId as number);
-            const promotedApp = await this.repo.findApplicationById(top.applicationId);
-            if (promotedApp?.email) {
-              void sendApplicationStatusEmail(promotedApp.email, promotedApp.applicantName, "OFFERED").catch(console.error);
-            }
+            // Route through the 3-stage approval flow. Waitlist candidates
+            // may not have a REFERENCE_CHECK row yet — the auto-promote path
+            // therefore bypasses `offerApplication`'s status guard and calls
+            // `beginOfferApproval` directly.
+            await this.beginOfferApproval(top.applicationId, actorId as number);
             void writeAuditLog({
               actorId: actorId ?? 0,
               action: "APPLICATION_AUTO_PROMOTED_FROM_WAITLIST",
@@ -259,7 +262,17 @@ export class RecruitmentService {
     return this.repo.reinstateApplication(id, actorId);
   }
 
-  async offerApplication(id: number, offeredById: number) {
+  /**
+   * Initiates the 3-stage offer approval workflow (fix #370).
+   *
+   * Old behaviour was: REFERENCE_CHECK → OFFERED directly (single HR call).
+   * New behaviour: REFERENCE_CHECK → OFFER_PENDING_LEADER (or skip to the
+   * next stage if the LEADER/DEPT_HEAD slot is unfilled).
+   *
+   * The actual OFFERED transition (+ email + HiringPlanItem link) happens
+   * only when HR approves (see `hrApprove`).
+   */
+  async offerApplication(id: number, initiatedById: number) {
     const app = await this.getApplication(id);
     if (app.status !== "REFERENCE_CHECK") throw new AppError(409, "APPLICATION_NOT_IN_REFERENCE_CHECK");
     const refCheck = await getPrisma().referenceCheck.findUnique({
@@ -269,13 +282,389 @@ export class RecruitmentService {
     if (refCheck?.result === "FLAGGED") {
       throw new AppError(409, "REFERENCE_CHECK_FLAGGED");
     }
-    const result = await this.repo.offerApplication(id, offeredById, offeredById);
-    // SJ6: email applicant on offer — fetch raw (unmasked) record for email address
-    const rawApp = await this.repo.findApplicationById(id);
-    if (rawApp?.email) {
-      void sendApplicationStatusEmail(rawApp.email, rawApp.applicantName, "OFFERED").catch(console.error);
+    return this.beginOfferApproval(id, initiatedById);
+  }
+
+  /**
+   * Resolves the initial pending status for the 3-stage flow and applies it.
+   *
+   * Skip rules (grill Q1 c1/d1):
+   *   - No LEADER in posting.department  → skip LEADER → try DEPT_HEAD
+   *   - No DEPT_HEAD (headId=null)       → skip DEPT_HEAD → HR (HR substitutes)
+   *   - Both absent                      → straight to OFFER_PENDING_HR
+   *
+   * Notification fan-out (grill Q3 c1) mirrors the resolved starting stage.
+   * Called both by explicit HR-initiated offer and by the waitlist auto-
+   * promote path so the two enter the same state machine.
+   */
+  private async beginOfferApproval(id: number, initiatedById: number) {
+    // Load raw (unmasked) — we need posting.department to route.
+    const raw = await this.repo.findApplicationById(id);
+    if (!raw) throw new AppError(404, "JOB_APPLICATION_NOT_FOUND");
+    const dept = raw.posting?.department;
+    const leaderId = dept ? await this.repo.findDepartmentLeader(dept.id) : null;
+    const deptHeadId = dept?.headId ?? null;
+
+    const nextStatus: "OFFER_PENDING_LEADER" | "OFFER_PENDING_DEPT_HEAD" | "OFFER_PENDING_HR" =
+      leaderId ? "OFFER_PENDING_LEADER"
+        : deptHeadId ? "OFFER_PENDING_DEPT_HEAD"
+        : "OFFER_PENDING_HR";
+
+    const updated = await this.repo.setApplicationStatus(id, nextStatus, initiatedById);
+
+    // Fire-and-forget notification (grill Q3 c1). Do not roll back the
+    // status transition on a notif insert failure — matches the injury
+    // and asset-request conventions.
+    if (this.notifRepo) {
+      const notifRepo = this.notifRepo;
+      const applicantName = raw.applicantName;
+      const notify = () => {
+        if (nextStatus === "OFFER_PENDING_LEADER" && leaderId) {
+          void notifRepo.createForUser(
+            leaderId,
+            "OFFER_APPROVAL_REQUESTED_LEADER",
+            (lang) => ({
+              title: lang === "en" ? "Offer Approval Required (Leader)" : "채용 오퍼 팀장 결재 대기",
+              body:
+                lang === "en"
+                  ? `Application #${id} (${applicantName}) awaits your approval.`
+                  : `지원자 #${id} (${applicantName})의 오퍼 결재 대기입니다.`,
+            }),
+            id,
+          ).catch(console.error);
+        } else if (nextStatus === "OFFER_PENDING_DEPT_HEAD" && deptHeadId) {
+          void notifRepo.createForUser(
+            deptHeadId,
+            "OFFER_APPROVAL_REQUESTED_DEPT_HEAD",
+            (lang) => ({
+              title: lang === "en" ? "Offer Approval Required (Dept Head)" : "채용 오퍼 부서장 결재 대기",
+              body:
+                lang === "en"
+                  ? `Application #${id} (${applicantName}) awaits your approval.`
+                  : `지원자 #${id} (${applicantName})의 오퍼 결재 대기입니다.`,
+            }),
+            id,
+          ).catch(console.error);
+        } else if (nextStatus === "OFFER_PENDING_HR") {
+          void notifRepo.createForHrManager(
+            "OFFER_APPROVAL_REQUESTED_HR",
+            (lang) => ({
+              title: lang === "en" ? "Offer Approval Required (HR)" : "채용 오퍼 HR 결재 대기",
+              body:
+                lang === "en"
+                  ? `Application #${id} (${applicantName}) awaits HR final approval.`
+                  : `지원자 #${id} (${applicantName})의 HR 최종 결재 대기입니다.`,
+            }),
+            id,
+          ).catch(console.error);
+        }
+      };
+      notify();
     }
-    return result;
+
+    return updated;
+  }
+
+  // ────────────────────────────────────────────
+  // Offer 3-stage approval — LEADER
+  // ────────────────────────────────────────────
+
+  async leaderApprove(applicationId: number, reviewerId: number) {
+    const raw = await this.repo.findApplicationById(applicationId);
+    if (!raw) throw new AppError(404, "JOB_APPLICATION_NOT_FOUND");
+    if (raw.status !== "OFFER_PENDING_LEADER") throw new AppError(409, "INVALID_STATUS");
+
+    const dept = raw.posting?.department;
+    const leaderId = dept ? await this.repo.findDepartmentLeader(dept.id) : null;
+    if (!leaderId || leaderId !== reviewerId) throw new AppError(403, "NOT_LEADER");
+    // Grill Q3 d1 — self-approval blocked. Reviewer must not be the offer initiator.
+    if (raw.offeredById === reviewerId) throw new AppError(403, "SELF_APPROVAL_FORBIDDEN");
+
+    const deptHeadId = dept?.headId ?? null;
+    // Skip DEPT_HEAD when the slot is unfilled (grill Q1 d1 — HR substitutes).
+    const nextStatus: "OFFER_PENDING_DEPT_HEAD" | "OFFER_PENDING_HR" =
+      deptHeadId ? "OFFER_PENDING_DEPT_HEAD" : "OFFER_PENDING_HR";
+
+    const prisma = getPrisma();
+    const updated = await prisma.$transaction(async (tx) => {
+      await this.repo.addOfferApproval(
+        applicationId,
+        { stage: "LEADER", action: "APPROVED", reviewerId },
+        tx as any,
+      );
+      return this.repo.updateApplicationStatusInTx(applicationId, nextStatus, tx as any);
+    });
+
+    writeAuditLog({
+      actorId: reviewerId,
+      action: "JOB_APPLICATION_OFFER_LEADER_APPROVED",
+      targetId: applicationId,
+      detail: { nextStatus },
+    }).catch(console.error);
+
+    // Notify the next reviewer — dept-head or HR-manager depending on skip.
+    if (this.notifRepo) {
+      const applicantName = raw.applicantName;
+      if (nextStatus === "OFFER_PENDING_DEPT_HEAD" && deptHeadId) {
+        void this.notifRepo.createForUser(
+          deptHeadId,
+          "OFFER_APPROVAL_REQUESTED_DEPT_HEAD",
+          (lang) => ({
+            title: lang === "en" ? "Offer Approval Required (Dept Head)" : "채용 오퍼 부서장 결재 대기",
+            body:
+              lang === "en"
+                ? `Application #${applicationId} (${applicantName}) awaits your approval.`
+                : `지원자 #${applicationId} (${applicantName})의 오퍼 결재 대기입니다.`,
+          }),
+          applicationId,
+        ).catch(console.error);
+      } else if (nextStatus === "OFFER_PENDING_HR") {
+        void this.notifRepo.createForHrManager(
+          "OFFER_APPROVAL_REQUESTED_HR",
+          (lang) => ({
+            title: lang === "en" ? "Offer Approval Required (HR)" : "채용 오퍼 HR 결재 대기",
+            body:
+              lang === "en"
+                ? `Application #${applicationId} (${applicantName}) awaits HR final approval.`
+                : `지원자 #${applicationId} (${applicantName})의 HR 최종 결재 대기입니다.`,
+          }),
+          applicationId,
+        ).catch(console.error);
+      }
+    }
+
+    return updated;
+  }
+
+  async leaderReject(applicationId: number, reviewerId: number, reason: string) {
+    const trimmed = reason?.trim();
+    if (!trimmed) throw new AppError(400, "REASON_REQUIRED");
+
+    const raw = await this.repo.findApplicationById(applicationId);
+    if (!raw) throw new AppError(404, "JOB_APPLICATION_NOT_FOUND");
+    if (raw.status !== "OFFER_PENDING_LEADER") throw new AppError(409, "INVALID_STATUS");
+
+    const dept = raw.posting?.department;
+    const leaderId = dept ? await this.repo.findDepartmentLeader(dept.id) : null;
+    if (!leaderId || leaderId !== reviewerId) throw new AppError(403, "NOT_LEADER");
+    if (raw.offeredById === reviewerId) throw new AppError(403, "SELF_APPROVAL_FORBIDDEN");
+
+    // Rejection is terminal (grill Q2 d1). We record the stage-specific
+    // status so the timeline still shows *where* the rejection happened.
+    const prisma = getPrisma();
+    const updated = await prisma.$transaction(async (tx) => {
+      await this.repo.addOfferApproval(
+        applicationId,
+        { stage: "LEADER", action: "REJECTED", reviewerId, reason: trimmed },
+        tx as any,
+      );
+      return this.repo.updateApplicationStatusInTx(applicationId, "OFFER_LEADER_REJECTED", tx as any);
+    });
+
+    writeAuditLog({
+      actorId: reviewerId,
+      action: "JOB_APPLICATION_OFFER_LEADER_REJECTED",
+      targetId: applicationId,
+      detail: { reason: trimmed },
+    }).catch(console.error);
+
+    return updated;
+  }
+
+  // ────────────────────────────────────────────
+  // Offer 3-stage approval — DEPT_HEAD
+  // ────────────────────────────────────────────
+
+  async deptHeadApprove(applicationId: number, reviewerId: number) {
+    const raw = await this.repo.findApplicationById(applicationId);
+    if (!raw) throw new AppError(404, "JOB_APPLICATION_NOT_FOUND");
+    if (raw.status !== "OFFER_PENDING_DEPT_HEAD") throw new AppError(409, "INVALID_STATUS");
+    if (raw.posting?.department?.headId !== reviewerId) throw new AppError(403, "NOT_DEPT_HEAD");
+    if (raw.offeredById === reviewerId) throw new AppError(403, "SELF_APPROVAL_FORBIDDEN");
+
+    const prisma = getPrisma();
+    const updated = await prisma.$transaction(async (tx) => {
+      await this.repo.addOfferApproval(
+        applicationId,
+        { stage: "DEPT_HEAD", action: "APPROVED", reviewerId },
+        tx as any,
+      );
+      return this.repo.updateApplicationStatusInTx(applicationId, "OFFER_PENDING_HR", tx as any);
+    });
+
+    writeAuditLog({
+      actorId: reviewerId,
+      action: "JOB_APPLICATION_OFFER_DEPT_HEAD_APPROVED",
+      targetId: applicationId,
+    }).catch(console.error);
+
+    if (this.notifRepo) {
+      const applicantName = raw.applicantName;
+      void this.notifRepo.createForHrManager(
+        "OFFER_APPROVAL_REQUESTED_HR",
+        (lang) => ({
+          title: lang === "en" ? "Offer Approval Required (HR)" : "채용 오퍼 HR 결재 대기",
+          body:
+            lang === "en"
+              ? `Application #${applicationId} (${applicantName}) awaits HR final approval.`
+              : `지원자 #${applicationId} (${applicantName})의 HR 최종 결재 대기입니다.`,
+        }),
+        applicationId,
+      ).catch(console.error);
+    }
+
+    return updated;
+  }
+
+  async deptHeadReject(applicationId: number, reviewerId: number, reason: string) {
+    const trimmed = reason?.trim();
+    if (!trimmed) throw new AppError(400, "REASON_REQUIRED");
+
+    const raw = await this.repo.findApplicationById(applicationId);
+    if (!raw) throw new AppError(404, "JOB_APPLICATION_NOT_FOUND");
+    if (raw.status !== "OFFER_PENDING_DEPT_HEAD") throw new AppError(409, "INVALID_STATUS");
+    if (raw.posting?.department?.headId !== reviewerId) throw new AppError(403, "NOT_DEPT_HEAD");
+    if (raw.offeredById === reviewerId) throw new AppError(403, "SELF_APPROVAL_FORBIDDEN");
+
+    const prisma = getPrisma();
+    const updated = await prisma.$transaction(async (tx) => {
+      await this.repo.addOfferApproval(
+        applicationId,
+        { stage: "DEPT_HEAD", action: "REJECTED", reviewerId, reason: trimmed },
+        tx as any,
+      );
+      return this.repo.updateApplicationStatusInTx(applicationId, "OFFER_DEPT_HEAD_REJECTED", tx as any);
+    });
+
+    writeAuditLog({
+      actorId: reviewerId,
+      action: "JOB_APPLICATION_OFFER_DEPT_HEAD_REJECTED",
+      targetId: applicationId,
+      detail: { reason: trimmed },
+    }).catch(console.error);
+
+    return updated;
+  }
+
+  // ────────────────────────────────────────────
+  // Offer 3-stage approval — HR
+  // ────────────────────────────────────────────
+
+  /**
+   * Terminal APPROVE — transitions to OFFERED and fires the side-effects
+   * that used to live in the old single-shot `offerApplication` (email,
+   * offeredById / offeredAt on the application). The controller already
+   * gates on `canWriteHR` so anyone landing here is HR-eligible.
+   */
+  async hrApprove(applicationId: number, reviewerId: number) {
+    const raw = await this.repo.findApplicationById(applicationId);
+    if (!raw) throw new AppError(404, "JOB_APPLICATION_NOT_FOUND");
+    if (raw.status !== "OFFER_PENDING_HR") throw new AppError(409, "INVALID_STATUS");
+    if (raw.offeredById === reviewerId) throw new AppError(403, "SELF_APPROVAL_FORBIDDEN");
+
+    // Approval row + status + offeredBy stamp must commit together — otherwise
+    // a partial commit would leave the timeline out of sync with the state.
+    const prisma = getPrisma();
+    const updated = await prisma.$transaction(async (tx) => {
+      await this.repo.addOfferApproval(
+        applicationId,
+        { stage: "HR", action: "APPROVED", reviewerId },
+        tx as any,
+      );
+      // OFFERED transition also stamps offeredAt / offeredById to reviewer —
+      // preserves the pre-#370 contract (raw.offeredBy = HR final approver).
+      return (tx as any).jobApplication.update({
+        where: { id: applicationId },
+        data: { status: "OFFERED", offeredAt: new Date(), offeredById: reviewerId },
+        include: {
+          posting: {
+            select: {
+              id: true, title: true, hiringPlanItemId: true, departmentId: true,
+              department: { select: { id: true, name: true, headId: true } },
+            },
+          },
+          offeredBy: { select: { id: true, username: true } },
+          interviews: { orderBy: { round: "asc" as const } },
+          referenceCheck: true,
+          onboarding: {
+            include: { user: { select: { id: true, username: true, email: true } } },
+          },
+          offerApprovals: {
+            orderBy: { createdAt: "asc" as const },
+            include: { reviewer: { select: { id: true, username: true, nickname: true } } },
+          },
+        },
+      });
+    });
+
+    writeAuditLog({
+      actorId: reviewerId,
+      action: "JOB_APPLICATION_STATUS_CHANGED",
+      targetId: applicationId,
+      detail: { newStatus: "OFFERED" },
+    }).catch(console.error);
+
+    // SJ6 email side effect — preserved from the old single-shot path.
+    if (raw.email) {
+      void sendApplicationStatusEmail(raw.email, raw.applicantName, "OFFERED").catch(console.error);
+    }
+
+    return updated;
+  }
+
+  async hrReject(applicationId: number, reviewerId: number, reason: string) {
+    const trimmed = reason?.trim();
+    if (!trimmed) throw new AppError(400, "REASON_REQUIRED");
+
+    const raw = await this.repo.findApplicationById(applicationId);
+    if (!raw) throw new AppError(404, "JOB_APPLICATION_NOT_FOUND");
+    if (raw.status !== "OFFER_PENDING_HR") throw new AppError(409, "INVALID_STATUS");
+    if (raw.offeredById === reviewerId) throw new AppError(403, "SELF_APPROVAL_FORBIDDEN");
+
+    const prisma = getPrisma();
+    const updated = await prisma.$transaction(async (tx) => {
+      await this.repo.addOfferApproval(
+        applicationId,
+        { stage: "HR", action: "REJECTED", reviewerId, reason: trimmed },
+        tx as any,
+      );
+      return this.repo.updateApplicationStatusInTx(applicationId, "OFFER_HR_REJECTED", tx as any);
+    });
+
+    writeAuditLog({
+      actorId: reviewerId,
+      action: "JOB_APPLICATION_OFFER_HR_REJECTED",
+      targetId: applicationId,
+      detail: { reason: trimmed },
+    }).catch(console.error);
+
+    return updated;
+  }
+
+  // ────────────────────────────────────────────
+  // Approval queue reads (list-by-role)
+  // ────────────────────────────────────────────
+
+  async listOfferApprovalQueue(
+    userId: number,
+    role: string,
+    foRole: string | null | undefined,
+    stage: "LEADER" | "DEPT_HEAD" | "HR",
+  ) {
+    if (stage === "LEADER") {
+      const rows = await this.repo.findApplicationsPendingLeader(userId);
+      return rows.map(maskApplication);
+    }
+    if (stage === "DEPT_HEAD") {
+      const rows = await this.repo.findApplicationsPendingDeptHead(userId);
+      return rows.map(maskApplication);
+    }
+    // HR queue is role-gated at the controller (canWriteHR). We also
+    // re-check here so service-layer callers can't bypass it.
+    const { canWriteHR } = await import("../lib/permissions");
+    if (!canWriteHR(role, foRole)) throw new AppError(403, "FORBIDDEN");
+    const rows = await this.repo.findApplicationsPendingHr();
+    return rows.map(maskApplication);
   }
 
   // --- Interview ---
@@ -528,7 +917,19 @@ export class RecruitmentService {
     const app = await this.getApplication(applicationId);
 
     // C2 fix: status guard — reject terminal/already-offered states.
-    const nonPromotableStatuses = ["OFFERED", "ONBOARDED", "REJECTED"];
+    // Also refuse re-entry once approval is in flight (any OFFER_PENDING_*
+    // or OFFER_*_REJECTED status) so a manual promote can't race the flow.
+    const nonPromotableStatuses = [
+      "OFFERED",
+      "ONBOARDED",
+      "REJECTED",
+      "OFFER_PENDING_LEADER",
+      "OFFER_PENDING_DEPT_HEAD",
+      "OFFER_PENDING_HR",
+      "OFFER_LEADER_REJECTED",
+      "OFFER_DEPT_HEAD_REJECTED",
+      "OFFER_HR_REJECTED",
+    ];
     if (nonPromotableStatuses.includes(app.status)) {
       throw new AppError(409, "APPLICATION_NOT_PROMOTABLE");
     }
@@ -547,13 +948,10 @@ export class RecruitmentService {
       throw new AppError(409, "WAITLIST_ALREADY_CONSUMED");
     }
 
-    // Reuse offerApplication for actual state change + audit trail.
-    const result = await this.repo.offerApplication(applicationId, actorId, actorId);
-    // Fetch raw (unmasked) record to send notification email.
-    const rawApp = await this.repo.findApplicationById(applicationId);
-    if (rawApp?.email) {
-      void sendApplicationStatusEmail(rawApp.email, rawApp.applicantName, "OFFERED").catch(console.error);
-    }
+    // Grill Q3 b1 — waitlist promote also routes through the 3-stage flow.
+    // The applicant email is deferred to `hrApprove` (SJ6 side effect).
+    const result = await this.beginOfferApproval(applicationId, actorId);
+
     void writeAuditLog({
       actorId,
       action: "APPLICATION_PROMOTED_FROM_WAITLIST",

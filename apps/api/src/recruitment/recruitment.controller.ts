@@ -180,6 +180,85 @@ export class RecruitmentController {
     }
   };
 
+  // --- Offer 3-stage approval (fix #370) ---
+
+  /**
+   * Read the current user's pending approval queue for a given stage.
+   *   stage=LEADER      — awaiting my LEADER row (UserDepartment.role='LEADER' in posting dept)
+   *   stage=DEPT_HEAD   — awaiting my dept-head row (posting.department.headId=me)
+   *   stage=HR          — awaiting HR (canWriteHR gate applies at controller)
+   */
+  listOfferApprovalQueue = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id: userId, role, frontOfficeRole } = requireUser(req);
+      const stage = String(req.params["stage"] ?? "").toUpperCase() as "LEADER" | "DEPT_HEAD" | "HR";
+      if (!["LEADER", "DEPT_HEAD", "HR"].includes(stage)) throw new AppError(400, "INVALID_STAGE");
+      if (stage === "HR" && !canWriteHR(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      res.json(await this.service.listOfferApprovalQueue(userId, role, frontOfficeRole, stage));
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  offerLeaderApprove = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id: userId } = requireUser(req);
+      res.json(await this.service.leaderApprove(Number(req.params["id"]), userId));
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  offerLeaderReject = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id: userId } = requireUser(req);
+      const { reason } = req.body as { reason?: string };
+      res.json(await this.service.leaderReject(Number(req.params["id"]), userId, reason ?? ""));
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  offerDeptHeadApprove = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id: userId } = requireUser(req);
+      res.json(await this.service.deptHeadApprove(Number(req.params["id"]), userId));
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  offerDeptHeadReject = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id: userId } = requireUser(req);
+      const { reason } = req.body as { reason?: string };
+      res.json(await this.service.deptHeadReject(Number(req.params["id"]), userId, reason ?? ""));
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  offerHrApprove = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id: userId, role, frontOfficeRole } = requireUser(req);
+      if (!canWriteHR(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      res.json(await this.service.hrApprove(Number(req.params["id"]), userId));
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  offerHrReject = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id: userId, role, frontOfficeRole } = requireUser(req);
+      if (!canWriteHR(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { reason } = req.body as { reason?: string };
+      res.json(await this.service.hrReject(Number(req.params["id"]), userId, reason ?? ""));
+    } catch (err) {
+      next(err);
+    }
+  };
+
   // --- Interview ---
 
   scheduleInterview = async (req: Request, res: Response, next: NextFunction) => {

@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { recruitmentApi } from '@/services/recruitment.service'
-import type { JobApplication, Interview, InterviewRound, InterviewResult, ReferenceCheckResult } from '@/types/recruitment'
+import type { JobApplication, Interview, InterviewRound, InterviewResult, ReferenceCheckResult, OfferApproval } from '@/types/recruitment'
+import { APPLICATION_STATUS_LABEL, APPLICATION_STATUS_STYLE, OFFER_APPROVAL_STAGE_LABEL } from '@/types/recruitment'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -13,15 +14,98 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { maskPhone } from '@/lib/pii'
 
+// #370 — status labels grew from 8 → 14 values (3-stage approval). We keep the
+// legacy `STATUS_LABEL` map for the old shortened variants used by the badge
+// variant heuristic, but the canonical labels come from types/recruitment.ts.
 const STATUS_LABEL: Record<string, string> = {
-  APPLIED: '지원', SCREENING: '서류검토', INTERVIEW_1: '1차면접',
-  INTERVIEW_2: '2차면접', REFERENCE_CHECK: '레퍼런스체크',
-  OFFERED: '합격통보', HIRED: '채용완료', REJECTED: '불합격',
+  ...APPLICATION_STATUS_LABEL,
+  HIRED: '채용완료',
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const variant = status === 'REJECTED' ? 'destructive' : status === 'HIRED' || status === 'OFFERED' ? 'default' : 'secondary'
-  return <Badge variant={variant}>{STATUS_LABEL[status] ?? status}</Badge>
+  const badgeClass =
+    (APPLICATION_STATUS_STYLE as Record<string, string>)[status] ??
+    (status === 'REJECTED'
+      ? 'bg-red-100 text-red-800'
+      : status === 'HIRED' || status === 'OFFERED'
+        ? 'bg-emerald-100 text-emerald-800'
+        : 'bg-slate-100 text-slate-700')
+  return <Badge className={badgeClass}>{STATUS_LABEL[status] ?? status}</Badge>
+}
+
+/**
+ * Offer 3-stage approval timeline (#370). Renders one row per stage in the
+ * canonical order 팀장 → 부서장 → HR, marking each row as APPROVED / REJECTED /
+ * PENDING based on the offerApprovals trail and the current application status.
+ * Absent when the application never entered the offer approval flow.
+ */
+function OfferApprovalTimeline({ app }: { app: JobApplication }) {
+  const trail = app.offerApprovals ?? []
+  const inFlight = app.status?.startsWith('OFFER_PENDING_')
+  const rejected = app.status?.startsWith('OFFER_') && app.status?.endsWith('_REJECTED')
+  const finalOffered = app.status === 'OFFERED' || app.status === 'ONBOARDED'
+  if (trail.length === 0 && !inFlight && !rejected && !finalOffered) return null
+
+  const stages: Array<'LEADER' | 'DEPT_HEAD' | 'HR'> = ['LEADER', 'DEPT_HEAD', 'HR']
+  const trailByStage = new Map<string, OfferApproval>(trail.map((a) => [a.stage, a]))
+
+  const pendingStage: string | null = app.status === 'OFFER_PENDING_LEADER'
+    ? 'LEADER'
+    : app.status === 'OFFER_PENDING_DEPT_HEAD'
+      ? 'DEPT_HEAD'
+      : app.status === 'OFFER_PENDING_HR'
+        ? 'HR'
+        : null
+
+  return (
+    <section className="border rounded-md p-3">
+      <h3 className="font-semibold text-sm mb-2">오퍼 결재 이력</h3>
+      <ol className="space-y-1.5 text-sm">
+        {stages.map((s) => {
+          const row = trailByStage.get(s)
+          const isPending = pendingStage === s && !row
+          const label = OFFER_APPROVAL_STAGE_LABEL[s]
+          if (row) {
+            return (
+              <li key={s} className="flex items-start gap-2">
+                <span
+                  className={
+                    row.action === 'APPROVED'
+                      ? 'inline-block w-16 text-emerald-700 font-medium'
+                      : 'inline-block w-16 text-red-700 font-medium'
+                  }
+                >
+                  {label}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(row.createdAt).toLocaleString('ko-KR')} ·{' '}
+                  {row.reviewer.nickname ?? row.reviewer.username} ·{' '}
+                  {row.action === 'APPROVED' ? '승인' : '반려'}
+                  {row.reason ? ` · ${row.reason}` : ''}
+                </span>
+              </li>
+            )
+          }
+          return (
+            <li key={s} className="flex items-start gap-2">
+              <span
+                className={
+                  isPending
+                    ? 'inline-block w-16 text-amber-700 font-medium'
+                    : 'inline-block w-16 text-muted-foreground'
+                }
+              >
+                {label}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {isPending ? '결재 대기' : '대기'}
+              </span>
+            </li>
+          )
+        })}
+      </ol>
+    </section>
+  )
 }
 
 function ResultBadge({ result }: { result: string }) {
@@ -292,6 +376,9 @@ export function ApplicationDetailPage() {
           </Button>
         </div>
       )}
+
+      {/* #370 — Offer 3-stage approval timeline (팀장 → 부서장 → HR) */}
+      <OfferApprovalTimeline app={app} />
 
       {/* Interviews */}
       <section className="space-y-3">

@@ -108,6 +108,10 @@ export const NOTIFICATION_ROUTES: Record<string, NotificationRoute> = {
   ASSET_REQUEST_APPROVED: '/asset/request',
   ASSET_REQUEST_REJECTED: '/asset/request',
   ASSET_REQUEST_FULFILLED: '/asset/request',
+  // Recruitment — Offer 3-stage approval (#370)
+  OFFER_APPROVAL_REQUESTED_LEADER: '/recruitment/offer-approval',
+  OFFER_APPROVAL_REQUESTED_DEPT_HEAD: '/recruitment/offer-approval',
+  OFFER_APPROVAL_REQUESTED_HR: '/recruitment/offer-approval',
 }
 
 export const notificationApi = {

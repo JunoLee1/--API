@@ -62,4 +62,13 @@ router.post("/applications/:id/onboarding/complete-mfa", controller.completeMfa)
 router.get("/postings/:id/waitlist", auth, controller.getPostingWaitlist);
 router.post("/applications/:id/promote-from-waitlist", auth, controller.promoteFromWaitlist);
 
+// Offer 3-stage approval (fix #370)
+router.get("/applications/offer-approvals/:stage", auth, controller.listOfferApprovalQueue);
+router.post("/applications/:id/offer-approval/leader-approve", auth, controller.offerLeaderApprove);
+router.post("/applications/:id/offer-approval/leader-reject", auth, controller.offerLeaderReject);
+router.post("/applications/:id/offer-approval/dept-head-approve", auth, controller.offerDeptHeadApprove);
+router.post("/applications/:id/offer-approval/dept-head-reject", auth, controller.offerDeptHeadReject);
+router.post("/applications/:id/offer-approval/hr-approve", auth, controller.offerHrApprove);
+router.post("/applications/:id/offer-approval/hr-reject", auth, controller.offerHrReject);
+
 export default router;

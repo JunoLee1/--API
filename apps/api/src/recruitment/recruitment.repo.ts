@@ -1,4 +1,8 @@
-import type { PrismaClient } from "../generated/client";
+import type {
+  PrismaClient,
+  JobApplicationOfferApprovalStage,
+  JobApplicationOfferApprovalAction,
+} from "../generated/client";
 import type {
   CreateJobPostingDto,
   UpdateJobPostingDto,
@@ -13,6 +17,8 @@ import type {
 import type { InterviewRound, JobApplicationStatus } from "../generated/enums";
 import { writeAuditLog } from "../lib/auditLog";
 
+type Tx = Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
+
 const POSTING_INCLUDE = {
   department: { select: { id: true, name: true } },
   createdBy: { select: { id: true, username: true } },
@@ -20,13 +26,29 @@ const POSTING_INCLUDE = {
   applications: { select: { id: true } },
 } as const;
 
+// Include the posting.department so approval-flow callers can resolve
+// leader (UserDepartment.role='LEADER') and dept-head (Department.headId)
+// without a second query. offerApprovals is ordered by createdAt so the
+// timeline (팀장 → 부서장 → HR) reads naturally.
 const APPLICATION_INCLUDE = {
-  posting: { select: { id: true, title: true, hiringPlanItemId: true } },
+  posting: {
+    select: {
+      id: true,
+      title: true,
+      hiringPlanItemId: true,
+      departmentId: true,
+      department: { select: { id: true, name: true, headId: true } },
+    },
+  },
   offeredBy: { select: { id: true, username: true } },
   interviews: { orderBy: { round: "asc" as const } },
   referenceCheck: true,
   onboarding: {
     include: { user: { select: { id: true, username: true, email: true } } },
+  },
+  offerApprovals: {
+    orderBy: { createdAt: "asc" as const },
+    include: { reviewer: { select: { id: true, username: true, nickname: true } } },
   },
 } as const;
 
@@ -457,6 +479,109 @@ export class RecruitmentRepository {
     return this.prisma.interview.update({
       where: { id },
       data: { result },
+    });
+  }
+
+  // --- Offer 3-stage approval (fix #370) ---
+  //
+  // Bottom-up flow: 팀장 (LEADER, UserDepartment.role='LEADER' in posting dept)
+  //                 → 부서장 (DEPT_HEAD, posting.department.headId)
+  //                 → HR (canWriteHR user).
+  // Status transitions live in the service; this repo only writes the
+  // approval trail row and the status column. addOfferApproval accepts an
+  // optional `tx?` so the service can wrap approval-row + status update in
+  // a single transaction (AssetRequest 패턴).
+
+  /**
+   * Resolves the leader of a department. LEADER = UserDepartment.role='LEADER'.
+   * Returns the most recently joined leader if multiple exist (defensive —
+   * schema doesn't enforce uniqueness). null if no leader is assigned.
+   */
+  async findDepartmentLeader(departmentId: number) {
+    const membership = await this.prisma.userDepartment.findFirst({
+      where: { departmentId, role: "LEADER" },
+      orderBy: { joinedAt: "desc" },
+      select: { userId: true },
+    });
+    return membership?.userId ?? null;
+  }
+
+  addOfferApproval(
+    applicationId: number,
+    data: {
+      stage: JobApplicationOfferApprovalStage;
+      action: JobApplicationOfferApprovalAction;
+      reviewerId: number;
+      reason?: string;
+    },
+    tx?: Tx,
+  ) {
+    const client = tx ?? this.prisma;
+    return client.jobApplicationOfferApproval.create({
+      data: {
+        applicationId,
+        stage: data.stage,
+        action: data.action,
+        reviewerId: data.reviewerId,
+        ...(data.reason !== undefined && { reason: data.reason }),
+      },
+    });
+  }
+
+  updateApplicationStatusInTx(
+    id: number,
+    status: JobApplicationStatus,
+    tx?: Tx,
+  ) {
+    const client = tx ?? this.prisma;
+    return client.jobApplication.update({
+      where: { id },
+      data: { status },
+      include: APPLICATION_INCLUDE,
+    });
+  }
+
+  /**
+   * OFFER_PENDING_LEADER — user is the LEADER of the posting's department.
+   */
+  findApplicationsPendingLeader(userId: number) {
+    return this.prisma.jobApplication.findMany({
+      where: {
+        status: "OFFER_PENDING_LEADER",
+        posting: {
+          department: {
+            members: { some: { userId, role: "LEADER" } },
+          },
+        },
+      },
+      include: APPLICATION_INCLUDE,
+      orderBy: { updatedAt: "desc" },
+    });
+  }
+
+  /**
+   * OFFER_PENDING_DEPT_HEAD — user is the head of the posting's department.
+   */
+  findApplicationsPendingDeptHead(userId: number) {
+    return this.prisma.jobApplication.findMany({
+      where: {
+        status: "OFFER_PENDING_DEPT_HEAD",
+        posting: { department: { headId: userId } },
+      },
+      include: APPLICATION_INCLUDE,
+      orderBy: { updatedAt: "desc" },
+    });
+  }
+
+  /**
+   * OFFER_PENDING_HR — HR queue. Role-gate is enforced at the controller
+   * layer (canWriteHR); the repo returns every pending-HR application.
+   */
+  findApplicationsPendingHr() {
+    return this.prisma.jobApplication.findMany({
+      where: { status: "OFFER_PENDING_HR" },
+      include: APPLICATION_INCLUDE,
+      orderBy: { updatedAt: "desc" },
     });
   }
 }
