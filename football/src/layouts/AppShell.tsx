@@ -442,6 +442,15 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN'],
   },
   {
+    to: '/admin/probation-reviews',
+    label: 'nav.item.probationReviews',
+    icon: Users2,
+    section: 'nav.section.management',
+    subSection: 'nav.subsection.hr',
+    roles: ['ADMIN', 'FRONT_OFFICE'],
+    frontOfficeRoles: ['HR_MANAGER'],
+  },
+  {
     to: '/sponsorship',
     label: 'nav.item.sponsorship',
     icon: Handshake,

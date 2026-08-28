@@ -134,6 +134,7 @@ export function StaffRecordPage() {
             <th className="py-2 pr-4">{t("staffRecord.role")}</th>
             <th className="py-2 pr-4">{t("staffRecord.department")}</th>
             <th className="py-2 pr-4">{t("staffRecord.phone")}</th>
+            <th className="py-2 pr-4">수습</th>
             <th className="py-2 pr-4">{t("staffRecord.status")}</th>
             <th className="py-2" />
           </tr>
@@ -151,6 +152,20 @@ export function StaffRecordPage() {
                   : "-"}
               </td>
               <td className="py-2 pr-4 text-muted-foreground">{maskPhone(r.phone)}</td>
+              <td className="py-2 pr-4">
+                {r.probationStatus === "IN_PROGRESS" && (
+                  <Badge variant="secondary">수습 중</Badge>
+                )}
+                {r.probationStatus === "PASSED" && (
+                  <Badge variant="default">정식</Badge>
+                )}
+                {r.probationStatus === "FAILED" && (
+                  <Badge variant="destructive">수습 실패</Badge>
+                )}
+                {!r.probationStatus && (
+                  <span className="text-muted-foreground">-</span>
+                )}
+              </td>
               <td className="py-2 pr-4">
                 <Badge variant={r.isActive ? "default" : "secondary"}>
                   {r.isActive ? t("staffRecord.active") : t("staffRecord.inactive")}

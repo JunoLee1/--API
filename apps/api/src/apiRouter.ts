@@ -69,6 +69,7 @@ import assetRequestRouter from "./asset-request/asset-request.routes";
 import hiringDispatchRouter from "./hiring-dispatch/hiring-dispatch.routes";
 import hiringDocumentRouter from "./hiring-document/hiring-document.routes";
 import employeeContractRouter from "./employee-contract/employee-contract.routes";
+import probationReviewRouter from "./probation-review/probation-review.routes";
 import medicalEquipmentLoanRouter from "./medical-equipment-loan/medical-equipment-loan.routes";
 import { monthlySettlementRouter } from "./monthly-settlement/monthly-settlement.routes";
 import { revenueAdjustmentRouter } from "./revenue-adjustment/revenue-adjustment.routes";
@@ -117,6 +118,10 @@ apiRouter.use("/academy-fees", academyFeeRouter);
 apiRouter.use("/coaching-staff", coachingStaffRouter);
 apiRouter.use("/club-settings", clubSettingsRouter);
 apiRouter.use("/departments", departmentRouter);
+// Probation-review routes hang off /staff-records/:id/probation-review(s).
+// Registered before the base CRUD router so the more-specific matchers win
+// in the (unlikely) case of overlap.
+apiRouter.use("/staff-records", probationReviewRouter);
 apiRouter.use("/staff-records", staffRecordRouter);
 apiRouter.use("/financial-reports", financialReportRouter);
 apiRouter.use("/operating-expenses", operatingExpenseRouter);

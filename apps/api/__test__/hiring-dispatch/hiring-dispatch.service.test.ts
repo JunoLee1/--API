@@ -535,6 +535,23 @@ describe("HiringDispatchService.dispatch", () => {
     expect(notif.createForHrManager).toHaveBeenCalled();
   });
 
+  it("createStaffRecord seeds probationStartedAt + probationStatus=IN_PROGRESS (issue #375)", async () => {
+    const notif = makeNotifRepo();
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "DISPATCH_APPROVED" })),
+    });
+    await makeService(repo, notif).dispatch(1, HR_EXECUTOR, "FRONT_OFFICE", "HR_MANAGER");
+    expect(repo.createStaffRecord).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: "hong@example.com",
+        departmentId: DEPT_ID,
+        probationStartedAt: expect.any(Date),
+        probationStatus: "IN_PROGRESS",
+      }),
+      expect.anything(),
+    );
+  });
+
   it("throws 400 EMAIL_ALREADY_IN_USE before opening the tx", async () => {
     const repo = makeRepo({
       findById: jest.fn().mockResolvedValue(makeDispatch({ status: "DISPATCH_APPROVED" })),
