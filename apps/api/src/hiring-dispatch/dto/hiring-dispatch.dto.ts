@@ -15,6 +15,10 @@ export interface CreateHiringDispatchDto {
   targetFrontOfficeRole?: string;
   targetCoachingRole?: string;
   permissionNotes?: string;
+  // Application-free dispatches carry their own list of required documents
+  // that HR must upload + approve before EXECUTION (#372). Ignored when
+  // applicationId is set (posting.requiredDocuments is authoritative there).
+  requiredDocuments?: string[];
 }
 
 export interface BudgetReverifyDto {

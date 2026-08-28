@@ -26,6 +26,9 @@ const detailInclude = {
           title: true,
           headcount: true,
           hiringPlanItemId: true,
+          // Q10 — gate needs the posting's requiredDocuments to know what
+          // must be APPROVED before EXECUTION.
+          requiredDocuments: true,
           hiringPlanItem: {
             select: { id: true, roleTitle: true, headcount: true },
           },
@@ -95,6 +98,11 @@ export class HiringDispatchRepository {
           targetCoachingRole: dto.targetCoachingRole as any,
         }),
         ...(dto.permissionNotes !== undefined && { permissionNotes: dto.permissionNotes }),
+        ...(dto.requiredDocuments !== undefined && {
+          requiredDocuments: dto.requiredDocuments
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0),
+        }),
         status: "CREATED",
         createdById,
       },

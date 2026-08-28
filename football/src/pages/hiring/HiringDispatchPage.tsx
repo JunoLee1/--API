@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useHiringDispatches } from '@/hooks/useHiringDispatches'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
@@ -150,6 +151,8 @@ export function HiringDispatchPage() {
   const [detailId, setDetailId] = useState<number | null>(null)
   const [detail, setDetail] = useState<HiringDispatch | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
+
+  const navigate = useNavigate()
 
   const [cancelingId, setCancelingId] = useState<number | null>(null)
   const [cancelReason, setCancelReason] = useState('')
@@ -806,6 +809,18 @@ export function HiringDispatchPage() {
                   </ul>
                 </div>
               )}
+
+              <div className="border-t pt-2 flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    navigate(`/hiring/dispatches/${detail.id}/documents`)
+                  }
+                >
+                  서류 관리
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>

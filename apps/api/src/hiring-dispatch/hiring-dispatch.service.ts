@@ -5,6 +5,7 @@ import { writeAuditLog } from "../lib/auditLog";
 import { encrypt } from "../lib/crypto";
 import { hashPassword } from "../lib/hash";
 import { isAdminLike } from "../lib/permissions";
+import type { HiringDocumentService } from "../hiring-document/hiring-document.service";
 import { NotificationRepository } from "../notification/notification.repo";
 import { HiringDispatchRepository } from "./hiring-dispatch.repo";
 import {
@@ -36,6 +37,10 @@ export class HiringDispatchService {
     private repo: HiringDispatchRepository,
     private notifRepo: NotificationRepository,
     private prisma: PrismaClient,
+    // Optional so existing tests that don't touch EXECUTION gate still work
+    // without setup. Production wiring (hiring-dispatch.routes.ts) injects
+    // the singleton from hiring-document.routes.ts.
+    private documentService?: HiringDocumentService,
   ) {}
 
   // ────────────────────────────────────────────
@@ -426,6 +431,13 @@ export class HiringDispatchService {
     if (!canDispatch) throw new AppError(403, "NOT_HR_MANAGER");
     if (dispatch.createdById === reviewerId) throw new AppError(403, "SELF_APPROVAL_FORBIDDEN");
 
+    // EXECUTION gate #1 (fix #372) — required hiring documents.
+    // Chained gates run before we touch the DB write side; each raises 400 on
+    // failure, keeping the dispatch in DISPATCH_APPROVED so HR can fix the
+    // preconditions and re-hit /dispatch. Followups #371 (contract signed)
+    // and #374 (task population) plug in here as additional gates.
+    await this.assertHiringDocsGate(dispatch);
+
     // Fail fast on email collision before we start the tx — the User.email
     // unique index would raise inside the tx anyway, but pre-check gives a
     // clean error code without polluting the connection with a rollback.
@@ -698,5 +710,39 @@ export class HiringDispatchService {
     }).catch(console.error);
 
     return updated;
+  }
+
+  // ────────────────────────────────────────────
+  // EXECUTION gates (fix #372, then #371, #374)
+  // ────────────────────────────────────────────
+
+  /**
+   * Delegates to `HiringDocumentService.assertRequiredDocsApproved` with the
+   * right target + required list resolved from the dispatch row. Kept private
+   * so it stays a single call-site helper — the sibling gates for #371/#374
+   * will follow the exact same shape.
+   *
+   * Skip semantics: if the service isn't wired in (tests) we no-op rather
+   * than throw. Production must always inject it (see hiring-dispatch.routes.ts).
+   */
+  private async assertHiringDocsGate(dispatch: {
+    id: number;
+    applicationId: number | null;
+    requiredDocuments: string[];
+    application: { posting: { requiredDocuments: string[] } | null } | null;
+  }): Promise<void> {
+    if (!this.documentService) return;
+    const target =
+      dispatch.applicationId != null
+        ? { applicationId: dispatch.applicationId }
+        : { hiringDispatchId: dispatch.id };
+    // Application-anchored dispatches source the required list from the
+    // parent JobPosting (Q3); Application-free dispatches carry it on the
+    // dispatch row directly (Q10).
+    const required =
+      dispatch.applicationId != null
+        ? dispatch.application?.posting?.requiredDocuments ?? []
+        : dispatch.requiredDocuments;
+    await this.documentService.assertRequiredDocsApproved(target, required);
   }
 }

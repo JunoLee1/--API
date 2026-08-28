@@ -33,6 +33,17 @@ function maskApplication<T extends { email: string | null; phone: string | null;
   };
 }
 
+/**
+ * Trim + drop empty strings so the DB never stores accidental whitespace-only
+ * entries that would silently break the HiringDispatch gate's set-lookup.
+ * `undefined` in => `undefined` out — lets the caller distinguish "no update"
+ * from "clear to empty".
+ */
+function normalizeRequiredDocuments(input: string[] | undefined): string[] | undefined {
+  if (input === undefined) return undefined;
+  return input.map((s) => s.trim()).filter((s) => s.length > 0);
+}
+
 export class RecruitmentService {
   constructor(
     private repo: RecruitmentRepository,
@@ -66,7 +77,12 @@ export class RecruitmentService {
     if (hiringPlanItem.status === "FULFILLED") throw new AppError(409, "HIRING_PLAN_ITEM_ALREADY_FULFILLED");
     if (hiringPlanItem.status === "CANCELLED") throw new AppError(409, "HIRING_PLAN_ITEM_CANCELLED");
 
-    const posting = await this.repo.createPosting({ ...dto, createdById });
+    const requiredDocuments = normalizeRequiredDocuments(dto.requiredDocuments);
+    const posting = await this.repo.createPosting({
+      ...dto,
+      ...(requiredDocuments !== undefined && { requiredDocuments }),
+      createdById,
+    });
 
     // 첫 JobPosting 생성 시 PLANNED → IN_PROGRESS 전이 (idempotent)
     if (hiringPlanItem.status === "PLANNED") {
@@ -122,7 +138,11 @@ export class RecruitmentService {
 
   async updatePosting(id: number, dto: UpdateJobPostingDto) {
     await this.getPosting(id);
-    return this.repo.updatePosting(id, dto);
+    const requiredDocuments = normalizeRequiredDocuments(dto.requiredDocuments);
+    return this.repo.updatePosting(id, {
+      ...dto,
+      ...(requiredDocuments !== undefined && { requiredDocuments }),
+    });
   }
 
   async approvePosting(id: number, approvedById: number) {
