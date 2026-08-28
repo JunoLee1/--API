@@ -36,6 +36,9 @@ import { AssetRequestApprovalPage } from '@/pages/asset/AssetRequestApprovalPage
 import { HiringDispatchPage } from '@/pages/hiring/HiringDispatchPage'
 import { HiringDispatchApprovalPage } from '@/pages/hiring/HiringDispatchApprovalPage'
 import { HiringDocumentPage } from '@/pages/hiring/HiringDocumentPage'
+import OnboardingTemplateManagementPage from '@/pages/onboarding/OnboardingTemplateManagementPage'
+import OnboardingChecklistPage from '@/pages/onboarding/OnboardingChecklistPage'
+import OnboardingVerifyPage from '@/pages/onboarding/OnboardingVerifyPage'
 import { EquipmentPage } from '@/pages/equipment/EquipmentPage'
 import { FacilityPage } from '@/pages/facility/FacilityPage'
 import { SponsorshipPage } from '@/pages/sponsorship/SponsorshipPage'
@@ -204,6 +207,15 @@ function App() {
             <Route path="/hiring/approval" element={<HiringDispatchApprovalPage />} />
             <Route path="/hiring/dispatches/:dispatchId/documents" element={<HiringDocumentPage />} />
             <Route path="/hiring/applications/:applicationId/documents" element={<HiringDocumentPage />} />
+            <Route
+              path="/departments/:departmentId/onboarding-template"
+              element={<OnboardingTemplateManagementPage />}
+            />
+            <Route
+              path="/onboarding/:onboardingId/checklist"
+              element={<OnboardingChecklistPage />}
+            />
+            <Route path="/hr/onboarding-verify" element={<OnboardingVerifyPage />} />
             <Route path="/equipment" element={<EquipmentPage />} />
             <Route path="/facility" element={<FacilityPage />} />
             <Route path="/sponsorship" element={<SponsorshipPage />} />

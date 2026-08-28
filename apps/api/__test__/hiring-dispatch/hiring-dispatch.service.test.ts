@@ -129,13 +129,31 @@ const makeNotifRepo = (): NotificationRepository =>
     createForGM: jest.fn().mockResolvedValue(undefined),
   } as unknown as NotificationRepository);
 
-const makePrisma = (overrides: Partial<any> = {}): PrismaClient =>
+// Default in-tx stubs. `populateOnboardingTasks()` reads
+// `tx.onboardingTemplate.findUnique` and (when populate is needed)
+// `tx.onboardingTask.createMany`. Returning `null` = department has no
+// template, so populate is a no-op — matches "no template" backward-compat.
+const makeTxStub = (overrides: Partial<any> = {}) => ({
+  onboardingTemplate: {
+    findUnique: jest.fn().mockResolvedValue(null),
+  },
+  onboardingTask: {
+    createMany: jest.fn().mockResolvedValue({ count: 0 }),
+  },
+  ...overrides,
+});
+
+const makePrisma = (overrides: Partial<any> = {}, txStub: any = makeTxStub()): PrismaClient =>
   ({
     jobApplication: {
       findUnique: jest.fn().mockResolvedValue({ id: APPLICATION_ID, status: "OFFERED" }),
     },
-    // Passthrough tx — mocked repos ignore the tx arg, so an empty object is enough.
-    $transaction: jest.fn().mockImplementation(async (fn: any) => fn({})),
+    // Fire-and-forget notifyNewEmployeeTasksAssigned reads onboarding + task count.
+    onboarding: {
+      findFirst: jest.fn().mockResolvedValue({ id: 999, _count: { tasks: 0 } }),
+    },
+    // Passthrough tx — mocked repos ignore the tx arg but populate helper uses it.
+    $transaction: jest.fn().mockImplementation(async (fn: any) => fn(txStub)),
     ...overrides,
   } as unknown as PrismaClient);
 
@@ -590,6 +608,86 @@ describe("HiringDispatchService.dispatch", () => {
     await expect(
       makeService(repo).dispatch(1, HR_ID, "FRONT_OFFICE", "HR_MANAGER"),
     ).rejects.toThrow(new AppError(400, "INVALID_STATUS"));
+  });
+
+  // ────────────────────────────────────────────
+  // #374 — OnboardingTask populate (inside dispatch tx)
+  // ────────────────────────────────────────────
+
+  it("populates OnboardingTask rows from department template inside the dispatch tx (#374)", async () => {
+    const templateTasks = [
+      { title: "환영 오리엔테이션" },
+      { title: "장비 수령", dueDaysFromStart: 3, requiresVerification: true },
+    ];
+    const txStub = makeTxStub({
+      onboardingTemplate: {
+        findUnique: jest.fn().mockResolvedValue({ tasks: templateTasks }),
+      },
+      onboardingTask: {
+        createMany: jest.fn().mockResolvedValue({ count: 2 }),
+      },
+    });
+    const prisma = makePrisma(
+      {
+        onboarding: {
+          findFirst: jest.fn().mockResolvedValue({ id: 999, _count: { tasks: 2 } }),
+        },
+      },
+      txStub,
+    );
+    const notif = makeNotifRepo();
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "DISPATCH_APPROVED" })),
+    });
+    await makeService(repo, notif, prisma).dispatch(
+      1,
+      HR_EXECUTOR,
+      "FRONT_OFFICE",
+      "HR_MANAGER",
+    );
+    // Template lookup happened inside the tx with the dispatch's departmentId.
+    expect(txStub.onboardingTemplate.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { departmentId: DEPT_ID } }),
+    );
+    // Two tasks were populated (order = template array index).
+    expect(txStub.onboardingTask.createMany).toHaveBeenCalledTimes(1);
+    const createArg = (txStub.onboardingTask.createMany as jest.Mock).mock.calls[0][0];
+    expect(createArg.data).toHaveLength(2);
+    expect(createArg.data[0]).toEqual(expect.objectContaining({ title: "환영 오리엔테이션", order: 0 }));
+    expect(createArg.data[1]).toEqual(
+      expect.objectContaining({ title: "장비 수령", requiresVerification: true, order: 1 }),
+    );
+    // Fire-and-forget ONBOARDING_TASKS_ASSIGNED notif reaches trainee (count > 0).
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(notif.createForUser).toHaveBeenCalledWith(
+      NEW_USER_ID,
+      "ONBOARDING_TASKS_ASSIGNED",
+      expect.any(Function),
+      1,
+    );
+  });
+
+  it("dispatch still succeeds when department has no template (backward-compat)", async () => {
+    // Default txStub returns null for template lookup — the pre-#374 path.
+    const notif = makeNotifRepo();
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "DISPATCH_APPROVED" })),
+    });
+    const result = await makeService(repo, notif).dispatch(
+      1,
+      HR_EXECUTOR,
+      "FRONT_OFFICE",
+      "HR_MANAGER",
+    );
+    expect(result.status).toBe("ONBOARDING");
+    // No ONBOARDING_TASKS_ASSIGNED notif fires when task count is 0.
+    await Promise.resolve();
+    await Promise.resolve();
+    const tasksAssignedCall = (notif.createForUser as jest.Mock).mock.calls.find(
+      (c) => c[1] === "ONBOARDING_TASKS_ASSIGNED",
+    );
+    expect(tasksAssignedCall).toBeUndefined();
   });
 });
 
