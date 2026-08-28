@@ -510,6 +510,8 @@ export class HiringDispatchService {
       );
 
       // 4. StaffRecord — HR-facing employee row. `email` links back to the User.
+      //    #375: seed probation tracking so the D-7 cron notifier can pick
+      //    the record up for 3MO/6MO reminders to the dept head.
       await this.repo.createStaffRecord(
         {
           name: dispatch.candidateName,
@@ -518,6 +520,8 @@ export class HiringDispatchService {
           departmentId: dispatch.departmentId,
           startDate: dispatch.startDate,
           createdById: reviewerId,
+          probationStartedAt: new Date(),
+          probationStatus: "IN_PROGRESS",
         },
         tx,
       );

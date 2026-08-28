@@ -251,6 +251,10 @@ export class HiringDispatchRepository {
       departmentId: number;
       startDate: Date;
       createdById: number;
+      // #375: seed probation tracking so the D-7 cron notifier can find the
+      // row. Both are required inputs — dispatch() always sets them.
+      probationStartedAt: Date;
+      probationStatus: "IN_PROGRESS" | "PASSED" | "FAILED";
     },
     tx?: Tx,
   ) {
@@ -266,6 +270,8 @@ export class HiringDispatchRepository {
         departmentId: data.departmentId,
         employmentStartDate: data.startDate,
         createdById: data.createdById,
+        probationStartedAt: data.probationStartedAt,
+        probationStatus: data.probationStatus,
       },
     });
   }

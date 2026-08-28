@@ -387,6 +387,8 @@ enum NotificationType {
   MEDICAL_EQUIPMENT_LOAN_EMERGENCY_REJECTED // 응급 반려 → 즉시 반납 요구 알림
   MEDICAL_EQUIPMENT_LOAN_EMERGENCY_RESOLVED // 응급 사후 승인 완료 → 요청자 알림
   MEDICAL_EQUIPMENT_LOAN_RETURN_REQUIRED // 응급 반려 시 즉시 반납 요구
+  PROBATION_REVIEW_DUE_SOON // 수습 평가 D-7 → 부서장 알림 (cron)
+  PROBATION_REVIEW_COMPLETED // 부서장 review 제출 → 대상 직원(있으면) 정보성 알림
 }
 
 enum DepreciationMethod {
@@ -979,6 +981,7 @@ model User {
   issuedEmployeeContracts    EmployeeContract[]              @relation("EmpContractIssuer")
   signedEmployeeContracts    EmployeeContract[]              @relation("EmpContractSigner")
   cancelledEmployeeContracts EmployeeContract[]              @relation("EmpContractCanceller")
+  probationReviewsSubmitted  ProbationReview[]               @relation("ProbationReviewer")
 }
 
 model Season {
@@ -2509,6 +2512,27 @@ model ClubSettings {
   reviewerDeptMap          Json?
   autoSurveyTopN           Int?   @default(3)
   interviewPassThreshold   Int    @default(3)
+  // 수습(probation) 기간 개월수. Cluster-wide setting. Default 3 months.
+  // Change here affects future dispatches only — existing StaffRecord rows
+  // with `probationStartedAt` retain their original 3/6-month checkpoints.
+  probationMonths          Int    @default(3)
+}
+
+enum ProbationReviewType {
+  THREE_MO
+  SIX_MO
+}
+
+enum ProbationReviewStatus {
+  PENDING
+  PASSED
+  FAILED
+}
+
+enum ProbationStatus {
+  IN_PROGRESS
+  PASSED
+  FAILED
 }
 
 model StaffRecord {
@@ -2527,11 +2551,40 @@ model StaffRecord {
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
+  // 수습(probation) 트래킹. `probationStartedAt` 은 HiringDispatch.dispatch()
+  // 실행 시점에 자동 세팅되고, `probationEndedAt` 은 SIX_MO PASSED 또는
+  // 어느 시점의 FAILED review 가 커밋될 때 세팅된다.
+  probationStartedAt DateTime?
+  probationEndedAt   DateTime?
+  probationStatus    ProbationStatus   @default(IN_PROGRESS)
+  probationReviews   ProbationReview[]
+
   createdBy           User            @relation("StaffRecordCreator", fields: [createdById], references: [id])
   staffSalaries       StaffSalary[]
   employmentStartDate DateTime?
   employmentEndDate   DateTime?
   certifications      Certification[] @relation("StaffCertifications")
+}
+
+/// 신규 직원 팔로우업 (Probation follow-up). 부서장이 3개월/6개월 시점에
+/// 평가를 제출한다. Cron `probationReviewNotifier` 가 D-7 알림을 부서장에게
+/// 발송한다. FAIL 처리는 수동 — HR/부서장이 별도로 `StaffRecord.terminate` 호출.
+model ProbationReview {
+  id               Int                   @id @default(autoincrement())
+  staffRecordId    Int
+  reviewType       ProbationReviewType
+  status           ProbationReviewStatus @default(PENDING)
+  leaderAssessment String?
+  reviewedById     Int?
+  reviewedAt       DateTime?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  staffRecord StaffRecord @relation(fields: [staffRecordId], references: [id], onDelete: Cascade)
+  reviewedBy  User?       @relation("ProbationReviewer", fields: [reviewedById], references: [id])
+
+  @@unique([staffRecordId, reviewType])
+  @@index([staffRecordId, status])
 }
 
 model FinancialReport {

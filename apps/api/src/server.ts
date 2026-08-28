@@ -37,6 +37,7 @@ import { startHiringSurveyReminderJob } from "./jobs/hiringSurveyReminder";
 import { startInspectionDueCron } from "./jobs/inspectionDueAlert";
 import { startOpexPurgeJob } from "./jobs/opexPurge";
 import { startMedicalEmergencyOverdueEscalationJob } from "./jobs/medicalEmergencyOverdueEscalation";
+import { startProbationReviewNotifierJob } from "./jobs/probationReviewNotifier";
 
 const app = express();
 
@@ -103,3 +104,4 @@ startHiringSurveyReminderJob();
 startInspectionDueCron();
 startOpexPurgeJob();
 startMedicalEmergencyOverdueEscalationJob();
+startProbationReviewNotifierJob();

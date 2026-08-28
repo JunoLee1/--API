@@ -13,6 +13,11 @@ export interface StaffRecord {
   createdById: number;
   createdAt: string;
   updatedAt: string;
+  // 신규 직원 팔로우업 (issue #375). Populated by HiringDispatch.dispatch().
+  // `probationStartedAt` null == pre-#375 staff or manually-created records.
+  probationStartedAt?: string | null;
+  probationEndedAt?: string | null;
+  probationStatus?: "IN_PROGRESS" | "PASSED" | "FAILED";
 }
 
 export const staffRecordApi = {

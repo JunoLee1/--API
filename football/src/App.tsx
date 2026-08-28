@@ -72,6 +72,7 @@ import AcademyFeePage from '@/pages/youth/AcademyFeePage'
 import GuardianPortalPage from '@/pages/youth/GuardianPortalPage'
 import TossCallbackPage from '@/pages/youth/TossCallbackPage'
 import { StaffRecordPage } from '@/pages/admin/StaffRecordPage'
+import { ProbationReviewPage } from '@/pages/admin/ProbationReviewPage'
 import { DepartmentPage } from '@/pages/admin/DepartmentPage'
 import { FinancialReportPage } from '@/pages/admin/FinancialReportPage'
 import { BudgetPlanPage } from '@/pages/admin/BudgetPlanPage'
@@ -233,6 +234,7 @@ function App() {
             <Route path="/admin/club-settings" element={<ClubSettingsPage />} />
             <Route path="/admin/departments" element={<DepartmentPage />} />
             <Route path="/admin/staff-records" element={<StaffRecordPage />} />
+            <Route path="/admin/probation-reviews" element={<ProbationReviewPage />} />
             <Route path="/admin/financial-report" element={<FinancialReportPage />} />
             <Route path="/admin/budget-plan" element={<BudgetPlanPage />} />
             <Route path="/admin/operating-expenses" element={<OperatingExpensePage />} />
