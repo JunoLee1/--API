@@ -1,0 +1,30 @@
+/**
+ * DTOs for the EmployeeContract skeleton (#371).
+ *
+ * State machine: DRAFT → ISSUED → SIGNED / CANCELLED. Every non-DRAFT
+ * transition is validated at the service layer; DTOs stay lean and only
+ * carry the caller-supplied fields.
+ */
+
+export interface CreateEmployeeContractDto {
+  // The dispatch this contract is attached to. Wire format keeps it a number
+  // so multer form fields need coercion at the controller boundary.
+  hiringDispatchId: number;
+}
+
+/**
+ * `issue` — no body fields; the multer-uploaded file *is* the payload.
+ * Kept as an exported interface for symmetry / documentation.
+ */
+export type IssueEmployeeContractDto = Record<string, never>;
+
+export interface SignEmployeeContractDto {
+  // ISO-8601 date/datetime string. Actual signing date (human input from the
+  // scanned page), not the upload timestamp — surfaces `signedAt` on the
+  // record so audit reports use the real calendar date.
+  signedAt: string;
+}
+
+export interface CancelEmployeeContractDto {
+  cancelReason: string;
+}
