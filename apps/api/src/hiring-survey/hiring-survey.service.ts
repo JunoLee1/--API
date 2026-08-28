@@ -2,7 +2,12 @@ import { AppError } from '../lib/appError'
 import { NotificationRepository } from '../notification/notification.repo'
 import { PlanReportRepository } from '../plan-report/plan-report.repo'
 import { HiringSurveyRepository } from './hiring-survey.repo'
-import type { CreateHiringSurveyDto, CreateSurveyResponseDto, UpdateHiringSurveyDraftDto } from './dto/hiring-survey.dto'
+import type {
+  CreateHiringSurveyDto,
+  CreateSurveyResponseDto,
+  UpdateHiringSurveyDraftDto,
+  UpdateSurveyResponseDto,
+} from './dto/hiring-survey.dto'
 
 export class HiringSurveyService {
   constructor(
@@ -28,70 +33,301 @@ export class HiringSurveyService {
 
     const survey = await this.repo.create(dto, createdById)
 
-    const headIds = survey.targetDepartments
-      .map((t) => t.department.headId)
-      .filter((id): id is number => id !== null)
-
-    await Promise.all(
-      headIds.map((userId) =>
-        this.notifRepo.create({
-          userId,
-          type: 'HIRING_SURVEY_OPEN',
-          title: '채용 수요 조사 참여 요청',
-          body: `"${survey.title}" 채용 수요 조사에 응답해 주세요. 마감일: ${new Date(dto.deadlineAt).toLocaleDateString('ko-KR')}`,
-          entityId: survey.id,
-        })
-      )
-    )
+    await this.notifyTargetHeadsAndLeaders(survey, new Date(dto.deadlineAt))
 
     return survey
   }
 
-  async submitResponse(
+  /**
+   * Fan out HIRING_SURVEY_OPEN to both dept heads (부서장) and LEADER-role users
+   * in target departments — grill decision Q4 c1. Dedup so a person who is both
+   * head and a LEADER row doesn't get two notifications.
+   */
+  private async notifyTargetHeadsAndLeaders(
+    survey: { id: number; title: string; targetDepartments: Array<{ departmentId?: number; department: { id?: number; headId: number | null } }> },
+    deadlineAt: Date,
+  ) {
+    const headIds = survey.targetDepartments
+      .map((t) => t.department.headId)
+      .filter((id): id is number => id !== null)
+
+    const deptIds = survey.targetDepartments
+      .map((t) => (t.departmentId ?? t.department.id))
+      .filter((id): id is number => typeof id === 'number')
+    const leaderIds = await this.repo.findLeaderUserIdsForDepartments(deptIds)
+
+    // Union — a LEADER who also happens to be the head shouldn't be notified twice
+    const recipients = Array.from(new Set<number>([...headIds, ...leaderIds]))
+
+    const body = `"${survey.title}" 채용 수요 조사에 응답해 주세요. 마감일: ${deadlineAt.toLocaleDateString('ko-KR')}`
+
+    await Promise.all(
+      recipients.map((userId) =>
+        this.notifRepo.create({
+          userId,
+          type: 'HIRING_SURVEY_OPEN',
+          title: '채용 수요 조사 참여 요청',
+          body,
+          entityId: survey.id,
+        }),
+      ),
+    )
+  }
+
+  /**
+   * 팀장 (LEADER role in `UserDepartment` for the target department) creates or
+   * updates a `SurveyResponse` for their department. Always lands as `DRAFT`
+   * — actual submission goes through `submitResponse` (issues #367/#368).
+   */
+  async createResponse(
     surveyId: number,
+    departmentId: number,
     userId: number,
     dto: CreateSurveyResponseDto,
   ) {
     const survey = await this.getById(surveyId)
     if (survey.status !== 'OPEN') throw new AppError(409, 'SURVEY_NOT_OPEN')
 
-    const target = survey.targetDepartments.find((t) => t.department.headId === userId)
-    if (!target) throw new AppError(403, 'NOT_TARGET_DEPARTMENT_HEAD')
+    const target = survey.targetDepartments.find((t) => t.departmentId === departmentId)
+    if (!target) throw new AppError(403, 'NOT_TARGET_DEPARTMENT')
 
+    const isLeader = await this.repo.isUserLeaderOfDepartment(userId, departmentId)
+    if (!isLeader) throw new AppError(403, 'NOT_LEADER')
+
+    this.validateResponseFields(dto)
+
+    return this.repo.upsertResponse(surveyId, departmentId, userId, dto)
+  }
+
+  /**
+   * 팀장 edits an existing DRAFT or REJECTED response. APPROVED and SUBMITTED
+   * are locked — SUBMITTED belongs to the dept head's queue, APPROVED is
+   * terminal (grill Q3 d2).
+   */
+  async updateResponse(id: number, userId: number, dto: UpdateSurveyResponseDto) {
+    const response = await this.repo.findResponseById(id)
+    if (!response) throw new AppError(404, 'RESPONSE_NOT_FOUND')
+    if (response.survey.status !== 'OPEN') throw new AppError(409, 'SURVEY_NOT_OPEN')
+
+    const isLeader = await this.repo.isUserLeaderOfDepartment(userId, response.departmentId)
+    if (!isLeader) throw new AppError(403, 'NOT_LEADER')
+
+    if (response.status !== 'DRAFT' && response.status !== 'REJECTED') {
+      throw new AppError(409, 'RESPONSE_NOT_EDITABLE')
+    }
+
+    // Only validate fields that were actually provided in the patch.
+    if (dto.roleTitle !== undefined && !dto.roleTitle.trim()) {
+      throw new AppError(400, 'ROLE_TITLE_REQUIRED')
+    }
+    if (dto.headcount !== undefined && (!dto.headcount || dto.headcount < 1)) {
+      throw new AppError(400, 'INVALID_HEADCOUNT')
+    }
+    if (
+      dto.quarter !== undefined &&
+      dto.quarter !== null &&
+      (dto.quarter < 1 || dto.quarter > 4)
+    ) {
+      throw new AppError(400, 'INVALID_QUARTER')
+    }
+
+    return this.repo.updateResponse(id, dto)
+  }
+
+  /**
+   * 팀장 transitions DRAFT|REJECTED → SUBMITTED. On success fires
+   * `SURVEY_RESPONSE_SUBMITTED` to the department head (부서장).
+   */
+  async submitResponse(id: number, userId: number) {
+    const response = await this.repo.findResponseById(id)
+    if (!response) throw new AppError(404, 'RESPONSE_NOT_FOUND')
+    if (response.survey.status !== 'OPEN') throw new AppError(409, 'SURVEY_NOT_OPEN')
+
+    const isLeader = await this.repo.isUserLeaderOfDepartment(userId, response.departmentId)
+    if (!isLeader) throw new AppError(403, 'NOT_LEADER')
+
+    if (response.status !== 'DRAFT' && response.status !== 'REJECTED') {
+      throw new AppError(409, 'INVALID_TRANSITION')
+    }
+
+    // Clear rejectionReason on resubmit so the dept head sees a clean queue item.
+    const updated = await this.repo.setResponseStatus(id, {
+      status: 'SUBMITTED',
+      rejectionReason: null,
+    })
+
+    // Fire-and-forget — a notif failure must not roll back the transition.
+    void this.notifRepo
+      .createForDepartmentHead(
+        response.departmentId,
+        'SURVEY_RESPONSE_SUBMITTED',
+        (lang) => ({
+          title:
+            lang === 'en'
+              ? 'Hiring Survey Response — Awaiting Approval'
+              : '채용 수요 응답 결재 대기',
+          body:
+            lang === 'en'
+              ? `A response for "${response.survey.title}" awaits your approval.`
+              : `"${response.survey.title}" 부서 응답이 결재 대기 중입니다.`,
+        }),
+        id,
+      )
+      .catch(console.error)
+
+    return updated
+  }
+
+  /**
+   * 부서장 (Department.headId) approves a SUBMITTED response.
+   * Fires `SURVEY_RESPONSE_APPROVED` back to the leader who submitted.
+   */
+  async approveResponse(id: number, reviewerId: number) {
+    const response = await this.repo.findResponseById(id)
+    if (!response) throw new AppError(404, 'RESPONSE_NOT_FOUND')
+    if (response.department.headId !== reviewerId) throw new AppError(403, 'NOT_DEPT_HEAD')
+    if (response.status !== 'SUBMITTED') throw new AppError(409, 'INVALID_TRANSITION')
+
+    const updated = await this.repo.setResponseStatus(id, {
+      status: 'APPROVED',
+      approvedById: reviewerId,
+      approvedAt: new Date(),
+      rejectionReason: null,
+    })
+
+    void this.notifRepo
+      .createForUser(
+        response.submittedById,
+        'SURVEY_RESPONSE_APPROVED',
+        (lang) => ({
+          title:
+            lang === 'en'
+              ? 'Hiring Survey Response Approved'
+              : '채용 수요 응답 승인 완료',
+          body:
+            lang === 'en'
+              ? `Your response for "${response.survey.title}" has been approved.`
+              : `"${response.survey.title}" 부서 응답이 승인됐습니다.`,
+        }),
+        id,
+      )
+      .catch(console.error)
+
+    // Once this approval brings the survey to "all APPROVED", tell HR the
+    // survey is ready to close (mirrors the pre-workflow ALL_RESPONDED alert,
+    // now tied to approvals). Cheap check — survey is already in scope.
+    void this.checkAndNotifyAllApproved(response.surveyId).catch(console.error)
+
+    return updated
+  }
+
+  private async checkAndNotifyAllApproved(surveyId: number) {
+    const survey = await this.repo.findById(surveyId)
+    if (!survey) return
+    const approvedDeptIds = new Set(
+      survey.responses.filter((r) => r.status === 'APPROVED').map((r) => r.departmentId),
+    )
+    const allApproved = survey.targetDepartments.every((t) =>
+      approvedDeptIds.has(t.departmentId),
+    )
+    if (!allApproved) return
+    await this.notifRepo.createForHrManager(
+      'HIRING_SURVEY_ALL_RESPONDED',
+      (lang) => ({
+        title:
+          lang === 'en'
+            ? 'Hiring survey — all departments approved'
+            : '채용 수요 조사 승인 완료',
+        body:
+          lang === 'en'
+            ? `"${survey.title}" — all ${survey.targetDepartments.length} target departments have been approved. Ready to close.`
+            : `"${survey.title}" — 대상 ${survey.targetDepartments.length}개 부서 응답 모두 승인 완료. 마감 준비됨.`,
+      }),
+      survey.id,
+    )
+  }
+
+  /**
+   * 부서장 rejects a SUBMITTED response with a required reason.
+   * Fires `SURVEY_RESPONSE_REJECTED` back to the leader with the reason.
+   * The response returns to REJECTED status; leader can edit and resubmit.
+   */
+  async rejectResponse(id: number, reviewerId: number, rejectionReason: string) {
+    const trimmed = rejectionReason?.trim()
+    if (!trimmed) throw new AppError(400, 'REJECTION_REASON_REQUIRED')
+
+    const response = await this.repo.findResponseById(id)
+    if (!response) throw new AppError(404, 'RESPONSE_NOT_FOUND')
+    if (response.department.headId !== reviewerId) throw new AppError(403, 'NOT_DEPT_HEAD')
+    if (response.status !== 'SUBMITTED') throw new AppError(409, 'INVALID_TRANSITION')
+
+    const updated = await this.repo.setResponseStatus(id, {
+      status: 'REJECTED',
+      rejectionReason: trimmed,
+      approvedById: null,
+      approvedAt: null,
+    })
+
+    void this.notifRepo
+      .createForUser(
+        response.submittedById,
+        'SURVEY_RESPONSE_REJECTED',
+        (lang) => ({
+          title:
+            lang === 'en'
+              ? 'Hiring Survey Response Rejected'
+              : '채용 수요 응답 반려',
+          body:
+            lang === 'en'
+              ? `Your response for "${response.survey.title}" was rejected: ${trimmed}`
+              : `"${response.survey.title}" 부서 응답이 반려됐습니다: ${trimmed}`,
+        }),
+        id,
+      )
+      .catch(console.error)
+
+    return updated
+  }
+
+  private validateResponseFields(dto: CreateSurveyResponseDto) {
     if (!dto.roleTitle?.trim()) throw new AppError(400, 'ROLE_TITLE_REQUIRED')
     if (!dto.headcount || dto.headcount < 1) throw new AppError(400, 'INVALID_HEADCOUNT')
     if (dto.quarter !== undefined && dto.quarter !== null && (dto.quarter < 1 || dto.quarter > 4)) {
       throw new AppError(400, 'INVALID_QUARTER')
     }
-
-    const response = await this.repo.upsertResponse(surveyId, target.departmentId, userId, dto)
-
-    // 모든 target 부서가 응답 완료 시 HR 매니저에게 알림
-    const respondedDeptIds = new Set(survey.responses.map((r) => r.departmentId))
-    respondedDeptIds.add(target.departmentId)
-    const allResponded = survey.targetDepartments.every((t) =>
-      respondedDeptIds.has(t.departmentId),
-    )
-    if (allResponded) {
-      void this.notifRepo.createForHrManager(
-        'HIRING_SURVEY_ALL_RESPONDED',
-        (lang) => ({
-          title: lang === 'en' ? 'Hiring survey — all departments responded' : '채용 수요 조사 응답 완료',
-          body:
-            lang === 'en'
-              ? `"${survey.title}" — all ${survey.targetDepartments.length} target departments have responded. Ready to close.`
-              : `"${survey.title}" — 대상 ${survey.targetDepartments.length}개 부서 응답 완료. 조사 마감 준비됨.`,
-        }),
-        survey.id,
-      ).catch(console.error)
-    }
-
-    return response
+    if (!dto.reason?.trim()) throw new AppError(400, 'REASON_REQUIRED')
   }
 
   async close(surveyId: number, closedByUserId: number) {
     const survey = await this.getById(surveyId)
     if (survey.status !== 'OPEN') throw new AppError(409, 'SURVEY_NOT_OPEN')
+
+    // HR close guard (grill Q4 a1): every target dept must have an APPROVED
+    // response. If any dept is still DRAFT/SUBMITTED/REJECTED (or missing
+    // entirely), the survey can't be closed — HR would carry rejected data
+    // into the plan report otherwise.
+    const responsesByDept = new Map(
+      survey.responses.map((r) => [r.departmentId, r]),
+    )
+    type Blocker = { departmentId: number; departmentName: string; status: string }
+    const blocking: Blocker[] = survey.targetDepartments
+      .map((t): Blocker | null => {
+        const r = responsesByDept.get(t.departmentId)
+        if (!r) {
+          return { departmentId: t.departmentId, departmentName: t.department.name, status: 'MISSING' }
+        }
+        if (r.status !== 'APPROVED') {
+          return { departmentId: t.departmentId, departmentName: t.department.name, status: r.status }
+        }
+        return null
+      })
+      .filter((x): x is Blocker => x !== null)
+
+    if (blocking.length > 0) {
+      const err = new AppError(409, 'RESPONSES_NOT_APPROVED') as AppError & { detail?: unknown }
+      err.detail = { blocking }
+      throw err
+    }
 
     await this.repo.close(surveyId)
 
@@ -168,22 +404,8 @@ export class HiringSurveyService {
 
     const opened = await this.repo.openDraft(id)
 
-    // 대상 부서장들에게 HIRING_SURVEY_OPEN 알림 (기존 create() flow 와 동일)
-    const headIds = survey.targetDepartments
-      .map((t) => t.department.headId)
-      .filter((hid): hid is number => hid !== null)
-
-    await Promise.all(
-      headIds.map((userId) =>
-        this.notifRepo.create({
-          userId,
-          type: 'HIRING_SURVEY_OPEN',
-          title: '채용 수요 조사 참여 요청',
-          body: `"${survey.title}" 채용 수요 조사에 응답해 주세요. 마감일: ${survey.deadlineAt.toLocaleDateString('ko-KR')}`,
-          entityId: survey.id,
-        })
-      )
-    )
+    // 대상 부서장 + LEADER 팀장들에게 HIRING_SURVEY_OPEN 알림 (grill Q4-c1)
+    await this.notifyTargetHeadsAndLeaders(survey, survey.deadlineAt)
 
     return opened
   }
@@ -249,7 +471,16 @@ export class HiringSurveyService {
   async autoCloseExpired(systemUserId: number) {
     const expired = await this.repo.findOpenPastDeadline()
     for (const survey of expired) {
-      await this.close(survey.id, systemUserId).catch(console.error)
+      // With the APPROVED-all close guard, surveys with pending reviews will
+      // throw RESPONSES_NOT_APPROVED — the cron shouldn't spam logs for that,
+      // it's a legit "not ready" signal that HR needs to chase manually.
+      await this.close(survey.id, systemUserId).catch((err) => {
+        if (err?.code === 'RESPONSES_NOT_APPROVED') {
+          console.warn(`[hiring-survey] auto-close skipped survey #${survey.id}: awaiting approvals`)
+          return
+        }
+        console.error(err)
+      })
     }
   }
 

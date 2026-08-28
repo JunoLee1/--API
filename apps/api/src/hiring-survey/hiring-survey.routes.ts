@@ -28,7 +28,16 @@ router.get('/', auth, controller.list)
 router.post('/', auth, requireHR, controller.create)
 router.get('/:id/participation-rate', auth, requireHR, controller.getParticipationRate)
 router.get('/:id', auth, controller.get)
-router.post('/:id/respond', auth, controller.submitResponse)
+
+// Response workflow (issues #367/#368) — leader authorization is enforced by the
+// service via `UserDepartment.role='LEADER'` for the target department, so no
+// `requireHR` gate here.
+router.post('/:id/respond', auth, controller.createResponse)
+router.patch('/:id/responses/:responseId', auth, controller.updateResponse)
+router.post('/:id/responses/:responseId/submit', auth, controller.submitResponse)
+router.post('/:id/responses/:responseId/approve', auth, controller.approveResponse)
+router.post('/:id/responses/:responseId/reject', auth, controller.rejectResponse)
+
 router.post('/:id/close', auth, requireHR, controller.close)
 router.patch('/:id', auth, requireHR, controller.updateDraft)
 router.post('/:id/open', auth, requireHR, controller.open)
