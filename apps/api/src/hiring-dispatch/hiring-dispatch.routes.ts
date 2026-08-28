@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { auth } from "../lib/authMiddleware";
+import { hiringDocumentService } from "../hiring-document/hiring-document.routes";
 import { getPrisma } from "../lib/prisma";
 import { NotificationRepository } from "../notification/notification.repo";
 import { HiringDispatchController } from "./hiring-dispatch.controller";
@@ -10,7 +11,9 @@ const router = Router();
 const prisma = getPrisma();
 const repo = new HiringDispatchRepository(prisma);
 const notifRepo = new NotificationRepository(prisma);
-const service = new HiringDispatchService(repo, notifRepo, prisma);
+// hiringDocumentService is the shared singleton (see hiring-document.routes.ts);
+// injected here so EXECUTION `dispatch()` can call the required-docs gate.
+const service = new HiringDispatchService(repo, notifRepo, prisma, hiringDocumentService);
 const controller = new HiringDispatchController(service);
 
 router.get("/", auth, controller.list);

@@ -32,6 +32,7 @@ export const recruitmentApi = {
     departmentId?: number
     planReportId: number
     hiringPlanItemId: number
+    requiredDocuments?: string[]
   }): Promise<JobPosting> =>
     api.post('/recruitment/job-postings', data),
 
@@ -40,6 +41,7 @@ export const recruitmentApi = {
     description?: string
     headcount?: number
     departmentId?: number | null
+    requiredDocuments?: string[]
   }): Promise<JobPosting> =>
     api.patch(`/recruitment/job-postings/${id}`, data),
 

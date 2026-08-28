@@ -35,6 +35,7 @@ import { AssetRequestPage } from '@/pages/asset/AssetRequestPage'
 import { AssetRequestApprovalPage } from '@/pages/asset/AssetRequestApprovalPage'
 import { HiringDispatchPage } from '@/pages/hiring/HiringDispatchPage'
 import { HiringDispatchApprovalPage } from '@/pages/hiring/HiringDispatchApprovalPage'
+import { HiringDocumentPage } from '@/pages/hiring/HiringDocumentPage'
 import { EquipmentPage } from '@/pages/equipment/EquipmentPage'
 import { FacilityPage } from '@/pages/facility/FacilityPage'
 import { SponsorshipPage } from '@/pages/sponsorship/SponsorshipPage'
@@ -199,6 +200,8 @@ function App() {
             <Route path="/asset/approval" element={<AssetRequestApprovalPage />} />
             <Route path="/hiring" element={<HiringDispatchPage />} />
             <Route path="/hiring/approval" element={<HiringDispatchApprovalPage />} />
+            <Route path="/hiring/dispatches/:dispatchId/documents" element={<HiringDocumentPage />} />
+            <Route path="/hiring/applications/:applicationId/documents" element={<HiringDocumentPage />} />
             <Route path="/equipment" element={<EquipmentPage />} />
             <Route path="/facility" element={<FacilityPage />} />
             <Route path="/sponsorship" element={<SponsorshipPage />} />

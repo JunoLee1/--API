@@ -21,6 +21,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Progress } from '@/components/ui/progress'
+import { RequiredDocumentsInput } from '@/components/hiring-document/RequiredDocumentsInput'
 
 const STATUS_COLORS: Record<JobPostingStatus, 'default' | 'secondary' | 'outline'> = {
   DRAFT: 'outline',
@@ -42,6 +43,7 @@ export function JobPostingListPage() {
   const [hiringItems, setHiringItems] = useState<HiringPlanItem[]>([])
   const [selectedHiringItemId, setSelectedHiringItemId] = useState<number | undefined>(undefined)
   const [form, setForm] = useState({ title: '', description: '', headcount: '1' })
+  const [requiredDocuments, setRequiredDocuments] = useState<string[]>([])
   const [progressMap, setProgressMap] = useState<Map<number, HeadcountProgressItem>>(new Map())
 
   const canWrite =
@@ -117,9 +119,11 @@ export function JobPostingListPage() {
         departmentId: report.departmentId,
         planReportId: selectedReportId,
         hiringPlanItemId: selectedHiringItemId,
+        requiredDocuments,
       })
       setOpen(false)
       setForm({ title: '', description: '', headcount: '1' })
+      setRequiredDocuments([])
       setSelectedReportId(null)
       setSelectedHiringItemId(undefined)
       setHiringItems([])
@@ -264,6 +268,13 @@ export function JobPostingListPage() {
                 value={form.headcount}
                 onChange={(e) => setForm((p) => ({ ...p, headcount: e.target.value }))}
               />
+            </div>
+            <div className="space-y-1.5">
+              <Label>필수 서류 (선택)</Label>
+              <p className="text-xs text-muted-foreground">
+                발령(HiringDispatch) 실행 전 반드시 승인되어야 하는 서류 종류. 비워두면 게이트 스킵.
+              </p>
+              <RequiredDocumentsInput value={requiredDocuments} onChange={setRequiredDocuments} />
             </div>
             <Button
               className="w-full"

@@ -25,6 +25,8 @@ export interface JobPosting {
   closedAt: string | null
   createdAt: string
   updatedAt: string
+  // #372 — free-form list of document types required before HiringDispatch execution
+  requiredDocuments?: string[]
   department: { id: number; name: string } | null
   createdBy: { id: number; username: string }
   approvedBy: { id: number; username: string } | null

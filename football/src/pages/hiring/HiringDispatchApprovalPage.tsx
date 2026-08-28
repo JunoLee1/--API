@@ -134,6 +134,8 @@ function ApprovalList({ stage }: ApprovalListProps) {
 
   const [rowActingId, setRowActingId] = useState<number | null>(null)
 
+  const navigate = useNavigate()
+
   const openDetail = async (id: number) => {
     setDetailId(id)
     setDetail(null)
@@ -575,6 +577,15 @@ function ApprovalList({ stage }: ApprovalListProps) {
               )}
 
               <div className="border-t pt-2 flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    navigate(`/hiring/dispatches/${detail.id}/documents`)
+                  }
+                >
+                  서류 관리
+                </Button>
                 {stage !== 'EXECUTION' && (
                   <Button
                     variant="outline"
@@ -589,6 +600,11 @@ function ApprovalList({ stage }: ApprovalListProps) {
                   size="sm"
                   onClick={() => openApprove(detail.id)}
                   disabled={rowActingId === detail.id}
+                  title={
+                    stage === 'EXECUTION'
+                      ? '필수 서류가 모두 승인되지 않으면 실행 시 400 오류가 발생합니다.'
+                      : undefined
+                  }
                 >
                   <ApproveIcon className="h-3 w-3 mr-1" />
                   {meta.approveLabel}

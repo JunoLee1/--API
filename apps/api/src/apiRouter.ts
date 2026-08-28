@@ -67,6 +67,7 @@ import budgetAutomationRouter from "./budget-automation/budget-automation.routes
 import expenseCategoryRouter from "./expense-category/expense-category.routes";
 import assetRequestRouter from "./asset-request/asset-request.routes";
 import hiringDispatchRouter from "./hiring-dispatch/hiring-dispatch.routes";
+import hiringDocumentRouter from "./hiring-document/hiring-document.routes";
 import medicalEquipmentLoanRouter from "./medical-equipment-loan/medical-equipment-loan.routes";
 import { monthlySettlementRouter } from "./monthly-settlement/monthly-settlement.routes";
 import { revenueAdjustmentRouter } from "./revenue-adjustment/revenue-adjustment.routes";
@@ -147,6 +148,7 @@ apiRouter.use("/budget-automation", budgetAutomationRouter);
 apiRouter.use("/expense-categories", expenseCategoryRouter);
 apiRouter.use("/asset-requests", assetRequestRouter);
 apiRouter.use("/hiring-dispatches", hiringDispatchRouter);
+apiRouter.use("/hiring-documents", hiringDocumentRouter);
 apiRouter.use("/medical-equipment-loan", medicalEquipmentLoanRouter);
 apiRouter.use("/monthly-settlement", monthlySettlementRouter);
 apiRouter.use("/revenue-adjustment", revenueAdjustmentRouter);

@@ -83,6 +83,10 @@ export interface HiringDispatch {
   createdUserId: number | null
   createdAt: string
   updatedAt: string
+  // #372 — application-free path uses this list; when applicationId is set,
+  // the posting.requiredDocuments is authoritative and this field is unused
+  // by the gate.
+  requiredDocuments?: string[]
 
   application: {
     id: number
@@ -95,6 +99,7 @@ export interface HiringDispatch {
       title: string
       headcount: number
       hiringPlanItemId: number | null
+      requiredDocuments?: string[]
       hiringPlanItem: { id: number; roleTitle: string; headcount: number } | null
     }
   } | null
@@ -156,6 +161,9 @@ export interface CreateHiringDispatchPayload {
   targetFrontOfficeRole?: string
   targetCoachingRole?: string
   permissionNotes?: string
+  // Application-free dispatches carry their own requiredDocuments (#372).
+  // Application-anchored dispatches ignore this in favor of posting-level list.
+  requiredDocuments?: string[]
 }
 
 export interface BudgetReverifyPayload {

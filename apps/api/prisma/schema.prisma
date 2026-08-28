@@ -973,6 +973,8 @@ model User {
   medicalLoansRequested     MedicalEquipmentLoanLedger[]    @relation("MedLoanRequestedBy")
   medicalLoansApproved      MedicalEquipmentLoanLedger[]    @relation("MedLoanApprovedBy")
   medicalLoansRejected      MedicalEquipmentLoanLedger[]    @relation("MedLoanRejectedBy")
+  uploadedHiringDocs        HiringDocument[]                @relation("HiringDocUploader")
+  reviewedHiringDocs        HiringDocument[]                @relation("HiringDocReviewer")
 }
 
 model Season {
@@ -2868,22 +2870,25 @@ enum ReferenceCheckResult {
 }
 
 model JobPosting {
-  id               Int              @id @default(autoincrement())
-  title            String
-  departmentId     Int?
-  headcount        Int              @default(1)
-  description      String
-  status           JobPostingStatus @default(DRAFT)
-  externalJobId    String?
-  createdById      Int
-  approvedById     Int?
-  approvedAt       DateTime?
-  closedAt         DateTime?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  budget           Int?
-  planReportId     Int?
-  hiringPlanItemId Int?
+  id                Int              @id @default(autoincrement())
+  title             String
+  departmentId      Int?
+  headcount         Int              @default(1)
+  description       String
+  status            JobPostingStatus @default(DRAFT)
+  externalJobId     String?
+  createdById       Int
+  approvedById      Int?
+  approvedAt        DateTime?
+  closedAt          DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  budget            Int?
+  planReportId      Int?
+  hiringPlanItemId  Int?
+  // Free-form list of document types HR must collect + approve before the
+  // resulting HiringDispatch can execute. Empty array = no gate (Q3, Q10).
+  requiredDocuments String[]         @default([])
 
   department     Department?      @relation(fields: [departmentId], references: [id])
   createdBy      User             @relation("JobPostingCreator", fields: [createdById], references: [id])
@@ -2915,13 +2920,14 @@ model JobApplication {
   source              ApplicationSource     @default(DIRECT)
   externalApplicantId String?
 
-  posting                 JobPosting      @relation(fields: [postingId], references: [id])
-  offeredBy               User?           @relation("ApplicationOffer", fields: [offeredById], references: [id])
-  screenedBy              User?           @relation("ApplicationScreener", fields: [screenedById], references: [id])
+  posting                 JobPosting       @relation(fields: [postingId], references: [id])
+  offeredBy               User?            @relation("ApplicationOffer", fields: [offeredById], references: [id])
+  screenedBy              User?            @relation("ApplicationScreener", fields: [screenedById], references: [id])
   interviews              Interview[]
   referenceCheck          ReferenceCheck?
   onboarding              Onboarding?
   hiringDispatch          HiringDispatch?
+  documents               HiringDocument[]
   referenceCheckConsent   Boolean?
   referenceCheckConsentAt DateTime?
   dataRetentionDeadline   DateTime?
@@ -4141,6 +4147,12 @@ enum HiringDispatchAction {
   REJECTED
 }
 
+enum HiringDocReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum EmploymentType {
   FULL_TIME
   PART_TIME
@@ -4179,6 +4191,10 @@ model HiringDispatch {
   createdById           Int
   createdAt             DateTime             @default(now())
   updatedAt             DateTime             @updatedAt
+  // Application-free path: required document types are declared directly on
+  // the dispatch (Q10). When an applicationId is present, the JobPosting's
+  // requiredDocuments is authoritative and this field is ignored by the gate.
+  requiredDocuments     String[]             @default([])
 
   application   JobApplication?          @relation(fields: [applicationId], references: [id])
   department    Department               @relation(fields: [departmentId], references: [id])
@@ -4187,6 +4203,7 @@ model HiringDispatch {
   createdBy     User                     @relation("DispatchCreator", fields: [createdById], references: [id])
   approvals     HiringDispatchApproval[]
   onboarding    Onboarding?
+  documents     HiringDocument[]
 
   @@index([status, createdAt])
   @@index([departmentId, status])
@@ -4206,4 +4223,42 @@ model HiringDispatchApproval {
 
   @@unique([dispatchId, stage])
   @@index([dispatchId, stage])
+}
+
+
+/**
+ * Documents collected as part of the hiring workflow. XOR reference — either
+ * anchored to an in-flight JobApplication (candidate-pipeline docs) or to a
+ * standalone HiringDispatch (Application-free 임원 스카웃 path). Re-uploads
+ * are append-only: HR inserts a new row rather than mutating an existing one
+ * (Contract 개정 선례), so `(target, docType)` history reads like an audit log
+ * and the latest row wins. See `hiring-document.service.ts` for the
+ * "current per docType" grouping and `hiring-dispatch.service.ts:dispatch()`
+ * for the EXECUTION gate that requires every requiredDocument to have a
+ * latest-row APPROVED status.
+ */
+model HiringDocument {
+  id                Int                    @id @default(autoincrement())
+  applicationId     Int?
+  hiringDispatchId  Int?
+  docType           String
+  fileUrl           String
+  fileName          String?
+  fileSize          Int?
+  status            HiringDocReviewStatus  @default(PENDING)
+  uploadedById      Int
+  uploadedAt        DateTime               @default(now())
+  reviewedById      Int?
+  reviewedAt        DateTime?
+  reviewNotes       String?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+
+  application    JobApplication?  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  hiringDispatch HiringDispatch?  @relation(fields: [hiringDispatchId], references: [id], onDelete: Cascade)
+  uploadedBy     User             @relation("HiringDocUploader", fields: [uploadedById], references: [id])
+  reviewedBy     User?            @relation("HiringDocReviewer", fields: [reviewedById], references: [id])
+
+  @@index([applicationId, docType, createdAt(sort: Desc)])
+  @@index([hiringDispatchId, docType, createdAt(sort: Desc)])
 }
