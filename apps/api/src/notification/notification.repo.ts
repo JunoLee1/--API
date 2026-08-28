@@ -69,6 +69,15 @@ export class NotificationRepository {
     return this.createForWhere({ role: "FRONT_OFFICE", frontOfficeRole: "FINANCE_MANAGER", isDeleted: false }, type, getMsg, entityId);
   }
 
+  /**
+   * ASSET_MANAGER FrontOfficeRole 유저 전원에게 알림. #373 신입 자동
+   * 프로비저닝의 재고 부족 경보(`PROVISIONING_LOW_STOCK`)에서 사용.
+   * asset-request 조달 큐 대시보드 도입 전까지는 인앱 알림이 유일 통로.
+   */
+  createForAssetManager(type: string, getMsg: MsgFactory, entityId?: number) {
+    return this.createForWhere({ role: "FRONT_OFFICE", frontOfficeRole: "ASSET_MANAGER", isDeleted: false }, type, getMsg, entityId);
+  }
+
   createForHeadCoach(type: string, getMsg: MsgFactory, entityId?: number) {
     return this.createForWhere({ role: "COACHING_STAFF", coachingRole: "HEAD_COACH" }, type, getMsg, entityId);
   }

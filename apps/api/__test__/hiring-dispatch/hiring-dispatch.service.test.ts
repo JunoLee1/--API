@@ -127,6 +127,8 @@ const makeNotifRepo = (): NotificationRepository =>
     createForHrManager: jest.fn().mockResolvedValue(undefined),
     createForFinanceManager: jest.fn().mockResolvedValue(undefined),
     createForGM: jest.fn().mockResolvedValue(undefined),
+    // #373 provisioning shortage alert — default no-op; specific tests spy.
+    createForAssetManager: jest.fn().mockResolvedValue(undefined),
   } as unknown as NotificationRepository);
 
 // Default in-tx stubs. `populateOnboardingTasks()` reads
@@ -151,6 +153,29 @@ const makePrisma = (overrides: Partial<any> = {}, txStub: any = makeTxStub()): P
     // Fire-and-forget notifyNewEmployeeTasksAssigned reads onboarding + task count.
     onboarding: {
       findFirst: jest.fn().mockResolvedValue({ id: 999, _count: { tasks: 0 } }),
+    },
+    // Fire-and-forget provisionNewEmployeeAssets (#373) reads dispatch (again,
+    // post-tx) + department kit + equipment stock. Default: dispatch resolves,
+    // no kit → helper is a silent no-op. Test cases override selectively.
+    hiringDispatch: {
+      findUnique: jest.fn().mockResolvedValue({
+        id: 1,
+        candidateName: "홍길동",
+        departmentId: DEPT_ID,
+        createdUserId: NEW_USER_ID,
+      }),
+    },
+    departmentDefaultAssetKit: {
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
+    equipmentItem: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    equipmentUnit: {
+      groupBy: jest.fn().mockResolvedValue([]),
+    },
+    assetRequest: {
+      create: jest.fn().mockResolvedValue({ id: 1 }),
     },
     // Passthrough tx — mocked repos ignore the tx arg but populate helper uses it.
     $transaction: jest.fn().mockImplementation(async (fn: any) => fn(txStub)),
@@ -688,6 +713,106 @@ describe("HiringDispatchService.dispatch", () => {
       (c) => c[1] === "ONBOARDING_TASKS_ASSIGNED",
     );
     expect(tasksAssignedCall).toBeUndefined();
+  });
+
+  // ────────────────────────────────────────────
+  // #373 — auto-provisioning hook (fire-and-forget, post-dispatch tx)
+  // ────────────────────────────────────────────
+
+  it("fires provisionNewEmployeeAssets hook after dispatch commits (#373)", async () => {
+    // Kit is populated → hook creates AssetRequest DRAFTs. Default equipment
+    // stock is empty → shortage alert is fired for both items.
+    const notif = makeNotifRepo();
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "DISPATCH_APPROVED" })),
+    });
+    const prisma = makePrisma({
+      departmentDefaultAssetKit: {
+        findUnique: jest.fn().mockResolvedValue({
+          assetItems: [
+            { equipmentItemId: 1, quantity: 1 },
+            { equipmentItemId: 2, quantity: 1 },
+          ],
+          defaultExpenseCategoryId: 55,
+        }),
+      },
+      equipmentItem: {
+        findMany: jest.fn().mockResolvedValue([
+          { id: 1, name: "노트북", quantity: 0, trackedIndividually: false },
+          { id: 2, name: "사원증", quantity: 5, trackedIndividually: false },
+        ]),
+      },
+    });
+    const result = await makeService(repo, notif, prisma).dispatch(
+      1,
+      HR_EXECUTOR,
+      "FRONT_OFFICE",
+      "HR_MANAGER",
+    );
+    expect(result.status).toBe("ONBOARDING");
+    // Yield until the fire-and-forget hook resolves. `setImmediate` runs
+    // after every microtask queue drain — enough to cover the chained awaits
+    // inside `provisionNewEmployeeAssets` (dispatch → kit → equipment →
+    // createMany loop → notify).
+    await new Promise((r) => setImmediate(r));
+    // 2 drafts created — one per kit item.
+    const createCalls = (prisma.assetRequest.create as jest.Mock).mock.calls;
+    expect(createCalls).toHaveLength(2);
+    expect(createCalls[0][0].data).toEqual(
+      expect.objectContaining({
+        status: "DRAFT",
+        isAutoProvisioned: true,
+        provisionedFromDispatchId: 1,
+        requesterId: NEW_USER_ID,
+      }),
+    );
+    // ASSET_MANAGER shortage alert fired (노트북 stock=0 < request=1).
+    expect(notif.createForAssetManager).toHaveBeenCalledWith(
+      "PROVISIONING_LOW_STOCK",
+      expect.any(Function),
+      1,
+    );
+  });
+
+  it("provisioning failure does not roll back dispatch (fire-and-forget, #373)", async () => {
+    // Simulate a Prisma error during draft creation. The dispatch itself
+    // must still resolve to ONBOARDING (already committed inside the tx).
+    const notif = makeNotifRepo();
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(makeDispatch({ status: "DISPATCH_APPROVED" })),
+    });
+    const prisma = makePrisma({
+      departmentDefaultAssetKit: {
+        findUnique: jest.fn().mockResolvedValue({
+          assetItems: [{ equipmentItemId: 1, quantity: 1 }],
+          defaultExpenseCategoryId: 55,
+        }),
+      },
+      equipmentItem: {
+        findMany: jest.fn().mockResolvedValue([
+          { id: 1, name: "노트북", quantity: 10, trackedIndividually: false },
+        ]),
+      },
+      assetRequest: {
+        create: jest.fn().mockRejectedValue(new Error("prisma boom")),
+      },
+    });
+    const spy = jest.spyOn(console, "error").mockImplementation(() => undefined);
+    const result = await makeService(repo, notif, prisma).dispatch(
+      1,
+      HR_EXECUTOR,
+      "FRONT_OFFICE",
+      "HR_MANAGER",
+    );
+    // Dispatch itself succeeded even though provisioning threw.
+    expect(result.status).toBe("ONBOARDING");
+    await new Promise((r) => setImmediate(r));
+    // Error was swallowed into console.error, not rethrown.
+    expect(spy).toHaveBeenCalledWith(
+      "[provisionNewEmployeeAssets] failed",
+      expect.any(Error),
+    );
+    spy.mockRestore();
   });
 });
 

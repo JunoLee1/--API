@@ -55,6 +55,11 @@ export interface AssetRequest {
 
   operatingExpenseId: number | null
 
+  // #373 자동 프로비저닝 — HiringDispatch.dispatch() 성공 후 부서 default kit
+  // 로부터 자동 생성된 draft 여부와 원본 dispatch 링크. DRAFT 상태에서 배지 표시.
+  isAutoProvisioned: boolean
+  provisionedFromDispatchId: number | null
+
   createdAt: string
   updatedAt: string
 
@@ -100,6 +105,10 @@ export interface AssetRequestListItem {
   justification: string
 
   operatingExpenseId: number | null
+
+  // #373 자동 프로비저닝 — 리스트 뷰에서도 배지 렌더 위해 노출.
+  isAutoProvisioned: boolean
+  provisionedFromDispatchId: number | null
 
   createdAt: string
   updatedAt: string

@@ -994,6 +994,8 @@ model User {
   createdOnbTemplates        OnboardingTemplate[]            @relation("OnbTemplateCreator")
   updatedOnbTemplates        OnboardingTemplate[]            @relation("OnbTemplateUpdater")
   verifiedOnbTasks           OnboardingTask[]                @relation("OnbTaskVerifier")
+  createdDeptAssetKits       DepartmentDefaultAssetKit[]     @relation("DeptAssetKitCreator")
+  updatedDeptAssetKits       DepartmentDefaultAssetKit[]     @relation("DeptAssetKitUpdater")
 }
 
 model Season {
@@ -2666,6 +2668,7 @@ model Department {
   operatingExpenses OperatingExpense[]
   hiringDispatches  HiringDispatch[]
   onboardingTemplate OnboardingTemplate?
+  defaultAssetKit   DepartmentDefaultAssetKit?
 
   @@unique([name, clubId])
 }
@@ -2712,6 +2715,7 @@ model ExpenseCategory {
   budgetLines         BudgetLine[]
   budgetOverrideLogs  BudgetOverrideLog[]
   assetRequests       AssetRequest[]
+  defaultAssetKits    DepartmentDefaultAssetKit[]
 }
 
 enum BudgetStatus {
@@ -4235,20 +4239,27 @@ model AssetRequest {
 
   operatingExpenseId Int?
 
+  // #373 자동 프로비저닝 추적: dispatch() 성공 후 부서 default kit 로부터 자동 생성된 draft
+  // 여부와 어떤 dispatch 로부터 왔는지 감사용 링크. FE 에서 "자동 프로비저닝" 배지 + 링크 제공.
+  isAutoProvisioned         Boolean @default(false)
+  provisionedFromDispatchId Int?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  requester        User                   @relation("AssetRequestRequester", fields: [requesterId], references: [id])
-  department       Department             @relation(fields: [departmentId], references: [id])
-  expenseCategory  ExpenseCategory        @relation(fields: [expenseCategoryId], references: [id])
-  equipmentItem    EquipmentItem?         @relation(fields: [equipmentItemId], references: [id])
-  softwareLicense  SoftwareLicense?       @relation(fields: [softwareLicenseId], references: [id])
-  operatingExpense OperatingExpense?      @relation(fields: [operatingExpenseId], references: [id])
-  approvals        AssetRequestApproval[]
+  requester               User                   @relation("AssetRequestRequester", fields: [requesterId], references: [id])
+  department              Department             @relation(fields: [departmentId], references: [id])
+  expenseCategory         ExpenseCategory        @relation(fields: [expenseCategoryId], references: [id])
+  equipmentItem           EquipmentItem?         @relation(fields: [equipmentItemId], references: [id])
+  softwareLicense         SoftwareLicense?       @relation(fields: [softwareLicenseId], references: [id])
+  operatingExpense        OperatingExpense?      @relation(fields: [operatingExpenseId], references: [id])
+  provisionedFromDispatch HiringDispatch?        @relation("DispatchProvisioned", fields: [provisionedFromDispatchId], references: [id], onDelete: SetNull)
+  approvals               AssetRequestApproval[]
 
   @@index([requesterId, status])
   @@index([departmentId, status])
   @@index([status, createdAt])
+  @@index([provisionedFromDispatchId])
 }
 
 model AssetRequestApproval {
@@ -4265,6 +4276,43 @@ model AssetRequestApproval {
 
   @@unique([assetRequestId, stage])
   @@index([assetRequestId, stage])
+}
+
+// ─────────────────────────────────────────────
+// 부서별 기본 자산 세트 (#373 신입 자동 프로비저닝)
+// ─────────────────────────────────────────────
+
+/**
+ * 부서마다 신입에게 자동 지급할 default 자산(노트북/사원증/유니폼 등) 리스트.
+ * HiringDispatch.dispatch() 성공 후 fire-and-forget 훅이 이 모델을 조회해
+ * 신입 계정으로 AssetRequest DRAFT 를 자동 생성함.
+ *
+ * `assetItems` JSON shape: `[{ equipmentItemId: number, quantity: number, note?: string }]`
+ *   - equipmentItemId: EquipmentItem.id (하드웨어 마스터 참조; runtime 검증)
+ *   - quantity: 신입 1인당 몇 개
+ *   - note: draft justification 에 붙는 추가 설명 (옵션)
+ *
+ * `defaultExpenseCategoryId`: 자동 생성 draft 의 expenseCategoryId 기본값
+ *   (신입이 편집 가능)
+ *
+ * 재고 부족은 provisioning 단계에서 처리하지 않음(#373 grill Q1) — draft 는
+ * 항상 생성되고 ASSET_MANAGER 에게만 부족 알림 발송. WAITING_STOCK 상태 도입은
+ * 후속 이슈.
+ */
+model DepartmentDefaultAssetKit {
+  id                       Int      @id @default(autoincrement())
+  departmentId             Int      @unique
+  assetItems               Json     // [{equipmentItemId, quantity, note?}]
+  defaultExpenseCategoryId Int
+  createdById              Int
+  updatedById              Int?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  department      Department      @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  expenseCategory ExpenseCategory @relation(fields: [defaultExpenseCategoryId], references: [id])
+  createdBy       User            @relation("DeptAssetKitCreator", fields: [createdById], references: [id])
+  updatedBy       User?           @relation("DeptAssetKitUpdater", fields: [updatedById], references: [id])
 }
 
 // ─────────────────────────────────────────────
@@ -4342,15 +4390,16 @@ model HiringDispatch {
   // requiredDocuments is authoritative and this field is ignored by the gate.
   requiredDocuments     String[]             @default([])
 
-  application       JobApplication?          @relation(fields: [applicationId], references: [id])
-  department        Department               @relation(fields: [departmentId], references: [id])
-  reportsToUser     User?                    @relation("DispatchReportsTo", fields: [reportsToUserId], references: [id])
-  createdUser       User?                    @relation("DispatchCreatedUser", fields: [createdUserId], references: [id])
-  createdBy         User                     @relation("DispatchCreator", fields: [createdById], references: [id])
-  approvals         HiringDispatchApproval[]
-  onboarding        Onboarding?
-  documents         HiringDocument[]
-  employeeContracts EmployeeContract[]
+  application               JobApplication?          @relation(fields: [applicationId], references: [id])
+  department                Department               @relation(fields: [departmentId], references: [id])
+  reportsToUser             User?                    @relation("DispatchReportsTo", fields: [reportsToUserId], references: [id])
+  createdUser               User?                    @relation("DispatchCreatedUser", fields: [createdUserId], references: [id])
+  createdBy                 User                     @relation("DispatchCreator", fields: [createdById], references: [id])
+  approvals                 HiringDispatchApproval[]
+  onboarding                Onboarding?
+  documents                 HiringDocument[]
+  employeeContracts         EmployeeContract[]
+  provisionedAssetRequests  AssetRequest[]           @relation("DispatchProvisioned")
 
   @@index([status, createdAt])
   @@index([departmentId, status])

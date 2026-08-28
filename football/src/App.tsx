@@ -33,6 +33,7 @@ import { TacticalAnalysisPage } from '@/pages/tactical/TacticalAnalysisPage'
 import { AssetInventoryPage } from '@/pages/asset/AssetInventoryPage'
 import { AssetRequestPage } from '@/pages/asset/AssetRequestPage'
 import { AssetRequestApprovalPage } from '@/pages/asset/AssetRequestApprovalPage'
+import DepartmentAssetKitPage from '@/pages/asset/DepartmentAssetKitPage'
 import { HiringDispatchPage } from '@/pages/hiring/HiringDispatchPage'
 import { HiringDispatchApprovalPage } from '@/pages/hiring/HiringDispatchApprovalPage'
 import { HiringDocumentPage } from '@/pages/hiring/HiringDocumentPage'
@@ -210,6 +211,10 @@ function App() {
             <Route
               path="/departments/:departmentId/onboarding-template"
               element={<OnboardingTemplateManagementPage />}
+            />
+            <Route
+              path="/departments/:departmentId/asset-kit"
+              element={<DepartmentAssetKitPage />}
             />
             <Route
               path="/onboarding/:onboardingId/checklist"

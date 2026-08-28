@@ -72,6 +72,7 @@ import employeeContractRouter from "./employee-contract/employee-contract.routes
 import probationReviewRouter from "./probation-review/probation-review.routes";
 import onboardingTemplateRouter from "./onboarding-template/onboarding-template.routes";
 import onboardingTaskRouter from "./onboarding-task/onboarding-task.routes";
+import departmentAssetKitRouter from "./department-asset-kit/department-asset-kit.routes";
 import medicalEquipmentLoanRouter from "./medical-equipment-loan/medical-equipment-loan.routes";
 import { monthlySettlementRouter } from "./monthly-settlement/monthly-settlement.routes";
 import { revenueAdjustmentRouter } from "./revenue-adjustment/revenue-adjustment.routes";
@@ -160,6 +161,7 @@ apiRouter.use("/hiring-documents", hiringDocumentRouter);
 apiRouter.use("/employee-contracts", employeeContractRouter);
 apiRouter.use("/onboarding-templates", onboardingTemplateRouter);
 apiRouter.use("/onboarding-tasks", onboardingTaskRouter);
+apiRouter.use("/department-asset-kits", departmentAssetKitRouter);
 apiRouter.use("/medical-equipment-loan", medicalEquipmentLoanRouter);
 apiRouter.use("/monthly-settlement", monthlySettlementRouter);
 apiRouter.use("/revenue-adjustment", revenueAdjustmentRouter);
