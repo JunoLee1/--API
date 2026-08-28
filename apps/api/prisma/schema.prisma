@@ -392,6 +392,11 @@ enum NotificationType {
   SURVEY_RESPONSE_SUBMITTED // 팀장 draft → SUBMITTED → 부서장 알림
   SURVEY_RESPONSE_APPROVED // 부서장 승인 → 팀장 알림
   SURVEY_RESPONSE_REJECTED // 부서장 반려 → 팀장 알림 (rejectionReason 포함)
+  ONBOARDING_TASKS_ASSIGNED // dispatch() populate 완료 → 신입에게 태스크 배정 알림
+  ONBOARDING_TASK_VERIFY_REQUESTED // 본인 self-report → HR/dept.head verify 요청
+  ONBOARDING_TASK_VERIFIED // verify APPROVE → 신입에게 승인 알림
+  ONBOARDING_TASK_REJECTED // verify REJECT → 신입에게 반려 알림 (verifyNotes 포함)
+  ONBOARDING_CONTENT_COMPLETED // 모든 required task 완료 → 신입 + HR + dept.head 알림
 }
 
 enum DepreciationMethod {
@@ -986,6 +991,9 @@ model User {
   signedEmployeeContracts    EmployeeContract[]              @relation("EmpContractSigner")
   cancelledEmployeeContracts EmployeeContract[]              @relation("EmpContractCanceller")
   probationReviewsSubmitted  ProbationReview[]               @relation("ProbationReviewer")
+  createdOnbTemplates        OnboardingTemplate[]            @relation("OnbTemplateCreator")
+  updatedOnbTemplates        OnboardingTemplate[]            @relation("OnbTemplateUpdater")
+  verifiedOnbTasks           OnboardingTask[]                @relation("OnbTaskVerifier")
 }
 
 model Season {
@@ -2657,6 +2665,7 @@ model Department {
   assetRequests     AssetRequest[]
   operatingExpenses OperatingExpense[]
   hiringDispatches  HiringDispatch[]
+  onboardingTemplate OnboardingTemplate?
 
   @@unique([name, clubId])
 }
@@ -3047,20 +3056,83 @@ model ReferenceCheck {
 }
 
 model Onboarding {
-  id               Int       @id @default(autoincrement())
-  applicationId    Int?      @unique
-  hiringDispatchId Int?      @unique
-  userId           Int?      @unique
-  otpCode          String
-  otpExpiresAt     DateTime
-  emailVerifiedAt  DateTime?
-  mfaRegisteredAt  DateTime?
-  completedAt      DateTime?
-  createdAt        DateTime  @default(now())
+  id                 Int       @id @default(autoincrement())
+  applicationId      Int?      @unique
+  hiringDispatchId   Int?      @unique
+  userId             Int?      @unique
+  otpCode            String
+  otpExpiresAt       DateTime
+  emailVerifiedAt    DateTime?
+  mfaRegisteredAt    DateTime?
+  completedAt        DateTime?
+  contentCompletedAt DateTime?
+  createdAt          DateTime  @default(now())
 
-  application    JobApplication? @relation(fields: [applicationId], references: [id])
-  hiringDispatch HiringDispatch? @relation(fields: [hiringDispatchId], references: [id])
-  user           User?           @relation("OnboardingUser", fields: [userId], references: [id])
+  application    JobApplication?  @relation(fields: [applicationId], references: [id])
+  hiringDispatch HiringDispatch?  @relation(fields: [hiringDispatchId], references: [id])
+  user           User?            @relation("OnboardingUser", fields: [userId], references: [id])
+  tasks          OnboardingTask[]
+}
+
+// ─────────────────────────────────────────────
+// 직무 온보딩 (OnboardingTemplate + OnboardingTask)
+// ─────────────────────────────────────────────
+
+/// Task 상태머신: PENDING → SELF_REPORTED → DONE / SKIPPED.
+/// SELF_REPORTED 는 requiresVerification=true 인 task 의 중간 상태.
+/// REJECT 는 SELF_REPORTED → PENDING 복귀 (별도 status 필드 없음, verifyNotes 로 표시).
+enum OnboardingTaskStatus {
+  PENDING
+  SELF_REPORTED
+  DONE
+  SKIPPED
+}
+
+/// Department 1:1 온보딩 컨텐츠 템플릿 (DepartmentDefaultAssetKit 선례).
+/// `tasks` = OnboardingTemplateTask[] JSON 배열. dispatch() 성공 시 스냅샷으로
+/// OnboardingTask 로 populate 됨 (populate-onboarding-tasks.ts).
+model OnboardingTemplate {
+  id           Int      @id @default(autoincrement())
+  departmentId Int      @unique
+  name         String
+  tasks        Json
+  createdById  Int
+  updatedById  Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  createdBy  User       @relation("OnbTemplateCreator", fields: [createdById], references: [id])
+  updatedBy  User?      @relation("OnbTemplateUpdater", fields: [updatedById], references: [id])
+}
+
+/// 신입 개인별 온보딩 태스크. dispatch() 안 template.tasks 스냅샷으로 자동 생성.
+/// 상태전환: 본인 self-report → (verify 필요) HR/dept.head 검증 → DONE / PENDING 복귀.
+model OnboardingTask {
+  id                   Int                  @id @default(autoincrement())
+  onboardingId         Int
+  title                String
+  description          String?
+  dueDate              DateTime?
+  requiresVerification Boolean              @default(false)
+  optional             Boolean              @default(false)
+  status               OnboardingTaskStatus @default(PENDING)
+  order                Int                  @default(0)
+
+  selfReportedAt DateTime?
+  verifiedById   Int?
+  verifiedAt     DateTime?
+  verifyNotes    String?
+  skipReason     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  onboarding Onboarding @relation(fields: [onboardingId], references: [id], onDelete: Cascade)
+  verifiedBy User?      @relation("OnbTaskVerifier", fields: [verifiedById], references: [id])
+
+  @@index([onboardingId, status])
+  @@index([onboardingId, order])
 }
 
 // ─────────────────────────────────────────────
@@ -4380,5 +4452,4 @@ model EmployeeContract {
   cancelledBy       User?          @relation("EmpContractCanceller", fields: [cancelledById], references: [id])
 
   @@index([hiringDispatchId, createdAt(sort: Desc)])
-}
 }

@@ -9,6 +9,7 @@ import { isAdminLike } from "../lib/permissions";
 import type { HiringDocumentService } from "../hiring-document/hiring-document.service";
 import { NotificationRepository } from "../notification/notification.repo";
 import { HiringDispatchRepository } from "./hiring-dispatch.repo";
+import { populateOnboardingTasks } from "./populate-onboarding-tasks";
 import {
   BudgetReverifyDto,
   CreateHiringDispatchDto,
@@ -528,7 +529,7 @@ export class HiringDispatchService {
 
       // 5. Onboarding (Q11-1 b: hiringDispatchId FK, applicationId stays null
       //    for Application-free path). OTP delivered by the notif fire below.
-      await this.repo.createOnboarding(
+      const onboarding = await this.repo.createOnboarding(
         {
           hiringDispatchId: id,
           userId: user.id,
@@ -536,6 +537,18 @@ export class HiringDispatchService {
           otpExpiresAt,
         },
         tx,
+      );
+
+      // 5b. Populate OnboardingTask rows from the Department's OnboardingTemplate
+      //     (Q4 — must run inside the same tx so a template read failure rolls
+      //     back the entire dispatch, keeping User/Onboarding consistent).
+      //     Silent no-op when the Department has no template (backward-compat
+      //     with pre-#374 dispatches).
+      await populateOnboardingTasks(
+        tx,
+        onboarding.id,
+        dispatch.departmentId,
+        dispatch.startDate,
       );
 
       // 6. Approval + status transition. Set ONBOARDING as the final state
@@ -629,7 +642,49 @@ export class HiringDispatchService {
         .catch(console.error);
     }
 
+    // Onboarding tasks populate notification (#374). Fire-and-forget: a
+    // notification failure must never roll back a completed dispatch.
+    // Counts tasks after the tx commits so we can include "X 개 태스크".
+    if (result.createdUserId) {
+      void this.notifyNewEmployeeTasksAssigned(id, result.createdUserId).catch(
+        console.error,
+      );
+    }
+
     return result;
+  }
+
+  /**
+   * Fire-and-forget notification (#374). Counts freshly-populated
+   * OnboardingTask rows via a dispatch → onboarding → tasks join so we don't
+   * need to pass the count from inside the tx. Silent no-op when 0 tasks
+   * (Department has no template) — no notif surface for zero content.
+   */
+  private async notifyNewEmployeeTasksAssigned(
+    dispatchId: number,
+    newUserId: number,
+  ): Promise<void> {
+    const onboarding = await this.prisma.onboarding.findFirst({
+      where: { hiringDispatchId: dispatchId },
+      select: { id: true, _count: { select: { tasks: true } } },
+    });
+    const taskCount = onboarding?._count?.tasks ?? 0;
+    if (taskCount === 0) return;
+    await this.notifRepo.createForUser(
+      newUserId,
+      "ONBOARDING_TASKS_ASSIGNED",
+      (lang) => ({
+        title:
+          lang === "en"
+            ? "Onboarding Tasks Assigned"
+            : "온보딩 태스크가 배정됐습니다",
+        body:
+          lang === "en"
+            ? `You have ${taskCount} onboarding task(s) to complete.`
+            : `완료해야 할 온보딩 태스크 ${taskCount}개가 있습니다.`,
+      }),
+      dispatchId,
+    );
   }
 
   // ────────────────────────────────────────────
