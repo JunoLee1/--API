@@ -1285,9 +1285,14 @@ email 중복(`User.email @unique`)은 tx 진입 전 pre-check로 `EMAIL_ALREADY_
 - **필수 서류 검증** — `HiringDocument` 최신 row 가 `posting.requiredDocuments` 또는 `HiringDispatch.requiredDocuments` 를 모두 APPROVED 로 커버해야 통과 (`## 채용 서류 (HiringDocument)` 섹션 참조)
 - **근로계약 서명 검증** — 최신 non-CANCELLED `EmployeeContract.status = SIGNED` 여야 통과 (`## 근로계약 (EmployeeContract)` 섹션 참조). EC 부재 시 `CONTRACT_NOT_ISSUED`, non-SIGNED 시 `CONTRACT_NOT_SIGNED` 400. Override 없음.
 
+**Dispatch tx 안 원자적 사이드이펙트:**
+- User + UserDepartment + StaffRecord + Onboarding create (기존)
+- `populateOnboardingTasks(tx, onboardingId, departmentId, startDate)` — 부서 `OnboardingTemplate` 기반 `OnboardingTask` populate (`## 직무 온보딩` 섹션 참조). Template 없으면 skip. 실패 시 dispatch 전체 롤백.
+
 **Post-dispatch fire-and-forget hooks:**
 - 알림 발송 (팀장·HR·candidate)
 - `provisionNewEmployeeAssets(dispatchId)` — 부서 `DepartmentDefaultAssetKit` 기반 AssetRequest DRAFT 자동 생성 (자산 신청 워크플로우 섹션 참조). 실패해도 dispatch 롤백 안 함.
+- `notifyNewEmployeeTasksAssigned(dispatchId)` — 신입에게 `ONBOARDING_TASKS_ASSIGNED` 알림
 
 **Onboarding dual reference (Q11-1 b):** `Onboarding.applicationId Int? @unique` + `Onboarding.hiringDispatchId Int? @unique` 둘 다 nullable. 하나만 non-null이어야 함(app-level XOR — Prisma CHECK 미지원). Application 기반 발령은 `hiringDispatchId`가 채워지고 `applicationId`는 null.
 
@@ -1347,6 +1352,81 @@ CANCELLED  (역방향 없음. 재발행은 신규 EC 생성 — append-only)
 - 외부 e-sign 통합 (DocuSign·모두사인 등) — 서비스 선정, webhook 수신
 - 계약 갱신 워크플로우 — 갱신 시점 알림, 신규 EC 생성 흐름
 - 퇴사 (offboarding) 워크플로우 — dispatch 반대 방향, User deactivation
+
+---
+
+## 직무 온보딩 (OnboardingTemplate + OnboardingTask)
+
+부서별 온보딩 콘텐츠 (오리엔테이션·교육·체크리스트) 를 템플릿으로 정의하고 신입 온보딩에 자동 populate 하는 도메인. 기존 `Onboarding` 은 **기술적 계정 활성화** (OTP + MFA) 만 담당했고, 이 도메인이 **직무 콘텐츠 완료** 를 별도 트랙으로 관리한다. 멘토 배정·자동 이벤트 감지 (첫 PR 머지 등) · 수습기간 (`ProbationReview` #375) 통합은 각각 후속 이슈로 분리.
+
+### OnboardingTemplate
+
+**부서 1:1** 매핑. `DepartmentDefaultAssetKit` 와 동일 패턴 (관리 UX 일관성).
+
+**필드:**
+- `departmentId Int @unique` — 부서 FK
+- `name String` — 표시명 (예: "재무팀 신입 온보딩")
+- `tasks Json` — `[{title, description?, dueDaysFromStart?, requiresVerification, optional}]` 배열 (max 100 요소)
+- `createdById / updatedById` — 감사
+
+**Template Task 필드 (JSON element):**
+- `title` — 필수 표시명
+- `description?` — 상세
+- `dueDaysFromStart?` — 입사일 (dispatch.startDate) 기준 N일 이내 (알림·정렬용)
+- `requiresVerification` — true 면 신입 self-report 후 HR/dept.head verify 필요
+- `optional` — false = 필수 완료, true = skip 허용
+
+**쓰기 권한:** Department.head (자기 부서), HR_MANAGER, HR_STAFF, ADMIN
+**읽기 권한:** ADMIN, HR_MANAGER, HR_STAFF (부서장 본인은 자기 부서만)
+
+### OnboardingTask
+
+신입 온보딩 시점에 template 을 스냅샷하여 populate 된 실제 task row. Template 수정 후에도 기존 Onboarding 은 영향 없음 (append-only 원칙).
+
+**상태머신:**
+```
+PENDING → SELF_REPORTED → DONE
+   ↓          ↓             (verify APPROVE)
+SKIPPED      PENDING (verify REJECT)
+```
+
+- `PENDING`: 초기 (populate 결과)
+- `SELF_REPORTED`: 신입이 self-report. `requiresVerification = true` 인 경우 중간 상태
+- `DONE`: 최종 완료. verify 불필요 시 self-report 즉시 DONE, 필요 시 APPROVED 후 DONE
+- `SKIPPED`: optional 태스크 skip. `skipReason` 필수
+- **역방향**: verify REJECT 시 SELF_REPORTED → PENDING 복귀 (verifyNotes 필수, 신입 재대응 후 다시 self-report)
+
+**필드:**
+- `onboardingId Int` — 상위 Onboarding FK
+- `title / description / dueDate / requiresVerification / optional / order` — template 에서 복사
+- `selfReportedAt`, `verifiedById / verifiedAt / verifyNotes`, `skipReason` — 감사 이력
+
+**자동 populate:** `HiringDispatch.dispatch()` `$transaction` 안, `Onboarding.create()` 직후 `populateOnboardingTasks()` 헬퍼 실행. 부서 template 없으면 skip (에러 없이 dispatch 성공).
+
+**콘텐츠 완료 판정:** `Onboarding.contentCompletedAt` 신설 필드. 모든 required (non-optional) task 가 DONE 또는 SKIPPED 상태 도달 시 fire-and-forget 훅이 자동 set. 기존 `Onboarding.completedAt` (OTP + MFA 완료 = 기술적 활성화) 와 의미 분리. HiringDispatch.COMPLETED 자동 전이는 **후속 이슈** (별도 semantics 정의 필요).
+
+**Self-verify 차단:** verify 액션은 `req.user.id !== onboarding.userId` 강제. 신입이 자기 task 를 스스로 verify 시 403 `CANNOT_SELF_VERIFY`.
+
+**권한:**
+- Task read: 본인, 결재 라인, HR, ADMIN
+- Task self-report / skip (본인 액션): 신입 본인 (`onboarding.userId`)
+- Task verify (APPROVE/REJECT): HR_STAFF, HR_MANAGER, Department.head, ADMIN (self-verify 차단)
+- Task skip (HR 대신): HR_STAFF, HR_MANAGER, Department.head, ADMIN
+
+**알림 4종:**
+- `ONBOARDING_TASKS_ASSIGNED` — populate 완료 시 신입 본인
+- `ONBOARDING_TASK_VERIFY_REQUESTED` — self-report 시 HR/dept.head
+- `ONBOARDING_TASK_VERIFIED` / `ONBOARDING_TASK_REJECTED` — verify 결과 신입 본인
+- `ONBOARDING_CONTENT_COMPLETED` — contentCompletedAt set 시 신입 + HR + dept.head
+
+**하위호환:** 이 도메인 도입 이전 생성된 Onboarding row 는 tasks = [] 유지 (backfill 안 함). 신규 dispatch 부터 자동 populate.
+
+**후속 이슈 (스텁 예정):**
+- `Mentorship` 모델 + 멘토 배정 워크플로우 (부서장 지정 or 라운드로빈)
+- 자동 이벤트 감지 (첫 PR 머지·훈련 참가 등 crossdomain 훅)
+- Due date 임박 알림 cron + 미완료 escalation
+- Task 완료 증빙 파일 첨부 (필요 시 HiringDocument 로 대체)
+- HiringDispatch.COMPLETED 자동 전이 hook (별도 논의)
 
 ---
 
