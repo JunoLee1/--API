@@ -977,6 +977,7 @@ model User {
   revenueAdjustments        RevenueAdjustment[]             @relation("AdjCreator")
   carryOverOverrides        FinancialReport[]               @relation("CarryOverOverrider")
   planStatusChanges         FinancialReport[]               @relation("PlanStatusChanger")
+  budgetPlanRequests        BudgetPlanRequest[]             @relation("BudgetPlanRequester")
   assetRequests             AssetRequest[]                  @relation("AssetRequestRequester")
   assetRequestApprovals     AssetRequestApproval[]          @relation("AssetRequestReviewer")
   createdDispatches         HiringDispatch[]                @relation("DispatchCreator")
@@ -2647,6 +2648,7 @@ model FinancialReport {
   overrideLogs                BudgetOverrideLog[]
   revenueLogs                 FinancialReportRevenueLog[]
   revenueAdjustments          RevenueAdjustment[]         @relation("SeasonAdj")
+  planRequests                BudgetPlanRequest[]
 }
 
 enum BudgetPlanStatus {
@@ -2733,17 +2735,71 @@ model ExpenseCategory {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
-  operatingExpenses   OperatingExpense[]
-  budgetCategoryPlans BudgetCategoryPlan[]
-  budgetLines         BudgetLine[]
-  budgetOverrideLogs  BudgetOverrideLog[]
-  assetRequests       AssetRequest[]
-  defaultAssetKits    DepartmentDefaultAssetKit[]
+  operatingExpenses       OperatingExpense[]
+  budgetCategoryPlans     BudgetCategoryPlan[]
+  budgetLines             BudgetLine[]
+  budgetOverrideLogs      BudgetOverrideLog[]
+  assetRequests           AssetRequest[]
+  defaultAssetKits        DepartmentDefaultAssetKit[]
+  budgetPlanRequestLines  BudgetPlanRequestLine[]
 }
 
 enum CategoryScope {
   TEAM
   DEPARTMENT
+}
+
+// 편성 워크플로우 트리거 (ADR 0019)
+enum TriggerType {
+  MULTI_LOCATION      // 다중거점 관리 (가중)
+  DIRECT_BUSINESS     // 사업 직접비 (가중)
+  PUBLIC_UTILITY      // 공공요금 (가중)
+  HOME_MATCH          // 홈경기 현장지원 (가산)
+  WEEKEND_OVERTIME    // 주말 야근 (가산)
+}
+
+enum BudgetPlanRequestStatus {
+  DRAFT
+  SUBMITTED
+  PROCESSED
+}
+
+// 팀장/부서장 편성 신청서 (spec 2026-08-29)
+model BudgetPlanRequest {
+  id                Int                     @id @default(autoincrement())
+  financialReportId Int
+  requestedById     Int
+  scope             CategoryScope
+  ownerType         String                  // "TEAM" | "DEPARTMENT" (denormalized for query)
+  ownerId           Int                     // Team.id | Department.id
+  status            BudgetPlanRequestStatus @default(DRAFT)
+  submittedAt       DateTime?
+  processedAt       DateTime?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  financialReport   FinancialReport         @relation(fields: [financialReportId], references: [id], onDelete: Cascade)
+  requestedBy       User                    @relation("BudgetPlanRequester", fields: [requestedById], references: [id])
+  lines             BudgetPlanRequestLine[]
+
+  @@unique([financialReportId, ownerType, ownerId])
+}
+
+model BudgetPlanRequestLine {
+  id             Int               @id @default(autoincrement())
+  requestId      Int
+  categoryId     Int
+  triggers       TriggerType[]     // 다중 선택
+  standardDelta  Int               @default(0)
+  premiumDelta   Int               @default(0)
+  evidenceUrl    String?
+  comment        String?
+  createdAt      DateTime          @default(now())
+
+  request        BudgetPlanRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  category       ExpenseCategory   @relation(fields: [categoryId], references: [id])
+
+  @@unique([requestId, categoryId])
 }
 
 enum BudgetStatus {

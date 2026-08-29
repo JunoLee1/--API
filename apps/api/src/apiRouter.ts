@@ -64,6 +64,7 @@ import formationSnapshotRouter from "./formation-snapshot/formation-snapshot.rou
 import certificationRouter from "./certification/certification.routes";
 import budgetControlRouter from "./budget-control/budget-control.routes";
 import budgetAutomationRouter from "./budget-automation/budget-automation.routes";
+import budgetPlanRequestRouter from "./budget-plan/plan-request.routes";
 import expenseCategoryRouter from "./expense-category/expense-category.routes";
 import assetRequestRouter from "./asset-request/asset-request.routes";
 import hiringDispatchRouter from "./hiring-dispatch/hiring-dispatch.routes";
@@ -154,6 +155,7 @@ apiRouter.use("/formation-snapshots", formationSnapshotRouter);
 apiRouter.use("/certification", certificationRouter);
 apiRouter.use("/budget-control", budgetControlRouter);
 apiRouter.use("/budget-automation", budgetAutomationRouter);
+apiRouter.use("/", budgetPlanRequestRouter);
 apiRouter.use("/expense-categories", expenseCategoryRouter);
 apiRouter.use("/asset-requests", assetRequestRouter);
 apiRouter.use("/hiring-dispatches", hiringDispatchRouter);
