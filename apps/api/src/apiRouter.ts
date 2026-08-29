@@ -81,6 +81,7 @@ import { accountCodeRouter } from "./account-code/account-code.routes";
 import { startCertStatusSyncJob } from "./jobs/certStatusSync";
 import { startPreventiveScheduleGenJob } from "./jobs/preventiveScheduleGen";
 import { startContactFollowUpNotifierJob } from "./jobs/contactFollowUpNotifier";
+import { startBudgetPlanReminderJob } from "./jobs/budgetPlanReminder";
 
 const apiRouter = Router();
 
@@ -172,5 +173,6 @@ apiRouter.use("/account-codes", accountCodeRouter);
 startCertStatusSyncJob();
 startPreventiveScheduleGenJob();
 startContactFollowUpNotifierJob();
+startBudgetPlanReminderJob();
 
 export default apiRouter;
