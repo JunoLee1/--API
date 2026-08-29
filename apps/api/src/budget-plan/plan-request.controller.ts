@@ -52,4 +52,14 @@ export class BudgetPlanRequestController {
       res.json(requests);
     } catch (err) { next(err); }
   };
+
+  executeKnapsack = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole, id: userId } = requireUser(req);
+      if (!canFinanceManage(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const seasonId = Number(req.params["seasonId"]);
+      await this.service.executeKnapsack(seasonId, userId);
+      res.status(204).end();
+    } catch (err) { next(err); }
+  };
 }
