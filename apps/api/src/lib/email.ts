@@ -97,3 +97,56 @@ export async function sendGuardianCallupEmail(
     `,
   });
 }
+
+// ADR 0021: 편성 워크플로우 알림 이메일 (in-app 병행)
+export async function sendCapacityFailedEmail(
+  to: string,
+  seasonId: number,
+  reason: string,
+): Promise<void> {
+  await transporter.sendMail({
+    from: process.env["SMTP_FROM"] ?? "Football ERP <no-reply@example.com>",
+    to,
+    subject: `[Football ERP] 시즌 ${seasonId} 편성 capacity 부족 (GM 개입 필요)`,
+    html: `
+      <p>시즌 ${seasonId} 편성 프로세스가 <strong>CAPACITY_FAILED</strong> 상태로 진입했습니다.</p>
+      <p>사유: ${reason}</p>
+      <p>대응: totalOperatingBudget 상향 or mandatoryMinimum 재검토 후 재편성 트리거.</p>
+    `,
+  });
+}
+
+export async function sendReviewOpenedEmail(
+  to: string,
+  seasonId: number,
+  deadline: Date,
+): Promise<void> {
+  const dl = deadline.toISOString().slice(0, 10);
+  await transporter.sendMail({
+    from: process.env["SMTP_FROM"] ?? "Football ERP <no-reply@example.com>",
+    to,
+    subject: `[Football ERP] 시즌 ${seasonId} 편성 심사 신청 창 개방`,
+    html: `
+      <p>시즌 ${seasonId} 편성 심사 신청 창이 개방됐습니다.</p>
+      <p>마감: <strong>${dl}</strong> (2주)</p>
+      <p>미신청 시 자동 Basic 티어로 확정됩니다. 트리거 근거를 준비하여 앱에서 신청해주세요.</p>
+    `,
+  });
+}
+
+export async function sendReviewDeadlineD1Email(
+  to: string,
+  seasonId: number,
+  deadline: Date,
+): Promise<void> {
+  const dl = deadline.toISOString().slice(0, 10);
+  await transporter.sendMail({
+    from: process.env["SMTP_FROM"] ?? "Football ERP <no-reply@example.com>",
+    to,
+    subject: `[Football ERP] 시즌 ${seasonId} 편성 심사 신청 마감 D-1`,
+    html: `
+      <p>시즌 ${seasonId} 편성 심사 신청 창이 <strong>내일 (${dl})</strong> 마감됩니다.</p>
+      <p>미신청 시 Basic 티어로 자동 확정. 재검토 필요 시 지금 신청해주세요.</p>
+    `,
+  });
+}

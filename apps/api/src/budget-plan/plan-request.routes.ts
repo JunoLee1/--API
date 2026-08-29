@@ -4,9 +4,27 @@ import { getPrisma } from "../lib/prisma";
 import { BudgetPlanRequestService } from "./plan-request.service";
 import { BudgetPlanRequestController } from "./plan-request.controller";
 import { KnapsackService } from "../budget/knapsack.service";
+import { NotificationRepository } from "../notification/notification.repo";
+import { notifyBudgetPlanEvent, resolveBudgetPlanReviewers } from "./notify";
+import {
+  sendCapacityFailedEmail,
+  sendReviewOpenedEmail,
+  sendReviewDeadlineD1Email,
+} from "../lib/email";
+
+const prisma = getPrisma();
+const notificationRepo = new NotificationRepository(prisma);
+const emailSender = {
+  sendCapacityFailedEmail,
+  sendReviewOpenedEmail,
+  sendReviewDeadlineD1Email,
+};
+const notifyHook = (event: Parameters<typeof notifyBudgetPlanEvent>[0], ctx: Parameters<typeof notifyBudgetPlanEvent>[1]) =>
+  notifyBudgetPlanEvent(event, ctx, { notificationRepo, email: emailSender });
+const reviewersFn = () => resolveBudgetPlanReviewers(prisma);
 
 const router = Router();
-const service = new BudgetPlanRequestService(getPrisma(), new KnapsackService());
+const service = new BudgetPlanRequestService(prisma, new KnapsackService(), notifyHook, reviewersFn);
 const controller = new BudgetPlanRequestController(service);
 
 // FinanceManager: DRAFT → AWAITING_REVIEW, 팀장·부서장 신청 창 개방 (14일)

@@ -4,6 +4,9 @@ import type { ExpenseCategoryService } from "../expense-category/expense-categor
 import type { GoalWeight, BudgetPreviewResponse } from "../budget-automation/dto/budget-automation.dto";
 import { calculateCapacity, validateInvariants } from "./capacity";
 import { AppError } from "../lib/appError";
+import type { BudgetPlanEvent, NotifyContext } from "./notify";
+
+export type BudgetPlanNotifyHook = (event: BudgetPlanEvent, ctx: NotifyContext) => Promise<void>;
 
 type Prisma = Pick<PrismaClient, "season" | "financialReport" | "budgetCategoryPlan" | "budgetTier">;
 
@@ -96,6 +99,7 @@ export async function createDraftForNextSeason(
   budgetAutomationService: Pick<BudgetAutomationService, "preview">,
   expenseCategoryService: Pick<ExpenseCategoryService, "resolveCategoryId">,
   closedSeasonId: number,
+  notifyHook?: BudgetPlanNotifyHook,
 ): Promise<DraftCreationResult | null> {
   const closed = await prisma.season.findUnique({
     where: { id: closedSeasonId },
@@ -158,6 +162,9 @@ export async function createDraftForNextSeason(
   // Step 3: capacity 계산
   let capacity = calculateCapacity(capReport, first.basicTiers.map((b) => ({ cost: b.cost })));
   if (capacity >= 0) {
+    if (notifyHook) {
+      await notifyHook("DRAFT_READY", { seasonId: nextSeason.id });
+    }
     return { nextSeasonId: nextSeason.id, draftReportId: report.id, planStatus: "DRAFT" };
   }
 
@@ -179,13 +186,18 @@ export async function createDraftForNextSeason(
 
   capacity = calculateCapacity(capReport, second.basicTiers.map((b) => ({ cost: b.cost })));
   if (capacity >= 0) {
+    if (notifyHook) {
+      await notifyHook("DRAFT_READY", { seasonId: nextSeason.id });
+    }
     return { nextSeasonId: nextSeason.id, draftReportId: report.id, planStatus: "DRAFT" };
   }
 
   const basicSum = second.basicTiers.reduce((s, b) => s + b.cost, 0);
   const reason = `capacity insufficient after CONSERVATIVE retry: totalOperatingBudget=${capReport.totalOperatingBudget}, basicSum=${basicSum}, contingency=${capReport.contingencyReserve}`;
   await failWithReason(prisma, report.id, reason);
-  // TODO(#404): GM alert via NotificationService.notifyBudgetPlanEvent({ event: "CAPACITY_FAILED", ... })
+  if (notifyHook) {
+    await notifyHook("CAPACITY_FAILED", { seasonId: nextSeason.id, reason });
+  }
   console.warn(`[budget-plan] CAPACITY_FAILED seasonId=${nextSeason.id}: ${reason}`);
   return { nextSeasonId: nextSeason.id, draftReportId: report.id, planStatus: "CAPACITY_FAILED" };
 }

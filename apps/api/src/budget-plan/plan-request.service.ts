@@ -3,6 +3,16 @@ import { AppError } from "../lib/appError";
 import { resolveRequesterScope, assertCategoryScopeMatch, type CategoryScope } from "./scope";
 import { promoteTiers, type PromotedTier } from "./promotion";
 import type { KnapsackService, KnapsackGroup } from "../budget/knapsack.service";
+import type { BudgetPlanNotifyHook } from "./draft";
+
+interface Reviewer {
+  userId: number;
+  email: string | null;
+  language: string | null;
+  scope: "TEAM" | "DEPARTMENT";
+  ownerId: number;
+}
+export type BudgetPlanReviewersFn = () => Promise<Reviewer[]>;
 
 const REVIEW_WINDOW_DAYS = 14;
 const REVIEW_WINDOW_MS = REVIEW_WINDOW_DAYS * 24 * 60 * 60 * 1000;
@@ -20,6 +30,8 @@ export class BudgetPlanRequestService {
   constructor(
     private prisma: PrismaClient,
     private knapsackService?: KnapsackService,
+    private notifyHook?: BudgetPlanNotifyHook,
+    private reviewersFn?: BudgetPlanReviewersFn,
   ) {}
 
   async openReview(seasonId: number, actorUserId: number): Promise<void> {
@@ -42,7 +54,14 @@ export class BudgetPlanRequestService {
         reviewDeadline: new Date(now.getTime() + REVIEW_WINDOW_MS),
       },
     });
-    // TODO(#404): NotificationService.notifyBudgetPlanEvent({ event: "REVIEW_OPENED", ... })
+    if (this.notifyHook && this.reviewersFn) {
+      const reviewers = await this.reviewersFn();
+      await this.notifyHook("REVIEW_OPENED", {
+        seasonId,
+        deadline: new Date(now.getTime() + REVIEW_WINDOW_MS),
+        reviewers,
+      });
+    }
   }
 
   async submit(seasonId: number, actorUserId: number, lines: SubmitLineDto[]) {
@@ -273,6 +292,9 @@ export class BudgetPlanRequestService {
       data: { status: "PROCESSED", processedAt: now },
     });
 
-    // TODO(#404): NotificationService.notifyBudgetPlanEvent({ event: "KNAPSACK_EXECUTED", ... })
+    if (this.notifyHook && this.reviewersFn) {
+      const reviewers = await this.reviewersFn();
+      await this.notifyHook("KNAPSACK_EXECUTED", { seasonId, reviewers });
+    }
   }
 }
