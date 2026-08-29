@@ -1,0 +1,364 @@
+{
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "ASSET_MANAGER": {
+                "id": "18e9fd104e329ead3db7fe4acf6371bc",
+                "groups": {},
+                "checks": {
+                        "ASSET_MANAGER list_equipment_items status<500": {
+                            "passes": 1277,
+                            "fails": 0,
+                            "name": "ASSET_MANAGER list_equipment_items status<500",
+                            "path": "::ASSET_MANAGER::ASSET_MANAGER list_equipment_items status<500",
+                            "id": "0930050ee3c988c427c015afdd35d9ee"
+                        },
+                        "ASSET_MANAGER list_asset_requests status<500": {
+                            "path": "::ASSET_MANAGER::ASSET_MANAGER list_asset_requests status<500",
+                            "id": "10f7acbf00857e9d3a4efa73c2ae3ff3",
+                            "passes": 1277,
+                            "fails": 0,
+                            "name": "ASSET_MANAGER list_asset_requests status<500"
+                        },
+                        "ASSET_MANAGER list_equipment_loans status<500": {
+                            "name": "ASSET_MANAGER list_equipment_loans status<500",
+                            "path": "::ASSET_MANAGER::ASSET_MANAGER list_equipment_loans status<500",
+                            "id": "ed6c35c0c65c3b10d4c2d1c3e8edea3a",
+                            "passes": 1277,
+                            "fails": 0
+                        }
+                    },
+                "name": "ASSET_MANAGER",
+                "path": "::ASSET_MANAGER"
+            },
+            "HEAD_COACH": {
+                "id": "a49b8ca2a580c7a9a7cd006d7701b04b",
+                "groups": {},
+                "checks": {
+                        "HEAD_COACH list_training_sessions status<500": {
+                            "name": "HEAD_COACH list_training_sessions status<500",
+                            "path": "::HEAD_COACH::HEAD_COACH list_training_sessions status<500",
+                            "id": "d1dbd55a733b08a2e5e27e0b8cba2750",
+                            "passes": 1299,
+                            "fails": 0
+                        },
+                        "HEAD_COACH list_players status<500": {
+                            "fails": 0,
+                            "name": "HEAD_COACH list_players status<500",
+                            "path": "::HEAD_COACH::HEAD_COACH list_players status<500",
+                            "id": "49902dfd57531095998161c23a2688df",
+                            "passes": 1299
+                        },
+                        "HEAD_COACH list_tactical status<500": {
+                            "name": "HEAD_COACH list_tactical status<500",
+                            "path": "::HEAD_COACH::HEAD_COACH list_tactical status<500",
+                            "id": "c11b0441df230b96ad58c19cb0348499",
+                            "passes": 1299,
+                            "fails": 0
+                        }
+                    },
+                "name": "HEAD_COACH",
+                "path": "::HEAD_COACH"
+            },
+            "GM": {
+                "path": "::GM",
+                "id": "49068dfeeb6fcc7e8c0e283a802927fe",
+                "groups": {},
+                "checks": {
+                        "GM list_pending_plan_reports status<500": {
+                            "path": "::GM::GM list_pending_plan_reports status<500",
+                            "id": "6433973eeb980491219ae09158c98f70",
+                            "passes": 1233,
+                            "fails": 0,
+                            "name": "GM list_pending_plan_reports status<500"
+                        },
+                        "GM list_pending_reports status<500": {
+                            "path": "::GM::GM list_pending_reports status<500",
+                            "id": "9c65dbcae903a573fa4f7e0b1ad6553a",
+                            "passes": 1233,
+                            "fails": 0,
+                            "name": "GM list_pending_reports status<500"
+                        },
+                        "GM list_pending_dispatches status<500": {
+                            "name": "GM list_pending_dispatches status<500",
+                            "path": "::GM::GM list_pending_dispatches status<500",
+                            "id": "f790a9fb9d5919dea6062ab50d0eb20d",
+                            "passes": 1233,
+                            "fails": 0
+                        }
+                    },
+                "name": "GM"
+            },
+            "FINANCE_MANAGER": {
+                "name": "FINANCE_MANAGER",
+                "path": "::FINANCE_MANAGER",
+                "id": "20de22058bcfd544410af92cd0ae0e9c",
+                "groups": {},
+                "checks": {
+                        "FINANCE_MANAGER list_operating_expenses status<500": {
+                            "name": "FINANCE_MANAGER list_operating_expenses status<500",
+                            "path": "::FINANCE_MANAGER::FINANCE_MANAGER list_operating_expenses status<500",
+                            "id": "de29d264d6c3a75aa1e4fda5923e2e71",
+                            "passes": 1298,
+                            "fails": 0
+                        },
+                        "FINANCE_MANAGER list_budget_control status<500": {
+                            "name": "FINANCE_MANAGER list_budget_control status<500",
+                            "path": "::FINANCE_MANAGER::FINANCE_MANAGER list_budget_control status<500",
+                            "id": "c83b30df0d82852c79fba3668026754d",
+                            "passes": 1298,
+                            "fails": 0
+                        },
+                        "FINANCE_MANAGER get_financial_report_season1 status<500": {
+                            "name": "FINANCE_MANAGER get_financial_report_season1 status<500",
+                            "path": "::FINANCE_MANAGER::FINANCE_MANAGER get_financial_report_season1 status<500",
+                            "id": "7b8b5d7ae7fe90372d31d793aa3da7ad",
+                            "passes": 1298,
+                            "fails": 0
+                        }
+                    }
+            },
+            "HR_MANAGER": {
+                "checks": {
+                    "HR_MANAGER list_surveys status<500": {
+                        "id": "b8f2c522df56e8526352f28f31d90355",
+                        "passes": 1335,
+                        "fails": 0,
+                        "name": "HR_MANAGER list_surveys status<500",
+                        "path": "::HR_MANAGER::HR_MANAGER list_surveys status<500"
+                    },
+                    "HR_MANAGER list_plan_reports status<500": {
+                        "name": "HR_MANAGER list_plan_reports status<500",
+                        "path": "::HR_MANAGER::HR_MANAGER list_plan_reports status<500",
+                        "id": "2274b6de77868af96b3dd7545e95933e",
+                        "passes": 1335,
+                        "fails": 0
+                    },
+                    "HR_MANAGER list_postings status<500": {
+                        "name": "HR_MANAGER list_postings status<500",
+                        "path": "::HR_MANAGER::HR_MANAGER list_postings status<500",
+                        "id": "dc1234b7d00e680803823e09318a821e",
+                        "passes": 1335,
+                        "fails": 0
+                    }
+                },
+                "name": "HR_MANAGER",
+                "path": "::HR_MANAGER",
+                "id": "8a5d0464e0ac9e90989800ca102f3072",
+                "groups": {}
+            },
+            "MEDICAL_DIRECTOR": {
+                "name": "MEDICAL_DIRECTOR",
+                "path": "::MEDICAL_DIRECTOR",
+                "id": "c08f3bdf9c7399a53b586de2f81b0a6f",
+                "groups": {},
+                "checks": {
+                        "MEDICAL_DIRECTOR list_injuries status<500": {
+                            "fails": 0,
+                            "name": "MEDICAL_DIRECTOR list_injuries status<500",
+                            "path": "::MEDICAL_DIRECTOR::MEDICAL_DIRECTOR list_injuries status<500",
+                            "id": "d3c6afb317fd6c780656eb5105cb90b7",
+                            "passes": 1237
+                        },
+                        "MEDICAL_DIRECTOR list_medical_equipment_loans status<500": {
+                            "name": "MEDICAL_DIRECTOR list_medical_equipment_loans status<500",
+                            "path": "::MEDICAL_DIRECTOR::MEDICAL_DIRECTOR list_medical_equipment_loans status<500",
+                            "id": "7e4de5030c4bd20f6f6fc21a0e3eec15",
+                            "passes": 1237,
+                            "fails": 0
+                        },
+                        "MEDICAL_DIRECTOR list_medical_expenses status<500": {
+                            "fails": 0,
+                            "name": "MEDICAL_DIRECTOR list_medical_expenses status<500",
+                            "path": "::MEDICAL_DIRECTOR::MEDICAL_DIRECTOR list_medical_expenses status<500",
+                            "id": "598e54005f81bafc6103a4aa7a8bb603",
+                            "passes": 1237
+                        }
+                    }
+            },
+            "PLAYER": {
+                "name": "PLAYER",
+                "path": "::PLAYER",
+                "id": "6bdbea69534964b55c0ca605c35a7e26",
+                "groups": {},
+                "checks": {
+                        "PLAYER my_profile status<500": {
+                            "name": "PLAYER my_profile status<500",
+                            "path": "::PLAYER::PLAYER my_profile status<500",
+                            "id": "e5360584705c3acc5a08032ac0f42338",
+                            "passes": 1254,
+                            "fails": 0
+                        },
+                        "PLAYER list_training_sessions status<500": {
+                            "name": "PLAYER list_training_sessions status<500",
+                            "path": "::PLAYER::PLAYER list_training_sessions status<500",
+                            "id": "90401ceefe385af297d088f596a8c951",
+                            "passes": 1254,
+                            "fails": 0
+                        },
+                        "PLAYER list_notifications status<500": {
+                            "path": "::PLAYER::PLAYER list_notifications status<500",
+                            "id": "12f617d01bbe5dd8c51ac939391b4071",
+                            "passes": 1254,
+                            "fails": 0,
+                            "name": "PLAYER list_notifications status<500"
+                        }
+                    }
+            }
+        },
+        "checks": {}
+    },
+    "metrics": {
+        "iteration_duration": {
+            "p(90)": 1046.5204506,
+            "p(95)": 1070.4796419999998,
+            "avg": 1023.7066089684342,
+            "min": 1003.598917,
+            "med": 1015.913833,
+            "max": 1356.273542
+        },
+        "vus": {
+            "max": 199,
+            "value": 0,
+            "min": 0
+        },
+        "http_req_failed": {
+            "passes": 5043,
+            "fails": 21763,
+            "thresholds": {
+                "rate<0.10": true
+            },
+            "value": 0.18812952324106544
+        },
+        "http_req_duration{expected_response:true}": {
+            "med": 4.969125,
+            "max": 180.118875,
+            "p(90)": 17.070791,
+            "p(95)": 25.4756205,
+            "avg": 8.131634137113464,
+            "min": 0.903958
+        },
+        "http_req_connecting": {
+            "avg": 0.021909679623964777,
+            "min": 0,
+            "med": 0,
+            "max": 28.525167,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "vus_max": {
+            "value": 200,
+            "min": 200,
+            "max": 200
+        },
+        "data_sent": {
+            "count": 12049629,
+            "rate": 111706.00153025606
+        },
+        "http_req_duration": {
+            "min": 0.211292,
+            "med": 4.3142295,
+            "max": 180.118875,
+            "p(90)": 15.361604000000003,
+            "p(95)": 22.70979199999997,
+            "avg": 7.201982444751153,
+            "thresholds": {
+                "p(95)<2000": false
+            }
+        },
+        "http_req_blocked": {
+            "avg": 0.036288683876744346,
+            "min": 0.000583,
+            "med": 0.005,
+            "max": 102.715916,
+            "p(90)": 0.011666,
+            "p(95)": 0.02016675
+        },
+        "http_req_receiving": {
+            "p(90)": 0.11652050000000003,
+            "p(95)": 0.150416,
+            "avg": 0.07660704275162265,
+            "min": 0.005083,
+            "med": 0.053625,
+            "max": 59.303875
+        },
+        "http_reqs": {
+            "count": 26806,
+            "rate": 248.5048358766933
+        },
+        "http_req_waiting": {
+            "avg": 7.103071501529558,
+            "min": 0.198875,
+            "med": 4.2155625,
+            "max": 179.829,
+            "p(90)": 15.248666500000004,
+            "p(95)": 22.60807324999999
+        },
+        "checks": {
+            "passes": 26799,
+            "fails": 0,
+            "value": 1
+        },
+        "persona_latency": {
+            "avg": 7.183955783312784,
+            "min": 0.211292,
+            "med": 4.313625,
+            "max": 180.118875,
+            "p(90)": 15.3452752,
+            "p(95)": 22.64969579999999
+        },
+        "group_duration": {
+            "min": 2.5785,
+            "med": 14.246375,
+            "max": 354.266667,
+            "p(90)": 45.479675000000015,
+            "p(95)": 69.18388379999999,
+            "avg": 22.32325497951426
+        },
+        "iterations": {
+            "count": 8933,
+            "rate": 82.81331414185262
+        },
+        "http_req_sending": {
+            "med": 0.014208,
+            "max": 7.709083,
+            "p(90)": 0.034667,
+            "p(95)": 0.053375,
+            "avg": 0.022303900470044196,
+            "min": 0.001916
+        },
+        "data_received": {
+            "count": 53800597,
+            "rate": 498758.05892535695
+        },
+        "http_req_tls_handshaking": {
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0
+        },
+        "persona_errors": {
+            "count": 0,
+            "rate": 0,
+            "thresholds": {
+                "count<50": false
+            }
+        }
+    },
+    "setup_data": {
+        "notificationIds": {},
+        "tokens": {
+                "ASSET_MANAGER": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTUsInJvbGUiOiJGUk9OVF9PRkZJQ0UiLCJjb2FjaGluZ1JvbGUiOm51bGwsImZyb250T2ZmaWNlUm9sZSI6IkFTU0VUX01BTkFHRVIiLCJkZXBhcnRtZW50Q2F0ZWdvcmllcyI6W10sInRlYW1JZCI6bnVsbCwiY2x1YklkIjpudWxsLCJpc0RlbW8iOmZhbHNlLCJpYXQiOjE3ODc4MDY0MTMsImV4cCI6MTc4NzgxMDAxM30.zYJOkTNwwQfF3EmWk1EqZnyRGR5_muUkOX8a8FdJD6o",
+                "FINANCE_MANAGER": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInJvbGUiOiJGUk9OVF9PRkZJQ0UiLCJjb2FjaGluZ1JvbGUiOm51bGwsImZyb250T2ZmaWNlUm9sZSI6IkZJTkFOQ0VfTUFOQUdFUiIsImRlcGFydG1lbnRDYXRlZ29yaWVzIjpbXSwidGVhbUlkIjpudWxsLCJjbHViSWQiOm51bGwsImlzRGVtbyI6ZmFsc2UsImlhdCI6MTc4NzgwNjQxMywiZXhwIjoxNzg3ODEwMDEzfQ.pZ9TdkJL7FZ3HVueDc9_0XjZ2U14SWJZx6bJAKAPHy8",
+                "GM": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTMsInJvbGUiOiJHTSIsImNvYWNoaW5nUm9sZSI6bnVsbCwiZnJvbnRPZmZpY2VSb2xlIjpudWxsLCJkZXBhcnRtZW50Q2F0ZWdvcmllcyI6W10sInRlYW1JZCI6bnVsbCwiY2x1YklkIjoxLCJpc0RlbW8iOmZhbHNlLCJpYXQiOjE3ODc4MDY0MTMsImV4cCI6MTc4NzgxMDAxM30.g9hzhP33HWWFk8YA8oKe3JtlYIxGgNjTzPLI9hROy8Y",
+                "HEAD_COACH": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Mywicm9sZSI6IkNPQUNISU5HX1NUQUZGIiwiY29hY2hpbmdSb2xlIjoiSEVBRF9DT0FDSCIsImZyb250T2ZmaWNlUm9sZSI6bnVsbCwiZGVwYXJ0bWVudENhdGVnb3JpZXMiOltdLCJ0ZWFtSWQiOm51bGwsImNsdWJJZCI6bnVsbCwiaXNEZW1vIjpmYWxzZSwiaWF0IjoxNzg3ODA2NDEyLCJleHAiOjE3ODc4MTAwMTJ9.v6jzI8vi1H9499s9jBnfKJXanzgHrCLFFX-D7akc5R0",
+                "HR_MANAGER": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzMsInJvbGUiOiJGUk9OVF9PRkZJQ0UiLCJjb2FjaGluZ1JvbGUiOm51bGwsImZyb250T2ZmaWNlUm9sZSI6IkhSX01BTkFHRVIiLCJkZXBhcnRtZW50Q2F0ZWdvcmllcyI6W10sInRlYW1JZCI6bnVsbCwiY2x1YklkIjpudWxsLCJpc0RlbW8iOmZhbHNlLCJpYXQiOjE3ODc4MDY0MTIsImV4cCI6MTc4NzgxMDAxMn0.-oORuvL90Ot_hnDvJvF1DU1TxNtzzsdAXcfFF5bMIK4",
+                "MEDICAL_DIRECTOR": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTEsInJvbGUiOiJDT0FDSElOR19TVEFGRiIsImNvYWNoaW5nUm9sZSI6Ik1FRElDQUxfRElSRUNUT1IiLCJmcm9udE9mZmljZVJvbGUiOm51bGwsImRlcGFydG1lbnRDYXRlZ29yaWVzIjpbXSwidGVhbUlkIjpudWxsLCJjbHViSWQiOm51bGwsImlzRGVtbyI6ZmFsc2UsImlhdCI6MTc4NzgwNjQxNCwiZXhwIjoxNzg3ODEwMDE0fQ.LonUei153tiQR_g7jS3daJMe26U8feEvfxpDHUVRTqI",
+                "PLAYER": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcsInJvbGUiOiJQTEFZRVIiLCJjb2FjaGluZ1JvbGUiOm51bGwsImZyb250T2ZmaWNlUm9sZSI6bnVsbCwiZGVwYXJ0bWVudENhdGVnb3JpZXMiOltdLCJ0ZWFtSWQiOm51bGwsImNsdWJJZCI6bnVsbCwiaXNEZW1vIjpmYWxzZSwiaWF0IjoxNzg3ODA2NDEzLCJleHAiOjE3ODc4MTAwMTN9.-kphfHHZpKthqbbXLMfuiJQAatAhXb6-BMIiUiA6eJA"
+            }
+    }
+}
