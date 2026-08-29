@@ -976,6 +976,7 @@ model User {
   settlementsApproved       MonthlySettlementReport[]       @relation("SettlementApprover")
   revenueAdjustments        RevenueAdjustment[]             @relation("AdjCreator")
   carryOverOverrides        FinancialReport[]               @relation("CarryOverOverrider")
+  planStatusChanges         FinancialReport[]               @relation("PlanStatusChanger")
   assetRequests             AssetRequest[]                  @relation("AssetRequestRequester")
   assetRequestApprovals     AssetRequestApproval[]          @relation("AssetRequestReviewer")
   createdDispatches         HiringDispatch[]                @relation("DispatchCreator")
@@ -2628,14 +2629,34 @@ model FinancialReport {
   carryOverOverriddenById     Int?
   carryOverOverriddenAt       DateTime?
   carryOverOverrideReason     String?
+  // 편성 워크플로우 상태 머신 (spec 2026-08-29). FINALIZED 는 legacy 시즌 backfill.
+  // BudgetPlanStatus 로 명명 (기존 PlanReport 의 PlanStatus enum 과 구분).
+  planStatus                  BudgetPlanStatus            @default(FINALIZED)
+  planStatusChangedAt         DateTime?
+  planStatusChangedById       Int?
+  reviewOpenedAt              DateTime?
+  reviewDeadline              DateTime?
+  knapsackExecutedAt          DateTime?
+  finalizedAt                 DateTime?
   createdAt                   DateTime                    @default(now())
   updatedAt                   DateTime                    @updatedAt
   season                      Season                      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
   carryOverOverriddenBy       User?                       @relation("CarryOverOverrider", fields: [carryOverOverriddenById], references: [id])
+  planStatusChangedBy         User?                       @relation("PlanStatusChanger", fields: [planStatusChangedById], references: [id])
   budgetCategoryPlans         BudgetCategoryPlan[]
   overrideLogs                BudgetOverrideLog[]
   revenueLogs                 FinancialReportRevenueLog[]
   revenueAdjustments          RevenueAdjustment[]         @relation("SeasonAdj")
+}
+
+enum BudgetPlanStatus {
+  DRAFT
+  CAPACITY_FAILED
+  AWAITING_REVIEW
+  KNAPSACK_EXECUTED
+  AWAITING_GM_APPROVAL
+  FINALIZED
+  RE_PLANNING
 }
 
 model Department {

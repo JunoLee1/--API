@@ -6,10 +6,15 @@ import { getPrisma } from "../lib/prisma";
 import { applyCarryOverToNextSeason } from "../lib/season-carryover";
 import type { RecruitmentService } from "../recruitment/recruitment.service";
 
+export interface BudgetPlanDraftHook {
+  createDraftForNextSeason(closedSeasonId: number): Promise<unknown>;
+}
+
 export class SeasonService {
   constructor(
     private repo: SeasonRepository,
     private recruitmentService?: RecruitmentService,
+    private budgetPlanDraftService?: BudgetPlanDraftHook,
   ) {}
 
   async createSeason(data: CreateSeasonDto) {
@@ -76,6 +81,16 @@ export class SeasonService {
         await this.recruitmentService.expireAllWaitlists();
       } catch (err) {
         console.warn(`[closeSeason] waitlist expire 자동 처리 실패 (seasonId=${id})`, err);
+      }
+    }
+
+    // Fix #400: best-effort 다음 시즌 편성 Draft 자동 생성.
+    // budget-automation preview 기반 Basic 티어 생성. 실패해도 close 성공 유지.
+    if (this.budgetPlanDraftService) {
+      try {
+        await this.budgetPlanDraftService.createDraftForNextSeason(id);
+      } catch (err) {
+        console.warn(`[closeSeason] budget draft 자동 생성 실패 (seasonId=${id})`, err);
       }
     }
 
