@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from './api'
 import type { PlanRequestLineDraft, TriggerType } from '@/components/budget-plan/types'
+import { financialReportApi, type FinancialReport } from './financial-report.service'
+import { budgetPlanApi as budgetPlanFRApi } from './financial-report.service'
+import type { BudgetPlan } from '@/types/budget'
 
 // ============================================================================
 // Wire types — mirror apps/api/src/budget-plan/*.ts
@@ -9,13 +12,19 @@ import type { PlanRequestLineDraft, TriggerType } from '@/components/budget-plan
 /**
  * FinancialReport.planStatus 상태 머신 (백엔드 Prisma enum BudgetPlanStatus).
  * FE 는 UI 표시/전이 가능 액션 판정 용도로만 소비한다.
+ *
+ * 백엔드 enum (schema.prisma):
+ *   DRAFT | CAPACITY_FAILED | AWAITING_REVIEW | KNAPSACK_EXECUTED
+ *   | AWAITING_GM_APPROVAL | FINALIZED | RE_PLANNING
  */
 export type BudgetPlanStatus =
   | 'DRAFT'
+  | 'CAPACITY_FAILED'
   | 'AWAITING_REVIEW'
   | 'KNAPSACK_EXECUTED'
   | 'AWAITING_GM_APPROVAL'
   | 'FINALIZED'
+  | 'RE_PLANNING'
 
 /** BudgetPlanRequest.status */
 export type BudgetPlanRequestStatus = 'DRAFT' | 'SUBMITTED' | 'PROCESSED'
@@ -189,14 +198,16 @@ export const budgetPlanApi = {
 // ============================================================================
 
 /**
- * Query key 계층. FR-스코프의 mutation 은 항상 두 계열을 함께 invalidate 해야 한다.
- * (재무보고서 자체 상태 planStatus 변화 + plan-request 리스트 갱신).
+ * Query key 계층. FR-스코프의 mutation 은 항상 세 계열을 함께 invalidate 해야 한다.
+ * (재무보고서 자체 상태 planStatus 변화 + plan-request 리스트 갱신 + BudgetPlan 재조회).
  */
 export const budgetPlanKeys = {
   requests: (seasonId: number) =>
     ['budget-plan', 'requests', seasonId] as const,
   financialReport: (seasonId: number) =>
     ['financial-report', seasonId] as const,
+  budgetPlan: (seasonId: number) =>
+    ['budget-plan', 'plan', seasonId] as const,
 }
 
 /**
@@ -210,7 +221,48 @@ function invalidateSeason(
   return Promise.all([
     qc.invalidateQueries({ queryKey: budgetPlanKeys.requests(seasonId) }),
     qc.invalidateQueries({ queryKey: budgetPlanKeys.financialReport(seasonId) }),
+    qc.invalidateQueries({ queryKey: budgetPlanKeys.budgetPlan(seasonId) }),
   ])
+}
+
+/**
+ * 편성 워크플로우 UI 가 소비하는 FinancialReport (planStatus 포함) 조회.
+ * seasonId 가 falsy 인 경우 자동 disable.
+ */
+export function useFinancialReport(seasonId: number | null | undefined) {
+  return useQuery<FinancialReport | null>({
+    queryKey: budgetPlanKeys.financialReport(seasonId ?? 0),
+    queryFn: async () => {
+      try {
+        return await financialReportApi.get(seasonId as number)
+      } catch {
+        // 404 (미생성) 를 null 로 흡수 — 상태별 UI 분기를 상위에서 처리.
+        return null
+      }
+    },
+    enabled: Number.isFinite(seasonId as number) && (seasonId as number) > 0,
+    staleTime: 60 * 1000,
+  })
+}
+
+/**
+ * BudgetPlan (BudgetCategoryPlan + tiers) 조회.
+ * 팀장 wizard 는 basicCost (name === "Basic" tier cost) 만 필요하지만
+ * 확장 여지를 위해 전체 plan 을 캐시한다.
+ */
+export function useBudgetPlan(seasonId: number | null | undefined) {
+  return useQuery<BudgetPlan | null>({
+    queryKey: budgetPlanKeys.budgetPlan(seasonId ?? 0),
+    queryFn: async () => {
+      try {
+        return await budgetPlanFRApi.get(seasonId as number)
+      } catch {
+        return null
+      }
+    },
+    enabled: Number.isFinite(seasonId as number) && (seasonId as number) > 0,
+    staleTime: 60 * 1000,
+  })
 }
 
 export function useOpenReview(seasonId: number) {

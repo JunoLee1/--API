@@ -1,5 +1,6 @@
 import { api } from './api'
 import type { BudgetPlan, UpsertBudgetPlanPayload, OptimizeResult, AutoGenerateResult } from '@/types/budget'
+import type { BudgetPlanStatus } from './budget-plan.service'
 
 export interface RevenueBreakdown {
   plannedRevenueTicket: number
@@ -27,6 +28,16 @@ export interface FinancialReport {
   plannedRevenueParentCompany?: number
   plannedRevenueAcademyFee?: number
   plannedRevenueOther?: number
+  /**
+   * 편성 워크플로우 상태 (schema.prisma enum BudgetPlanStatus).
+   * `findUnique` 로 뽑는 raw FinancialReport 에 늘 포함되므로 optional 이 아니지만,
+   * 예전 API 응답 캐시나 CSV upload 경로에서 undefined 로 오는 경우가 있어 optional 로 둔다.
+   */
+  planStatus?: BudgetPlanStatus
+  planStatusChangedAt?: string | null
+  planStatusChangedById?: number | null
+  reviewOpenedAt?: string | null
+  reviewDeadline?: string | null
 }
 
 export interface PnLRevenueActual {
