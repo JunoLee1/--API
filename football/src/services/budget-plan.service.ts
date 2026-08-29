@@ -16,6 +16,9 @@ import type { BudgetPlan } from '@/types/budget'
  * 백엔드 enum (schema.prisma):
  *   DRAFT | CAPACITY_FAILED | AWAITING_REVIEW | KNAPSACK_EXECUTED
  *   | AWAITING_GM_APPROVAL | FINALIZED | RE_PLANNING
+ *
+ * CAPACITY_FAILED 는 편성 시작 시 가용 예산 부족 (트리거 X capacity 검증 실패).
+ * RE_PLANNING 은 GM 이 FINALIZED 이후 재편성을 결정한 임시 상태.
  */
 export type BudgetPlanStatus =
   | 'DRAFT'
