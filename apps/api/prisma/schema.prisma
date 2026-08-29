@@ -2703,13 +2703,14 @@ model UserDepartment {
 // ─────────────────────────────────────────────
 
 model ExpenseCategory {
-  id        Int      @id @default(autoincrement())
-  code      String   @unique
+  id        Int           @id @default(autoincrement())
+  code      String        @unique
   label     String
-  sortOrder Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  sortOrder Int           @default(0)
+  isActive  Boolean       @default(true)
+  scope     CategoryScope @default(DEPARTMENT)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 
   operatingExpenses   OperatingExpense[]
   budgetCategoryPlans BudgetCategoryPlan[]
@@ -2717,6 +2718,11 @@ model ExpenseCategory {
   budgetOverrideLogs  BudgetOverrideLog[]
   assetRequests       AssetRequest[]
   defaultAssetKits    DepartmentDefaultAssetKit[]
+}
+
+enum CategoryScope {
+  TEAM
+  DEPARTMENT
 }
 
 enum BudgetStatus {
