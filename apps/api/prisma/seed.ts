@@ -1233,6 +1233,29 @@ async function main() {
     },
   });
 
+  // ── FinancialReport (편성 워크플로우 baseline for loadtest / dashboard) ──
+  await prisma.financialReport.upsert({
+    where: { seasonId: season.id },
+    update: {},
+    create: {
+      seasonId: season.id,
+      totalRevenue: 10_000_000_000,
+      plannedRevenueTicket: 3_000_000_000,
+      plannedRevenueSponsorship: 4_000_000_000,
+      plannedRevenueBroadcast: 1_500_000_000,
+      plannedRevenueMerchandise: 800_000_000,
+      plannedRevenueSubsidy: 300_000_000,
+      plannedRevenueParentCompany: 300_000_000,
+      plannedRevenueAcademyFee: 80_000_000,
+      plannedRevenueOther: 20_000_000,
+      totalOperatingBudget: 300_000_000,
+      contingencyReserve: 20_000_000,
+      playerSalaryBudget: 500_000_000,
+      carryOverFromPrev: 0,
+      planStatus: "FINALIZED",
+    },
+  });
+
   // ── Players ───────────────────────────────────────────
   const p1 = await prisma.player.upsert({
     where: { id: "player-001" },

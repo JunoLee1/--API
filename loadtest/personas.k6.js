@@ -60,6 +60,8 @@ const PERSONAS = [
       { path: '/operating-expenses?seasonId=1', label: 'list_operating_expenses' },
       { path: '/budget-control', label: 'list_budget_control' },
       { path: '/financial-reports/1', label: 'get_financial_report_season1' },
+      // 편성 워크플로우 조회 (spec 2026-08-29). GET 이라 idempotent.
+      { path: '/financial-reports/1/plan-requests', label: 'list_budget_plan_requests' },
     ],
   },
   {
@@ -84,16 +86,16 @@ const PERSONAS = [
     name: 'PLAYER',
     email: 'player@club.com',
     endpoints: [
-      { path: '/players/me', label: 'my_profile' },
+      { path: '/players', label: 'list_players' },
       { path: '/training', label: 'list_training_sessions' },
-      { path: '/notifications', label: 'list_notifications' },
+      { path: '/notifications/my', label: 'list_my_notifications' },
     ],
   },
   {
     name: 'MEDICAL_DIRECTOR',
     email: 'meddir@club.com',
     endpoints: [
-      { path: '/injuries', label: 'list_injuries' },
+      { path: '/injuries/active', label: 'list_active_injuries' },
       { path: '/medical-equipment-loan', label: 'list_medical_equipment_loans' },
       { path: '/medical-expenses', label: 'list_medical_expenses' },
     ],
