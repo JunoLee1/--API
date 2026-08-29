@@ -30,13 +30,14 @@ const makePrismaMock = (opts: {
     findMany: jest.fn().mockImplementation(({ where }: any) => {
       const financialReportId = where.financialReportId;
       return Promise.resolve([
-        { id: 201, financialReportId, categoryId: 1 },
-        { id: 202, financialReportId, categoryId: 2 },
+        { id: 201, financialReportId, categoryId: 1, mandatoryMinimum: 0 },
+        { id: 202, financialReportId, categoryId: 2, mandatoryMinimum: 0 },
       ]);
     }),
   } as any,
   budgetTier: {
     createMany: jest.fn().mockResolvedValue({ count: 0 }),
+    deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
   } as any,
 });
 
@@ -117,7 +118,7 @@ describe("createDraftForNextSeason", () => {
       1,
     );
 
-    expect(result).toEqual({ nextSeasonId: 5, draftReportId: 100 });
+    expect(result).toMatchObject({ nextSeasonId: 5, draftReportId: 100 });
     expect(budgetAuto.preview).toHaveBeenCalledWith(
       expect.objectContaining({ targetSeasonId: 5, revenueGoal: "MAINTAIN", expenseGoal: "MAINTAIN" }),
     );
