@@ -10,6 +10,13 @@ import { BudgetAutomationService } from "../budget-automation/budget-automation.
 import { BudgetAutomationRepository } from "../budget-automation/budget-automation.repo";
 import { expenseCategoryService } from "../expense-category/expense-category.routes";
 import { createDraftForNextSeason } from "../budget-plan/draft";
+import { NotificationRepository } from "../notification/notification.repo";
+import { notifyBudgetPlanEvent } from "../budget-plan/notify";
+import {
+  sendCapacityFailedEmail,
+  sendReviewOpenedEmail,
+  sendReviewDeadlineD1Email,
+} from "../lib/email";
 
 const router = Router();
 const prisma = getPrisma();
@@ -21,9 +28,14 @@ const budgetAutomationService = new BudgetAutomationService(
   new BudgetAutomationRepository(prisma),
   expenseCategoryService,
 );
+// Fix #404: wire notify hook (ADR 0021 channel routing).
+const notificationRepo = new NotificationRepository(prisma);
+const emailSender = { sendCapacityFailedEmail, sendReviewOpenedEmail, sendReviewDeadlineD1Email };
+const notifyHook = (event: Parameters<typeof notifyBudgetPlanEvent>[0], ctx: Parameters<typeof notifyBudgetPlanEvent>[1]) =>
+  notifyBudgetPlanEvent(event, ctx, { notificationRepo, email: emailSender });
 const budgetPlanDraftHook = {
   createDraftForNextSeason: (closedSeasonId: number) =>
-    createDraftForNextSeason(prisma, budgetAutomationService, expenseCategoryService, closedSeasonId),
+    createDraftForNextSeason(prisma, budgetAutomationService, expenseCategoryService, closedSeasonId, notifyHook),
 };
 const service = new SeasonService(repo, recruitmentService, budgetPlanDraftHook);
 const controller = new SeasonController(service);
