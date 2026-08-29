@@ -1821,7 +1821,7 @@ GM 인수인계서에 항목만 존재하고 내용이 공란. 담당자 확인 
 **운영비 카테고리 (OperatingCategory):**
 MEDICAL | MEAL | TRAVEL | EQUIPMENT | SCOUTING | YOUTH
 
-**BudgetCategoryPlan:** 카테고리별 계획 단위. `mandatoryMinimum`(의무 최소치)과 `knapsackAllocated`(최적화 결과)를 보관. 신규 시즌 생성 시 직전 시즌 플랜 자동 복사.
+**BudgetCategoryPlan:** 카테고리별 계획 단위. `mandatoryMinimum`(의무 최소치)과 `knapsackAllocated`(최적화 결과)를 보관. 신규 시즌 생성 시 직전 시즌 플랜 자동 복사. `mandatoryMinimum` 세팅·변경은 별도 승인 프로세스 (ADR 0022): FM 제안 → GM 승인 → 이력 로그 (`MandatoryMinimumChangeLog`, append-only). 승인은 즉시 반영, 편성 재실행은 GM 이 GmReplanPanel 에서 수동 트리거.
 
 **BudgetTier:** 카테고리 내 선택 가능한 지출 수준(Basic / Standard / Premium). 각 티어는 `cost`(비용)와 `value`(GM 설정 가치점수)를 가진다. Knapsack은 재량 예산 안에서 최대 가치합이 되는 티어 조합을 선택.
 
