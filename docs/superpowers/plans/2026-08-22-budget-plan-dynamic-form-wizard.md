@@ -1,3 +1,6 @@
+> ⚠️ **SUPERSEDED by [2026-08-29-budget-plan-ui-align-with-spec.md](2026-08-29-budget-plan-ui-align-with-spec.md)**
+> 편성 워크플로우 spec (ADR 0011/0019/0020, 2026-08-29) 이 자동 티어 승격·트리거 기반 입력을 확정. 이 plan 의 "자유 티어 개수/이름/value 입력" 방향은 spec 과 정면 충돌. 신 spec 반영은 supersede 문서 참조.
+
 # BudgetPlanPage — Dynamic Form + Wizard UI Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

@@ -1,3 +1,6 @@
+> ⚠️ **SUPERSEDED by [2026-08-29-budget-plan-ui-align-with-spec.md](2026-08-29-budget-plan-ui-align-with-spec.md)**
+> 편성 워크플로우 spec 배포 이후 티어가 고정 3단계 (Basic/Standard/Premium) 로 확정되어 티어 D&D 정렬 목표 무의미. 카테고리 D&D 유지 여부는 supersede 문서 참조. Auto-save 는 신 plan 에도 유지 (draft 자동 저장 통합).
+
 # BudgetPlanPage — D&D 정렬 + Auto-save Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
