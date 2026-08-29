@@ -33,8 +33,11 @@ import {
   useExecuteKnapsack,
   useFinalize,
   useOpenReview,
+  usePendingOverrideLogs,
   usePlanRequests,
   useRePlan,
+  useReviewOverride,
+  type BudgetOverrideLogDto,
   type BudgetPlanRequestDto,
   type BudgetPlanRequestLineDto,
   type BudgetPlanStatus,
@@ -103,6 +106,13 @@ const ERROR_MESSAGE: Record<string, string> = {
     '지금은 이 액션을 실행할 수 없습니다 (상태 전이 실패)',
   SELF_APPROVAL_REQUIRES_GM: '본인 신청 확정은 GM 승인이 필요합니다',
   KNAPSACK_CAPACITY_FAILED: '예산 부족 — GM 알림 발송됨',
+  // 이의 신청 심사 (override.service.ts)
+  OVERRIDE_EXCEEDS_TOTAL_BUDGET: '총 예산 초과 — 승인 불가',
+  INVALID_OVERRIDE_STATUS_TRANSITION:
+    '이미 심사된 이의 신청입니다 (다시 심사할 수 없음)',
+  OVERRIDE_LOG_NOT_FOUND: '이의 신청 기록을 찾을 수 없습니다',
+  CATEGORY_PLAN_NOT_FOUND: '해당 카테고리의 편성 계획이 없습니다',
+  DECISION_MUST_BE_APPROVED_OR_REJECTED: '승인 또는 반려를 선택해야 합니다',
 }
 
 function translateError(err: unknown): string {
@@ -280,6 +290,94 @@ function RePlanDialog({
 }
 
 // ---------------------------------------------------------------------------
+// 이의 신청 심사 Dialog (승인/반려 공용).
+// 반려는 reviewNote 필수, 승인은 optional.
+// ---------------------------------------------------------------------------
+interface OverrideReviewDialogProps {
+  open: boolean
+  decision: 'APPROVED' | 'REJECTED' | null
+  submitting: boolean
+  onOpenChange: (open: boolean) => void
+  onSubmit: (note: string) => void
+}
+
+function OverrideReviewDialog({
+  open,
+  decision,
+  submitting,
+  onOpenChange,
+  onSubmit,
+}: OverrideReviewDialogProps) {
+  const [note, setNote] = useState('')
+  const noteTrimmed = note.trim()
+  const requireNote = decision === 'REJECTED'
+  const disabled =
+    submitting || (requireNote && noteTrimmed.length === 0)
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        onOpenChange(next)
+        if (!next) setNote('')
+      }}
+    >
+      <DialogContent data-testid="override-review-dialog">
+        <DialogHeader>
+          <DialogTitle>
+            {decision === 'APPROVED' ? '이의 신청 승인' : '이의 신청 반려'}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2 py-2">
+          <Label htmlFor="override-review-note">
+            심사 메모 {requireNote ? '(필수)' : '(선택)'}
+          </Label>
+          <Textarea
+            id="override-review-note"
+            data-testid="override-review-note"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder={
+              requireNote
+                ? '반려 사유를 입력하세요 (신청자에게 전달됨)'
+                : '심사 메모 (선택 사항)'
+            }
+            disabled={submitting}
+          />
+          {decision === 'APPROVED' && (
+            <p className="text-xs text-muted-foreground">
+              승인 시 해당 카테고리의 knapsackAllocated 가 신청 금액으로 자동
+              조정됩니다.
+            </p>
+          )}
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={submitting}
+            data-testid="override-review-cancel"
+          >
+            취소
+          </Button>
+          <Button
+            onClick={() => onSubmit(noteTrimmed)}
+            disabled={disabled}
+            data-testid="override-review-submit"
+          >
+            {submitting
+              ? '처리 중…'
+              : decision === 'APPROVED'
+                ? '승인'
+                : '반려'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // 신청 한 건의 라인 테이블.
 // ---------------------------------------------------------------------------
 function LinesTable({
@@ -368,14 +466,20 @@ function LinesTable({
 // ---------------------------------------------------------------------------
 export function FinanceManagerReview({ seasonId, planStatus }: Props) {
   const { user: currentUser } = useCurrentUser()
-  const { labelOf } = useExpenseCategories()
+  const { labelOf, rows: categories } = useExpenseCategories()
   const requestsQuery = usePlanRequests(seasonId)
+  const overrideLogsQuery = usePendingOverrideLogs(seasonId)
   const openReview = useOpenReview(seasonId)
   const executeKnapsack = useExecuteKnapsack(seasonId)
   const finalize = useFinalize(seasonId)
   const rePlan = useRePlan(seasonId)
+  const reviewOverride = useReviewOverride()
 
   const [rePlanOpen, setRePlanOpen] = useState(false)
+  const [reviewTarget, setReviewTarget] = useState<{
+    log: BudgetOverrideLogDto
+    decision: 'APPROVED' | 'REJECTED'
+  } | null>(null)
 
   const requests: BudgetPlanRequestDto[] = requestsQuery.data ?? []
   const groups = useMemo(() => groupByOwner(requests), [requests])
@@ -421,6 +525,42 @@ export function FinanceManagerReview({ seasonId, planStatus }: Props) {
       onError: (err) => toast.error(translateError(err)),
     })
   }
+
+  // 이의 신청 심사: 사용자가 [승인] 또는 [반려] 버튼을 누르면 대상 로그+결정을
+  // reviewTarget 에 저장하고 Dialog 를 연다. Dialog submit 시 아래 핸들러가 mutate.
+  const handleOverrideReviewSubmit = (note: string) => {
+    if (!reviewTarget) return
+    const { log, decision } = reviewTarget
+    reviewOverride.mutate(
+      {
+        logId: log.id,
+        decision,
+        // 서버는 note 를 undefined 로 두면 null 로 저장 (승인 case), REJECTED
+        // 는 이미 dialog 에서 non-empty 를 강제.
+        note: note.length > 0 ? note : undefined,
+        seasonId,
+      },
+      {
+        onSuccess: () => {
+          toast.success(
+            decision === 'APPROVED'
+              ? '이의 신청이 승인되었습니다 — knapsackAllocated 가 조정됩니다'
+              : '이의 신청이 반려되었습니다',
+          )
+          setReviewTarget(null)
+        },
+        onError: (err) => toast.error(translateError(err)),
+      },
+    )
+  }
+
+  const categoryLabelById = (categoryId: number): string => {
+    const cat = categories.find((c) => c.id === categoryId)
+    if (!cat) return `#${categoryId}`
+    return labelOf(cat.code)
+  }
+
+  const pendingLogs: BudgetOverrideLogDto[] = overrideLogsQuery.data ?? []
 
   return (
     <div className="space-y-6" data-testid="finance-manager-review">
@@ -571,11 +711,135 @@ export function FinanceManagerReview({ seasonId, planStatus }: Props) {
         </CardContent>
       </Card>
 
+      {/* 이의 신청 심사 (PENDING BudgetOverrideLog) */}
+      <Card data-testid="override-review-section">
+        <CardHeader>
+          <CardTitle className="text-base">
+            이의 신청 심사
+            <span className="ml-2 text-xs text-muted-foreground">
+              ({pendingLogs.length}건 대기)
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {overrideLogsQuery.isLoading && (
+            <div className="space-y-2" data-testid="override-logs-loading">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          )}
+
+          {overrideLogsQuery.isError && !overrideLogsQuery.isLoading && (
+            <div
+              className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900 dark:bg-red-950 dark:text-red-100 dark:border-red-800"
+              data-testid="override-logs-error"
+            >
+              이의 신청 목록을 불러오지 못했습니다:{' '}
+              {translateError(overrideLogsQuery.error)}
+            </div>
+          )}
+
+          {!overrideLogsQuery.isLoading &&
+            !overrideLogsQuery.isError &&
+            pendingLogs.length === 0 && (
+              <p
+                className="text-sm text-muted-foreground"
+                data-testid="override-logs-empty"
+              >
+                대기 중인 이의 신청이 없습니다.
+              </p>
+            )}
+
+          {pendingLogs.length > 0 && (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">카테고리</TableHead>
+                  <TableHead className="text-xs text-right">금액</TableHead>
+                  <TableHead className="text-xs">사유</TableHead>
+                  <TableHead className="text-xs">신청자</TableHead>
+                  <TableHead className="text-xs">신청일시</TableHead>
+                  <TableHead className="text-xs text-right">액션</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pendingLogs.map((log) => (
+                  <TableRow key={log.id} data-override-log-id={log.id}>
+                    <TableCell className="text-xs">
+                      {log.expenseCategory?.label
+                        ? log.expenseCategory.label
+                        : log.expenseCategory?.code
+                          ? labelOf(log.expenseCategory.code)
+                          : categoryLabelById(log.categoryId)}
+                    </TableCell>
+                    <TableCell className="text-xs tabular-nums text-right">
+                      ₩{log.amount.toLocaleString('ko-KR')}
+                    </TableCell>
+                    <TableCell className="text-xs max-w-[16rem]">
+                      <span
+                        className="block truncate"
+                        title={log.reason}
+                        data-override-reason
+                      >
+                        {log.reason}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {/* 서버가 아직 requestedBy.username 을 include 하지 않아 id fallback */}
+                      #{log.createdById}
+                    </TableCell>
+                    <TableCell className="text-xs tabular-nums">
+                      {new Date(log.createdAt).toLocaleString('ko-KR')}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            setReviewTarget({ log, decision: 'APPROVED' })
+                          }
+                          disabled={reviewOverride.isPending}
+                          data-testid={`override-approve-${log.id}`}
+                        >
+                          승인
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            setReviewTarget({ log, decision: 'REJECTED' })
+                          }
+                          disabled={reviewOverride.isPending}
+                          data-testid={`override-reject-${log.id}`}
+                        >
+                          반려
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
       <RePlanDialog
         open={rePlanOpen}
         onOpenChange={setRePlanOpen}
         submitting={rePlan.isPending}
         onSubmit={handleRePlanSubmit}
+      />
+
+      <OverrideReviewDialog
+        open={reviewTarget !== null}
+        decision={reviewTarget?.decision ?? null}
+        submitting={reviewOverride.isPending}
+        onOpenChange={(next) => {
+          if (!next && !reviewOverride.isPending) setReviewTarget(null)
+        }}
+        onSubmit={handleOverrideReviewSubmit}
       />
     </div>
   )

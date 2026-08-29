@@ -31,7 +31,9 @@ vi.mock('@/services/api', () => ({
       submitCalls.push({ path, body })
       return { id: 1, status: 'SUBMITTED', lines: [] }
     }),
-    get: vi.fn(),
+    // #431: FINALIZED 분기의 OverrideRequestDialog 가 useExpenseCategories 를
+    // 마운트하므로 promise 를 반환해야 hook catch 가 조용히 [] 로 fallback 한다.
+    get: vi.fn(async () => []),
     put: vi.fn(),
     patch: vi.fn(),
     postForm: vi.fn(),

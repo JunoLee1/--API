@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CategoryEditor } from './CategoryEditor'
+import { OverrideRequestDialog } from './OverrideRequestDialog'
 import { emptyLine, type PlanRequestLineDraft } from './types'
 import { useSubmitPlanRequest } from '@/services/budget-plan.service'
 import type { BudgetPlanStatus } from '@/services/budget-plan.service'
@@ -263,16 +264,47 @@ export function BudgetPlanWizard({
 
   // --- Non-AWAITING_REVIEW: read-only summary ---
   if (planStatus !== 'AWAITING_REVIEW') {
+    // FINALIZED 상태에서만 카테고리별 이의 신청이 가능하다.
+    // 백엔드 `override.service.ts:24` 가 planStatus === 'FINALIZED' 를 강제하므로
+    // FE 도 UI 진입을 그 상태로 제한한다. 스코프는 role 로 추정한 requesterScope 를
+    // 사용 (팀장 → TEAM, 부서장 → DEPARTMENT).
+    const canRequestOverride =
+      planStatus === 'FINALIZED' && requesterScope != null
+
     return (
       <Card data-testid="wizard-readonly" data-plan-status={planStatus ?? 'UNKNOWN'}>
         <CardHeader className="flex flex-row items-center gap-2 space-y-0">
           <CardTitle className="text-base flex-1">편성 워크플로우</CardTitle>
           {planStatus && <PlanStatusBadgePlaceholder status={planStatus} />}
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
             {planStatus ? STATUS_MESSAGE[planStatus] : '상태 정보를 불러오는 중...'}
           </p>
+          {canRequestOverride && (
+            <div
+              className="flex flex-col gap-1"
+              data-testid="wizard-override-section"
+            >
+              <p className="text-xs text-muted-foreground">
+                확정된 편성에 대해 카테고리별로 이의 신청을 제출할 수 있습니다.
+                재무담당(FM) 승인 후 knapsackAllocated 가 자동 조정됩니다.
+              </p>
+              <OverrideRequestDialog
+                seasonId={seasonId}
+                scope={requesterScope!}
+                trigger={
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    data-testid="wizard-override-request-btn"
+                  >
+                    카테고리별 이의 신청
+                  </Button>
+                }
+              />
+            </div>
+          )}
           {/* TODO(#428): PlanStatusBadge + 상세 액션 카드로 교체 */}
         </CardContent>
       </Card>
