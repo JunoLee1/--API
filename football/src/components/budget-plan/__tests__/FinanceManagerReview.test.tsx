@@ -42,6 +42,7 @@ const openReviewMock: MockMutation = { mutate: vi.fn(), isPending: false }
 const executeKnapsackMock: MockMutation = { mutate: vi.fn(), isPending: false }
 const finalizeMock: MockMutation = { mutate: vi.fn(), isPending: false }
 const rePlanMock: MockMutation = { mutate: vi.fn(), isPending: false }
+const reviewOverrideMock: MockMutation = { mutate: vi.fn(), isPending: false }
 
 let mockRequests: BudgetPlanRequestDto[] = []
 let mockRequestsLoading = false
@@ -52,11 +53,20 @@ vi.mock('@/services/budget-plan.service', () => ({
   useExecuteKnapsack: () => executeKnapsackMock,
   useFinalize: () => finalizeMock,
   useRePlan: () => rePlanMock,
+  useReviewOverride: () => reviewOverrideMock,
   usePlanRequests: () => ({
     data: mockRequests,
     isLoading: mockRequestsLoading,
     isError: mockRequestsError !== null,
     error: mockRequestsError,
+  }),
+  // #431: 이의 신청 목록 훅 — 기존 테스트는 override UI 를 검증하지 않으므로
+  // 항상 빈 배열 loaded 로 반환한다.
+  usePendingOverrideLogs: () => ({
+    data: [],
+    isLoading: false,
+    isError: false,
+    error: null,
   }),
 }))
 
@@ -165,10 +175,12 @@ beforeEach(() => {
   executeKnapsackMock.mutate.mockReset()
   finalizeMock.mutate.mockReset()
   rePlanMock.mutate.mockReset()
+  reviewOverrideMock.mutate.mockReset()
   openReviewMock.isPending = false
   executeKnapsackMock.isPending = false
   finalizeMock.isPending = false
   rePlanMock.isPending = false
+  reviewOverrideMock.isPending = false
   mockRequests = []
   mockRequestsLoading = false
   mockRequestsError = null

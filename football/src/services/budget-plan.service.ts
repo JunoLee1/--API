@@ -6,6 +6,30 @@ import { budgetPlanApi as budgetPlanFRApi } from './financial-report.service'
 import type { BudgetPlan } from '@/types/budget'
 
 // ============================================================================
+// BudgetOverrideLog wire type
+// ----------------------------------------------------------------------------
+// 백엔드 Prisma 모델 (`apps/api/prisma/schema.prisma:2854`) 을 그대로 미러링한다.
+// GET /financial-reports/:seasonId/budget 응답의 `overrideLogs[]` 배열에서 이
+// 형태로 내려온다 (financial-report.repo.ts:180 의 include). `BudgetPlan` (FE)
+// 의 `overrideLogs: BudgetOverrideLog[]` 는 레거시 lean 타입이라 status/
+// reviewedBy 등이 빠져 있어 이번 slice 에서 별도 wire 타입을 정의한다.
+// ============================================================================
+export interface BudgetOverrideLogDto {
+  id: number
+  financialReportId: number
+  categoryId: number
+  amount: number
+  reason: string
+  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  createdById: number
+  createdAt: string
+  reviewedById: number | null
+  reviewedAt: string | null
+  reviewNote: string | null
+  expenseCategory?: { id?: number; code: string; label?: string }
+}
+
+// ============================================================================
 // Wire types — mirror apps/api/src/budget-plan/*.ts
 // ============================================================================
 
@@ -358,5 +382,38 @@ export function useReviewOverride() {
     mutationFn: ({ logId, decision, note }: ReviewOverrideVars) =>
       budgetPlanApi.reviewOverride(logId, decision, note),
     onSuccess: (_data, { seasonId }) => invalidateSeason(qc, seasonId),
+  })
+}
+
+/**
+ * PENDING 상태의 BudgetOverrideLog 목록을 반환.
+ *
+ * 백엔드에는 아직 `GET /budget-override-logs?status=PENDING` 같은 전용 엔드포인트가
+ * 없다 (`apps/api/src/budget-plan/override.controller.ts` 는 request/review 두
+ * 개만 노출). 대신 `GET /financial-reports/:seasonId/budget` 응답이
+ * `overrideLogs` 를 include 하므로 (backend `financial-report.repo.ts:180`,
+ * `orderBy createdAt desc, take 50`), 여기서 client-side 로 PENDING 만 필터한다.
+ *
+ * TODO(#431-backend-endpoint): 스케일 커지면 `GET /financial-reports/:seasonId/
+ * override-logs?status=PENDING` 을 서버에 추가하고 이 hook 을 그 쪽으로 옮긴다.
+ * 지금은 `budgetPlanKeys.budgetPlan(seasonId)` 캐시를 재사용해 mutation
+ * invalidation 이 자동으로 반영된다.
+ *
+ * seasonId 가 falsy 인 경우 자동 disable.
+ */
+export function usePendingOverrideLogs(seasonId: number | null | undefined) {
+  return useQuery<BudgetOverrideLogDto[]>({
+    queryKey: [...budgetPlanKeys.budgetPlan(seasonId ?? 0), 'pending-override-logs'] as const,
+    queryFn: async () => {
+      // budgetPlanApi.get 은 BudgetPlan (FE lean type) 을 반환하지만 실제 서버
+      // JSON 은 wire shape 이라, `overrideLogs` 원본을 얻기 위해 raw fetch 를 쓴다.
+      const plan = (await budgetPlanFRApi.get(seasonId as number)) as unknown as {
+        overrideLogs?: BudgetOverrideLogDto[]
+      } | null
+      const logs = plan?.overrideLogs ?? []
+      return logs.filter((l) => l.status === 'PENDING')
+    },
+    enabled: Number.isFinite(seasonId as number) && (seasonId as number) > 0,
+    staleTime: 60 * 1000,
   })
 }
