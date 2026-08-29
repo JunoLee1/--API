@@ -1,16 +1,9 @@
 import { cn } from '@/lib/utils'
+import type { TriggerType } from './types'
 
-/**
- * ADR 0019 편성 트리거 5종. #423 가 shared union 을 types.ts 에 export 하면
- * #425 에서 이 로컬 정의를 re-export 로 교체할 예정. 지금은 slice 를 완전
- * 독립적으로 유지하기 위해 로컬 정의.
- */
-export type TriggerType =
-  | 'MULTI_LOCATION'
-  | 'DIRECT_BUSINESS'
-  | 'PUBLIC_UTILITY'
-  | 'HOME_MATCH'
-  | 'WEEKEND_OVERTIME'
+// #425: 로컬 정의를 걷어내고 shared union (`./types`) 을 그대로 사용한다.
+// 기존 소비자가 `TriggerMultiSelect` 에서 re-import 하던 경우를 고려해 re-export.
+export type { TriggerType }
 
 /**
  * 가중(weighted) 트리거 - 예산 규모에 곱해서 반영. amber 계열 border.
