@@ -1,3 +1,6 @@
+> ⚠️ **PARTIALLY SUPERSEDED by [2026-08-29-budget-plan-ui-align-with-spec.md](2026-08-29-budget-plan-ui-align-with-spec.md)**
+> 편성 spec 이후 `FinancialReport.planStatus` 필드가 새로 도입됨. WageCapKPI 노출 시점을 planStatus (KNAPSACK_EXECUTED / FINALIZED) 와 연동 필요. 이 plan 의 baseline 로직은 유효하나 상태 게이팅 부분은 신 plan 확인.
+
 # 총 가용 예산 KPI (WageCapKPI 확장) Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
