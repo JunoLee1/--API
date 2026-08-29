@@ -11,6 +11,8 @@ import {
   sendReviewOpenedEmail,
   sendReviewDeadlineD1Email,
 } from "../lib/email";
+import { BudgetOverrideService } from "./override.service";
+import { BudgetOverrideController } from "./override.controller";
 
 const prisma = getPrisma();
 const notificationRepo = new NotificationRepository(prisma);
@@ -44,5 +46,11 @@ router.post("/financial-reports/:seasonId/finalize", auth, controller.finalize);
 
 // GM: AWAITING_GM_APPROVAL → FINALIZED
 router.post("/financial-reports/:seasonId/gm-approve", auth, controller.gmApprove);
+
+// #407: BudgetOverrideLog 편성 이의 신청/승인
+const overrideService = new BudgetOverrideService(prisma);
+const overrideController = new BudgetOverrideController(overrideService);
+router.post("/financial-reports/:seasonId/override-request", auth, overrideController.requestOverride);
+router.post("/budget-override-logs/:id/review", auth, overrideController.review);
 
 export default router;
