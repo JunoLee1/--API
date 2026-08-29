@@ -39,4 +39,10 @@ router.get("/financial-reports/:seasonId/plan-requests", auth, controller.list);
 // FinanceManager: knapsack 실행 (심사 마감 or 전원 신청 완료 후)
 router.post("/financial-reports/:seasonId/execute-knapsack", auth, controller.executeKnapsack);
 
+// FinanceManager: KNAPSACK_EXECUTED → FINALIZED (자체 신청 있으면 AWAITING_GM_APPROVAL escalate)
+router.post("/financial-reports/:seasonId/finalize", auth, controller.finalize);
+
+// GM: AWAITING_GM_APPROVAL → FINALIZED
+router.post("/financial-reports/:seasonId/gm-approve", auth, controller.gmApprove);
+
 export default router;

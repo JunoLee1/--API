@@ -127,6 +127,75 @@ export class BudgetPlanRequestService {
     });
   }
 
+  async finalize(seasonId: number, actorUserId: number): Promise<void> {
+    const report = await this.prisma.financialReport.findUnique({
+      where: { seasonId },
+      select: { id: true, planStatus: true },
+    });
+    if (!report) throw new AppError(404, "FINANCIAL_REPORT_NOT_FOUND");
+    if (report.planStatus !== "KNAPSACK_EXECUTED") {
+      throw new AppError(409, "INVALID_PLAN_STATUS_TRANSITION");
+    }
+
+    // Self-approval 방지: FM 이 요청자인 request 존재 시 GM 으로 escalate
+    const selfRequest = await this.prisma.budgetPlanRequest.findFirst({
+      where: { financialReportId: report.id, requestedById: actorUserId },
+      select: { id: true },
+    });
+    const now = new Date();
+    if (selfRequest) {
+      await this.prisma.financialReport.update({
+        where: { id: report.id },
+        data: {
+          planStatus: "AWAITING_GM_APPROVAL",
+          planStatusChangedAt: now,
+          planStatusChangedById: actorUserId,
+        },
+      });
+      // GM approval 대기 알림은 별도 이벤트 필요 (현재 notify.ts 미정의) — 후속 이슈로 처리
+      return;
+    }
+
+    await this.prisma.financialReport.update({
+      where: { id: report.id },
+      data: {
+        planStatus: "FINALIZED",
+        planStatusChangedAt: now,
+        planStatusChangedById: actorUserId,
+        finalizedAt: now,
+      },
+    });
+    if (this.notifyHook && this.reviewersFn) {
+      const reviewers = await this.reviewersFn();
+      await this.notifyHook("FINALIZED", { seasonId, reviewers });
+    }
+  }
+
+  async gmApprove(seasonId: number, actorUserId: number): Promise<void> {
+    const report = await this.prisma.financialReport.findUnique({
+      where: { seasonId },
+      select: { id: true, planStatus: true },
+    });
+    if (!report) throw new AppError(404, "FINANCIAL_REPORT_NOT_FOUND");
+    if (report.planStatus !== "AWAITING_GM_APPROVAL") {
+      throw new AppError(409, "INVALID_PLAN_STATUS_TRANSITION");
+    }
+    const now = new Date();
+    await this.prisma.financialReport.update({
+      where: { id: report.id },
+      data: {
+        planStatus: "FINALIZED",
+        planStatusChangedAt: now,
+        planStatusChangedById: actorUserId,
+        finalizedAt: now,
+      },
+    });
+    if (this.notifyHook && this.reviewersFn) {
+      const reviewers = await this.reviewersFn();
+      await this.notifyHook("FINALIZED", { seasonId, reviewers });
+    }
+  }
+
   async executeKnapsack(seasonId: number, actorUserId: number): Promise<void> {
     if (!this.knapsackService) throw new AppError(500, "KNAPSACK_SERVICE_NOT_INJECTED");
 

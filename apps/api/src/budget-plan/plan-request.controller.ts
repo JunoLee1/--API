@@ -62,4 +62,24 @@ export class BudgetPlanRequestController {
       res.status(204).end();
     } catch (err) { next(err); }
   };
+
+  finalize = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole, id: userId } = requireUser(req);
+      if (!canFinanceManage(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const seasonId = Number(req.params["seasonId"]);
+      await this.service.finalize(seasonId, userId);
+      res.status(204).end();
+    } catch (err) { next(err); }
+  };
+
+  gmApprove = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, id: userId } = requireUser(req);
+      if (role !== "GM") throw new AppError(403, "FORBIDDEN");
+      const seasonId = Number(req.params["seasonId"]);
+      await this.service.gmApprove(seasonId, userId);
+      res.status(204).end();
+    } catch (err) { next(err); }
+  };
 }
