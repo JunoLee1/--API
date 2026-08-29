@@ -2768,6 +2768,9 @@ async function main() {
   // ── Staff Salaries + Payroll (2026 Jan~Jun) ───────────
   await seedStaffSalaries();
 
+  // ── 편성 워크플로우 (ExpenseCategory + BudgetPlanRequest + BudgetOverrideLog) ──
+  await seedBudgetPlanWorkflow();
+
   console.log("✅ Seed complete");
   console.log(`   - Countries: 2`);
   console.log(`   - Users: 21 + 10 유소년 / pw: Password1!`);
@@ -3006,6 +3009,184 @@ async function seedTicketSales2025(adminId: number) {
     return s + g * 20000 + v * 80000;
   }, 0);
   console.log(`✅ 2025 시즌 홈경기 티켓 시드: ${homeMatches2025.length}경기, ${(totalRev2025 / 1e8).toFixed(1)}억원`);
+}
+
+// 편성 워크플로우 seed (ExpenseCategory + BudgetPlanRequest + BudgetOverrideLog) — #433
+// 기존 12개 카테고리(MEDICAL, HOME_MATCH_SUPPORT 등)는 재활용, 편성 spec 트리거(ADR 0019)
+// 매핑용 4개만 신규 추가 (PUBLIC_UTILITY_KRW, MULTI_LOCATION_MGMT, DIRECT_BUSINESS_EXP, WEEKEND_OVERTIME_PAY).
+async function seedBudgetPlanWorkflow() {
+  const financialReport = await prisma.financialReport.findFirstOrThrow({
+    orderBy: { id: "asc" },
+  });
+
+  const newCategorySeeds = [
+    { code: "PUBLIC_UTILITY_KRW",   label: "공공요금",       sortOrder: 30, scope: "DEPARTMENT" as const },
+    { code: "MULTI_LOCATION_MGMT",  label: "다중거점 관리",  sortOrder: 31, scope: "DEPARTMENT" as const },
+    { code: "DIRECT_BUSINESS_EXP",  label: "사업 직접비",    sortOrder: 32, scope: "DEPARTMENT" as const },
+    { code: "WEEKEND_OVERTIME_PAY", label: "주말 야근 수당", sortOrder: 33, scope: "DEPARTMENT" as const },
+  ];
+  for (const c of newCategorySeeds) {
+    await prisma.expenseCategory.upsert({
+      where: { code: c.code },
+      update: {},
+      create: c,
+    });
+  }
+
+  const codes = [
+    "MEDICAL", "HOME_MATCH_SUPPORT", "AWAY_TRAVEL_TEAM", "TEAM_TRAINING_GEAR",
+    "SPORTS_EQUIPMENT",
+    "PUBLIC_UTILITY_KRW", "MULTI_LOCATION_MGMT", "DIRECT_BUSINESS_EXP", "WEEKEND_OVERTIME_PAY",
+  ];
+  const cats = await prisma.expenseCategory.findMany({ where: { code: { in: codes } } });
+  const catId = (code: string) => {
+    const c = cats.find((x) => x.code === code);
+    if (!c) throw new Error(`[seed] ExpenseCategory not found: ${code}`);
+    return c.id;
+  };
+
+  const financeUser = await prisma.user.findUniqueOrThrow({ where: { email: "finance@club.com" } });
+  const youthCoach  = await prisma.user.findUniqueOrThrow({ where: { email: "youth.coach1@club.com" } });
+  const headCoach   = await prisma.user.findUniqueOrThrow({ where: { email: "coach@club.com" } });
+  const gm          = await prisma.user.findUniqueOrThrow({ where: { email: "gm@club.com" } });
+
+  const firstTeam   = await prisma.team.findFirstOrThrow({ where: { name: "1군" } });
+  const u18Team     = await prisma.team.findFirstOrThrow({ where: { name: "U-18" } });
+  const financeDept = await prisma.department.findFirstOrThrow({ where: { name: "재무관리", clubId: null } });
+
+  const teamReq = await prisma.budgetPlanRequest.upsert({
+    where: {
+      financialReportId_ownerType_ownerId: {
+        financialReportId: financialReport.id,
+        ownerType: "TEAM",
+        ownerId: u18Team.id,
+      },
+    },
+    update: {},
+    create: {
+      financialReportId: financialReport.id,
+      requestedById: youthCoach.id,
+      scope: "TEAM",
+      ownerType: "TEAM",
+      ownerId: u18Team.id,
+      status: "SUBMITTED",
+      submittedAt: new Date("2026-08-25T10:00:00Z"),
+    },
+  });
+  const teamReqLines = [
+    { requestId: teamReq.id, categoryId: catId("HOME_MATCH_SUPPORT"),  triggers: ["HOME_MATCH" as const], standardDelta: 3_000_000, premiumDelta: 0,         comment: "홈 경기 지원 인원 증가 반영" },
+    { requestId: teamReq.id, categoryId: catId("AWAY_TRAVEL_TEAM"),    triggers: [],                       standardDelta: 5_000_000, premiumDelta: 2_000_000, comment: "원정 K리그2 경기 확대" },
+    { requestId: teamReq.id, categoryId: catId("TEAM_TRAINING_GEAR"),  triggers: [],                       standardDelta: 1_500_000, premiumDelta: 0,         comment: "GPS 장비 노후 교체" },
+  ];
+  for (const l of teamReqLines) {
+    await prisma.budgetPlanRequestLine.upsert({
+      where: { requestId_categoryId: { requestId: l.requestId, categoryId: l.categoryId } },
+      update: {},
+      create: l,
+    });
+  }
+
+  const deptReq = await prisma.budgetPlanRequest.upsert({
+    where: {
+      financialReportId_ownerType_ownerId: {
+        financialReportId: financialReport.id,
+        ownerType: "DEPARTMENT",
+        ownerId: financeDept.id,
+      },
+    },
+    update: {},
+    create: {
+      financialReportId: financialReport.id,
+      requestedById: financeUser.id,
+      scope: "DEPARTMENT",
+      ownerType: "DEPARTMENT",
+      ownerId: financeDept.id,
+      status: "SUBMITTED",
+      submittedAt: new Date("2026-08-26T09:30:00Z"),
+    },
+  });
+  const deptReqLines = [
+    { requestId: deptReq.id, categoryId: catId("PUBLIC_UTILITY_KRW"),  triggers: ["PUBLIC_UTILITY" as const],   standardDelta: 8_000_000, premiumDelta: 0,         comment: "전기·가스 요금 인상 반영" },
+    { requestId: deptReq.id, categoryId: catId("MULTI_LOCATION_MGMT"), triggers: ["MULTI_LOCATION" as const],   standardDelta: 4_000_000, premiumDelta: 1_000_000, comment: "2 지점 유지 관리 비용" },
+    { requestId: deptReq.id, categoryId: catId("MEDICAL"),             triggers: [],                             standardDelta: 2_500_000, premiumDelta: 0,         comment: "선수·직원 건강검진 확대" },
+  ];
+  for (const l of deptReqLines) {
+    await prisma.budgetPlanRequestLine.upsert({
+      where: { requestId_categoryId: { requestId: l.requestId, categoryId: l.categoryId } },
+      update: {},
+      create: l,
+    });
+  }
+
+  const draftReq = await prisma.budgetPlanRequest.upsert({
+    where: {
+      financialReportId_ownerType_ownerId: {
+        financialReportId: financialReport.id,
+        ownerType: "TEAM",
+        ownerId: firstTeam.id,
+      },
+    },
+    update: {},
+    create: {
+      financialReportId: financialReport.id,
+      requestedById: headCoach.id,
+      scope: "TEAM",
+      ownerType: "TEAM",
+      ownerId: firstTeam.id,
+      status: "DRAFT",
+    },
+  });
+  await prisma.budgetPlanRequestLine.upsert({
+    where: { requestId_categoryId: { requestId: draftReq.id, categoryId: catId("SPORTS_EQUIPMENT") } },
+    update: {},
+    create: {
+      requestId: draftReq.id,
+      categoryId: catId("SPORTS_EQUIPMENT"),
+      triggers: [],
+      standardDelta: 2_000_000,
+      premiumDelta: 0,
+      comment: "홈/원정 유니폼 추가 세트",
+    },
+  });
+
+  const existingPending = await prisma.budgetOverrideLog.findFirst({
+    where: { financialReportId: financialReport.id, categoryId: catId("PUBLIC_UTILITY_KRW"), status: "PENDING" },
+  });
+  if (!existingPending) {
+    await prisma.budgetOverrideLog.create({
+      data: {
+        financialReportId: financialReport.id,
+        categoryId: catId("PUBLIC_UTILITY_KRW"),
+        amount: 3_000_000,
+        reason: "8월 폭염 냉방비 초과 — 실사용량 근거 첨부",
+        createdById: financeUser.id,
+        status: "PENDING",
+      },
+    });
+  }
+
+  const existingApproved = await prisma.budgetOverrideLog.findFirst({
+    where: { financialReportId: financialReport.id, categoryId: catId("MEDICAL"), status: "APPROVED" },
+  });
+  if (!existingApproved) {
+    await prisma.budgetOverrideLog.create({
+      data: {
+        financialReportId: financialReport.id,
+        categoryId: catId("MEDICAL"),
+        amount: 4_500_000,
+        reason: "선수 부상 의료 지출 추가 승인 요청",
+        createdById: headCoach.id,
+        status: "APPROVED",
+        reviewedById: gm.id,
+        reviewedAt: new Date("2026-08-27T14:00:00Z"),
+        reviewNote: "긴급 사안 승인",
+      },
+    });
+  }
+
+  console.log(
+    `[seed] BudgetPlan workflow — ${newCategorySeeds.length} new categories, 3 requests (SUBMITTED×2, DRAFT×1), 2 override logs (PENDING+APPROVED)`,
+  );
 }
 
 main()
