@@ -196,6 +196,45 @@ export class BudgetPlanRequestService {
     }
   }
 
+  async rePlan(seasonId: number, actorUserId: number, reason: string): Promise<void> {
+    if (!reason || reason.trim().length === 0) {
+      throw new AppError(400, "REASON_REQUIRED");
+    }
+    const report = await this.prisma.financialReport.findUnique({
+      where: { seasonId },
+      select: { id: true, planStatus: true },
+    });
+    if (!report) throw new AppError(404, "FINANCIAL_REPORT_NOT_FOUND");
+    if (report.planStatus !== "FINALIZED") {
+      throw new AppError(409, "INVALID_PLAN_STATUS_TRANSITION");
+    }
+    const now = new Date();
+    // 기존 SUBMITTED request 는 archive (PROCESSED)
+    await this.prisma.budgetPlanRequest.updateMany({
+      where: { financialReportId: report.id, status: "SUBMITTED" },
+      data: { status: "PROCESSED", processedAt: now },
+    });
+    await this.prisma.financialReport.update({
+      where: { id: report.id },
+      data: {
+        planStatus: "AWAITING_REVIEW",
+        planStatusChangedAt: now,
+        planStatusChangedById: actorUserId,
+        reviewOpenedAt: now,
+        reviewDeadline: new Date(now.getTime() + REVIEW_WINDOW_MS),
+        note: `RE_PLAN: ${reason}`,
+      },
+    });
+    if (this.notifyHook && this.reviewersFn) {
+      const reviewers = await this.reviewersFn();
+      await this.notifyHook("REVIEW_OPENED", {
+        seasonId,
+        deadline: new Date(now.getTime() + REVIEW_WINDOW_MS),
+        reviewers,
+      });
+    }
+  }
+
   async executeKnapsack(seasonId: number, actorUserId: number): Promise<void> {
     if (!this.knapsackService) throw new AppError(500, "KNAPSACK_SERVICE_NOT_INJECTED");
 
