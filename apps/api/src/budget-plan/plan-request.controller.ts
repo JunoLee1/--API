@@ -82,4 +82,16 @@ export class BudgetPlanRequestController {
       res.status(204).end();
     } catch (err) { next(err); }
   };
+
+  rePlan = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, id: userId } = requireUser(req);
+      if (role !== "GM") throw new AppError(403, "FORBIDDEN");
+      const seasonId = Number(req.params["seasonId"]);
+      const { reason } = req.body as { reason?: string };
+      if (!reason || reason.trim().length === 0) throw new AppError(400, "REASON_REQUIRED");
+      await this.service.rePlan(seasonId, userId, reason);
+      res.status(204).end();
+    } catch (err) { next(err); }
+  };
 }

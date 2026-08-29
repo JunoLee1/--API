@@ -47,6 +47,9 @@ router.post("/financial-reports/:seasonId/finalize", auth, controller.finalize);
 // GM: AWAITING_GM_APPROVAL → FINALIZED
 router.post("/financial-reports/:seasonId/gm-approve", auth, controller.gmApprove);
 
+// GM: FINALIZED → AWAITING_REVIEW 재개방 (reason 필수)
+router.post("/financial-reports/:seasonId/re-plan", auth, controller.rePlan);
+
 // #407: BudgetOverrideLog 편성 이의 신청/승인
 const overrideService = new BudgetOverrideService(prisma);
 const overrideController = new BudgetOverrideController(overrideService);
