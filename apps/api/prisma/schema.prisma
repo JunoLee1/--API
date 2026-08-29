@@ -917,6 +917,8 @@ model User {
   secondApprovedPayrolls    PayrollRun[]                    @relation("PayrollRunSecondApprover")
   budgetOverrideLogs        BudgetOverrideLog[]             @relation("BudgetOverrideLogCreator")
   budgetOverrideReviews     BudgetOverrideLog[]             @relation("BudgetOverrideLogReviewer")
+  proposedMinimumChanges    MandatoryMinimumChangeLog[]     @relation("MinimumProposer")
+  reviewedMinimumChanges    MandatoryMinimumChangeLog[]     @relation("MinimumReviewer")
   revenueLogChanges         FinancialReportRevenueLog[]     @relation("RevenueLogChanger")
   operatingExpenses         OperatingExpense[]              @relation("OperatingExpenseCreator")
   paidExpenses              OperatingExpense[]              @relation("OperatingExpensePayer")
@@ -2823,17 +2825,18 @@ enum AdjustmentStatus {
 }
 
 model BudgetCategoryPlan {
-  id                Int             @id @default(autoincrement())
-  financialReportId Int
-  categoryId        Int
-  mandatoryMinimum  Int             @default(0)
-  knapsackAllocated Int?
-  sortOrder         Int             @default(0)
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  financialReport   FinancialReport @relation(fields: [financialReportId], references: [id], onDelete: Cascade)
-  expenseCategory   ExpenseCategory @relation(fields: [categoryId], references: [id])
-  tiers             BudgetTier[]
+  id                  Int                         @id @default(autoincrement())
+  financialReportId   Int
+  categoryId          Int
+  mandatoryMinimum    Int                         @default(0)
+  knapsackAllocated   Int?
+  sortOrder           Int                         @default(0)
+  createdAt           DateTime                    @default(now())
+  updatedAt           DateTime                    @updatedAt
+  financialReport     FinancialReport             @relation(fields: [financialReportId], references: [id], onDelete: Cascade)
+  expenseCategory     ExpenseCategory             @relation(fields: [categoryId], references: [id])
+  tiers               BudgetTier[]
+  minimumChangeLogs   MandatoryMinimumChangeLog[]
 
   @@unique([financialReportId, categoryId])
 }
@@ -2867,6 +2870,43 @@ model BudgetOverrideLog {
   createdBy         User            @relation("BudgetOverrideLogCreator", fields: [createdById], references: [id])
   reviewedBy        User?           @relation("BudgetOverrideLogReviewer", fields: [reviewedById], references: [id])
   expenseCategory   ExpenseCategory @relation(fields: [categoryId], references: [id])
+}
+
+// mandatoryMinimum 세팅·변경 이력 (ADR 0022)
+enum MinimumEvidenceType {
+  CONTRACT     // 계약서 근거 — evidenceUrl 필수
+  LEGAL        // 법령 근거 — evidenceUrl 필수
+  FIXED_COST   // 계약 없는 고정비 (임대료 등) — evidenceUrl optional
+}
+
+enum MinimumChangeStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELED     // 같은 categoryPlanId 새 PENDING 등장 시 이전 자동 취소 (grill Q5)
+}
+
+model MandatoryMinimumChangeLog {
+  id             Int                 @id @default(autoincrement())
+  categoryPlanId Int
+  previousAmount Int
+  newAmount      Int
+  evidenceType   MinimumEvidenceType
+  evidenceUrl    String?             // CONTRACT/LEGAL 필수, FIXED_COST optional (서비스 레이어 강제)
+  reason         String
+  effectiveDate  DateTime            // 참고용 (계약 개시일 등 감사 기록)
+  status         MinimumChangeStatus @default(PENDING)
+  proposedById   Int
+  proposedAt     DateTime            @default(now())
+  reviewedById   Int?
+  reviewedAt     DateTime?
+  reviewNote     String?
+
+  categoryPlan BudgetCategoryPlan @relation(fields: [categoryPlanId], references: [id], onDelete: Cascade)
+  proposedBy   User               @relation("MinimumProposer", fields: [proposedById], references: [id])
+  reviewedBy   User?              @relation("MinimumReviewer", fields: [reviewedById], references: [id])
+
+  @@index([categoryPlanId, status])
 }
 
 enum ExpenseCostType {
