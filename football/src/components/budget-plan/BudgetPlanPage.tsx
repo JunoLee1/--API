@@ -5,6 +5,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser'
 import type { UserDto } from '@/types/auth'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PlanStatusBadge } from './PlanStatusBadge'
+import { GmReplanPanel } from './GmReplanPanel'
 
 interface Props {
   seasonId: number
@@ -151,14 +152,9 @@ export function BudgetPlanPage({ seasonId }: Props) {
       )}
 
       {persona === 'GM' && (
-        // TODO(#432): <GmApprovalPanel seasonId={seasonId} planStatus={planStatus} />
-        // 확정 승인 자체는 별도 slice 에서 처리되며, 이 자리는 재편성 지시 패널이 들어온다.
-        <section
-          data-persona="GM"
-          className="rounded-md border border-dashed p-4 text-sm text-muted-foreground"
-        >
-          GM 재편성 지시 패널 (준비 중)
-        </section>
+        // #432 GM 재편성 지시 패널. 확정된 편성만 재편성 트리거 가능하며,
+        // 그 외 상태 (승인 대기 등) UI 는 별도 slice 에서 붙는다.
+        <GmReplanPanel seasonId={seasonId} planStatus={planStatus} />
       )}
 
       {persona === 'ADMIN' && (
