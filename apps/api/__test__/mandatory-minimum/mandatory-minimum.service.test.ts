@@ -9,6 +9,9 @@ type MockOpts = {
   logCategoryPlanId?: number;
   logNewAmount?: number;
   seasonFinancialReportId?: number | null;
+  // #449 B3: review() post-tx 위반 감지에 필요한 seasonId (log include 결과)
+  logSeasonId?: number | null;
+  planTiers?: Array<{ id: number; name: string; cost: number }>;
 };
 
 const makePrisma = (opts: MockOpts = {}) => {
@@ -38,6 +41,11 @@ const makePrisma = (opts: MockOpts = {}) => {
           status: opts.logStatus,
           categoryPlanId: opts.logCategoryPlanId ?? 10,
           newAmount: opts.logNewAmount ?? 200_000,
+          // #449 B3: review() 안에서 select 하는 categoryPlan.financialReport.seasonId
+          categoryPlan:
+            opts.logSeasonId === null
+              ? { financialReport: null }
+              : { financialReport: { seasonId: opts.logSeasonId ?? 1 } },
         }
       : null,
   );
@@ -50,10 +58,16 @@ const makePrisma = (opts: MockOpts = {}) => {
 
   const prisma = {
     budgetCategoryPlan: {
+      // propose 와 detectMinimumViolation 이 서로 다른 select 를 사용하지만
+      // 둘 다 동일 mock 결과를 사용 (tiers 배열 있어도 propose 는 무시).
       findUnique: jest.fn().mockResolvedValue(
         opts.planId === null
           ? null
-          : { id: opts.planId ?? 10, mandatoryMinimum: opts.planMandatoryMinimum ?? 100_000 },
+          : {
+              id: opts.planId ?? 10,
+              mandatoryMinimum: opts.planMandatoryMinimum ?? 100_000,
+              tiers: opts.planTiers ?? [],
+            },
       ),
       update: updatePlan,
     } as any,
@@ -267,6 +281,122 @@ describe("MandatoryMinimumService.review", () => {
     const logUpdate = prisma.__updated[0].args;
     expect(logUpdate.data.status).toBe("REJECTED");
     expect(prisma.__updatedPlan).toHaveLength(0);
+  });
+
+  // #449 B3: APPROVED post-tx 위반 감지 훅 통합 테스트
+  describe("post-approval violation notifier", () => {
+    test("APPROVED + Basic=100 + newAmount=200 → notifier 호출 (violated=true)", async () => {
+      const prisma = makePrisma({
+        logStatus: "PENDING",
+        logCategoryPlanId: 10,
+        logNewAmount: 200_000,
+        logSeasonId: 1,
+        planMandatoryMinimum: 200_000,
+        planTiers: [{ id: 1, name: "Basic", cost: 100_000 }],
+      });
+      const notifier = jest.fn().mockResolvedValue(undefined as unknown as never);
+      const svc = new MandatoryMinimumService(
+        prisma as unknown as PrismaClient,
+        notifier as any,
+      );
+
+      await svc.review(500, "APPROVED", "OK", 999);
+
+      expect(notifier).toHaveBeenCalledTimes(1);
+      const [seasonId, categoryPlanId, detection] = notifier.mock.calls[0] as any;
+      expect(seasonId).toBe(1);
+      expect(categoryPlanId).toBe(10);
+      expect(detection.violated).toBe(true);
+      expect(detection.basicCost).toBe(100_000);
+      expect(detection.newMinimum).toBe(200_000);
+      expect(detection.violationDelta).toBe(100_000);
+    });
+
+    test("APPROVED + Basic=300 + newAmount=200 → notifier 호출 (violated=false)", async () => {
+      // notifier 자체는 호출됨 (detection 결과와 무관하게 항상 훅 실행).
+      // 발송 여부는 notifier 내부에서 detection.violated 로 결정.
+      const prisma = makePrisma({
+        logStatus: "PENDING",
+        logCategoryPlanId: 10,
+        logNewAmount: 200_000,
+        logSeasonId: 1,
+        planMandatoryMinimum: 200_000,
+        planTiers: [{ id: 1, name: "Basic", cost: 300_000 }],
+      });
+      const notifier = jest.fn().mockResolvedValue(undefined as unknown as never);
+      const svc = new MandatoryMinimumService(
+        prisma as unknown as PrismaClient,
+        notifier as any,
+      );
+
+      await svc.review(500, "APPROVED", "OK", 999);
+
+      expect(notifier).toHaveBeenCalledTimes(1);
+      const [, , detection] = notifier.mock.calls[0] as any;
+      expect(detection.violated).toBe(false);
+      expect(detection.violationDelta).toBe(0);
+    });
+
+    test("notifier 없이도 review APPROVED 정상 동작 (하위호환)", async () => {
+      const prisma = makePrisma({
+        logStatus: "PENDING",
+        logCategoryPlanId: 10,
+        logNewAmount: 250_000,
+      });
+      const svc = new MandatoryMinimumService(prisma as unknown as PrismaClient);
+      // notifier 없어도 예외 없이 update 반영
+      await svc.review(500, "APPROVED", "OK", 999);
+      expect(prisma.__updatedPlan[0].args.data.mandatoryMinimum).toBe(250_000);
+    });
+
+    test("REJECTED → notifier 호출 안 함", async () => {
+      const prisma = makePrisma({
+        logStatus: "PENDING",
+        logCategoryPlanId: 10,
+        logNewAmount: 200_000,
+        logSeasonId: 1,
+        planMandatoryMinimum: 100_000,
+        planTiers: [{ id: 1, name: "Basic", cost: 50_000 }],
+      });
+      const notifier = jest.fn().mockResolvedValue(undefined as unknown as never);
+      const svc = new MandatoryMinimumService(
+        prisma as unknown as PrismaClient,
+        notifier as any,
+      );
+
+      await svc.review(500, "REJECTED", "근거 부족", 999);
+
+      expect(notifier).not.toHaveBeenCalled();
+    });
+
+    test("notifier 내부 예외 → review 자체는 성공 (fire-and-forget)", async () => {
+      const prisma = makePrisma({
+        logStatus: "PENDING",
+        logCategoryPlanId: 10,
+        logNewAmount: 200_000,
+        logSeasonId: 1,
+        planMandatoryMinimum: 200_000,
+        planTiers: [{ id: 1, name: "Basic", cost: 100_000 }],
+      });
+      const notifier = jest.fn().mockRejectedValue(new Error("boom") as never);
+      const svc = new MandatoryMinimumService(
+        prisma as unknown as PrismaClient,
+        notifier as any,
+      );
+
+      const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+      try {
+        // review 자체는 정상적으로 updated 를 반환해야 함
+        const result = await svc.review(500, "APPROVED", "OK", 999);
+        expect(result).toBeDefined();
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          "[mm] post-review violation notify failed",
+          expect.any(Error),
+        );
+      } finally {
+        consoleErrorSpy.mockRestore();
+      }
+    });
   });
 });
 

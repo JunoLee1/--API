@@ -4,6 +4,8 @@ import type {
   MinimumEvidenceType,
   MinimumChangeStatus,
 } from "../generated/enums";
+import { detectMinimumViolation } from "./violation";
+import type { ViolationDetection } from "./violation";
 
 // #448 B2: mandatoryMinimum 세팅·변경 워크플로우 (ADR 0022)
 //
@@ -44,8 +46,19 @@ const CATEGORY_SELECT = {
 
 type Prisma = Pick<PrismaClient, "budgetCategoryPlan" | "mandatoryMinimumChangeLog" | "financialReport" | "$transaction">;
 
+// #449 B3: review() APPROVED 후 위반 감지 + GM 알림 훅.
+// 테스트에서 spy 할 수 있도록 hook injection.
+export type ViolationNotifier = (
+  seasonId: number,
+  categoryPlanId: number,
+  detection: ViolationDetection,
+) => Promise<void>;
+
 export class MandatoryMinimumService {
-  constructor(private prisma: Prisma) {}
+  constructor(
+    private prisma: Prisma,
+    private violationNotifier?: ViolationNotifier,
+  ) {}
 
   /**
    * FinanceManager 제안. 같은 categoryPlanId 에 기존 PENDING 이 있으면 자동 CANCELED (grill Q5).
@@ -140,6 +153,12 @@ export class MandatoryMinimumService {
         status: true,
         categoryPlanId: true,
         newAmount: true,
+        // #449 B3: post-tx 알림용 seasonId 필요 (financialReport → seasonId)
+        categoryPlan: {
+          select: {
+            financialReport: { select: { seasonId: true } },
+          },
+        },
       },
     });
     if (!log) throw new AppError(404, "LOG_NOT_FOUND");
@@ -189,7 +208,20 @@ export class MandatoryMinimumService {
       }),
     ]);
 
-    // TODO(#449 B3): after tx commit, detect basicCost < newAmount 위반 + notify GM (ADR 0021 채널)
+    // #449 B3: tx commit 후 fire-and-forget — Basic < newAmount 이면 GM 재편성 요청 알림.
+    // 예외는 review() 성공을 막지 않는다 (내부에서도 try/catch 로 로깅).
+    const seasonId = log.categoryPlan?.financialReport?.seasonId;
+    if (this.violationNotifier && seasonId != null) {
+      try {
+        const detection = await detectMinimumViolation(
+          this.prisma,
+          log.categoryPlanId,
+        );
+        await this.violationNotifier(seasonId, log.categoryPlanId, detection);
+      } catch (err) {
+        console.error("[mm] post-review violation notify failed", err);
+      }
+    }
 
     return updated;
   }

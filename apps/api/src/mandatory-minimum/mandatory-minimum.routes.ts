@@ -3,9 +3,20 @@ import { auth } from "../lib/authMiddleware";
 import { getPrisma } from "../lib/prisma";
 import { MandatoryMinimumService } from "./mandatory-minimum.service";
 import { MandatoryMinimumController } from "./mandatory-minimum.controller";
+import { NotificationRepository } from "../notification/notification.repo";
+import { notifyMinimumViolation } from "./notify";
 
 const prisma = getPrisma();
-const service = new MandatoryMinimumService(prisma);
+
+// #449 B3: review() APPROVED 후 위반 → GM 재편성 요청 알림 훅
+const notificationRepo = new NotificationRepository(prisma);
+const violationNotifier = (
+  seasonId: number,
+  categoryPlanId: number,
+  detection: Parameters<typeof notifyMinimumViolation>[2],
+) => notifyMinimumViolation(seasonId, categoryPlanId, detection, { prisma, notificationRepo });
+
+const service = new MandatoryMinimumService(prisma, violationNotifier);
 const controller = new MandatoryMinimumController(service);
 
 const router = Router();
