@@ -397,6 +397,8 @@ enum NotificationType {
   ONBOARDING_TASK_VERIFIED // verify APPROVE → 신입에게 승인 알림
   ONBOARDING_TASK_REJECTED // verify REJECT → 신입에게 반려 알림 (verifyNotes 포함)
   ONBOARDING_CONTENT_COMPLETED // 모든 required task 완료 → 신입 + HR + dept.head 알림
+  // #449 B3: mandatoryMinimum 승인 후 Basic 티어 < 새 최소예산 감지 → GM 재편성 요청
+  MANDATORY_MINIMUM_VIOLATION_REQUIRES_REPLAN
 }
 
 enum DepreciationMethod {
