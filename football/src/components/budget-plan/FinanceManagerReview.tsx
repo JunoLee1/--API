@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useExpenseCategories } from '@/hooks/useExpenseCategories'
 import {
+  useBudgetPlan,
   useExecuteKnapsack,
   useFinalize,
   useOpenReview,
@@ -42,6 +43,9 @@ import {
   type BudgetPlanRequestLineDto,
   type BudgetPlanStatus,
 } from '@/services/budget-plan.service'
+import { usePendingMinimums } from '@/services/mandatory-minimum.service'
+import { MandatoryMinimumProposalDialog } from './MandatoryMinimumProposalDialog'
+import type { CategoryScope } from '@/types/expense-category'
 
 // ============================================================================
 // Widened planStatus (issue #429 spec)
@@ -474,6 +478,10 @@ export function FinanceManagerReview({ seasonId, planStatus }: Props) {
   const finalize = useFinalize(seasonId)
   const rePlan = useRePlan(seasonId)
   const reviewOverride = useReviewOverride()
+  // #451: mandatoryMinimum 관리 섹션. BudgetPlan(budgetCategoryPlans[]) +
+  // PENDING mm 제안 목록. 각 하위 hook 이 seasonId 로 스코프.
+  const budgetPlanQuery = useBudgetPlan(seasonId)
+  const pendingMinimumsQuery = usePendingMinimums(seasonId)
 
   const [rePlanOpen, setRePlanOpen] = useState(false)
   const [reviewTarget, setReviewTarget] = useState<{
@@ -819,6 +827,158 @@ export function FinanceManagerReview({ seasonId, planStatus }: Props) {
                     </TableCell>
                   </TableRow>
                 ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 카테고리별 mandatoryMinimum 관리 (issue #451 F2 / ADR 0022) */}
+      <Card data-testid="mm-manage-section">
+        <CardHeader>
+          <CardTitle className="text-base">
+            카테고리별 최소 배정액 관리
+            {pendingMinimumsQuery.data && pendingMinimumsQuery.data.length > 0 && (
+              <span
+                className="ml-2 text-xs text-muted-foreground"
+                data-testid="mm-pending-count"
+              >
+                ({pendingMinimumsQuery.data.length}건 PENDING)
+              </span>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {budgetPlanQuery.isLoading && (
+            <div className="space-y-2" data-testid="mm-loading">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          )}
+
+          {budgetPlanQuery.isError && !budgetPlanQuery.isLoading && (
+            <div
+              className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900 dark:bg-red-950 dark:text-red-100 dark:border-red-800"
+              data-testid="mm-error"
+            >
+              편성 계획을 불러오지 못했습니다:{' '}
+              {translateError(budgetPlanQuery.error)}
+            </div>
+          )}
+
+          {!budgetPlanQuery.isLoading &&
+            !budgetPlanQuery.isError &&
+            (budgetPlanQuery.data?.budgetCategoryPlans ?? []).length === 0 && (
+              <p
+                className="text-sm text-muted-foreground"
+                data-testid="mm-empty"
+              >
+                아직 편성 카테고리가 없습니다.
+              </p>
+            )}
+
+          {(budgetPlanQuery.data?.budgetCategoryPlans ?? []).length > 0 && (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">카테고리</TableHead>
+                  <TableHead className="text-xs">스코프</TableHead>
+                  <TableHead className="text-xs text-right">
+                    현재 최소 배정액
+                  </TableHead>
+                  <TableHead className="text-xs">PENDING</TableHead>
+                  <TableHead className="text-xs text-right">액션</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(budgetPlanQuery.data?.budgetCategoryPlans ?? []).map((cp) => {
+                  // BudgetCategoryPlan.category 는 code 문자열. label / scope 는
+                  // useExpenseCategories 결과에서 조회한다.
+                  const cat = categories.find((c) => c.code === cp.category)
+                  const label = cat?.label ?? labelOf(cp.category)
+                  const scope: CategoryScope | undefined = cat?.scope
+                  // PENDING 제안 lookup — 같은 categoryPlanId 로 매칭.
+                  const pending = (pendingMinimumsQuery.data ?? []).find(
+                    (p) => p.categoryPlanId === cp.id,
+                  )
+                  return (
+                    <TableRow key={cp.id} data-mm-category-plan-id={cp.id}>
+                      <TableCell className="text-xs font-medium">
+                        {label}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {scope ? (
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              'border',
+                              SCOPE_BADGE_CLASS[scope],
+                            )}
+                            data-mm-scope={scope}
+                          >
+                            {SCOPE_BADGE_LABEL[scope]}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs tabular-nums text-right">
+                        ₩{cp.mandatoryMinimum.toLocaleString('ko-KR')}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {pending ? (
+                          <Badge
+                            variant="outline"
+                            className="border border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-100 dark:border-amber-800 tabular-nums"
+                            title={`제안 금액 ₩${pending.newAmount.toLocaleString('ko-KR')} — 사유: ${pending.reason}`}
+                            data-testid={`mm-pending-badge-${cp.id}`}
+                          >
+                            PENDING ₩
+                            {pending.newAmount.toLocaleString('ko-KR')}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <MandatoryMinimumProposalDialog
+                            categoryPlan={{
+                              id: cp.id,
+                              mandatoryMinimum: cp.mandatoryMinimum,
+                              expenseCategory: {
+                                code: cp.category,
+                                label,
+                              },
+                            }}
+                            seasonId={seasonId}
+                            trigger={
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                data-testid={`mm-propose-btn-${cp.id}`}
+                              >
+                                값 제안
+                              </Button>
+                            }
+                          />
+                          {/* TODO(#453 F4): <MandatoryMinimumHistoryDialog />
+                              현재는 placeholder — disabled 상태로 노출해 이력 진입점만
+                              유지한다. */}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled
+                            title="이력 조회는 곧 지원됩니다 (issue #453)"
+                            data-testid={`mm-history-btn-${cp.id}`}
+                          >
+                            이력
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
               </TableBody>
             </Table>
           )}
