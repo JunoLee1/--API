@@ -22,6 +22,7 @@ import {
   useRePlan,
   type BudgetPlanStatus,
 } from '@/services/budget-plan.service'
+import { MandatoryMinimumApprovalQueue } from './MandatoryMinimumApprovalQueue'
 import { PlanStatusBadge } from './PlanStatusBadge'
 
 // ============================================================================
@@ -209,6 +210,13 @@ export function GmReplanPanel({
       data-testid="gm-re-plan-panel"
       className="space-y-4"
     >
+      {/*
+        #452 F3: GM 은 재편성을 실행하기 전에 대기 중인 mandatoryMinimum
+        변경 제안부터 확인해야 한다. 따라서 승인 대기함을 재편성 트리거 카드
+        위에 embed. 큐가 비어 있으면 컴팩트 empty state 를 스스로 렌더한다.
+      */}
+      <MandatoryMinimumApprovalQueue seasonId={seasonId} />
+
       <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between gap-4">
