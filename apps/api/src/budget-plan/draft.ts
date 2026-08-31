@@ -23,6 +23,8 @@ interface RunPreviewArgs {
   nextSeasonId: number;
   reportId: number;
   goal: GoalWeight;
+  // #448: 이전 시즌 categoryId → mandatoryMinimum 매핑. 신규 카테고리는 여기 없어서 0 fallback.
+  previousMinimums: Map<number, number>;
 }
 
 interface BasicTierProbe {
@@ -53,7 +55,9 @@ async function runPreviewAndPersistBasics(args: RunPreviewArgs): Promise<{
     data: categoryEntries.map((c) => ({
       financialReportId: args.reportId,
       categoryId: c.categoryId,
-      mandatoryMinimum: 0,
+      // #448: 이전 시즌 값 이어받음. 신규 카테고리는 0 (grill Q3).
+      // 재시도 (CONSERVATIVE) 시엔 skipDuplicates 로 기존 plan 유지 → 값 덮어쓰지 않음.
+      mandatoryMinimum: args.previousMinimums.get(c.categoryId) ?? 0,
       sortOrder: c.sortOrder,
     })),
     skipDuplicates: true,
@@ -142,6 +146,10 @@ export async function createDraftForNextSeason(
     contingencyReserve: (report as any).contingencyReserve ?? null,
   };
 
+  // #448: 이전 시즌 categoryId → mandatoryMinimum 이월용 map.
+  // FinancialReport.seasonId 는 @unique → 1:1. 없으면 빈 map (신규 카테고리처럼 0 fallback).
+  const previousMinimums = await loadPreviousMinimums(prisma, closedSeasonId);
+
   // Step 1: MAINTAIN preview → Basic 티어
   const first = await runPreviewAndPersistBasics({
     prisma,
@@ -150,6 +158,7 @@ export async function createDraftForNextSeason(
     nextSeasonId: nextSeason.id,
     reportId: report.id,
     goal: "MAINTAIN",
+    previousMinimums,
   });
 
   // Step 2: invariant → 위반 시 즉시 CAPACITY_FAILED
@@ -176,6 +185,7 @@ export async function createDraftForNextSeason(
     nextSeasonId: nextSeason.id,
     reportId: report.id,
     goal: "CONSERVATIVE",
+    previousMinimums,
   });
 
   const invariantResult2 = checkInvariants(second.basicTiers);
@@ -229,4 +239,24 @@ async function failWithReason(prisma: Prisma, reportId: number, reason: string):
       note: reason,
     },
   });
+}
+
+/**
+ * #448: 이전 시즌 FinancialReport 의 budgetCategoryPlan 에서 categoryId → mandatoryMinimum 매핑.
+ * 이전 시즌 FinancialReport 가 없거나 plan 이 없으면 빈 map (신규 카테고리는 0 fallback — grill Q3).
+ */
+async function loadPreviousMinimums(
+  prisma: Prisma,
+  prevSeasonId: number,
+): Promise<Map<number, number>> {
+  const prevReport = await prisma.financialReport.findUnique({
+    where: { seasonId: prevSeasonId },
+    select: { id: true },
+  });
+  if (!prevReport) return new Map();
+  const plans = await prisma.budgetCategoryPlan.findMany({
+    where: { financialReportId: prevReport.id },
+    select: { categoryId: true, mandatoryMinimum: true },
+  });
+  return new Map(plans.map((p) => [p.categoryId, p.mandatoryMinimum]));
 }
