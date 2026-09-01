@@ -4,7 +4,10 @@ import { AppError } from "./appError";
 /**
  * 특정 시즌의 실제 매출을 소스 테이블에서 집계한다.
  * - Ticket:        SalesRecord TICKET+VIP_TICKET, Match.seasonId 매칭
- * - Sponsorship:   SponsorshipPayment PAID, paidAt in season window
+ * - Sponsorship (Actual, cash basis):
+ *                  SponsorshipPayment PAID, paidAt in season window
+ * - Sponsorship (Expected, accrual basis, ADR 0024):
+ *                  SponsorshipPayment.dueDate in season window (status 무관)
  * - Merchandise:   SalesRecord UNIFORM, saleDate in season window
  * - Other:         SalesRecord OTHER,   saleDate in season window
  * - AcademyFee:    LedgerEntry ACADEMY_FEE INCOME, createdAt in season window
@@ -14,7 +17,8 @@ import { AppError } from "./appError";
  */
 export interface SeasonRevenueActuals {
   plannedRevenueTicket: number;
-  plannedRevenueSponsorship: number;
+  plannedRevenueSponsorship: number;      // Actual (cash by paidAt in window)
+  expectedRevenueSponsorship: number;     // Expected (accrual by dueDate in window, status 무관) — ADR 0024
   plannedRevenueMerchandise: number;
   plannedRevenueOther: number;
   plannedRevenueAcademyFee: number;
@@ -32,7 +36,7 @@ export async function getSeasonRevenueActuals(seasonId: number): Promise<SeasonR
   });
   if (!season) throw new AppError(404, "SEASON_NOT_FOUND");
 
-  const [ticketAgg, uniformAgg, otherAgg, sponsorAgg, academyFeeAgg] = await Promise.all([
+  const [ticketAgg, uniformAgg, otherAgg, sponsorAgg, expectedSponsorAgg, academyFeeAgg] = await Promise.all([
     prisma.salesRecord.aggregate({
       where: {
         type: { in: ["TICKET", "VIP_TICKET"] as any[] },
@@ -61,6 +65,11 @@ export async function getSeasonRevenueActuals(seasonId: number): Promise<SeasonR
       where: { status: "PAID", paidAt: { gte: season.startDate, lte: season.endDate } },
       _sum: { amount: true },
     }),
+    // Expected (accrual, ADR 0024): dueDate ∈ season window, status 무관 (PENDING/PAID/OVERDUE).
+    prisma.sponsorshipPayment.aggregate({
+      where: { dueDate: { gte: season.startDate, lte: season.endDate } },
+      _sum: { amount: true },
+    }),
     prisma.ledgerEntry.aggregate({
       where: {
         category: "ACADEMY_FEE",
@@ -74,6 +83,7 @@ export async function getSeasonRevenueActuals(seasonId: number): Promise<SeasonR
   return {
     plannedRevenueTicket:        Number((ticketAgg._sum as any).totalAmount ?? 0),
     plannedRevenueSponsorship:   Number(sponsorAgg._sum.amount ?? 0),
+    expectedRevenueSponsorship:  Number(expectedSponsorAgg._sum.amount ?? 0),
     plannedRevenueMerchandise:   Number((uniformAgg._sum as any).totalAmount ?? 0),
     plannedRevenueOther:         Number((otherAgg._sum as any).totalAmount ?? 0),
     plannedRevenueAcademyFee:    Number(academyFeeAgg._sum.amountKrw ?? 0),

@@ -2,7 +2,8 @@ import { PrismaClient } from "../generated/client";
 
 export interface RevenueBreakdownDto {
   plannedRevenueTicket?: number;
-  plannedRevenueSponsorship?: number;
+  plannedRevenueSponsorship?: number;      // Actual (cash)
+  expectedRevenueSponsorship?: number;     // Expected (accrual, ADR 0024) — NOT summed into total
   plannedRevenueBroadcast?: number;
   plannedRevenueMerchandise?: number;
   plannedRevenueSubsidy?: number;
@@ -51,6 +52,11 @@ export class FinancialReportRepository {
       ? {
           plannedRevenueTicket: breakdown.plannedRevenueTicket ?? 0,
           plannedRevenueSponsorship: breakdown.plannedRevenueSponsorship ?? 0,
+          // Expected 는 nullable 이므로 undefined 그대로 두면 Prisma 가 SET 안 함.
+          // (breakdown 에 undefined 로 오면 field 를 건드리지 않고, 명시 값이면 설정)
+          ...(breakdown.expectedRevenueSponsorship !== undefined
+            ? { expectedRevenueSponsorship: breakdown.expectedRevenueSponsorship }
+            : {}),
           plannedRevenueBroadcast: breakdown.plannedRevenueBroadcast ?? 0,
           plannedRevenueMerchandise: breakdown.plannedRevenueMerchandise ?? 0,
           plannedRevenueSubsidy: breakdown.plannedRevenueSubsidy ?? 0,

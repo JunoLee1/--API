@@ -2617,6 +2617,14 @@ model FinancialReport {
   // actuals into these fields — that broke dashboards prior to 2026-08-22.
   plannedRevenueTicket        Float                       @default(0)
   plannedRevenueSponsorship   Float                       @default(0)
+  // Expected sponsorship revenue (accrual basis): Σ SponsorshipPayment.amount
+  // WHERE dueDate ∈ [season.startDate, season.endDate], status 무관.
+  // Nullable for backward compatibility (see ADR 0024). plannedRevenueSponsorship
+  // 은 여전히 Actual (cash by paidAt) — 이 필드가 추가되어도 breaking 없음.
+  // Deviation from ADR (Int? → Float?): 실측 sponsorship 총합이 INT4 범위(2.1B)
+  // 를 초과하는 시즌이 있어 sibling plannedRevenueSponsorship(Float) 와 동일한
+  // double precision 으로 저장. FE 는 여전히 number 로 소비 가능.
+  expectedRevenueSponsorship  Float?
   plannedRevenueBroadcast     Float                       @default(0)
   plannedRevenueMerchandise   Float                       @default(0)
   plannedRevenueSubsidy       Float                       @default(0)

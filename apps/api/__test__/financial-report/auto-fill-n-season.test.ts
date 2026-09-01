@@ -54,9 +54,9 @@ describe("FinancialReportService.autoFillRevenueFromPrevSeasons", () => {
   it("averages 3 CLOSED seasons by field (default lookback=3)", async () => {
     mockPrisma.season.findMany.mockResolvedValue([{ id: 30 }, { id: 20 }, { id: 10 }]);
     mockGetActuals
-      .mockResolvedValueOnce({ plannedRevenueTicket: 300, plannedRevenueSponsorship: 900, plannedRevenueMerchandise: 60, plannedRevenueOther: 30, plannedRevenueAcademyFee: 120, ...ZERO_MANUAL })
-      .mockResolvedValueOnce({ plannedRevenueTicket: 200, plannedRevenueSponsorship: 600, plannedRevenueMerchandise: 30, plannedRevenueOther: 0,  plannedRevenueAcademyFee: 90,  ...ZERO_MANUAL })
-      .mockResolvedValueOnce({ plannedRevenueTicket: 100, plannedRevenueSponsorship: 300, plannedRevenueMerchandise: 0,  plannedRevenueOther: 0,  plannedRevenueAcademyFee: 60,  ...ZERO_MANUAL });
+      .mockResolvedValueOnce({ plannedRevenueTicket: 300, plannedRevenueSponsorship: 900, expectedRevenueSponsorship: 1200, plannedRevenueMerchandise: 60, plannedRevenueOther: 30, plannedRevenueAcademyFee: 120, ...ZERO_MANUAL })
+      .mockResolvedValueOnce({ plannedRevenueTicket: 200, plannedRevenueSponsorship: 600, expectedRevenueSponsorship: 900,  plannedRevenueMerchandise: 30, plannedRevenueOther: 0,  plannedRevenueAcademyFee: 90,  ...ZERO_MANUAL })
+      .mockResolvedValueOnce({ plannedRevenueTicket: 100, plannedRevenueSponsorship: 300, expectedRevenueSponsorship: 300,  plannedRevenueMerchandise: 0,  plannedRevenueOther: 0,  plannedRevenueAcademyFee: 60,  ...ZERO_MANUAL });
 
     const repo = makeRepo();
     const svc = new FinancialReportService(repo, new KnapsackService(), makeCategoryService());
@@ -69,12 +69,14 @@ describe("FinancialReportService.autoFillRevenueFromPrevSeasons", () => {
     }));
     const [seasonIdArg, totalArg, noteArg, breakdownArg] = (repo.upsert as jest.Mock).mock.calls[0];
     expect(seasonIdArg).toBe(99);
-    expect(breakdownArg.plannedRevenueTicket).toBe(200);       // (300+200+100)/3
-    expect(breakdownArg.plannedRevenueSponsorship).toBe(600);  // (900+600+300)/3
-    expect(breakdownArg.plannedRevenueMerchandise).toBe(30);   // (60+30+0)/3
-    expect(breakdownArg.plannedRevenueOther).toBe(10);         // (30+0+0)/3
-    expect(breakdownArg.plannedRevenueAcademyFee).toBe(90);    // (120+90+60)/3
+    expect(breakdownArg.plannedRevenueTicket).toBe(200);         // (300+200+100)/3
+    expect(breakdownArg.plannedRevenueSponsorship).toBe(600);    // (900+600+300)/3
+    expect(breakdownArg.expectedRevenueSponsorship).toBe(800);   // (1200+900+300)/3
+    expect(breakdownArg.plannedRevenueMerchandise).toBe(30);     // (60+30+0)/3
+    expect(breakdownArg.plannedRevenueOther).toBe(10);           // (30+0+0)/3
+    expect(breakdownArg.plannedRevenueAcademyFee).toBe(90);      // (120+90+60)/3
     expect(breakdownArg.plannedRevenueBroadcast).toBe(0);
+    // Expected 는 total 에 포함 X (ADR 0024: 별도 metric)
     expect(totalArg).toBe(200 + 600 + 30 + 10 + 90);
     expect(noteArg).toContain("3개 CLOSED 시즌");
   });
@@ -82,8 +84,8 @@ describe("FinancialReportService.autoFillRevenueFromPrevSeasons", () => {
   it("falls back to however many CLOSED seasons exist when fewer than lookback", async () => {
     mockPrisma.season.findMany.mockResolvedValue([{ id: 5 }]);   // only 1
     mockGetActuals.mockResolvedValueOnce({
-      plannedRevenueTicket: 100, plannedRevenueSponsorship: 200, plannedRevenueMerchandise: 0,
-      plannedRevenueOther: 0, plannedRevenueAcademyFee: 0, ...ZERO_MANUAL,
+      plannedRevenueTicket: 100, plannedRevenueSponsorship: 200, expectedRevenueSponsorship: 250,
+      plannedRevenueMerchandise: 0, plannedRevenueOther: 0, plannedRevenueAcademyFee: 0, ...ZERO_MANUAL,
     });
 
     const repo = makeRepo();
@@ -91,7 +93,8 @@ describe("FinancialReportService.autoFillRevenueFromPrevSeasons", () => {
     await svc.autoFillRevenueFromPrevSeasons(99, 3);
 
     const [, , noteArg, breakdownArg] = (repo.upsert as jest.Mock).mock.calls[0];
-    expect(breakdownArg.plannedRevenueTicket).toBe(100);   // /1 not /3
+    expect(breakdownArg.plannedRevenueTicket).toBe(100);         // /1 not /3
+    expect(breakdownArg.expectedRevenueSponsorship).toBe(250);   // single-season carry
     expect(noteArg).toContain("1개 CLOSED 시즌");
   });
 
@@ -117,8 +120,8 @@ describe("FinancialReportService.autoFillRevenueFromPrevSeasons", () => {
   it("respects lookback=5 override", async () => {
     mockPrisma.season.findMany.mockResolvedValue([{ id: 50 }, { id: 40 }, { id: 30 }, { id: 20 }, { id: 10 }]);
     mockGetActuals.mockResolvedValue({
-      plannedRevenueTicket: 100, plannedRevenueSponsorship: 0, plannedRevenueMerchandise: 0,
-      plannedRevenueOther: 0, plannedRevenueAcademyFee: 0, ...ZERO_MANUAL,
+      plannedRevenueTicket: 100, plannedRevenueSponsorship: 0, expectedRevenueSponsorship: 0,
+      plannedRevenueMerchandise: 0, plannedRevenueOther: 0, plannedRevenueAcademyFee: 0, ...ZERO_MANUAL,
     });
 
     const repo = makeRepo();
