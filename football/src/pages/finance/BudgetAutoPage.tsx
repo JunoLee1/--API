@@ -199,7 +199,7 @@ export default function BudgetAutoPage() {
                   <SelectContent>
                     <SelectItem value="" label="기본값 사용">기본값 사용</SelectItem>
                     {(Object.keys(GOAL_LABELS) as GoalWeight[]).map(g => (
-                      <SelectItem key={g} value={g}>{GOAL_LABELS[g]}</SelectItem>
+                      <SelectItem key={g} value={g} label={GOAL_LABELS[g]}>{GOAL_LABELS[g]}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

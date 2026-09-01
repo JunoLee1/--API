@@ -122,7 +122,7 @@ function CreateLeagueDialog({ open, onOpenChange, onSaved }: CreateLeagueDialogP
               </SelectTrigger>
               <SelectContent>
                 {countries.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
+                  <SelectItem key={c.id} value={String(c.id)} label={`${c.name} (${c.code})`}>
                     {c.name} ({c.code})
                   </SelectItem>
                 ))}

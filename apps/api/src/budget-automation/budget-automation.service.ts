@@ -50,17 +50,22 @@ export class BudgetAutomationService {
     if (!targetSeason) throw new AppError(404, "SEASON_NOT_FOUND");
 
     const pastSeasons = await this.repo.getPastSeasons(targetSeason.startDate, lookback);
-    if (pastSeasons.length === 0) throw new AppError(400, "NO_HISTORICAL_DATA");
+    // 과거 시즌 데이터 없으면 empty predictions (predicted=0, dataPoints=0, warning=INSUFFICIENT_DATA) 로 200 반환.
+    // FE 는 seasonsUsed === 0 으로 감지해 수동 입력 UX 로 fallback. apply() 는 별도 guard.
 
     // pastSeasons is ordered DESC (most recent first); reverse for chronological order
     const chronoSeasonIds = pastSeasons.map((s) => s.id).reverse();
     const pastSeasonIds = pastSeasons.map((s) => s.id);
-    const mostRecentSeasonId = pastSeasonIds[0]!;
+    const mostRecentSeasonId = pastSeasonIds[0] ?? null;
 
     const [perSeasonActuals, expenseRows, budgetLines] = await Promise.all([
       Promise.all(chronoSeasonIds.map((id) => getSeasonRevenueActuals(id))),
-      this.repo.getExpenseActualsByCategory(pastSeasonIds),
-      this.repo.getLatestApprovedBudgetLines(mostRecentSeasonId),
+      pastSeasonIds.length > 0
+        ? this.repo.getExpenseActualsByCategory(pastSeasonIds)
+        : Promise.resolve([]),
+      mostRecentSeasonId != null
+        ? this.repo.getLatestApprovedBudgetLines(mostRecentSeasonId)
+        : Promise.resolve([]),
     ]);
 
     // perSeasonActuals[i] corresponds to chronoSeasonIds[i] (oldest → newest)
@@ -117,7 +122,7 @@ export class BudgetAutomationService {
       expenseTotal += predicted;
 
       const budgeted = budgetByCat.get(cat) ?? 0;
-      const recentActual = expenseMap[cat]?.[mostRecentSeasonId] ?? 0;
+      const recentActual = mostRecentSeasonId != null ? expenseMap[cat]?.[mostRecentSeasonId] ?? 0 : 0;
       const isLowUtil = budgeted > 0 && recentActual < budgeted * 0.5;
 
       const warning = isLowUtil ? "LOW_UTILIZATION" : cagrWarning;
@@ -153,6 +158,11 @@ export class BudgetAutomationService {
 
   async apply(dto: BudgetApplyRequestDto, createdById: number) {
     const previewResult = await this.preview(dto);
+    // 과거 데이터 없으면 preview 는 empty predictions 로 200 응답하지만, apply 는 실측 기반 예산 확정이므로
+    // 수동 입력 없이는 의미 없는 0-line BudgetHeader 가 생성됨. 명시적 400 으로 차단.
+    if (previewResult.parameters.seasonsUsed === 0) {
+      throw new AppError(400, "NO_HISTORICAL_DATA");
+    }
     const targetSeason = await this.repo.getTargetSeason(dto.targetSeasonId);
     const year = new Date(targetSeason!.startDate).getFullYear();
 
