@@ -45,6 +45,7 @@ import {
 } from '@/services/budget-plan.service'
 import { usePendingMinimums } from '@/services/mandatory-minimum.service'
 import { MandatoryMinimumProposalDialog } from './MandatoryMinimumProposalDialog'
+import { MandatoryMinimumHistoryDialog } from './MandatoryMinimumHistoryDialog'
 import type { CategoryScope } from '@/types/expense-category'
 
 // ============================================================================
@@ -962,18 +963,19 @@ export function FinanceManagerReview({ seasonId, planStatus }: Props) {
                               </Button>
                             }
                           />
-                          {/* TODO(#453 F4): <MandatoryMinimumHistoryDialog />
-                              현재는 placeholder — disabled 상태로 노출해 이력 진입점만
-                              유지한다. */}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled
-                            title="이력 조회는 곧 지원됩니다 (issue #453)"
-                            data-testid={`mm-history-btn-${cp.id}`}
-                          >
-                            이력
-                          </Button>
+                          <MandatoryMinimumHistoryDialog
+                            categoryPlanId={cp.id}
+                            categoryLabel={label}
+                            trigger={
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                data-testid={`mm-history-btn-${cp.id}`}
+                              >
+                                이력
+                              </Button>
+                            }
+                          />
                         </div>
                       </TableCell>
                     </TableRow>
