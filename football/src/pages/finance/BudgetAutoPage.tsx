@@ -135,18 +135,26 @@ export default function BudgetAutoPage() {
           <div className="space-y-1">
             <Label>대상 시즌</Label>
             <Select value={targetSeasonId} onValueChange={setTargetSeasonId}>
-              <SelectTrigger><SelectValue placeholder="시즌 선택" /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder="시즌 선택">
+                  {(v) => seasons.find(s => String(s.id) === v)?.name ?? '시즌 선택'}
+                </SelectValue>
+              </SelectTrigger>
               <SelectContent>
-                {seasons.map(s => <SelectItem key={s.id} value={String(s.id)} label={s.name}>{s.name}</SelectItem>)}
+                {seasons.map(s => <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1">
             <Label>과거 참조 시즌 수</Label>
             <Select value={lookback} onValueChange={setLookback}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue>
+                  {(v) => v ? `${v}시즌` : ''}
+                </SelectValue>
+              </SelectTrigger>
               <SelectContent>
-                {['2','3','4','5'].map(v => <SelectItem key={v} value={v} label={`${v}시즌`}>{v}시즌</SelectItem>)}
+                {['2','3','4','5'].map(v => <SelectItem key={v} value={v}>{v}시즌</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -158,10 +166,14 @@ export default function BudgetAutoPage() {
           <div className="space-y-1">
             <Label>수익 목표</Label>
             <Select value={revenueGoal} onValueChange={v => setRevenueGoal(v as GoalWeight)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue>
+                  {(v) => GOAL_LABELS[v as GoalWeight] ?? ''}
+                </SelectValue>
+              </SelectTrigger>
               <SelectContent>
                 {(Object.keys(GOAL_LABELS) as GoalWeight[]).map(g => (
-                  <SelectItem key={g} value={g} label={GOAL_LABELS[g]}>{GOAL_LABELS[g]}</SelectItem>
+                  <SelectItem key={g} value={g}>{GOAL_LABELS[g]}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -169,10 +181,14 @@ export default function BudgetAutoPage() {
           <div className="space-y-1">
             <Label>지출 목표</Label>
             <Select value={expenseGoal} onValueChange={v => setExpenseGoal(v as GoalWeight)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue>
+                  {(v) => GOAL_LABELS[v as GoalWeight] ?? ''}
+                </SelectValue>
+              </SelectTrigger>
               <SelectContent>
                 {(Object.keys(GOAL_LABELS) as GoalWeight[]).map(g => (
-                  <SelectItem key={g} value={g} label={GOAL_LABELS[g]}>{GOAL_LABELS[g]}</SelectItem>
+                  <SelectItem key={g} value={g}>{GOAL_LABELS[g]}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -195,11 +211,15 @@ export default function BudgetAutoPage() {
                     setCategoryOverrides(next)
                   }}
                 >
-                  <SelectTrigger><SelectValue placeholder="기본값 사용" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="기본값 사용">
+                      {(v) => v ? GOAL_LABELS[v as GoalWeight] : '기본값 사용'}
+                    </SelectValue>
+                  </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="" label="기본값 사용">기본값 사용</SelectItem>
+                    <SelectItem value="">기본값 사용</SelectItem>
                     {(Object.keys(GOAL_LABELS) as GoalWeight[]).map(g => (
-                      <SelectItem key={g} value={g} label={GOAL_LABELS[g]}>{GOAL_LABELS[g]}</SelectItem>
+                      <SelectItem key={g} value={g}>{GOAL_LABELS[g]}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
