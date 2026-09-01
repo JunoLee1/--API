@@ -3317,6 +3317,19 @@ async function seedSponsorships(adminId: number) {
 // budget-automation.getExpenseActualsByCategory 는 status ∈ {APPROVED, PAID} + deletedAt=null 만 집계.
 // getLatestApprovedBudgetLines 는 BudgetHeader status ∈ {APPROVED, LOCKED} 만 lookup.
 async function seedOperatingExpenses(adminId: number) {
+  // 2024 CLOSED 시즌 (CAGR 계산용 이전 시즌). 2025/2026 은 별도 로직에서 이미 생성됨.
+  // Season.name 은 unique 아니라 findFirst 후 conditional create.
+  let season2024 = await prisma.season.findFirst({ where: { name: "2024 시즌" } });
+  if (!season2024) {
+    season2024 = await prisma.season.create({
+      data: {
+        name: "2024 시즌",
+        startDate: new Date("2024-03-01"),
+        endDate: new Date("2024-11-30"),
+        status: "CLOSED",
+      },
+    });
+  }
   const season2025 = await prisma.season.findFirst({ where: { name: "2025 시즌" } });
   const season2026 = await prisma.season.findFirst({ where: { name: "2026 시즌" } });
   if (!season2025 || !season2026) {
@@ -3354,7 +3367,7 @@ async function seedOperatingExpenses(adminId: number) {
 
   // BudgetHeader/Line APPROVED 승격 — 시즌별로 1개 APPROVED header + 카테고리별 line
   // (기존 DRAFT/SUBMITTED header 는 유지, 신규 APPROVED header 를 별도 seed 로 추가)
-  async function ensureApprovedBudgetHeader(seasonId: number, year: number): Promise<Map<number, number>> {
+  async function ensureApprovedBudgetHeader(seasonId: number, year: number, seasonMultiplier = 1.0): Promise<Map<number, number>> {
     const existing = await prisma.budgetHeader.findFirst({
       where: { seasonId, status: "APPROVED", name: `${year} 시즌 확정 예산 (seed)` },
       include: { lines: true },
@@ -3368,7 +3381,7 @@ async function seedOperatingExpenses(adminId: number) {
 
     const linesData = Object.entries(categoryBudget).map(([code, info]) => ({
       categoryId: catIdByCode.get(code)!,
-      originalAmount: info.annual,
+      originalAmount: Math.round(info.annual * seasonMultiplier),
       departmentId: info.departmentName ? deptIdByName.get(info.departmentName) ?? null : null,
       year,
     }));
@@ -3403,10 +3416,12 @@ async function seedOperatingExpenses(adminId: number) {
     return lineMap;
   }
 
+  // 2024 는 2025 대비 -8% (실적 성장세 반영), 2025 는 base, 2026 은 in-flight
+  const lines2024 = await ensureApprovedBudgetHeader(season2024.id, 2024, 0.92);
   const lines2025 = await ensureApprovedBudgetHeader(season2025.id, 2025);
   const lines2026 = await ensureApprovedBudgetHeader(season2026.id, 2026);
 
-  // 2025: 12개월 모두 지출. 카테고리별 월평균 = annual/12, ±15% 변동.
+  // 2024/2025: 12개월 모두 지출. 카테고리별 월평균 = annual/12, ±15% 변동.
   // 2026: 1~8월까지만 (in-flight)
   const currentMonth2026 = 8;
 
@@ -3416,14 +3431,14 @@ async function seedOperatingExpenses(adminId: number) {
   let expenseCount = 0;
   let skippedCount = 0;
 
-  async function seedForSeason(seasonId: number, year: number, months: number, lineMap: Map<number, number>) {
+  async function seedForSeason(seasonId: number, year: number, months: number, lineMap: Map<number, number>, seasonMultiplier = 1.0) {
     for (const [code, info] of Object.entries(categoryBudget)) {
       const catId = catIdByCode.get(code);
       const budgetLineId = lineMap.get(catId ?? -1);
       if (!catId || !budgetLineId) continue;
       const departmentId = info.departmentName ? deptIdByName.get(info.departmentName) ?? null : null;
 
-      const monthly = Math.round(info.annual / 12);
+      const monthly = Math.round((info.annual * seasonMultiplier) / 12);
 
       for (let m = 1; m <= months; m++) {
         // 월별 realistic 지출 (±15% 변동, 시드로 결정론적)
@@ -3464,14 +3479,15 @@ async function seedOperatingExpenses(adminId: number) {
     }
   }
 
+  await seedForSeason(season2024.id, 2024, 12, lines2024, 0.92);
   await seedForSeason(season2025.id, 2025, 12, lines2025);
   await seedForSeason(season2026.id, 2026, currentMonth2026, lines2026);
 
   const total2025 = Object.values(categoryBudget).reduce((s, i) => s + i.annual, 0);
   console.log(
-    `[seed] OperatingExpense — 2025 12개월 + 2026 ${currentMonth2026}개월. ${expenseCount} rows (${skippedCount} skipped), 2025 예산 ${(total2025 / 1e8).toFixed(1)}억`,
+    `[seed] OperatingExpense — 2024/2025 12개월 + 2026 ${currentMonth2026}개월. ${expenseCount} rows (${skippedCount} skipped), 2025 예산 ${(total2025 / 1e8).toFixed(1)}억`,
   );
-  console.log(`[seed] BudgetHeader APPROVED (2025/2026 각 1개) + 12 lines/season, departmentId/teamName 매핑 완료`);
+  console.log(`[seed] BudgetHeader APPROVED (2024 -8% / 2025 base / 2026) + 12 lines/season, departmentId 매핑 완료`);
 }
 
 main()

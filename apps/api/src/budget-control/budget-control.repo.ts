@@ -4,10 +4,19 @@ import type { CreateBudgetHeaderDto, UpdateBudgetHeaderDto, CreateBudgetLineDto,
 export class BudgetControlRepository {
   constructor(private prisma: PrismaClient) {}
 
-  createHeader(dto: CreateBudgetHeaderDto, createdById: number) {
+  async createHeader(dto: CreateBudgetHeaderDto, createdById: number) {
+    // BudgetHeader @@unique([seasonId, version]) — 같은 시즌 재실행 시 version 자동 증가
+    const latest = await this.prisma.budgetHeader.findFirst({
+      where: { seasonId: dto.seasonId },
+      orderBy: { version: "desc" },
+      select: { version: true },
+    });
+    const nextVersion = (latest?.version ?? 0) + 1;
+
     return this.prisma.budgetHeader.create({
       data: {
         seasonId: dto.seasonId,
+        version: nextVersion,
         name: dto.name,
         totalBudget: dto.totalBudget,
         note: dto.note ?? null,
