@@ -2774,6 +2774,10 @@ async function main() {
   // ── Sponsorship + SponsorshipPayment (2025 실적 + 2026 in-flight) ──
   await seedSponsorships(admin.id);
 
+  // ── 운영비 실적 (2025 CLOSED 시즌 12개월 + 2026 부분) ──
+  // BudgetHeader/Line APPROVED 승격 + OperatingExpense (부서/팀 매핑) 실적
+  await seedOperatingExpenses(admin.id);
+
   console.log("✅ Seed complete");
   console.log(`   - Countries: 2`);
   console.log(`   - Users: 21 + 10 유소년 / pw: Password1!`);
@@ -3307,6 +3311,167 @@ async function seedSponsorships(adminId: number) {
   console.log(
     `[seed] Sponsorships — ${sponsorshipCount} contracts, ${paymentCount} payments (2025 4+1 PAID, 2026 2 PAID + 2 PENDING + 3 OVERSEAS)`,
   );
+}
+
+// 운영비 실적 seed — 부서·팀별 지출 데이터로 BudgetAutoPage expense CAGR 예측 활성화.
+// budget-automation.getExpenseActualsByCategory 는 status ∈ {APPROVED, PAID} + deletedAt=null 만 집계.
+// getLatestApprovedBudgetLines 는 BudgetHeader status ∈ {APPROVED, LOCKED} 만 lookup.
+async function seedOperatingExpenses(adminId: number) {
+  const season2025 = await prisma.season.findFirst({ where: { name: "2025 시즌" } });
+  const season2026 = await prisma.season.findFirst({ where: { name: "2026 시즌" } });
+  if (!season2025 || !season2026) {
+    console.log("[seed] Skipped OperatingExpense — 2025/2026 시즌 미존재");
+    return;
+  }
+
+  // 카테고리 코드별 연간 예산 규모 (원). scope=TEAM 은 팀 스코프, DEPARTMENT 는 부서 스코프.
+  // 실적치는 예산 대비 85%~110% 범위에서 realistic 하게 분포.
+  const categoryBudget: Record<string, { annual: number; departmentName?: string | null; teamName?: string | null }> = {
+    MEDICAL:            { annual: 120_000_000, departmentName: "의료기기 관리" },
+    MEAL:               { annual:  80_000_000, departmentName: "재무관리" },
+    TRAVEL:             { annual: 200_000_000, departmentName: "재무관리" },
+    SPORTS_EQUIPMENT:   { annual:  90_000_000, departmentName: "선수 장비관리" },
+    SCOUTING:           { annual:  60_000_000, departmentName: "재무관리" },
+    YOUTH:              { annual:  50_000_000, departmentName: "재무관리" },
+    IT_SECURITY:        { annual:  45_000_000, departmentName: "IT 자산관리" },
+    FACILITY_EQUIPMENT: { annual:  70_000_000, departmentName: "시설관리" },
+    STAFF_RECRUITMENT:  { annual:  30_000_000, departmentName: "HR" },
+    HOME_MATCH_SUPPORT: { annual: 150_000_000, teamName: "1군" },
+    AWAY_TRAVEL_TEAM:   { annual: 180_000_000, teamName: "1군" },
+    TEAM_TRAINING_GEAR: { annual:  55_000_000, teamName: "1군" },
+  };
+
+  // 부서/팀 조회 (id 해석)
+  const departments = await prisma.department.findMany({ where: { clubId: null } });
+  const teams = await prisma.team.findMany();
+  const deptIdByName = new Map(departments.map((d) => [d.name, d.id]));
+  const teamIdByName = new Map(teams.map((t) => [t.name, t.id]));
+
+  const categories = await prisma.expenseCategory.findMany({
+    where: { code: { in: Object.keys(categoryBudget) } },
+  });
+  const catIdByCode = new Map(categories.map((c) => [c.code, c.id]));
+
+  // BudgetHeader/Line APPROVED 승격 — 시즌별로 1개 APPROVED header + 카테고리별 line
+  // (기존 DRAFT/SUBMITTED header 는 유지, 신규 APPROVED header 를 별도 seed 로 추가)
+  async function ensureApprovedBudgetHeader(seasonId: number, year: number): Promise<Map<number, number>> {
+    const existing = await prisma.budgetHeader.findFirst({
+      where: { seasonId, status: "APPROVED", name: `${year} 시즌 확정 예산 (seed)` },
+      include: { lines: true },
+    });
+    if (existing) {
+      return new Map(existing.lines.map((l) => [l.categoryId, l.id]));
+    }
+
+    // seasonId+version unique — 기존 header 회피용 seed version 99 사용
+    const nextVersion = 99;
+
+    const linesData = Object.entries(categoryBudget).map(([code, info]) => ({
+      categoryId: catIdByCode.get(code)!,
+      originalAmount: info.annual,
+      departmentId: info.departmentName ? deptIdByName.get(info.departmentName) ?? null : null,
+      year,
+    }));
+    const totalBudget = linesData.reduce((sum, l) => sum + l.originalAmount, 0);
+
+    const header = await prisma.budgetHeader.create({
+      data: {
+        seasonId,
+        version: nextVersion,
+        status: "APPROVED",
+        name: `${year} 시즌 확정 예산 (seed)`,
+        totalBudget,
+        createdById: adminId,
+        approvedById: adminId,
+        approvedAt: new Date(`${year}-01-15`),
+      },
+    });
+
+    const lineMap = new Map<number, number>();
+    for (const l of linesData) {
+      const line = await prisma.budgetLine.create({
+        data: {
+          budgetHeaderId: header.id,
+          categoryId: l.categoryId,
+          originalAmount: l.originalAmount,
+          year: l.year,
+          departmentId: l.departmentId,
+        },
+      });
+      lineMap.set(l.categoryId, line.id);
+    }
+    return lineMap;
+  }
+
+  const lines2025 = await ensureApprovedBudgetHeader(season2025.id, 2025);
+  const lines2026 = await ensureApprovedBudgetHeader(season2026.id, 2026);
+
+  // 2025: 12개월 모두 지출. 카테고리별 월평균 = annual/12, ±15% 변동.
+  // 2026: 1~8월까지만 (in-flight)
+  const currentMonth2026 = 8;
+
+  const financeStaff = await prisma.user.findFirst({ where: { email: "finance.staff@club.com" } });
+  const approverId = financeStaff?.id ?? adminId;
+
+  let expenseCount = 0;
+  let skippedCount = 0;
+
+  async function seedForSeason(seasonId: number, year: number, months: number, lineMap: Map<number, number>) {
+    for (const [code, info] of Object.entries(categoryBudget)) {
+      const catId = catIdByCode.get(code);
+      const budgetLineId = lineMap.get(catId ?? -1);
+      if (!catId || !budgetLineId) continue;
+      const departmentId = info.departmentName ? deptIdByName.get(info.departmentName) ?? null : null;
+
+      const monthly = Math.round(info.annual / 12);
+
+      for (let m = 1; m <= months; m++) {
+        // 월별 realistic 지출 (±15% 변동, 시드로 결정론적)
+        const seed = (catId * 31 + m) % 30 - 15; // -15 ~ +14
+        const amount = Math.max(1_000_000, Math.round(monthly * (1 + seed / 100)));
+
+        const date = new Date(Date.UTC(year, m - 1, 15));
+        const paidAt = new Date(Date.UTC(year, m - 1, 25));
+
+        // 중복 방지: (budgetLineId + date) 조합 unique
+        const exists = await prisma.operatingExpense.findFirst({
+          where: { budgetLineId, date, deletedAt: null },
+          select: { id: true },
+        });
+        if (exists) { skippedCount++; continue; }
+
+        await prisma.operatingExpense.create({
+          data: {
+            seasonId,
+            categoryId: catId,
+            budgetLineId,
+            amount,
+            date,
+            note: `${year}-${String(m).padStart(2, "0")} ${code} 실적 (seed)`,
+            createdById: adminId,
+            departmentId,
+            status: "PAID",
+            firstApprovedById: approverId,
+            firstApprovedAt: date,
+            approvedById: approverId,
+            approvedAt: date,
+            paidAt,
+            paidById: approverId,
+          },
+        });
+        expenseCount++;
+      }
+    }
+  }
+
+  await seedForSeason(season2025.id, 2025, 12, lines2025);
+  await seedForSeason(season2026.id, 2026, currentMonth2026, lines2026);
+
+  const total2025 = Object.values(categoryBudget).reduce((s, i) => s + i.annual, 0);
+  console.log(
+    `[seed] OperatingExpense — 2025 12개월 + 2026 ${currentMonth2026}개월. ${expenseCount} rows (${skippedCount} skipped), 2025 예산 ${(total2025 / 1e8).toFixed(1)}억`,
+  );
+  console.log(`[seed] BudgetHeader APPROVED (2025/2026 각 1개) + 12 lines/season, departmentId/teamName 매핑 완료`);
 }
 
 main()
