@@ -8,6 +8,27 @@ export interface OverrideRequestDto {
   reason: string;
 }
 
+/**
+ * #444: BudgetOverrideLog PENDING 목록 조회용 query 파라미터.
+ * status 미지정 시 전체 상태 반환, limit 미지정 시 50 (max 200).
+ * cursor 는 마지막으로 본 log.id (exclusive, DESC ordering) — 다음 페이지 요청 시 사용.
+ */
+export interface ListOverrideLogsQuery {
+  status?: "PENDING" | "APPROVED" | "REJECTED";
+  limit?: number;
+  cursor?: number;
+}
+
+const OVERRIDE_LOG_LIST_INCLUDE = {
+  expenseCategory: { select: { id: true, code: true, label: true } },
+  createdBy: {
+    select: { id: true, email: true, username: true, frontOfficeRole: true },
+  },
+  reviewedBy: {
+    select: { id: true, email: true, username: true, frontOfficeRole: true },
+  },
+} as const;
+
 export class BudgetOverrideService {
   constructor(private prisma: PrismaClient) {}
 
@@ -121,5 +142,57 @@ export class BudgetOverrideService {
         data: { knapsackAllocated: log.amount },
       }),
     ]);
+  }
+
+  /**
+   * #444: BudgetOverrideLog 목록 조회 (id DESC, 커서 페이지네이션).
+   *
+   * FM/GM/ADMIN 을 상정한 전 시즌 로그 조회. 컨트롤러가 권한 게이트를 담당하며,
+   * 서비스는 순수 데이터 접근만 책임진다 (팀장/부서장 scope 매칭은 후속 이슈).
+   *
+   * 기존 `GET /financial-reports/:seasonId/budget` 응답의 `overrideLogs` include
+   * (`financial-report.repo.ts:180` — take 50) 는 FM 리뷰 UI 가 PENDING 만 필터
+   * 하기엔 잘림 리스크가 있어 이 endpoint 로 대체한다.
+   *
+   * FinancialReport 가 아직 없으면 빈 배열 반환 (404 대신 idempotent 응답).
+   */
+  async list(seasonId: number, query: ListOverrideLogsQuery) {
+    const report = await this.prisma.financialReport.findUnique({
+      where: { seasonId },
+      select: { id: true },
+    });
+    if (!report) return [];
+
+    const rawLimit = query.limit ?? 50;
+    if (!Number.isInteger(rawLimit) || rawLimit <= 0) {
+      throw new AppError(400, "INVALID_LIMIT");
+    }
+    if (rawLimit > 200) throw new AppError(400, "LIMIT_EXCEEDS_MAX");
+
+    if (
+      query.status !== undefined &&
+      query.status !== "PENDING" &&
+      query.status !== "APPROVED" &&
+      query.status !== "REJECTED"
+    ) {
+      throw new AppError(400, "INVALID_STATUS");
+    }
+
+    if (query.cursor !== undefined) {
+      if (!Number.isInteger(query.cursor) || query.cursor <= 0) {
+        throw new AppError(400, "INVALID_CURSOR");
+      }
+    }
+
+    return this.prisma.budgetOverrideLog.findMany({
+      where: {
+        financialReportId: report.id,
+        ...(query.status ? { status: query.status } : {}),
+        ...(query.cursor !== undefined ? { id: { lt: query.cursor } } : {}),
+      },
+      orderBy: { id: "desc" },
+      take: rawLimit,
+      include: OVERRIDE_LOG_LIST_INCLUDE,
+    });
   }
 }
