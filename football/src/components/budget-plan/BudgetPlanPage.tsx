@@ -1,9 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { AlertTriangle } from 'lucide-react'
 import { financialReportApi } from '@/services/financial-report.service'
-import type { BudgetPlanStatus } from '@/services/budget-plan.service'
+import {
+  useBudgetPlan,
+  type BudgetPlanStatus,
+} from '@/services/budget-plan.service'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { useExpenseCategories } from '@/hooks/useExpenseCategories'
 import type { UserDto } from '@/types/auth'
+import type { BudgetPlan } from '@/types/budget'
+import { Badge } from '@/components/ui/badge'
+import { buttonVariants } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
 import { PlanStatusBadge } from './PlanStatusBadge'
 import { GmReplanPanel } from './GmReplanPanel'
 
@@ -56,12 +65,150 @@ function resolvePersona(user: UserDto): Persona {
   return 'OTHER'
 }
 
+// ============================================================================
+// mandatoryMinimum 위반 배너 (#453 F4)
+// ----------------------------------------------------------------------------
+// FINALIZED 이후 categoryPlan 의 basicCost 가 mandatoryMinimum 을 하회하는
+// 카테고리가 있으면 페이지 상단에 재편성 필요를 알리는 warning bar 를 노출한다.
+// 배너는 조회 데이터만 사용하고 서버에 별도 위반 감지 요청을 보내지 않는다 —
+// backend B3 (#449) 가 FINALIZED 승인 시점에 GM 에게 이미 알림을 발송하고,
+// FE 배너는 즉시 UX 를 위한 병행 감지 채널이다.
+// ============================================================================
+
+interface Violation {
+  categoryPlanId: number
+  categoryCode: string
+  basicCost: number
+  mandatoryMinimum: number
+}
+
+/**
+ * BudgetPlan → 위반 카테고리 목록. `basicCost < mandatoryMinimum` 인 항목만
+ * 뽑고, 그 외는 제외한다. Basic tier 가 없는 카테고리는 자동화 미실행 상태로
+ * 간주해 basicCost = 0 으로 취급 (Wizard `basicCostByCategoryCode` 규약).
+ */
+export function detectMinimumViolations(
+  plan: BudgetPlan | null | undefined,
+): Violation[] {
+  if (!plan) return []
+  const out: Violation[] = []
+  for (const cp of plan.budgetCategoryPlans) {
+    const basicTier = cp.tiers.find((t) => t.name === 'Basic')
+    const basicCost = basicTier?.cost ?? 0
+    if (basicCost < cp.mandatoryMinimum) {
+      out.push({
+        categoryPlanId: cp.id,
+        categoryCode: cp.category,
+        basicCost,
+        mandatoryMinimum: cp.mandatoryMinimum,
+      })
+    }
+  }
+  return out
+}
+
+/** ₩ 포맷터 — Intl.NumberFormat 을 재사용 (배너 안 delta 표시). */
+const wonFmt = new Intl.NumberFormat('ko-KR', {
+  style: 'currency',
+  currency: 'KRW',
+  maximumFractionDigits: 0,
+})
+
+interface ViolationBannerProps {
+  seasonId: number
+  isGm: boolean
+}
+
+/**
+ * 위반 배너 자체. `useBudgetPlan` 은 hook 이라 조건부 호출이 안 되므로,
+ * 이 컴포넌트는 배너 유무를 반환값으로 판단해 상위에서 렌더 여부를 결정할 수
+ * 있도록 위반 카운트 = 0 이면 null 반환.
+ */
+function MandatoryMinimumViolationBanner({
+  seasonId,
+  isGm,
+}: ViolationBannerProps) {
+  const budgetPlanQuery = useBudgetPlan(seasonId)
+  const { labelOf } = useExpenseCategories()
+
+  const violations = useMemo(
+    () => detectMinimumViolations(budgetPlanQuery.data),
+    [budgetPlanQuery.data],
+  )
+
+  if (violations.length === 0) return null
+
+  return (
+    <section
+      role="alert"
+      data-testid="mm-violation-banner"
+      data-violation-count={violations.length}
+      className={cn(
+        'flex flex-col gap-2 rounded-md border p-3 text-sm',
+        'border-amber-300 bg-amber-50 text-amber-900',
+        'dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100',
+      )}
+    >
+      <div className="flex items-start gap-2">
+        <AlertTriangle
+          className="mt-0.5 size-4 shrink-0"
+          aria-hidden="true"
+        />
+        <div className="flex-1 space-y-1">
+          <p className="font-medium" data-testid="mm-violation-headline">
+            재편성 필요: {violations.length}개 카테고리에서 basicCost &lt;
+            mandatoryMinimum 위반
+          </p>
+          <div
+            className="flex flex-wrap gap-1.5"
+            data-testid="mm-violation-chips"
+          >
+            {violations.map((v) => {
+              const delta = v.mandatoryMinimum - v.basicCost
+              return (
+                <Badge
+                  key={v.categoryPlanId}
+                  variant="outline"
+                  className={cn(
+                    'border-amber-400 bg-amber-100 text-amber-900',
+                    'dark:border-amber-700 dark:bg-amber-900 dark:text-amber-100',
+                  )}
+                  data-testid={`mm-violation-chip-${v.categoryCode}`}
+                >
+                  {labelOf(v.categoryCode)} · 부족 {wonFmt.format(delta)}
+                </Badge>
+              )
+            })}
+          </div>
+        </div>
+        {isGm && (
+          // 앵커 링크 — 실제 재편성 액션은 GmReplanPanel 내부 dialog 를 통해서만
+          // 이루어진다. shadcn Button 은 base-ui 로 감싸져 있어 asChild 를
+          // 지원하지 않으므로 buttonVariants 클래스만 재사용해 anchor 로 스타일한다.
+          <a
+            href="#gm-replan-panel"
+            className={cn(
+              buttonVariants({ variant: 'outline', size: 'sm' }),
+              'shrink-0 border-amber-400 bg-amber-100 text-amber-900 hover:bg-amber-200 dark:border-amber-700 dark:bg-amber-900 dark:text-amber-100 dark:hover:bg-amber-800',
+            )}
+            data-testid="mm-violation-replan-shortcut"
+          >
+            재편성 트리거
+          </a>
+        )}
+      </div>
+    </section>
+  )
+}
+
 /**
  * 편성 워크플로우의 진입점 페이지.
  *
  * role + planStatus 를 기준으로 하위 slice (#427 Wizard, #429 FMReview, #432 GmApproval)
  * 중 하나를 렌더한다. 이번 PR (#428) 은 뱃지 + 라우팅 skeleton 만 담당하며,
  * 각 slice 는 병렬 PR 로 나뉘어 있어 아직 export 가 없다 (placeholder + TODO 유지).
+ *
+ * 상단에는 mandatoryMinimum 위반 배너 (#453 F4) 를 조건부로 노출한다.
  */
 export function BudgetPlanPage({ seasonId }: Props) {
   const { user, loading: userLoading } = useCurrentUser()
@@ -118,6 +265,7 @@ export function BudgetPlanPage({ seasonId }: Props) {
   }
 
   const persona = resolvePersona(user)
+  const isGm = persona === 'GM'
 
   return (
     <div className="p-6 space-y-6 max-w-3xl mx-auto">
@@ -125,6 +273,13 @@ export function BudgetPlanPage({ seasonId }: Props) {
         <h1 className="text-2xl font-semibold">편성 워크플로우</h1>
         <PlanStatusBadge status={planStatus} />
       </header>
+
+      {/*
+        mandatoryMinimum 위반 배너 (#453 F4). basicCost < mm 인 카테고리가
+        하나 이상이면 노출된다. GM 은 재편성 shortcut 도 함께 렌더.
+        위반이 없으면 컴포넌트 자체가 null 이라 배너 자리를 차지하지 않는다.
+      */}
+      <MandatoryMinimumViolationBanner seasonId={seasonId} isGm={isGm} />
 
       {/*
         각 slice 는 별도 PR 로 진행되므로 이번 PR 은 place-holder + TODO 만 남긴다.
@@ -154,7 +309,12 @@ export function BudgetPlanPage({ seasonId }: Props) {
       {persona === 'GM' && (
         // #432 GM 재편성 지시 패널. 확정된 편성만 재편성 트리거 가능하며,
         // 그 외 상태 (승인 대기 등) UI 는 별도 slice 에서 붙는다.
-        <GmReplanPanel seasonId={seasonId} planStatus={planStatus} />
+        //
+        // #453 F4 위반 배너의 "재편성 트리거" shortcut 이 이 anchor 로 스크롤한다.
+        // 재편성 실행 자체는 GmReplanPanel 내부 dialog 를 통해서만 이루어진다.
+        <div id="gm-replan-panel">
+          <GmReplanPanel seasonId={seasonId} planStatus={planStatus} />
+        </div>
       )}
 
       {persona === 'ADMIN' && (
