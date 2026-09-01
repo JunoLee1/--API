@@ -52,9 +52,18 @@ export class BudgetAutomationRepository {
     lines: Array<{ categoryId: number; originalAmount: number; year: number }>
   ) {
     return this.prisma.$transaction(async (tx) => {
+      // BudgetHeader @@unique([seasonId, version]) — 같은 시즌 재실행 시 version 자동 증가
+      const latest = await tx.budgetHeader.findFirst({
+        where: { seasonId: data.seasonId },
+        orderBy: { version: "desc" },
+        select: { version: true },
+      });
+      const nextVersion = (latest?.version ?? 0) + 1;
+
       const header = await tx.budgetHeader.create({
         data: {
           seasonId: data.seasonId,
+          version: nextVersion,
           name: data.name,
           totalBudget: data.totalBudget,
           note: data.note ?? null,
