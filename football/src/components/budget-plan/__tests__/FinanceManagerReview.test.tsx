@@ -155,13 +155,29 @@ vi.mock('sonner', () => ({
 function makeRequest(
   overrides: Partial<BudgetPlanRequestDto> = {},
 ): BudgetPlanRequestDto {
+  // 서버 응답 shape (issue #445 include 확장). ownerName / requestedBy 는
+  // scope + ownerId + requestedById 로부터 파생. 개별 테스트는 overrides 로
+  // 부분 갱신하되, TEAM/DEPARTMENT scope 기본값은 이 팩토리가 채운다.
+  const scope = overrides.scope ?? 'TEAM'
+  const ownerId = overrides.ownerId ?? 7
+  const requestedById = overrides.requestedById ?? 11
+  const defaultOwnerName = scope === 'TEAM' ? `U-${ownerId}팀` : `부서 A${ownerId}`
+  const defaultRequester = {
+    id: requestedById,
+    username: `user_${requestedById}`,
+    email: `user${requestedById}@example.com`,
+    frontOfficeRole: null,
+    coachingRole: null,
+  }
   return {
     id: 1,
     financialReportId: 100,
-    requestedById: 11,
-    scope: 'TEAM',
-    ownerType: 'TEAM',
-    ownerId: 7,
+    requestedById,
+    scope,
+    ownerType: scope,
+    ownerId,
+    ownerName: overrides.ownerName ?? defaultOwnerName,
+    requestedBy: overrides.requestedBy ?? defaultRequester,
     status: 'SUBMITTED',
     submittedAt: '2026-08-29T10:00:00.000Z',
     processedAt: null,
@@ -288,6 +304,58 @@ describe('FinanceManagerReview — 신청 현황 렌더', () => {
     mockRequests = []
     renderReview('DRAFT')
     expect(screen.getByTestId('requests-empty')).toBeTruthy()
+  })
+
+  // -------------------------------------------------------------------------
+  // (#445) owner 이름 / 신청자 이름 렌더
+  // -------------------------------------------------------------------------
+  it('서버가 include 한 ownerName / requestedBy.username 을 표시한다 (id fallback 없음)', () => {
+    mockRequests = [
+      makeRequest({
+        id: 1,
+        scope: 'TEAM',
+        ownerId: 7,
+        requestedById: 11,
+        ownerName: 'U-18 프로팀',
+        requestedBy: {
+          id: 11,
+          username: 'kim.coach',
+          email: 'kim@example.com',
+          frontOfficeRole: null,
+          coachingRole: 'HEAD_COACH',
+        },
+      }),
+      makeRequest({
+        id: 2,
+        scope: 'DEPARTMENT',
+        ownerId: 3,
+        requestedById: 22,
+        ownerName: '스카우팅부',
+        requestedBy: {
+          id: 22,
+          username: null,
+          email: 'lee.head@example.com',
+          frontOfficeRole: 'DEPARTMENT_HEAD',
+          coachingRole: null,
+        },
+      }),
+    ]
+
+    renderReview('AWAITING_REVIEW')
+
+    // 팀 이름 (group header + request block 모두 렌더되므로 getAllByText)
+    expect(screen.getAllByText('U-18 프로팀').length).toBeGreaterThan(0)
+    // username 있는 신청자
+    expect(screen.getByText(/kim\.coach/)).toBeTruthy()
+    // 부서 이름
+    expect(screen.getAllByText('스카우팅부').length).toBeGreaterThan(0)
+    // username 없는 경우 email fallback
+    expect(screen.getByText(/lee\.head@example\.com/)).toBeTruthy()
+
+    // id fallback (`팀 #7` / `신청자 #11`) 은 등장하지 않아야 함
+    expect(screen.queryByText(/팀 #7/)).toBeNull()
+    expect(screen.queryByText(/부서 #3/)).toBeNull()
+    expect(screen.queryByText(/신청자 #11/)).toBeNull()
   })
 })
 
