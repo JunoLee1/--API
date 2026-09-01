@@ -1829,6 +1829,8 @@ MEDICAL | MEAL | TRAVEL | EQUIPMENT | SCOUTING | YOUTH
 
 **BudgetOverrideLog:** 긴급지출로 예비비 초과 시 GM이 카테고리 예산을 수동 조정한 기록. 감사 추적 목적.
 
+**편성 확정 → BudgetHeader auto-gen (ADR 0023):** `planStatus === FINALIZED` 전이 트랜잭션 안에서 `BudgetHeader` 자동 생성 (`originalAmount = mandatoryMinimum + knapsackAllocated`). 재편성 시 기존 version LOCKED + 새 version 신규 생성. `OperatingExpense.create()` 는 `seasonId+categoryId` 전체 지출 (모든 version 합산) 대비 최신 APPROVED header 의 line 검증. 부서 귀속은 MVP `departmentId=null` (부서별 세분화는 별도 이슈).
+
 **잔여예산 계산:** 조회 시점에 시즌 내 지출 합산(Pull). `knapsackAllocated − Σ(실제지출)`.
 
 **쓰기 권한 (Knapsack 실행·플랜 저장):** GM, FINANCE_MANAGER
