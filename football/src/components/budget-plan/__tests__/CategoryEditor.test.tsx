@@ -63,8 +63,13 @@ describe('CategoryEditor', () => {
     // 트리거 그룹 존재
     expect(screen.getByRole('group', { name: '편성 트리거 선택' })).toBeTruthy()
 
-    // 카테고리 라벨
-    expect(screen.getByText('공공요금')).toBeTruthy()
+    // 카테고리 라벨 (TriggerMultiSelect 의 PUBLIC_UTILITY chip 과 텍스트 충돌 →
+    // Card 헤더 안에서만 찾도록 범위를 좁힌다).
+    const card = document.querySelector(
+      `[data-category-code="${CATEGORY.code}"]`,
+    ) as HTMLElement | null
+    expect(card).not.toBeNull()
+    expect(within(card!).getAllByText('공공요금').length).toBeGreaterThan(0)
   })
 
   it('트리거가 하나도 없으면 표준 델타 input 이 disabled 이다', () => {
@@ -108,9 +113,16 @@ describe('CategoryEditor', () => {
     ) as HTMLElement | null
     expect(previewBlock).not.toBeNull()
 
-    const scope = within(previewBlock!)
-    // Standard cost = 0 + 1000 = 1000
-    expect(scope.getByText('₩1,000')).toBeTruthy()
+    // Standard cost = 0 + 1000 = 1000. `₩` 와 숫자가 분리된 span 이라 getByText
+    // 는 텍스트를 정확히 못 잡으므로 data-preview 로 직접 조회한다.
+    const standardCost = previewBlock!.querySelector(
+      '[data-preview="standard-cost"]',
+    )
+    expect(standardCost?.textContent).toBe('₩1,000')
+    const standardValue = previewBlock!.querySelector(
+      '[data-preview="standard-value"]',
+    )
+    expect(standardValue?.textContent).toBe('₩1,000')
 
     // Sanity check: 상수값이 backend 와 정합 (drift 방지)
     expect(TRIGGER_MULTIPLIER.MULTI_LOCATION).toBe(1.0)

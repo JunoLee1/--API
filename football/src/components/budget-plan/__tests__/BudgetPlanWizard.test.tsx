@@ -261,8 +261,11 @@ describe('BudgetPlanWizard planStatus branching', () => {
   it('AWAITING_REVIEW → wizard 오픈 (CategoryEditor 렌더)', () => {
     renderWizard({ planStatus: 'AWAITING_REVIEW' })
     expect(screen.getByTestId('wizard-open')).toBeTruthy()
-    // 카테고리 라벨이 렌더됨
-    expect(screen.getByText('공공요금')).toBeTruthy()
+    // 카테고리 카드가 렌더됨 (TriggerMultiSelect 안에도 '공공요금' chip 이 있으므로
+    // data-category-code 로 정확히 조회).
+    expect(
+      document.querySelector('[data-category-code="utilities"]'),
+    ).not.toBeNull()
     // Submit 버튼 (categories = 1, so single page → isLast)
     expect(screen.getByTestId('wizard-submit')).toBeTruthy()
   })
@@ -285,8 +288,13 @@ describe('BudgetPlanWizard scope 필터', () => {
       categories: [TEAM_CATEGORY, DEPT_CATEGORY],
       currentUser: HEAD_COACH_USER,
     })
-    expect(screen.getByText('공공요금')).toBeTruthy()
-    expect(screen.queryByText('시설')).toBeNull()
+    // 라벨 문자열은 TriggerMultiSelect chip 과 충돌 가능 → data-category-code 조회.
+    expect(
+      document.querySelector(`[data-category-code="${TEAM_CATEGORY.code}"]`),
+    ).not.toBeNull()
+    expect(
+      document.querySelector(`[data-category-code="${DEPT_CATEGORY.code}"]`),
+    ).toBeNull()
   })
 
   it('부서장 → DEPARTMENT scope 카테고리만 렌더', () => {
@@ -295,8 +303,12 @@ describe('BudgetPlanWizard scope 필터', () => {
       categories: [TEAM_CATEGORY, DEPT_CATEGORY],
       currentUser: DEPT_HEAD_USER,
     })
-    expect(screen.queryByText('공공요금')).toBeNull()
-    expect(screen.getByText('시설')).toBeTruthy()
+    expect(
+      document.querySelector(`[data-category-code="${TEAM_CATEGORY.code}"]`),
+    ).toBeNull()
+    expect(
+      document.querySelector(`[data-category-code="${DEPT_CATEGORY.code}"]`),
+    ).not.toBeNull()
   })
 
   it('isActive=false 카테고리는 제외', () => {
@@ -305,8 +317,12 @@ describe('BudgetPlanWizard scope 필터', () => {
       categories: [TEAM_CATEGORY, INACTIVE_CATEGORY],
       currentUser: HEAD_COACH_USER,
     })
-    expect(screen.getByText('공공요금')).toBeTruthy()
-    expect(screen.queryByText('비활성')).toBeNull()
+    expect(
+      document.querySelector(`[data-category-code="${TEAM_CATEGORY.code}"]`),
+    ).not.toBeNull()
+    expect(
+      document.querySelector(`[data-category-code="${INACTIVE_CATEGORY.code}"]`),
+    ).toBeNull()
   })
 
   it('스코프 카테고리가 하나도 없으면 empty 카드', () => {

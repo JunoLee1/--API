@@ -31,7 +31,7 @@ type MutateFn = (
 ) => void
 
 interface MockMutation {
-  mutate: ReturnType<typeof vi.fn<Parameters<MutateFn>, void>>
+  mutate: ReturnType<typeof vi.fn<MutateFn>>
   isPending: boolean
 }
 
@@ -341,7 +341,7 @@ describe('OverrideRequestDialog — 에러 코드 매핑', () => {
       target: { value: '10000' },
     })
     fireEvent.change(screen.getByTestId('override-reason-input'), {
-      target: { value: '유효한 사유입니다' },
+      target: { value: '유효한 사유를 입력합니다 (10 자 이상)' },
     })
     fireEvent.click(screen.getByTestId('override-submit'))
 
@@ -365,7 +365,7 @@ describe('OverrideRequestDialog — 에러 코드 매핑', () => {
       target: { value: '10000' },
     })
     fireEvent.change(screen.getByTestId('override-reason-input'), {
-      target: { value: '유효한 사유입니다' },
+      target: { value: '유효한 사유를 입력합니다 (10 자 이상)' },
     })
     fireEvent.click(screen.getByTestId('override-submit'))
 

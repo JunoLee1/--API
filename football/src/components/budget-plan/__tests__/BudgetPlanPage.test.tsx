@@ -34,6 +34,39 @@ vi.mock('@/services/financial-report.service', () => ({
   },
 }))
 
+// BudgetPlanPage 는 `useBudgetPlan` (react-query) 를 호출하므로 QueryClientProvider
+// 없이 렌더하려면 훅을 스텁 해야 한다. 이 뷰 분기 테스트는 plan 데이터에 의존하지
+// 않으므로 null 로 고정.
+vi.mock('@/services/budget-plan.service', async () => {
+  const actual = await vi.importActual<Record<string, unknown>>(
+    '@/services/budget-plan.service',
+  )
+  return {
+    ...actual,
+    useBudgetPlan: () => ({
+      data: null,
+      isLoading: false,
+      isError: false,
+    }),
+  }
+})
+
+// useExpenseCategories 는 network 호출을 하므로 stub.
+vi.mock('@/hooks/useExpenseCategories', () => ({
+  useExpenseCategories: () => ({
+    rows: [],
+    loading: false,
+    labelOf: (code: string) => code,
+  }),
+}))
+
+// GmReplanPanel 은 useQueryClient 를 사용하므로 lightweight 스텁으로 대체.
+vi.mock('../GmReplanPanel', () => ({
+  GmReplanPanel: ({ seasonId }: { seasonId: number }) => (
+    <section data-testid="gm-re-plan-panel-stub">GM Panel {seasonId}</section>
+  ),
+}))
+
 // eslint-disable-next-line import/first
 import { BudgetPlanPage } from '../BudgetPlanPage'
 
@@ -98,7 +131,8 @@ describe('BudgetPlanPage view dispatch', () => {
 
   it('GM → GM placeholder', async () => {
     await renderWithStatus(makeUser({ role: 'GM' }), 'FINALIZED')
-    expect(document.querySelector('[data-persona="GM"]')).toBeTruthy()
+    // GM persona 는 real GmReplanPanel (여기서는 stub) 을 렌더한다.
+    expect(screen.getByTestId('gm-re-plan-panel-stub')).toBeTruthy()
     expect(screen.getByText('확정')).toBeTruthy()
   })
 
