@@ -4,6 +4,7 @@ import { resolveRequesterScope, assertCategoryScopeMatch, type CategoryScope } f
 import { promoteTiers, type PromotedTier } from "./promotion";
 import type { KnapsackService, KnapsackGroup } from "../budget/knapsack.service";
 import type { BudgetPlanNotifyHook } from "./draft";
+import { autoGenBudgetHeaderFromPlan } from "./auto-header";
 
 interface Reviewer {
   userId: number;
@@ -206,15 +207,21 @@ export class BudgetPlanRequestService {
       return;
     }
 
-    await this.prisma.financialReport.update({
-      where: { id: report.id },
-      data: {
-        planStatus: "FINALIZED",
-        planStatusChangedAt: now,
-        planStatusChangedById: actorUserId,
-        finalizedAt: now,
-      },
+    // ADR 0023 Q2: FINALIZED 전이와 BudgetHeader/Line 자동 생성은 한 트랜잭션.
+    // 헤더 생성이 실패하면 planStatus 전이도 롤백되어 편성-지출 정합이 깨지지 않는다.
+    await this.prisma.$transaction(async (tx) => {
+      await tx.financialReport.update({
+        where: { id: report.id },
+        data: {
+          planStatus: "FINALIZED",
+          planStatusChangedAt: now,
+          planStatusChangedById: actorUserId,
+          finalizedAt: now,
+        },
+      });
+      await autoGenBudgetHeaderFromPlan(seasonId, actorUserId, tx);
     });
+    // notifyHook 은 fire-and-forget (트랜잭션 밖). 실패해도 편성 확정은 유지된다.
     if (this.notifyHook && this.reviewersFn) {
       const reviewers = await this.reviewersFn();
       await this.notifyHook("FINALIZED", { seasonId, reviewers });
@@ -231,14 +238,18 @@ export class BudgetPlanRequestService {
       throw new AppError(409, "INVALID_PLAN_STATUS_TRANSITION");
     }
     const now = new Date();
-    await this.prisma.financialReport.update({
-      where: { id: report.id },
-      data: {
-        planStatus: "FINALIZED",
-        planStatusChangedAt: now,
-        planStatusChangedById: actorUserId,
-        finalizedAt: now,
-      },
+    // ADR 0023 Q2: self-approval 승인 경로도 finalize 와 동일한 in-tx 훅.
+    await this.prisma.$transaction(async (tx) => {
+      await tx.financialReport.update({
+        where: { id: report.id },
+        data: {
+          planStatus: "FINALIZED",
+          planStatusChangedAt: now,
+          planStatusChangedById: actorUserId,
+          finalizedAt: now,
+        },
+      });
+      await autoGenBudgetHeaderFromPlan(seasonId, actorUserId, tx);
     });
     if (this.notifyHook && this.reviewersFn) {
       const reviewers = await this.reviewersFn();
