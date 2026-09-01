@@ -32,12 +32,19 @@ export class OperatingExpenseRepository {
     return this.prisma.budgetLine.findUnique({ where: { id: budgetLineId } });
   }
 
-  findBudgetLinesForSeasonCategory(seasonId: number, categoryId: number) {
+  async findBudgetLinesForSeasonCategory(seasonId: number, categoryId: number) {
+    // ADR 0023 (#474): 편성 확정으로 v2 를 발행하면 v1 은 LOCKED 로 전이되지만,
+    // budget-automation.apply 를 별도로 approve 하면 여러 APPROVED 헤더가 공존할
+    // 수 있다. 자동 매칭 (auto-lookup) 은 반드시 최신 version 하나의 header 만
+    // 참조해야 하므로 latest APPROVED 헤더로 필터한다.
+    const latestApproved = await this.prisma.budgetHeader.findFirst({
+      where: { seasonId, status: "APPROVED" },
+      orderBy: { version: "desc" },
+      select: { id: true },
+    });
+    if (!latestApproved) return [];
     return this.prisma.budgetLine.findMany({
-      where: {
-        categoryId,
-        budgetHeader: { seasonId, status: "APPROVED" },
-      },
+      where: { categoryId, budgetHeaderId: latestApproved.id },
       select: { id: true, departmentId: true, originalAmount: true },
     });
   }
@@ -88,20 +95,40 @@ export class OperatingExpenseRepository {
     tx?: Tx,
   ) {
     const run = async (client: Tx) => {
-      const line = await client.budgetLine.findUnique({ where: { id: data.budgetLineId } });
-      if (!line) throw new Error("BUDGET_LINE_NOT_FOUND");
-      if (line.categoryId !== data.categoryId) throw new Error("CATEGORY_MISMATCH");
+      // ADR 0023 Q4: 최신 APPROVED BudgetHeader 의 category line 을 ceiling 으로
+      // 사용한다. 재편성(v1 LOCKED, v2 APPROVED) 이후에도 v2 originalAmount 가
+      // 실제 한도이며, 아래 지출 합산은 seasonId+categoryId 로 v1 시절 지출까지
+      // 모두 포함해 오버스펜딩을 방지한다.
+      const activeLine = await client.budgetLine.findFirst({
+        where: {
+          categoryId: data.categoryId,
+          budgetHeader: { seasonId: data.seasonId, status: "APPROVED" },
+        },
+        orderBy: [{ budgetHeader: { version: "desc" } }],
+      });
+      if (!activeLine) throw new Error("BUDGET_LINE_NOT_FOUND");
+
+      // Caller-provided budgetLineId 는 저장/감사용으로 유지하되 (호환), 검증
+      // 자체는 최신 APPROVED header 의 line 을 참조한다. 정합 안 맞으면 (예: v1
+      // BudgetLine 을 caller 가 넘겼는데 v2 로 재편성됨) categoryId 일치는 강제.
+      const legacyLine = await client.budgetLine.findUnique({
+        where: { id: data.budgetLineId },
+      });
+      if (legacyLine && legacyLine.categoryId !== data.categoryId) {
+        throw new Error("CATEGORY_MISMATCH");
+      }
 
       const { _sum } = await client.operatingExpense.aggregate({
         where: {
-          budgetLineId: data.budgetLineId,
+          seasonId: data.seasonId,
+          categoryId: data.categoryId,
           deletedAt: null,
           status: { in: ["PENDING", "FIRST_APPROVED", "APPROVED", "PAID"] },
         },
         _sum: { amount: true },
       });
       const used = _sum.amount ?? 0;
-      if (used + data.amount > line.originalAmount) throw new Error("BUDGET_EXCEEDED");
+      if (used + data.amount > activeLine.originalAmount) throw new Error("BUDGET_EXCEEDED");
 
       return client.operatingExpense.create({
         data: {
