@@ -8,12 +8,26 @@ import type { BudgetPlan } from '@/types/budget'
 // ============================================================================
 // BudgetOverrideLog wire type
 // ----------------------------------------------------------------------------
-// 백엔드 Prisma 모델 (`apps/api/prisma/schema.prisma:2854`) 을 그대로 미러링한다.
-// GET /financial-reports/:seasonId/budget 응답의 `overrideLogs[]` 배열에서 이
-// 형태로 내려온다 (financial-report.repo.ts:180 의 include). `BudgetPlan` (FE)
-// 의 `overrideLogs: BudgetOverrideLog[]` 는 레거시 lean 타입이라 status/
-// reviewedBy 등이 빠져 있어 이번 slice 에서 별도 wire 타입을 정의한다.
+// 백엔드 Prisma 모델 (`apps/api/prisma/schema.prisma:2859`) 을 미러링한다.
+// 두 endpoint 에서 서로 다른 include 세트를 반환한다:
+//
+//  1) GET /financial-reports/:seasonId/budget (financial-report.repo.ts:180)
+//     — expenseCategory { code } 만 include. take 50. 다른 소비처 (advanced panel)
+//     의 하위 호환을 위해 유지.
+//
+//  2) GET /financial-reports/:seasonId/override-logs (#444 이 endpoint)
+//     — expenseCategory { id, code, label } + createdBy + reviewedBy 확장.
+//     `usePendingOverrideLogs` 가 이 endpoint 로 이관됨.
+//
+// 두 case 를 하나의 wire 타입으로 표현하기 위해 include 관계는 optional 로 선언.
 // ============================================================================
+export interface BudgetOverrideLogUserRef {
+  id: number
+  email: string
+  username: string | null
+  frontOfficeRole?: string | null
+}
+
 export interface BudgetOverrideLogDto {
   id: number
   financialReportId: number
@@ -27,6 +41,19 @@ export interface BudgetOverrideLogDto {
   reviewedAt: string | null
   reviewNote: string | null
   expenseCategory?: { id?: number; code: string; label?: string }
+  createdBy?: BudgetOverrideLogUserRef
+  reviewedBy?: BudgetOverrideLogUserRef | null
+}
+
+/**
+ * #444: `GET /financial-reports/:seasonId/override-logs` query 파라미터.
+ * status 미지정 시 전체 (PENDING/APPROVED/REJECTED). limit 기본 50, max 200.
+ * cursor 는 이전 페이지 마지막 log.id (exclusive, id DESC ordering).
+ */
+export interface ListOverrideLogsQuery {
+  status?: 'PENDING' | 'APPROVED' | 'REJECTED'
+  limit?: number
+  cursor?: number
 }
 
 // ============================================================================
@@ -238,6 +265,22 @@ export const budgetPlanApi = {
       decision,
       ...(note !== undefined ? { note } : {}),
     }),
+
+  /**
+   * #444: BudgetOverrideLog 목록 조회 (id DESC, 커서 페이지네이션).
+   * FM/GM/ADMIN 만 접근 (팀장/부서장 scope 매칭은 후속 이슈 — 서버 403).
+   * 응답: `BudgetOverrideLogDto[]` — expenseCategory + createdBy + reviewedBy include.
+   */
+  listOverrideLogs: (seasonId: number, query: ListOverrideLogsQuery = {}) => {
+    const params = new URLSearchParams()
+    if (query.status !== undefined) params.set('status', query.status)
+    if (query.limit !== undefined) params.set('limit', String(query.limit))
+    if (query.cursor !== undefined) params.set('cursor', String(query.cursor))
+    const qs = params.toString()
+    return api.get<BudgetOverrideLogDto[]>(
+      `/financial-reports/${seasonId}/override-logs${qs ? `?${qs}` : ''}`,
+    )
+  },
 }
 
 // ============================================================================
@@ -255,6 +298,23 @@ export const budgetPlanKeys = {
     ['financial-report', seasonId] as const,
   budgetPlan: (seasonId: number) =>
     ['budget-plan', 'plan', seasonId] as const,
+  /**
+   * #444: BudgetOverrideLog 목록 — query 조합별로 세분화.
+   * `partial: true` 로 mutation 후 seasonId 전체 invalidate 가 가능하도록
+   * (status/limit/cursor 조합 무관하게) seasonId 접두 3-tuple 을 리턴한다.
+   */
+  overrideLogs: (seasonId: number) =>
+    ['budget-plan', 'override-logs', seasonId] as const,
+  overrideLogsQuery: (
+    seasonId: number,
+    query: { status?: string; limit?: number; cursor?: number } = {},
+  ) =>
+    [
+      'budget-plan',
+      'override-logs',
+      seasonId,
+      { status: query.status, limit: query.limit, cursor: query.cursor },
+    ] as const,
 }
 
 /**
@@ -269,6 +329,9 @@ function invalidateSeason(
     qc.invalidateQueries({ queryKey: budgetPlanKeys.requests(seasonId) }),
     qc.invalidateQueries({ queryKey: budgetPlanKeys.financialReport(seasonId) }),
     qc.invalidateQueries({ queryKey: budgetPlanKeys.budgetPlan(seasonId) }),
+    // #444: override 심사 mutation 후 status/cursor 조합 전체 invalidate
+    // (prefix 매칭이라 partial 3-tuple 로 모든 query 를 걸어낸다).
+    qc.invalidateQueries({ queryKey: budgetPlanKeys.overrideLogs(seasonId) }),
   ])
 }
 
@@ -406,33 +469,21 @@ export function useReviewOverride() {
 }
 
 /**
- * PENDING 상태의 BudgetOverrideLog 목록을 반환.
+ * PENDING 상태의 BudgetOverrideLog 목록.
  *
- * 백엔드에는 아직 `GET /budget-override-logs?status=PENDING` 같은 전용 엔드포인트가
- * 없다 (`apps/api/src/budget-plan/override.controller.ts` 는 request/review 두
- * 개만 노출). 대신 `GET /financial-reports/:seasonId/budget` 응답이
- * `overrideLogs` 를 include 하므로 (backend `financial-report.repo.ts:180`,
- * `orderBy createdAt desc, take 50`), 여기서 client-side 로 PENDING 만 필터한다.
- *
- * TODO(#431-backend-endpoint): 스케일 커지면 `GET /financial-reports/:seasonId/
- * override-logs?status=PENDING` 을 서버에 추가하고 이 hook 을 그 쪽으로 옮긴다.
- * 지금은 `budgetPlanKeys.budgetPlan(seasonId)` 캐시를 재사용해 mutation
- * invalidation 이 자동으로 반영된다.
+ * #444: 이전 구현은 `GET /financial-reports/:seasonId/budget` 응답의
+ * `overrideLogs[]` (take 50) 를 재사용해 client-side 로 status filter 를
+ * 걸었지만, take 잘림으로 인해 PENDING 이 누락될 리스크가 있었다. 이제
+ * 서버가 `GET /financial-reports/:seasonId/override-logs?status=PENDING` 을
+ * 제공하므로 그 쪽을 소비한다 (limit 200 max, id DESC).
  *
  * seasonId 가 falsy 인 경우 자동 disable.
  */
 export function usePendingOverrideLogs(seasonId: number | null | undefined) {
+  const query: ListOverrideLogsQuery = { status: 'PENDING' }
   return useQuery<BudgetOverrideLogDto[]>({
-    queryKey: [...budgetPlanKeys.budgetPlan(seasonId ?? 0), 'pending-override-logs'] as const,
-    queryFn: async () => {
-      // budgetPlanApi.get 은 BudgetPlan (FE lean type) 을 반환하지만 실제 서버
-      // JSON 은 wire shape 이라, `overrideLogs` 원본을 얻기 위해 raw fetch 를 쓴다.
-      const plan = (await budgetPlanFRApi.get(seasonId as number)) as unknown as {
-        overrideLogs?: BudgetOverrideLogDto[]
-      } | null
-      const logs = plan?.overrideLogs ?? []
-      return logs.filter((l) => l.status === 'PENDING')
-    },
+    queryKey: budgetPlanKeys.overrideLogsQuery(seasonId ?? 0, query),
+    queryFn: () => budgetPlanApi.listOverrideLogs(seasonId as number, query),
     enabled: Number.isFinite(seasonId as number) && (seasonId as number) > 0,
     staleTime: 60 * 1000,
   })

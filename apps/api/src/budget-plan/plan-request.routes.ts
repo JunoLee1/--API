@@ -56,4 +56,7 @@ const overrideController = new BudgetOverrideController(overrideService);
 router.post("/financial-reports/:seasonId/override-request", auth, overrideController.requestOverride);
 router.post("/budget-override-logs/:id/review", auth, overrideController.review);
 
+// #444: FM/GM/ADMIN — BudgetOverrideLog 목록 조회 (status filter/limit/cursor)
+router.get("/financial-reports/:seasonId/override-logs", auth, overrideController.list);
+
 export default router;

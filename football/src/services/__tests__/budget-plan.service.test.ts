@@ -185,3 +185,64 @@ describe('budgetPlanApi.requestOverride', () => {
     expect((init as RequestInit).method).toBe('POST')
   })
 })
+
+// #444: BudgetOverrideLog 목록 조회 wire test
+describe('budgetPlanApi.listOverrideLogs (#444)', () => {
+  it('query 인자 없이 호출 시 base URL 만 사용한다', async () => {
+    fetchSpy.mockResolvedValueOnce(jsonResponse({ status: 200, body: [] }))
+    const result = await budgetPlanApi.listOverrideLogs(7)
+    expect(result).toEqual([])
+    const [url, init] = fetchSpy.mock.calls[0]
+    expect(url).toBe('/api/financial-reports/7/override-logs')
+    expect((init as RequestInit).method).toBe('GET')
+  })
+
+  it('status=PENDING → ?status=PENDING 를 붙인다', async () => {
+    fetchSpy.mockResolvedValueOnce(jsonResponse({ status: 200, body: [] }))
+    await budgetPlanApi.listOverrideLogs(7, { status: 'PENDING' })
+    const [url] = fetchSpy.mock.calls[0]
+    expect(url).toBe('/api/financial-reports/7/override-logs?status=PENDING')
+  })
+
+  it('status + limit + cursor 조합 → 모두 query 로 직렬화된다', async () => {
+    fetchSpy.mockResolvedValueOnce(jsonResponse({ status: 200, body: [] }))
+    await budgetPlanApi.listOverrideLogs(7, {
+      status: 'PENDING',
+      limit: 25,
+      cursor: 100,
+    })
+    const [url] = fetchSpy.mock.calls[0]
+    expect(url).toBe(
+      '/api/financial-reports/7/override-logs?status=PENDING&limit=25&cursor=100',
+    )
+  })
+
+  it('응답 body 를 그대로 반환한다 (createdBy/reviewedBy include 포함)', async () => {
+    const rows = [
+      {
+        id: 42,
+        financialReportId: 100,
+        categoryId: 11,
+        amount: 500_000,
+        reason: '월드컵 준비',
+        status: 'PENDING',
+        createdById: 88,
+        createdAt: '2026-08-29T10:00:00.000Z',
+        reviewedById: null,
+        reviewedAt: null,
+        reviewNote: null,
+        expenseCategory: { id: 11, code: 'utilities', label: '공공요금' },
+        createdBy: {
+          id: 88,
+          email: 'leader@x.com',
+          username: 'leader',
+          frontOfficeRole: null,
+        },
+        reviewedBy: null,
+      },
+    ]
+    fetchSpy.mockResolvedValueOnce(jsonResponse({ status: 200, body: rows }))
+    const result = await budgetPlanApi.listOverrideLogs(7, { status: 'PENDING' })
+    expect(result).toEqual(rows)
+  })
+})

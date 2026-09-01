@@ -194,3 +194,135 @@ describe("BudgetOverrideService.reviewOverride (#407)", () => {
     });
   });
 });
+
+// #444: BudgetOverrideLog 목록 조회 (id DESC, status filter, limit/cursor)
+describe("BudgetOverrideService.list (#444)", () => {
+  // list() 전용 mock — findMany 응답을 커스터마이즈.
+  const makeListPrisma = (opts: {
+    reportId?: number | null;
+    rows?: any[];
+  }) => {
+    const findManyCalls: any[] = [];
+    const findMany = jest.fn().mockImplementation((args: any) => {
+      findManyCalls.push(args);
+      return Promise.resolve(opts.rows ?? []);
+    });
+    return {
+      financialReport: {
+        findUnique: jest.fn().mockResolvedValue(
+          opts.reportId === null ? null : { id: opts.reportId ?? 100 },
+        ),
+      } as any,
+      budgetOverrideLog: { findMany } as any,
+      __findManyCalls: findManyCalls,
+    };
+  };
+
+  test("FinancialReport 없음 → 빈 배열 (404 대신 idempotent)", async () => {
+    const prisma = makeListPrisma({ reportId: null });
+    const service = new BudgetOverrideService(prisma as any as PrismaClient);
+    const rows = await service.list(1, {});
+    expect(rows).toEqual([]);
+    expect(prisma.__findManyCalls).toHaveLength(0);
+  });
+
+  test("status=PENDING filter → where.status='PENDING'", async () => {
+    const prisma = makeListPrisma({
+      reportId: 100,
+      rows: [{ id: 3, status: "PENDING", amount: 500 }],
+    });
+    const service = new BudgetOverrideService(prisma as any as PrismaClient);
+    const rows = await service.list(1, { status: "PENDING" });
+    expect(rows).toHaveLength(1);
+    const call = prisma.__findManyCalls[0];
+    expect(call.where).toMatchObject({ financialReportId: 100, status: "PENDING" });
+    expect(call.orderBy).toEqual({ id: "desc" });
+    expect(call.take).toBe(50); // default
+  });
+
+  test("status 미지정 → where.status 없음 (전체 상태)", async () => {
+    const prisma = makeListPrisma({ reportId: 100, rows: [] });
+    const service = new BudgetOverrideService(prisma as any as PrismaClient);
+    await service.list(1, {});
+    const call = prisma.__findManyCalls[0];
+    expect(call.where.status).toBeUndefined();
+  });
+
+  test("limit 지정 → take 반영", async () => {
+    const prisma = makeListPrisma({ reportId: 100, rows: [] });
+    const service = new BudgetOverrideService(prisma as any as PrismaClient);
+    await service.list(1, { limit: 25 });
+    expect(prisma.__findManyCalls[0].take).toBe(25);
+  });
+
+  test("limit=200 (경계) → OK", async () => {
+    const prisma = makeListPrisma({ reportId: 100, rows: [] });
+    const service = new BudgetOverrideService(prisma as any as PrismaClient);
+    await service.list(1, { limit: 200 });
+    expect(prisma.__findManyCalls[0].take).toBe(200);
+  });
+
+  test("limit>200 → 400 LIMIT_EXCEEDS_MAX", async () => {
+    const prisma = makeListPrisma({ reportId: 100 });
+    const service = new BudgetOverrideService(prisma as any as PrismaClient);
+    await expect(service.list(1, { limit: 201 })).rejects.toMatchObject({
+      statusCode: 400,
+      code: "LIMIT_EXCEEDS_MAX",
+    });
+  });
+
+  test("limit<=0 → 400 INVALID_LIMIT", async () => {
+    const prisma = makeListPrisma({ reportId: 100 });
+    const service = new BudgetOverrideService(prisma as any as PrismaClient);
+    await expect(service.list(1, { limit: 0 })).rejects.toMatchObject({
+      statusCode: 400,
+      code: "INVALID_LIMIT",
+    });
+  });
+
+  test("cursor 지정 → where.id={ lt: cursor }", async () => {
+    const prisma = makeListPrisma({ reportId: 100, rows: [] });
+    const service = new BudgetOverrideService(prisma as any as PrismaClient);
+    await service.list(1, { cursor: 42 });
+    expect(prisma.__findManyCalls[0].where).toMatchObject({
+      financialReportId: 100,
+      id: { lt: 42 },
+    });
+  });
+
+  test("cursor<=0 → 400 INVALID_CURSOR", async () => {
+    const prisma = makeListPrisma({ reportId: 100 });
+    const service = new BudgetOverrideService(prisma as any as PrismaClient);
+    await expect(service.list(1, { cursor: 0 })).rejects.toMatchObject({
+      statusCode: 400,
+      code: "INVALID_CURSOR",
+    });
+  });
+
+  test("include: expenseCategory + createdBy + reviewedBy", async () => {
+    const prisma = makeListPrisma({ reportId: 100, rows: [] });
+    const service = new BudgetOverrideService(prisma as any as PrismaClient);
+    await service.list(1, {});
+    const call = prisma.__findManyCalls[0];
+    expect(call.include).toMatchObject({
+      expenseCategory: { select: { id: true, code: true, label: true } },
+      createdBy: {
+        select: { id: true, email: true, username: true, frontOfficeRole: true },
+      },
+      reviewedBy: {
+        select: { id: true, email: true, username: true, frontOfficeRole: true },
+      },
+    });
+  });
+
+  test("invalid status 문자열 → 400 INVALID_STATUS", async () => {
+    const prisma = makeListPrisma({ reportId: 100 });
+    const service = new BudgetOverrideService(prisma as any as PrismaClient);
+    await expect(
+      service.list(1, { status: "BOGUS" as any }),
+    ).rejects.toMatchObject({
+      statusCode: 400,
+      code: "INVALID_STATUS",
+    });
+  });
+});
