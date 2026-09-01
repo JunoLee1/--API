@@ -2771,6 +2771,9 @@ async function main() {
   // ── 편성 워크플로우 (ExpenseCategory + BudgetPlanRequest + BudgetOverrideLog) ──
   await seedBudgetPlanWorkflow();
 
+  // ── Sponsorship + SponsorshipPayment (2025 실적 + 2026 in-flight) ──
+  await seedSponsorships(admin.id);
+
   console.log("✅ Seed complete");
   console.log(`   - Countries: 2`);
   console.log(`   - Users: 21 + 10 유소년 / pw: Password1!`);
@@ -3186,6 +3189,123 @@ async function seedBudgetPlanWorkflow() {
 
   console.log(
     `[seed] BudgetPlan workflow — ${newCategorySeeds.length} new categories, 3 requests (SUBMITTED×2, DRAFT×1), 2 override logs (PENDING+APPROVED)`,
+  );
+}
+
+// Sponsorship seed — 2025 실적 + 2026 in-flight 로 FinancialReport 스폰서십 revenue 집계 데이터 확보.
+// getSeasonRevenueActuals 는 status=PAID + paidAt in season window 만 count (cash basis, #325 참조).
+async function seedSponsorships(adminId: number) {
+  const s2025 = new Date("2025-01-01");
+  const e2025 = new Date("2025-12-31");
+  const s2026 = new Date("2026-01-01");
+  const e2026 = new Date("2026-12-31");
+
+  const sponsors = [
+    {
+      key: "TITLE-2025-KOREA",
+      data: {
+        sponsorName: "코리아텔레콤",
+        type: "TITLE" as const,
+        totalFee: 3_000_000_000,
+        contractStart: s2025,
+        contractEnd: e2025,
+        paymentSchedule: "QUARTERLY" as const,
+        currency: "KRW" as const,
+        isOverseas: false,
+        businessRegNumber: "104-81-12345",
+      },
+      payments: [
+        { dueDate: new Date("2025-03-31"), amount: 750_000_000, paidAt: new Date("2025-03-28"), status: "PAID" as const },
+        { dueDate: new Date("2025-06-30"), amount: 750_000_000, paidAt: new Date("2025-06-30"), status: "PAID" as const },
+        { dueDate: new Date("2025-09-30"), amount: 750_000_000, paidAt: new Date("2025-09-25"), status: "PAID" as const },
+        { dueDate: new Date("2025-12-31"), amount: 750_000_000, paidAt: new Date("2025-12-22"), status: "PAID" as const },
+      ],
+    },
+    {
+      key: "KIT-2025-SEOUL",
+      data: {
+        sponsorName: "서울스포츠",
+        type: "KIT" as const,
+        totalFee: 800_000_000,
+        contractStart: s2025,
+        contractEnd: e2025,
+        paymentSchedule: "ANNUAL" as const,
+        currency: "KRW" as const,
+        isOverseas: false,
+        businessRegNumber: "220-88-45678",
+      },
+      payments: [
+        { dueDate: new Date("2025-01-31"), amount: 800_000_000, paidAt: new Date("2025-01-30"), status: "PAID" as const },
+      ],
+    },
+    {
+      key: "TITLE-2026-KOREA",
+      data: {
+        sponsorName: "코리아텔레콤",
+        type: "TITLE" as const,
+        totalFee: 3_600_000_000,
+        contractStart: s2026,
+        contractEnd: e2026,
+        paymentSchedule: "QUARTERLY" as const,
+        currency: "KRW" as const,
+        isOverseas: false,
+        businessRegNumber: "104-81-12345",
+      },
+      payments: [
+        { dueDate: new Date("2026-03-31"), amount: 900_000_000, paidAt: new Date("2026-03-30"), status: "PAID" as const },
+        { dueDate: new Date("2026-06-30"), amount: 900_000_000, paidAt: new Date("2026-06-29"), status: "PAID" as const },
+        { dueDate: new Date("2026-09-30"), amount: 900_000_000, paidAt: null, status: "PENDING" as const },
+        { dueDate: new Date("2026-12-31"), amount: 900_000_000, paidAt: null, status: "PENDING" as const },
+      ],
+    },
+    {
+      key: "DIGITAL-2026-LONDON",
+      data: {
+        sponsorName: "London Digital Ltd.",
+        type: "DIGITAL" as const,
+        totalFee: 500_000_000,
+        contractStart: s2026,
+        contractEnd: e2026,
+        paymentSchedule: "MONTHLY" as const,
+        currency: "GBP" as const,
+        isOverseas: true,
+        taxId: "GB123456789",
+        overseasAddress: "10 Downing Street, London",
+      },
+      payments: [
+        { dueDate: new Date("2026-02-28"), amount: 41_667_000, paidAt: new Date("2026-02-27"), status: "PAID" as const },
+        { dueDate: new Date("2026-03-31"), amount: 41_667_000, paidAt: new Date("2026-03-29"), status: "PAID" as const },
+        { dueDate: new Date("2026-04-30"), amount: 41_667_000, paidAt: null, status: "OVERDUE" as const },
+      ],
+    },
+  ];
+
+  let sponsorshipCount = 0;
+  let paymentCount = 0;
+
+  for (const s of sponsors) {
+    // key = (sponsorName + contractStart) 조합으로 idempotent 판별
+    const existing = await prisma.sponsorship.findFirst({
+      where: { sponsorName: s.data.sponsorName, contractStart: s.data.contractStart },
+      select: { id: true },
+    });
+    if (existing) continue;
+
+    const created = await prisma.sponsorship.create({
+      data: { ...s.data, createdById: adminId },
+    });
+    sponsorshipCount++;
+
+    for (const p of s.payments) {
+      await prisma.sponsorshipPayment.create({
+        data: { sponsorshipId: created.id, ...p },
+      });
+      paymentCount++;
+    }
+  }
+
+  console.log(
+    `[seed] Sponsorships — ${sponsorshipCount} contracts, ${paymentCount} payments (2025 4+1 PAID, 2026 2 PAID + 2 PENDING + 3 OVERSEAS)`,
   );
 }
 
