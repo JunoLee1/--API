@@ -88,6 +88,19 @@ export interface BudgetPlanRequestLineDto {
   createdAt: string
 }
 
+/**
+ * 신청자 정보 (issue #445 → server include 확장). FinanceManagerReview 가
+ * `신청자 #{id}` fallback 없이 사람 이름/이메일을 표시할 수 있게 한다.
+ * frontOfficeRole / coachingRole 은 서버가 include 하지만 null 허용.
+ */
+export interface BudgetPlanRequesterDto {
+  id: number
+  username: string | null
+  email: string
+  frontOfficeRole?: string | null
+  coachingRole?: string | null
+}
+
 export interface BudgetPlanRequestDto {
   id: number
   financialReportId: number
@@ -95,6 +108,13 @@ export interface BudgetPlanRequestDto {
   scope: 'TEAM' | 'DEPARTMENT'
   ownerType: string
   ownerId: number
+  /**
+   * issue #445: 서버가 ownerType 별 batch lookup 으로 조합해서 반환.
+   * TEAM → Team.name, DEPARTMENT → Department.name, lookup 실패 시
+   * 서버 fallback (`팀 #7` / `부서 #3`) 을 그대로 소비.
+   */
+  ownerName: string
+  requestedBy: BudgetPlanRequesterDto
   status: BudgetPlanRequestStatus
   submittedAt: string | null
   processedAt: string | null

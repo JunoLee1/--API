@@ -120,10 +120,60 @@ export class BudgetPlanRequestService {
   }
 
   async list(seasonId: number) {
-    return this.prisma.budgetPlanRequest.findMany({
+    // 신청 목록을 조회하면서 requestedBy 를 include. Prisma 는 ownerType(String)
+    // 에 조건부 relation include 를 지원하지 않으므로 (Team/Department 는 서로
+    // 다른 모델이고 ownerId 는 discriminator 없이 저장됨), team/department 이름은
+    // 서비스 레이어에서 batch lookup 으로 조합한다.
+    const requests = await this.prisma.budgetPlanRequest.findMany({
       where: { financialReport: { seasonId } },
-      include: { lines: true },
+      include: {
+        lines: true,
+        requestedBy: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            frontOfficeRole: true,
+            coachingRole: true,
+          },
+        },
+      },
       orderBy: { submittedAt: "desc" },
+    });
+
+    // Batch lookup: ownerType 별로 id 를 모아 각각 1 회씩 findMany. 요청이 N 건
+    // 이더라도 team/department 조회는 각각 최대 1 회 (총 2 회) 로 억제된다.
+    const teamIds: number[] = [];
+    const deptIds: number[] = [];
+    for (const r of requests) {
+      if (r.ownerType === "TEAM") teamIds.push(r.ownerId);
+      else if (r.ownerType === "DEPARTMENT") deptIds.push(r.ownerId);
+    }
+    const [teams, departments] = await Promise.all([
+      teamIds.length > 0
+        ? this.prisma.team.findMany({
+            where: { id: { in: teamIds } },
+            select: { id: true, name: true },
+          })
+        : Promise.resolve([] as { id: number; name: string }[]),
+      deptIds.length > 0
+        ? this.prisma.department.findMany({
+            where: { id: { in: deptIds } },
+            select: { id: true, name: true },
+          })
+        : Promise.resolve([] as { id: number; name: string }[]),
+    ]);
+    const teamName = new Map(teams.map((t) => [t.id, t.name]));
+    const deptName = new Map(departments.map((d) => [d.id, d.name]));
+
+    return requests.map((r) => {
+      const ownerName =
+        r.ownerType === "TEAM"
+          ? (teamName.get(r.ownerId) ?? `팀 #${r.ownerId}`)
+          : r.ownerType === "DEPARTMENT"
+            ? (deptName.get(r.ownerId) ?? `부서 #${r.ownerId}`)
+            : `#${r.ownerId}`;
+      return { ...r, ownerName };
     });
   }
 

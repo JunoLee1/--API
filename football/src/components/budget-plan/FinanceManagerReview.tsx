@@ -149,16 +149,23 @@ function TriggerChips({ triggers }: { triggers: readonly string[] }) {
 }
 
 // ---------------------------------------------------------------------------
-// 소유자 표기. 서버가 owner name 을 아직 include 하지 않으므로 (backend
-// `plan-request.service.list` 는 `include: { lines: true }` 만 실행)
-// scope + id 로만 표시하고 TODO 를 남긴다. 추후 서버가 `team` / `department`
-// 를 함께 include 하도록 확장되면 이 함수를 갱신할 것.
+// 소유자 표기. issue #445 로 서버가 ownerName (Team.name / Department.name)
+// 을 조합해 반환하므로 그대로 소비한다. 서버 lookup 실패 시 서버가 이미
+// `팀 #7` / `부서 #3` fallback 을 넣으므로 FE 는 추가 방어를 하지 않는다.
 // ---------------------------------------------------------------------------
 function ownerDisplayName(req: BudgetPlanRequestDto): string {
-  const kind = SCOPE_BADGE_LABEL[req.scope]
-  // TODO(#429-owner-name): 서버가 team.name / department.name 을 include 하면
-  // 그 값을 우선 사용하도록 수정.
-  return `${kind} #${req.ownerId}`
+  return req.ownerName
+}
+
+// ---------------------------------------------------------------------------
+// 신청자 표기. issue #445 로 서버가 requestedBy (id/username/email/…) 를
+// include 하므로 username 우선, 없으면 email 로 표시한다. `#id` fallback 은
+// 서버 응답이 실제로 없을 때만 (테스트 편의) 로 축소한다.
+// ---------------------------------------------------------------------------
+function requesterDisplayName(req: BudgetPlanRequestDto): string {
+  const requestedBy = req.requestedBy
+  if (!requestedBy) return `#${req.requestedById}`
+  return requestedBy.username ?? requestedBy.email ?? `#${requestedBy.id}`
 }
 
 interface OwnerGroup {
@@ -697,7 +704,7 @@ export function FinanceManagerReview({ seasonId, planStatus }: Props) {
                     </Badge>
                     <span className="font-medium">{ownerDisplayName(req)}</span>
                     <span className="text-muted-foreground">
-                      신청자 #{req.requestedById}
+                      신청자 {requesterDisplayName(req)}
                     </span>
                     <span className="text-muted-foreground">
                       {req.submittedAt
