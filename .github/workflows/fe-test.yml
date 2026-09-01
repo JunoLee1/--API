@@ -1,0 +1,30 @@
+name: FE Test
+
+on:
+  pull_request:
+    paths:
+      - 'football/**'
+      - '.github/workflows/fe-test.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: football/package-lock.json
+
+      - name: Install dependencies
+        working-directory: football
+        run: npm ci
+
+      - name: Run vitest
+        working-directory: football
+        run: npm run test

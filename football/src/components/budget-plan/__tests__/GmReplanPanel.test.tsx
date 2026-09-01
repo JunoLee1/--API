@@ -30,7 +30,7 @@ type MutateFn = (
 ) => void
 
 interface MockMutation {
-  mutate: ReturnType<typeof vi.fn<Parameters<MutateFn>, void>>
+  mutate: ReturnType<typeof vi.fn<MutateFn>>
   isPending: boolean
 }
 

@@ -30,7 +30,7 @@ type MutateFn = (
 ) => void
 
 interface MockMutation {
-  mutate: ReturnType<typeof vi.fn<Parameters<MutateFn>, void>>
+  mutate: ReturnType<typeof vi.fn<MutateFn>>
   isPending: boolean
 }
 
@@ -43,25 +43,53 @@ const reviewOverrideMock: MockMutation = { mutate: vi.fn(), isPending: false }
 let mockRequests: BudgetPlanRequestDto[] = []
 let mockPendingLogs: BudgetOverrideLogDto[] = []
 
-vi.mock('@/services/budget-plan.service', () => ({
-  useOpenReview: () => openReviewMock,
-  useExecuteKnapsack: () => executeKnapsackMock,
-  useFinalize: () => finalizeMock,
-  useRePlan: () => rePlanMock,
-  useReviewOverride: () => reviewOverrideMock,
-  usePlanRequests: () => ({
-    data: mockRequests,
-    isLoading: false,
-    isError: false,
-    error: null,
-  }),
-  usePendingOverrideLogs: () => ({
-    data: mockPendingLogs,
-    isLoading: false,
-    isError: false,
-    error: null,
-  }),
-}))
+vi.mock('@/services/budget-plan.service', async () => {
+  const actual = await vi.importActual<Record<string, unknown>>(
+    '@/services/budget-plan.service',
+  )
+  return {
+    ...actual,
+    useOpenReview: () => openReviewMock,
+    useExecuteKnapsack: () => executeKnapsackMock,
+    useFinalize: () => finalizeMock,
+    useRePlan: () => rePlanMock,
+    useReviewOverride: () => reviewOverrideMock,
+    usePlanRequests: () => ({
+      data: mockRequests,
+      isLoading: false,
+      isError: false,
+      error: null,
+    }),
+    usePendingOverrideLogs: () => ({
+      data: mockPendingLogs,
+      isLoading: false,
+      isError: false,
+      error: null,
+    }),
+    // #451 상단 mm 관리 섹션 — override 테스트는 mm 을 검증하지 않음.
+    useBudgetPlan: () => ({
+      data: null,
+      isLoading: false,
+      isError: false,
+    }),
+  }
+})
+
+// mm 관리 섹션의 usePendingMinimums 도 스텁 (override 테스트 무관).
+vi.mock('@/services/mandatory-minimum.service', async () => {
+  const actual = await vi.importActual<Record<string, unknown>>(
+    '@/services/mandatory-minimum.service',
+  )
+  return {
+    ...actual,
+    usePendingMinimums: () => ({
+      data: [],
+      isLoading: false,
+      isError: false,
+    }),
+    usePendingMinimumsCount: () => 0,
+  }
+})
 
 vi.mock('@/hooks/useCurrentUser', () => ({
   useCurrentUser: () => ({

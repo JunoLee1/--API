@@ -34,7 +34,7 @@ type MutateFn = (
 ) => void
 
 interface MockMutation {
-  mutate: ReturnType<typeof vi.fn<Parameters<MutateFn>, void>>
+  mutate: ReturnType<typeof vi.fn<MutateFn>>
   isPending: boolean
 }
 
@@ -48,27 +48,57 @@ let mockRequests: BudgetPlanRequestDto[] = []
 let mockRequestsLoading = false
 let mockRequestsError: Error | null = null
 
-vi.mock('@/services/budget-plan.service', () => ({
-  useOpenReview: () => openReviewMock,
-  useExecuteKnapsack: () => executeKnapsackMock,
-  useFinalize: () => finalizeMock,
-  useRePlan: () => rePlanMock,
-  useReviewOverride: () => reviewOverrideMock,
-  usePlanRequests: () => ({
-    data: mockRequests,
-    isLoading: mockRequestsLoading,
-    isError: mockRequestsError !== null,
-    error: mockRequestsError,
-  }),
-  // #431: 이의 신청 목록 훅 — 기존 테스트는 override UI 를 검증하지 않으므로
-  // 항상 빈 배열 loaded 로 반환한다.
-  usePendingOverrideLogs: () => ({
-    data: [],
-    isLoading: false,
-    isError: false,
-    error: null,
-  }),
-}))
+vi.mock('@/services/budget-plan.service', async () => {
+  const actual = await vi.importActual<Record<string, unknown>>(
+    '@/services/budget-plan.service',
+  )
+  return {
+    ...actual,
+    useOpenReview: () => openReviewMock,
+    useExecuteKnapsack: () => executeKnapsackMock,
+    useFinalize: () => finalizeMock,
+    useRePlan: () => rePlanMock,
+    useReviewOverride: () => reviewOverrideMock,
+    usePlanRequests: () => ({
+      data: mockRequests,
+      isLoading: mockRequestsLoading,
+      isError: mockRequestsError !== null,
+      error: mockRequestsError,
+    }),
+    // #431: 이의 신청 목록 훅 — 기존 테스트는 override UI 를 검증하지 않으므로
+    // 항상 빈 배열 loaded 로 반환한다.
+    usePendingOverrideLogs: () => ({
+      data: [],
+      isLoading: false,
+      isError: false,
+      error: null,
+    }),
+    // #451 mandatoryMinimum 관리 섹션 상단에서 소비 — 이 테스트 파일은 mm 을
+    // 검증하지 않으므로 null 로 스텁.
+    useBudgetPlan: () => ({
+      data: null,
+      isLoading: false,
+      isError: false,
+    }),
+  }
+})
+
+// mandatory-minimum.service 도 FMReview 가 상단에서 usePendingMinimums 호출 →
+// 빈 배열로 스텁 (이 파일은 mm 관리 UI 를 검증하지 않는다).
+vi.mock('@/services/mandatory-minimum.service', async () => {
+  const actual = await vi.importActual<Record<string, unknown>>(
+    '@/services/mandatory-minimum.service',
+  )
+  return {
+    ...actual,
+    usePendingMinimums: () => ({
+      data: [],
+      isLoading: false,
+      isError: false,
+    }),
+    usePendingMinimumsCount: () => 0,
+  }
+})
 
 // useCurrentUser: FM(id=42) 를 기본으로 반환. 테스트마다 재할당 가능.
 let mockCurrentUserId: number | null = 42
@@ -202,7 +232,11 @@ describe('FinanceManagerReview — 신청 현황 렌더', () => {
 
     renderReview('AWAITING_REVIEW')
 
-    const teamGroup = screen.getByText('팀 #7').closest('[data-owner-group]')
+    // "팀 #7" 은 owner group h3 + 각 request span 에서 반복 출현하므로 group
+    // wrapper (data-owner-group) 로 직접 조회한다.
+    const teamGroup = document.querySelector(
+      '[data-owner-group="TEAM:7"]',
+    ) as HTMLElement | null
     expect(teamGroup).not.toBeNull()
     // 같은 owner 아래에 2 개의 request block
     expect(
@@ -210,7 +244,10 @@ describe('FinanceManagerReview — 신청 현황 렌더', () => {
     ).toBe(2)
 
     // DEPARTMENT 그룹은 별개
-    expect(screen.getByText('부서 #3')).toBeTruthy()
+    const deptGroup = document.querySelector(
+      '[data-owner-group="DEPARTMENT:3"]',
+    )
+    expect(deptGroup).not.toBeNull()
   })
 
   it('라인의 카테고리 라벨과 트리거 chip 이 노출된다', () => {
