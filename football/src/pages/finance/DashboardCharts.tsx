@@ -166,7 +166,7 @@ export default function DashboardCharts() {
             </SelectTrigger>
             <SelectContent>
               {seasons.map((s) => (
-                <SelectItem key={s.id} value={String(s.id)}>
+                <SelectItem key={s.id} value={String(s.id)} label={s.name}>
                   {s.name}
                 </SelectItem>
               ))}

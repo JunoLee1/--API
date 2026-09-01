@@ -652,11 +652,14 @@ function SaleForm({ form, setForm, matches, seatZones, showMatchSelect, saving, 
           >
             <SelectTrigger><SelectValue placeholder={t('ticketSales.dialog.matchSelect')} /></SelectTrigger>
             <SelectContent>
-              {matches.map((m) => (
-                <SelectItem key={m.id} value={m.id.toString()}>
-                  {new Date(m.date).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })} {m.homeTeamName} vs {m.awayTeamName}
-                </SelectItem>
-              ))}
+              {matches.map((m) => {
+                const matchLabel = `${new Date(m.date).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })} ${m.homeTeamName} vs ${m.awayTeamName}`
+                return (
+                  <SelectItem key={m.id} value={m.id.toString()} label={matchLabel}>
+                    {matchLabel}
+                  </SelectItem>
+                )
+              })}
             </SelectContent>
           </Select>
         </div>
@@ -679,7 +682,7 @@ function SaleForm({ form, setForm, matches, seatZones, showMatchSelect, saving, 
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
             {TICKET_TYPES.map((tp) => (
-              <SelectItem key={tp} value={tp}>{TICKET_TYPE_LABEL[tp]}</SelectItem>
+              <SelectItem key={tp} value={tp} label={TICKET_TYPE_LABEL[tp]}>{TICKET_TYPE_LABEL[tp]}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -700,11 +703,14 @@ function SaleForm({ form, setForm, matches, seatZones, showMatchSelect, saving, 
           >
             <SelectTrigger><SelectValue placeholder={t('ticketSales.dialog.seatZoneSelect')} /></SelectTrigger>
             <SelectContent>
-              {seatZones.map((z) => (
-                <SelectItem key={z.id} value={z.id.toString()}>
-                  {z.name}{z.unitPrice ? ` (₩${z.unitPrice.toLocaleString()})` : ''}
-                </SelectItem>
-              ))}
+              {seatZones.map((z) => {
+                const zoneLabel = `${z.name}${z.unitPrice ? ` (₩${z.unitPrice.toLocaleString()})` : ''}`
+                return (
+                  <SelectItem key={z.id} value={z.id.toString()} label={zoneLabel}>
+                    {zoneLabel}
+                  </SelectItem>
+                )
+              })}
             </SelectContent>
           </Select>
         </div>
