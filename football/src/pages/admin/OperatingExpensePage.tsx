@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { operatingExpenseApi, EXPENSE_COST_TYPE_LABEL, ALL_EXPENSE_COST_TYPES, type ExpenseCostType } from '@/services/operating-expense.service'
@@ -13,10 +13,15 @@ import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
-import { Trash2, Plus } from 'lucide-react'
+import { Trash2, Plus, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
+import { Pagination } from '@/components/ui/pagination'
+
+type SortKey = 'date' | 'category' | 'amount' | 'by'
+type SortDir = 'asc' | 'desc'
+const PAGE_SIZE = 10
 
 function fmt(n: number) {
   return n.toLocaleString('ko-KR') + '원'
@@ -29,6 +34,9 @@ export function OperatingExpensePage() {
   const [seasons, setSeasons] = useState<Season[]>([])
   const [seasonId, setSeasonId] = useState<number | null>(null)
   const [expenses, setExpenses] = useState<OperatingExpense[]>([])
+  const [sortKey, setSortKey] = useState<SortKey>('date')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
   const [form, setForm] = useState({
@@ -61,10 +69,81 @@ export function OperatingExpensePage() {
 
   const handleSeasonChange = async (id: number) => {
     setSeasonId(id)
+    setPage(1)
     setLoading(true)
     try { await load(id) }
     catch { toast.error(t('operatingExpense.loadFailed')) }
     finally { setLoading(false) }
+  }
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(key)
+      setSortDir(key === 'date' ? 'desc' : 'asc')
+    }
+    setPage(1)
+  }
+
+  const sortedExpenses = useMemo(() => {
+    const arr = [...expenses]
+    const dir = sortDir === 'asc' ? 1 : -1
+    arr.sort((a, b) => {
+      let av: string | number
+      let bv: string | number
+      switch (sortKey) {
+        case 'date':
+          av = new Date(a.date).getTime()
+          bv = new Date(b.date).getTime()
+          break
+        case 'category':
+          av = labelOf(a.category)
+          bv = labelOf(b.category)
+          break
+        case 'amount':
+          av = a.amount
+          bv = b.amount
+          break
+        case 'by':
+          av = a.createdBy.username ?? ''
+          bv = b.createdBy.username ?? ''
+          break
+      }
+      if (av < bv) return -1 * dir
+      if (av > bv) return 1 * dir
+      return 0
+    })
+    return arr
+  }, [expenses, sortKey, sortDir, labelOf])
+
+  const totalPages = Math.max(1, Math.ceil(sortedExpenses.length / PAGE_SIZE))
+  const pagedExpenses = useMemo(
+    () => sortedExpenses.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [sortedExpenses, page],
+  )
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages)
+  }, [page, totalPages])
+
+  const SortableHead = ({ k, label }: { k: SortKey; label: string }) => {
+    const active = sortKey === k
+    const Icon = active ? (sortDir === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown
+    return (
+      <TableHead>
+        <button
+          type="button"
+          onClick={() => handleSort(k)}
+          className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
+          data-testid={`opex-sort-${k}`}
+          aria-sort={active ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+        >
+          {label}
+          <Icon className={`h-3 w-3 ${active ? 'text-foreground' : 'text-muted-foreground/60'}`} />
+        </button>
+      </TableHead>
+    )
   }
 
   const handleCreate = async () => {
@@ -150,16 +229,16 @@ export function OperatingExpensePage() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead>{t('operatingExpense.col.date')}</TableHead>
-                <TableHead>{t('operatingExpense.col.category')}</TableHead>
-                <TableHead>{t('operatingExpense.col.amount')}</TableHead>
+                <SortableHead k="date" label={t('operatingExpense.col.date')} />
+                <SortableHead k="category" label={t('operatingExpense.col.category')} />
+                <SortableHead k="amount" label={t('operatingExpense.col.amount')} />
                 <TableHead>{t('operatingExpense.col.note')}</TableHead>
-                <TableHead>{t('operatingExpense.col.by')}</TableHead>
+                <SortableHead k="by" label={t('operatingExpense.col.by')} />
                 <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {expenses.map((e) => (
+              {pagedExpenses.map((e) => (
                 <TableRow key={e.id}>
                   <TableCell className="tabular-nums text-sm">{new Date(e.date).toLocaleDateString('ko-KR')}</TableCell>
                   <TableCell className="text-sm">{labelOf(e.category)}</TableCell>
@@ -177,6 +256,14 @@ export function OperatingExpensePage() {
           </Table>
         )}
       </div>
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={sortedExpenses.length}
+        pageSize={PAGE_SIZE}
+        onPageChange={setPage}
+      />
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-w-sm">
