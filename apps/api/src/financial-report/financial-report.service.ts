@@ -265,6 +265,9 @@ export class FinancialReportService {
     const breakdown: RevenueBreakdownDto = {
       plannedRevenueTicket:        avg((a) => a.plannedRevenueTicket),
       plannedRevenueSponsorship:   avg((a) => a.plannedRevenueSponsorship),
+      // Expected 는 총액(sumBreakdown)에는 미포함 (별도 metric, ADR 0024).
+      // Breakdown 에는 field 로 담아서 repo.upsert 가 persist 하도록.
+      expectedRevenueSponsorship:  avg((a) => a.expectedRevenueSponsorship),
       plannedRevenueMerchandise:   avg((a) => a.plannedRevenueMerchandise),
       plannedRevenueOther:         avg((a) => a.plannedRevenueOther),
       plannedRevenueAcademyFee:    avg((a) => a.plannedRevenueAcademyFee),
