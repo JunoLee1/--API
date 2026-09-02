@@ -17,6 +17,8 @@ import {
 import { dashboardApi } from '@/services/dashboard.service'
 import type { FinanceDashboard, TrendEntry } from '@/services/dashboard.service'
 import { seasonApi } from '@/services/season.service'
+import { useFinancialReport } from '@/services/budget-plan.service'
+import { computeSponsorUncollected } from '@/pages/finance/sponsorUncollected'
 import type { Season, WageCapKPI } from '@/types/season'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -106,6 +108,17 @@ export default function DashboardCharts() {
       .catch(() => toast.error('대시보드 데이터를 불러오지 못했습니다'))
       .finally(() => setLoading(false))
   }, [selectedSeasonId, viewMode, year, month])
+
+  // ADR 0024: 시즌 뷰일 때 sponsorship 미수금 배지 표시.
+  // dashboardApi 응답은 Actual (cash) 만 담으므로 FinancialReport 를 병행 조회해서
+  // expectedRevenueSponsorship 을 얻는다. Monthly 뷰나 seasonId 미선택 시엔 disable.
+  const { data: financialReport } = useFinancialReport(
+    viewMode === 'season' ? selectedSeasonId ?? null : null,
+  )
+  const sponsorUncollected = computeSponsorUncollected(
+    financialReport?.plannedRevenueSponsorship,
+    financialReport?.expectedRevenueSponsorship,
+  )
 
   const donutSource = viewMode === 'season' ? data?.donut.season : data?.donut.monthly
   const donutEntries = donutSource
@@ -228,8 +241,17 @@ export default function DashboardCharts() {
         {/* DonutChart */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">
-              수익 구성 ({viewMode === 'season' ? '시즌 전체' : `${year}년 ${month}월`})
+            <CardTitle className="text-base flex items-center gap-2 flex-wrap">
+              <span>수익 구성 ({viewMode === 'season' ? '시즌 전체' : `${year}년 ${month}월`})</span>
+              {sponsorUncollected > 0 && (
+                <span
+                  className="text-xs font-normal text-amber-600"
+                  data-testid="dashboard-sponsor-uncollected-badge"
+                  title="스폰서십 SponsorshipPayment.dueDate 기준 예상 - 실지급 (ADR 0024)"
+                >
+                  스폰서십 미수금 {sponsorUncollected.toLocaleString()}
+                </span>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>

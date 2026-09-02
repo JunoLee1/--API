@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertTriangle, ArrowLeft, Wand2 } from 'lucide-react'
 import { budgetAutomationApi } from '@/services/budgetAutomation.service'
 import { seasonApi } from '@/services/season.service'
+import { useFinancialReport } from '@/services/budget-plan.service'
+import { computeSponsorUncollected } from '@/pages/finance/sponsorUncollected'
 import type { BudgetPreviewResponse, GoalWeight, OperatingCategory, BudgetPreviewRequest } from '@/types/budget-automation'
 import type { Season } from '@/types/season'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
@@ -71,6 +73,17 @@ export default function BudgetAutoPage() {
   const [loading, setLoading] = useState(false)
   const [applyName, setApplyName] = useState('')
   const [applying, setApplying] = useState(false)
+
+  // ADR 0024: 대상 시즌의 sponsorship 실측/예상 배지를 CAGR 예측 행 옆에 병행 표시.
+  // Preview 는 CAGR 기반 미래 예측이지만, 대상 시즌 안에 이미 체결된 계약의
+  // dueDate 누적 (Expected) 이 있으면 "현재 시즌 미수금" 참고 정보를 제공한다.
+  // seasonId 가 falsy 이면 useFinancialReport 가 disable 되어 data 는 undefined.
+  const targetSeasonIdNum = targetSeasonId ? Number(targetSeasonId) : null
+  const { data: targetFinancialReport } = useFinancialReport(targetSeasonIdNum)
+  const sponsorUncollected = computeSponsorUncollected(
+    targetFinancialReport?.plannedRevenueSponsorship,
+    targetFinancialReport?.expectedRevenueSponsorship,
+  )
 
   useEffect(() => {
     seasonApi.list().then(setSeasons).catch(() => null)
@@ -238,7 +251,12 @@ export default function BudgetAutoPage() {
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>수익 예측 <span className="text-muted-foreground text-sm font-normal">({preview.parameters.seasonsUsed}시즌 기준)</span></CardTitle>
+              <CardTitle>
+                수익 예측 <span className="text-muted-foreground text-sm font-normal">({preview.parameters.seasonsUsed}시즌 기준)</span>
+              </CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">
+                예산 예측: 다음 시즌 CAGR 기반. 스폰서십 미수금 배지는 현재 대상 시즌의 SponsorshipPayment dueDate 누적 (Expected) vs 실지급 (Actual) 차액 — ADR 0024.
+              </p>
             </CardHeader>
             <CardContent>
               <table className="w-full text-sm">
@@ -253,9 +271,22 @@ export default function BudgetAutoPage() {
                 <tbody>
                   {REVENUE_KEYS.map(key => {
                     const p = preview.revenue.byCategory[key]
+                    const isSponsor = key === 'plannedRevenueSponsorship'
                     return (
-                      <tr key={key} className="border-b last:border-0">
-                        <td className="py-1.5">{REVENUE_LABELS[key]}</td>
+                      <tr key={key} className="border-b last:border-0" data-revenue-key={key}>
+                        <td className="py-1.5">
+                          {REVENUE_LABELS[key]}
+                          {isSponsor && sponsorUncollected > 0 && (
+                            <Badge
+                              variant="outline"
+                              className="ml-2 text-amber-600 border-amber-400 text-xs"
+                              data-testid="sponsor-uncollected-badge"
+                              title="현재 시즌 SponsorshipPayment.dueDate 기준 예상 - 실지급 (ADR 0024)"
+                            >
+                              현재 시즌 미수금 ₩{fmt(sponsorUncollected)}
+                            </Badge>
+                          )}
+                        </td>
                         <td className="text-right"><CagrBadge cagr={p.cagr} /></td>
                         <td className="text-right font-mono">₩{fmt(p.predicted)}</td>
                         <td className="text-right">
