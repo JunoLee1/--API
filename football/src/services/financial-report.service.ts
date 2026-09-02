@@ -5,6 +5,11 @@ import type { BudgetPlanStatus } from './budget-plan.service'
 export interface RevenueBreakdown {
   plannedRevenueTicket: number
   plannedRevenueSponsorship: number
+  /**
+   * Sponsorship accrual (dueDate ∈ season window, status 무관) — ADR 0024.
+   * Optional 로 두어 기존 소비처 (Actual 만 쓰던 upload/CSV 경로) 하위 호환.
+   */
+  expectedRevenueSponsorship?: number | null
   plannedRevenueBroadcast: number
   plannedRevenueMerchandise: number
   plannedRevenueSubsidy: number
@@ -22,6 +27,11 @@ export interface FinancialReport {
   updatedAt: string
   plannedRevenueTicket?: number
   plannedRevenueSponsorship?: number
+  /**
+   * Sponsorship Expected (accrual by dueDate) — ADR 0024, PR #480 (BE slice).
+   * null 인 경우: 기존 row 아직 backfill 안 됨 or 계약/payment schedule 없음.
+   */
+  expectedRevenueSponsorship?: number | null
   plannedRevenueBroadcast?: number
   plannedRevenueMerchandise?: number
   plannedRevenueSubsidy?: number
