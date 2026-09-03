@@ -21,6 +21,8 @@ export const contractApi = {
     endDate: string
     salary: number
     managedById?: number
+    signingBonus?: number
+    signingBonusPaidAt?: string
   }) => api.post<ContractCreateResult>('/contracts', payload),
 
   updateStatus: (id: number, status: ContractStatus) =>

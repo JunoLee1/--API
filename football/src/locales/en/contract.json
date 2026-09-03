@@ -28,7 +28,11 @@
       "saved": "Contract registered.",
       "saveFailed": "Failed to save.",
       "required": "Please fill in all required fields.",
-      "wageCapWarning": "Contract registered but exceeds the wage cap by {{percent}}%."
+      "wageCapWarning": "Contract registered but exceeds the wage cap by {{percent}}%.",
+      "signingBonus": "Signing Bonus (optional)",
+      "signingBonusPlaceholder": "e.g. 50000000",
+      "signingBonusPaidAt": "Signing Bonus Pay Date (optional)",
+      "signingBonusPreview": "{{amount}} / year (amortized over {{years}} year(s))"
     },
     "status": {
       "ACTIVE": "Active",

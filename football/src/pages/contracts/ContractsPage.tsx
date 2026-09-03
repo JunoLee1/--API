@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { contractApi } from '@/services/contract.service'
+import { computeSigningBonusAnnual } from './lib/signing-bonus'
 import type { ContractSummary, ContractStatus } from '@/types/contract'
 import {
   CONTRACT_STATUS_STYLE,
@@ -60,12 +61,20 @@ interface CreateContractDialogProps {
   onSaved: () => void
 }
 
-function CreateContractDialog({ open, onOpenChange, playerId, onSaved }: CreateContractDialogProps) {
+export function CreateContractDialog({ open, onOpenChange, playerId, onSaved }: CreateContractDialogProps) {
   const { t } = useTranslation('contract')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [salary, setSalary] = useState('')
+  const [signingBonus, setSigningBonus] = useState('')
+  const [signingBonusPaidAt, setSigningBonusPaidAt] = useState('')
   const [saving, setSaving] = useState(false)
+
+  const bonusNum = Number(signingBonus) || 0
+  const annualBonus =
+    bonusNum > 0 && startDate && endDate
+      ? computeSigningBonusAnnual(bonusNum, startDate, endDate)
+      : 0
 
   const handleSave = async () => {
     if (!startDate || !endDate || !salary) {
@@ -74,7 +83,14 @@ function CreateContractDialog({ open, onOpenChange, playerId, onSaved }: CreateC
     }
     setSaving(true)
     try {
-      const result = await contractApi.create({ playerId, startDate, endDate, salary: Number(salary) })
+      const result = await contractApi.create({
+        playerId,
+        startDate,
+        endDate,
+        salary: Number(salary),
+        signingBonus: bonusNum || undefined,
+        signingBonusPaidAt: signingBonusPaidAt || undefined,
+      })
       if (result.wageCapWarning) {
         toast.warning(t('contracts.createDialog.wageCapWarning', { percent: result.wageCapWarning.percentOver.toFixed(1) }))
       } else {
@@ -97,11 +113,21 @@ function CreateContractDialog({ open, onOpenChange, playerId, onSaved }: CreateC
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
             <Label>{t('contracts.createDialog.startDate')}</Label>
-            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            <Input
+              data-testid="startDate-input"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label>{t('contracts.createDialog.endDate')}</Label>
-            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            <Input
+              data-testid="endDate-input"
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label>{t('contracts.createDialog.salary')}</Label>
@@ -111,6 +137,33 @@ function CreateContractDialog({ open, onOpenChange, playerId, onSaved }: CreateC
               placeholder={t('contracts.createDialog.salaryPlaceholder')}
               value={salary ? Number(salary).toLocaleString('ko-KR') : ''}
               onChange={(e) => setSalary(e.target.value.replace(/[^0-9]/g, ''))}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>{t('contracts.createDialog.signingBonus')}</Label>
+            <Input
+              data-testid="signingBonus-input"
+              type="text"
+              inputMode="numeric"
+              placeholder={t('contracts.createDialog.signingBonusPlaceholder')}
+              value={signingBonus ? Number(signingBonus).toLocaleString('ko-KR') : ''}
+              onChange={(e) => setSigningBonus(e.target.value.replace(/[^0-9]/g, ''))}
+            />
+            {annualBonus > 0 && (
+              <p data-testid="signingBonus-preview" className="text-xs text-muted-foreground">
+                {t('contracts.createDialog.signingBonusPreview', {
+                  amount: formatSalary(annualBonus),
+                  years: Math.max(1, Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25))),
+                })}
+              </p>
+            )}
+          </div>
+          <div className="space-y-1.5">
+            <Label>{t('contracts.createDialog.signingBonusPaidAt')}</Label>
+            <Input
+              type="date"
+              value={signingBonusPaidAt}
+              onChange={(e) => setSigningBonusPaidAt(e.target.value)}
             />
           </div>
         </div>
