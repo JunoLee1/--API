@@ -1137,8 +1137,10 @@ model Contract {
   id               Int            @id @default(autoincrement())
   startDate        DateTime
   endDate          DateTime
-  salary           Int
-  status           ContractStatus @default(ACTIVE)
+  salary             Int
+  signingBonus       BigInt    @default(0)
+  signingBonusPaidAt DateTime?
+  status             ContractStatus @default(ACTIVE)
   contractType     ContractType   @default(PROFESSIONAL)
   playerId         String
   managedById      Int?

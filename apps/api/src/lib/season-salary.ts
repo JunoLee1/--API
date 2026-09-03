@@ -1,4 +1,5 @@
 import type { PrismaClient } from "../generated/client";
+import { computeSigningBonusForSeason } from "./signing-bonus";
 
 /**
  * Season-scoped salary aggregation helpers.
@@ -29,14 +30,15 @@ async function overlapPlayerSalary(prisma: PrismaClient, seasonId: number): Prom
       startDate: { lte: season.endDate },
       endDate: { gte: season.startDate },
     },
-    select: { salary: true, startDate: true, endDate: true },
+    select: { salary: true, signingBonus: true, startDate: true, endDate: true },
   });
   return contracts.reduce((sum, c) => {
     const overlapStart = c.startDate > season.startDate ? c.startDate : season.startDate;
     const overlapEnd = c.endDate < season.endDate ? c.endDate : season.endDate;
     if (overlapEnd <= overlapStart) return sum;
     const months = (overlapEnd.getTime() - overlapStart.getTime()) / MS_PER_MONTH;
-    return sum + (c.salary / 12) * months;
+    const bonus = computeSigningBonusForSeason(c, season.startDate, season.endDate);
+    return sum + (c.salary / 12) * months + bonus;
   }, 0);
 }
 

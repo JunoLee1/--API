@@ -1,0 +1,2 @@
+ALTER TABLE "Contract" ADD COLUMN "signingBonus" BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE "Contract" ADD COLUMN "signingBonusPaidAt" TIMESTAMP(3);
