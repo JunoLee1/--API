@@ -1,6 +1,7 @@
 import { PrismaClient, SeasonStatus } from "../generated/client";
 import { getSeasonRevenueActuals } from "../lib/season-actuals";
 import { getSeasonPlayerSalary, getSeasonStaffSalary } from "../lib/season-salary";
+import { computeSigningBonusForSeason } from "../lib/signing-bonus";
 
 export class SeasonRepository {
   constructor(private prisma: PrismaClient) {}
@@ -57,10 +58,13 @@ export class SeasonRepository {
         startDate: { lte: season.endDate },
         endDate: { gte: season.startDate },
       },
-      select: { salary: true },
+      select: { salary: true, signingBonus: true, startDate: true, endDate: true },
     });
 
-    const totalPayroll = contracts.reduce((sum, c) => sum + c.salary, 0);
+    const totalPayroll = contracts.reduce((sum, c) => {
+      const bonus = computeSigningBonusForSeason(c, season.startDate, season.endDate);
+      return sum + c.salary + bonus;
+    }, 0);
     const totalRevenue = season.financialReport?.totalRevenue ?? null;
 
     let cap: number | null = null;

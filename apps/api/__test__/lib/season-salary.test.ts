@@ -33,6 +33,7 @@ describe("getSeasonPlayerSalary", () => {
         findMany: jest.fn().mockResolvedValue([
           {
             salary: 120_000_000,
+            signingBonus: BigInt(0),
             startDate: new Date("2026-01-01"),
             endDate: new Date("2026-12-31"),
           },
@@ -41,6 +42,47 @@ describe("getSeasonPlayerSalary", () => {
     });
     const v = await getSeasonPlayerSalary(p, 1);
     // full year overlap → 120M (allow ±2M for 30.44 day/month approximation)
+    expect(v).toBeGreaterThan(118_000_000);
+    expect(v).toBeLessThan(122_000_000);
+  });
+});
+
+describe("getSeasonPlayerSalary — signingBonus amortization", () => {
+  it("adds amortized annual signing bonus to overlapping contracts", async () => {
+    // Contract: 3-year, salary 120M/y, signing bonus 90M → 30M/y
+    // Total season cost: 120M + 30M = 150M
+    const p = makePrisma({
+      contract: {
+        findMany: jest.fn().mockResolvedValue([
+          {
+            salary: 120_000_000,
+            signingBonus: BigInt(90_000_000),
+            startDate: new Date("2024-01-01"),
+            endDate: new Date("2026-12-31"),
+          },
+        ]),
+      },
+    });
+    const v = await getSeasonPlayerSalary(p, 1);
+    // 120M salary (full year) + 30M signing bonus annual ≈ 150M (±2M tolerance)
+    expect(v).toBeGreaterThan(148_000_000);
+    expect(v).toBeLessThan(152_000_000);
+  });
+
+  it("does not add signing bonus from non-overlapping contract (already filtered by DB)", async () => {
+    const p = makePrisma({
+      contract: {
+        findMany: jest.fn().mockResolvedValue([
+          {
+            salary: 120_000_000,
+            signingBonus: BigInt(0),
+            startDate: new Date("2026-01-01"),
+            endDate: new Date("2026-12-31"),
+          },
+        ]),
+      },
+    });
+    const v = await getSeasonPlayerSalary(p, 1);
     expect(v).toBeGreaterThan(118_000_000);
     expect(v).toBeLessThan(122_000_000);
   });
