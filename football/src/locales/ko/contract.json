@@ -28,7 +28,11 @@
       "saved": "계약이 등록됐습니다.",
       "saveFailed": "저장에 실패했습니다.",
       "required": "필수 항목을 모두 입력해주세요.",
-      "wageCapWarning": "계약이 등록되었으나 임금상한을 {{percent}}% 초과합니다."
+      "wageCapWarning": "계약이 등록되었으나 임금상한을 {{percent}}% 초과합니다.",
+      "signingBonus": "계약금 (선택)",
+      "signingBonusPlaceholder": "예: 50000000",
+      "signingBonusPaidAt": "계약금 지급일 (선택)",
+      "signingBonusPreview": "연간 {{amount}} ({{years}}년 균등 분배)"
     },
     "status": {
       "ACTIVE": "활성",
