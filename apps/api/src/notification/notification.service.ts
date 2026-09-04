@@ -227,4 +227,23 @@ export class NotificationService {
       };
     });
   }
+
+  async notifyAcquisitionSurveyPublished(surveyId: number, title: string) {
+    const getMsg = () => ({
+      title: "영입 수요조사 요청",
+      body: `"${title}" 수요조사가 등록되었습니다. 의견을 작성해주세요.`,
+    });
+    await Promise.all([
+      this.repo.createForHeadCoach("ACQUISITION_SURVEY_PUBLISHED", getMsg, surveyId),
+      this.repo.createForCoachingStaff("ACQUISITION_SURVEY_PUBLISHED", getMsg, surveyId),
+      this.repo.createForScout("ACQUISITION_SURVEY_PUBLISHED", getMsg, surveyId),
+    ]);
+    getIO().to("staff-room").emit("notification:acquisition-survey", {
+      type: "ACQUISITION_SURVEY_PUBLISHED",
+      surveyId,
+      title: getMsg().title,
+      body: getMsg().body,
+      createdAt: new Date().toISOString(),
+    });
+  }
 }
