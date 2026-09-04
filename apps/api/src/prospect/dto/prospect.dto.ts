@@ -1,4 +1,4 @@
-import { Foot, Position, ProspectStatus, VisaEligibility, WorkPermitStatus } from "../../generated/enums";
+import { Foot, NegotiationType, Position, ProspectStatus, VisaEligibility, WorkPermitStatus } from "../../generated/enums";
 
 export interface CreateProspectDto {
   name: string;
@@ -33,7 +33,19 @@ export interface SignProspectDto {
   contractStartDate: string;
   contractEndDate: string;
   salary: number;
+  signingBonus?: number;
   managedById?: number;
   workPermitStatus?: WorkPermitStatus;
   workPermitExpiry?: string;
+}
+
+export interface ProspectMedicalResultDto {
+  result: "pass" | "fail";
+  medicalNotes?: string;
+}
+
+export interface CreateProspectNegotiationLogDto {
+  type: NegotiationType;
+  note: string;
+  amount?: number;
 }

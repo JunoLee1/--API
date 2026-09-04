@@ -2,7 +2,7 @@ import { PrismaClient } from "../generated/client";
 import { ProspectStatus } from "../generated/enums";
 import { AppError } from "../lib/appError";
 import { encrypt } from "../lib/crypto";
-import { CreateProspectDto, UpdateProspectDto, SignProspectDto } from "./dto/prospect.dto";
+import { CreateProspectDto, UpdateProspectDto, SignProspectDto, ProspectMedicalResultDto, CreateProspectNegotiationLogDto } from "./dto/prospect.dto";
 
 const PROSPECT_SELECT = {
   id: true,
@@ -104,6 +104,7 @@ export class ProspectRepository {
           nationalityId: dto.nationalityId,
           workPermitStatus: dto.workPermitStatus ?? "NOT_REQUIRED",
           workPermitExpiry: dto.workPermitExpiry ? new Date(dto.workPermitExpiry) : null,
+          prospectId: prospectId,
         },
         select: { id: true },
       });
@@ -114,6 +115,7 @@ export class ProspectRepository {
           startDate: new Date(dto.contractStartDate),
           endDate: new Date(dto.contractEndDate),
           salary: dto.salary,
+          ...(dto.signingBonus !== undefined && { signingBonus: dto.signingBonus }),
           status: "ACTIVE",
           managedById: dto.managedById ?? null,
         },
@@ -124,6 +126,38 @@ export class ProspectRepository {
         data: { status: "SIGNED", convertedPlayerId: player.id },
         select: PROSPECT_SELECT,
       });
+    });
+  }
+
+  async recordMedicalResult(id: number, dto: ProspectMedicalResultDto) {
+    const newStatus = dto.result === "pass" ? "CONTRACT_PENDING" : "ARCHIVED";
+    return this.prisma.prospect.update({
+      where: { id },
+      data: {
+        status: newStatus,
+        ...(dto.medicalNotes !== undefined && { medicalNotes: dto.medicalNotes }),
+      },
+      select: PROSPECT_SELECT,
+    });
+  }
+
+  addNegotiationLog(id: number, dto: CreateProspectNegotiationLogDto, createdById: number) {
+    return (this.prisma as any).prospectNegotiationLog.create({
+      data: {
+        prospectId: id,
+        type: dto.type,
+        note: dto.note,
+        ...(dto.amount !== undefined && { amount: dto.amount }),
+        createdById,
+      },
+    });
+  }
+
+  getNegotiationLogs(id: number) {
+    return (this.prisma as any).prospectNegotiationLog.findMany({
+      where: { prospectId: id },
+      orderBy: { createdAt: "asc" },
+      include: { createdBy: { select: { id: true, username: true } } },
     });
   }
 }

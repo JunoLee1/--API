@@ -959,6 +959,7 @@ model User {
   transferRequestsConfirmed TransferRequest[]               @relation("TRConfirmedBy")
   transferRequestsRejected  TransferRequest[]               @relation("TRRejectedBy")
   transferNegotiationLogs   TransferNegotiationLog[]
+  prospectNegotiationLogs   ProspectNegotiationLog[]
   createdPlanReports        PlanReport[]                    @relation("PlanReportCreatedBy")
   approvedPlanReports       PlanReport[]                    @relation("PlanReportApprovedBy")
   confirmedPlanReviews      PlanReview[]                    @relation("PlanReviewConfirmer")
@@ -1092,6 +1093,7 @@ model Player {
   workPermitStatus                  WorkPermitStatus @default(NOT_REQUIRED)
   workPermitExpiry                  DateTime?
   teamId                            Int?
+  prospectId                        Int?
   promotedFromYouthAt               DateTime?
   youthOriginTeamId                 Int?
 
@@ -1836,6 +1838,7 @@ model Prospect {
   position          Position?
   currentTeam       String?
   notes             String?
+  medicalNotes      String?
   status            ProspectStatus   @default(ACTIVE)
   convertedPlayerId String?
   createdAt         DateTime         @default(now())
@@ -1843,8 +1846,22 @@ model Prospect {
   visaRequired      Boolean          @default(false)
   visaEligibility   VisaEligibility?
 
-  convertedPlayer Player? @relation("ProspectConvertedPlayer", fields: [convertedPlayerId], references: [id])
-  createdBy       User?   @relation("ProspectCreatedBy", fields: [createdById], references: [id])
+  convertedPlayer  Player?                  @relation("ProspectConvertedPlayer", fields: [convertedPlayerId], references: [id])
+  createdBy        User?                    @relation("ProspectCreatedBy", fields: [createdById], references: [id])
+  negotiationLogs  ProspectNegotiationLog[]
+}
+
+model ProspectNegotiationLog {
+  id          Int             @id @default(autoincrement())
+  prospectId  Int
+  type        NegotiationType
+  note        String
+  amount      Int?
+  createdById Int
+  createdAt   DateTime        @default(now())
+
+  prospect  Prospect @relation(fields: [prospectId], references: [id])
+  createdBy User     @relation(fields: [createdById], references: [id])
 }
 
 model AuditLog {
