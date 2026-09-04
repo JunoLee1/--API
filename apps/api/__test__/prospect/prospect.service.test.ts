@@ -26,6 +26,9 @@ const mockRepo = {
   update: jest.fn<() => Promise<any>>().mockResolvedValue(activeProspect),
   updateStatus: jest.fn<() => Promise<any>>().mockResolvedValue({ ...activeProspect, status: "ARCHIVED" }),
   sign: jest.fn<() => Promise<any>>().mockResolvedValue(signedProspect),
+  recordMedicalResult: jest.fn<() => Promise<any>>(),
+  addNegotiationLog: jest.fn<() => Promise<any>>(),
+  getNegotiationLogs: jest.fn<() => Promise<any[]>>(),
 } as any;
 
 const service = new ProspectService(mockRepo);
@@ -97,5 +100,70 @@ describe("ProspectService - sign", () => {
       statusCode: 409,
       code: "INVALID_STATUS_TRANSITION",
     });
+  });
+
+  test("sign with signingBonus — repo에 signingBonus 전달", async () => {
+    const dtoWithBonus = { ...signDto, signingBonus: 10_000_000 };
+    mockRepo.sign.mockResolvedValue(signedProspect);
+    await service.sign(1, dtoWithBonus);
+    expect(mockRepo.sign).toHaveBeenCalledWith(1, dtoWithBonus);
+  });
+});
+
+// ─── recordMedicalResult ──────────────────────────────────────────────────────
+
+describe("ProspectService.recordMedicalResult", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  const medicalProspect = { ...activeProspect, status: "MEDICAL_TEST" as const };
+
+  test("MEDICAL_TEST가 아니면 409", async () => {
+    mockRepo.findById.mockResolvedValue(activeProspect);
+    await expect(service.recordMedicalResult(1, { result: "pass" }))
+      .rejects.toMatchObject({ statusCode: 409, code: "CANNOT_RECORD_MEDICAL_NON_PENDING" });
+  });
+
+  test("pass — CONTRACT_PENDING으로 전환", async () => {
+    mockRepo.findById.mockResolvedValue(medicalProspect);
+    mockRepo.recordMedicalResult.mockResolvedValue({ ...medicalProspect, status: "CONTRACT_PENDING" });
+    const result = await service.recordMedicalResult(1, { result: "pass" });
+    expect(mockRepo.recordMedicalResult).toHaveBeenCalledWith(1, { result: "pass" });
+    expect(result.status).toBe("CONTRACT_PENDING");
+  });
+
+  test("fail — medicalNotes와 함께 ARCHIVED로 전환", async () => {
+    mockRepo.findById.mockResolvedValue(medicalProspect);
+    mockRepo.recordMedicalResult.mockResolvedValue({ ...medicalProspect, status: "ARCHIVED" });
+    await service.recordMedicalResult(1, { result: "fail", medicalNotes: "심장 이상" });
+    expect(mockRepo.recordMedicalResult).toHaveBeenCalledWith(1, { result: "fail", medicalNotes: "심장 이상" });
+  });
+});
+
+// ─── addNegotiationLog / getNegotiationLogs ───────────────────────────────────
+
+describe("ProspectService.addNegotiationLog", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test("SIGNED이면 409", async () => {
+    mockRepo.findById.mockResolvedValue(signedProspect);
+    await expect(service.addNegotiationLog(1, { type: "CLUB_TO_CLUB", note: "첫 제안" }, 10))
+      .rejects.toMatchObject({ statusCode: 409, code: "CANNOT_LOG_NEGOTIATION_ON_NON_ACTIVE" });
+  });
+
+  test("CONTRACT_PENDING이면 성공", async () => {
+    const contractPending = { ...activeProspect, status: "CONTRACT_PENDING" as const };
+    mockRepo.findById.mockResolvedValue(contractPending);
+    const log = { id: 1, type: "PLAYER", note: "연봉 협상" };
+    mockRepo.addNegotiationLog.mockResolvedValue(log);
+    const result = await service.addNegotiationLog(1, { type: "PLAYER", note: "연봉 협상" }, 10);
+    expect(mockRepo.addNegotiationLog).toHaveBeenCalledWith(1, { type: "PLAYER", note: "연봉 협상" }, 10);
+    expect(result.id).toBe(1);
+  });
+
+  test("getNegotiationLogs — repo에 위임", async () => {
+    mockRepo.getNegotiationLogs.mockResolvedValue([{ id: 1 }]);
+    const result = await service.getNegotiationLogs(1);
+    expect(mockRepo.getNegotiationLogs).toHaveBeenCalledWith(1);
+    expect(result).toHaveLength(1);
   });
 });

@@ -4,7 +4,7 @@ import { isAdminLike } from "../lib/permissions";
 import { requireUser } from "../lib/authMiddleware";
 import { ProspectService } from "./prospect.service";
 import { ProspectStatus } from "../generated/enums";
-import { TransitionProspectStatusDto, SignProspectDto } from "./dto/prospect.dto";
+import { TransitionProspectStatusDto, SignProspectDto, ProspectMedicalResultDto, CreateProspectNegotiationLogDto } from "./dto/prospect.dto";
 
 const canWrite = (role: string, frontOfficeRole: string | null | undefined): boolean =>
   isAdminLike(role) ||
@@ -74,6 +74,34 @@ export class ProspectController {
       res.status(200).json(
         await this.service.sign(Number(req.params["id"]), req.body as SignProspectDto)
       );
+    } catch (err) { next(err); }
+  };
+
+  recordMedicalResult = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = requireUser(req);
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(
+        await this.service.recordMedicalResult(Number(req.params["id"]), req.body as ProspectMedicalResultDto)
+      );
+    } catch (err) { next(err); }
+  };
+
+  addNegotiationLog = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole, id } = requireUser(req);
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      res.status(201).json(
+        await this.service.addNegotiationLog(Number(req.params["id"]), req.body as CreateProspectNegotiationLogDto, id)
+      );
+    } catch (err) { next(err); }
+  };
+
+  getNegotiationLogs = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, coachingRole } = requireUser(req);
+      if (!canRead(role, coachingRole)) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(await this.service.getNegotiationLogs(Number(req.params["id"])));
     } catch (err) { next(err); }
   };
 }
