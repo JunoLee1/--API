@@ -153,7 +153,17 @@ export class TransferRequestService {
     const req = await this.getById(id);
     if (req.status !== TransferRequestStatus.CONFIRMED) throw new AppError(409, "CANNOT_REGISTER_NON_CONFIRMED");
     if ((req as any).registeredAt) throw new AppError(409, "ALREADY_REGISTERED");
-    return this.repo.setRegistered(id);
+    const result = await this.repo.setRegistered(id);
+    await this.notifRepo.createForUser(
+      req.requestedBy.id,
+      "TRANSFER_REGISTERED",
+      (lang: string) => ({
+        title: lang === "ko" ? "리그 등록 완료" : "League Registration Complete",
+        body: lang === "ko" ? "이적 선수의 리그 등록이 완료되었습니다." : "The transfer player has been registered with the league.",
+      }),
+      id,
+    );
+    return result;
   }
 
   async addNegotiationLog(id: number, dto: CreateNegotiationLogDto, createdById: number) {

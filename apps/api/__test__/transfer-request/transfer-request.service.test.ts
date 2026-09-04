@@ -202,6 +202,13 @@ describe("TransferRequestService.register", () => {
     expect(mockRepo.setRegistered).toHaveBeenCalledWith(1);
     expect(result).toBeDefined();
   });
+
+  test("성공 — requestedBy에게 TRANSFER_REGISTERED 알림 발송", async () => {
+    mockRepo.findById.mockResolvedValue(makeRequest({ status: TransferRequestStatus.CONFIRMED, registeredAt: null }));
+    mockRepo.setRegistered.mockResolvedValue(makeRequest({ status: TransferRequestStatus.CONFIRMED, registeredAt: new Date() }));
+    await service.register(1);
+    expect(mockNotifRepo.createForUser).toHaveBeenCalledWith(10, "TRANSFER_REGISTERED", expect.any(Function), 1);
+  });
 });
 
 // ─── addNegotiationLog ────────────────────────────────────────────────────────
