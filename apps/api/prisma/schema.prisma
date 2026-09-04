@@ -146,8 +146,14 @@ enum TransferRequestStatus {
   DRAFT
   PENDING_APPROVAL
   APPROVED
+  MEDICAL_PENDING
   CONFIRMED
   REJECTED
+}
+
+enum NegotiationType {
+  CLUB_TO_CLUB
+  PLAYER
 }
 
 enum RecallStatus {
@@ -952,6 +958,7 @@ model User {
   transferRequestsReviewed  TransferRequest[]               @relation("TRReviewedBy")
   transferRequestsConfirmed TransferRequest[]               @relation("TRConfirmedBy")
   transferRequestsRejected  TransferRequest[]               @relation("TRRejectedBy")
+  transferNegotiationLogs   TransferNegotiationLog[]
   createdPlanReports        PlanReport[]                    @relation("PlanReportCreatedBy")
   approvedPlanReports       PlanReport[]                    @relation("PlanReportApprovedBy")
   confirmedPlanReviews      PlanReview[]                    @relation("PlanReviewConfirmer")
@@ -1241,6 +1248,10 @@ model TransferRequest {
   endDate      DateTime?
   rejectReason String?
 
+  expectedSalary Int?
+  medicalNotes   String?
+  registeredAt   DateTime?
+
   requestedById Int
   reviewedById  Int?
   confirmedById Int?
@@ -1252,12 +1263,26 @@ model TransferRequest {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  player      Player @relation(fields: [playerId], references: [id])
-  agency      Agency @relation(fields: [agencyId], references: [id])
-  requestedBy User   @relation("TRRequestedBy", fields: [requestedById], references: [id])
-  reviewedBy  User?  @relation("TRReviewedBy", fields: [reviewedById], references: [id])
-  confirmedBy User?  @relation("TRConfirmedBy", fields: [confirmedById], references: [id])
-  rejectedBy  User?  @relation("TRRejectedBy", fields: [rejectedById], references: [id])
+  player           Player                 @relation(fields: [playerId], references: [id])
+  agency           Agency                 @relation(fields: [agencyId], references: [id])
+  requestedBy      User                   @relation("TRRequestedBy", fields: [requestedById], references: [id])
+  reviewedBy       User?                  @relation("TRReviewedBy", fields: [reviewedById], references: [id])
+  confirmedBy      User?                  @relation("TRConfirmedBy", fields: [confirmedById], references: [id])
+  rejectedBy       User?                  @relation("TRRejectedBy", fields: [rejectedById], references: [id])
+  negotiationLogs  TransferNegotiationLog[]
+}
+
+model TransferNegotiationLog {
+  id                Int             @id @default(autoincrement())
+  transferRequestId Int
+  type              NegotiationType
+  note              String
+  amount            Int?
+  createdById       Int
+  createdAt         DateTime        @default(now())
+
+  transferRequest TransferRequest @relation(fields: [transferRequestId], references: [id])
+  createdBy       User            @relation(fields: [createdById], references: [id])
 }
 
 model Partner {
