@@ -76,6 +76,10 @@ export class ContractService {
     return updated;
   }
 
+  getActiveBuyout(contractId: number) {
+    return this.repo.findActiveBuyout(contractId);
+  }
+
   async addBuyout(contractId: number, dto: CreateBuyoutDto, actorId: number) {
     const contract = await this.repo.findById(contractId);
     if (!contract) throw new AppError(404, "CONTRACT_NOT_FOUND");
