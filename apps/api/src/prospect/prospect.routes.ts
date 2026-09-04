@@ -28,6 +28,9 @@ router.post("/", auth, controller.create);
 router.get("/:id", auth, controller.getById);
 router.patch("/:id/status", auth, controller.updateStatus);
 router.post("/:id/sign", auth, canSignProspect, controller.sign);
+router.patch("/:id/medical", auth, controller.recordMedicalResult);
+router.get("/:id/negotiation-logs", auth, controller.getNegotiationLogs);
+router.post("/:id/negotiation-logs", auth, controller.addNegotiationLog);
 router.patch("/:id", auth, controller.update);
 
 export default router;

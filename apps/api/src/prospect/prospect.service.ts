@@ -1,12 +1,14 @@
 import { ProspectRepository } from "./prospect.repo";
 import { AppError } from "../lib/appError";
-import { CreateProspectDto, UpdateProspectDto, TransitionProspectStatusDto, SignProspectDto } from "./dto/prospect.dto";
+import { CreateProspectDto, UpdateProspectDto, TransitionProspectStatusDto, SignProspectDto, ProspectMedicalResultDto, CreateProspectNegotiationLogDto } from "./dto/prospect.dto";
 import { ProspectStatus } from "../generated/enums";
 import { NotificationService } from "../notification/notification.service";
 import { NotificationRepository } from "../notification/notification.repo";
 import { getPrisma } from "../lib/prisma";
 
 const notificationService = new NotificationService(new NotificationRepository(getPrisma()));
+
+const NON_ACTIVE_STATUSES: ProspectStatus[] = ["SIGNED", "ARCHIVED"];
 
 export class ProspectService {
   constructor(private repo: ProspectRepository) {}
@@ -40,5 +42,23 @@ export class ProspectService {
     const result = await this.repo.sign(id, dto);
     void notificationService.notifyProspectSigned(result.name).catch(console.error);
     return result;
+  }
+
+  async recordMedicalResult(id: number, dto: ProspectMedicalResultDto) {
+    const prospect = await this.getById(id);
+    if (prospect.status !== "MEDICAL_TEST") throw new AppError(409, "CANNOT_RECORD_MEDICAL_NON_PENDING");
+    return this.repo.recordMedicalResult(id, dto);
+  }
+
+  async addNegotiationLog(id: number, dto: CreateProspectNegotiationLogDto, createdById: number) {
+    const prospect = await this.getById(id);
+    if (NON_ACTIVE_STATUSES.includes(prospect.status as ProspectStatus)) {
+      throw new AppError(409, "CANNOT_LOG_NEGOTIATION_ON_NON_ACTIVE");
+    }
+    return this.repo.addNegotiationLog(id, dto, createdById);
+  }
+
+  getNegotiationLogs(id: number) {
+    return this.repo.getNegotiationLogs(id);
   }
 }
