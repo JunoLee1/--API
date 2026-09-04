@@ -1156,17 +1156,20 @@ model Contract {
 }
 
 model BuyoutClause {
-  id         Int    @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   amount     BigInt
-  contractId Int    @unique
+  validUntil DateTime?
+  contractId Int       @unique
 
   contract Contract @relation(fields: [contractId], references: [id])
 }
 
 model ExtensionOption {
-  id             Int    @id @default(autoincrement())
+  id             Int     @id @default(autoincrement())
   condition      String
   durationMonths Int
+  conditionText  String?
+  minAppearances Int?
   contractId     Int
 
   contract Contract @relation(fields: [contractId], references: [id])

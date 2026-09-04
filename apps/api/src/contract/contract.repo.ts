@@ -74,7 +74,11 @@ export class ContractRepository {
 
   createBuyout(contractId: number, dto: CreateBuyoutDto) {
     return this.prisma.buyoutClause.create({
-      data: { contractId, amount: dto.amount },
+      data: {
+        contractId,
+        amount: dto.amount,
+        ...(dto.validUntil && { validUntil: new Date(dto.validUntil) }),
+      },
     });
   }
 
@@ -84,6 +88,18 @@ export class ContractRepository {
         contractId,
         condition: dto.condition,
         durationMonths: dto.durationMonths,
+        ...(dto.conditionText !== undefined && { conditionText: dto.conditionText }),
+        ...(dto.minAppearances !== undefined && { minAppearances: dto.minAppearances }),
+      },
+    });
+  }
+
+  findActiveBuyout(contractId: number) {
+    const now = new Date();
+    return this.prisma.buyoutClause.findFirst({
+      where: {
+        contractId,
+        OR: [{ validUntil: null }, { validUntil: { gt: now } }],
       },
     });
   }

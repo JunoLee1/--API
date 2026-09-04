@@ -16,11 +16,14 @@ export interface UpdateContractStatusDto {
 
 export interface CreateBuyoutDto {
   amount: number;
+  validUntil?: string;
 }
 
 export interface CreateExtensionDto {
   condition: string;
   durationMonths: number;
+  conditionText?: string;
+  minAppearances?: number;
 }
 
 export interface BonusTriggerDto {
