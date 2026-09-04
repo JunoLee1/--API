@@ -58,6 +58,34 @@ export class TransferRequestController {
     } catch (err) { next(err); }
   };
 
+  recordMedicalResult = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role } = req.user!;
+      if (role !== "MEDICAL" && role !== "MEDICAL_DIRECTOR") throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(await this.service.recordMedicalResult(Number(req.params["id"]), req.body, req.user!.id));
+    } catch (err) { next(err); }
+  };
+
+  register = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role } = req.user!;
+      if (!isAdminLike(role)) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(await this.service.register(Number(req.params["id"])));
+    } catch (err) { next(err); }
+  };
+
+  addNegotiationLog = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.status(201).json(await this.service.addNegotiationLog(Number(req.params["id"]), req.body, req.user!.id));
+    } catch (err) { next(err); }
+  };
+
+  getNegotiationLogs = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.status(200).json(await this.service.getNegotiationLogs(Number(req.params["id"])));
+    } catch (err) { next(err); }
+  };
+
   remove = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role } = req.user!;

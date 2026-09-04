@@ -1,6 +1,6 @@
 import { PrismaClient, Prisma } from "../generated/client";
-import { TransferRequestStatus, TransferType } from "../generated/enums";
-import { CreateTransferRequestDto, UpdateTransferRequestDto, ListTransferRequestQuery } from "./dto/transfer-request.dto";
+import { TransferRequestStatus, TransferType, NegotiationType } from "../generated/enums";
+import { CreateTransferRequestDto, UpdateTransferRequestDto, ListTransferRequestQuery, MedicalResultDto, CreateNegotiationLogDto } from "./dto/transfer-request.dto";
 
 const n = <T>(v: T | undefined | null): T | null => v ?? null;
 
@@ -11,6 +11,9 @@ const DETAIL_SELECT = {
   fromClub: true,
   toClub: true,
   fee: true,
+  expectedSalary: true,
+  medicalNotes: true,
+  registeredAt: true,
   startDate: true,
   endDate: true,
   rejectReason: true,
@@ -51,7 +54,7 @@ export class TransferRequestRepository {
     return this.prisma.transferRequest.findFirst({
       where: {
         playerId,
-        status: { in: [TransferRequestStatus.DRAFT, TransferRequestStatus.PENDING_APPROVAL, TransferRequestStatus.APPROVED] },
+        status: { in: [TransferRequestStatus.DRAFT, TransferRequestStatus.PENDING_APPROVAL, TransferRequestStatus.APPROVED, TransferRequestStatus.MEDICAL_PENDING] },
       },
       select: { id: true },
     });
@@ -175,6 +178,55 @@ export class TransferRequestRepository {
       });
 
       return updated;
+    });
+  }
+
+  sendToMedical(id: number) {
+    return this.prisma.transferRequest.update({
+      where: { id },
+      data: { status: TransferRequestStatus.MEDICAL_PENDING },
+      select: DETAIL_SELECT,
+    });
+  }
+
+  recordMedicalResult(id: number, dto: MedicalResultDto) {
+    const isPassed = dto.result === "pass";
+    return this.prisma.transferRequest.update({
+      where: { id },
+      data: {
+        status: isPassed ? TransferRequestStatus.CONFIRMED : TransferRequestStatus.REJECTED,
+        ...(isPassed ? { confirmedAt: new Date() } : { rejectedAt: new Date() }),
+        ...(dto.medicalNotes !== undefined && { medicalNotes: dto.medicalNotes }),
+      },
+      select: DETAIL_SELECT,
+    });
+  }
+
+  setRegistered(id: number) {
+    return this.prisma.transferRequest.update({
+      where: { id },
+      data: { registeredAt: new Date() },
+      select: DETAIL_SELECT,
+    });
+  }
+
+  addNegotiationLog(id: number, dto: CreateNegotiationLogDto, createdById: number) {
+    return (this.prisma as any).transferNegotiationLog.create({
+      data: {
+        transferRequestId: id,
+        type: dto.type,
+        note: dto.note,
+        ...(dto.amount !== undefined && { amount: dto.amount }),
+        createdById,
+      },
+    });
+  }
+
+  getNegotiationLogs(id: number) {
+    return (this.prisma as any).transferNegotiationLog.findMany({
+      where: { transferRequestId: id },
+      orderBy: { createdAt: "asc" },
+      include: { createdBy: { select: { id: true, username: true } } },
     });
   }
 
