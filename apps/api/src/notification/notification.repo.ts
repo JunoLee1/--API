@@ -118,6 +118,10 @@ export class NotificationRepository {
     return this.createForWhere({ role: "COACHING_STAFF", coachingRole: "PHYSICAL_COACH" }, type, getMsg, entityId);
   }
 
+  createForScout(type: string, getMsg: MsgFactory, entityId?: number) {
+    return this.createForWhere({ role: "FRONT_OFFICE", frontOfficeRole: "SCOUT" }, type, getMsg, entityId);
+  }
+
   /**
    * 특정 부서의 부서장(headId user)에게 알림.
    * 결재함 자동 라우팅용 — PlanReport.reviewerDept 등에서 사용.

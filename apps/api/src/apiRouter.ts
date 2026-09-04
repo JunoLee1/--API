@@ -79,6 +79,7 @@ import medicalEquipmentLoanRouter from "./medical-equipment-loan/medical-equipme
 import { monthlySettlementRouter } from "./monthly-settlement/monthly-settlement.routes";
 import { revenueAdjustmentRouter } from "./revenue-adjustment/revenue-adjustment.routes";
 import { accountCodeRouter } from "./account-code/account-code.routes";
+import acquisitionSurveyRouter from "./acquisition-survey/acquisition-survey.routes";
 import { startCertStatusSyncJob } from "./jobs/certStatusSync";
 import { startPreventiveScheduleGenJob } from "./jobs/preventiveScheduleGen";
 import { startContactFollowUpNotifierJob } from "./jobs/contactFollowUpNotifier";
@@ -171,6 +172,7 @@ apiRouter.use("/medical-equipment-loan", medicalEquipmentLoanRouter);
 apiRouter.use("/monthly-settlement", monthlySettlementRouter);
 apiRouter.use("/revenue-adjustment", revenueAdjustmentRouter);
 apiRouter.use("/account-codes", accountCodeRouter);
+apiRouter.use("/acquisition-surveys", acquisitionSurveyRouter);
 
 startCertStatusSyncJob();
 startPreventiveScheduleGenJob();

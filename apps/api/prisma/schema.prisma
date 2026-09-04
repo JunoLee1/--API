@@ -1009,8 +1009,10 @@ model User {
   createdOnbTemplates        OnboardingTemplate[]            @relation("OnbTemplateCreator")
   updatedOnbTemplates        OnboardingTemplate[]            @relation("OnbTemplateUpdater")
   verifiedOnbTasks           OnboardingTask[]                @relation("OnbTaskVerifier")
-  createdDeptAssetKits       DepartmentDefaultAssetKit[]     @relation("DeptAssetKitCreator")
-  updatedDeptAssetKits       DepartmentDefaultAssetKit[]     @relation("DeptAssetKitUpdater")
+  createdDeptAssetKits           DepartmentDefaultAssetKit[]         @relation("DeptAssetKitCreator")
+  updatedDeptAssetKits           DepartmentDefaultAssetKit[]         @relation("DeptAssetKitUpdater")
+  createdAcquisitionSurveys      PlayerAcquisitionSurvey[]           @relation("AcqSurveyCreator")
+  acquisitionSurveyResponses     PlayerAcquisitionSurveyResponse[]   @relation("AcqSurveyResponder")
 }
 
 model Season {
@@ -4716,4 +4718,50 @@ model EmployeeContract {
   cancelledBy       User?          @relation("EmpContractCanceller", fields: [cancelledById], references: [id])
 
   @@index([hiringDispatchId, createdAt(sort: Desc)])
+}
+
+// ─── 선수 영입 수요조사 (#494) ─────────────────────────────────────────────────
+model PlayerAcquisitionSurvey {
+  id          Int          @id @default(autoincrement())
+  title       String
+  status      SurveyStatus @default(OPEN)
+  dueDate     DateTime?
+  notes       String?
+  createdById Int
+  createdAt   DateTime     @default(now())
+  closedAt    DateTime?
+
+  createdBy User                              @relation("AcqSurveyCreator", fields: [createdById], references: [id])
+  responses  PlayerAcquisitionSurveyResponse[]
+
+  @@index([status])
+}
+
+model PlayerAcquisitionSurveyResponse {
+  id           Int       @id @default(autoincrement())
+  surveyId     Int
+  respondentId Int
+  submittedAt  DateTime?
+  createdAt    DateTime  @default(now())
+
+  survey     PlayerAcquisitionSurvey           @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  respondent User                              @relation("AcqSurveyResponder", fields: [respondentId], references: [id])
+  items      PlayerAcquisitionSurveyResponseItem[]
+
+  @@unique([surveyId, respondentId])
+  @@index([surveyId])
+}
+
+model PlayerAcquisitionSurveyResponseItem {
+  id         Int            @id @default(autoincrement())
+  responseId Int
+  position   Position
+  priority   SurveyPriority
+  budgetMin  Int?
+  budgetMax  Int?
+  notes      String?
+
+  response PlayerAcquisitionSurveyResponse @relation(fields: [responseId], references: [id], onDelete: Cascade)
+
+  @@index([responseId])
 }
