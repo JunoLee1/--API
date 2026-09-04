@@ -118,20 +118,22 @@ export class TransferRequestRepository {
     });
   }
 
-  async confirm(
-    id: number,
-    action: "confirm" | "reject",
-    confirmedById: number,
-    rejectReason?: string,
-  ) {
-    if (action === "reject") {
+  sendToMedical(id: number) {
+    return this.prisma.transferRequest.update({
+      where: { id },
+      data: { status: TransferRequestStatus.MEDICAL_PENDING },
+      select: DETAIL_SELECT,
+    });
+  }
+
+  async recordMedicalResult(id: number, dto: MedicalResultDto) {
+    if (dto.result !== "pass") {
       return this.prisma.transferRequest.update({
         where: { id },
         data: {
           status: TransferRequestStatus.REJECTED,
-          rejectedById: confirmedById,
           rejectedAt: new Date(),
-          ...(rejectReason !== undefined && { rejectReason }),
+          ...(dto.medicalNotes !== undefined && { medicalNotes: dto.medicalNotes }),
         },
         select: DETAIL_SELECT,
       });
@@ -144,11 +146,7 @@ export class TransferRequestRepository {
     return this.prisma.$transaction(async (tx) => {
       const updated = await tx.transferRequest.update({
         where: { id },
-        data: {
-          status: TransferRequestStatus.CONFIRMED,
-          confirmedById,
-          confirmedAt: new Date(),
-        },
+        data: { status: TransferRequestStatus.CONFIRMED, confirmedAt: new Date() },
         select: DETAIL_SELECT,
       });
 
@@ -178,27 +176,6 @@ export class TransferRequestRepository {
       });
 
       return updated;
-    });
-  }
-
-  sendToMedical(id: number) {
-    return this.prisma.transferRequest.update({
-      where: { id },
-      data: { status: TransferRequestStatus.MEDICAL_PENDING },
-      select: DETAIL_SELECT,
-    });
-  }
-
-  recordMedicalResult(id: number, dto: MedicalResultDto) {
-    const isPassed = dto.result === "pass";
-    return this.prisma.transferRequest.update({
-      where: { id },
-      data: {
-        status: isPassed ? TransferRequestStatus.CONFIRMED : TransferRequestStatus.REJECTED,
-        ...(isPassed ? { confirmedAt: new Date() } : { rejectedAt: new Date() }),
-        ...(dto.medicalNotes !== undefined && { medicalNotes: dto.medicalNotes }),
-      },
-      select: DETAIL_SELECT,
     });
   }
 
