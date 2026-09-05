@@ -21,7 +21,7 @@ LONGLIST → PRE_SHORTLIST → SHORTLIST (VIDEO_EVAL PASS 필수) → ACTIVE →
 ```
 
 - LONGLIST → PRE_SHORTLIST: 하드 게이트 없음, 스카우트 판단으로 승격
-- PRE_SHORTLIST → SHORTLIST: VIDEO_EVAL PASS 필수 (기존 LONGLIST→SHORTLIST 게이트 그대로 이동)
+- PRE_SHORTLIST → SHORTLIST: VIDEO_EVAL PASS 필수 + SHORTLIST 정원 미초과 필수
 - LONGLIST → SHORTLIST 직행: 차단 (`MUST_GO_THROUGH_PRE_SHORTLIST` 400 에러)
 - 보류(ARCHIVED)는 모든 단계에서 가능 (변경 없음)
 
@@ -55,16 +55,38 @@ enum ProspectStatus {
    const NON_ACTIVE_STATUSES: ProspectStatus[] = ["LONGLIST", "PRE_SHORTLIST", "SHORTLIST", "SIGNED", "ARCHIVED"];
    ```
 
-2. `updateStatus` 게이트 이동: SHORTLIST 전이 시 prospect 현재 상태를 fetch해 직행 차단 + VIDEO_EVAL PASS 검사:
+2. `SHORTLIST_CAPACITY` 상수 추가:
+   ```ts
+   const SHORTLIST_CAPACITY = 5;
+   ```
+
+3. `updateStatus` 게이트: SHORTLIST 전이 시 prospect 현재 상태 fetch + 직행 차단 + 정원 체크 + VIDEO_EVAL PASS 검사:
    ```ts
    if (dto.status === "SHORTLIST") {
      const prospect = await this.repo.findById(id);
      if (!prospect) throw new AppError(404, "PROSPECT_NOT_FOUND");
      if (prospect.status === "LONGLIST") throw new AppError(400, "MUST_GO_THROUGH_PRE_SHORTLIST");
+     const count = await this.repo.countByStatus("SHORTLIST");
+     if (count >= SHORTLIST_CAPACITY) throw new AppError(409, "SHORTLIST_FULL");
      const latest = await this.repo.getLatestVideoEvaluation(id);
      if (!latest || latest.result !== "PASS") throw new AppError(400, "VIDEO_EVAL_REQUIRED");
    }
    ```
+
+### `apps/api/src/prospect/prospect.repo.ts`
+
+`countByStatus(status: ProspectStatus): Promise<number>` 메서드 추가:
+```ts
+countByStatus(status: ProspectStatus) {
+  return this.prisma.prospect.count({ where: { status } });
+}
+```
+
+### `apps/api/src/prospect/prospect.controller.ts` + routes
+
+`GET /prospects/shortlist-capacity` 엔드포인트 추가 (canRead 권한):
+- 응답: `{ capacity: number; current: number }`
+- 서비스: `getShortlistCapacity()` → `{ capacity: SHORTLIST_CAPACITY, current: await repo.countByStatus("SHORTLIST") }`
 
 ### `apps/api/src/prospect/dto/prospect.dto.ts`
 
@@ -78,7 +100,8 @@ status?: 'LONGLIST' | 'PRE_SHORTLIST';
 
 - LONGLIST → SHORTLIST 직행 시 `MUST_GO_THROUGH_PRE_SHORTLIST` 400 에러 반환
 - PRE_SHORTLIST → SHORTLIST: VIDEO_EVAL PASS 없으면 `VIDEO_EVAL_REQUIRED` 400 에러
-- PRE_SHORTLIST → SHORTLIST: VIDEO_EVAL PASS 있으면 정상 전환
+- PRE_SHORTLIST → SHORTLIST: SHORTLIST 정원(5명) 초과 시 `SHORTLIST_FULL` 409 에러
+- PRE_SHORTLIST → SHORTLIST: VIDEO_EVAL PASS + 정원 미초과 시 정상 전환
 
 ## FE 변경
 
@@ -138,6 +161,27 @@ status?: 'LONGLIST' | 'PRE_SHORTLIST'
    ```
 
 4. `handleTransition` acquisition gate check: 조건 `status === 'SHORTLIST'` 그대로 유지 (PRE_SHORTLIST→SHORTLIST 시점에 동일하게 발동)
+
+5. `handleTransition`에 `SHORTLIST_FULL` 에러 처리 추가:
+   ```ts
+   if (err.message.includes('SHORTLIST_FULL')) {
+     toast.error('쇼트리스트 정원(5명)이 꽉 찼습니다')
+   }
+   ```
+
+### `football/src/services/prospect.service.ts`
+
+`shortlistCapacity` API 추가:
+```ts
+shortlistCapacity: () =>
+  api.get<{ capacity: number; current: number }>('/prospects/shortlist-capacity'),
+```
+
+### `football/src/pages/prospects/ProspectsPage.tsx` (추가)
+
+페이지 상단에 정원 현황 표시:
+- 마운트 시 + 전환 성공 후 `prospectApi.shortlistCapacity()` 호출
+- "쇼트리스트 **N/5**" 텍스트 또는 뱃지로 표시 (N이 5면 빨간색 강조)
 
 ## 권한
 
