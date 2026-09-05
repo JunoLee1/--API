@@ -546,6 +546,7 @@ enum PlayStyle {
 
 enum ProspectStatus {
   LONGLIST
+  PRE_SHORTLIST
   SHORTLIST
   ACTIVE
   MEDICAL_TEST
