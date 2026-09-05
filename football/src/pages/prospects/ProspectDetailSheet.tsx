@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
@@ -50,6 +50,16 @@ function VideoEvalDialog({ prospectId, open, onOpenChange, onSaved }: VideoEvalD
   const [totalScore, setTotalScore] = useState('')
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (open) {
+      setQualityPassed(false)
+      setIdentifiable(false)
+      setContinuity(false)
+      setTotalScore('')
+      setNotes('')
+    }
+  }, [open])
 
   const previewResult = computePreviewResult(qualityPassed, identifiable, continuity, totalScore)
 
@@ -155,23 +165,23 @@ function EvalTab({ prospect, canWrite }: EvalTabProps) {
   const [addingLog, setAddingLog] = useState(false)
   const [logFormOpen, setLogFormOpen] = useState(false)
 
-  const loadEvals = () => {
+  const loadEvals = useCallback(() => {
     setLoadingEval(true)
     prospectApi.videoEvaluations.list(prospect.id)
       .then(setEvaluations)
       .catch(() => toast.error('평가 이력을 불러오지 못했습니다'))
       .finally(() => setLoadingEval(false))
-  }
+  }, [prospect.id])
 
-  const loadLogs = () => {
+  const loadLogs = useCallback(() => {
     setLoadingLogs(true)
     prospectApi.evaluationLogs.list(prospect.id)
       .then(setLogs)
       .catch(() => toast.error('스카우팅 로그를 불러오지 못했습니다'))
       .finally(() => setLoadingLogs(false))
-  }
+  }, [prospect.id])
 
-  useEffect(() => { loadEvals(); loadLogs() }, [prospect.id])
+  useEffect(() => { loadEvals(); loadLogs() }, [loadEvals, loadLogs])
 
   const handleAddLog = async () => {
     if (!logNote.trim()) return
@@ -335,6 +345,10 @@ interface InfoTabProps {
 function InfoTab({ prospect, canWrite, onUpdated }: InfoTabProps) {
   const [marketValue, setMarketValue] = useState(String(prospect.currentMarketValue ?? ''))
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    setMarketValue(String(prospect.currentMarketValue ?? ''))
+  }, [prospect.id, prospect.currentMarketValue])
 
   const handleSaveMarketValue = async () => {
     setSaving(true)
