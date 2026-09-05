@@ -568,13 +568,24 @@ COACHING_STAFF 또는 HEAD_COACH가 경기별 포메이션·선발·후보 라�
 
 **상태머신:**
 ```
-ACTIVE(추적 중) → MEDICAL_TEST(메디컬 테스트) → CONTRACT_PENDING(계약 협상 중) → SIGNED(계약 성사)
-                                                                                ↘ ARCHIVED(결렬·종료)
+LONGLIST(롱리스트) → SHORTLIST(쇼트리스트) → ACTIVE(협상 중) → MEDICAL_TEST(메디컬 테스트) → CONTRACT_PENDING(계약 검토) → SIGNED(계약 완료)
+     ↘                      ↘                    ↘                    ↘                           ↘
+                                              ARCHIVED(보류·결렬)
 ```
-어느 단계에서도 ARCHIVED로 전환 가능 (협상 결렬). 역방향 전환 없음.
+어느 단계에서도 ARCHIVED로 전환 가능. 역방향 전환 없음. 기본값은 `LONGLIST`.
+
+- **LONGLIST → SHORTLIST**: SCOUT이 스카우팅 평가 후 쇼트리스트 승격
+- **SHORTLIST → ACTIVE**: TD가 협상 개시 결정 (이후 단계는 TD 주도)
+- **ACTIVE → MEDICAL_TEST**: 메디컬 테스트 진행
+- **MEDICAL_TEST → CONTRACT_PENDING**: 메디컬 통과 시 자동 전환 (`POST /prospects/:id/medical-result`)
+- **CONTRACT_PENDING → SIGNED**: 계약 성사 (`POST /prospects/:id/sign`)
+
+협상 로그(`NegotiationLog`)는 `ACTIVE` 이후 단계에서만 추가 가능.
 
 **속성:**
 - `name`, `nationality`, `position`, `currentTeam`: 기본 신원 정보
+- `playStyle`: 포지션별 플레이스타일 enum (`PlayStyle`). Sign 시 `Player.playStyle`로 자동 복사.
+- `externalId`: 외부 ID (향후 Transfermarkt 등 연동용). `@unique`.
 - `notes`: SCOUT의 자유 텍스트 분석 메모
 - `convertedPlayerId`: SIGNED 시 연결된 Player ID. 스카우팅 이력 추적용.
 
