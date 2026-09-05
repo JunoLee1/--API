@@ -20,6 +20,8 @@ const PROSPECT_SELECT = {
 } as const;
 
 const VALID_TRANSITIONS: Record<ProspectStatus, ProspectStatus[]> = {
+  LONGLIST:         ["SHORTLIST", "ARCHIVED"],
+  SHORTLIST:        ["ACTIVE", "ARCHIVED"],
   ACTIVE:           ["MEDICAL_TEST", "ARCHIVED"],
   MEDICAL_TEST:     ["CONTRACT_PENDING", "ARCHIVED"],
   CONTRACT_PENDING: ["ARCHIVED"],

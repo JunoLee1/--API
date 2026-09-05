@@ -8,7 +8,7 @@ import { getPrisma } from "../lib/prisma";
 
 const notificationService = new NotificationService(new NotificationRepository(getPrisma()));
 
-const NON_ACTIVE_STATUSES: ProspectStatus[] = ["SIGNED", "ARCHIVED"];
+const NON_ACTIVE_STATUSES: ProspectStatus[] = ["LONGLIST", "SHORTLIST", "SIGNED", "ARCHIVED"];
 
 export class ProspectService {
   constructor(private repo: ProspectRepository) {}
