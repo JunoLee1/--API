@@ -32,6 +32,11 @@ router.post("/:id/sign", auth, canSignProspect, controller.sign);
 router.patch("/:id/medical", auth, controller.recordMedicalResult);
 router.get("/:id/negotiation-logs", auth, controller.getNegotiationLogs);
 router.post("/:id/negotiation-logs", auth, controller.addNegotiationLog);
+router.get("/:id/video-evaluations", auth, controller.getVideoEvaluations);
+router.post("/:id/video-evaluations", auth, controller.addVideoEvaluation);
+router.get("/:id/evaluation-logs", auth, controller.getEvaluationLogs);
+router.post("/:id/evaluation-logs", auth, controller.addEvaluationLog);
+router.get("/:id/acquisition-gate-check", auth, controller.checkAcquisitionGate);
 router.patch("/:id", auth, controller.update);
 
 export default router;

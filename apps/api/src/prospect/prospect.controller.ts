@@ -5,6 +5,7 @@ import { requireUser } from "../lib/authMiddleware";
 import { ProspectService } from "./prospect.service";
 import { ProspectStatus } from "../generated/enums";
 import { TransitionProspectStatusDto, SignProspectDto, ProspectMedicalResultDto, CreateProspectNegotiationLogDto } from "./dto/prospect.dto";
+import { CreateProspectVideoEvaluationDto, CreateProspectEvaluationLogDto } from "./dto/video-evaluation.dto";
 
 const canWrite = (role: string, frontOfficeRole: string | null | undefined): boolean =>
   isAdminLike(role) ||
@@ -114,6 +115,58 @@ export class ProspectController {
       const { role, coachingRole } = requireUser(req);
       if (!canRead(role, coachingRole)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.getNegotiationLogs(Number(req.params["id"])));
+    } catch (err) { next(err); }
+  };
+
+  addVideoEvaluation = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole, id } = requireUser(req);
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      res.status(201).json(
+        await this.service.addVideoEvaluation(
+          Number(req.params["id"]),
+          req.body as CreateProspectVideoEvaluationDto,
+          id,
+        ),
+      );
+    } catch (err) { next(err); }
+  };
+
+  getVideoEvaluations = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, coachingRole } = requireUser(req);
+      if (!canRead(role, coachingRole)) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(await this.service.getVideoEvaluations(Number(req.params["id"])));
+    } catch (err) { next(err); }
+  };
+
+  addEvaluationLog = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole, id } = requireUser(req);
+      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      res.status(201).json(
+        await this.service.addEvaluationLog(
+          Number(req.params["id"]),
+          req.body as CreateProspectEvaluationLogDto,
+          id,
+        ),
+      );
+    } catch (err) { next(err); }
+  };
+
+  getEvaluationLogs = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, coachingRole } = requireUser(req);
+      if (!canRead(role, coachingRole)) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(await this.service.getEvaluationLogs(Number(req.params["id"])));
+    } catch (err) { next(err); }
+  };
+
+  checkAcquisitionGate = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, coachingRole } = requireUser(req);
+      if (!canRead(role, coachingRole)) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(await this.service.checkAcquisitionGate(Number(req.params["id"])));
     } catch (err) { next(err); }
   };
 }
