@@ -35,6 +35,7 @@ export interface UpdatePlayerDto {
   emergencyContactRelation?: string | null;
   allergies?: string[];
   foodPreferences?: string | null;
+  playStyle?: string | null;
 }
 
 export interface UpdatePlayerStatusDto {

@@ -3,8 +3,8 @@ import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { playerApi } from '@/services/player.service'
 import { api } from '@/services/api'
-import type { Player, PlayerDetail, Position, PlayerLevel } from '@/types/player'
-import { POSITION_ABBR, LEVEL_LABEL } from '@/types/player'
+import type { Player, PlayerDetail, Position, PlayerLevel, PlayStyle } from '@/types/player'
+import { POSITION_ABBR, LEVEL_LABEL, PLAY_STYLE_LABEL, POSITION_PLAY_STYLES } from '@/types/player'
 import {
   Sheet,
   SheetContent,
@@ -19,6 +19,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select'
 
 interface Country {
@@ -66,6 +67,7 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
   const [height, setHeight] = useState('')
   const [weight, setWeight] = useState('')
   const [position, setPosition] = useState<Position>('STRIKER')
+  const [playStyle, setPlayStyle] = useState<PlayStyle | ''>('')
   const [level, setLevel] = useState<PlayerLevel>('ROOKIE')
   const [nationalityId, setNationalityId] = useState<number | ''>('')
   const [countries, setCountries] = useState<Country[]>([])
@@ -87,6 +89,7 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
       setHeight(String(player.height))
       setWeight(String(player.weight))
       setPosition(player.position)
+      setPlayStyle((player as any).playStyle ?? '')
       setLevel(player.level)
       setNationalityId(player.nationality.id)
     } else {
@@ -96,6 +99,7 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
       setHeight('')
       setWeight('')
       setPosition('STRIKER')
+      setPlayStyle('')
       setLevel('ROOKIE')
       setNationalityId('')
     }
@@ -137,6 +141,7 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
         position,
         level,
         nationalityId: Number(nationalityId),
+        playStyle: playStyle || null,
       }
       if (isEdit && player) {
         await playerApi.update(player.id, payload)
@@ -242,7 +247,7 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
             {/* 포지션 */}
             <div className="space-y-1.5">
               <Label>{t('form.position')} *</Label>
-              <Select value={position} onValueChange={(v) => setPosition(v as Position)}>
+              <Select value={position} onValueChange={(v) => { setPosition(v as Position); setPlayStyle('') }}>
                 <SelectTrigger>
                   {position
                     ? <span>{POSITION_ABBR[position]} · {t(`position.${position}`)}</span>
@@ -253,6 +258,23 @@ export function PlayerFormDialog({ open, onOpenChange, player, onSaved }: Props)
                     <SelectItem key={p} value={p}>
                       {POSITION_ABBR[p]} · {t(`position.${p}`)}
                     </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 플레이스타일 */}
+            <div className="space-y-1.5">
+              <Label>플레이스타일</Label>
+              <Select value={playStyle} onValueChange={(v) => setPlayStyle(v as PlayStyle)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="선택">
+                    {playStyle ? PLAY_STYLE_LABEL[playStyle as PlayStyle] : undefined}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {POSITION_PLAY_STYLES[position].map(ps => (
+                    <SelectItem key={ps} value={ps}>{PLAY_STYLE_LABEL[ps]}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

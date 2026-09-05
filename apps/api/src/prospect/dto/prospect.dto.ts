@@ -8,6 +8,7 @@ export interface CreateProspectDto {
   notes?: string;
   createdById?: number;
   status?: 'LONGLIST' | 'SHORTLIST';
+  playStyle?: string;
 }
 
 export interface UpdateProspectDto {
