@@ -395,11 +395,13 @@
     "loadFailed": "Prospect 목록을 불러오지 못했습니다.",
     "noData": "등록된 Prospect가 없습니다.",
     "status": {
-      "ACTIVE": "추적 중",
+      "LONGLIST": "롱리스트",
+      "SHORTLIST": "쇼트리스트",
+      "ACTIVE": "협상 중",
       "MEDICAL_TEST": "메디컬 테스트",
-      "CONTRACT_PENDING": "계약 협상 중",
+      "CONTRACT_PENDING": "계약 검토",
       "SIGNED": "영입 완료",
-      "ARCHIVED": "종료"
+      "ARCHIVED": "보류"
     },
     "visaEligibility": {
       "NOT_REQUIRED": "해당 없음",

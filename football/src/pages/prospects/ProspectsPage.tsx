@@ -33,7 +33,7 @@ import { Plus } from 'lucide-react'
 
 interface Country { id: number; name: string }
 
-const STATUSES: (ProspectStatus | 'ALL')[] = ['ALL', 'ACTIVE', 'MEDICAL_TEST', 'CONTRACT_PENDING', 'SIGNED', 'ARCHIVED']
+const STATUSES: (ProspectStatus | 'ALL')[] = ['ALL', 'LONGLIST', 'SHORTLIST', 'ACTIVE', 'MEDICAL_TEST', 'CONTRACT_PENDING', 'SIGNED', 'ARCHIVED']
 const POSITIONS: Position[] = [
   'GOALKEEPER', 'STRIKER', 'SHADOW_STRIKER', 'WINGER',
   'CENTRAL_ATTACK_MIDFIELDER', 'RIGHT_ATTACK_MIDFIELDER', 'LEFT_ATTACK_MIDFIELDER',
@@ -327,7 +327,7 @@ export function ProspectsPage() {
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [loading, setLoading] = useState(true)
   const [searchParams] = useSearchParams()
-  const [statusFilter, setStatusFilter] = useState<ProspectStatus | 'ALL'>('ACTIVE')
+  const [statusFilter, setStatusFilter] = useState<ProspectStatus | 'ALL'>('LONGLIST')
   const [position, setPosition] = useState<Position | ''>(
     (searchParams.get('position') as Position) ?? ''
   )
@@ -386,6 +386,24 @@ export function ProspectsPage() {
   const renderActions = (p: Prospect) => {
     if (!canWrite && !canSign) return null
     switch (p.status) {
+      case 'LONGLIST':
+        return canWrite ? (
+          <div className="flex gap-1">
+            <Button size="sm" variant="outline" className="h-7 text-xs"
+              onClick={() => handleTransition(p.id, 'SHORTLIST')}>쇼트리스트 승격</Button>
+            <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground"
+              onClick={() => handleTransition(p.id, 'ARCHIVED')}>{t('prospects.deleteButton')}</Button>
+          </div>
+        ) : null
+      case 'SHORTLIST':
+        return canWrite ? (
+          <div className="flex gap-1">
+            <Button size="sm" variant="outline" className="h-7 text-xs"
+              onClick={() => handleTransition(p.id, 'ACTIVE')}>협상 시작</Button>
+            <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground"
+              onClick={() => handleTransition(p.id, 'ARCHIVED')}>{t('prospects.deleteButton')}</Button>
+          </div>
+        ) : null
       case 'ACTIVE':
         return canWrite ? (
           <div className="flex gap-1">

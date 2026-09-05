@@ -1,6 +1,6 @@
 import type { Position } from './player'
 
-export type ProspectStatus = 'ACTIVE' | 'MEDICAL_TEST' | 'CONTRACT_PENDING' | 'SIGNED' | 'ARCHIVED'
+export type ProspectStatus = 'LONGLIST' | 'SHORTLIST' | 'ACTIVE' | 'MEDICAL_TEST' | 'CONTRACT_PENDING' | 'SIGNED' | 'ARCHIVED'
 export type VisaEligibility = 'NOT_REQUIRED' | 'CONFIRMED' | 'UNCERTAIN'
 export type WorkPermitStatus = 'NOT_REQUIRED' | 'PENDING' | 'APPROVED' | 'REJECTED'
 
@@ -48,14 +48,18 @@ export interface SignProspectDto {
 }
 
 export const STATUS_LABEL: Record<ProspectStatus, string> = {
-  ACTIVE: 'Tracking',
-  MEDICAL_TEST: 'Medical Test',
-  CONTRACT_PENDING: 'Contract Pending',
-  SIGNED: 'Signed',
-  ARCHIVED: 'Archived',
+  LONGLIST: '롱리스트',
+  SHORTLIST: '쇼트리스트',
+  ACTIVE: '협상 중',
+  MEDICAL_TEST: '메디컬 테스트',
+  CONTRACT_PENDING: '계약 검토',
+  SIGNED: '계약 완료',
+  ARCHIVED: '보류',
 }
 
 export const STATUS_STYLE: Record<ProspectStatus, string> = {
+  LONGLIST: 'bg-slate-100 text-slate-700 border-slate-200',
+  SHORTLIST: 'bg-indigo-100 text-indigo-700 border-indigo-200',
   ACTIVE: 'bg-blue-100 text-blue-800 border-blue-200',
   MEDICAL_TEST: 'bg-purple-100 text-purple-800 border-purple-200',
   CONTRACT_PENDING: 'bg-amber-100 text-amber-800 border-amber-200',
