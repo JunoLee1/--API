@@ -554,6 +554,19 @@ enum ProspectStatus {
   ARCHIVED
 }
 
+enum VideoEvalResult {
+  PASS
+  FAIL
+  PENDING
+}
+
+enum EvaluationLogType {
+  VIDEO_ANALYSIS
+  CONSISTENCY
+  FIELD_VISIT
+  LEAGUE_LEVEL
+}
+
 enum VisaEligibility {
   NOT_REQUIRED
   CONFIRMED
@@ -1002,6 +1015,8 @@ model User {
   transferRequestsRejected  TransferRequest[]               @relation("TRRejectedBy")
   transferNegotiationLogs   TransferNegotiationLog[]
   prospectNegotiationLogs   ProspectNegotiationLog[]
+  prospectVideoEvaluations  ProspectVideoEvaluation[]
+  prospectEvaluationLogs    ProspectEvaluationLog[]
   createdPlanReports        PlanReport[]                    @relation("PlanReportCreatedBy")
   approvedPlanReports       PlanReport[]                    @relation("PlanReportApprovedBy")
   confirmedPlanReviews      PlanReview[]                    @relation("PlanReviewConfirmer")
@@ -1885,8 +1900,9 @@ model Prospect {
   medicalNotes      String?
   status            ProspectStatus   @default(LONGLIST)
   convertedPlayerId String?
-  externalId        String?          @unique
-  playStyle         PlayStyle?
+  externalId          String?          @unique
+  currentMarketValue  Int?
+  playStyle           PlayStyle?
   createdAt         DateTime         @default(now())
   createdById       Int?
   visaRequired      Boolean          @default(false)
@@ -1895,6 +1911,8 @@ model Prospect {
   convertedPlayer  Player?                  @relation("ProspectConvertedPlayer", fields: [convertedPlayerId], references: [id])
   createdBy        User?                    @relation("ProspectCreatedBy", fields: [createdById], references: [id])
   negotiationLogs  ProspectNegotiationLog[]
+  videoEvaluations ProspectVideoEvaluation[]
+  evaluationLogs   ProspectEvaluationLog[]
 }
 
 model ProspectNegotiationLog {
@@ -1908,6 +1926,39 @@ model ProspectNegotiationLog {
 
   prospect  Prospect @relation(fields: [prospectId], references: [id])
   createdBy User     @relation(fields: [createdById], references: [id])
+}
+
+model ProspectVideoEvaluation {
+  id            Int             @id @default(autoincrement())
+  prospectId    Int
+  qualityPassed Boolean
+  identifiable  Boolean
+  continuity    Boolean
+  totalScore    Int?
+  scoreData     Json?
+  result        VideoEvalResult
+  notes         String?
+  evaluatedById Int
+  evaluatedAt   DateTime        @default(now())
+
+  prospect    Prospect @relation(fields: [prospectId], references: [id])
+  evaluatedBy User     @relation(fields: [evaluatedById], references: [id])
+
+  @@index([prospectId])
+}
+
+model ProspectEvaluationLog {
+  id            Int               @id @default(autoincrement())
+  prospectId    Int
+  type          EvaluationLogType
+  note          String
+  evaluatedById Int
+  evaluatedAt   DateTime          @default(now())
+
+  prospect    Prospect @relation(fields: [prospectId], references: [id])
+  evaluatedBy User     @relation(fields: [evaluatedById], references: [id])
+
+  @@index([prospectId])
 }
 
 model AuditLog {

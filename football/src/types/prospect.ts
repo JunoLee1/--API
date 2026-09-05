@@ -18,6 +18,7 @@ export interface Prospect {
   createdBy: { nickname: string } | null
   visaRequired: boolean
   visaEligibility: VisaEligibility | null
+  currentMarketValue: number | null
 }
 
 export interface CreateProspectDto {
@@ -33,6 +34,7 @@ export interface CreateProspectDto {
 export interface UpdateProspectDto extends Partial<CreateProspectDto> {
   visaRequired?: boolean
   visaEligibility?: VisaEligibility
+  currentMarketValue?: number | null
 }
 
 export interface SignProspectDto {
@@ -81,4 +83,77 @@ export const WORK_PERMIT_LABEL: Record<WorkPermitStatus, string> = {
   PENDING: 'Pending',
   APPROVED: 'Approved',
   REJECTED: 'Rejected',
+}
+
+export type VideoEvalResult = 'PASS' | 'FAIL' | 'PENDING'
+export type EvaluationLogType = 'VIDEO_ANALYSIS' | 'CONSISTENCY' | 'FIELD_VISIT' | 'LEAGUE_LEVEL'
+
+export interface ProspectVideoEvaluation {
+  id: number
+  prospectId: number
+  qualityPassed: boolean
+  identifiable: boolean
+  continuity: boolean
+  totalScore: number | null
+  scoreData: Record<string, number> | null
+  result: VideoEvalResult
+  notes: string | null
+  evaluatedBy: { nickname: string }
+  evaluatedAt: string
+}
+
+export interface ProspectEvaluationLog {
+  id: number
+  prospectId: number
+  type: EvaluationLogType
+  note: string
+  evaluatedBy: { nickname: string }
+  evaluatedAt: string
+}
+
+export interface CreateVideoEvaluationDto {
+  qualityPassed: boolean
+  identifiable: boolean
+  continuity: boolean
+  totalScore?: number | null
+  scoreData?: Record<string, number> | null
+  notes?: string | null
+}
+
+export interface CreateEvaluationLogDto {
+  type: EvaluationLogType
+  note: string
+  evaluatedAt?: string
+}
+
+export interface AcquisitionGateCheckResult {
+  positionMatched: boolean
+  budgetWarning: boolean
+  matchedSurveys: { id: number; position: string; budgetMin: number | null; budgetMax: number | null }[]
+}
+
+export const VIDEO_EVAL_RESULT_LABEL: Record<VideoEvalResult, string> = {
+  PASS: 'PASS',
+  FAIL: 'FAIL',
+  PENDING: '보류',
+}
+
+export const VIDEO_EVAL_RESULT_STYLE: Record<VideoEvalResult, string> = {
+  PASS: 'bg-green-100 text-green-800 border-green-200',
+  FAIL: 'bg-red-100 text-red-800 border-red-200',
+  PENDING: 'bg-amber-100 text-amber-700 border-amber-200',
+}
+
+export const EVAL_LOG_TYPE_LABEL: Record<EvaluationLogType, string> = {
+  VIDEO_ANALYSIS: '풀매치 비디오',
+  CONSISTENCY: '일관성 평가',
+  FIELD_VISIT: '현장 확인',
+  LEAGUE_LEVEL: '리그 수준',
+}
+
+export const EVAL_LOG_TYPE_DOT: Record<EvaluationLogType, string> = {
+  VIDEO_ANALYSIS: 'bg-indigo-400',
+  CONSISTENCY: 'bg-violet-400',
+  FIELD_VISIT: 'bg-teal-400',
+  LEAGUE_LEVEL: 'bg-amber-400',
 }

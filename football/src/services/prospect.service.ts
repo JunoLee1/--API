@@ -1,5 +1,9 @@
 import { api } from './api'
-import type { Prospect, CreateProspectDto, UpdateProspectDto, ProspectStatus, SignProspectDto } from '@/types/prospect'
+import type {
+  Prospect, CreateProspectDto, UpdateProspectDto, ProspectStatus, SignProspectDto,
+  ProspectVideoEvaluation, ProspectEvaluationLog,
+  CreateVideoEvaluationDto, CreateEvaluationLogDto, AcquisitionGateCheckResult,
+} from '@/types/prospect'
 
 export const prospectApi = {
   list: (status?: ProspectStatus) =>
@@ -26,4 +30,21 @@ export const prospectApi = {
       squadPlayers: { id: string; playerName: string; position: string | null; status: string }[]
     }>(`/prospects/check-duplicate?${params}`)
   },
+
+  videoEvaluations: {
+    list: (id: number) =>
+      api.get<ProspectVideoEvaluation[]>(`/prospects/${id}/video-evaluations`),
+    create: (id: number, dto: CreateVideoEvaluationDto) =>
+      api.post<ProspectVideoEvaluation>(`/prospects/${id}/video-evaluations`, dto),
+  },
+
+  evaluationLogs: {
+    list: (id: number) =>
+      api.get<ProspectEvaluationLog[]>(`/prospects/${id}/evaluation-logs`),
+    create: (id: number, dto: CreateEvaluationLogDto) =>
+      api.post<ProspectEvaluationLog>(`/prospects/${id}/evaluation-logs`, dto),
+  },
+
+  acquisitionGateCheck: (id: number) =>
+    api.get<AcquisitionGateCheckResult>(`/prospects/${id}/acquisition-gate-check`),
 }
