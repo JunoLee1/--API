@@ -17,4 +17,13 @@ export const prospectApi = {
 
   sign: (id: number, dto: SignProspectDto) =>
     api.post<Prospect>(`/prospects/${id}/sign`, dto),
+
+  checkDuplicate: (name: string, currentTeam?: string) => {
+    const params = new URLSearchParams({ name })
+    if (currentTeam) params.set('currentTeam', currentTeam)
+    return api.get<{
+      prospects: { id: number; name: string; currentTeam: string | null; position: string | null; status: string }[]
+      squadPlayers: { id: string; playerName: string; position: string | null; status: string }[]
+    }>(`/prospects/check-duplicate?${params}`)
+  },
 }

@@ -24,6 +24,18 @@ const canSign = (role: string, frontOfficeRole: string | null | undefined): bool
 export class ProspectController {
   constructor(private service: ProspectService) {}
 
+  checkDuplicate = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, coachingRole } = requireUser(req);
+      if (!canRead(role, coachingRole)) throw new AppError(403, "FORBIDDEN");
+      const name = req.query["name"] as string;
+      const currentTeam = req.query["currentTeam"] as string | undefined;
+      if (!name) throw new AppError(400, "NAME_REQUIRED");
+      const result = await this.service.checkDuplicate(name, currentTeam);
+      res.status(200).json(result);
+    } catch (err) { next(err); }
+  };
+
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { role, coachingRole } = requireUser(req);

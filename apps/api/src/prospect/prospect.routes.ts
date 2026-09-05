@@ -23,6 +23,7 @@ const canSignProspect = (req: Request, res: Response, next: NextFunction) => {
   next();
 };
 
+router.get("/check-duplicate", auth, controller.checkDuplicate);
 router.get("/", auth, controller.list);
 router.post("/", auth, controller.create);
 router.get("/:id", auth, controller.getById);
