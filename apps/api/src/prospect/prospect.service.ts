@@ -1,7 +1,8 @@
 import { ProspectRepository } from "./prospect.repo";
 import { AppError } from "../lib/appError";
 import { CreateProspectDto, UpdateProspectDto, TransitionProspectStatusDto, SignProspectDto, ProspectMedicalResultDto, CreateProspectNegotiationLogDto } from "./dto/prospect.dto";
-import { ProspectStatus } from "../generated/enums";
+import { ProspectStatus, VideoEvalResult } from "../generated/enums";
+import { CreateProspectVideoEvaluationDto, CreateProspectEvaluationLogDto } from "./dto/video-evaluation.dto";
 import { NotificationService } from "../notification/notification.service";
 import { NotificationRepository } from "../notification/notification.repo";
 import { getPrisma } from "../lib/prisma";
@@ -9,6 +10,17 @@ import { getPrisma } from "../lib/prisma";
 const notificationService = new NotificationService(new NotificationRepository(getPrisma()));
 
 const NON_ACTIVE_STATUSES: ProspectStatus[] = ["LONGLIST", "SHORTLIST", "SIGNED", "ARCHIVED"];
+
+export function computeVideoEvalResult(
+  qualityPassed: boolean,
+  identifiable: boolean,
+  continuity: boolean,
+  totalScore: number | null | undefined,
+): VideoEvalResult {
+  if (!qualityPassed || !identifiable || !continuity) return 'FAIL';
+  if (totalScore != null && totalScore >= 70) return 'PASS';
+  return 'PENDING';
+}
 
 export class ProspectService {
   constructor(private repo: ProspectRepository) {}
@@ -39,8 +51,14 @@ export class ProspectService {
     return this.repo.update(id, dto);
   }
 
-  updateStatus(id: number, dto: TransitionProspectStatusDto) {
+  async updateStatus(id: number, dto: TransitionProspectStatusDto) {
     if (dto.status === "SIGNED") throw new AppError(400, "USE_SIGN_ENDPOINT");
+    if (dto.status === "SHORTLIST") {
+      const latest = await this.repo.getLatestVideoEvaluation(id);
+      if (!latest || latest.result !== "PASS") {
+        throw new AppError(400, "VIDEO_EVAL_REQUIRED");
+      }
+    }
     return this.repo.updateStatus(id, dto.status);
   }
 
@@ -66,5 +84,28 @@ export class ProspectService {
 
   getNegotiationLogs(id: number) {
     return this.repo.getNegotiationLogs(id);
+  }
+
+  async addVideoEvaluation(id: number, dto: CreateProspectVideoEvaluationDto, evaluatedById: number) {
+    await this.getById(id); // 존재 확인
+    const result = computeVideoEvalResult(dto.qualityPassed, dto.identifiable, dto.continuity, dto.totalScore);
+    return this.repo.addVideoEvaluation(id, dto, evaluatedById, result);
+  }
+
+  getVideoEvaluations(id: number) {
+    return this.repo.getVideoEvaluations(id);
+  }
+
+  async addEvaluationLog(id: number, dto: CreateProspectEvaluationLogDto, evaluatedById: number) {
+    await this.getById(id); // 존재 확인
+    return this.repo.addEvaluationLog(id, dto, evaluatedById);
+  }
+
+  getEvaluationLogs(id: number) {
+    return this.repo.getEvaluationLogs(id);
+  }
+
+  checkAcquisitionGate(id: number) {
+    return this.repo.checkAcquisitionGate(id);
   }
 }
