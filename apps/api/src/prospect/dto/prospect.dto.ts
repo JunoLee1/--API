@@ -19,6 +19,7 @@ export interface UpdateProspectDto {
   notes?: string;
   visaRequired?: boolean;
   visaEligibility?: VisaEligibility;
+  currentMarketValue?: number | null;
 }
 
 export interface TransitionProspectStatusDto {
