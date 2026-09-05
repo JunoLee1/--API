@@ -236,10 +236,24 @@ export class NotificationService {
     await Promise.all([
       this.repo.createForHeadCoach("ACQUISITION_SURVEY_PUBLISHED", getMsg, surveyId),
       this.repo.createForCoachingStaff("ACQUISITION_SURVEY_PUBLISHED", getMsg, surveyId),
-      this.repo.createForScout("ACQUISITION_SURVEY_PUBLISHED", getMsg, surveyId),
     ]);
     getIO().to("staff-room").emit("notification:acquisition-survey", {
       type: "ACQUISITION_SURVEY_PUBLISHED",
+      surveyId,
+      title: getMsg().title,
+      body: getMsg().body,
+      createdAt: new Date().toISOString(),
+    });
+  }
+
+  async notifyAcquisitionSurveyClosed(surveyId: number, title: string) {
+    const getMsg = () => ({
+      title: "영입 수요조사 마감",
+      body: `"${title}" 수요조사가 마감됐습니다. 롱리스트 조사를 시작해주세요.`,
+    });
+    await this.repo.createForScout("ACQUISITION_SURVEY_CLOSED", getMsg, surveyId);
+    getIO().to("staff-room").emit("notification:acquisition-survey", {
+      type: "ACQUISITION_SURVEY_CLOSED",
       surveyId,
       title: getMsg().title,
       body: getMsg().body,

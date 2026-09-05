@@ -192,7 +192,9 @@ function SubmitResponseDialog({
                   <label className="text-xs font-medium">포지션 *</label>
                   <Select value={item.position} onValueChange={v => updateItem(i, { position: v as Position })}>
                     <SelectTrigger className="h-9">
-                      <SelectValue placeholder="선택" />
+                      <SelectValue placeholder="선택">
+                        {item.position ? POSITION_LABEL[item.position as Position] : '선택'}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {POSITIONS.map(p => (
@@ -207,7 +209,9 @@ function SubmitResponseDialog({
                   <label className="text-xs font-medium">우선순위 *</label>
                   <Select value={item.priority} onValueChange={v => updateItem(i, { priority: v as Priority })}>
                     <SelectTrigger className="h-9">
-                      <SelectValue placeholder="선택" />
+                      <SelectValue placeholder="선택">
+                        {item.priority ? PRIORITY_LABEL[item.priority as Priority] : '선택'}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {(['HIGH', 'MEDIUM', 'LOW'] as Priority[]).map(p => (
@@ -297,10 +301,7 @@ function SurveyDetail({ id, onBack }: { id: number; onBack: () => void }) {
   const canManage = user?.role === 'GM' ||
     (user?.role === 'FRONT_OFFICE' && (user as any).frontOfficeRole === 'TD')
 
-  const canRespond = !canManage && (
-    user?.role === 'COACHING_STAFF' ||
-    (user?.role === 'FRONT_OFFICE' && (user as any).frontOfficeRole === 'SCOUT')
-  )
+  const canRespond = !canManage && user?.role === 'COACHING_STAFF'
 
   const hasResponded = responses.some(r => r.respondentId === user?.id)
 
