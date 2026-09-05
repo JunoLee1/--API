@@ -139,8 +139,8 @@ export const VIDEO_EVAL_RESULT_LABEL: Record<VideoEvalResult, string> = {
 }
 
 export const VIDEO_EVAL_RESULT_STYLE: Record<VideoEvalResult, string> = {
-  PASS: 'bg-green-100 text-green-700 border-green-200',
-  FAIL: 'bg-red-100 text-red-700 border-red-200',
+  PASS: 'bg-green-100 text-green-800 border-green-200',
+  FAIL: 'bg-red-100 text-red-800 border-red-200',
   PENDING: 'bg-amber-100 text-amber-700 border-amber-200',
 }
 
@@ -151,7 +151,7 @@ export const EVAL_LOG_TYPE_LABEL: Record<EvaluationLogType, string> = {
   LEAGUE_LEVEL: '리그 수준',
 }
 
-export const EVAL_LOG_TYPE_COLOR: Record<EvaluationLogType, string> = {
+export const EVAL_LOG_TYPE_DOT: Record<EvaluationLogType, string> = {
   VIDEO_ANALYSIS: 'bg-indigo-400',
   CONSISTENCY: 'bg-violet-400',
   FIELD_VISIT: 'bg-teal-400',
