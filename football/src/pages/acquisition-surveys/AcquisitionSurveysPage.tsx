@@ -18,8 +18,25 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Plus, ChevronLeft, Trash2 } from 'lucide-react'
-import { POSITION_LABEL } from '@/types/player'
 import type { Position } from '@/types/player'
+
+const POSITION_LABEL: Record<Position, string> = {
+  GOALKEEPER: '골키퍼',
+  STRIKER: '스트라이커',
+  SHADOW_STRIKER: '세컨 스트라이커',
+  WINGER: '윙어',
+  CENTRAL_ATTACK_MIDFIELDER: '중앙 공격형 미드필더',
+  RIGHT_ATTACK_MIDFIELDER: '우측 공격형 미드필더',
+  LEFT_ATTACK_MIDFIELDER: '좌측 공격형 미드필더',
+  CENTRAL_DEFENSIVE_MIDFIELDER: '중앙 수비형 미드필더',
+  LEFT_DEFENSIVE_MIDFIELDER: '좌측 수비형 미드필더',
+  RIGHT_DEFENSIVE_MIDFIELDER: '우측 수비형 미드필더',
+  CENTER_BACK: '센터백',
+  LEFT_WING_BACK: '좌측 윙백',
+  LEFT_FULL_BACK: '좌측 풀백',
+  RIGHT_WING_BACK: '우측 윙백',
+  RIGHT_FULL_BACK: '우측 풀백',
+}
 
 type SurveyStatus = 'OPEN' | 'CLOSED'
 type Priority = 'HIGH' | 'MEDIUM' | 'LOW'
@@ -204,11 +221,15 @@ function SubmitResponseDialog({
                 <div className="space-y-1">
                   <label className="text-xs font-medium">예산 최소 (원)</label>
                   <Input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     className="h-9"
-                    placeholder="예: 100000000"
-                    value={item.budgetMin}
-                    onChange={e => updateItem(i, { budgetMin: e.target.value })}
+                    placeholder="예: 100,000,000"
+                    value={item.budgetMin ? Number(item.budgetMin).toLocaleString() : ''}
+                    onChange={e => {
+                      const raw = e.target.value.replace(/,/g, '')
+                      if (raw === '' || /^\d+$/.test(raw)) updateItem(i, { budgetMin: raw })
+                    }}
                   />
                 </div>
 
@@ -216,11 +237,15 @@ function SubmitResponseDialog({
                 <div className="space-y-1">
                   <label className="text-xs font-medium">예산 최대 (원)</label>
                   <Input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     className="h-9"
-                    placeholder="예: 200000000"
-                    value={item.budgetMax}
-                    onChange={e => updateItem(i, { budgetMax: e.target.value })}
+                    placeholder="예: 200,000,000"
+                    value={item.budgetMax ? Number(item.budgetMax).toLocaleString() : ''}
+                    onChange={e => {
+                      const raw = e.target.value.replace(/,/g, '')
+                      if (raw === '' || /^\d+$/.test(raw)) updateItem(i, { budgetMax: raw })
+                    }}
                   />
                 </div>
               </div>
