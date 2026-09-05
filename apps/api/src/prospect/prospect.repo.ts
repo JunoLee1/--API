@@ -1,8 +1,9 @@
-import { PrismaClient } from "../generated/client";
-import { ProspectStatus } from "../generated/enums";
+import { PrismaClient, Prisma } from "../generated/client";
+import { ProspectStatus, VideoEvalResult, EvaluationLogType } from "../generated/enums";
 import { AppError } from "../lib/appError";
 import { encrypt } from "../lib/crypto";
 import { CreateProspectDto, UpdateProspectDto, SignProspectDto, ProspectMedicalResultDto, CreateProspectNegotiationLogDto } from "./dto/prospect.dto";
+import { CreateProspectVideoEvaluationDto, CreateProspectEvaluationLogDto } from "./dto/video-evaluation.dto";
 
 const PROSPECT_SELECT = {
   id: true,
@@ -18,6 +19,7 @@ const PROSPECT_SELECT = {
   createdBy: { select: { nickname: true } },
   visaRequired: true,
   visaEligibility: true,
+  currentMarketValue: true,
 } as const;
 
 const VALID_TRANSITIONS: Record<ProspectStatus, ProspectStatus[]> = {
@@ -93,6 +95,7 @@ export class ProspectRepository {
         ...(dto.notes !== undefined && { notes: dto.notes }),
         ...(dto.visaRequired !== undefined && { visaRequired: dto.visaRequired }),
         ...(dto.visaEligibility !== undefined && { visaEligibility: dto.visaEligibility }),
+        ...(dto.currentMarketValue !== undefined && { currentMarketValue: dto.currentMarketValue }),
       },
       select: PROSPECT_SELECT,
     });
@@ -186,5 +189,112 @@ export class ProspectRepository {
       orderBy: { createdAt: "asc" },
       include: { createdBy: { select: { id: true, username: true } } },
     });
+  }
+
+  addVideoEvaluation(
+    prospectId: number,
+    dto: CreateProspectVideoEvaluationDto,
+    evaluatedById: number,
+    result: VideoEvalResult,
+  ) {
+    return this.prisma.prospectVideoEvaluation.create({
+      data: {
+        prospectId,
+        qualityPassed: dto.qualityPassed,
+        identifiable: dto.identifiable,
+        continuity: dto.continuity,
+        totalScore: dto.totalScore ?? null,
+        scoreData: dto.scoreData ?? Prisma.JsonNull,
+        result,
+        notes: dto.notes ?? null,
+        evaluatedById,
+      },
+      include: { evaluatedBy: { select: { nickname: true } } },
+    });
+  }
+
+  getVideoEvaluations(prospectId: number) {
+    return this.prisma.prospectVideoEvaluation.findMany({
+      where: { prospectId },
+      orderBy: { evaluatedAt: 'desc' },
+      include: { evaluatedBy: { select: { nickname: true } } },
+    });
+  }
+
+  getLatestVideoEvaluation(prospectId: number) {
+    return this.prisma.prospectVideoEvaluation.findFirst({
+      where: { prospectId },
+      orderBy: { evaluatedAt: 'desc' },
+      select: { result: true },
+    });
+  }
+
+  addEvaluationLog(
+    prospectId: number,
+    dto: CreateProspectEvaluationLogDto,
+    evaluatedById: number,
+  ) {
+    return this.prisma.prospectEvaluationLog.create({
+      data: {
+        prospectId,
+        type: dto.type as EvaluationLogType,
+        note: dto.note,
+        evaluatedById,
+        ...(dto.evaluatedAt && { evaluatedAt: new Date(dto.evaluatedAt) }),
+      },
+      include: { evaluatedBy: { select: { nickname: true } } },
+    });
+  }
+
+  getEvaluationLogs(prospectId: number) {
+    return this.prisma.prospectEvaluationLog.findMany({
+      where: { prospectId },
+      orderBy: { evaluatedAt: 'desc' },
+      include: { evaluatedBy: { select: { nickname: true } } },
+    });
+  }
+
+  async checkAcquisitionGate(prospectId: number) {
+    const prospect = await this.prisma.prospect.findUnique({
+      where: { id: prospectId },
+      select: { position: true, currentMarketValue: true },
+    });
+    if (!prospect) throw new AppError(404, 'PROSPECT_NOT_FOUND');
+
+    if (!prospect.position) {
+      return { positionMatched: false, budgetWarning: false, matchedSurveys: [] };
+    }
+
+    const items = await this.prisma.playerAcquisitionSurveyResponseItem.findMany({
+      where: {
+        position: prospect.position,
+        response: { survey: { status: 'OPEN' } },
+      },
+      select: {
+        position: true,
+        budgetMin: true,
+        budgetMax: true,
+        response: { select: { surveyId: true } },
+      },
+    });
+
+    const positionMatched = items.length > 0;
+    let budgetWarning = false;
+    if (positionMatched && prospect.currentMarketValue != null) {
+      budgetWarning = items.every(
+        (item) => item.budgetMax != null && prospect.currentMarketValue! > item.budgetMax,
+      );
+    }
+
+    return {
+      positionMatched,
+      budgetWarning,
+      matchedSurveys: items.map((item) => ({
+        id: item.response.surveyId,
+        position: item.position,
+        budgetMin: item.budgetMin,
+        budgetMax: item.budgetMax,
+      })),
+    };
   }
 }
