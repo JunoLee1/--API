@@ -45,6 +45,7 @@ import { FacilityPage } from '@/pages/facility/FacilityPage'
 import { SponsorshipPage } from '@/pages/sponsorship/SponsorshipPage'
 import { SponsorshipDetailPage } from '@/pages/sponsorship/SponsorshipDetailPage'
 import { ProspectsPage } from '@/pages/prospects/ProspectsPage'
+import { AcquisitionSurveysPage } from '@/pages/acquisition-surveys/AcquisitionSurveysPage'
 import { NotificationsPage } from '@/pages/notifications/NotificationsPage'
 import { MePage } from '@/pages/me/MePage'
 import { UsersPage } from '@/pages/admin/UsersPage'
@@ -227,6 +228,8 @@ function App() {
             <Route path="/sponsorship" element={<SponsorshipPage />} />
             <Route path="/sponsorship/:id" element={<SponsorshipDetailPage />} />
             <Route path="/prospects" element={<ProspectsPage />} />
+            <Route path="/acquisition-surveys" element={<AcquisitionSurveysPage />} />
+            <Route path="/acquisition-surveys/:id" element={<AcquisitionSurveysPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/me" element={<MePage />} />
             <Route path="/reports" element={<ReportsPage />} />

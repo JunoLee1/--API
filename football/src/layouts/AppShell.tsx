@@ -17,6 +17,7 @@ import { connectSocket, disconnectSocket } from '@/lib/socket'
 import { usePlayerNotification } from '@/hooks/usePlayerNotification'
 import { usePartnerNotification } from '@/hooks/usePartnerNotification'
 import { useReportNotification } from '@/hooks/useReportNotification'
+import { useAcquisitionSurveyNotification } from '@/hooks/useAcquisitionSurveyNotification'
 import { Switch } from '@/components/ui/switch'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
@@ -839,6 +840,7 @@ export function AppShell() {
   usePlayerNotification(refreshUnread)
   usePartnerNotification(user?.role)
   useReportNotification(refreshUnread)
+  useAcquisitionSurveyNotification(refreshUnread)
 
   const clearLocalSession = () => {
     authApi.logout()
