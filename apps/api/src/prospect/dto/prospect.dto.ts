@@ -7,6 +7,7 @@ export interface CreateProspectDto {
   currentTeam?: string;
   notes?: string;
   createdById?: number;
+  status?: 'LONGLIST' | 'SHORTLIST';
 }
 
 export interface UpdateProspectDto {

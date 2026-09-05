@@ -13,6 +13,16 @@ const NON_ACTIVE_STATUSES: ProspectStatus[] = ["LONGLIST", "SHORTLIST", "SIGNED"
 export class ProspectService {
   constructor(private repo: ProspectRepository) {}
 
+  checkDuplicate(name: string, currentTeam?: string) {
+    return this.repo.checkDuplicate(name, currentTeam);
+  }
+
+  async create(dto: CreateProspectDto) {
+    const { squadPlayers } = await this.repo.checkDuplicate(dto.name);
+    if (squadPlayers.length > 0) throw new AppError(409, "ALREADY_IN_SQUAD");
+    return this.repo.create(dto);
+  }
+
   getAll(status?: ProspectStatus) {
     return this.repo.findAll(status);
   }
@@ -21,10 +31,6 @@ export class ProspectService {
     const prospect = await this.repo.findById(id);
     if (!prospect) throw new AppError(404, "PROSPECT_NOT_FOUND");
     return prospect;
-  }
-
-  create(dto: CreateProspectDto) {
-    return this.repo.create(dto);
   }
 
   async update(id: number, dto: UpdateProspectDto) {
