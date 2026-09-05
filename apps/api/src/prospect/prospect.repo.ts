@@ -32,6 +32,27 @@ const VALID_TRANSITIONS: Record<ProspectStatus, ProspectStatus[]> = {
 export class ProspectRepository {
   constructor(private prisma: PrismaClient) {}
 
+  async checkDuplicate(name: string, currentTeam?: string) {
+    const [prospects, squadPlayers] = await Promise.all([
+      this.prisma.prospect.findMany({
+        where: {
+          name: { equals: name, mode: "insensitive" },
+          ...(currentTeam ? { currentTeam: { equals: currentTeam, mode: "insensitive" } } : {}),
+          status: { notIn: ["SIGNED", "ARCHIVED"] },
+        },
+        select: { id: true, name: true, currentTeam: true, position: true, status: true },
+      }),
+      this.prisma.player.findMany({
+        where: {
+          playerName: { equals: name, mode: "insensitive" },
+          status: { notIn: ["RETIRED", "RELEASED"] },
+        },
+        select: { id: true, playerName: true, position: true, status: true },
+      }),
+    ]);
+    return { prospects, squadPlayers };
+  }
+
   findAll(status?: ProspectStatus) {
     return this.prisma.prospect.findMany({
       ...(status !== undefined && { where: { status } }),
@@ -53,6 +74,7 @@ export class ProspectRepository {
         currentTeam: dto.currentTeam ?? null,
         notes: dto.notes ?? null,
         createdById: dto.createdById ?? null,
+        status: dto.status ?? "LONGLIST",
       },
       select: PROSPECT_SELECT,
     });

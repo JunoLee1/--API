@@ -21,7 +21,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -62,12 +62,14 @@ function CreateProspectDialog({ open, onOpenChange, onSaved }: CreateProspectDia
   const [position, setPosition] = useState<Position | ''>('')
   const [currentTeam, setCurrentTeam] = useState('')
   const [notes, setNotes] = useState('')
+  const [listStatus, setListStatus] = useState<'LONGLIST' | 'SHORTLIST'>('LONGLIST')
   const [visaRequired, setVisaRequired] = useState(false)
   const [visaEligibility, setVisaEligibility] = useState<VisaEligibility>('NOT_REQUIRED')
   const [saving, setSaving] = useState(false)
+  const [duplicates, setDuplicates] = useState<{ id: number; name: string; currentTeam: string | null; status: string }[]>([])
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
-  const handleSave = async () => {
-    if (!name.trim()) { toast.error(t('prospects.form.required')); return }
+  const doCreate = async () => {
     setSaving(true)
     try {
       const dto: CreateProspectDto = {
@@ -76,12 +78,14 @@ function CreateProspectDialog({ open, onOpenChange, onSaved }: CreateProspectDia
         ...(position && { position }),
         ...(currentTeam.trim() && { currentTeam: currentTeam.trim() }),
         ...(notes.trim() && { notes: notes.trim() }),
+        status: listStatus,
       }
       const prospect = await prospectApi.create(dto)
       if (visaRequired) {
         await prospectApi.update(prospect.id, { visaRequired: true, visaEligibility })
       }
       toast.success(t('prospects.form.createSuccess'))
+      setConfirmOpen(false)
       onSaved()
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : t('prospects.form.saveFailed'))
@@ -90,11 +94,67 @@ function CreateProspectDialog({ open, onOpenChange, onSaved }: CreateProspectDia
     }
   }
 
+  const handleSave = async () => {
+    if (!name.trim()) { toast.error(t('prospects.form.required')); return }
+    const { prospects: found, squadPlayers } = await prospectApi
+      .checkDuplicate(name.trim(), currentTeam.trim() || undefined)
+      .catch(() => ({ prospects: [], squadPlayers: [] }))
+    if (squadPlayers.length > 0) {
+      toast.error(`${name.trim()}은(는) 이미 우리 팀 스쿼드에 등록된 선수입니다.`)
+      return
+    }
+    if (found.length > 0) {
+      setDuplicates(found)
+      setConfirmOpen(true)
+      return
+    }
+    await doCreate()
+  }
+
   return (
+    <>
+    <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>중복 선수 감지</DialogTitle>
+          <DialogDescription>
+            동일한 이름의 후보가 이미 리스트에 있습니다. 그래도 추가하시겠습니까?
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-1 py-2">
+          {duplicates.map(d => (
+            <div key={d.id} className="text-sm border rounded px-3 py-2 flex justify-between">
+              <span className="font-medium">{d.name}</span>
+              <span className="text-muted-foreground">{d.currentTeam ?? '소속 미상'} · {d.status}</span>
+            </div>
+          ))}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setConfirmOpen(false)}>취소</Button>
+          <Button variant="destructive" onClick={doCreate} disabled={saving}>
+            {saving ? '저장 중...' : '그래도 추가'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader><DialogTitle>{t('prospects.form.createTitle')}</DialogTitle></DialogHeader>
         <div className="space-y-3 py-2">
+          <div className="space-y-1.5">
+            <Label>리스트 *</Label>
+            <Select value={listStatus} onValueChange={(v) => setListStatus(v as 'LONGLIST' | 'SHORTLIST')}>
+              <SelectTrigger>
+                <SelectValue>
+                  {listStatus === 'LONGLIST' ? '롱리스트' : '쇼트리스트'}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="LONGLIST">롱리스트</SelectItem>
+                <SelectItem value="SHORTLIST">쇼트리스트</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-1.5">
             <Label>{t('prospects.form.nameLabel')} *</Label>
             <Input placeholder="선수 이름" value={name} onChange={(e) => setName(e.target.value)} />
@@ -146,6 +206,7 @@ function CreateProspectDialog({ open, onOpenChange, onSaved }: CreateProspectDia
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    </>
   )
 }
 

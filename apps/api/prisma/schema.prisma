@@ -1849,6 +1849,7 @@ model Prospect {
   medicalNotes      String?
   status            ProspectStatus   @default(LONGLIST)
   convertedPlayerId String?
+  externalId        String?          @unique
   createdAt         DateTime         @default(now())
   createdById       Int?
   visaRequired      Boolean          @default(false)

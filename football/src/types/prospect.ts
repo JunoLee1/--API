@@ -25,6 +25,7 @@ export interface CreateProspectDto {
   position?: Position
   currentTeam?: string
   notes?: string
+  status?: 'LONGLIST' | 'SHORTLIST'
 }
 
 export interface UpdateProspectDto extends Partial<CreateProspectDto> {
