@@ -11,8 +11,8 @@ import type {
 import {
   STATUS_STYLE,
 } from '@/types/prospect'
-import type { Position } from '@/types/player'
-import { POSITION_LABEL } from '@/types/player'
+import type { Position, PlayStyle } from '@/types/player'
+import { POSITION_LABEL, PLAY_STYLE_LABEL, POSITION_PLAY_STYLES } from '@/types/player'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -60,12 +60,21 @@ function CreateProspectDialog({ open, onOpenChange, onSaved }: CreateProspectDia
   const [name, setName] = useState('')
   const [nationality, setNationality] = useState('')
   const [position, setPosition] = useState<Position | ''>('')
+  const [playStyle, setPlayStyle] = useState<PlayStyle | ''>('')
   const [currentTeam, setCurrentTeam] = useState('')
   const [notes, setNotes] = useState('')
   const [listStatus, setListStatus] = useState<'LONGLIST' | 'SHORTLIST'>('LONGLIST')
   const [visaRequired, setVisaRequired] = useState(false)
   const [visaEligibility, setVisaEligibility] = useState<VisaEligibility>('NOT_REQUIRED')
   const [saving, setSaving] = useState(false)
+  const [countries, setCountries] = useState<Country[]>([])
+
+  useEffect(() => {
+    if (!open) return
+    api.get<{ data: Country[] } | Country[]>('/countries')
+      .then(res => setCountries(Array.isArray(res) ? res : res.data))
+      .catch(() => null)
+  }, [open])
   const [duplicates, setDuplicates] = useState<{ id: number; name: string; currentTeam: string | null; status: string }[]>([])
   const [confirmOpen, setConfirmOpen] = useState(false)
 
@@ -79,6 +88,7 @@ function CreateProspectDialog({ open, onOpenChange, onSaved }: CreateProspectDia
         ...(currentTeam.trim() && { currentTeam: currentTeam.trim() }),
         ...(notes.trim() && { notes: notes.trim() }),
         status: listStatus,
+        ...(playStyle && { playStyle }),
       }
       const prospect = await prospectApi.create(dto)
       if (visaRequired) {
@@ -161,17 +171,45 @@ function CreateProspectDialog({ open, onOpenChange, onSaved }: CreateProspectDia
           </div>
           <div className="space-y-1.5">
             <Label>{t('prospects.form.nationalityLabel')}</Label>
-            <Input placeholder="예: 대한민국" value={nationality} onChange={(e) => setNationality(e.target.value)} />
+            <Select value={nationality} onValueChange={setNationality}>
+              <SelectTrigger>
+                <SelectValue placeholder="국적 선택">
+                  {nationality || undefined}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {countries.map(c => (
+                  <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1.5">
             <Label>{t('prospects.form.positionLabel')}</Label>
-            <Select value={position} onValueChange={(v) => setPosition(v as Position)}>
+            <Select value={position} onValueChange={(v) => { setPosition(v as Position); setPlayStyle('') }}>
               <SelectTrigger><SelectValue placeholder="포지션 선택" /></SelectTrigger>
               <SelectContent>
                 {POSITIONS.map((pos) => <SelectItem key={pos} value={pos}>{POSITION_LABEL[pos]}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
+          {position && (
+            <div className="space-y-1.5">
+              <Label>플레이스타일</Label>
+              <Select value={playStyle} onValueChange={(v) => setPlayStyle(v as PlayStyle)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="선택">
+                    {playStyle ? PLAY_STYLE_LABEL[playStyle as PlayStyle] : undefined}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {POSITION_PLAY_STYLES[position as Position].map(ps => (
+                    <SelectItem key={ps} value={ps}>{PLAY_STYLE_LABEL[ps]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label>{t('prospects.form.currentTeamLabel')}</Label>
             <Input placeholder="예: FC 서울" value={currentTeam} onChange={(e) => setCurrentTeam(e.target.value)} />
