@@ -114,6 +114,7 @@ export const NOTIFICATION_ROUTES: Record<string, NotificationRoute> = {
   OFFER_APPROVAL_REQUESTED_HR: '/recruitment/offer-approval',
   // 선수 영입 수요조사 (#494)
   ACQUISITION_SURVEY_PUBLISHED: (entityId: number) => `/acquisition-surveys/${entityId}`,
+  ACQUISITION_SURVEY_CLOSED: (entityId: number) => `/acquisition-surveys/${entityId}`,
 }
 
 export const notificationApi = {
