@@ -204,7 +204,7 @@ export class ProspectRepository {
         identifiable: dto.identifiable,
         continuity: dto.continuity,
         totalScore: dto.totalScore ?? null,
-        scoreData: dto.scoreData ?? Prisma.JsonNull,
+        scoreData: dto.scoreData ?? Prisma.DbNull,
         result,
         notes: dto.notes ?? null,
         evaluatedById,
