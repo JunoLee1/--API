@@ -1,4 +1,4 @@
-import type { Position } from './player'
+import type { Position, PlayStyle } from './player'
 
 export type ProspectStatus = 'LONGLIST' | 'SHORTLIST' | 'ACTIVE' | 'MEDICAL_TEST' | 'CONTRACT_PENDING' | 'SIGNED' | 'ARCHIVED'
 export type VisaEligibility = 'NOT_REQUIRED' | 'CONFIRMED' | 'UNCERTAIN'
@@ -12,6 +12,7 @@ export interface Prospect {
   currentTeam: string | null
   notes: string | null
   status: ProspectStatus
+  playStyle: PlayStyle | null
   convertedPlayerId: string | null
   createdAt: string
   createdBy: { nickname: string } | null
@@ -26,6 +27,7 @@ export interface CreateProspectDto {
   currentTeam?: string
   notes?: string
   status?: 'LONGLIST' | 'SHORTLIST'
+  playStyle?: PlayStyle
 }
 
 export interface UpdateProspectDto extends Partial<CreateProspectDto> {

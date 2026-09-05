@@ -508,6 +508,42 @@ enum EquipmentUnitStatus {
   RETIRED
 }
 
+enum PlayStyle {
+  // GK
+  SWEEPER_KEEPER
+  TRADITIONAL_GK
+  // CB
+  BALL_PLAYING_CB
+  STOPPER
+  LIBERO
+  // FB / WB
+  INVERTED_FULLBACK
+  OVERLAPPING_WINGBACK
+  DEFENSIVE_WINGBACK
+  // DM
+  REGISTA
+  HALF_BACK
+  DEFENSIVE_MIDFIELDER
+  // CM
+  BOX_TO_BOX
+  MEZZALA
+  CARRILERO
+  DEEP_LYING_PLAYMAKER
+  // AM
+  TREQUARTISTA
+  ADVANCED_PLAYMAKER
+  // W
+  INVERTED_WINGER
+  INSIDE_FORWARD
+  WIDE_MIDFIELDER
+  // ST
+  FALSE_9
+  TARGET_MAN
+  POACHER
+  COMPLETE_FORWARD
+  PRESSING_FORWARD
+}
+
 enum ProspectStatus {
   LONGLIST
   SHORTLIST
@@ -1128,7 +1164,7 @@ model Player {
   videoAssignments       VideoAssignment[]
   callups                PlayerCallup[]
   workPermitAlerts       WorkPermitAlertLog[]
-  playStyle              String?
+  playStyle              PlayStyle?
   allergies              String[]
   foodPreferences        String?
   // 최신값 캐시 — MarketValueHistory 항목 생성 시 항상 동시 업데이트할 것 (service 레이어에서 트랜잭션 보장)
@@ -1850,6 +1886,7 @@ model Prospect {
   status            ProspectStatus   @default(LONGLIST)
   convertedPlayerId String?
   externalId        String?          @unique
+  playStyle         PlayStyle?
   createdAt         DateTime         @default(now())
   createdById       Int?
   visaRequired      Boolean          @default(false)

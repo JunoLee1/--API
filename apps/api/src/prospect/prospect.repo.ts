@@ -12,6 +12,7 @@ const PROSPECT_SELECT = {
   currentTeam: true,
   notes: true,
   status: true,
+  playStyle: true,
   convertedPlayerId: true,
   createdAt: true,
   createdBy: { select: { nickname: true } },
@@ -75,6 +76,7 @@ export class ProspectRepository {
         notes: dto.notes ?? null,
         createdById: dto.createdById ?? null,
         status: dto.status ?? "LONGLIST",
+        playStyle: (dto.playStyle as any) ?? null,
       },
       select: PROSPECT_SELECT,
     });
@@ -107,7 +109,7 @@ export class ProspectRepository {
   async sign(prospectId: number, dto: SignProspectDto) {
     const prospect = await this.prisma.prospect.findUnique({
       where: { id: prospectId },
-      select: { id: true, status: true, name: true, position: true },
+      select: { id: true, status: true, name: true, position: true, playStyle: true },
     });
     if (!prospect) throw new AppError(404, "PROSPECT_NOT_FOUND");
     if (prospect.status !== "CONTRACT_PENDING") throw new AppError(409, "INVALID_STATUS_TRANSITION");
@@ -129,6 +131,7 @@ export class ProspectRepository {
           workPermitStatus: dto.workPermitStatus ?? "NOT_REQUIRED",
           workPermitExpiry: dto.workPermitExpiry ? new Date(dto.workPermitExpiry) : null,
           prospectId: prospectId,
+          ...(prospect.playStyle && { playStyle: prospect.playStyle }),
         },
         select: { id: true },
       });

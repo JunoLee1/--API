@@ -162,6 +162,7 @@ export class PlayerRepository {
         }),
         ...(data.allergies !== undefined && { allergies: data.allergies }),
         ...(data.foodPreferences !== undefined && { foodPreferences: data.foodPreferences }),
+        ...(data.playStyle !== undefined && { playStyle: data.playStyle as any }),
       },
       select: PLAYER_SELECT,
     });
