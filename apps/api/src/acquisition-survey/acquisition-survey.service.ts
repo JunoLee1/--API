@@ -10,7 +10,7 @@ const notificationService = new NotificationService(new NotificationRepository(g
 export class AcquisitionSurveyService {
   constructor(
     private repo: AcquisitionSurveyRepository,
-    private notify: Pick<NotificationService, "notifyAcquisitionSurveyPublished"> = notificationService,
+    private notify: Pick<NotificationService, "notifyAcquisitionSurveyPublished" | "notifyAcquisitionSurveyClosed"> = notificationService,
   ) {}
 
   getAll() {
@@ -32,7 +32,9 @@ export class AcquisitionSurveyService {
   async close(id: number) {
     const survey = await this.getById(id);
     if (survey.status === "CLOSED") throw new AppError(409, "SURVEY_ALREADY_CLOSED");
-    return this.repo.close(id);
+    const closed = await this.repo.close(id);
+    void this.notify.notifyAcquisitionSurveyClosed(survey.id, survey.title).catch(console.error);
+    return closed;
   }
 
   async submitResponse(surveyId: number, respondentId: number, items: SubmitAcquisitionSurveyResponseItemDto[]) {
