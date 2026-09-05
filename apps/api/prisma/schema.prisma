@@ -509,6 +509,8 @@ enum EquipmentUnitStatus {
 }
 
 enum ProspectStatus {
+  LONGLIST
+  SHORTLIST
   ACTIVE
   MEDICAL_TEST
   CONTRACT_PENDING
@@ -1845,7 +1847,7 @@ model Prospect {
   currentTeam       String?
   notes             String?
   medicalNotes      String?
-  status            ProspectStatus   @default(ACTIVE)
+  status            ProspectStatus   @default(LONGLIST)
   convertedPlayerId String?
   createdAt         DateTime         @default(now())
   createdById       Int?
