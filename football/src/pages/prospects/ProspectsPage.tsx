@@ -30,6 +30,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { Plus } from 'lucide-react'
+import { ProspectDetailSheet } from './ProspectDetailSheet'
 
 interface Country { id: number; name: string }
 
@@ -432,6 +433,8 @@ export function ProspectsPage() {
   )
   const [createOpen, setCreateOpen] = useState(false)
   const [signTarget, setSignTarget] = useState<Prospect | null>(null)
+  const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null)
+  const [sheetOpen, setSheetOpen] = useState(false)
 
   const canWrite =
     user?.role === 'ADMIN' ||
@@ -464,13 +467,32 @@ export function ProspectsPage() {
   }, [statusFilter])
 
   const handleTransition = async (id: number, status: ProspectStatus) => {
+    if (status === 'SHORTLIST') {
+      try {
+        const gate = await prospectApi.acquisitionGateCheck(id)
+        const warnings: string[] = []
+        if (!gate.positionMatched) warnings.push('활성 수요조사에 해당 포지션 요청이 없습니다')
+        if (gate.budgetWarning) warnings.push('예상 시가가 수요조사 예산 범위를 초과합니다')
+        if (warnings.length > 0) {
+          const confirmed = window.confirm(`주의:\n${warnings.join('\n')}\n\n그래도 쇼트리스트로 승격하시겠습니까?`)
+          if (!confirmed) return
+        }
+      } catch {
+        // gate check 실패해도 전환 시도는 진행
+      }
+    }
+
     try {
       await prospectApi.transition(id, status)
-      toast.success(t('prospects.deleteSuccess'))
+      toast.success('상태가 변경되었습니다')
       const s = statusFilter === 'ALL' ? undefined : statusFilter
       void fetchProspects(s)
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : t('prospects.deleteFailed'))
+      if (err instanceof Error && err.message.includes('VIDEO_EVAL_REQUIRED')) {
+        toast.error('비디오 평가 PASS 필요 — 평가 탭에서 먼저 평가를 완료해주세요')
+      } else {
+        toast.error(err instanceof Error ? err.message : t('prospects.deleteFailed'))
+      }
     }
   }
 
@@ -599,7 +621,11 @@ export function ProspectsPage() {
             </TableHeader>
             <TableBody>
               {(position ? prospects.filter((p) => p.position === position) : prospects).map((p) => (
-                <TableRow key={p.id}>
+                <TableRow
+                  key={p.id}
+                  className="cursor-pointer"
+                  onClick={() => { setSelectedProspect(p); setSheetOpen(true) }}
+                >
                   <TableCell className="font-medium">{p.name}</TableCell>
                   <TableCell className="font-mono text-sm">{p.position ? POSITION_LABEL[p.position] : '—'}</TableCell>
                   <TableCell className="text-sm">{p.currentTeam ?? '—'}</TableCell>
@@ -631,7 +657,7 @@ export function ProspectsPage() {
                     {p.createdBy?.nickname ?? '—'}
                   </TableCell>
                   {(canWrite || canSign) && (
-                    <TableCell>{renderActions(p)}</TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>{renderActions(p)}</TableCell>
                   )}
                 </TableRow>
               ))}
@@ -662,6 +688,22 @@ export function ProspectsPage() {
           }}
         />
       )}
+      <ProspectDetailSheet
+        prospect={selectedProspect}
+        open={sheetOpen}
+        onOpenChange={(v) => {
+          setSheetOpen(v)
+          if (!v) {
+            const s = statusFilter === 'ALL' ? undefined : statusFilter
+            void fetchProspects(s)
+          }
+        }}
+        canWrite={canWrite}
+        onUpdated={(updated) => {
+          setSelectedProspect(updated)
+          setProspects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+        }}
+      />
     </div>
   )
 }
