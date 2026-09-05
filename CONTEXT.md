@@ -588,6 +588,7 @@ LONGLIST(롱리스트) → SHORTLIST(쇼트리스트) → ACTIVE(협상 중) →
 - `externalId`: 외부 ID (향후 Transfermarkt 등 연동용). `@unique`.
 - `notes`: SCOUT의 자유 텍스트 분석 메모
 - `convertedPlayerId`: SIGNED 시 연결된 Player ID. 스카우팅 이력 추적용.
+- `currentMarketValue`: 예상 시가(만원). 수동 입력. #503 예산 soft 체크 기준.
 
 **쓰기 권한:** SCOUT, GM, TD.
 **읽기 권한:** FRONT_OFFICE 전체, HEAD_COACH.
@@ -605,6 +606,39 @@ LONGLIST(롱리스트) → SHORTLIST(쇼트리스트) → ACTIVE(협상 중) →
 4. `visaRequired = true`이면 `Player.workPermitStatus = PENDING` 으로 초기화
 
 User 계정 연결은 별도 단계 (ADMIN이 초대 발송 후 선수가 직접 가입).
+
+### 비디오 평가 (ProspectVideoEvaluation)
+
+SCOUT이 LONGLIST 단계에서 비디오 영상을 기반으로 제출하는 구조화 평가. Prospect당 N개 레코드 허용(이력 보존), 최신 레코드가 현재 상태를 대표.
+
+**Hard gate (모두 true여야 PASS 가능):**
+- `qualityPassed`: 화질 720p 이상
+- `identifiable`: 타겟 선수 식별 가능
+- `continuity`: 풀타임 추적 연속성 확보
+
+**result 계산 규칙 (서비스 레이어):**
+- hard gate 하나라도 false → `FAIL`
+- 전부 true + `totalScore >= 70` → `PASS`
+- 전부 true + (`totalScore < 70` 또는 null) → `PENDING`
+
+**SHORTLIST 전환 조건:** 최신 `ProspectVideoEvaluation.result === PASS` 필수. 미충족 시 `400 VIDEO_EVAL_REQUIRED`.
+
+**속성:**
+- `scoreData`: 포지션별 지표를 자유 JSON으로 저장 `{ "sprints": 72, "passAcc": 85 }`
+- `totalScore`: soft 합산 점수 0~100
+
+### 스카우팅 로그 (ProspectEvaluationLog)
+
+LONGLIST 단계부터 추가 가능한 서술형 평가 타임라인. NegotiationLog와 달리 단계 제한 없음.
+
+**type:**
+- `VIDEO_ANALYSIS`: 풀매치 비디오 분석
+- `CONSISTENCY`: 복수 경기 일관성 평가
+- `FIELD_VISIT`: 현장 직접 관전
+- `LEAGUE_LEVEL`: 리그 수준 적절성 확인
+
+**쓰기 권한:** SCOUT, GM, TD  
+**읽기 권한:** FRONT_OFFICE 전체, HEAD_COACH
 
 ---
 
