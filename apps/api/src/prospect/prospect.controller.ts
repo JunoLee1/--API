@@ -169,4 +169,12 @@ export class ProspectController {
       res.status(200).json(await this.service.checkAcquisitionGate(Number(req.params["id"])));
     } catch (err) { next(err); }
   };
+
+  getShortlistCapacity = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, coachingRole } = requireUser(req);
+      if (!canRead(role, coachingRole)) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(await this.service.getShortlistCapacity());
+    } catch (err) { next(err); }
+  };
 }
