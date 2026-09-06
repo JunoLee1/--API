@@ -57,6 +57,16 @@ export const canWriteHR = (role: string, foRole?: string | null, deptCategories?
   (role === 'FRONT_OFFICE' && foRole === 'HR_MANAGER') ||
   (deptCategories?.includes('HR') ?? false)
 
+export const canReadFacility = (role: string, foRole?: string | null, deptCategories?: string[]): boolean =>
+  isAdminLike(role) ||
+  (role === 'FRONT_OFFICE' && (foRole === 'FACILITY_MANAGER' || foRole === 'FACILITY_STAFF')) ||
+  (deptCategories?.includes('OPERATIONS') ?? false)
+
+export const canWriteFacility = (role: string, foRole?: string | null, deptCategories?: string[]): boolean =>
+  isAdminLike(role) ||
+  (role === 'FRONT_OFFICE' && foRole === 'FACILITY_MANAGER') ||
+  (deptCategories?.includes('OPERATIONS') ?? false)
+
 export const canManageTD = (role: string, foRole?: string | null): boolean =>
   isAdminLike(role) ||
   (role === 'FRONT_OFFICE' && foRole === 'TD')

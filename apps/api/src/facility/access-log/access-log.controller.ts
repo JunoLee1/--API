@@ -9,8 +9,8 @@ export class AccessLogController {
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = requireUser(req);
-      if (!isAdminLike(user.role) && user.role !== "GM" && user.role !== "FRONT_OFFICE") {
+      const { role, departmentCategories } = requireUser(req);
+      if (!isAdminLike(role) && role !== "FRONT_OFFICE" && !(departmentCategories?.includes('OPERATIONS') ?? false)) {
         return res.status(403).json({ error: "FORBIDDEN" });
       }
       res.json(await this.service.list(req.query as AccessLogListQuery));
