@@ -568,17 +568,22 @@ COACHING_STAFF 또는 HEAD_COACH가 경기별 포메이션·선발·후보 라�
 
 **상태머신:**
 ```
-LONGLIST(롱리스트) → SHORTLIST(쇼트리스트) → ACTIVE(협상 중) → MEDICAL_TEST(메디컬 테스트) → CONTRACT_PENDING(계약 검토) → SIGNED(계약 완료)
-     ↘                      ↘                    ↘                    ↘                           ↘
-                                              ARCHIVED(보류·결렬)
+LONGLIST(롱리스트) → PRE_SHORTLIST(적극 검토 중) → SHORTLIST(쇼트리스트) → ACTIVE(협상 중) → MEDICAL_TEST(메디컬 테스트) → CONTRACT_PENDING(계약 검토) → SIGNED(계약 완료)
+     ↘                    ↘                              ↘                    ↘                    ↘                           ↘
+                                                                         ARCHIVED(보류·결렬)
 ```
 어느 단계에서도 ARCHIVED로 전환 가능. 역방향 전환 없음. 기본값은 `LONGLIST`.
 
-- **LONGLIST → SHORTLIST**: SCOUT이 스카우팅 평가 후 쇼트리스트 승격
+- **LONGLIST → PRE_SHORTLIST**: SCOUT이 기본 적격성 확인 후 적극 평가 단계로 진입
+- **PRE_SHORTLIST → SHORTLIST**: VIDEO_EVAL PASS 필수 + SHORTLIST 정원(최대 5명) 미초과 필수. LONGLIST에서 SHORTLIST로의 직행은 차단됨.
 - **SHORTLIST → ACTIVE**: TD가 협상 개시 결정 (이후 단계는 TD 주도)
 - **ACTIVE → MEDICAL_TEST**: 메디컬 테스트 진행
 - **MEDICAL_TEST → CONTRACT_PENDING**: 메디컬 통과 시 자동 전환 (`POST /prospects/:id/medical-result`)
 - **CONTRACT_PENDING → SIGNED**: 계약 성사 (`POST /prospects/:id/sign`)
+
+**PRE_SHORTLIST (적극 검토 중) 단계:** LONGLIST 과부화 해소를 위한 중간 단계. "발굴만 된 선수"와 "적극 평가 중인 선수"를 명시적으로 구분하며, 롱리스트 리스트에서 스카우트 판단으로 평가 기준에 부합하는 선수를 이 단계로 승격시킨다.
+
+**SHORTLIST 정원 제한:** 최대 5명. 정원 초과 상태에서 추가 승격 시도 시 `409 SHORTLIST_FULL` 에러 반환.
 
 협상 로그(`NegotiationLog`)는 `ACTIVE` 이후 단계에서만 추가 가능.
 
@@ -609,7 +614,7 @@ User 계정 연결은 별도 단계 (ADMIN이 초대 발송 후 선수가 직접
 
 ### 비디오 평가 (ProspectVideoEvaluation)
 
-SCOUT이 LONGLIST 단계에서 비디오 영상을 기반으로 제출하는 구조화 평가. Prospect당 N개 레코드 허용(이력 보존), 최신 레코드가 현재 상태를 대표.
+SCOUT이 LONGLIST/PRE_SHORTLIST 단계에서 비디오 영상을 기반으로 제출하는 구조화 평가. Prospect당 N개 레코드 허용(이력 보존), 최신 레코드가 현재 상태를 대표.
 
 **Hard gate (모두 true여야 PASS 가능):**
 - `qualityPassed`: 화질 720p 이상
@@ -621,7 +626,7 @@ SCOUT이 LONGLIST 단계에서 비디오 영상을 기반으로 제출하는 구
 - 전부 true + `totalScore >= 70` → `PASS`
 - 전부 true + (`totalScore < 70` 또는 null) → `PENDING`
 
-**SHORTLIST 전환 조건:** 최신 `ProspectVideoEvaluation.result === PASS` 필수. 미충족 시 `400 VIDEO_EVAL_REQUIRED`.
+**PRE_SHORTLIST → SHORTLIST 전환 조건:** 최신 `ProspectVideoEvaluation.result === PASS` 필수. 미충족 시 `400 VIDEO_EVAL_REQUIRED`.
 
 **속성:**
 - `scoreData`: 포지션별 지표를 자유 JSON으로 저장 `{ "sprints": 72, "passAcc": 85 }`
