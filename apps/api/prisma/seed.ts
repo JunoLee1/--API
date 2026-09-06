@@ -22,29 +22,32 @@ async function seedDepartments() {
   const findOrCreate = async (name: string, extra: Record<string, unknown> = {}) => {
     const existing = await prisma.department.findFirst({ where: { name, clubId: null } });
     if (existing) {
-      if (Object.keys(extra).some(k => k !== 'parentId')) {
-        return prisma.department.update({ where: { id: existing.id }, data: extra });
+      const updateData: Record<string, unknown> = {};
+      if ('category' in extra) updateData.category = extra.category;
+      if ('parentId' in extra) updateData.parentId = extra.parentId;
+      if (Object.keys(updateData).length > 0) {
+        return prisma.department.update({ where: { id: existing.id }, data: updateData });
       }
       return existing;
     }
     return prisma.department.create({ data: { name, ...extra } });
   };
 
-  const finance = await findOrCreate('재무관리', { category: 'FINANCE' });
-  const asset   = await findOrCreate('자산관리');
+  // ── 최상위 부서 ────────────────────────────────────────────
+  const bizSupport = await findOrCreate('경영지원');
+  const opsInfra   = await findOrCreate('운영/인프라');
 
-  const subDepts: Array<[string, Record<string, unknown>]> = [
-    ['HR',        { category: 'HR' }],
-    ['시설관리',   { category: 'OPERATIONS' }],
-    ['선수 장비관리', {}],
-    ['의료기기 관리', {}],
-    ['IT 자산관리',  {}],
-  ];
-  for (const [name, extra] of subDepts) {
-    await findOrCreate(name, { parentId: asset.id, ...extra });
-  }
+  // ── 경영지원 하위 ──────────────────────────────────────────
+  await findOrCreate('재무관리',  { parentId: bizSupport.id, category: 'FINANCE' });
+  await findOrCreate('HR',        { parentId: bizSupport.id, category: 'HR' });
 
-  console.log(`Departments seeded: 재무관리(FINANCE), 자산관리 + sub-departments(HR, 시설관리:OPERATIONS, ...)`);
+  // ── 운영/인프라 하위 ───────────────────────────────────────
+  await findOrCreate('시설관리',      { parentId: opsInfra.id, category: 'OPERATIONS' });
+  await findOrCreate('선수 장비관리', { parentId: opsInfra.id, category: 'OPERATIONS' });
+  await findOrCreate('의료기기 관리', { parentId: opsInfra.id, category: 'OPERATIONS' });
+  await findOrCreate('IT 자산관리',   { parentId: opsInfra.id, category: 'OPERATIONS' });
+
+  console.log('Departments seeded: 경영지원(재무관리·HR), 운영/인프라(시설관리·장비·의료기기·IT)');
 }
 
 async function seedLeagues() {
@@ -68,19 +71,16 @@ async function seedLeagues() {
 }
 
 async function seedDepartmentHeads() {
-  const asset   = await prisma.department.findFirstOrThrow({ where: { name: '자산관리', clubId: null } });
-  const finance  = await prisma.department.findFirstOrThrow({ where: { name: '재무관리', clubId: null } });
-  const hrDept   = await prisma.department.findFirstOrThrow({ where: { name: 'HR', clubId: null } });
+  const finance = await prisma.department.findFirstOrThrow({ where: { name: '재무관리', clubId: null } });
+  const hrDept  = await prisma.department.findFirstOrThrow({ where: { name: 'HR', clubId: null } });
 
-  const assetUser   = await prisma.user.findUnique({ where: { email: 'asset@club.com' } });
   const financeUser = await prisma.user.findUnique({ where: { email: 'finance@club.com' } });
   const hrUser      = await prisma.user.findUnique({ where: { email: 'hr@club.com' } });
 
-  await prisma.department.update({ where: { id: asset.id },   data: { headId: assetUser?.id ?? null } });
   await prisma.department.update({ where: { id: finance.id }, data: { headId: financeUser?.id ?? null } });
   await prisma.department.update({ where: { id: hrDept.id },  data: { headId: hrUser?.id ?? null } });
 
-  console.log('Department heads assigned: 자산관리→asset, 재무관리→finance, HR→hr');
+  console.log('Department heads assigned: 재무관리→finance, HR→hr');
 }
 
 async function seedHrSubDepartments() {
