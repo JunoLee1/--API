@@ -9,7 +9,9 @@ import { getPrisma } from "../lib/prisma";
 
 const notificationService = new NotificationService(new NotificationRepository(getPrisma()));
 
-const NON_ACTIVE_STATUSES: ProspectStatus[] = ["LONGLIST", "SHORTLIST", "SIGNED", "ARCHIVED"];
+const SHORTLIST_CAPACITY = 5;
+
+const NON_ACTIVE_STATUSES: ProspectStatus[] = ["LONGLIST", "PRE_SHORTLIST", "SHORTLIST", "SIGNED", "ARCHIVED"];
 
 export function computeVideoEvalResult(
   qualityPassed: boolean,
@@ -54,12 +56,20 @@ export class ProspectService {
   async updateStatus(id: number, dto: TransitionProspectStatusDto) {
     if (dto.status === "SIGNED") throw new AppError(400, "USE_SIGN_ENDPOINT");
     if (dto.status === "SHORTLIST") {
+      const prospect = await this.repo.findById(id);
+      if (!prospect) throw new AppError(404, "PROSPECT_NOT_FOUND");
+      if (prospect.status === "LONGLIST") throw new AppError(400, "MUST_GO_THROUGH_PRE_SHORTLIST");
+      const count = await this.repo.countByStatus("SHORTLIST");
+      if (count >= SHORTLIST_CAPACITY) throw new AppError(409, "SHORTLIST_FULL");
       const latest = await this.repo.getLatestVideoEvaluation(id);
-      if (!latest || latest.result !== "PASS") {
-        throw new AppError(400, "VIDEO_EVAL_REQUIRED");
-      }
+      if (!latest || latest.result !== "PASS") throw new AppError(400, "VIDEO_EVAL_REQUIRED");
     }
     return this.repo.updateStatus(id, dto.status);
+  }
+
+  async getShortlistCapacity() {
+    const current = await this.repo.countByStatus("SHORTLIST");
+    return { capacity: SHORTLIST_CAPACITY, current };
   }
 
   async sign(id: number, dto: SignProspectDto) {
