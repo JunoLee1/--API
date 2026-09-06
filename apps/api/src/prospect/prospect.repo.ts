@@ -23,7 +23,8 @@ const PROSPECT_SELECT = {
 } as const;
 
 const VALID_TRANSITIONS: Record<ProspectStatus, ProspectStatus[]> = {
-  LONGLIST:         ["SHORTLIST", "ARCHIVED"],
+  LONGLIST:         ["PRE_SHORTLIST", "ARCHIVED"],
+  PRE_SHORTLIST:    ["SHORTLIST", "ARCHIVED"],
   SHORTLIST:        ["ACTIVE", "ARCHIVED"],
   ACTIVE:           ["MEDICAL_TEST", "ARCHIVED"],
   MEDICAL_TEST:     ["CONTRACT_PENDING", "ARCHIVED"],
@@ -252,6 +253,10 @@ export class ProspectRepository {
       orderBy: { evaluatedAt: 'desc' },
       include: { evaluatedBy: { select: { nickname: true } } },
     });
+  }
+
+  countByStatus(status: ProspectStatus) {
+    return this.prisma.prospect.count({ where: { status } });
   }
 
   async checkAcquisitionGate(prospectId: number) {

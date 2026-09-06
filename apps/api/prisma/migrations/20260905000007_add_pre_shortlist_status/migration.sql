@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "ProspectStatus" ADD VALUE 'PRE_SHORTLIST' AFTER 'LONGLIST';

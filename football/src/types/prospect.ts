@@ -1,6 +1,6 @@
 import type { Position, PlayStyle } from './player'
 
-export type ProspectStatus = 'LONGLIST' | 'SHORTLIST' | 'ACTIVE' | 'MEDICAL_TEST' | 'CONTRACT_PENDING' | 'SIGNED' | 'ARCHIVED'
+export type ProspectStatus = 'LONGLIST' | 'PRE_SHORTLIST' | 'SHORTLIST' | 'ACTIVE' | 'MEDICAL_TEST' | 'CONTRACT_PENDING' | 'SIGNED' | 'ARCHIVED'
 export type VisaEligibility = 'NOT_REQUIRED' | 'CONFIRMED' | 'UNCERTAIN'
 export type WorkPermitStatus = 'NOT_REQUIRED' | 'PENDING' | 'APPROVED' | 'REJECTED'
 
@@ -27,7 +27,7 @@ export interface CreateProspectDto {
   position?: Position
   currentTeam?: string
   notes?: string
-  status?: 'LONGLIST' | 'SHORTLIST'
+  status?: 'LONGLIST' | 'PRE_SHORTLIST'
   playStyle?: PlayStyle
 }
 
@@ -54,6 +54,7 @@ export interface SignProspectDto {
 
 export const STATUS_LABEL: Record<ProspectStatus, string> = {
   LONGLIST: '롱리스트',
+  PRE_SHORTLIST: '적극 검토 중',
   SHORTLIST: '쇼트리스트',
   ACTIVE: '협상 중',
   MEDICAL_TEST: '메디컬 테스트',
@@ -64,6 +65,7 @@ export const STATUS_LABEL: Record<ProspectStatus, string> = {
 
 export const STATUS_STYLE: Record<ProspectStatus, string> = {
   LONGLIST: 'bg-slate-100 text-slate-700 border-slate-200',
+  PRE_SHORTLIST: 'bg-sky-100 text-sky-700 border-sky-200',
   SHORTLIST: 'bg-indigo-100 text-indigo-700 border-indigo-200',
   ACTIVE: 'bg-blue-100 text-blue-800 border-blue-200',
   MEDICAL_TEST: 'bg-purple-100 text-purple-800 border-purple-200',

@@ -20,6 +20,7 @@ const makeRepo = (overrides: Partial<ProspectRepository> = {}): ProspectReposito
   addEvaluationLog: jest.fn(),
   getEvaluationLogs: jest.fn(),
   checkAcquisitionGate: jest.fn(),
+  countByStatus: jest.fn().mockResolvedValue(0),  // 추가: 기본값 0 (정원 미초과)
   ...overrides,
 } as unknown as ProspectRepository);
 
@@ -53,6 +54,7 @@ describe('computeVideoEvalResult', () => {
 describe('ProspectService.updateStatus — SHORTLIST gate', () => {
   it('최신 VideoEvaluation 없으면 VIDEO_EVAL_REQUIRED 400', async () => {
     const service = new ProspectService(makeRepo({
+      findById: jest.fn().mockResolvedValue({ id: 1, status: 'PRE_SHORTLIST' }),
       getLatestVideoEvaluation: jest.fn().mockResolvedValue(null),
     }));
     await expect(service.updateStatus(1, { status: 'SHORTLIST' }))
@@ -61,6 +63,7 @@ describe('ProspectService.updateStatus — SHORTLIST gate', () => {
 
   it('최신 VideoEvaluation result가 FAIL이면 VIDEO_EVAL_REQUIRED 400', async () => {
     const service = new ProspectService(makeRepo({
+      findById: jest.fn().mockResolvedValue({ id: 1, status: 'PRE_SHORTLIST' }),
       getLatestVideoEvaluation: jest.fn().mockResolvedValue({ result: 'FAIL' }),
     }));
     await expect(service.updateStatus(1, { status: 'SHORTLIST' }))
@@ -69,6 +72,7 @@ describe('ProspectService.updateStatus — SHORTLIST gate', () => {
 
   it('최신 VideoEvaluation result가 PENDING이면 VIDEO_EVAL_REQUIRED 400', async () => {
     const service = new ProspectService(makeRepo({
+      findById: jest.fn().mockResolvedValue({ id: 1, status: 'PRE_SHORTLIST' }),
       getLatestVideoEvaluation: jest.fn().mockResolvedValue({ result: 'PENDING' }),
     }));
     await expect(service.updateStatus(1, { status: 'SHORTLIST' }))
@@ -78,6 +82,7 @@ describe('ProspectService.updateStatus — SHORTLIST gate', () => {
   it('최신 VideoEvaluation result가 PASS면 repo.updateStatus 호출', async () => {
     const updateStatus = jest.fn().mockResolvedValue({ id: 1, status: 'SHORTLIST' });
     const service = new ProspectService(makeRepo({
+      findById: jest.fn().mockResolvedValue({ id: 1, status: 'PRE_SHORTLIST' }),
       getLatestVideoEvaluation: jest.fn().mockResolvedValue({ result: 'PASS' }),
       updateStatus,
     }));
@@ -90,5 +95,34 @@ describe('ProspectService.updateStatus — SHORTLIST gate', () => {
     const service = new ProspectService(makeRepo({ getLatestVideoEvaluation: getLatest }));
     await service.updateStatus(1, { status: 'ARCHIVED' });
     expect(getLatest).not.toHaveBeenCalled();
+  });
+
+  it('LONGLIST에서 SHORTLIST 직행 시 MUST_GO_THROUGH_PRE_SHORTLIST 400', async () => {
+    const service = new ProspectService(makeRepo({
+      findById: jest.fn().mockResolvedValue({ id: 1, status: 'LONGLIST' }),
+    }));
+    await expect(service.updateStatus(1, { status: 'SHORTLIST' }))
+      .rejects.toThrow(new AppError(400, 'MUST_GO_THROUGH_PRE_SHORTLIST'));
+  });
+
+  it('SHORTLIST 정원 5명 초과 시 SHORTLIST_FULL 409', async () => {
+    const service = new ProspectService(makeRepo({
+      findById: jest.fn().mockResolvedValue({ id: 1, status: 'PRE_SHORTLIST' }),
+      countByStatus: jest.fn().mockResolvedValue(5),
+    }));
+    await expect(service.updateStatus(1, { status: 'SHORTLIST' }))
+      .rejects.toThrow(new AppError(409, 'SHORTLIST_FULL'));
+  });
+
+  it('PRE_SHORTLIST + 정원 미초과 + VIDEO_EVAL PASS면 repo.updateStatus 호출', async () => {
+    const updateStatus = jest.fn().mockResolvedValue({ id: 1, status: 'SHORTLIST' });
+    const service = new ProspectService(makeRepo({
+      findById: jest.fn().mockResolvedValue({ id: 1, status: 'PRE_SHORTLIST' }),
+      countByStatus: jest.fn().mockResolvedValue(4),
+      getLatestVideoEvaluation: jest.fn().mockResolvedValue({ result: 'PASS' }),
+      updateStatus,
+    }));
+    await service.updateStatus(1, { status: 'SHORTLIST' });
+    expect(updateStatus).toHaveBeenCalledWith(1, 'SHORTLIST');
   });
 });

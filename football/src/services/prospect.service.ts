@@ -31,6 +31,9 @@ export const prospectApi = {
     }>(`/prospects/check-duplicate?${params}`)
   },
 
+  shortlistCapacity: () =>
+    api.get<{ capacity: number; current: number }>('/prospects/shortlist-capacity'),
+
   videoEvaluations: {
     list: (id: number) =>
       api.get<ProspectVideoEvaluation[]>(`/prospects/${id}/video-evaluations`),

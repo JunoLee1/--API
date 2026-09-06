@@ -7,7 +7,7 @@ export interface CreateProspectDto {
   currentTeam?: string;
   notes?: string;
   createdById?: number;
-  status?: 'LONGLIST' | 'SHORTLIST';
+  status?: 'LONGLIST' | 'PRE_SHORTLIST';
   playStyle?: string;
 }
 
