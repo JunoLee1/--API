@@ -34,7 +34,7 @@ import { ProspectDetailSheet } from './ProspectDetailSheet'
 
 interface Country { id: number; name: string }
 
-const STATUSES: (ProspectStatus | 'ALL')[] = ['ALL', 'LONGLIST', 'SHORTLIST', 'ACTIVE', 'MEDICAL_TEST', 'CONTRACT_PENDING', 'SIGNED', 'ARCHIVED']
+const STATUSES: (ProspectStatus | 'ALL')[] = ['ALL', 'LONGLIST', 'PRE_SHORTLIST', 'SHORTLIST', 'ACTIVE', 'MEDICAL_TEST', 'CONTRACT_PENDING', 'SIGNED', 'ARCHIVED']
 const POSITIONS: Position[] = [
   'GOALKEEPER', 'STRIKER', 'SHADOW_STRIKER', 'WINGER',
   'CENTRAL_ATTACK_MIDFIELDER', 'RIGHT_ATTACK_MIDFIELDER', 'LEFT_ATTACK_MIDFIELDER',
@@ -64,7 +64,7 @@ function CreateProspectDialog({ open, onOpenChange, onSaved }: CreateProspectDia
   const [playStyle, setPlayStyle] = useState<PlayStyle | ''>('')
   const [currentTeam, setCurrentTeam] = useState('')
   const [notes, setNotes] = useState('')
-  const [listStatus, setListStatus] = useState<'LONGLIST' | 'SHORTLIST'>('LONGLIST')
+  const [listStatus, setListStatus] = useState<'LONGLIST' | 'PRE_SHORTLIST'>('LONGLIST')
   const [visaRequired, setVisaRequired] = useState(false)
   const [visaEligibility, setVisaEligibility] = useState<VisaEligibility>('NOT_REQUIRED')
   const [saving, setSaving] = useState(false)
@@ -154,15 +154,15 @@ function CreateProspectDialog({ open, onOpenChange, onSaved }: CreateProspectDia
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
             <Label>리스트 *</Label>
-            <Select value={listStatus} onValueChange={(v) => setListStatus(v as 'LONGLIST' | 'SHORTLIST')}>
+            <Select value={listStatus} onValueChange={(v) => setListStatus(v as 'LONGLIST' | 'PRE_SHORTLIST')}>
               <SelectTrigger>
                 <SelectValue>
-                  {listStatus === 'LONGLIST' ? '롱리스트' : '쇼트리스트'}
+                  {listStatus === 'LONGLIST' ? '롱리스트' : '적극 검토 중'}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="LONGLIST">롱리스트</SelectItem>
-                <SelectItem value="SHORTLIST">쇼트리스트</SelectItem>
+                <SelectItem value="PRE_SHORTLIST">적극 검토 중</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -435,6 +435,13 @@ export function ProspectsPage() {
   const [signTarget, setSignTarget] = useState<Prospect | null>(null)
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [shortlistCapacity, setShortlistCapacity] = useState<{ capacity: number; current: number } | null>(null)
+
+  const fetchShortlistCapacity = () => {
+    prospectApi.shortlistCapacity()
+      .then(setShortlistCapacity)
+      .catch(() => null)
+  }
 
   const canWrite =
     user?.role === 'ADMIN' ||
@@ -464,6 +471,7 @@ export function ProspectsPage() {
   useEffect(() => {
     const status = statusFilter === 'ALL' ? undefined : statusFilter
     void fetchProspects(status)
+    fetchShortlistCapacity()
   }, [statusFilter])
 
   const handleTransition = async (id: number, status: ProspectStatus) => {
@@ -487,9 +495,12 @@ export function ProspectsPage() {
       toast.success('상태가 변경되었습니다')
       const s = statusFilter === 'ALL' ? undefined : statusFilter
       void fetchProspects(s)
+      fetchShortlistCapacity()
     } catch (err: unknown) {
       if (err instanceof Error && err.message.includes('VIDEO_EVAL_REQUIRED')) {
         toast.error('비디오 평가 PASS 필요 — 평가 탭에서 먼저 평가를 완료해주세요')
+      } else if (err instanceof Error && err.message.includes('SHORTLIST_FULL')) {
+        toast.error('쇼트리스트 정원(5명)이 꽉 찼습니다')
       } else {
         toast.error(err instanceof Error ? err.message : t('prospects.deleteFailed'))
       }
@@ -508,6 +519,15 @@ export function ProspectsPage() {
     if (!canWrite && !canSign) return null
     switch (p.status) {
       case 'LONGLIST':
+        return canWrite ? (
+          <div className="flex gap-1">
+            <Button size="sm" variant="outline" className="h-7 text-xs"
+              onClick={() => handleTransition(p.id, 'PRE_SHORTLIST')}>평가 시작</Button>
+            <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground"
+              onClick={() => handleTransition(p.id, 'ARCHIVED')}>{t('prospects.deleteButton')}</Button>
+          </div>
+        ) : null
+      case 'PRE_SHORTLIST':
         return canWrite ? (
           <div className="flex gap-1">
             <Button size="sm" variant="outline" className="h-7 text-xs"
@@ -567,6 +587,11 @@ export function ProspectsPage() {
         <div>
           <h1 className="text-lg font-semibold tracking-tight">{t('prospects.title')}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{t('prospects.description')}</p>
+          {shortlistCapacity && (
+            <span className={`text-xs font-medium ${shortlistCapacity.current >= shortlistCapacity.capacity ? 'text-red-600' : 'text-muted-foreground'}`}>
+              쇼트리스트 {shortlistCapacity.current}/{shortlistCapacity.capacity}
+            </span>
+          )}
         </div>
         {canWrite && (
           <Button size="sm" onClick={() => setCreateOpen(true)}>
