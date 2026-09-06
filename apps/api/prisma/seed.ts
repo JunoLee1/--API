@@ -21,18 +21,30 @@ function encryptPhone(text: string) {
 async function seedDepartments() {
   const findOrCreate = async (name: string, extra: Record<string, unknown> = {}) => {
     const existing = await prisma.department.findFirst({ where: { name, clubId: null } });
-    if (existing) return existing;
+    if (existing) {
+      if (Object.keys(extra).some(k => k !== 'parentId')) {
+        return prisma.department.update({ where: { id: existing.id }, data: extra });
+      }
+      return existing;
+    }
     return prisma.department.create({ data: { name, ...extra } });
   };
 
-  const finance = await findOrCreate('재무관리');
+  const finance = await findOrCreate('재무관리', { category: 'FINANCE' });
   const asset   = await findOrCreate('자산관리');
 
-  for (const name of ['HR', '시설관리', '선수 장비관리', '의료기기 관리', 'IT 자산관리']) {
-    await findOrCreate(name, { parentId: asset.id });
+  const subDepts: Array<[string, Record<string, unknown>]> = [
+    ['HR',        { category: 'HR' }],
+    ['시설관리',   { category: 'OPERATIONS' }],
+    ['선수 장비관리', {}],
+    ['의료기기 관리', {}],
+    ['IT 자산관리',  {}],
+  ];
+  for (const [name, extra] of subDepts) {
+    await findOrCreate(name, { parentId: asset.id, ...extra });
   }
 
-  console.log(`Departments seeded: 재무관리, 자산관리 + 5 sub-departments`);
+  console.log(`Departments seeded: 재무관리(FINANCE), 자산관리 + sub-departments(HR, 시설관리:OPERATIONS, ...)`);
 }
 
 async function seedLeagues() {
