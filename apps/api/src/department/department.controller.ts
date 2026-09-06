@@ -18,7 +18,7 @@ export class DepartmentController {
     try {
       const user = requireUser(req);
       if (!canRead(user.role)) throw new AppError(403, "FORBIDDEN");
-      const scopedClubId = user.role === "ADMIN" ? user.clubId : null;
+      const scopedClubId = user.role === "SUPER_ADMIN" ? null : (user.clubId ?? null);
       res.json(await this.service.list(scopedClubId));
     } catch (err) {
       next(err);
