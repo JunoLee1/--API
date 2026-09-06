@@ -4,8 +4,8 @@ import { requireUser } from "../lib/authMiddleware";
 import { canReadFinance } from "../lib/permissions";
 import { OpsReportService } from "./ops-report.service";
 
-const canRead = (role: string, foRole: string | null | undefined) =>
-  canReadFinance(role, foRole) ||
+const canRead = (role: string, foRole: string | null | undefined, deptCategories?: string[]) =>
+  canReadFinance(role, foRole, deptCategories) ||
   (role === "FRONT_OFFICE" && foRole === "HR_MANAGER");
 
 export class OpsReportController {
@@ -13,8 +13,8 @@ export class OpsReportController {
 
   getOpsKpi = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole, departmentCategories } = requireUser(req);
+      if (!canRead(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.query["seasonId"]);
       const year = Number(req.query["year"]) || new Date().getFullYear();
       const month = Number(req.query["month"]) || new Date().getMonth();
@@ -26,8 +26,8 @@ export class OpsReportController {
 
   getAnnualOps = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole, departmentCategories } = requireUser(req);
+      if (!canRead(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.query["seasonId"]);
       if (!seasonId) throw new AppError(400, "SEASON_ID_REQUIRED");
       const data = await this.service.getAnnualOpsReport(seasonId);
@@ -37,8 +37,8 @@ export class OpsReportController {
 
   getBudgetKpi = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canReadFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole, departmentCategories } = requireUser(req);
+      if (!canReadFinance(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.query["seasonId"]);
       const year = Number(req.query["year"]) || new Date().getFullYear();
       const month = Number(req.query["month"]) || new Date().getMonth();
@@ -50,8 +50,8 @@ export class OpsReportController {
 
   getAnnualBudget = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canReadFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole, departmentCategories } = requireUser(req);
+      if (!canReadFinance(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.query["seasonId"]);
       if (!seasonId) throw new AppError(400, "SEASON_ID_REQUIRED");
       const data = await this.service.getAnnualBudgetReport(seasonId);
@@ -83,8 +83,8 @@ export class OpsReportController {
 
   drillAttendanceCorrections = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole, departmentCategories } = requireUser(req);
+      if (!canRead(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const year = Number(req.query["year"]) || new Date().getFullYear();
       const month = Number(req.query["month"]) || new Date().getMonth() + 1;
       const data = await this.service.getAttendanceCorrectionLog(year, month);
@@ -94,8 +94,8 @@ export class OpsReportController {
 
   getDrillSalaryDistribution = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canReadFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole, departmentCategories } = requireUser(req);
+      if (!canReadFinance(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.query["seasonId"]);
       if (!seasonId) throw new AppError(400, "SEASON_ID_REQUIRED");
       const data = await this.service.getSalaryDistributionDrilldown(seasonId);
@@ -105,8 +105,8 @@ export class OpsReportController {
 
   getDrillUnregisteredAttendance = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole, departmentCategories } = requireUser(req);
+      if (!canRead(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.query["seasonId"]);
       const year = Number(req.query["year"]) || new Date().getFullYear();
       const month = Number(req.query["month"]) || new Date().getMonth() + 1;
@@ -118,8 +118,8 @@ export class OpsReportController {
 
   getBudgetExecutionByCategory = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canReadFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole, departmentCategories } = requireUser(req);
+      if (!canReadFinance(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.query["seasonId"]);
       const year = Number(req.query["year"]) || new Date().getFullYear();
       const month = Number(req.query["month"]) || new Date().getMonth() + 1;
@@ -131,8 +131,8 @@ export class OpsReportController {
 
   getPartnerKpi = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canRead(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole, departmentCategories } = requireUser(req);
+      if (!canRead(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.query["seasonId"]);
       if (!seasonId) throw new AppError(400, "SEASON_ID_REQUIRED");
       const data = await this.service.getPartnerKpi(seasonId);
@@ -154,8 +154,8 @@ export class OpsReportController {
 
   getSponsorshipVsBudget = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canReadFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole, departmentCategories } = requireUser(req);
+      if (!canReadFinance(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const seasonId = Number(req.query["seasonId"]);
       if (!seasonId) throw new AppError(400, "SEASON_ID_REQUIRED");
       const data = await this.service.getSponsorshipVsBudget(seasonId);

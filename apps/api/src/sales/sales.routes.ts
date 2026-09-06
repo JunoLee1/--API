@@ -15,14 +15,14 @@ const ctrl = new SalesController(service);
 const fanCtrl = new FanController();
 
 const checkReadFinance = (req: Request, res: Response, next: NextFunction) => {
-  const { role, frontOfficeRole } = req.user!;
-  if (!canReadFinance(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
+  const { role, frontOfficeRole, departmentCategories } = req.user!;
+  if (!canReadFinance(role, frontOfficeRole, departmentCategories)) return next(new AppError(403, "FORBIDDEN"));
   next();
 };
 
 const checkWriteFinance = (req: Request, res: Response, next: NextFunction) => {
-  const { role, frontOfficeRole } = req.user!;
-  if (!canWriteFinance(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
+  const { role, frontOfficeRole, departmentCategories } = req.user!;
+  if (!canWriteFinance(role, frontOfficeRole, departmentCategories)) return next(new AppError(403, "FORBIDDEN"));
   next();
 };
 

@@ -69,7 +69,7 @@ export class OnboardingTaskController {
       const user = requireUser(req);
       const id = this.parseTaskId(req);
       const dto = (req.body ?? {}) as VerifyOnboardingTaskDto;
-      const row = await this.service.verify(id, dto, user.id, user.role, user.frontOfficeRole);
+      const row = await this.service.verify(id, dto, user.id, user.role, user.frontOfficeRole, user.departmentCategories);
       res.json(row);
     } catch (err) {
       next(err);
@@ -81,7 +81,7 @@ export class OnboardingTaskController {
       const user = requireUser(req);
       const id = this.parseTaskId(req);
       const dto = (req.body ?? {}) as SkipOnboardingTaskDto;
-      const row = await this.service.skip(id, dto, user.id, user.role, user.frontOfficeRole);
+      const row = await this.service.skip(id, dto, user.id, user.role, user.frontOfficeRole, user.departmentCategories);
       res.json(row);
     } catch (err) {
       next(err);

@@ -96,6 +96,7 @@ export class OnboardingTaskService {
     actorId: number,
     actorRole: string,
     actorFoRole: string | null | undefined,
+    actorDeptCategories?: string[],
   ) {
     if (dto.action !== "APPROVE" && dto.action !== "REJECT") {
       throw new AppError(400, "INVALID_VERIFY_ACTION");
@@ -124,7 +125,7 @@ export class OnboardingTaskService {
     // department, and duplicating that lookup would race under load.
     const deptHeadId = task.onboarding.hiringDispatch?.department?.headId ?? null;
     const isDeptHead = deptHeadId != null && deptHeadId === actorId;
-    if (!isDeptHead && !canWriteHR(actorRole, actorFoRole)) {
+    if (!isDeptHead && !canWriteHR(actorRole, actorFoRole, actorDeptCategories)) {
       throw new AppError(403, "NOT_VERIFIER");
     }
 
@@ -163,6 +164,7 @@ export class OnboardingTaskService {
     actorId: number,
     actorRole: string,
     actorFoRole: string | null | undefined,
+    actorDeptCategories?: string[],
   ) {
     const reason = dto.skipReason?.trim() ?? "";
     if (!reason) throw new AppError(400, "SKIP_REASON_REQUIRED");
@@ -175,7 +177,7 @@ export class OnboardingTaskService {
     const isOwner = task.onboarding.userId === actorId;
     const deptHeadId = task.onboarding.hiringDispatch?.department?.headId ?? null;
     const isDeptHead = deptHeadId != null && deptHeadId === actorId;
-    const isHR = canWriteHR(actorRole, actorFoRole);
+    const isHR = canWriteHR(actorRole, actorFoRole, actorDeptCategories);
     if (!isOwner && !isHR && !isDeptHead) {
       throw new AppError(403, "NOT_AUTHORIZED");
     }

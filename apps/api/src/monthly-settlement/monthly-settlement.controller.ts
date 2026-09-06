@@ -11,8 +11,8 @@ export class MonthlySettlementController {
 
   getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canReadFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole, departmentCategories } = requireUser(req);
+      if (!canReadFinance(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const seasonId = req.query["seasonId"] ? Number(req.query["seasonId"]) : undefined;
       const list = await this.service.getAll(seasonId);
       res.status(200).json(list);
@@ -21,8 +21,8 @@ export class MonthlySettlementController {
 
   generate = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole, id: userId } = requireUser(req);
-      if (!canReadFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole, departmentCategories, id: userId } = requireUser(req);
+      if (!canReadFinance(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const { seasonId, year, month } = req.body as GenerateSettlementDto;
       if (!seasonId || !year || !month) throw new AppError(400, "INVALID_BODY");
       const report = await this.service.generate(seasonId, year, month, userId);
@@ -32,8 +32,8 @@ export class MonthlySettlementController {
 
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canReadFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole, departmentCategories } = requireUser(req);
+      if (!canReadFinance(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const id = Number(req.params["id"]);
       const report = await this.service.getById(id);
       if (!report) throw new AppError(404, "SETTLEMENT_NOT_FOUND");
@@ -43,8 +43,8 @@ export class MonthlySettlementController {
 
   updateNote = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canReadFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole, departmentCategories } = requireUser(req);
+      if (!canReadFinance(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const id = Number(req.params["id"]);
       const { note } = req.body as { note: string };
       if (!note) throw new AppError(400, "NOTE_REQUIRED");
@@ -55,8 +55,8 @@ export class MonthlySettlementController {
 
   submitFirst = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole, id: userId } = requireUser(req);
-      if (!canReadFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole, departmentCategories, id: userId } = requireUser(req);
+      if (!canReadFinance(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const id = Number(req.params["id"]);
       const report = await this.service.submitFirst(id, userId);
       res.status(200).json(report);
@@ -65,8 +65,8 @@ export class MonthlySettlementController {
 
   approveFirst = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole, id: userId } = requireUser(req);
-      if (!canWriteFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole, departmentCategories, id: userId } = requireUser(req);
+      if (!canWriteFinance(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const id = Number(req.params["id"]);
       const report = await this.service.approveFirst(id, userId);
       res.status(200).json(report);
@@ -85,8 +85,8 @@ export class MonthlySettlementController {
 
   reject = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canWriteFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole, departmentCategories } = requireUser(req);
+      if (!canWriteFinance(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const id = Number(req.params["id"]);
       const { reason } = req.body as { reason: string };
       if (!reason) throw new AppError(400, "REASON_REQUIRED");
@@ -97,8 +97,8 @@ export class MonthlySettlementController {
 
   export = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canReadFinance(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole, departmentCategories } = requireUser(req);
+      if (!canReadFinance(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const report = await this.service.getForExport(Number(req.params["id"]));
       if (!report) throw new AppError(404, "SETTLEMENT_NOT_FOUND");
       const buf = await generateSettlementExcel(report);
