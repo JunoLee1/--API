@@ -1,5 +1,6 @@
 import { ProspectRepository } from "./prospect.repo";
 import { AppError } from "../lib/appError";
+import { getForeignQuota } from "../lib/foreign-quota";
 import { CreateProspectDto, UpdateProspectDto, TransitionProspectStatusDto, SignProspectDto, ProspectMedicalResultDto, CreateProspectNegotiationLogDto } from "./dto/prospect.dto";
 import { ProspectStatus, VideoEvalResult } from "../generated/enums";
 import { CreateProspectVideoEvaluationDto, CreateProspectEvaluationLogDto } from "./dto/video-evaluation.dto";
@@ -73,6 +74,11 @@ export class ProspectService {
   }
 
   async sign(id: number, dto: SignProspectDto) {
+    if (dto.workPermitStatus && dto.workPermitStatus !== 'NOT_REQUIRED') {
+      const { leagueLevel, count } = await this.repo.getForeignPlayerCount();
+      const limit = getForeignQuota(leagueLevel);
+      if (count >= limit) throw new AppError(409, 'FOREIGN_QUOTA_EXCEEDED');
+    }
     const result = await this.repo.sign(id, dto);
     void notificationService.notifyProspectSigned(result.name).catch(console.error);
     return result;

@@ -21,6 +21,7 @@ const makeRepo = (overrides: Partial<ProspectRepository> = {}): ProspectReposito
   getEvaluationLogs: jest.fn(),
   checkAcquisitionGate: jest.fn(),
   countByStatus: jest.fn().mockResolvedValue(0),  // 추가: 기본값 0 (정원 미초과)
+  getForeignPlayerCount: jest.fn().mockResolvedValue({ leagueLevel: 'K_LEAGUE_1', count: 0 }),
   ...overrides,
 } as unknown as ProspectRepository);
 
@@ -124,5 +125,35 @@ describe('ProspectService.updateStatus — SHORTLIST gate', () => {
     }));
     await service.updateStatus(1, { status: 'SHORTLIST' });
     expect(updateStatus).toHaveBeenCalledWith(1, 'SHORTLIST');
+  });
+});
+
+// ─── ProspectService.sign — 외국인 쿼터 ─────────────────────────────────────
+
+describe('ProspectService.sign — 외국인 쿼터', () => {
+  it('workPermitStatus가 NOT_REQUIRED이면 쿼터 체크 없이 통과', async () => {
+    const repo = makeRepo({ sign: jest.fn().mockResolvedValue({ name: '홍길동' }) });
+    const service = new ProspectService(repo);
+    await service.sign(1, { workPermitStatus: 'NOT_REQUIRED' } as any);
+    expect(repo.getForeignPlayerCount).not.toHaveBeenCalled();
+  });
+
+  it('K리그1 쿼터 5명 초과 시 FOREIGN_QUOTA_EXCEEDED 409', async () => {
+    const repo = makeRepo({
+      getForeignPlayerCount: jest.fn().mockResolvedValue({ leagueLevel: 'K_LEAGUE_1', count: 5 }),
+    });
+    const service = new ProspectService(repo);
+    await expect(
+      service.sign(1, { workPermitStatus: 'PENDING' } as any)
+    ).rejects.toMatchObject({ statusCode: 409, message: 'FOREIGN_QUOTA_EXCEEDED' });
+  });
+
+  it('K리그1 쿼터 4명이면 통과', async () => {
+    const repo = makeRepo({
+      getForeignPlayerCount: jest.fn().mockResolvedValue({ leagueLevel: 'K_LEAGUE_1', count: 4 }),
+      sign: jest.fn().mockResolvedValue({ name: '외국인' }),
+    });
+    const service = new ProspectService(repo);
+    await expect(service.sign(1, { workPermitStatus: 'PENDING' } as any)).resolves.toBeDefined();
   });
 });
