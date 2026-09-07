@@ -157,3 +157,37 @@ describe('ProspectService.sign — 외국인 쿼터', () => {
     await expect(service.sign(1, { workPermitStatus: 'PENDING' } as any)).resolves.toBeDefined();
   });
 });
+
+// ─── ProspectService — 비자 게이트 ──────────────────────────────────────────
+
+describe('ProspectService — 비자 게이트', () => {
+  it('visaRequired=true + UNCERTAIN이면 recordMedicalResult(pass) 시 400', async () => {
+    const service = new ProspectService(makeRepo({
+      findById: jest.fn().mockResolvedValue({
+        id: 1, status: 'MEDICAL_TEST', visaRequired: true, visaEligibility: 'UNCERTAIN',
+      }),
+    }));
+    await expect(service.recordMedicalResult(1, { result: 'pass' }))
+      .rejects.toMatchObject({ statusCode: 400, message: 'VISA_ELIGIBILITY_UNCERTAIN' });
+  });
+
+  it('visaRequired=false이면 UNCERTAIN이어도 통과', async () => {
+    const service = new ProspectService(makeRepo({
+      findById: jest.fn().mockResolvedValue({
+        id: 1, status: 'MEDICAL_TEST', visaRequired: false, visaEligibility: 'UNCERTAIN',
+      }),
+      recordMedicalResult: jest.fn().mockResolvedValue({ id: 1, status: 'CONTRACT_PENDING' }),
+    }));
+    await expect(service.recordMedicalResult(1, { result: 'pass' })).resolves.toBeDefined();
+  });
+
+  it('updateStatus → CONTRACT_PENDING, UNCERTAIN이면 400', async () => {
+    const service = new ProspectService(makeRepo({
+      findById: jest.fn().mockResolvedValue({
+        id: 1, status: 'MEDICAL_TEST', visaRequired: true, visaEligibility: 'UNCERTAIN',
+      }),
+    }));
+    await expect(service.updateStatus(1, { status: 'CONTRACT_PENDING' }))
+      .rejects.toMatchObject({ statusCode: 400, message: 'VISA_ELIGIBILITY_UNCERTAIN' });
+  });
+});

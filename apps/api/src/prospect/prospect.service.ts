@@ -65,6 +65,13 @@ export class ProspectService {
       const latest = await this.repo.getLatestVideoEvaluation(id);
       if (!latest || latest.result !== "PASS") throw new AppError(400, "VIDEO_EVAL_REQUIRED");
     }
+    if (dto.status === "CONTRACT_PENDING") {
+      const prospect = await this.repo.findById(id);
+      if (!prospect) throw new AppError(404, "PROSPECT_NOT_FOUND");
+      if (prospect.visaRequired && prospect.visaEligibility === 'UNCERTAIN') {
+        throw new AppError(400, 'VISA_ELIGIBILITY_UNCERTAIN');
+      }
+    }
     return this.repo.updateStatus(id, dto.status);
   }
 
@@ -87,6 +94,9 @@ export class ProspectService {
   async recordMedicalResult(id: number, dto: ProspectMedicalResultDto) {
     const prospect = await this.getById(id);
     if (prospect.status !== "MEDICAL_TEST") throw new AppError(409, "CANNOT_RECORD_MEDICAL_NON_PENDING");
+    if (dto.result === 'pass' && prospect.visaRequired && prospect.visaEligibility === 'UNCERTAIN') {
+      throw new AppError(400, 'VISA_ELIGIBILITY_UNCERTAIN');
+    }
     return this.repo.recordMedicalResult(id, dto);
   }
 
