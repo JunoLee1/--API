@@ -20,28 +20,28 @@ const controller = new InjuryController(service);
 
 router.get("/stats", auth, (req, res, next) => {
   const user = req.user!;
-  if (!canReadInjuryReport(user.role, user.coachingRole)) {
+  if (!canReadInjuryReport(user.role, user.coachingRole, user.departmentCategories)) {
     return next(new AppError(403, "FORBIDDEN"));
   }
   next();
 }, controller.getStats);
 router.get("/active", auth, (req, res, next) => {
   const user = req.user!;
-  if (!canReadActiveInjury(user.role, user.coachingRole)) {
+  if (!canReadActiveInjury(user.role, user.coachingRole, user.departmentCategories)) {
     return next(new AppError(403, "FORBIDDEN"));
   }
   next();
 }, controller.getActive);
 router.get("/player/:playerId", auth, (req, res, next) => {
   const user = req.user!;
-  if (!canReadActiveInjury(user.role, user.coachingRole)) {
+  if (!canReadActiveInjury(user.role, user.coachingRole, user.departmentCategories)) {
     return next(new AppError(403, "FORBIDDEN"));
   }
   next();
 }, controller.getByPlayer);
 router.get("/:id", auth, (req, res, next) => {
   const user = req.user!;
-  if (!canReadActiveInjury(user.role, user.coachingRole)) {
+  if (!canReadActiveInjury(user.role, user.coachingRole, user.departmentCategories)) {
     return next(new AppError(403, "FORBIDDEN"));
   }
   next();
@@ -50,14 +50,14 @@ router.post("/", auth, controller.create);
 router.patch("/:id/status", auth, controller.updateStatus);
 router.get("/:id/report", auth, (req, res, next) => {
   const user = req.user!;
-  if (!canReadInjuryReport(user.role, user.coachingRole)) {
+  if (!canReadInjuryReport(user.role, user.coachingRole, user.departmentCategories)) {
     return next(new AppError(403, "FORBIDDEN"));
   }
   next();
 }, controller.getReport);
 router.put("/:id/report", auth, (req, res, next) => {
   const user = req.user!;
-  if (!canReadInjuryReport(user.role, user.coachingRole)) {
+  if (!canReadInjuryReport(user.role, user.coachingRole, user.departmentCategories)) {
     return next(new AppError(403, "FORBIDDEN"));
   }
   next();

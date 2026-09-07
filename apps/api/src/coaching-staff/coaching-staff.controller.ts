@@ -22,11 +22,12 @@ export class CoachingStaffController {
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = requireUser(req);
+      const { role, coachingRole, departmentCategories } = requireUser(req);
       const canAccess =
         isAdminLike(role) ||
         role === "GM" ||
-        (role === "COACHING_STAFF" && coachingRole === "HEAD_COACH");
+        (role === "COACHING_STAFF" && coachingRole === "HEAD_COACH") ||
+        (departmentCategories?.includes('PERFORMANCE') ?? false);
       if (!canAccess) throw new AppError(403, "FORBIDDEN");
 
       const refDate = req.query["week"]
@@ -42,8 +43,9 @@ export class CoachingStaffController {
 
   listEvaluations = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = requireUser(req);
-      if (!isAdminLike(role) && role !== "COACHING_STAFF") throw new AppError(403, "FORBIDDEN");
+      const { role, departmentCategories } = requireUser(req);
+      if (!isAdminLike(role) && role !== "COACHING_STAFF" && !(departmentCategories?.includes('PERFORMANCE') ?? false))
+        throw new AppError(403, "FORBIDDEN");
       const staffUserId = parseInt(String(req.params["staffUserId"]));
       res.json(await this.evalRepo!.listForStaff(staffUserId));
     } catch (err) { next(err); }
@@ -51,7 +53,7 @@ export class CoachingStaffController {
 
   createEvaluation = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = requireUser(req);
+      const { role, coachingRole } = requireUser(req);  // HEAD_COACH 전용, deptCategories 불필요
       if (!isAdminLike(role) && !(role === "COACHING_STAFF" && coachingRole === "HEAD_COACH"))
         throw new AppError(403, "FORBIDDEN");
       const staffUserId = parseInt(String(req.params["staffUserId"]));

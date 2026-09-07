@@ -27,8 +27,8 @@ const checkTrainingWrite = (req: Request, _res: Response, next: NextFunction) =>
 };
 
 const checkMedicalRead = (req: Request, _res: Response, next: NextFunction) => {
-  const { role, coachingRole } = req.user!;
-  if (canReadInjuryReport(role, coachingRole)) return next();
+  const { role, coachingRole, departmentCategories } = req.user!;
+  if (canReadInjuryReport(role, coachingRole, departmentCategories)) return next();
   next(new AppError(403, "FORBIDDEN"));
 };
 

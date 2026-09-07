@@ -9,8 +9,8 @@ export class SquadPlanController {
 
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role } = requireUser(req);
-      const canRead = isAdminLike(role) || role === "COACHING_STAFF";
+      const { role, departmentCategories } = requireUser(req);
+      const canRead = isAdminLike(role) || role === "COACHING_STAFF" || (departmentCategories?.includes('PERFORMANCE') ?? false);
       if (!canRead) throw new AppError(403, "FORBIDDEN");
 
       const seasonId = Number(req.query["seasonId"]);
