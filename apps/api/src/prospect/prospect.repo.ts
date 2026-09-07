@@ -303,4 +303,17 @@ export class ProspectRepository {
       })),
     };
   }
+
+  async getForeignPlayerCount(): Promise<{ leagueLevel: import('../generated/enums').LeagueLevel | null; count: number }> {
+    const [season, count] = await Promise.all([
+      this.prisma.season.findFirst({ where: { status: 'ACTIVE' }, select: { leagueLevel: true } }),
+      this.prisma.player.count({
+        where: {
+          status: 'ACTIVE',
+          workPermitStatus: { not: 'NOT_REQUIRED' },
+        },
+      }),
+    ]);
+    return { leagueLevel: season?.leagueLevel ?? null, count };
+  }
 }
