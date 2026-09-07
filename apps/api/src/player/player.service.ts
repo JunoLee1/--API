@@ -122,6 +122,19 @@ export class PlayerService {
     return result;
   }
 
+  async updateWorkPermit(id: string, dto: { workPermitStatus: string; workPermitExpiry?: string }) {
+    const player = await this.repo.findById(id);
+    if (!player) throw new AppError(404, 'PLAYER_NOT_FOUND');
+    if (dto.workPermitStatus === 'NOT_REQUIRED') throw new AppError(400, 'CANNOT_SET_NOT_REQUIRED');
+    if (dto.workPermitStatus === 'APPROVED' && !dto.workPermitExpiry) {
+      throw new AppError(400, 'EXPIRY_DATE_REQUIRED');
+    }
+    return this.repo.updateWorkPermit(id, {
+      workPermitStatus: dto.workPermitStatus,
+      workPermitExpiry: dto.workPermitExpiry ? new Date(dto.workPermitExpiry) : undefined,
+    });
+  }
+
   async deletePlayer(id: string, actorId: number) {
     const player = await this.repo.findById(id);
     if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");

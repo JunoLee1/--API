@@ -1,3 +1,5 @@
+import type { WorkPermitStatus } from './prospect'
+
 export type PlayerStatus = 'ACTIVE' | 'ON_LOAN' | 'RELEASED' | 'RETIRED'
 
 export type PlayStyle =
@@ -128,6 +130,8 @@ export interface PlayerDetail extends Player {
   transfers: PlayerTransfer[]
   promotedFromYouthAt?: string | null
   youthOriginTeamId?: number | null
+  workPermitStatus: WorkPermitStatus
+  workPermitExpiry: string | null
 }
 
 export interface PlayerListQuery {
@@ -230,6 +234,20 @@ export const STATUS_LABEL: Record<PlayerStatus, string> = {
   ON_LOAN: 'On Loan',
   RELEASED: 'Released',
   RETIRED: 'Retired',
+}
+
+export const WORK_PERMIT_LABEL: Record<WorkPermitStatus, string> = {
+  NOT_REQUIRED: '해당없음',
+  PENDING: '진행중',
+  APPROVED: '취득완료',
+  REJECTED: '거절',
+}
+
+export const WORK_PERMIT_STYLE: Record<WorkPermitStatus, string> = {
+  NOT_REQUIRED: 'text-muted-foreground',
+  PENDING: 'text-yellow-600',
+  APPROVED: 'text-green-600',
+  REJECTED: 'text-red-600',
 }
 
 export interface JerseyNumber {

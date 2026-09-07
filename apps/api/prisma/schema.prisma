@@ -1935,6 +1935,7 @@ model ProspectVideoEvaluation {
   qualityPassed Boolean
   identifiable  Boolean
   continuity    Boolean
+  jerseyNumber  Int?
   totalScore    Int?
   scoreData     Json?
   result        VideoEvalResult

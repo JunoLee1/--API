@@ -96,6 +96,7 @@ export interface ProspectVideoEvaluation {
   qualityPassed: boolean
   identifiable: boolean
   continuity: boolean
+  jerseyNumber: number | null
   totalScore: number | null
   scoreData: Record<string, number> | null
   result: VideoEvalResult
@@ -117,6 +118,7 @@ export interface CreateVideoEvaluationDto {
   qualityPassed: boolean
   identifiable: boolean
   continuity: boolean
+  jerseyNumber?: number | null
   totalScore?: number | null
   scoreData?: Record<string, number> | null
   notes?: string | null

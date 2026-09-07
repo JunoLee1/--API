@@ -10,9 +10,18 @@ import type { PlayerDetail, PlayerStatus, PositionZone, MarketValueEntry } from 
 import {
   POSITION_ABBR,
   POSITION_ZONE,
+  WORK_PERMIT_LABEL,
+  WORK_PERMIT_STYLE,
 } from '@/types/player'
+import type { WorkPermitStatus } from '@/types/prospect'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -135,6 +144,9 @@ export function PlayerDetailPage() {
   const [allergyEditMode, setAllergyEditMode] = useState(false)
   const [allergyInput, setAllergyInput] = useState('')
   const [allergySaving, setAllergySaving] = useState(false)
+  const [wpStatus, setWpStatus] = useState<WorkPermitStatus>('NOT_REQUIRED')
+  const [wpExpiry, setWpExpiry] = useState('')
+  const [wpSaving, setWpSaving] = useState(false)
 
   const confirm = useConfirm()
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
@@ -165,6 +177,10 @@ export function PlayerDetailPage() {
     user?.role === 'ADMIN' ||
     (user?.role === 'COACHING_STAFF' &&
       (user?.coachingRole === 'MEDICAL' || user?.coachingRole === 'MEDICAL_DIRECTOR'))
+  const canUpdateWorkPermit =
+    user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'GM' ||
+    (user?.role === 'FRONT_OFFICE' &&
+      (user?.frontOfficeRole === 'TD' || user?.frontOfficeRole === 'CONTRACT_MANAGER'))
 
   const handleDelete = async () => {
     if (!player) return
@@ -210,6 +226,12 @@ export function PlayerDetailPage() {
   }, [player])
 
   useEffect(() => {
+    if (!player) return
+    setWpStatus(player.workPermitStatus)
+    setWpExpiry(player.workPermitExpiry ?? '')
+  }, [player])
+
+  useEffect(() => {
     if (!promoteOpen) return
     teamApi.list().then((teams) => {
       setAvailableTeams(teams.filter((t: any) => t.type !== 'YOUTH'))
@@ -231,6 +253,23 @@ export function PlayerDetailPage() {
       toast.error(err instanceof Error ? err.message : t('detailPage.mvUpdateFailed'))
     } finally {
       setMvSaving(false)
+    }
+  }
+
+  const handleWorkPermitSave = async () => {
+    setWpSaving(true)
+    try {
+      await playerApi.updateWorkPermit(player!.id, {
+        workPermitStatus: wpStatus,
+        ...(wpExpiry && { workPermitExpiry: wpExpiry }),
+      })
+      toast.success('노동허가 상태가 업데이트되었습니다')
+    } catch (e: any) {
+      const code = e?.response?.data?.error
+      if (code === 'EXPIRY_DATE_REQUIRED') toast.error('APPROVED 시 만료일이 필요합니다')
+      else toast.error('저장에 실패했습니다')
+    } finally {
+      setWpSaving(false)
     }
   }
 
@@ -629,6 +668,55 @@ export function PlayerDetailPage() {
                     </>
                   )}
                 </div>
+              )}
+
+              {/* 노동허가 */}
+              {player.workPermitStatus !== 'NOT_REQUIRED' && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">노동허가</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">현재 상태:</span>
+                      <span className={`text-sm font-medium ${WORK_PERMIT_STYLE[player.workPermitStatus]}`}>
+                        {WORK_PERMIT_LABEL[player.workPermitStatus]}
+                      </span>
+                      {player.workPermitExpiry && (
+                        <span className="text-xs text-muted-foreground ml-2">
+                          만료: {new Date(player.workPermitExpiry).toLocaleDateString('ko-KR')}
+                        </span>
+                      )}
+                    </div>
+                    {canUpdateWorkPermit && (
+                      <div className="space-y-2 pt-2 border-t">
+                        <div className="flex gap-2 items-center">
+                          <Select value={wpStatus} onValueChange={(v) => setWpStatus(v as WorkPermitStatus)}>
+                            <SelectTrigger className="w-36 h-8 text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {(['PENDING', 'APPROVED', 'REJECTED'] as WorkPermitStatus[]).map(s => (
+                                <SelectItem key={s} value={s}>{WORK_PERMIT_LABEL[s]}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {wpStatus === 'APPROVED' && (
+                            <Input
+                              type="date"
+                              value={wpExpiry}
+                              onChange={(e) => setWpExpiry(e.target.value)}
+                              className="w-36 h-8 text-sm"
+                            />
+                          )}
+                          <Button size="sm" className="h-8" onClick={handleWorkPermitSave} disabled={wpSaving}>
+                            {wpSaving ? '저장중...' : '저장'}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               )}
 
               {/* 부 포지션 */}

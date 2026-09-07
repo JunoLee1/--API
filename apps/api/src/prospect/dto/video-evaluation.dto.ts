@@ -2,6 +2,7 @@ export interface CreateProspectVideoEvaluationDto {
   qualityPassed: boolean;
   identifiable: boolean;
   continuity: boolean;
+  jerseyNumber?: number | null;
   totalScore?: number | null;
   scoreData?: Record<string, number> | null;
   notes?: string | null;
