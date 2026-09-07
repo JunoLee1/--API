@@ -156,8 +156,14 @@ export class TrainingRepository {
   }) {
     const where: Record<string, unknown> = {}
 
+    // 유소년팀 세션 제외 — teamId가 없거나 FIRST_TEAM 세션만 포함
+    where.session = {
+      OR: [{ teamId: null }, { team: { type: 'FIRST_TEAM' } }],
+    }
+
     if (filters.from || filters.to) {
       where.session = {
+        ...(where.session as object),
         date: {
           ...(filters.from ? { gte: new Date(filters.from) } : {}),
           ...(filters.to ? { lte: new Date(filters.to + 'T23:59:59Z') } : {}),
@@ -167,7 +173,7 @@ export class TrainingRepository {
 
     if (filters.sessionType) {
       where.session = {
-        ...(where.session as object ?? {}),
+        ...(where.session as object),
         sessionType: filters.sessionType,
       }
     }
