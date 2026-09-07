@@ -43,11 +43,12 @@ export class TacticalController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole, coachingRole } = requireUser(req);
+      const { role, frontOfficeRole, coachingRole, departmentCategories } = requireUser(req);
       const canCreate =
         isAdminLike(role) ||
         (role === "COACHING_STAFF" && coachingRole !== "HEAD_COACH") ||
-        (role === "FRONT_OFFICE" && frontOfficeRole === "TACTICAL_ANALYST");
+        (role === "FRONT_OFFICE" && frontOfficeRole === "TACTICAL_ANALYST") ||
+        (departmentCategories?.includes('PERFORMANCE') ?? false);
       if (!canCreate) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.createAnalysis(req.body, requireUser(req).id));
     } catch (err) { next(err); }
@@ -56,7 +57,8 @@ export class TacticalController {
   addLineup = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);
-      if (!STAFF_ROLES.includes(user.role as StaffRole)) throw new AppError(403, "FORBIDDEN");
+      if (!STAFF_ROLES.includes(user.role as StaffRole) && !(user.departmentCategories?.includes('PERFORMANCE') ?? false))
+        throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.addLineup(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
   };
@@ -64,7 +66,8 @@ export class TacticalController {
   addMedia = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);
-      if (!STAFF_ROLES.includes(user.role as StaffRole)) throw new AppError(403, "FORBIDDEN");
+      if (!STAFF_ROLES.includes(user.role as StaffRole) && !(user.departmentCategories?.includes('PERFORMANCE') ?? false))
+        throw new AppError(403, "FORBIDDEN");
       const analysisId = Number(req.params["id"]);
       const files = req.files as Express.Multer.File[];
       if (!files || files.length === 0) throw new AppError(400, "NO_FILES");
@@ -82,11 +85,12 @@ export class TacticalController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole, coachingRole } = requireUser(req);
+      const { role, frontOfficeRole, coachingRole, departmentCategories } = requireUser(req);
       const canUpdate =
         isAdminLike(role) ||
         (role === "COACHING_STAFF" && coachingRole !== "HEAD_COACH") ||
-        (role === "FRONT_OFFICE" && frontOfficeRole === "TACTICAL_ANALYST");
+        (role === "FRONT_OFFICE" && frontOfficeRole === "TACTICAL_ANALYST") ||
+        (departmentCategories?.includes('PERFORMANCE') ?? false);
       if (!canUpdate) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(
         await this.service.updateAnalysis(Number(req.params["id"]), req.body)

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../../lib/appError";
-import { isAdminLike } from "../../lib/permissions";
+import { isAdminLike, canWriteFacility } from "../../lib/permissions";
 import { requireUser } from "../../lib/authMiddleware";
 import type { MaintenanceService } from "./maintenance.service";
 import type { CreateMaintenanceDto, UpdateMaintenanceDto, MaintenanceListQuery } from "./dto/maintenance.dto";
@@ -11,18 +11,6 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
   PENDING_APPROVAL: ["RESOLVED", "REJECTED", "IN_PROGRESS"],
   RESOLVED: [],
   REJECTED: [],
-};
-
-const isFacilityManager = (req: Request) => {
-  const user = requireUser(req);
-  return isAdminLike(user.role) ||
-    user.role === "GM" ||
-    (user.role === "FRONT_OFFICE" && user.frontOfficeRole === "FACILITY_MANAGER");
-};
-
-const isGM = (req: Request) => {
-  const user = requireUser(req);
-  return isAdminLike(user.role) || user.role === "GM";
 };
 
 export class MaintenanceController {
@@ -42,23 +30,25 @@ export class MaintenanceController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!isFacilityManager(req)) throw new AppError(403, "FORBIDDEN");
-      const result = await this.service.create(req.body as CreateMaintenanceDto, requireUser(req).id);
+      const { role, frontOfficeRole, departmentCategories, id } = requireUser(req);
+      if (!canWriteFacility(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
+      const result = await this.service.create(req.body as CreateMaintenanceDto, id);
       res.status(201).json(result);
     } catch (err) { next(err); }
   };
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!isFacilityManager(req)) throw new AppError(403, "FORBIDDEN");
-      const { id: updatedById } = requireUser(req);
+      const { role, frontOfficeRole, departmentCategories, id: updatedById } = requireUser(req);
+      if (!canWriteFacility(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.update(Number(req.params.id), req.body as UpdateMaintenanceDto, updatedById));
     } catch (err) { next(err); }
   };
 
   updateStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!isFacilityManager(req)) throw new AppError(403, "FORBIDDEN");
+      const { role, frontOfficeRole, departmentCategories } = requireUser(req);
+      if (!canWriteFacility(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const id = Number(req.params.id);
       const { status } = req.body as { status: string };
       const existing = await this.service.get(id);
@@ -72,22 +62,24 @@ export class MaintenanceController {
 
   approve = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!isFacilityManager(req)) throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.approve(Number(req.params.id), requireUser(req).id));
+      const { role, frontOfficeRole, departmentCategories, id } = requireUser(req);
+      if (!canWriteFacility(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
+      res.json(await this.service.approve(Number(req.params.id), id));
     } catch (err) { next(err); }
   };
 
   gmApprove = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!isGM(req)) throw new AppError(403, "FORBIDDEN");
-      res.json(await this.service.gmApprove(Number(req.params.id), requireUser(req).id));
+      const { role, id } = requireUser(req);
+      if (!isAdminLike(role)) throw new AppError(403, "FORBIDDEN");
+      res.json(await this.service.gmApprove(Number(req.params.id), id));
     } catch (err) { next(err); }
   };
 
   reject = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!isFacilityManager(req) && !isGM(req)) throw new AppError(403, "FORBIDDEN");
-      const { id: actorId } = requireUser(req);
+      const { role, frontOfficeRole, departmentCategories, id: actorId } = requireUser(req);
+      if (!canWriteFacility(role, frontOfficeRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       res.json(await this.service.reject(Number(req.params.id), req.body.reason, actorId));
     } catch (err) { next(err); }
   };

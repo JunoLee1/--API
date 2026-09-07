@@ -12,10 +12,11 @@ const canWrite = (role: string, frontOfficeRole: string | null | undefined): boo
   role === "GM" ||
   (role === "FRONT_OFFICE" && frontOfficeRole === "SCOUT");
 
-const canRead = (role: string, coachingRole: string | null | undefined): boolean =>
+const canRead = (role: string, coachingRole: string | null | undefined, deptCategories?: string[]): boolean =>
   isAdminLike(role) ||
   role === "FRONT_OFFICE" ||
-  (role === "COACHING_STAFF" && coachingRole === "HEAD_COACH");
+  (role === "COACHING_STAFF" && coachingRole === "HEAD_COACH") ||
+  (deptCategories?.includes('PERFORMANCE') ?? false);
 
 const canSign = (role: string, frontOfficeRole: string | null | undefined): boolean =>
   isAdminLike(role) ||
@@ -27,8 +28,8 @@ export class ProspectController {
 
   checkDuplicate = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = requireUser(req);
-      if (!canRead(role, coachingRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, coachingRole, departmentCategories } = requireUser(req);
+      if (!canRead(role, coachingRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const name = req.query["name"] as string;
       const currentTeam = req.query["currentTeam"] as string | undefined;
       if (!name) throw new AppError(400, "NAME_REQUIRED");
@@ -39,8 +40,8 @@ export class ProspectController {
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = requireUser(req);
-      if (!canRead(role, coachingRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, coachingRole, departmentCategories } = requireUser(req);
+      if (!canRead(role, coachingRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const status = req.query["status"] as ProspectStatus | undefined;
       res.status(200).json(await this.service.getAll(status));
     } catch (err) { next(err); }
@@ -48,8 +49,8 @@ export class ProspectController {
 
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = requireUser(req);
-      if (!canRead(role, coachingRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, coachingRole, departmentCategories } = requireUser(req);
+      if (!canRead(role, coachingRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.getById(Number(req.params["id"])));
     } catch (err) { next(err); }
   };
@@ -112,8 +113,8 @@ export class ProspectController {
 
   getNegotiationLogs = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = requireUser(req);
-      if (!canRead(role, coachingRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, coachingRole, departmentCategories } = requireUser(req);
+      if (!canRead(role, coachingRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.getNegotiationLogs(Number(req.params["id"])));
     } catch (err) { next(err); }
   };
@@ -134,8 +135,8 @@ export class ProspectController {
 
   getVideoEvaluations = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = requireUser(req);
-      if (!canRead(role, coachingRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, coachingRole, departmentCategories } = requireUser(req);
+      if (!canRead(role, coachingRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.getVideoEvaluations(Number(req.params["id"])));
     } catch (err) { next(err); }
   };
@@ -156,24 +157,24 @@ export class ProspectController {
 
   getEvaluationLogs = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = requireUser(req);
-      if (!canRead(role, coachingRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, coachingRole, departmentCategories } = requireUser(req);
+      if (!canRead(role, coachingRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.getEvaluationLogs(Number(req.params["id"])));
     } catch (err) { next(err); }
   };
 
   checkAcquisitionGate = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = requireUser(req);
-      if (!canRead(role, coachingRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, coachingRole, departmentCategories } = requireUser(req);
+      if (!canRead(role, coachingRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.checkAcquisitionGate(Number(req.params["id"])));
     } catch (err) { next(err); }
   };
 
   getShortlistCapacity = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = requireUser(req);
-      if (!canRead(role, coachingRole)) throw new AppError(403, "FORBIDDEN");
+      const { role, coachingRole, departmentCategories } = requireUser(req);
+      if (!canRead(role, coachingRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.getShortlistCapacity());
     } catch (err) { next(err); }
   };

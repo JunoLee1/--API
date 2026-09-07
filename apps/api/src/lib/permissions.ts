@@ -57,18 +57,30 @@ export const canWriteHR = (role: string, foRole?: string | null, deptCategories?
   (role === 'FRONT_OFFICE' && foRole === 'HR_MANAGER') ||
   (deptCategories?.includes('HR') ?? false)
 
+export const canReadFacility = (role: string, foRole?: string | null, deptCategories?: string[]): boolean =>
+  isAdminLike(role) ||
+  (role === 'FRONT_OFFICE' && (foRole === 'FACILITY_MANAGER' || foRole === 'FACILITY_STAFF')) ||
+  (deptCategories?.includes('OPERATIONS') ?? false)
+
+export const canWriteFacility = (role: string, foRole?: string | null, deptCategories?: string[]): boolean =>
+  isAdminLike(role) ||
+  (role === 'FRONT_OFFICE' && foRole === 'FACILITY_MANAGER') ||
+  (deptCategories?.includes('OPERATIONS') ?? false)
+
 export const canManageTD = (role: string, foRole?: string | null): boolean =>
   isAdminLike(role) ||
   (role === 'FRONT_OFFICE' && foRole === 'TD')
 
-export const canReadActiveInjury = (role: string, coachingRole?: string | null): boolean =>
+export const canReadActiveInjury = (role: string, coachingRole?: string | null, deptCategories?: string[]): boolean =>
   isAdminLike(role) ||
   role === 'COACHING_STAFF' ||
-  (role === 'FRONT_OFFICE' && coachingRole === 'TD')
+  (role === 'FRONT_OFFICE' && coachingRole === 'TD') ||
+  (deptCategories?.includes('PERFORMANCE') ?? false)
 
-export const canReadInjuryReport = (role: string, coachingRole?: string | null): boolean =>
+export const canReadInjuryReport = (role: string, coachingRole?: string | null, deptCategories?: string[]): boolean =>
   isAdminLike(role) ||
-  (role === 'COACHING_STAFF' && (coachingRole === 'MEDICAL' || coachingRole === 'MEDICAL_DIRECTOR'))
+  (role === 'COACHING_STAFF' && (coachingRole === 'MEDICAL' || coachingRole === 'MEDICAL_DIRECTOR')) ||
+  (deptCategories?.includes('PERFORMANCE') ?? false)
 
 export const isHeadCoach = (role: string, coachingRole?: string | null): boolean =>
   role === 'COACHING_STAFF' && coachingRole === 'HEAD_COACH'
@@ -103,24 +115,38 @@ export function canApprovePlan(userRole: string, requiredLevel: string | null): 
 
 /**
  * 의무기기 대여 요청 가능 여부
- * CoachingRole MEDICAL / MEDICAL_DIRECTOR 또는 isAdminLike
+ * CoachingRole MEDICAL / MEDICAL_DIRECTOR, PERFORMANCE 부서 카테고리, 또는 isAdminLike
  */
 export function canRequestMedicalEquipmentLoan(user: {
   role: string;
   coachingRole?: string | null;
+  departmentCategories?: string[];
 }): boolean {
   if (isAdminLike(user.role)) return true;
-  return user.coachingRole === "MEDICAL" || user.coachingRole === "MEDICAL_DIRECTOR";
+  if (user.coachingRole === "MEDICAL" || user.coachingRole === "MEDICAL_DIRECTOR") return true;
+  return user.departmentCategories?.includes('PERFORMANCE') ?? false;
 }
 
 /**
  * 의무기기 대여 승인 가능 여부 (일반 + 사후 승인)
- * CoachingRole MEDICAL_DIRECTOR 또는 isAdminLike
+ * CoachingRole MEDICAL_DIRECTOR, PERFORMANCE 부서 카테고리, 또는 isAdminLike
  */
 export function canApproveMedicalEquipmentLoan(user: {
   role: string;
   coachingRole?: string | null;
+  departmentCategories?: string[];
 }): boolean {
   if (isAdminLike(user.role)) return true;
-  return user.coachingRole === "MEDICAL_DIRECTOR";
+  if (user.coachingRole === "MEDICAL_DIRECTOR") return true;
+  return user.departmentCategories?.includes('PERFORMANCE') ?? false;
 }
+
+export const canReadPerformance = (role: string, coachingRole?: string | null, deptCategories?: string[]): boolean =>
+  isAdminLike(role) ||
+  role === 'COACHING_STAFF' ||
+  (deptCategories?.includes('PERFORMANCE') ?? false)
+
+export const canWritePerformance = (role: string, coachingRole?: string | null, deptCategories?: string[]): boolean =>
+  isAdminLike(role) ||
+  (role === 'COACHING_STAFF' && !!coachingRole) ||
+  (deptCategories?.includes('PERFORMANCE') ?? false)

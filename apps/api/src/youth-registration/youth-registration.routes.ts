@@ -45,14 +45,14 @@ const service = new YouthRegistrationService(repo, notifRepo, inviteAdapter);
 const controller = new YouthRegistrationController(service);
 
 const checkReadHR = (req: Request, _res: Response, next: NextFunction) => {
-  const { role, frontOfficeRole } = req.user!;
-  if (!canReadHR(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
+  const { role, frontOfficeRole, departmentCategories } = req.user!;
+  if (!canReadHR(role, frontOfficeRole, departmentCategories)) return next(new AppError(403, "FORBIDDEN"));
   next();
 };
 
 const checkWriteHR = (req: Request, _res: Response, next: NextFunction) => {
-  const { role, frontOfficeRole } = req.user!;
-  if (!canWriteHR(role, frontOfficeRole)) return next(new AppError(403, "FORBIDDEN"));
+  const { role, frontOfficeRole, departmentCategories } = req.user!;
+  if (!canWriteHR(role, frontOfficeRole, departmentCategories)) return next(new AppError(403, "FORBIDDEN"));
   next();
 };
 

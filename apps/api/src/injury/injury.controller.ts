@@ -13,10 +13,11 @@ export class InjuryController {
 
   getStats = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = requireUser(req);
+      const { role, coachingRole, departmentCategories } = requireUser(req);
       const isMedicalDirector =
         role === "COACHING_STAFF" && coachingRole === "MEDICAL_DIRECTOR";
-      if (!isAdminLike(role) && !isMedicalDirector) throw new AppError(403, "FORBIDDEN");
+      const hasPerformanceDept = departmentCategories?.includes('PERFORMANCE') ?? false;
+      if (!isAdminLike(role) && !isMedicalDirector && !hasPerformanceDept) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.getStats());
     } catch (err) { next(err); }
   };

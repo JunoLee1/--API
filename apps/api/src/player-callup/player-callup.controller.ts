@@ -72,8 +72,11 @@ export class PlayerCallupController {
 
   confirmMedical = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole } = requireUser(req);
-      if (role !== "COACHING_STAFF" || coachingRole !== "MEDICAL") {
+      const { role, coachingRole, departmentCategories } = requireUser(req);
+      const canConfirm =
+        (role === "COACHING_STAFF" && coachingRole === "MEDICAL") ||
+        (departmentCategories?.includes('PERFORMANCE') ?? false);
+      if (!canConfirm) {
         throw new AppError(403, "FORBIDDEN");
       }
       res.json(await this.service.confirmMedical(Number(req.params["id"])));

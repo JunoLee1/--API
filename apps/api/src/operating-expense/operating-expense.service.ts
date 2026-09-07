@@ -93,8 +93,8 @@ export class OperatingExpenseService {
     return expense;
   }
 
-  async firstApprove(id: number, approverId: number, role: string, foRole: string | null | undefined) {
-    if (!canReadFinance(role, foRole)) throw new AppError(403, "FORBIDDEN");
+  async firstApprove(id: number, approverId: number, role: string, foRole: string | null | undefined, departmentCategories?: string[]) {
+    if (!canReadFinance(role, foRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
     const expense = await this.repo.findById(id);
     if (!expense || expense.deletedAt) throw new AppError(404, "NOT_FOUND");
     if (expense.status !== "PENDING") throw new AppError(400, "INVALID_STATUS");
@@ -121,15 +121,15 @@ export class OperatingExpenseService {
     return updated;
   }
 
-  async approve(id: number, approverId: number, role: string, foRole: string | null | undefined) {
+  async approve(id: number, approverId: number, role: string, foRole: string | null | undefined, departmentCategories?: string[]) {
     const expense = await this.repo.findById(id);
     if (!expense || expense.deletedAt) throw new AppError(404, "NOT_FOUND");
 
     if (expense.amount < APPROVAL_THRESHOLD) {
-      if (!canReadFinance(role, foRole)) throw new AppError(403, "FORBIDDEN");
+      if (!canReadFinance(role, foRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       if (expense.status !== "PENDING") throw new AppError(400, "INVALID_STATUS");
     } else {
-      if (!canWriteFinance(role, foRole)) throw new AppError(403, "FORBIDDEN");
+      if (!canWriteFinance(role, foRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
       if (expense.status !== "FIRST_APPROVED") throw new AppError(400, "REQUIRES_FIRST_APPROVAL");
     }
 
@@ -156,8 +156,8 @@ export class OperatingExpenseService {
     return updated;
   }
 
-  async reject(id: number, rejectorId: number, reason: string, role: string, foRole: string | null | undefined) {
-    if (!canReadFinance(role, foRole)) throw new AppError(403, "FORBIDDEN");
+  async reject(id: number, rejectorId: number, reason: string, role: string, foRole: string | null | undefined, departmentCategories?: string[]) {
+    if (!canReadFinance(role, foRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
     const expense = await this.repo.findById(id);
     if (!expense || expense.deletedAt) throw new AppError(404, "NOT_FOUND");
     if (!["PENDING", "FIRST_APPROVED"].includes(expense.status)) throw new AppError(400, "INVALID_STATUS");
@@ -183,13 +183,13 @@ export class OperatingExpenseService {
     return updated;
   }
 
-  async cancel(id: number, cancellerId: number, reason: string, role: string, foRole: string | null | undefined) {
+  async cancel(id: number, cancellerId: number, reason: string, role: string, foRole: string | null | undefined, departmentCategories?: string[]) {
     const expense = await this.repo.findById(id);
     if (!expense || expense.deletedAt) throw new AppError(404, "NOT_FOUND");
     if (expense.status !== "APPROVED") throw new AppError(400, "INVALID_STATUS");
 
     const isSelf = expense.createdById === cancellerId;
-    const isManager = canWriteFinance(role, foRole);
+    const isManager = canWriteFinance(role, foRole, departmentCategories);
     if (!isSelf && !isManager) throw new AppError(403, "FORBIDDEN");
 
     const updated = await this.repo.updateStatus(id, {
