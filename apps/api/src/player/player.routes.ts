@@ -35,6 +35,9 @@ router.post("/", auth, controller.createPlayer);
 // RC18: PLAYER 본인이 응급연락처 필드만 수정 (자기 정보만)
 router.patch("/:id/my-info", auth, requireRole("PLAYER"), controller.updateMyInfo);
 
+// 노동허가 상태 업데이트 (ADMIN, GM, FRONT_OFFICE[TD|CONTRACT_MANAGER])
+router.patch("/:id/work-permit", auth, controller.updateWorkPermit);
+
 // 선수 정보 수정 (ADMIN, FRONT_OFFICE)
 router.patch("/:id", auth, controller.updatePlayer);
 

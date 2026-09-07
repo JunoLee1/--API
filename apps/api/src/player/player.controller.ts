@@ -249,6 +249,18 @@ export class PlayerController {
     } catch (err) { next(err); }
   };
 
+  updateWorkPermit = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, frontOfficeRole } = requireUser(req);
+      const canUpdate =
+        isAdminLike(role) ||
+        role === 'GM' ||
+        (role === 'FRONT_OFFICE' && (frontOfficeRole === 'TD' || frontOfficeRole === 'CONTRACT_MANAGER'));
+      if (!canUpdate) throw new AppError(403, 'FORBIDDEN');
+      res.json(await this.service.updateWorkPermit(req.params['id']!, req.body));
+    } catch (err) { next(err); }
+  };
+
   // RC18: PLAYER 본인만 응급연락처 필드 수정 가능
   updateMyInfo = async (req: Request, res: Response, next: NextFunction) => {
     try {

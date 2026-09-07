@@ -82,6 +82,8 @@ export class PlayerRepository {
           },
           orderBy: { date: "desc" },
         },
+        workPermitStatus: true,
+        workPermitExpiry: true,
       },
     });
   }
@@ -190,6 +192,17 @@ export class PlayerRepository {
         youthOriginTeamId: true,
         team: { select: { id: true, type: true } },
       },
+    });
+  }
+
+  updateWorkPermit(id: string, data: { workPermitStatus: string; workPermitExpiry?: Date | null }) {
+    return this.prisma.player.update({
+      where: { id },
+      data: {
+        workPermitStatus: data.workPermitStatus as any,
+        ...(data.workPermitExpiry !== undefined && { workPermitExpiry: data.workPermitExpiry }),
+      },
+      select: { id: true, workPermitStatus: true, workPermitExpiry: true },
     });
   }
 
