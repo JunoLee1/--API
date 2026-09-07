@@ -6,7 +6,47 @@ import { Select as SelectPrimitive } from "@base-ui/react/select"
 import { cn } from "@/lib/utils"
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
 
-const Select = SelectPrimitive.Root
+// SelectItem 이 등록한 label 을 SelectValue 가 조회할 수 있게 하는 context.
+// base-ui Select.Value 는 items prop 또는 render children 없이는 selected value 를 그대로 렌더한다
+// (raw enum code / id 노출). shadcn 사용처는 `<SelectValue placeholder="..." />` 만 쓰고
+// `<SelectItem value=...>{label}</SelectItem>` 로 값을 넣는 패턴이므로, 이 context 로 items map 을 자동 구성한다.
+interface SelectLabelStore {
+  labels: Map<string, React.ReactNode>
+  registerLabel: (value: string, label: React.ReactNode) => void
+  unregisterLabel: (value: string) => void
+}
+
+const SelectLabelContext = React.createContext<SelectLabelStore | null>(null)
+
+function useSelectLabelStore(): SelectLabelStore {
+  const [, forceUpdate] = React.useReducer((x: number) => x + 1, 0)
+  const labelsRef = React.useRef<Map<string, React.ReactNode>>(new Map())
+  const registerLabel = React.useCallback((value: string, label: React.ReactNode) => {
+    const prev = labelsRef.current.get(value)
+    if (prev !== label) {
+      labelsRef.current.set(value, label)
+      forceUpdate()
+    }
+  }, [])
+  const unregisterLabel = React.useCallback((value: string) => {
+    if (labelsRef.current.delete(value)) {
+      forceUpdate()
+    }
+  }, [])
+  return React.useMemo(
+    () => ({ labels: labelsRef.current, registerLabel, unregisterLabel }),
+    [registerLabel, unregisterLabel],
+  )
+}
+
+function Select(props: React.ComponentProps<typeof SelectPrimitive.Root>) {
+  const store = useSelectLabelStore()
+  return (
+    <SelectLabelContext.Provider value={store}>
+      <SelectPrimitive.Root {...(props as any)} />
+    </SelectLabelContext.Provider>
+  )
+}
 
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   return (
@@ -18,13 +58,33 @@ function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   )
 }
 
-function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
+function SelectValue({
+  className,
+  placeholder,
+  children,
+  ...props
+}: SelectPrimitive.Value.Props) {
+  const store = React.useContext(SelectLabelContext)
   return (
     <SelectPrimitive.Value
       data-slot="select-value"
       className={cn("flex flex-1 text-left", className)}
+      placeholder={placeholder}
       {...props}
-    />
+    >
+      {typeof children === "function"
+        ? (children as (value: any) => React.ReactNode)
+        : children != null
+          ? children
+          : // Default render: context 에 등록된 label 조회, 없으면 placeholder, 최후엔 raw value.
+            (v: any) => {
+              if (v == null || v === "") return placeholder ?? null
+              const key = String(v)
+              const label = store?.labels.get(key)
+              if (label != null) return label
+              return placeholder ?? key
+            }}
+    </SelectPrimitive.Value>
   )
 }
 
@@ -112,16 +172,33 @@ function SelectItem({
   className,
   children,
   label,
+  value,
   ...props
 }: SelectPrimitive.Item.Props) {
   const resolvedLabel = label ?? (
     typeof children === "string" || typeof children === "number"
       ? String(children)
       : undefined
-  );
+  )
+  const store = React.useContext(SelectLabelContext)
+
+  // Display label (SelectValue 렌더용) — string/number children 은 그대로, JSX children 은 whole node 사용.
+  // label prop 이 명시되어 있으면 그것을 우선.
+  const displayLabel: React.ReactNode = label ?? children
+
+  React.useEffect(() => {
+    if (store == null || value == null || value === "") return
+    const key = String(value)
+    store.registerLabel(key, displayLabel)
+    return () => {
+      store.unregisterLabel(key)
+    }
+  }, [store, value, displayLabel])
+
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
+      value={value}
       label={resolvedLabel}
       className={cn(
         "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
