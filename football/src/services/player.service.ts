@@ -77,4 +77,7 @@ export const playerApi = {
 
   updateMarketValue: (id: string, value: number) =>
     api.patch<{ playerId: string; currentMarketValue: number }>(`/players/${id}/market-value`, { value }),
+
+  updateWorkPermit: (id: string, dto: { workPermitStatus: string; workPermitExpiry?: string }) =>
+    api.patch(`/players/${id}/work-permit`, dto),
 }
