@@ -307,7 +307,11 @@ function SignProspectDialog({ prospect, open, onOpenChange, onSaved }: SignProsp
       toast.success(t('prospects.signForm.success'))
       onSaved()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : t('prospects.signForm.failed'))
+      if (err instanceof Error && err.message.includes('FOREIGN_QUOTA_EXCEEDED')) {
+        toast.error('외국인 선수 등록 쿼터를 초과했습니다.')
+      } else {
+        toast.error(err instanceof Error ? err.message : t('prospects.signForm.failed'))
+      }
     } finally {
       setSaving(false)
     }
@@ -501,6 +505,8 @@ export function ProspectsPage() {
         toast.error('비디오 평가 PASS 필요 — 평가 탭에서 먼저 평가를 완료해주세요')
       } else if (err instanceof Error && err.message.includes('SHORTLIST_FULL')) {
         toast.error('쇼트리스트 정원(5명)이 꽉 찼습니다')
+      } else if (err instanceof Error && err.message.includes('VISA_ELIGIBILITY_UNCERTAIN')) {
+        toast.error('비자 취득 가능성이 불확실합니다. visaEligibility를 CONFIRMED으로 변경 후 진행하세요.')
       } else {
         toast.error(err instanceof Error ? err.message : t('prospects.deleteFailed'))
       }
