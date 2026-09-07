@@ -66,8 +66,8 @@ export class TrainingService {
 
     const approved = await this.repo.approve(id, approvedById);
 
-    // BH8: 고퍼포먼스 선수(score ≥ 80) 일괄 알림
-    const HIGH_PERF_THRESHOLD = 80;
+    // BH8: 고퍼포먼스 선수(score ≥ 8) 일괄 알림 (10점 만점)
+    const HIGH_PERF_THRESHOLD = 8;
     const highPerfResults = presentResults.filter(
       (r: any) => r.performanceScore != null && r.performanceScore >= HIGH_PERF_THRESHOLD
     );
@@ -124,7 +124,7 @@ export class TrainingService {
   async upsertResult(sessionId: number, dto: UpsertResultDto) {
     const session = await this.repo.findById(sessionId);
     if (!session) throw new AppError(404, "SESSION_NOT_FOUND");
-    if (dto.performanceScore !== undefined && (dto.performanceScore < 0 || dto.performanceScore > 100)) {
+    if (dto.performanceScore !== undefined && (dto.performanceScore < 0 || dto.performanceScore > 10)) {
       throw new AppError(400, "PERFORMANCE_SCORE_OUT_OF_RANGE");
     }
     const result = await this.repo.upsertResult(sessionId, dto);

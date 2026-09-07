@@ -47,6 +47,7 @@ function VideoEvalDialog({ prospectId, open, onOpenChange, onSaved }: VideoEvalD
   const [qualityPassed, setQualityPassed] = useState(false)
   const [identifiable, setIdentifiable] = useState(false)
   const [continuity, setContinuity] = useState(false)
+  const [jerseyNumber, setJerseyNumber] = useState('')
   const [totalScore, setTotalScore] = useState('')
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
@@ -56,6 +57,7 @@ function VideoEvalDialog({ prospectId, open, onOpenChange, onSaved }: VideoEvalD
       setQualityPassed(false)
       setIdentifiable(false)
       setContinuity(false)
+      setJerseyNumber('')
       setTotalScore('')
       setNotes('')
     }
@@ -70,6 +72,7 @@ function VideoEvalDialog({ prospectId, open, onOpenChange, onSaved }: VideoEvalD
         qualityPassed,
         identifiable,
         continuity,
+        jerseyNumber: jerseyNumber !== '' ? Number(jerseyNumber) : null,
         totalScore: totalScore !== '' ? Number(totalScore) : null,
         notes: notes || null,
       }
@@ -107,6 +110,18 @@ function VideoEvalDialog({ prospectId, open, onOpenChange, onSaved }: VideoEvalD
                 <Label htmlFor="continuity" className="text-sm">풀타임 추적 연속성</Label>
               </div>
             </div>
+          </div>
+          <div>
+            <Label className="text-xs font-medium text-muted-foreground">영상 내 등번호</Label>
+            <Input
+              type="number"
+              min={1}
+              max={99}
+              value={jerseyNumber}
+              onChange={(e) => setJerseyNumber(e.target.value)}
+              placeholder="예: 10"
+              className="mt-1"
+            />
           </div>
           <div>
             <Label className="text-xs font-medium text-muted-foreground">Soft 합산 점수 (0~100)</Label>
