@@ -20,11 +20,12 @@ export class CoachAvailabilityController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole, id: requesterId } = requireUser(req);
+      const { role, coachingRole, departmentCategories, id: requesterId } = requireUser(req);
       const canCreate =
         isAdminLike(role) ||
         (role === "COACHING_STAFF" && coachingRole === "HEAD_COACH") ||
-        (role === "COACHING_STAFF" && req.body.userId === requesterId);
+        (role === "COACHING_STAFF" && req.body.userId === requesterId) ||
+        (departmentCategories?.includes('PERFORMANCE') ?? false);
       if (!canCreate) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.create(req.body, requesterId));
     } catch (err) { next(err); }

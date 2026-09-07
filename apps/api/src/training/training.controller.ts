@@ -27,7 +27,8 @@ export class TrainingController {
   createSession = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);
-      if (!(STAFF_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
+      if (!(STAFF_ROLES as readonly string[]).includes(user.role) && !(user.departmentCategories?.includes('PERFORMANCE') ?? false))
+        throw new AppError(403, "FORBIDDEN");
       if (req.body.sessionType === "GOALKEEPER") {
         const isGK = isAdminLike(user.role) || user.coachingRole === "GOALKEEPER_COACH";
         if (!isGK) throw new AppError(403, "FORBIDDEN");
@@ -49,7 +50,8 @@ export class TrainingController {
   addContent = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);
-      if (!(STAFF_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
+      if (!(STAFF_ROLES as readonly string[]).includes(user.role) && !(user.departmentCategories?.includes('PERFORMANCE') ?? false))
+        throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.addContent(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
   };
@@ -57,7 +59,8 @@ export class TrainingController {
   addParticipants = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);
-      if (!(STAFF_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
+      if (!(STAFF_ROLES as readonly string[]).includes(user.role) && !(user.departmentCategories?.includes('PERFORMANCE') ?? false))
+        throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.addParticipants(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
   };
@@ -65,7 +68,8 @@ export class TrainingController {
   upsertResult = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);
-      if (!(STAFF_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
+      if (!(STAFF_ROLES as readonly string[]).includes(user.role) && !(user.departmentCategories?.includes('PERFORMANCE') ?? false))
+        throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.upsertResult(Number(req.params["id"]), req.body));
     } catch (err) { next(err); }
   };

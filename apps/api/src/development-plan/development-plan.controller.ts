@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
 import { requireUser } from "../lib/authMiddleware";
+import { canWritePerformance } from "../lib/permissions";
 import { DevelopmentPlanService } from "./development-plan.service";
 
 export class DevelopmentPlanController {
@@ -25,7 +26,7 @@ export class DevelopmentPlanController {
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);
-      if (user.role !== "COACHING_STAFF") throw new AppError(403, "FORBIDDEN");
+      if (!canWritePerformance(user.role, user.coachingRole, user.departmentCategories)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(await this.service.create(req.body, user.id));
     } catch (err) { next(err); }
   };
