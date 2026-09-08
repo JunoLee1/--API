@@ -80,7 +80,6 @@ import { StaffRecordPage } from '@/pages/admin/StaffRecordPage'
 import { ProbationReviewPage } from '@/pages/admin/ProbationReviewPage'
 import { DepartmentPage } from '@/pages/admin/DepartmentPage'
 import { FinancialReportPage } from '@/pages/admin/FinancialReportPage'
-import { BudgetPlanPage } from '@/pages/admin/BudgetPlanPage'
 import { OperatingExpensePage } from '@/pages/admin/OperatingExpensePage'
 import HrReportPage from '@/pages/admin/HrReportPage'
 import { JobPostingListPage } from '@/pages/admin/recruitment/JobPostingListPage'
@@ -94,10 +93,9 @@ import { HiringSurveyDraftEditPage } from '@/pages/admin/recruitment/HiringSurve
 import { OfferApprovalPage } from '@/pages/recruitment/OfferApprovalPage'
 import { PlanReportHiringItemsPage } from '@/pages/finance/PlanReportHiringItemsPage'
 import DashboardCharts from '@/pages/finance/DashboardCharts'
-import BudgetListPage from '@/pages/finance/BudgetListPage'
 import AccountCodesPage from '@/pages/settings/AccountCodesPage'
 import BudgetDetailPage from '@/pages/finance/BudgetDetailPage'
-import BudgetAutoPage from '@/pages/finance/BudgetAutoPage'
+import BudgetPage from '@/pages/budget/BudgetPage'
 import { TeamSelectPage } from '@/pages/team-select/TeamSelectPage'
 import { LeaguePage } from '@/pages/admin/LeaguePage'
 import { TicketSalesPage } from '@/pages/finance/TicketSalesPage'
@@ -128,6 +126,11 @@ function PlayerMeRedirect() {
 function GrowthReportRedirect() {
   const { playerId } = useParams<{ playerId: string }>()
   return <Navigate to={`/players/${playerId}`} replace />
+}
+
+function NavigateToBudgetDetail() {
+  const { id } = useParams()
+  return <Navigate to={`/budget/${id}`} replace />
 }
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -258,7 +261,12 @@ function App() {
             <Route path="/admin/staff-records" element={<StaffRecordPage />} />
             <Route path="/admin/probation-reviews" element={<ProbationReviewPage />} />
             <Route path="/admin/financial-report" element={<FinancialReportPage />} />
-            <Route path="/admin/budget-plan" element={<BudgetPlanPage />} />
+            {/* 예산 통합 페이지 */}
+            <Route path="/budget" element={<BudgetPage />} />
+            <Route path="/budget/:id" element={<BudgetDetailPage />} />
+
+            {/* 기존 경로 리다이렉트 */}
+            <Route path="/admin/budget-plan" element={<Navigate to="/budget?tab=plan" replace />} />
             <Route path="/admin/operating-expenses" element={<OperatingExpensePage />} />
             <Route path="/admin/hr-report" element={<HrReportPage />} />
             <Route path="/admin/recruitment" element={<JobPostingListPage />} />
@@ -281,9 +289,9 @@ function App() {
             <Route path="/finance/plan-reports/:id/edit" element={<PlanReportFormPage />} />
             <Route path="/finance/plan-reports/:id" element={<PlanReportDetailPage />} />
             <Route path="/finance/plan-reports/approval" element={<PlanReportApprovalPage />} />
-            <Route path="/finance/budget" element={<BudgetListPage />} />
-            <Route path="/finance/budget/auto" element={<BudgetAutoPage />} />
-            <Route path="/finance/budget/:id" element={<BudgetDetailPage />} />
+            <Route path="/finance/budget" element={<Navigate to="/budget?tab=execution" replace />} />
+            <Route path="/finance/budget/auto" element={<Navigate to="/budget?tab=auto" replace />} />
+            <Route path="/finance/budget/:id" element={<NavigateToBudgetDetail />} />
             <Route path="/finance/dashboard" element={<DashboardCharts />} />
             <Route path="/settings/account-codes" element={<AccountCodesPage />} />
             <Route path="/admin/payroll" element={<PayrollPage />} />
