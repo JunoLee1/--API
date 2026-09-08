@@ -33,6 +33,7 @@ export class ProspectService {
   }
 
   async create(dto: CreateProspectDto) {
+    if (!dto.nationalityId) throw new AppError(400, "NATIONALITY_REQUIRED");
     const { squadPlayers } = await this.repo.checkDuplicate(dto.name);
     if (squadPlayers.length > 0) throw new AppError(409, "ALREADY_IN_SQUAD");
     return this.repo.create(dto);

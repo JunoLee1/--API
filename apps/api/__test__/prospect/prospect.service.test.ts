@@ -4,7 +4,8 @@ import { ProspectService } from "../../src/prospect/prospect.service";
 const activeProspect = {
   id: 1,
   name: "John Doe",
-  nationality: "English",
+  nationalityId: 1,
+  country: { id: 1, name: "England", code: "GB" },
   position: "STRIKER",
   currentTeam: "FC Example",
   notes: null,
@@ -70,7 +71,6 @@ describe("ProspectService - sign", () => {
     dateOfBirth: "1995-06-15",
     height: 180,
     weight: 75,
-    nationalityId: 1,
     contractStartDate: "2024-07-01",
     contractEndDate: "2026-06-30",
     salary: 5000000,
