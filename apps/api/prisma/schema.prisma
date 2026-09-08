@@ -846,6 +846,8 @@ model Club {
   users       User[]
   leagues     ClubLeague[]
   departments Department[]
+  players   Player[]   @relation("PlayerClub")
+  prospects Prospect[] @relation("ProspectClub")
 }
 
 model Team {
@@ -1157,6 +1159,7 @@ model Player {
   prospectId                        Int?
   promotedFromYouthAt               DateTime?
   youthOriginTeamId                 Int?
+  clubId                            Int?
 
   nationality            Country                   @relation(fields: [nationalityId], references: [id])
   user                   User?                     @relation(fields: [userId], references: [id])
@@ -1201,6 +1204,7 @@ model Player {
   guardianInviteCodes    GuardianInviteCode[]
   transferRequests       TransferRequest[]
   certifications         Certification[]           @relation("PlayerCertifications")
+  club                   Club?                     @relation("PlayerClub", fields: [clubId], references: [id])
 }
 
 model Contract {
@@ -1911,9 +1915,11 @@ model Prospect {
   createdById       Int?
   visaRequired      Boolean          @default(false)
   visaEligibility   VisaEligibility?
+  clubId            Int?
 
   convertedPlayer  Player?                  @relation("ProspectConvertedPlayer", fields: [convertedPlayerId], references: [id])
   createdBy        User?                    @relation("ProspectCreatedBy", fields: [createdById], references: [id])
+  club             Club?                    @relation("ProspectClub", fields: [clubId], references: [id])
   negotiationLogs  ProspectNegotiationLog[]
   videoEvaluations ProspectVideoEvaluation[]
   evaluationLogs   ProspectEvaluationLog[]
