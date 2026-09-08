@@ -27,22 +27,22 @@ export class PlayerRepository {
   findAll(query: PlayerListQuery, clubId?: number | null) {
     return this.prisma.player.findMany({
       where: {
-        ...(clubId != null && { team: { clubId } }),
+        ...(clubId != null && { clubId }),
         ...(query.status && { status: query.status }),
         ...(query.position && { position: query.position }),
         ...(query.level && { level: query.level }),
         ...(query.nationalityId && { nationalityId: query.nationalityId }),
         ...(query.excludeYouth && { NOT: { team: { type: 'YOUTH' } } }),
-        ...(query.teamType && { team: { ...(clubId != null && { clubId }), type: query.teamType } }),
+        ...(query.teamType && { team: { type: query.teamType } }),
       },
       select: PLAYER_SELECT,
       orderBy: { playerName: "asc" },
     });
   }
 
-  findById(id: string, includePrivate = false) {
-    return this.prisma.player.findUnique({
-      where: { id },
+  findById(id: string, clubId?: number | null, includePrivate = false) {
+    return this.prisma.player.findFirst({
+      where: { id, ...(clubId != null && { clubId }) },
       select: {
         ...PLAYER_SELECT,
         userId: true,
@@ -88,7 +88,7 @@ export class PlayerRepository {
     });
   }
 
-  create(data: CreatePlayerDto) {
+  create(data: CreatePlayerDto, clubId?: number | null) {
     const dobEnc = encrypt(data.dateOfBirth);
 
     const encName = data.emergencyContactName ? encrypt(data.emergencyContactName) : null;
@@ -106,6 +106,7 @@ export class PlayerRepository {
         position: data.position,
         level: data.level,
         nationalityId: data.nationalityId,
+        clubId: clubId ?? null,
         ...(data.externalId && { externalId: data.externalId }),
         ...(data.userId && { userId: data.userId }),
         ...(data.agentId && { agentId: data.agentId }),
