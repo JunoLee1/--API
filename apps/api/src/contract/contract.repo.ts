@@ -17,6 +17,9 @@ const CONTRACT_DETAIL = {
   managedById: true,
   agencyId: true,
   agencyCommission: true,
+  signingBonus: true,
+  signingBonusScheduledAt: true,
+  signingBonusPaidAt: true,
   buyoutClause: true,
   extensionOptions: true,
   performanceBonuses: {
@@ -56,6 +59,8 @@ export class ContractRepository {
         startDate: new Date(dto.startDate),
         endDate: new Date(dto.endDate),
         salary: dto.salary,
+        ...(dto.signingBonus && dto.signingBonus > 0 && { signingBonus: BigInt(dto.signingBonus) }),
+        ...(dto.signingBonusScheduledAt && { signingBonusScheduledAt: new Date(dto.signingBonusScheduledAt) }),
         ...(dto.managedById && { managedById: dto.managedById }),
         ...(dto.agencyId && { agencyId: dto.agencyId }),
         ...(dto.agencyCommission !== undefined && { agencyCommission: dto.agencyCommission }),
@@ -127,6 +132,14 @@ export class ContractRepository {
     return this.prisma.buyoutClause.findUnique({
       where: { contractId },
       select: { id: true },
+    });
+  }
+
+  markSigningBonusPaid(id: number, paidAt: Date) {
+    return this.prisma.contract.update({
+      where: { id },
+      data: { signingBonusPaidAt: paidAt },
+      select: CONTRACT_DETAIL,
     });
   }
 
