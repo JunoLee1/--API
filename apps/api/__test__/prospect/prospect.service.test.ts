@@ -153,6 +153,52 @@ describe("ProspectService - create", () => {
   });
 });
 
+// ─── create (club scoping) ───────────────────────────────────────────────────
+
+describe("ProspectService - create (club scoping)", () => {
+  const actorWithClub = { id: 10, role: "ADMIN", clubId: 5 } as any;
+  const actorNoClub = { id: 11, role: "FRONT_OFFICE", clubId: null } as any;
+
+  beforeEach(() => jest.clearAllMocks());
+
+  it("actor.clubId를 repo.create에 전달", async () => {
+    mockRepo.checkDuplicate.mockResolvedValue({ prospects: [], squadPlayers: [] });
+    mockRepo.create.mockResolvedValue(activeProspect);
+    await service.create({ nationalityId: 1, name: "테스터" } as any, actorWithClub);
+    expect(mockRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({ nationalityId: 1 }),
+      5
+    );
+  });
+
+  it("actor.clubId 없으면 null 전달", async () => {
+    mockRepo.checkDuplicate.mockResolvedValue({ prospects: [], squadPlayers: [] });
+    mockRepo.create.mockResolvedValue(activeProspect);
+    await service.create({ nationalityId: 1, name: "테스터" } as any, actorNoClub);
+    expect(mockRepo.create).toHaveBeenCalledWith(expect.any(Object), null);
+  });
+});
+
+// ─── getById (club scoping) ───────────────────────────────────────────────────
+
+describe("ProspectService - getById (club scoping)", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("clubId 불일치(null 반환) → PROSPECT_NOT_FOUND", async () => {
+    mockRepo.findById.mockResolvedValue(null);
+    await expect(service.getById(1, 99)).rejects.toMatchObject({
+      statusCode: 404, code: "PROSPECT_NOT_FOUND",
+    });
+    expect(mockRepo.findById).toHaveBeenCalledWith(1, 99);
+  });
+
+  it("clubId 일치 → 반환", async () => {
+    mockRepo.findById.mockResolvedValue(activeProspect);
+    const result = await service.getById(1, 1);
+    expect(result).toMatchObject({ id: 1 });
+  });
+});
+
 // ─── addNegotiationLog / getNegotiationLogs ───────────────────────────────────
 
 describe("ProspectService.addNegotiationLog", () => {

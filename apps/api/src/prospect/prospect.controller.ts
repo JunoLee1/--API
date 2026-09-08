@@ -40,26 +40,27 @@ export class ProspectController {
 
   list = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole, departmentCategories } = requireUser(req);
-      if (!canRead(role, coachingRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!canRead(user.role, user.coachingRole, user.departmentCategories)) throw new AppError(403, "FORBIDDEN");
       const status = req.query["status"] as ProspectStatus | undefined;
-      res.status(200).json(await this.service.getAll(status));
+      res.status(200).json(await this.service.getAll(status, user.clubId));
     } catch (err) { next(err); }
   };
 
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, coachingRole, departmentCategories } = requireUser(req);
-      if (!canRead(role, coachingRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
-      res.status(200).json(await this.service.getById(Number(req.params["id"])));
+      const user = requireUser(req);
+      if (!canRead(user.role, user.coachingRole, user.departmentCategories)) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(await this.service.getById(Number(req.params["id"]), user.clubId));
     } catch (err) { next(err); }
   };
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole, id } = requireUser(req);
-      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
-      res.status(201).json(await this.service.create({ ...req.body, createdById: id }));
+      const user = requireUser(req);
+      if (!canWrite(user.role, user.frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const prospect = await this.service.create(req.body, user);
+      res.status(201).json(prospect);
     } catch (err) { next(err); }
   };
 
