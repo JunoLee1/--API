@@ -59,7 +59,7 @@ export class ContractRepository {
         startDate: new Date(dto.startDate),
         endDate: new Date(dto.endDate),
         salary: dto.salary,
-        ...(dto.signingBonus && dto.signingBonus > 0 && { signingBonus: BigInt(dto.signingBonus) }),
+        ...(dto.signingBonus !== undefined && dto.signingBonus > 0 && { signingBonus: BigInt(Math.round(dto.signingBonus)) }),
         ...(dto.signingBonusScheduledAt && { signingBonusScheduledAt: new Date(dto.signingBonusScheduledAt) }),
         ...(dto.managedById && { managedById: dto.managedById }),
         ...(dto.agencyId && { agencyId: dto.agencyId }),
