@@ -38,7 +38,7 @@ export class ContractService {
     if (dto.signingBonus !== undefined && dto.signingBonus < 0) {
       throw new AppError(400, "INVALID_SIGNING_BONUS");
     }
-    if (dto.signingBonusScheduledAt && (!dto.signingBonus || dto.signingBonus === 0)) {
+    if (dto.signingBonusScheduledAt && (dto.signingBonus === undefined || dto.signingBonus === 0)) {
       throw new AppError(400, "SIGNING_BONUS_SCHEDULED_WITHOUT_AMOUNT");
     }
 
@@ -132,7 +132,7 @@ export class ContractService {
   async markSigningBonusPaid(id: number, dto: MarkSigningBonusPaidDto, actorId: number) {
     const contract = await this.repo.findById(id);
     if (!contract) throw new AppError(404, "CONTRACT_NOT_FOUND");
-    if (!contract.signingBonus || Number(contract.signingBonus) === 0) {
+    if (contract.signingBonus == null || contract.signingBonus === 0n) {
       throw new AppError(400, "NO_SIGNING_BONUS");
     }
     if (contract.signingBonusPaidAt) {
