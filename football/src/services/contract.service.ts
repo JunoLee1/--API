@@ -22,7 +22,7 @@ export const contractApi = {
     salary: number
     managedById?: number
     signingBonus?: number
-    signingBonusPaidAt?: string
+    signingBonusScheduledAt?: string
   }) => api.post<ContractCreateResult>('/contracts', payload),
 
   updateStatus: (id: number, status: ContractStatus) =>
@@ -36,4 +36,7 @@ export const contractApi = {
 
   addBonus: (contractId: number, dto: CreateBonusDto) =>
     api.post<ContractDetail>(`/contracts/${contractId}/bonuses`, dto),
+
+  markSigningBonusPaid: (id: number, paidAt?: string) =>
+    api.patch<ContractDetail>(`/contracts/${id}/signing-bonus-paid`, paidAt ? { paidAt } : {}),
 }
