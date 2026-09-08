@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
 import { toast } from 'sonner'
+import { useNavigate, Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -171,6 +172,7 @@ export function BudgetPlanWizard({
   currentUser,
   onSubmitSuccess,
 }: Props) {
+  const navigate = useNavigate()
   const submitMutation = useSubmitPlanRequest(seasonId)
 
   const requesterScope = useMemo(() => inferRequesterScope(currentUser), [currentUser])
@@ -254,7 +256,12 @@ export function BudgetPlanWizard({
       clearDraftFromStorage(seasonId)
       setLineMap({})
       setRestoredFromStorage(false)
-      toast.success('편성 요청이 접수되었습니다')
+      toast.success('편성 요청이 접수됐습니다.', {
+        action: {
+          label: '예산안 확인하기',
+          onClick: () => navigate('/budget?tab=execution'),
+        },
+      })
       onSubmitSuccess?.()
     } catch (err) {
       const msg = err instanceof Error ? err.message : '제출 실패'
@@ -306,6 +313,14 @@ export function BudgetPlanWizard({
             </div>
           )}
           {/* TODO(#428): PlanStatusBadge + 상세 액션 카드로 교체 */}
+          <div className="pt-2">
+            <Link
+              to="/budget?tab=execution"
+              className="text-sm text-primary underline underline-offset-2"
+            >
+              예산안 확인하기 →
+            </Link>
+          </div>
         </CardContent>
       </Card>
     )
