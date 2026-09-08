@@ -80,6 +80,7 @@ function CreateProspectDialog({ open, onOpenChange, onSaved }: CreateProspectDia
   const [confirmOpen, setConfirmOpen] = useState(false)
 
   const doCreate = async () => {
+    if (!nationalityId) { toast.error(t('prospects.form.required')); return }
     setSaving(true)
     try {
       const dto: CreateProspectDto = {
