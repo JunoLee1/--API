@@ -1208,6 +1208,7 @@ model Contract {
   endDate          DateTime
   salary             Int
   signingBonus       BigInt    @default(0)
+  signingBonusScheduledAt DateTime?
   signingBonusPaidAt DateTime?
   status             ContractStatus @default(ACTIVE)
   contractType     ContractType   @default(PROFESSIONAL)
