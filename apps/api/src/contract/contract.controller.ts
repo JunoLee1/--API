@@ -75,6 +75,23 @@ export class ContractController {
     }
   };
 
+  markSigningBonusPaid = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = requireUser(req);
+      const { role, frontOfficeRole } = user;
+      const canMark =
+        isAdminLike(role) ||
+        (role === "FRONT_OFFICE" &&
+          (frontOfficeRole === "FINANCE_MANAGER" || frontOfficeRole === "CONTRACT_MANAGER"));
+      if (!canMark) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(
+        await this.service.markSigningBonusPaid(Number(req.params["id"]), req.body, user.id)
+      );
+    } catch (err) {
+      next(err);
+    }
+  };
+
   getSquadSalaryOverview = async (req: Request, res: Response, next: NextFunction) => {
     try {
       requireUser(req);

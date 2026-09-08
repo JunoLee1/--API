@@ -32,6 +32,9 @@ router.post("/", auth, controller.create);
 // 계약 상태 변경 ACTIVE→EXPIRED|TERMINATED (ADMIN)
 router.patch("/:id/status", auth, controller.updateStatus);
 
+// 사이닝보너스 지급 완료 처리 (ADMIN/GM/FINANCE_MANAGER/CONTRACT_MANAGER)
+router.patch("/:id/signing-bonus-paid", auth, controller.markSigningBonusPaid);
+
 // 바이아웃 조항 추가 (계약당 1개)
 router.post("/:id/buyout", auth, controller.addBuyout);
 
