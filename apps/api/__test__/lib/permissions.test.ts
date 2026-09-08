@@ -83,3 +83,39 @@ describe("canManageTD", () => {
   test("FRONT_OFFICE + HR_MANAGER → false", () => expect(canManageTD("FRONT_OFFICE", "HR_MANAGER")).toBe(false));
   test("COACHING_STAFF → false", () => expect(canManageTD("COACHING_STAFF", null)).toBe(false));
 });
+
+describe("assertClubAccess", () => {
+  const { assertClubAccess } = require("../../src/lib/permissions");
+  const { AppError } = require("../../src/lib/appError");
+
+  function makeReq(role: string, clubId: number | null | undefined) {
+    return { user: { role, clubId } } as any;
+  }
+
+  test("SUPER_ADMIN은 targetClubId 무관 통과", () => {
+    expect(() => assertClubAccess(makeReq("SUPER_ADMIN", 1), 99)).not.toThrow();
+    expect(() => assertClubAccess(makeReq("SUPER_ADMIN", null), null)).not.toThrow();
+  });
+
+  test("user.clubId 없으면 모든 역할 bypass", () => {
+    expect(() => assertClubAccess(makeReq("ADMIN", null), 1)).not.toThrow();
+    expect(() => assertClubAccess(makeReq("FRONT_OFFICE", undefined), 1)).not.toThrow();
+  });
+
+  test("clubId 일치하면 통과", () => {
+    expect(() => assertClubAccess(makeReq("ADMIN", 1), 1)).not.toThrow();
+    expect(() => assertClubAccess(makeReq("COACHING_STAFF", 2), 2)).not.toThrow();
+  });
+
+  test("clubId 불일치 → 404 NOT_FOUND", () => {
+    expect(() => assertClubAccess(makeReq("ADMIN", 1), 2)).toThrow(
+      expect.objectContaining({ statusCode: 404, code: "NOT_FOUND" })
+    );
+  });
+
+  test("targetClubId null → 404 NOT_FOUND (정보 노출 방지)", () => {
+    expect(() => assertClubAccess(makeReq("ADMIN", 1), null)).toThrow(
+      expect.objectContaining({ statusCode: 404, code: "NOT_FOUND" })
+    );
+  });
+});

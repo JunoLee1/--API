@@ -94,10 +94,9 @@ export function assertClubAccess(req: Request, targetClubId: number | null | und
   const user = req.user;
   if (!user) throw new AppError(401, 'UNAUTHORIZED');
   if (user.role === 'SUPER_ADMIN') return;
-  if (user.role === 'ADMIN') {
-    if (targetClubId == null || user.clubId !== targetClubId) {
-      throw new AppError(403, 'FORBIDDEN');
-    }
+  if (!user.clubId) return;
+  if (!targetClubId || user.clubId !== targetClubId) {
+    throw new AppError(404, 'NOT_FOUND');
   }
 }
 
