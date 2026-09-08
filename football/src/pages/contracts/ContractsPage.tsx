@@ -67,7 +67,7 @@ export function CreateContractDialog({ open, onOpenChange, playerId, onSaved }: 
   const [endDate, setEndDate] = useState('')
   const [salary, setSalary] = useState('')
   const [signingBonus, setSigningBonus] = useState('')
-  const [signingBonusPaidAt, setSigningBonusPaidAt] = useState('')
+  const [signingBonusScheduledAt, setSigningBonusScheduledAt] = useState('')
   const [saving, setSaving] = useState(false)
 
   const bonusNum = Number(signingBonus) || 0
@@ -89,7 +89,7 @@ export function CreateContractDialog({ open, onOpenChange, playerId, onSaved }: 
         endDate,
         salary: Number(salary),
         signingBonus: bonusNum || undefined,
-        signingBonusPaidAt: signingBonusPaidAt || undefined,
+        signingBonusScheduledAt: signingBonusScheduledAt || undefined,
       })
       if (result.wageCapWarning) {
         toast.warning(t('contracts.createDialog.wageCapWarning', { percent: result.wageCapWarning.percentOver.toFixed(1) }))
@@ -159,11 +159,11 @@ export function CreateContractDialog({ open, onOpenChange, playerId, onSaved }: 
             )}
           </div>
           <div className="space-y-1.5">
-            <Label>{t('contracts.createDialog.signingBonusPaidAt')}</Label>
+            <Label>{t('contracts.createDialog.signingBonusScheduledAt')}</Label>
             <Input
               type="date"
-              value={signingBonusPaidAt}
-              onChange={(e) => setSigningBonusPaidAt(e.target.value)}
+              value={signingBonusScheduledAt}
+              onChange={(e) => setSigningBonusScheduledAt(e.target.value)}
             />
           </div>
         </div>

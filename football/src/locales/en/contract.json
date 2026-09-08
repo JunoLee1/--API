@@ -31,7 +31,7 @@
       "wageCapWarning": "Contract registered but exceeds the wage cap by {{percent}}%.",
       "signingBonus": "Signing Bonus (optional)",
       "signingBonusPlaceholder": "e.g. 50000000",
-      "signingBonusPaidAt": "Signing Bonus Pay Date (optional)",
+      "signingBonusScheduledAt": "Scheduled Payment Date (optional)",
       "signingBonusPreview": "{{amount}} / year (amortized over {{years}} year(s))"
     },
     "status": {
@@ -93,7 +93,20 @@
       "CUP": "Cup",
       "CHAMPIONS_LEAGUE": "Champions League",
       "FRIENDLY": "Friendly"
-    }
+    },
+    "signingBonus": "Signing Bonus",
+    "signingBonusAmount": "Amount",
+    "signingBonusAnnual": "Annual amortized",
+    "signingBonusScheduled": "Scheduled payment",
+    "signingBonusStatus": "Payment status",
+    "signingBonusUnpaid": "Unpaid",
+    "signingBonusPaid": "Paid",
+    "signingBonusMarkPaid": "Mark as Paid",
+    "signingBonusMarkPaidTitle": "Mark Signing Bonus as Paid",
+    "signingBonusMarkPaidDesc": "Enter the actual payment date.",
+    "signingBonusPaidAt": "Payment date",
+    "signingBonusMarkPaidConfirm": "Confirm",
+    "signingBonusMarkPaidSuccess": "Signing bonus payment recorded."
   },
   "transfers": {
     "title": "Transfers",
