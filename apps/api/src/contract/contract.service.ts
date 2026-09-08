@@ -5,6 +5,7 @@ import { writeAuditLog } from "../lib/auditLog";
 import { getPrisma } from "../lib/prisma";
 import {
   CreateContractDto,
+  MarkSigningBonusPaidDto,
   UpdateContractStatusDto,
   CreateBuyoutDto,
   CreateExtensionDto,
@@ -32,6 +33,13 @@ export class ContractService {
     // SH17: salary 최대값 10억 KRW
     if (!Number.isInteger(dto.salary) || dto.salary > 1_000_000_000) {
       throw new AppError(400, "SALARY_EXCEEDS_LIMIT");
+    }
+
+    if (dto.signingBonus !== undefined && dto.signingBonus < 0) {
+      throw new AppError(400, "INVALID_SIGNING_BONUS");
+    }
+    if (dto.signingBonusScheduledAt && (!dto.signingBonus || dto.signingBonus === 0)) {
+      throw new AppError(400, "SIGNING_BONUS_SCHEDULED_WITHOUT_AMOUNT");
     }
 
     const player = await getPrisma().player.findUnique({
@@ -119,6 +127,26 @@ export class ContractService {
       detail: { amount: dto.amount, description: dto.description },
     });
     return bonus;
+  }
+
+  async markSigningBonusPaid(id: number, dto: MarkSigningBonusPaidDto, actorId: number) {
+    const contract = await this.repo.findById(id);
+    if (!contract) throw new AppError(404, "CONTRACT_NOT_FOUND");
+    if (!contract.signingBonus || Number(contract.signingBonus) === 0) {
+      throw new AppError(400, "NO_SIGNING_BONUS");
+    }
+    if (contract.signingBonusPaidAt) {
+      throw new AppError(409, "ALREADY_PAID");
+    }
+    const paidAt = dto.paidAt ? new Date(dto.paidAt) : new Date();
+    const updated = await this.repo.markSigningBonusPaid(id, paidAt);
+    await writeAuditLog({
+      actorId,
+      action: "CONTRACT_SIGNING_BONUS_PAID",
+      targetId: id,
+      detail: { paidAt: paidAt.toISOString() },
+    });
+    return updated;
   }
 
   getSquadSalaryOverview() {
