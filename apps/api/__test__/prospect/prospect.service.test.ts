@@ -29,6 +29,7 @@ const mockRepo = {
   recordMedicalResult: jest.fn<() => Promise<any>>(),
   addNegotiationLog: jest.fn<() => Promise<any>>(),
   getNegotiationLogs: jest.fn<() => Promise<any[]>>(),
+  checkDuplicate: jest.fn<() => Promise<any>>().mockResolvedValue({ prospects: [], squadPlayers: [] }),
 } as any;
 
 const service = new ProspectService(mockRepo);
@@ -136,6 +137,19 @@ describe("ProspectService.recordMedicalResult", () => {
     mockRepo.recordMedicalResult.mockResolvedValue({ ...medicalProspect, status: "ARCHIVED" });
     await service.recordMedicalResult(1, { result: "fail", medicalNotes: "심장 이상" });
     expect(mockRepo.recordMedicalResult).toHaveBeenCalledWith(1, { result: "fail", medicalNotes: "심장 이상" });
+  });
+});
+
+// ─── create ──────────────────────────────────────────────────────────────────
+
+describe("ProspectService - create", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test("create without nationalityId → 400 NATIONALITY_REQUIRED", async () => {
+    mockRepo.checkDuplicate.mockResolvedValue({ prospects: [], squadPlayers: [] });
+    await expect(
+      service.create({ name: "John", nationalityId: 0 } as any)
+    ).rejects.toMatchObject({ statusCode: 400, code: "NATIONALITY_REQUIRED" });
   });
 });
 

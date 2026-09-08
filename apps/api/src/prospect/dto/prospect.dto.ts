@@ -2,7 +2,7 @@ import { Foot, NegotiationType, Position, ProspectStatus, VisaEligibility, WorkP
 
 export interface CreateProspectDto {
   name: string;
-  nationality?: string;
+  nationalityId: number;
   position?: Position;
   currentTeam?: string;
   notes?: string;
@@ -13,7 +13,7 @@ export interface CreateProspectDto {
 
 export interface UpdateProspectDto {
   name?: string;
-  nationality?: string;
+  nationalityId?: number;
   position?: Position;
   currentTeam?: string;
   notes?: string;
@@ -31,7 +31,6 @@ export interface SignProspectDto {
   preferredFoot?: Foot;
   height: number;
   weight: number;
-  nationalityId: number;
   position?: Position;
   contractStartDate: string;
   contractEndDate: string;
