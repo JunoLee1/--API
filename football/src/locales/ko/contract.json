@@ -31,7 +31,7 @@
       "wageCapWarning": "계약이 등록되었으나 임금상한을 {{percent}}% 초과합니다.",
       "signingBonus": "계약금 (선택)",
       "signingBonusPlaceholder": "예: 50000000",
-      "signingBonusPaidAt": "계약금 지급일 (선택)",
+      "signingBonusScheduledAt": "예정 지급일 (선택)",
       "signingBonusPreview": "연간 {{amount}} ({{years}}년 균등 분배)"
     },
     "status": {
@@ -93,7 +93,20 @@
       "CUP": "컵",
       "CHAMPIONS_LEAGUE": "챔피언스리그",
       "FRIENDLY": "친선경기"
-    }
+    },
+    "signingBonus": "서명 보너스",
+    "signingBonusAmount": "금액",
+    "signingBonusAnnual": "연분할",
+    "signingBonusScheduled": "예정 지급일",
+    "signingBonusStatus": "지급 상태",
+    "signingBonusUnpaid": "미지급",
+    "signingBonusPaid": "완료",
+    "signingBonusMarkPaid": "지급 완료 처리",
+    "signingBonusMarkPaidTitle": "지급 완료 처리",
+    "signingBonusMarkPaidDesc": "실제 지급일을 입력하세요.",
+    "signingBonusPaidAt": "지급일",
+    "signingBonusMarkPaidConfirm": "완료 처리",
+    "signingBonusMarkPaidSuccess": "서명 보너스 지급 완료 처리됐습니다"
   },
   "transfers": {
     "title": "이적 현황",
