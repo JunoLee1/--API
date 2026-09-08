@@ -58,19 +58,25 @@ export class ProspectRepository {
     return { prospects, squadPlayers };
   }
 
-  findAll(status?: ProspectStatus) {
+  findAll(status?: ProspectStatus, clubId?: number | null) {
     return this.prisma.prospect.findMany({
-      ...(status !== undefined && { where: { status } }),
+      where: {
+        ...(status !== undefined && { status }),
+        ...(clubId != null && { clubId }),
+      },
       select: PROSPECT_SELECT,
       orderBy: { createdAt: "desc" },
     });
   }
 
-  findById(id: number) {
-    return this.prisma.prospect.findUnique({ where: { id }, select: PROSPECT_SELECT });
+  findById(id: number, clubId?: number | null) {
+    return this.prisma.prospect.findFirst({
+      where: { id, ...(clubId != null && { clubId }) },
+      select: PROSPECT_SELECT,
+    });
   }
 
-  create(dto: CreateProspectDto) {
+  create(dto: CreateProspectDto, clubId?: number | null) {
     return this.prisma.prospect.create({
       data: {
         name: dto.name,
@@ -81,6 +87,7 @@ export class ProspectRepository {
         createdById: dto.createdById ?? null,
         status: dto.status ?? "LONGLIST",
         playStyle: (dto.playStyle as any) ?? null,
+        clubId: clubId ?? null,
       },
       select: PROSPECT_SELECT,
     });
