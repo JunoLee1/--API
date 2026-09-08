@@ -33,6 +33,9 @@ export interface ContractSummary {
 
 export interface ContractDetail extends ContractSummary {
   playerId: string
+  signingBonus: number
+  signingBonusScheduledAt: string | null
+  signingBonusPaidAt: string | null
   buyoutClause: { id: number; amount: number } | null
   extensionOptions: Array<{ id: number; condition: string; durationMonths: number }>
   performanceBonuses: PerformanceBonus[]
