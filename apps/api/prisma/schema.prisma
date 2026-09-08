@@ -881,7 +881,8 @@ model Country {
   users   User[]
   players Player[]
   clubs   Club[]
-  leagues League[]
+  leagues   League[]
+  prospects Prospect[]
 }
 
 model PhoneNumber {
@@ -1895,7 +1896,8 @@ model EquipmentAssignment {
 model Prospect {
   id                Int              @id @default(autoincrement())
   name              String
-  nationality       String?
+  nationalityId     Int?
+  nationality       Country?   @relation(fields: [nationalityId], references: [id])
   position          Position?
   currentTeam       String?
   notes             String?
