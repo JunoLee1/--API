@@ -157,3 +157,49 @@ describe("MatchService — updateMatch venue 반영", () => {
     }
   });
 });
+
+describe("MatchService — upsertPlayerStats 드리블 검증", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test("dribblesCompleted > dribblesAttempted인 경우 400 DRIBBLES_COMPLETED_EXCEEDS_ATTEMPTED 에러를 던진다", async () => {
+    const existingMatch = { id: 1, ...baseCreateDto };
+    mockRepo.findById.mockResolvedValue(existingMatch);
+    const dto = {
+      playerId: 10,
+      dribblesAttempted: 4,
+      dribblesCompleted: 5,
+      dribblesFailed: 0,
+    };
+
+    try {
+      await service.upsertPlayerStats(1, dto);
+      throw new Error("Should have thrown");
+    } catch (err: any) {
+      expect(err.statusCode).toBe(400);
+      expect(err.code).toBe("DRIBBLES_COMPLETED_EXCEEDS_ATTEMPTED");
+    }
+    expect(mockRepo.findPlayerStats).not.toHaveBeenCalled();
+  });
+
+  test("dribblesFailed > dribblesAttempted인 경우 400 DRIBBLES_FAILED_EXCEEDS_ATTEMPTED 에러를 던진다", async () => {
+    const existingMatch = { id: 1, ...baseCreateDto };
+    mockRepo.findById.mockResolvedValue(existingMatch);
+    const dto = {
+      playerId: 10,
+      dribblesAttempted: 4,
+      dribblesCompleted: 2,
+      dribblesFailed: 7,
+    };
+
+    try {
+      await service.upsertPlayerStats(1, dto);
+      throw new Error("Should have thrown");
+    } catch (err: any) {
+      expect(err.statusCode).toBe(400);
+      expect(err.code).toBe("DRIBBLES_FAILED_EXCEEDS_ATTEMPTED");
+    }
+    expect(mockRepo.findPlayerStats).not.toHaveBeenCalled();
+  });
+});
