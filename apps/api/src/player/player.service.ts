@@ -26,8 +26,8 @@ export class PlayerService {
     });
   }
 
-  async getPlayerById(id: string, includePrivate = false) {
-    const raw = await this.repo.findById(id, includePrivate);
+  async getPlayerById(id: string, clubId?: number | null, includePrivate = false) {
+    const raw = await this.repo.findById(id, clubId, includePrivate);
     if (!raw) throw new AppError(404, "PLAYER_NOT_FOUND");
 
     const {
@@ -66,9 +66,9 @@ export class PlayerService {
     };
   }
 
-  async createPlayer(dto: CreatePlayerDto, actorId: number) {
-    const player = await this.repo.create(dto);
-    await writeAuditLog({ actorId, action: "PLAYER_CREATED", targetId: player.id });
+  async createPlayer(dto: CreatePlayerDto, actor: Express.User) {
+    const player = await this.repo.create(dto, actor.clubId ?? null);
+    await writeAuditLog({ actorId: actor.id, action: "PLAYER_CREATED", targetId: player.id });
     return player;
   }
 

@@ -4,7 +4,8 @@ import { ProspectService } from "../../src/prospect/prospect.service";
 const activeProspect = {
   id: 1,
   name: "John Doe",
-  nationality: "English",
+  nationalityId: 1,
+  country: { id: 1, name: "England", code: "GB" },
   position: "STRIKER",
   currentTeam: "FC Example",
   notes: null,
@@ -29,6 +30,7 @@ const mockRepo = {
   recordMedicalResult: jest.fn<() => Promise<any>>(),
   addNegotiationLog: jest.fn<() => Promise<any>>(),
   getNegotiationLogs: jest.fn<() => Promise<any[]>>(),
+  checkDuplicate: jest.fn<() => Promise<any>>().mockResolvedValue({ prospects: [], squadPlayers: [] }),
 } as any;
 
 const service = new ProspectService(mockRepo);
@@ -69,7 +71,6 @@ describe("ProspectService - sign", () => {
     dateOfBirth: "1995-06-15",
     height: 180,
     weight: 75,
-    nationalityId: 1,
     contractStartDate: "2024-07-01",
     contractEndDate: "2026-06-30",
     salary: 5000000,
@@ -136,6 +137,65 @@ describe("ProspectService.recordMedicalResult", () => {
     mockRepo.recordMedicalResult.mockResolvedValue({ ...medicalProspect, status: "ARCHIVED" });
     await service.recordMedicalResult(1, { result: "fail", medicalNotes: "심장 이상" });
     expect(mockRepo.recordMedicalResult).toHaveBeenCalledWith(1, { result: "fail", medicalNotes: "심장 이상" });
+  });
+});
+
+// ─── create ──────────────────────────────────────────────────────────────────
+
+describe("ProspectService - create", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test("create without nationalityId → 400 NATIONALITY_REQUIRED", async () => {
+    mockRepo.checkDuplicate.mockResolvedValue({ prospects: [], squadPlayers: [] });
+    await expect(
+      service.create({ name: "John", nationalityId: 0 } as any)
+    ).rejects.toMatchObject({ statusCode: 400, code: "NATIONALITY_REQUIRED" });
+  });
+});
+
+// ─── create (club scoping) ───────────────────────────────────────────────────
+
+describe("ProspectService - create (club scoping)", () => {
+  const actorWithClub = { id: 10, role: "ADMIN", clubId: 5 } as any;
+  const actorNoClub = { id: 11, role: "FRONT_OFFICE", clubId: null } as any;
+
+  beforeEach(() => jest.clearAllMocks());
+
+  it("actor.clubId를 repo.create에 전달", async () => {
+    mockRepo.checkDuplicate.mockResolvedValue({ prospects: [], squadPlayers: [] });
+    mockRepo.create.mockResolvedValue(activeProspect);
+    await service.create({ nationalityId: 1, name: "테스터" } as any, actorWithClub);
+    expect(mockRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({ nationalityId: 1 }),
+      5
+    );
+  });
+
+  it("actor.clubId 없으면 null 전달", async () => {
+    mockRepo.checkDuplicate.mockResolvedValue({ prospects: [], squadPlayers: [] });
+    mockRepo.create.mockResolvedValue(activeProspect);
+    await service.create({ nationalityId: 1, name: "테스터" } as any, actorNoClub);
+    expect(mockRepo.create).toHaveBeenCalledWith(expect.any(Object), null);
+  });
+});
+
+// ─── getById (club scoping) ───────────────────────────────────────────────────
+
+describe("ProspectService - getById (club scoping)", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("clubId 불일치(null 반환) → PROSPECT_NOT_FOUND", async () => {
+    mockRepo.findById.mockResolvedValue(null);
+    await expect(service.getById(1, 99)).rejects.toMatchObject({
+      statusCode: 404, code: "PROSPECT_NOT_FOUND",
+    });
+    expect(mockRepo.findById).toHaveBeenCalledWith(1, 99);
+  });
+
+  it("clubId 일치 → 반환", async () => {
+    mockRepo.findById.mockResolvedValue(activeProspect);
+    const result = await service.getById(1, 1);
+    expect(result).toMatchObject({ id: 1 });
   });
 });
 

@@ -8,6 +8,12 @@ export interface CreateContractDto {
   managedById?: number;
   agencyId?: number;
   agencyCommission?: number;
+  signingBonus?: number;          // ≥ 0
+  signingBonusScheduledAt?: string; // ISO date; signingBonus > 0 일 때만 유효
+}
+
+export interface MarkSigningBonusPaidDto {
+  paidAt?: string; // ISO date; 생략 시 서비스에서 new Date() 사용
 }
 
 export interface UpdateContractStatusDto {

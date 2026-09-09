@@ -22,7 +22,8 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
-import { ArrowLeft, Plus } from 'lucide-react'
+import { ArrowLeft, Plus, CheckCircle2 } from 'lucide-react'
+import { computeSigningBonusAnnual } from './lib/signing-bonus'
 
 const BONUS_METRICS = Object.keys(BONUS_METRIC_LABEL) as BonusMetric[]
 const BONUS_PERIODS = Object.keys(BONUS_PERIOD_LABEL) as BonusPeriod[]
@@ -233,8 +234,18 @@ export function ContractDetailPage() {
   const [addingBuyout, setAddingBuyout] = useState(false)
   const [extensionDialogOpen, setExtensionDialogOpen] = useState(false)
   const [bonusDialogOpen, setBonusDialogOpen] = useState(false)
+  const [markPaidOpen, setMarkPaidOpen] = useState(false)
+  const [markPaidDate, setMarkPaidDate] = useState('')
+  const [markingPaid, setMarkingPaid] = useState(false)
 
   const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
+
+  const canMarkPaid =
+    user?.role === 'ADMIN' ||
+    user?.role === 'SUPER_ADMIN' ||
+    user?.role === 'GM' ||
+    (user?.role === 'FRONT_OFFICE' &&
+      (user?.frontOfficeRole === 'FINANCE_MANAGER' || user?.frontOfficeRole === 'CONTRACT_MANAGER'))
 
   const load = async () => {
     if (!id) return
@@ -263,6 +274,22 @@ export function ContractDetailPage() {
       toast.error(err instanceof Error ? err.message : t('contractDetail.saveFailed'))
     } finally {
       setAddingBuyout(false)
+    }
+  }
+
+  const handleMarkPaid = async () => {
+    if (!contract) return
+    setMarkingPaid(true)
+    try {
+      await contractApi.markSigningBonusPaid(contract.id, markPaidDate || undefined)
+      toast.success(t('contractDetail.signingBonusMarkPaidSuccess'))
+      setMarkPaidOpen(false)
+      setMarkPaidDate('')
+      void load()
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : t('contractDetail.saveFailed'))
+    } finally {
+      setMarkingPaid(false)
     }
   }
 
@@ -309,6 +336,65 @@ export function ContractDetailPage() {
             </div>
           </dl>
         </section>
+
+        {/* 서명 보너스 */}
+        {contract.signingBonus > 0 && (
+          <section data-testid="signing-bonus-card">
+            <h2 className="text-sm font-semibold text-muted-foreground mb-3">
+              {t('contractDetail.signingBonus')}
+            </h2>
+            <dl className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <dt className="text-muted-foreground">{t('contractDetail.signingBonusAmount')}</dt>
+                <dd className="font-medium tabular-nums">{formatSalary(contract.signingBonus)}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">{t('contractDetail.signingBonusAnnual')}</dt>
+                <dd className="font-medium tabular-nums">
+                  {formatSalary(
+                    computeSigningBonusAnnual(contract.signingBonus, contract.startDate, contract.endDate)
+                  )} / 년
+                </dd>
+              </div>
+              {contract.signingBonusScheduledAt && (
+                <div>
+                  <dt className="text-muted-foreground">{t('contractDetail.signingBonusScheduled')}</dt>
+                  <dd className="font-medium tabular-nums">{formatDate(contract.signingBonusScheduledAt)}</dd>
+                </div>
+              )}
+              <div className="col-span-2 flex items-center justify-between">
+                <div>
+                  <dt className="text-muted-foreground">{t('contractDetail.signingBonusStatus')}</dt>
+                  {contract.signingBonusPaidAt ? (
+                    <dd className="flex items-center gap-1.5 text-sm font-medium text-green-700 dark:text-green-400">
+                      <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                      <span>{t('contractDetail.signingBonusPaid')}</span>
+                      <span data-testid="paid-date" className="tabular-nums">
+                        · {formatDate(contract.signingBonusPaidAt)}
+                      </span>
+                    </dd>
+                  ) : (
+                    <dd className="text-sm text-muted-foreground">{t('contractDetail.signingBonusUnpaid')}</dd>
+                  )}
+                </div>
+                {!contract.signingBonusPaidAt && canMarkPaid && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs"
+                    data-testid="mark-paid-btn"
+                    onClick={() => {
+                      setMarkPaidDate(new Date().toISOString().slice(0, 10))
+                      setMarkPaidOpen(true)
+                    }}
+                  >
+                    {t('contractDetail.signingBonusMarkPaid')}
+                  </Button>
+                )}
+              </div>
+            </dl>
+          </section>
+        )}
 
         {/* 바이아웃 조항 */}
         <section>
@@ -416,6 +502,32 @@ export function ContractDetailPage() {
         contractId={contract.id}
         onSaved={() => { setBonusDialogOpen(false); void load() }}
       />
+      <Dialog open={markPaidOpen} onOpenChange={setMarkPaidOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('contractDetail.signingBonusMarkPaidTitle')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">{t('contractDetail.signingBonusMarkPaidDesc')}</p>
+            <div className="space-y-1.5">
+              <Label>{t('contractDetail.signingBonusPaidAt')}</Label>
+              <Input
+                type="date"
+                value={markPaidDate}
+                onChange={(e) => setMarkPaidDate(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMarkPaidOpen(false)} disabled={markingPaid}>
+              {t('contractDetail.cancel')}
+            </Button>
+            <Button onClick={() => void handleMarkPaid()} disabled={markingPaid}>
+              {markingPaid ? t('contractDetail.saving') : t('contractDetail.signingBonusMarkPaidConfirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

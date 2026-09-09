@@ -33,7 +33,7 @@ describe("ProspectController - create (write permission)", () => {
   beforeEach(() => jest.clearAllMocks());
 
   test("ADMIN can create prospect → 201", async () => {
-    const req = mockReq({ body: { name: "Test", nationality: "French", position: "STRIKER", currentTeam: "FC Lyon" } });
+    const req = mockReq({ body: { name: "Test", nationalityId: 1, position: "STRIKER", currentTeam: "FC Lyon" } });
     const res = mockRes();
     await controller.create(req, res, mockNext);
     expect(res.status).toHaveBeenCalledWith(201);
@@ -43,7 +43,7 @@ describe("ProspectController - create (write permission)", () => {
   test("SCOUT can create prospect → 201", async () => {
     const req = mockReq({
       user: { id: 2, role: "FRONT_OFFICE", coachingRole: null, frontOfficeRole: "SCOUT" },
-      body: { name: "Test", nationality: "French", position: "STRIKER", currentTeam: "FC Lyon" },
+      body: { name: "Test", nationalityId: 1, position: "STRIKER", currentTeam: "FC Lyon" },
     });
     const res = mockRes();
     await controller.create(req, res, mockNext);
@@ -54,7 +54,7 @@ describe("ProspectController - create (write permission)", () => {
   test("GM can create prospect → 201", async () => {
     const req = mockReq({
       user: { id: 3, role: "GM", coachingRole: null, frontOfficeRole: null },
-      body: { name: "Test", nationality: "French", position: "STRIKER", currentTeam: "FC Lyon" },
+      body: { name: "Test", nationalityId: 1, position: "STRIKER", currentTeam: "FC Lyon" },
     });
     const res = mockRes();
     await controller.create(req, res, mockNext);

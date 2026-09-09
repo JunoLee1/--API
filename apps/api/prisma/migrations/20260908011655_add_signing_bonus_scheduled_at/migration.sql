@@ -1,0 +1,2 @@
+-- This migration is a duplicate of 20260908000001_add_signing_bonus_scheduled_at.
+-- The column signingBonusScheduledAt already exists; this is a no-op.

@@ -32,18 +32,19 @@ export class ProspectService {
     return this.repo.checkDuplicate(name, currentTeam);
   }
 
-  async create(dto: CreateProspectDto) {
+  async create(dto: CreateProspectDto, actor?: Express.User) {
+    if (!dto.nationalityId) throw new AppError(400, "NATIONALITY_REQUIRED");
     const { squadPlayers } = await this.repo.checkDuplicate(dto.name);
     if (squadPlayers.length > 0) throw new AppError(409, "ALREADY_IN_SQUAD");
-    return this.repo.create(dto);
+    return this.repo.create(dto, actor?.clubId ?? null);
   }
 
-  getAll(status?: ProspectStatus) {
-    return this.repo.findAll(status);
+  getAll(status?: ProspectStatus, clubId?: number | null) {
+    return this.repo.findAll(status, clubId);
   }
 
-  async getById(id: number) {
-    const prospect = await this.repo.findById(id);
+  async getById(id: number, clubId?: number | null) {
+    const prospect = await this.repo.findById(id, clubId);
     if (!prospect) throw new AppError(404, "PROSPECT_NOT_FOUND");
     return prospect;
   }
