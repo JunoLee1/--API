@@ -848,6 +848,8 @@ model Club {
   departments Department[]
   players   Player[]   @relation("PlayerClub")
   prospects Prospect[] @relation("ProspectClub")
+  trainingSessions  TrainingSession[]  @relation("TrainingSessionClub")
+  operatingExpenses OperatingExpense[] @relation("OperatingExpenseClub")
 }
 
 model Team {
@@ -1733,9 +1735,11 @@ model TrainingSession {
   approvedById Int?
   teamId       Int?
   targetLoad   Int?
+  clubId       Int?
 
   season          Season                @relation(fields: [seasonId], references: [id])
   team            Team?                 @relation(fields: [teamId], references: [id])
+  club            Club?                 @relation("TrainingSessionClub", fields: [clubId], references: [id])
   createdBy       User                  @relation("TrainingSessionCreatedBy", fields: [createdById], references: [id])
   approvedBy      User?                 @relation("TrainingSessionApprovedBy", fields: [approvedById], references: [id])
   contents        TrainingContent[]
@@ -3132,6 +3136,7 @@ model OperatingExpense {
   cancelledAt                DateTime?
   cancellationReason         String?
   departmentId               Int?
+  clubId                     Int?
   season                     Season                      @relation(fields: [seasonId], references: [id])
   createdBy                  User                        @relation("OperatingExpenseCreator", fields: [createdById], references: [id])
   paidBy                     User?                       @relation("OperatingExpensePayer", fields: [paidById], references: [id])
@@ -3143,6 +3148,7 @@ model OperatingExpense {
   rejectedBy                 User?                       @relation("OperatingExpenseRejecter", fields: [rejectedById], references: [id])
   cancelledBy                User?                       @relation("OperatingExpenseCanceller", fields: [cancelledById], references: [id])
   department                 Department?                 @relation(fields: [departmentId], references: [id])
+  club                       Club?                       @relation("OperatingExpenseClub", fields: [clubId], references: [id])
   assetRequests              AssetRequest[]
   medicalEquipmentLoanLedger MedicalEquipmentLoanLedger?
 }
