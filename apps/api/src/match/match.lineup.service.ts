@@ -41,6 +41,9 @@ export class MatchLineupService {
     if (starters.length !== 11) {
       throw new AppError(400, "INVALID_STARTER_COUNT");
     }
+    if (bench.length > 7) {
+      throw new AppError(400, "BENCH_LIMIT_EXCEEDED");
+    }
     if (new Set(playerIds).size !== playerIds.length) {
       throw new AppError(409, "DUPLICATE_PLAYER");
     }

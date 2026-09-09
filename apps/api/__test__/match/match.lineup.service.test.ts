@@ -155,6 +155,51 @@ describe("MatchLineupService - saveLineup", () => {
     await expect(service.saveLineup(10, dto))
       .rejects.toMatchObject({ statusCode: 400, message: "INVALID_STARTER_COUNT" });
   });
+
+  test("벤치 8명이면 400 BENCH_LIMIT_EXCEEDED", async () => {
+    const dto = {
+      formation: "4-3-3",
+      slots: [
+        ...makeSlots().filter(s => s.isStarter),  // 11 starters
+        { playerId: "p12", slotKey: "B1", isStarter: false },
+        { playerId: "p13", slotKey: "B2", isStarter: false },
+        { playerId: "p14", slotKey: "B3", isStarter: false },
+        { playerId: "p15", slotKey: "B4", isStarter: false },
+        { playerId: "p16", slotKey: "B5", isStarter: false },
+        { playerId: "p17", slotKey: "B6", isStarter: false },
+        { playerId: "p18", slotKey: "B7", isStarter: false },
+        { playerId: "p19", slotKey: "B8", isStarter: false },  // 8 bench
+      ],
+    };
+    mockRepo.findPlayersByIds.mockResolvedValue(
+      dto.slots.map(s => ({ id: s.playerId, status: "ACTIVE" }))
+    );
+    await expect(service.saveLineup(10, dto))
+      .rejects.toMatchObject({ statusCode: 400, message: "BENCH_LIMIT_EXCEEDED" });
+  });
+
+  test("벤치 7명이면 저장 성공", async () => {
+    const dto = {
+      formation: "4-3-3",
+      slots: [
+        ...makeSlots().filter(s => s.isStarter),  // 11 starters
+        { playerId: "p12", slotKey: "B1", isStarter: false },
+        { playerId: "p13", slotKey: "B2", isStarter: false },
+        { playerId: "p14", slotKey: "B3", isStarter: false },
+        { playerId: "p15", slotKey: "B4", isStarter: false },
+        { playerId: "p16", slotKey: "B5", isStarter: false },
+        { playerId: "p17", slotKey: "B6", isStarter: false },
+        { playerId: "p18", slotKey: "B7", isStarter: false },  // exactly 7
+      ],
+    };
+    mockRepo.findPlayersByIds.mockResolvedValue(
+      dto.slots.map(s => ({ id: s.playerId, status: "ACTIVE" }))
+    );
+    mockRepo.findActiveInjuredPlayerIds.mockResolvedValue([]);
+    mockRepo.saveLineup.mockResolvedValue({ id: 1, matchId: 10, formation: "4-3-3", slots: [] });
+    await service.saveLineup(10, dto);
+    expect(mockRepo.saveLineup).toHaveBeenCalled();
+  });
 });
 
 describe("MatchLineupService - confirmLineup", () => {
