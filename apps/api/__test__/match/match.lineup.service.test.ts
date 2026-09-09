@@ -55,25 +55,37 @@ describe("MatchLineupService - saveLineup", () => {
   });
 
   test("중복 playerId면 409 DUPLICATE_PLAYER", async () => {
+    const baseSlots = makeSlots();
     const dto = {
       formation: "4-3-3",
       slots: [
-        { playerId: "p1", slotKey: "GK", isStarter: true },
-        { playerId: "p1", slotKey: "LB", isStarter: true },
+        ...baseSlots.slice(0, 10),                           // 10 starters (p1–p10)
+        { playerId: "p1", slotKey: "RW", isStarter: true }, // duplicate p1 as 11th starter
+        ...baseSlots.filter(s => !s.isStarter),             // 5 bench
       ],
     };
+    mockRepo.findPlayersByIds.mockResolvedValue(
+      dto.slots.map(s => ({ id: s.playerId, status: "ACTIVE" }))
+    );
     await expect(service.saveLineup(10, dto))
       .rejects.toMatchObject({ statusCode: 409, message: "DUPLICATE_PLAYER" });
   });
 
   test("중복 slotKey면 409 DUPLICATE_SLOT", async () => {
+    const baseSlots = makeSlots();
+    // Replace the 11th starter (RW, p11) with a duplicate LB slot
+    // → 11 starters, 10 outfield (slotsForFormation passes), but LB appears twice
     const dto = {
       formation: "4-3-3",
       slots: [
-        { playerId: "p1", slotKey: "GK", isStarter: true },
-        { playerId: "p2", slotKey: "GK", isStarter: true },
+        ...baseSlots.slice(0, 10),                            // p1(GK)..p10(ST) – 10 starters
+        { playerId: "p17", slotKey: "LB", isStarter: true }, // 11th starter with duplicate LB
+        ...baseSlots.filter(s => !s.isStarter),              // 5 bench
       ],
     };
+    mockRepo.findPlayersByIds.mockResolvedValue(
+      dto.slots.map(s => ({ id: s.playerId, status: "ACTIVE" }))
+    );
     await expect(service.saveLineup(10, dto))
       .rejects.toMatchObject({ statusCode: 409, message: "DUPLICATE_SLOT" });
   });
@@ -112,6 +124,36 @@ describe("MatchLineupService - saveLineup", () => {
     await expect(service.saveLineup(10, validDto))
       .rejects.toMatchObject({ statusCode: 400, message: "INELIGIBLE_PLAYER_IN_LINEUP" });
     expect(mockRepo.saveLineup).not.toHaveBeenCalled();
+  });
+
+  test("선발 10명이면 400 INVALID_STARTER_COUNT", async () => {
+    const dto = {
+      formation: "4-3-3",
+      slots: makeSlots().map((s, i) =>
+        i === 10 ? { ...s, isStarter: false } : s  // move p11 to bench → 10 starters, 6 bench
+      ),
+    };
+    mockRepo.findPlayersByIds.mockResolvedValue(
+      dto.slots.map(s => ({ id: s.playerId, status: "ACTIVE" }))
+    );
+    await expect(service.saveLineup(10, dto))
+      .rejects.toMatchObject({ statusCode: 400, message: "INVALID_STARTER_COUNT" });
+  });
+
+  test("선발 12명이면 400 INVALID_STARTER_COUNT", async () => {
+    const dto = {
+      formation: "4-3-3",
+      slots: [
+        ...makeSlots().filter(s => s.isStarter),   // 11 starters
+        { playerId: "p17", slotKey: "ST2", isStarter: true },  // 12th starter
+        ...makeSlots().filter(s => !s.isStarter),  // 5 bench
+      ],
+    };
+    mockRepo.findPlayersByIds.mockResolvedValue(
+      dto.slots.map(s => ({ id: s.playerId, status: "ACTIVE" }))
+    );
+    await expect(service.saveLineup(10, dto))
+      .rejects.toMatchObject({ statusCode: 400, message: "INVALID_STARTER_COUNT" });
   });
 });
 

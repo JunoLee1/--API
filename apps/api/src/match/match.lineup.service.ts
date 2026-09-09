@@ -36,6 +36,11 @@ export class MatchLineupService {
     if (ineligible.length > 0) {
       throw new AppError(400, "INELIGIBLE_PLAYER_IN_LINEUP");
     }
+    const starters = dto.slots.filter(s => s.isStarter);
+    const bench = dto.slots.filter(s => !s.isStarter);
+    if (starters.length !== 11) {
+      throw new AppError(400, "INVALID_STARTER_COUNT");
+    }
     if (new Set(playerIds).size !== playerIds.length) {
       throw new AppError(409, "DUPLICATE_PLAYER");
     }
