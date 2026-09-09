@@ -27,8 +27,8 @@ router.post("/", auth, controller.create);
 router.patch("/:id/first-approve", auth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = Number(req.params["id"]);
-    const { role, frontOfficeRole, departmentCategories, id: userId } = req.user!;
-    const result = await service.firstApprove(id, userId, role, frontOfficeRole, departmentCategories);
+    const { role, frontOfficeRole, departmentCategories, id: userId, clubId } = req.user!;
+    const result = await service.firstApprove(id, userId, role, frontOfficeRole, departmentCategories, clubId);
     res.json(result);
   } catch (err) { next(err); }
 });
@@ -36,8 +36,8 @@ router.patch("/:id/first-approve", auth, async (req: Request, res: Response, nex
 router.patch("/:id/approve", auth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = Number(req.params["id"]);
-    const { role, frontOfficeRole, departmentCategories, id: userId } = req.user!;
-    const result = await service.approve(id, userId, role, frontOfficeRole, departmentCategories);
+    const { role, frontOfficeRole, departmentCategories, id: userId, clubId } = req.user!;
+    const result = await service.approve(id, userId, role, frontOfficeRole, departmentCategories, clubId);
     res.json(result);
   } catch (err) { next(err); }
 });
@@ -45,10 +45,10 @@ router.patch("/:id/approve", auth, async (req: Request, res: Response, next: Nex
 router.patch("/:id/reject", auth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = Number(req.params["id"]);
-    const { role, frontOfficeRole, departmentCategories, id: userId } = req.user!;
+    const { role, frontOfficeRole, departmentCategories, id: userId, clubId } = req.user!;
     const { reason } = req.body as { reason?: string };
     if (!reason?.trim()) throw new AppError(400, "REASON_REQUIRED");
-    const result = await service.reject(id, userId, reason.trim(), role, frontOfficeRole, departmentCategories);
+    const result = await service.reject(id, userId, reason.trim(), role, frontOfficeRole, departmentCategories, clubId);
     res.json(result);
   } catch (err) { next(err); }
 });
@@ -56,10 +56,10 @@ router.patch("/:id/reject", auth, async (req: Request, res: Response, next: Next
 router.patch("/:id/cancel", auth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = Number(req.params["id"]);
-    const { role, frontOfficeRole, departmentCategories, id: userId } = req.user!;
+    const { role, frontOfficeRole, departmentCategories, id: userId, clubId } = req.user!;
     const { reason } = req.body as { reason?: string };
     if (!reason?.trim()) throw new AppError(400, "REASON_REQUIRED");
-    const result = await service.cancel(id, userId, reason.trim(), role, frontOfficeRole, departmentCategories);
+    const result = await service.cancel(id, userId, reason.trim(), role, frontOfficeRole, departmentCategories, clubId);
     res.json(result);
   } catch (err) { next(err); }
 });
@@ -67,7 +67,8 @@ router.patch("/:id/cancel", auth, async (req: Request, res: Response, next: Next
 router.patch("/:id/pay", auth, checkWriteFinance, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = Number(req.params["id"]);
-    const result = await service.markPaid(id, req.user!.id);
+    const { id: userId, clubId } = req.user!;
+    const result = await service.markPaid(id, userId, clubId);
     res.json(result);
   } catch (err) { next(err); }
 });

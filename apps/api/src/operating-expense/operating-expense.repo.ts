@@ -5,9 +5,9 @@ type Tx = Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction"
 export class OperatingExpenseRepository {
   constructor(private prisma: PrismaClient) {}
 
-  findBySeasonId(seasonId: number) {
+  findBySeasonId(seasonId: number, clubId?: number | null) {
     return this.prisma.operatingExpense.findMany({
-      where: { seasonId, deletedAt: null },
+      where: { seasonId, deletedAt: null, ...(clubId != null && { clubId }) },
       include: {
         createdBy: { select: { id: true, username: true } },
         budgetLine: { select: { id: true, originalAmount: true, expenseCategory: { select: { code: true } } } },
@@ -17,9 +17,9 @@ export class OperatingExpenseRepository {
     });
   }
 
-  findById(id: number) {
-    return this.prisma.operatingExpense.findUnique({
-      where: { id },
+  findById(id: number, clubId?: number | null) {
+    return this.prisma.operatingExpense.findFirst({
+      where: { id, ...(clubId != null && { clubId }) },
       include: {
         createdBy: { select: { id: true, username: true } },
         budgetLine: { select: { id: true, originalAmount: true, budgetHeaderId: true, expenseCategory: { select: { code: true } } } },
@@ -91,6 +91,7 @@ export class OperatingExpenseRepository {
       note?: string | null;
       createdById: number;
       budgetLineId: number;
+      clubId?: number | null;
     },
     tx?: Tx,
   ) {
@@ -141,6 +142,7 @@ export class OperatingExpenseRepository {
           createdById: data.createdById,
           budgetLineId: data.budgetLineId,
           status: "PENDING",
+          ...(data.clubId != null && { clubId: data.clubId }),
         },
         include: {
           createdBy: { select: { id: true, username: true } },

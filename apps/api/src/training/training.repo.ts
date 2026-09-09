@@ -6,9 +6,12 @@ const n = <T>(v: T | undefined): T | null => v ?? null;
 export class TrainingRepository {
   constructor(private prisma: PrismaClient) {}
 
-  findAll(query: SessionListQuery) {
+  findAll(query: SessionListQuery, clubId?: number | null) {
     return this.prisma.trainingSession.findMany({
-      where: { ...(query.seasonId && { seasonId: query.seasonId }) },
+      where: {
+        ...(query.seasonId && { seasonId: query.seasonId }),
+        ...(clubId != null && { clubId }),
+      },
       select: {
         id: true,
         date: true,
@@ -22,9 +25,9 @@ export class TrainingRepository {
     });
   }
 
-  findById(id: number) {
-    return this.prisma.trainingSession.findUnique({
-      where: { id },
+  findById(id: number, clubId?: number | null) {
+    return this.prisma.trainingSession.findFirst({
+      where: { id, ...(clubId != null && { clubId }) },
       select: {
         id: true,
         date: true,
@@ -41,7 +44,7 @@ export class TrainingRepository {
     });
   }
 
-  create(dto: CreateSessionDto, createdById: number) {
+  create(dto: CreateSessionDto, createdById: number, clubId?: number | null) {
     return this.prisma.trainingSession.create({
       data: {
         date: new Date(dto.date),
@@ -49,6 +52,7 @@ export class TrainingRepository {
         sessionType: dto.sessionType,
         seasonId: dto.seasonId,
         createdById,
+        ...(clubId != null && { clubId }),
         ...(dto.teamId ? { teamId: dto.teamId } : {}),
         ...(dto.contents && {
           contents: { create: dto.contents },
@@ -234,9 +238,9 @@ export class TrainingRepository {
     });
   }
 
-  findByIdWithTeam(id: number) {
-    return this.prisma.trainingSession.findUnique({
-      where: { id },
+  findByIdWithTeam(id: number, clubId?: number | null) {
+    return this.prisma.trainingSession.findFirst({
+      where: { id, ...(clubId != null && { clubId }) },
       select: { id: true, teamId: true, date: true, team: { select: { id: true, type: true, name: true } } },
     });
   }

@@ -22,22 +22,22 @@ export class TrainingService {
     private notifRepo?: NotificationRepository,
   ) {}
 
-  getSessions(query: SessionListQuery) {
-    return this.repo.findAll(query);
+  getSessions(query: SessionListQuery, actorClubId?: number | null) {
+    return this.repo.findAll(query, actorClubId);
   }
 
-  async getSessionById(id: number) {
-    const session = await this.repo.findById(id);
+  async getSessionById(id: number, actorClubId?: number | null) {
+    const session = await this.repo.findById(id, actorClubId);
     if (!session) throw new AppError(404, "SESSION_NOT_FOUND");
     return session;
   }
 
-  async createSession(dto: CreateSessionDto, createdById: number) {
+  async createSession(dto: CreateSessionDto, createdById: number, actorClubId?: number | null) {
     const sessionDate = new Date(dto.date);
     if (sessionDate > new Date()) {
       throw new AppError(400, "SESSION_DATE_FUTURE_NOT_ALLOWED");
     }
-    const session = await this.repo.create(dto, createdById);
+    const session = await this.repo.create(dto, createdById, actorClubId);
     void this.repo.addAllActivePlayers(session.id, session.teamId).catch(console.error);
     if (this.notifRepo) {
       void this.notifRepo
@@ -54,8 +54,8 @@ export class TrainingService {
     return session;
   }
 
-  async approveSession(id: number, approvedById: number) {
-    const session = await this.repo.findById(id);
+  async approveSession(id: number, approvedById: number, actorClubId?: number | null) {
+    const session = await this.repo.findById(id, actorClubId);
     if (!session) throw new AppError(404, "SESSION_NOT_FOUND");
     if (session.isApproved) throw new AppError(409, "ALREADY_APPROVED");
 
@@ -109,20 +109,20 @@ export class TrainingService {
     return { ...approved, evalWarning: { missing: missingCount, total: presentResults.length } };
   }
 
-  async addContent(sessionId: number, dto: AddContentDto) {
-    const session = await this.repo.findById(sessionId);
+  async addContent(sessionId: number, dto: AddContentDto, actorClubId?: number | null) {
+    const session = await this.repo.findById(sessionId, actorClubId);
     if (!session) throw new AppError(404, "SESSION_NOT_FOUND");
     return this.repo.addContent(sessionId, dto);
   }
 
-  async addParticipants(sessionId: number, dto: AddParticipantsDto) {
-    const session = await this.repo.findById(sessionId);
+  async addParticipants(sessionId: number, dto: AddParticipantsDto, actorClubId?: number | null) {
+    const session = await this.repo.findById(sessionId, actorClubId);
     if (!session) throw new AppError(404, "SESSION_NOT_FOUND");
     return this.repo.addParticipants(sessionId, dto);
   }
 
-  async upsertResult(sessionId: number, dto: UpsertResultDto) {
-    const session = await this.repo.findById(sessionId);
+  async upsertResult(sessionId: number, dto: UpsertResultDto, actorClubId?: number | null) {
+    const session = await this.repo.findById(sessionId, actorClubId);
     if (!session) throw new AppError(404, "SESSION_NOT_FOUND");
     if (dto.performanceScore !== undefined && (dto.performanceScore < 0 || dto.performanceScore > 10)) {
       throw new AppError(400, "PERFORMANCE_SCORE_OUT_OF_RANGE");
@@ -157,8 +157,8 @@ export class TrainingService {
     return result;
   }
 
-  async updateSession(id: number, data: { date?: string; goal?: string }, _updatedById: number) {
-    const session = await this.repo.findByIdWithTeam(id);
+  async updateSession(id: number, data: { date?: string; goal?: string }, _updatedById: number, actorClubId?: number | null) {
+    const session = await this.repo.findByIdWithTeam(id, actorClubId);
     if (!session) throw new AppError(404, "SESSION_NOT_FOUND");
     const updated = await this.repo.updateSession(id, data);
     if (session.team?.type === "YOUTH" && this.notifRepo) {
@@ -181,8 +181,8 @@ export class TrainingService {
     return updated;
   }
 
-  async cancelSession(id: number) {
-    const session = await this.repo.findByIdWithTeam(id);
+  async cancelSession(id: number, actorClubId?: number | null) {
+    const session = await this.repo.findByIdWithTeam(id, actorClubId);
     if (!session) throw new AppError(404, "SESSION_NOT_FOUND");
     const result = await this.repo.cancelSession(id);
     if (session.team?.type === "YOUTH" && this.notifRepo) {

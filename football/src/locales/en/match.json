@@ -130,6 +130,8 @@
       "interceptions": "Interceptions",
       "clearances": "Clearances",
       "saves": "Saves",
+      "shotsAllowed": "Shots Allowed",
+      "shotBlocked": "Shots Blocked",
       "ballRecoveries": "Ball Recoveries",
       "turnovers": "Turnovers",
       "groundDuels": "Ground Duels Won",
