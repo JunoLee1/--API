@@ -66,48 +66,48 @@ export class ProspectController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
-      res.status(200).json(await this.service.update(Number(req.params["id"]), req.body));
+      const user = requireUser(req);
+      if (!canWrite(user.role, user.frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      res.status(200).json(await this.service.update(Number(req.params["id"]), req.body, user.clubId));
     } catch (err) { next(err); }
   };
 
   updateStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!canWrite(user.role, user.frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(
-        await this.service.updateStatus(Number(req.params["id"]), req.body as TransitionProspectStatusDto)
+        await this.service.updateStatus(Number(req.params["id"]), req.body as TransitionProspectStatusDto, user.clubId)
       );
     } catch (err) { next(err); }
   };
 
   sign = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canSign(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!canSign(user.role, user.frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(
-        await this.service.sign(Number(req.params["id"]), req.body as SignProspectDto)
+        await this.service.sign(Number(req.params["id"]), req.body as SignProspectDto, user.clubId)
       );
     } catch (err) { next(err); }
   };
 
   recordMedicalResult = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
-      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!canWrite(user.role, user.frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(
-        await this.service.recordMedicalResult(Number(req.params["id"]), req.body as ProspectMedicalResultDto)
+        await this.service.recordMedicalResult(Number(req.params["id"]), req.body as ProspectMedicalResultDto, user.clubId)
       );
     } catch (err) { next(err); }
   };
 
   addNegotiationLog = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole, id } = requireUser(req);
-      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!canWrite(user.role, user.frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(
-        await this.service.addNegotiationLog(Number(req.params["id"]), req.body as CreateProspectNegotiationLogDto, id)
+        await this.service.addNegotiationLog(Number(req.params["id"]), req.body as CreateProspectNegotiationLogDto, user.id, user.clubId)
       );
     } catch (err) { next(err); }
   };
@@ -122,13 +122,14 @@ export class ProspectController {
 
   addVideoEvaluation = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole, id } = requireUser(req);
-      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!canWrite(user.role, user.frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(
         await this.service.addVideoEvaluation(
           Number(req.params["id"]),
           req.body as CreateProspectVideoEvaluationDto,
-          id,
+          user.id,
+          user.clubId,
         ),
       );
     } catch (err) { next(err); }
@@ -144,13 +145,14 @@ export class ProspectController {
 
   addEvaluationLog = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole, id } = requireUser(req);
-      if (!canWrite(role, frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
+      const user = requireUser(req);
+      if (!canWrite(user.role, user.frontOfficeRole)) throw new AppError(403, "FORBIDDEN");
       res.status(201).json(
         await this.service.addEvaluationLog(
           Number(req.params["id"]),
           req.body as CreateProspectEvaluationLogDto,
-          id,
+          user.id,
+          user.clubId,
         ),
       );
     } catch (err) { next(err); }
