@@ -31,6 +31,7 @@ export class MatchLineupService {
       throw new AppError(400, "INVALID_FORMATION");
     }
     const playerIds = dto.slots.map((s) => s.playerId);
+    const players = await this.repo.findPlayersByIds(playerIds);
     if (new Set(playerIds).size !== playerIds.length) {
       throw new AppError(409, "DUPLICATE_PLAYER");
     }

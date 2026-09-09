@@ -8,22 +8,40 @@ const mockRepo = {
   findSlotsWithUsers: jest.fn<() => Promise<any>>().mockResolvedValue([]),
   findMatchInfo: jest.fn<() => Promise<any>>().mockResolvedValue(null),
   findActiveInjuredPlayerIds: jest.fn<() => Promise<any>>().mockResolvedValue([]),
+  findPlayersByIds: jest.fn<() => Promise<any>>().mockResolvedValue([]),
 } as any;
 
 const service = new MatchLineupService(mockRepo);
 
+const makeSlots = () => [
+  { playerId: "p1",  slotKey: "GK",   isStarter: true },
+  { playerId: "p2",  slotKey: "LB",   isStarter: true },
+  { playerId: "p3",  slotKey: "LCB",  isStarter: true },
+  { playerId: "p4",  slotKey: "RCB",  isStarter: true },
+  { playerId: "p5",  slotKey: "RB",   isStarter: true },
+  { playerId: "p6",  slotKey: "LCM",  isStarter: true },
+  { playerId: "p7",  slotKey: "CM",   isStarter: true },
+  { playerId: "p8",  slotKey: "RCM",  isStarter: true },
+  { playerId: "p9",  slotKey: "LW",   isStarter: true },
+  { playerId: "p10", slotKey: "ST",   isStarter: true },
+  { playerId: "p11", slotKey: "RW",   isStarter: true },
+  { playerId: "p12", slotKey: "B1",   isStarter: false },
+  { playerId: "p13", slotKey: "B2",   isStarter: false },
+  { playerId: "p14", slotKey: "B3",   isStarter: false },
+  { playerId: "p15", slotKey: "B4",   isStarter: false },
+  { playerId: "p16", slotKey: "B5",   isStarter: false },
+];
+
 const validDto = {
   formation: "4-3-3",
-  slots: [
-    { playerId: "p1", slotKey: "GK", isStarter: true },
-    { playerId: "p2", slotKey: "LB", isStarter: true },
-  ],
+  slots: makeSlots(),
 };
 
 describe("MatchLineupService - saveLineup", () => {
   beforeEach(() => jest.clearAllMocks());
 
   test("유효한 dto로 저장 성공 시 repo.saveLineup 호출", async () => {
+    mockRepo.findPlayersByIds.mockResolvedValue(makeSlots().map(s => ({ id: s.playerId, status: "ACTIVE" })));
     mockRepo.findActiveInjuredPlayerIds.mockResolvedValue([]);
     mockRepo.saveLineup.mockResolvedValue({ id: 1, matchId: 10, formation: "4-3-3", slots: [] });
     await service.saveLineup(10, validDto);
@@ -61,6 +79,7 @@ describe("MatchLineupService - saveLineup", () => {
   });
 
   test("부상 중인 선수 포함 시 409 INJURED_PLAYER_IN_LINEUP", async () => {
+    mockRepo.findPlayersByIds.mockResolvedValue(makeSlots().map(s => ({ id: s.playerId, status: "ACTIVE" })));
     mockRepo.findActiveInjuredPlayerIds.mockResolvedValue([{ playerId: "p1" }]);
     await expect(service.saveLineup(10, validDto))
       .rejects.toMatchObject({ statusCode: 409, message: "INJURED_PLAYER_IN_LINEUP" });
@@ -68,6 +87,7 @@ describe("MatchLineupService - saveLineup", () => {
   });
 
   test("복귀 완료 선수만 있으면 저장 성공", async () => {
+    mockRepo.findPlayersByIds.mockResolvedValue(makeSlots().map(s => ({ id: s.playerId, status: "ACTIVE" })));
     mockRepo.findActiveInjuredPlayerIds.mockResolvedValue([]);
     mockRepo.saveLineup.mockResolvedValue({ id: 1, matchId: 10, formation: "4-3-3", slots: [] });
     await service.saveLineup(10, validDto);
