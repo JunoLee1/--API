@@ -72,14 +72,14 @@ export class PlayerService {
     return player;
   }
 
-  async updatePlayer(id: string, dto: UpdatePlayerDto) {
-    const player = await this.repo.findById(id);
+  async updatePlayer(id: string, dto: UpdatePlayerDto, actorClubId?: number | null) {
+    const player = await this.repo.findById(id, actorClubId);
     if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
     return this.repo.update(id, dto);
   }
 
-  async updatePlayerStatus(id: string, { status }: UpdatePlayerStatusDto, actorId: number) {
-    const player = await this.repo.findById(id);
+  async updatePlayerStatus(id: string, { status }: UpdatePlayerStatusDto, actorId: number, actorClubId?: number | null) {
+    const player = await this.repo.findById(id, actorClubId);
     if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
     const result = await this.repo.updateStatus(id, status);
 
@@ -106,8 +106,8 @@ export class PlayerService {
     return result;
   }
 
-  async promotePlayer(id: string, targetTeamId: number, actorId: number) {
-    const player = await this.repo.findById(id);
+  async promotePlayer(id: string, targetTeamId: number, actorId: number, actorClubId?: number | null) {
+    const player = await this.repo.findById(id, actorClubId);
     if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
     if (!player.team || player.team.type !== "YOUTH") {
       throw new AppError(409, "PLAYER_NOT_ON_YOUTH_TEAM");
@@ -122,8 +122,8 @@ export class PlayerService {
     return result;
   }
 
-  async updateWorkPermit(id: string, dto: { workPermitStatus: string; workPermitExpiry?: string }) {
-    const player = await this.repo.findById(id);
+  async updateWorkPermit(id: string, dto: { workPermitStatus: string; workPermitExpiry?: string }, actorClubId?: number | null) {
+    const player = await this.repo.findById(id, actorClubId);
     if (!player) throw new AppError(404, 'PLAYER_NOT_FOUND');
     if (dto.workPermitStatus === 'NOT_REQUIRED') throw new AppError(400, 'CANNOT_SET_NOT_REQUIRED');
     if (dto.workPermitStatus === 'APPROVED' && !dto.workPermitExpiry) {
@@ -135,8 +135,8 @@ export class PlayerService {
     });
   }
 
-  async deletePlayer(id: string, actorId: number) {
-    const player = await this.repo.findById(id);
+  async deletePlayer(id: string, actorId: number, actorClubId?: number | null) {
+    const player = await this.repo.findById(id, actorClubId);
     if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
     await this.repo.delete(id);
     await writeAuditLog({ actorId, action: "PLAYER_DELETED", targetId: id, detail: { playerName: player.playerName } });
@@ -149,8 +149,8 @@ export class PlayerService {
     return this.mvRepo.getHistory(playerId);
   }
 
-  async updateMarketValue(playerId: string, dto: UpdateMarketValueDto, recordedById: number) {
-    const player = await this.repo.findById(playerId);
+  async updateMarketValue(playerId: string, dto: UpdateMarketValueDto, recordedById: number, actorClubId?: number | null) {
+    const player = await this.repo.findById(playerId, actorClubId);
     if (!player) throw new AppError(404, "PLAYER_NOT_FOUND");
     if (!this.mvRepo) throw new AppError(500, "MARKET_VALUE_REPO_NOT_CONFIGURED");
     await this.mvRepo.updateCurrentValue(playerId, dto.value, recordedById);
