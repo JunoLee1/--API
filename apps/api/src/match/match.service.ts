@@ -89,6 +89,25 @@ export class MatchService {
       throw new AppError(400, "DRIBBLES_FAILED_EXCEEDS_ATTEMPTED");
     }
 
+    if (dto.minutesPlayed != null) {
+      const matchDuration = (match as any).extraTime === true ? 120 : 90;
+      const { subOff, subOn } = await this.repo.findSubstitutionForPlayer(matchId, dto.playerId);
+
+      if (subOff) {
+        if (dto.minutesPlayed !== subOff.minute) {
+          throw new AppError(400, "MINUTES_PLAYED_MISMATCH_SUB_OFF");
+        }
+      } else if (subOn) {
+        if (dto.minutesPlayed !== matchDuration - subOn.minute) {
+          throw new AppError(400, "MINUTES_PLAYED_MISMATCH_SUB_ON");
+        }
+      } else {
+        if (dto.minutesPlayed !== matchDuration) {
+          throw new AppError(400, "MINUTES_PLAYED_MISMATCH_FULL");
+        }
+      }
+    }
+
     const existing = await this.repo.findPlayerStats(matchId, dto.playerId);
     const result = existing
       ? await this.repo.updatePlayerStats(existing.id, dto)
