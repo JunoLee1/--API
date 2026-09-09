@@ -13,8 +13,8 @@ export class OperatingExpenseService {
     private categoryService: ExpenseCategoryService,
   ) {}
 
-  async list(seasonId: number) {
-    const rows = await this.repo.findBySeasonId(seasonId);
+  async list(seasonId: number, actorClubId?: number | null) {
+    const rows = await this.repo.findBySeasonId(seasonId, actorClubId);
     // categoryId is NOT NULL post-cutover, so expenseCategory relation is always present.
     return rows.map((r) => ({
       ...r,
@@ -37,6 +37,7 @@ export class OperatingExpenseService {
     note?: string;
     createdById: number;
     budgetLineId?: number;
+    actorClubId?: number | null;
   }) {
     if (data.amount <= 0) throw new AppError(400, "INVALID_AMOUNT");
     if (!(await this.categoryService.isValidCode(data.category))) {
@@ -70,6 +71,7 @@ export class OperatingExpenseService {
         note: data.note ?? null,
         createdById: data.createdById,
         budgetLineId,
+        clubId: data.actorClubId ?? null,
       });
     } catch (err: any) {
       if (err.message === "BUDGET_EXCEEDED") throw new AppError(409, "BUDGET_EXCEEDED");
@@ -93,9 +95,9 @@ export class OperatingExpenseService {
     return expense;
   }
 
-  async firstApprove(id: number, approverId: number, role: string, foRole: string | null | undefined, departmentCategories?: string[]) {
+  async firstApprove(id: number, approverId: number, role: string, foRole: string | null | undefined, departmentCategories?: string[], actorClubId?: number | null) {
     if (!canReadFinance(role, foRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
-    const expense = await this.repo.findById(id);
+    const expense = await this.repo.findById(id, actorClubId);
     if (!expense || expense.deletedAt) throw new AppError(404, "NOT_FOUND");
     if (expense.status !== "PENDING") throw new AppError(400, "INVALID_STATUS");
     if (expense.amount < APPROVAL_THRESHOLD) throw new AppError(400, "USE_SINGLE_STAGE_APPROVE");
@@ -121,8 +123,8 @@ export class OperatingExpenseService {
     return updated;
   }
 
-  async approve(id: number, approverId: number, role: string, foRole: string | null | undefined, departmentCategories?: string[]) {
-    const expense = await this.repo.findById(id);
+  async approve(id: number, approverId: number, role: string, foRole: string | null | undefined, departmentCategories?: string[], actorClubId?: number | null) {
+    const expense = await this.repo.findById(id, actorClubId);
     if (!expense || expense.deletedAt) throw new AppError(404, "NOT_FOUND");
 
     if (expense.amount < APPROVAL_THRESHOLD) {
@@ -156,9 +158,9 @@ export class OperatingExpenseService {
     return updated;
   }
 
-  async reject(id: number, rejectorId: number, reason: string, role: string, foRole: string | null | undefined, departmentCategories?: string[]) {
+  async reject(id: number, rejectorId: number, reason: string, role: string, foRole: string | null | undefined, departmentCategories?: string[], actorClubId?: number | null) {
     if (!canReadFinance(role, foRole, departmentCategories)) throw new AppError(403, "FORBIDDEN");
-    const expense = await this.repo.findById(id);
+    const expense = await this.repo.findById(id, actorClubId);
     if (!expense || expense.deletedAt) throw new AppError(404, "NOT_FOUND");
     if (!["PENDING", "FIRST_APPROVED"].includes(expense.status)) throw new AppError(400, "INVALID_STATUS");
 
@@ -183,8 +185,8 @@ export class OperatingExpenseService {
     return updated;
   }
 
-  async cancel(id: number, cancellerId: number, reason: string, role: string, foRole: string | null | undefined, departmentCategories?: string[]) {
-    const expense = await this.repo.findById(id);
+  async cancel(id: number, cancellerId: number, reason: string, role: string, foRole: string | null | undefined, departmentCategories?: string[], actorClubId?: number | null) {
+    const expense = await this.repo.findById(id, actorClubId);
     if (!expense || expense.deletedAt) throw new AppError(404, "NOT_FOUND");
     if (expense.status !== "APPROVED") throw new AppError(400, "INVALID_STATUS");
 
@@ -213,8 +215,8 @@ export class OperatingExpenseService {
     return updated;
   }
 
-  async markPaid(id: number, paidById: number) {
-    const expense = await this.repo.findById(id);
+  async markPaid(id: number, paidById: number, actorClubId?: number | null) {
+    const expense = await this.repo.findById(id, actorClubId);
     if (!expense || expense.deletedAt) throw new AppError(404, "NOT_FOUND");
     if (expense.status !== "APPROVED") throw new AppError(400, "INVALID_STATUS");
 
@@ -239,8 +241,8 @@ export class OperatingExpenseService {
     return updated;
   }
 
-  async update(id: number, userId: number, data: { amount?: number; category?: string; note?: string }) {
-    const expense = await this.repo.findById(id);
+  async update(id: number, userId: number, data: { amount?: number; category?: string; note?: string }, actorClubId?: number | null) {
+    const expense = await this.repo.findById(id, actorClubId);
     if (!expense || expense.deletedAt) throw new AppError(404, "NOT_FOUND");
     if (expense.paidAt) throw new AppError(409, "ALREADY_PAID");
     if (expense.createdById !== userId) throw new AppError(403, "FORBIDDEN");
@@ -275,8 +277,8 @@ export class OperatingExpenseService {
     return this.repo.update(id, payload);
   }
 
-  async delete(id: number, requesterId: number, requesterRole: string, reason: string) {
-    const expense = await this.repo.findById(id);
+  async delete(id: number, requesterId: number, requesterRole: string, reason: string, actorClubId?: number | null) {
+    const expense = await this.repo.findById(id, actorClubId);
     if (!expense) throw new AppError(404, "NOT_FOUND");
     if (expense.deletedAt) throw new AppError(404, "NOT_FOUND");
     if (expense.status !== "PENDING") throw new AppError(400, "ONLY_PENDING_DELETABLE");
