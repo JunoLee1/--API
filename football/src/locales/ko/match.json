@@ -130,6 +130,8 @@
       "interceptions": "인터셉트",
       "clearances": "클리어링",
       "saves": "선방",
+      "shotsAllowed": "허용 슈팅",
+      "shotBlocked": "슈팅 블록",
       "ballRecoveries": "볼 회수",
       "turnovers": "턴오버",
       "groundDuels": "지상 경합 성공",
