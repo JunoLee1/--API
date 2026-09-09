@@ -85,6 +85,8 @@ export interface UpsertTeamStatsDto {
   oppRedCards?: number;
   oppXG?: number;
   oppOffsides?: number;
+  oppPossession?: number;
+  oppGoals?: number;
 }
 
 export type ShotResultType = 'GOAL' | 'ON_TARGET' | 'OFF_TARGET' | 'BLOCKED';

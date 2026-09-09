@@ -291,6 +291,8 @@ export class MatchRepository {
         ...(dto.oppRedCards !== undefined && { oppRedCards: dto.oppRedCards }),
         ...(dto.oppXG !== undefined && { oppXG: dto.oppXG }),
         ...(dto.oppOffsides !== undefined && { oppOffsides: dto.oppOffsides }),
+        ...(dto.oppPossession !== undefined && { oppPossession: dto.oppPossession }),
+        ...(dto.oppGoals      !== undefined && { oppGoals: dto.oppGoals }),
       },
       update: {
         possession: dto.possession,
@@ -306,6 +308,8 @@ export class MatchRepository {
         ...(dto.oppRedCards !== undefined && { oppRedCards: dto.oppRedCards }),
         ...(dto.oppXG !== undefined && { oppXG: dto.oppXG }),
         ...(dto.oppOffsides !== undefined && { oppOffsides: dto.oppOffsides }),
+        ...(dto.oppPossession !== undefined && { oppPossession: dto.oppPossession }),
+        ...(dto.oppGoals      !== undefined && { oppGoals: dto.oppGoals }),
       },
     });
   }
