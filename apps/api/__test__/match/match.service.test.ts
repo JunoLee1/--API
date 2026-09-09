@@ -328,3 +328,64 @@ describe("MatchService — upsertTeamStats Q_Opp 검증", () => {
     ).rejects.toMatchObject({ statusCode: 400, message: "OPP_GOALS_NEGATIVE" });
   });
 });
+
+describe("MatchService — upsertTeamStats Q_Cross 검증", () => {
+  const baseMatch = {
+    id: 1, homeTeamName: "FC Seoul", awayTeamName: "Jeonbuk",
+    homeScore: 2, awayScore: 1, extraTime: false, hasSquad: true,
+  };
+  const baseDto = {
+    possession: 55, yellowCards: 1, redCards: 0, corners: 5, offsides: 2,
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockRepo.findById.mockResolvedValue(baseMatch);
+    mockRepo.upsertTeamStats.mockResolvedValue({ id: 1 });
+  });
+
+  test("possession + oppPossession ≠ 100 → 400 POSSESSION_SUM_INVALID", async () => {
+    await expect(
+      service.upsertTeamStats(1, { ...baseDto, oppPossession: 40 })
+    ).rejects.toMatchObject({ statusCode: 400, message: "POSSESSION_SUM_INVALID" });
+    // possession = 55, oppPossession = 40, sum = 95 ≠ 100
+  });
+
+  test("possession + oppPossession = 100 → 성공", async () => {
+    await service.upsertTeamStats(1, { ...baseDto, oppPossession: 45 });
+    expect(mockRepo.upsertTeamStats).toHaveBeenCalled();
+  });
+
+  test("oppPossession 미제공 시 합산 검증 스킵 → 성공", async () => {
+    await service.upsertTeamStats(1, { ...baseDto });
+    expect(mockRepo.upsertTeamStats).toHaveBeenCalled();
+  });
+
+  test("홈팀(FC Seoul): oppGoals ≠ awayScore → 400 OPP_GOALS_MISMATCH", async () => {
+    await expect(
+      service.upsertTeamStats(1, { ...baseDto, oppGoals: 2 })
+    ).rejects.toMatchObject({ statusCode: 400, message: "OPP_GOALS_MISMATCH" });
+    // match.awayScore = 1, oppGoals = 2 → mismatch
+  });
+
+  test("홈팀(FC Seoul): oppGoals === awayScore → 성공", async () => {
+    await service.upsertTeamStats(1, { ...baseDto, oppGoals: 1 });
+    expect(mockRepo.upsertTeamStats).toHaveBeenCalled();
+  });
+
+  test("원정팀(FC Seoul): oppGoals ≠ homeScore → 400 OPP_GOALS_MISMATCH", async () => {
+    mockRepo.findById.mockResolvedValue({
+      ...baseMatch, homeTeamName: "Jeonbuk", awayTeamName: "FC Seoul",
+      homeScore: 3, awayScore: 0,
+    });
+    await expect(
+      service.upsertTeamStats(1, { ...baseDto, oppGoals: 2 })
+    ).rejects.toMatchObject({ statusCode: 400, message: "OPP_GOALS_MISMATCH" });
+  });
+
+  test("스코어 미입력 시 oppGoals 검증 스킵 → 성공", async () => {
+    mockRepo.findById.mockResolvedValue({ ...baseMatch, homeScore: null, awayScore: null });
+    await service.upsertTeamStats(1, { ...baseDto, oppGoals: 99 });
+    expect(mockRepo.upsertTeamStats).toHaveBeenCalled();
+  });
+});

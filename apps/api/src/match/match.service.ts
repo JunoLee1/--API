@@ -132,6 +132,22 @@ export class MatchService {
       throw new AppError(400, "OPP_GOALS_NEGATIVE");
     }
 
+    // Q_Cross: possession sum = 100
+    if (dto.oppPossession != null) {
+      if (dto.possession + dto.oppPossession !== 100) {
+        throw new AppError(400, "POSSESSION_SUM_INVALID");
+      }
+    }
+
+    // Q_Cross: oppGoals matches match scoreline
+    if (dto.oppGoals != null) {
+      const isHome = (match as any).homeTeamName === "FC Seoul";
+      const oppScore = isHome ? (match as any).awayScore : (match as any).homeScore;
+      if (oppScore != null && dto.oppGoals !== oppScore) {
+        throw new AppError(400, "OPP_GOALS_MISMATCH");
+      }
+    }
+
     return this.repo.upsertTeamStats(matchId, dto);
   }
 
