@@ -77,6 +77,7 @@ describe("ProspectService - sign", () => {
   };
 
   test("sign succeeds and returns signed prospect", async () => {
+    mockRepo.findById.mockResolvedValue(activeProspect);
     mockRepo.sign.mockResolvedValue(signedProspect);
 
     const result = await service.sign(1, signDto);
@@ -86,7 +87,7 @@ describe("ProspectService - sign", () => {
   });
 
   test("sign on non-existent prospect → repo propagates 404", async () => {
-    mockRepo.sign.mockRejectedValue({ statusCode: 404, code: "PROSPECT_NOT_FOUND" });
+    mockRepo.findById.mockResolvedValue(null);
 
     await expect(service.sign(99, signDto)).rejects.toMatchObject({
       statusCode: 404,
@@ -95,6 +96,7 @@ describe("ProspectService - sign", () => {
   });
 
   test("sign on non-CONTRACT_PENDING prospect → repo propagates 409", async () => {
+    mockRepo.findById.mockResolvedValue(activeProspect);
     mockRepo.sign.mockRejectedValue({ statusCode: 409, code: "INVALID_STATUS_TRANSITION" });
 
     await expect(service.sign(1, signDto)).rejects.toMatchObject({
@@ -105,6 +107,7 @@ describe("ProspectService - sign", () => {
 
   test("sign with signingBonus — repo에 signingBonus 전달", async () => {
     const dtoWithBonus = { ...signDto, signingBonus: 10_000_000 };
+    mockRepo.findById.mockResolvedValue(activeProspect);
     mockRepo.sign.mockResolvedValue(signedProspect);
     await service.sign(1, dtoWithBonus);
     expect(mockRepo.sign).toHaveBeenCalledWith(1, dtoWithBonus);
