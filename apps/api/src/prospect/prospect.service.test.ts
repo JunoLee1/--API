@@ -93,7 +93,10 @@ describe('ProspectService.updateStatus — SHORTLIST gate', () => {
 
   it('SHORTLIST 이외 전환은 VideoEval 체크 없이 진행', async () => {
     const getLatest = jest.fn();
-    const service = new ProspectService(makeRepo({ getLatestVideoEvaluation: getLatest }));
+    const service = new ProspectService(makeRepo({
+      findById: jest.fn().mockResolvedValue({ id: 1, status: 'ACTIVE' }),
+      getLatestVideoEvaluation: getLatest,
+    }));
     await service.updateStatus(1, { status: 'ARCHIVED' });
     expect(getLatest).not.toHaveBeenCalled();
   });

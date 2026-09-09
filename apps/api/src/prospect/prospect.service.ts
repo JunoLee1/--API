@@ -57,9 +57,9 @@ export class ProspectService {
 
   async updateStatus(id: number, dto: TransitionProspectStatusDto, actorClubId?: number | null) {
     if (dto.status === "SIGNED") throw new AppError(400, "USE_SIGN_ENDPOINT");
+    // 모든 경로에서 club 스코핑 보장
+    const prospect = await this.getById(id, actorClubId);
     if (dto.status === "SHORTLIST") {
-      const prospect = await this.repo.findById(id, actorClubId);
-      if (!prospect) throw new AppError(404, "PROSPECT_NOT_FOUND");
       if (prospect.status === "LONGLIST") throw new AppError(400, "MUST_GO_THROUGH_PRE_SHORTLIST");
       const count = await this.repo.countByStatus("SHORTLIST");
       if (count >= SHORTLIST_CAPACITY) throw new AppError(409, "SHORTLIST_FULL");
@@ -67,8 +67,6 @@ export class ProspectService {
       if (!latest || latest.result !== "PASS") throw new AppError(400, "VIDEO_EVAL_REQUIRED");
     }
     if (dto.status === "CONTRACT_PENDING") {
-      const prospect = await this.repo.findById(id, actorClubId);
-      if (!prospect) throw new AppError(404, "PROSPECT_NOT_FOUND");
       if (prospect.visaRequired && prospect.visaEligibility === 'UNCERTAIN') {
         throw new AppError(400, 'VISA_ELIGIBILITY_UNCERTAIN');
       }
