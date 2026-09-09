@@ -46,6 +46,18 @@ describe("MatchSubstitutionService.create", () => {
       .rejects.toMatchObject({ statusCode: 400, message: "INVALID_SUBSTITUTION_MINUTE" });
   });
 
+  test("minute = 1 → 성공 (boundary)", async () => {
+    mockRepo.create.mockResolvedValue({ id: 1 });
+    await service.create(1, { fromPlayerId: "A", toPlayerId: "B", minute: 1 });
+    expect(mockRepo.create).toHaveBeenCalled();
+  });
+
+  test("minute = 120 → 성공 (boundary)", async () => {
+    mockRepo.create.mockResolvedValue({ id: 2 });
+    await service.create(1, { fromPlayerId: "A", toPlayerId: "B", minute: 120 });
+    expect(mockRepo.create).toHaveBeenCalled();
+  });
+
   test("valid dto → calls repo.create", async () => {
     const sub = { id: 1, matchId: 1, fromPlayerId: "A", toPlayerId: "B", minute: 70 };
     mockRepo.create.mockResolvedValue(sub);

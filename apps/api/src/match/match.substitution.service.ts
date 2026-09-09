@@ -17,7 +17,7 @@ export class MatchSubstitutionService {
     return this.repo.create(matchId, dto);
   }
 
-  async delete(matchId: number, id: number) {
+  async delete(_matchId: number, id: number) {
     return this.repo.delete(id);
   }
 
