@@ -93,6 +93,26 @@ describe("MatchLineupService - saveLineup", () => {
     await service.saveLineup(10, validDto);
     expect(mockRepo.saveLineup).toHaveBeenCalledWith(10, validDto);
   });
+
+  test("RELEASED 선수 포함 시 400 INELIGIBLE_PLAYER_IN_LINEUP", async () => {
+    mockRepo.findPlayersByIds.mockResolvedValue([
+      { id: "p1", status: "RELEASED" },
+      ...makeSlots().slice(1).map(s => ({ id: s.playerId, status: "ACTIVE" })),
+    ]);
+    await expect(service.saveLineup(10, validDto))
+      .rejects.toMatchObject({ statusCode: 400, message: "INELIGIBLE_PLAYER_IN_LINEUP" });
+    expect(mockRepo.saveLineup).not.toHaveBeenCalled();
+  });
+
+  test("ON_LOAN 선수 포함 시 400 INELIGIBLE_PLAYER_IN_LINEUP", async () => {
+    mockRepo.findPlayersByIds.mockResolvedValue([
+      { id: "p2", status: "ON_LOAN" },
+      ...makeSlots().filter(s => s.playerId !== "p2").map(s => ({ id: s.playerId, status: "ACTIVE" })),
+    ]);
+    await expect(service.saveLineup(10, validDto))
+      .rejects.toMatchObject({ statusCode: 400, message: "INELIGIBLE_PLAYER_IN_LINEUP" });
+    expect(mockRepo.saveLineup).not.toHaveBeenCalled();
+  });
 });
 
 describe("MatchLineupService - confirmLineup", () => {

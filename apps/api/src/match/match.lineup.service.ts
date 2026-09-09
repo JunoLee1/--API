@@ -32,6 +32,10 @@ export class MatchLineupService {
     }
     const playerIds = dto.slots.map((s) => s.playerId);
     const players = await this.repo.findPlayersByIds(playerIds);
+    const ineligible = players.filter(p => p.status === "RELEASED" || p.status === "ON_LOAN");
+    if (ineligible.length > 0) {
+      throw new AppError(400, "INELIGIBLE_PLAYER_IN_LINEUP");
+    }
     if (new Set(playerIds).size !== playerIds.length) {
       throw new AppError(409, "DUPLICATE_PLAYER");
     }
