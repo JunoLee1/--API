@@ -98,3 +98,9 @@ export interface CreateShotEventDto {
   result: ShotResultType;
   minute?: number;
 }
+
+export interface CreateSubstitutionDto {
+  fromPlayerId: string;
+  toPlayerId: string;
+  minute: number;
+}
