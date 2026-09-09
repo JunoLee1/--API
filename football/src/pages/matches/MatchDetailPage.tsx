@@ -240,6 +240,8 @@ type PlayerStatsForm = {
   interceptions: string
   clearances: string
   saves: string
+  shotsAllowed: string
+  shotBlocked: string
   cleanSheet: boolean
   ballRecoveries: string
   turnovers: string
@@ -274,6 +276,8 @@ const PLAYER_STAT_FIELDS: { key: keyof Omit<PlayerStatsForm, 'playerId' | 'clean
   { key: 'interceptions', label: 'playerStats.fields.interceptions' },
   { key: 'clearances', label: 'playerStats.fields.clearances' },
   { key: 'saves', label: 'playerStats.fields.saves' },
+  { key: 'shotsAllowed', label: 'playerStats.fields.shotsAllowed' },
+  { key: 'shotBlocked', label: 'playerStats.fields.shotBlocked' },
   { key: 'ballRecoveries', label: 'playerStats.fields.ballRecoveries' },
   { key: 'turnovers', label: 'playerStats.fields.turnovers' },
   { key: 'groundDuels', label: 'playerStats.fields.groundDuels' },
@@ -293,7 +297,7 @@ const PLAYER_STAT_FIELDS: { key: keyof Omit<PlayerStatsForm, 'playerId' | 'clean
 const EMPTY_PLAYER_FORM: PlayerStatsForm = {
   playerId: '', minutesPlayed: '', goals: '', assists: '', xG: '', xA: '',
   shots: '', passesAttempted: '', passesCompleted: '', keyPasses: '',
-  tackles: '', tacklesAttempted: '', interceptions: '', clearances: '', saves: '', cleanSheet: false,
+  tackles: '', tacklesAttempted: '', interceptions: '', clearances: '', saves: '', shotsAllowed: '', shotBlocked: '', cleanSheet: false,
   ballRecoveries: '', turnovers: '', groundDuels: '', groundDuelsAttempted: '', aerialDuels: '', aerialDuelsAttempted: '', distanceCovered: '', sprint: '',
   foulsCommitted: '', shotsOnTarget: '', dribblesAttempted: '', dribblesCompleted: '', dribblesFailed: '',
   longPassesAttempted: '', longPassesCompleted: '',
@@ -340,6 +344,8 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
         interceptions: existing.interceptions != null ? String(existing.interceptions) : '',
         clearances: existing.clearances != null ? String(existing.clearances) : '',
         saves: existing.saves != null ? String(existing.saves) : '',
+        shotsAllowed: existing.shotsAllowed != null ? String(existing.shotsAllowed) : '',
+        shotBlocked: existing.shotBlocked != null ? String(existing.shotBlocked) : '',
         cleanSheet: existing.cleanSheet ?? false,
         ballRecoveries: existing.ballRecoveries != null ? String(existing.ballRecoveries) : '',
         turnovers: existing.turnovers != null ? String(existing.turnovers) : '',
@@ -425,6 +431,8 @@ function PlayerStatsDialog({ open, onOpenChange, match, onSaved }: PlayerStatsDi
         interceptions: num(form.interceptions),
         clearances: num(form.clearances),
         saves: num(form.saves),
+        shotsAllowed: num(form.shotsAllowed),
+        shotBlocked: num(form.shotBlocked),
         cleanSheet: form.cleanSheet || undefined,
         ballRecoveries: num(form.ballRecoveries),
         turnovers: num(form.turnovers),
