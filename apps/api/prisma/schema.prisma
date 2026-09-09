@@ -1713,6 +1713,8 @@ model TeamMatchStats {
   oppRedCards      Int?
   oppXG            Float?
   oppOffsides      Int?
+  oppPossession    Int?
+  oppGoals         Int?
   matchId          Int    @unique
 
   match Match @relation(fields: [matchId], references: [id])
