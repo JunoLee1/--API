@@ -1,0 +1,28 @@
+import { PrismaClient } from "../generated/client";
+import { CreateSubstitutionDto } from "./dto/match.dto";
+
+export class MatchSubstitutionRepository {
+  constructor(private prisma: PrismaClient) {}
+
+  create(matchId: number, dto: CreateSubstitutionDto) {
+    return this.prisma.substitutionEvent.create({
+      data: {
+        matchId,
+        fromPlayerId: dto.fromPlayerId,
+        toPlayerId: dto.toPlayerId,
+        minute: dto.minute,
+      },
+    });
+  }
+
+  delete(id: number) {
+    return this.prisma.substitutionEvent.delete({ where: { id } });
+  }
+
+  findByMatch(matchId: number) {
+    return this.prisma.substitutionEvent.findMany({
+      where: { matchId },
+      orderBy: { minute: "asc" },
+    });
+  }
+}

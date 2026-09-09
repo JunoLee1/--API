@@ -91,6 +91,13 @@ export class MatchLineupRepository {
     });
   }
 
+  findPlayersByIds(playerIds: string[]) {
+    return this.prisma.player.findMany({
+      where: { id: { in: playerIds } },
+      select: { id: true, status: true },
+    });
+  }
+
   confirmLineup(matchId: number, confirmedById: number) {
     return this.prisma.matchLineup.update({
       where: { matchId },

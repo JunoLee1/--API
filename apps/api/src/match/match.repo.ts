@@ -42,6 +42,7 @@ const MATCH_SELECT = {
   actualAttendance: true,
   priceRegular: true,
   priceVip: true,
+  extraTime: true,
 } as const;
 
 export class MatchRepository {
@@ -158,6 +159,18 @@ export class MatchRepository {
     return this.prisma.playerMatchStats.findUnique({
       where: { matchId_playerId: { matchId, playerId } },
     });
+  }
+
+  async findSubstitutionForPlayer(matchId: number, playerId: string) {
+    const [subOff, subOn] = await Promise.all([
+      this.prisma.substitutionEvent.findFirst({
+        where: { matchId, fromPlayerId: playerId },
+      }),
+      this.prisma.substitutionEvent.findFirst({
+        where: { matchId, toPlayerId: playerId },
+      }),
+    ]);
+    return { subOff, subOn };
   }
 
   createPlayerStats(matchId: number, dto: UpsertPlayerStatsDto) {
@@ -278,6 +291,8 @@ export class MatchRepository {
         ...(dto.oppRedCards !== undefined && { oppRedCards: dto.oppRedCards }),
         ...(dto.oppXG !== undefined && { oppXG: dto.oppXG }),
         ...(dto.oppOffsides !== undefined && { oppOffsides: dto.oppOffsides }),
+        ...(dto.oppPossession !== undefined && { oppPossession: dto.oppPossession }),
+        ...(dto.oppGoals      !== undefined && { oppGoals: dto.oppGoals }),
       },
       update: {
         possession: dto.possession,
@@ -293,6 +308,8 @@ export class MatchRepository {
         ...(dto.oppRedCards !== undefined && { oppRedCards: dto.oppRedCards }),
         ...(dto.oppXG !== undefined && { oppXG: dto.oppXG }),
         ...(dto.oppOffsides !== undefined && { oppOffsides: dto.oppOffsides }),
+        ...(dto.oppPossession !== undefined && { oppPossession: dto.oppPossession }),
+        ...(dto.oppGoals      !== undefined && { oppGoals: dto.oppGoals }),
       },
     });
   }

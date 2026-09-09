@@ -12,6 +12,10 @@ const SUPPORTED_FORMATIONS = [
   "3-5-2", "3-4-3", "5-3-2", "5-4-1",
 ];
 
+function slotsForFormation(formation: string): number {
+  return formation.split("-").reduce((sum, n) => sum + parseInt(n, 10), 0);
+}
+
 export class MatchLineupService {
   constructor(private repo: MatchLineupRepository) {}
 
@@ -31,6 +35,23 @@ export class MatchLineupService {
       throw new AppError(400, "INVALID_FORMATION");
     }
     const playerIds = dto.slots.map((s) => s.playerId);
+    const players = await this.repo.findPlayersByIds(playerIds);
+    const ineligible = players.filter(p => p.status === "RELEASED" || p.status === "ON_LOAN");
+    if (ineligible.length > 0) {
+      throw new AppError(400, "INELIGIBLE_PLAYER_IN_LINEUP");
+    }
+    const starters = dto.slots.filter(s => s.isStarter);
+    const bench = dto.slots.filter(s => !s.isStarter);
+    if (starters.length !== 11) {
+      throw new AppError(400, "INVALID_STARTER_COUNT");
+    }
+    if (bench.length > 7) {
+      throw new AppError(400, "BENCH_LIMIT_EXCEEDED");
+    }
+    const outfieldStarters = starters.filter(s => s.slotKey !== "GK");
+    if (outfieldStarters.length !== slotsForFormation(dto.formation)) {
+      throw new AppError(400, "INVALID_FORMATION");
+    }
     if (new Set(playerIds).size !== playerIds.length) {
       throw new AppError(409, "DUPLICATE_PLAYER");
     }

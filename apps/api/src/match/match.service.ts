@@ -89,6 +89,29 @@ export class MatchService {
       throw new AppError(400, "DRIBBLES_FAILED_EXCEEDS_ATTEMPTED");
     }
 
+    if (dto.minutesPlayed != null) {
+      const matchDuration = (match as any).extraTime === true ? 120 : 90;
+      const { subOff, subOn } = await this.repo.findSubstitutionForPlayer(matchId, dto.playerId);
+
+      if (subOff && subOn) {
+        if (dto.minutesPlayed !== subOff.minute - subOn.minute) {
+          throw new AppError(400, "MINUTES_PLAYED_MISMATCH_SUB_OFF");
+        }
+      } else if (subOff) {
+        if (dto.minutesPlayed !== subOff.minute) {
+          throw new AppError(400, "MINUTES_PLAYED_MISMATCH_SUB_OFF");
+        }
+      } else if (subOn) {
+        if (dto.minutesPlayed !== matchDuration - subOn.minute) {
+          throw new AppError(400, "MINUTES_PLAYED_MISMATCH_SUB_ON");
+        }
+      } else {
+        if (dto.minutesPlayed !== matchDuration) {
+          throw new AppError(400, "MINUTES_PLAYED_MISMATCH_FULL");
+        }
+      }
+    }
+
     const existing = await this.repo.findPlayerStats(matchId, dto.playerId);
     const result = existing
       ? await this.repo.updatePlayerStats(existing.id, dto)
@@ -100,6 +123,35 @@ export class MatchService {
   async upsertTeamStats(matchId: number, dto: UpsertTeamStatsDto) {
     const match = await this.repo.findById(matchId);
     if (!match) throw new AppError(404, "MATCH_NOT_FOUND");
+
+    if (dto.oppShotsOnTarget != null && dto.oppShots != null &&
+        dto.oppShotsOnTarget > dto.oppShots) {
+      throw new AppError(400, "OPP_SHOTS_ON_TARGET_EXCEEDS_SHOTS");
+    }
+    if (dto.oppPossession != null &&
+        (dto.oppPossession < 0 || dto.oppPossession > 100)) {
+      throw new AppError(400, "OPP_POSSESSION_OUT_OF_RANGE");
+    }
+    if (dto.oppGoals != null && dto.oppGoals < 0) {
+      throw new AppError(400, "OPP_GOALS_NEGATIVE");
+    }
+
+    // Q_Cross: possession sum = 100
+    if (dto.oppPossession != null) {
+      if (dto.possession + dto.oppPossession !== 100) {
+        throw new AppError(400, "POSSESSION_SUM_INVALID");
+      }
+    }
+
+    // Q_Cross: oppGoals matches match scoreline
+    if (dto.oppGoals != null) {
+      const isHome = (match as any).homeTeamName === "FC Seoul";
+      const oppScore = isHome ? (match as any).awayScore : (match as any).homeScore;
+      if (oppScore != null && dto.oppGoals !== oppScore) {
+        throw new AppError(400, "OPP_GOALS_MISMATCH");
+      }
+    }
+
     return this.repo.upsertTeamStats(matchId, dto);
   }
 

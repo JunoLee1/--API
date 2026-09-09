@@ -10,6 +10,9 @@ import { MatchSquadRepository } from "./match.squad.repo";
 import { MatchSquadService } from "./match.squad.service";
 import { MatchSquadController } from "./match.squad.controller";
 import { getPrisma } from "../lib/prisma";
+import { MatchSubstitutionRepository } from "./match.substitution.repo";
+import { MatchSubstitutionService } from "./match.substitution.service";
+import { MatchSubstitutionController } from "./match.substitution.controller";
 
 const router = Router();
 const repo = new MatchRepository(getPrisma());
@@ -84,5 +87,13 @@ const lineupController = new MatchLineupController(lineupService);
 router.get("/:id/lineup", auth, lineupController.getLineup);
 router.put("/:id/lineup", auth, lineupController.saveLineup);
 router.post("/:id/lineup/confirm", auth, lineupController.confirmLineup);
+
+const subRepo = new MatchSubstitutionRepository(getPrisma());
+const subService = new MatchSubstitutionService(subRepo, repo);
+const subController = new MatchSubstitutionController(subService);
+
+router.get("/:id/substitutions",           auth, subController.list);
+router.post("/:id/substitutions",          auth, subController.create);
+router.delete("/:id/substitutions/:subId", auth, subController.delete);
 
 export default router;
