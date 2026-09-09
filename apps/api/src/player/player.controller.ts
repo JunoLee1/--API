@@ -116,7 +116,7 @@ export class PlayerController {
     try {
       const user = requireUser(req);
       if (!(WRITE_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
-      const player = await this.service.updatePlayer(String(req.params["id"]), req.body);
+      const player = await this.service.updatePlayer(String(req.params["id"]), req.body, user.clubId);
       res.status(200).json(player);
     } catch (err) {
       next(err);
@@ -127,7 +127,7 @@ export class PlayerController {
     try {
       const user = requireUser(req);
       if (!isAdminLike(user.role)) throw new AppError(403, "FORBIDDEN");
-      const result = await this.service.updatePlayerStatus(String(req.params["id"]), req.body, user.id);
+      const result = await this.service.updatePlayerStatus(String(req.params["id"]), req.body, user.id, user.clubId);
       res.status(200).json(result);
     } catch (err) {
       next(err);
@@ -144,7 +144,7 @@ export class PlayerController {
       if (!targetTeamId || typeof targetTeamId !== 'number' || targetTeamId <= 0) {
         res.status(400).json({ code: "TARGET_TEAM_REQUIRED" }); return;
       }
-      const result = await this.service.promotePlayer(String(req.params["id"]), targetTeamId, user.id);
+      const result = await this.service.promotePlayer(String(req.params["id"]), targetTeamId, user.id, user.clubId);
       res.json(result);
     } catch (err) {
       next(err);
@@ -155,7 +155,7 @@ export class PlayerController {
     try {
       const user = requireUser(req);
       if (!isAdminLike(user.role)) throw new AppError(403, "FORBIDDEN");
-      await this.service.deletePlayer(String(req.params["id"]), user.id);
+      await this.service.deletePlayer(String(req.params["id"]), user.id, user.clubId);
       res.status(204).send();
     } catch (err) {
       next(err);
@@ -185,6 +185,7 @@ export class PlayerController {
         String(req.params["id"]),
         req.body,
         user.id,
+        user.clubId,
       );
       res.json(result);
     } catch (err) { next(err); }
@@ -251,13 +252,13 @@ export class PlayerController {
 
   updateWorkPermit = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role, frontOfficeRole } = requireUser(req);
+      const user = requireUser(req);
       const canUpdate =
-        isAdminLike(role) ||
-        role === 'GM' ||
-        (role === 'FRONT_OFFICE' && (frontOfficeRole === 'TD' || frontOfficeRole === 'CONTRACT_MANAGER'));
+        isAdminLike(user.role) ||
+        user.role === 'GM' ||
+        (user.role === 'FRONT_OFFICE' && (user.frontOfficeRole === 'TD' || user.frontOfficeRole === 'CONTRACT_MANAGER'));
       if (!canUpdate) throw new AppError(403, 'FORBIDDEN');
-      res.json(await this.service.updateWorkPermit(req.params['id']!, req.body));
+      res.json(await this.service.updateWorkPermit(req.params['id']!, req.body, user.clubId));
     } catch (err) { next(err); }
   };
 
@@ -280,7 +281,7 @@ export class PlayerController {
         ...(emergencyContactName !== undefined && { emergencyContactName }),
         ...(emergencyContactPhone !== undefined && { emergencyContactPhone }),
         ...(emergencyContactRelation !== undefined && { emergencyContactRelation }),
-      });
+      }, user.clubId);
 
       res.json(result);
     } catch (err) {
