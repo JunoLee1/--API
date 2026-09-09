@@ -48,8 +48,8 @@ ALTER TABLE "public"."ProspectNegotiationLog" DROP CONSTRAINT "ProspectNegotiati
 -- DropForeignKey
 ALTER TABLE "public"."OperatingExpense" DROP CONSTRAINT "OperatingExpense_paidById_fkey";
 
--- DropForeignKey
-ALTER TABLE "public"."MaintenanceRequest" DROP CONSTRAINT "MaintenanceRequest_sourceScheduleId_fkey";
+-- DropForeignKey (conditional: may not exist if already dropped in a prior migration)
+ALTER TABLE "public"."MaintenanceRequest" DROP CONSTRAINT IF EXISTS "MaintenanceRequest_sourceScheduleId_fkey";
 
 -- DropForeignKey
 ALTER TABLE "public"."Certification" DROP CONSTRAINT "Certification_ownerId_fkey";
