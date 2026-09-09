@@ -22,6 +22,8 @@ export class MatchSubstitutionService {
   }
 
   async list(matchId: number) {
+    const match = await this.matchRepo.findById(matchId);
+    if (!match) throw new AppError(404, "MATCH_NOT_FOUND");
     return this.repo.findByMatch(matchId);
   }
 }

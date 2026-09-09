@@ -90,6 +90,12 @@ describe("MatchSubstitutionService.list", () => {
     service = new MatchSubstitutionService(mockRepo, mockMatchRepo);
   });
 
+  test("match not found → 404 MATCH_NOT_FOUND", async () => {
+    mockMatchRepo.findById.mockResolvedValue(null);
+    await expect(service.list(1))
+      .rejects.toMatchObject({ statusCode: 404, message: "MATCH_NOT_FOUND" });
+  });
+
   test("returns repo.findByMatch result", async () => {
     const list = [{ id: 1, minute: 60 }];
     mockRepo.findByMatch.mockResolvedValue(list);

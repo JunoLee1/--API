@@ -93,7 +93,11 @@ export class MatchService {
       const matchDuration = (match as any).extraTime === true ? 120 : 90;
       const { subOff, subOn } = await this.repo.findSubstitutionForPlayer(matchId, dto.playerId);
 
-      if (subOff) {
+      if (subOff && subOn) {
+        if (dto.minutesPlayed !== subOff.minute - subOn.minute) {
+          throw new AppError(400, "MINUTES_PLAYED_MISMATCH_SUB_OFF");
+        }
+      } else if (subOff) {
         if (dto.minutesPlayed !== subOff.minute) {
           throw new AppError(400, "MINUTES_PLAYED_MISMATCH_SUB_OFF");
         }

@@ -282,6 +282,25 @@ describe("MatchService — minutesPlayed 검증", () => {
     await service.upsertPlayerStats(1, { playerId: "C" });
     expect(mockRepo.createPlayerStats).toHaveBeenCalled();
   });
+
+  test("교체로 들어왔다가 다시 교체된 선수: minutesPlayed === subOff.minute - subOn.minute", async () => {
+    mockRepo.findSubstitutionForPlayer.mockResolvedValue({
+      subOff: { minute: 80 },
+      subOn: { minute: 60 },
+    });
+    await service.upsertPlayerStats(1, { playerId: "D", minutesPlayed: 20 });
+    expect(mockRepo.createPlayerStats).toHaveBeenCalled();
+  });
+
+  test("교체로 들어왔다가 다시 교체된 선수: minutesPlayed ≠ subOff.minute - subOn.minute → 400", async () => {
+    mockRepo.findSubstitutionForPlayer.mockResolvedValue({
+      subOff: { minute: 80 },
+      subOn: { minute: 60 },
+    });
+    await expect(
+      service.upsertPlayerStats(1, { playerId: "D", minutesPlayed: 25 })
+    ).rejects.toMatchObject({ statusCode: 400, message: "MINUTES_PLAYED_MISMATCH_SUB_OFF" });
+  });
 });
 
 describe("MatchService — upsertTeamStats Q_Opp 검증", () => {
