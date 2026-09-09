@@ -283,3 +283,48 @@ describe("MatchService — minutesPlayed 검증", () => {
     expect(mockRepo.createPlayerStats).toHaveBeenCalled();
   });
 });
+
+describe("MatchService — upsertTeamStats Q_Opp 검증", () => {
+  const baseMatch = {
+    id: 1, homeTeamName: "FC Seoul", awayTeamName: "Jeonbuk",
+    homeScore: 2, awayScore: 1, extraTime: false, hasSquad: true,
+  };
+  const baseDto = {
+    possession: 55, yellowCards: 1, redCards: 0, corners: 5, offsides: 2,
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockRepo.findById.mockResolvedValue(baseMatch);
+    mockRepo.upsertTeamStats.mockResolvedValue({ id: 1 });
+  });
+
+  test("oppShotsOnTarget > oppShots → 400 OPP_SHOTS_ON_TARGET_EXCEEDS_SHOTS", async () => {
+    await expect(
+      service.upsertTeamStats(1, { ...baseDto, oppShots: 3, oppShotsOnTarget: 5 })
+    ).rejects.toMatchObject({ statusCode: 400, message: "OPP_SHOTS_ON_TARGET_EXCEEDS_SHOTS" });
+  });
+
+  test("oppShotsOnTarget === oppShots → 성공", async () => {
+    await service.upsertTeamStats(1, { ...baseDto, oppShots: 5, oppShotsOnTarget: 5 });
+    expect(mockRepo.upsertTeamStats).toHaveBeenCalled();
+  });
+
+  test("oppPossession < 0 → 400 OPP_POSSESSION_OUT_OF_RANGE", async () => {
+    await expect(
+      service.upsertTeamStats(1, { ...baseDto, oppPossession: -1 })
+    ).rejects.toMatchObject({ statusCode: 400, message: "OPP_POSSESSION_OUT_OF_RANGE" });
+  });
+
+  test("oppPossession > 100 → 400 OPP_POSSESSION_OUT_OF_RANGE", async () => {
+    await expect(
+      service.upsertTeamStats(1, { ...baseDto, oppPossession: 101 })
+    ).rejects.toMatchObject({ statusCode: 400, message: "OPP_POSSESSION_OUT_OF_RANGE" });
+  });
+
+  test("oppGoals < 0 → 400 OPP_GOALS_NEGATIVE", async () => {
+    await expect(
+      service.upsertTeamStats(1, { ...baseDto, oppGoals: -1 })
+    ).rejects.toMatchObject({ statusCode: 400, message: "OPP_GOALS_NEGATIVE" });
+  });
+});

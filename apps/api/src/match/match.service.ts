@@ -119,6 +119,19 @@ export class MatchService {
   async upsertTeamStats(matchId: number, dto: UpsertTeamStatsDto) {
     const match = await this.repo.findById(matchId);
     if (!match) throw new AppError(404, "MATCH_NOT_FOUND");
+
+    if (dto.oppShotsOnTarget != null && dto.oppShots != null &&
+        dto.oppShotsOnTarget > dto.oppShots) {
+      throw new AppError(400, "OPP_SHOTS_ON_TARGET_EXCEEDS_SHOTS");
+    }
+    if (dto.oppPossession != null &&
+        (dto.oppPossession < 0 || dto.oppPossession > 100)) {
+      throw new AppError(400, "OPP_POSSESSION_OUT_OF_RANGE");
+    }
+    if (dto.oppGoals != null && dto.oppGoals < 0) {
+      throw new AppError(400, "OPP_GOALS_NEGATIVE");
+    }
+
     return this.repo.upsertTeamStats(matchId, dto);
   }
 
