@@ -200,6 +200,19 @@ describe("MatchLineupService - saveLineup", () => {
     await service.saveLineup(10, dto);
     expect(mockRepo.saveLineup).toHaveBeenCalled();
   });
+
+  test("GK가 2명 선발이면 400 INVALID_FORMATION (슬롯 불일치)", async () => {
+    const slotsWithTwoGK = makeSlots().map(s =>
+      s.slotKey === "RW" ? { ...s, slotKey: "GK" } : s  // replace RW with 2nd GK slot → 2 GKs
+    );
+    // 11 starters but 9 outfield starters (formation expects 10)
+    const dto = { formation: "4-3-3", slots: slotsWithTwoGK };
+    mockRepo.findPlayersByIds.mockResolvedValue(
+      dto.slots.map(s => ({ id: s.playerId, status: "ACTIVE" }))
+    );
+    await expect(service.saveLineup(10, dto))
+      .rejects.toMatchObject({ statusCode: 400, message: "INVALID_FORMATION" });
+  });
 });
 
 describe("MatchLineupService - confirmLineup", () => {
