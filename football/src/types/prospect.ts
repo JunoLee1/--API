@@ -7,7 +7,8 @@ export type WorkPermitStatus = 'NOT_REQUIRED' | 'PENDING' | 'APPROVED' | 'REJECT
 export interface Prospect {
   id: number
   name: string
-  nationality: string | null
+  nationalityId: number | null
+  country: { id: number; name: string; code: string } | null
   position: Position | null
   currentTeam: string | null
   notes: string | null
@@ -23,7 +24,7 @@ export interface Prospect {
 
 export interface CreateProspectDto {
   name: string
-  nationality?: string
+  nationalityId: number
   position?: Position
   currentTeam?: string
   notes?: string
@@ -41,7 +42,6 @@ export interface SignProspectDto {
   dateOfBirth: string
   height: number
   weight: number
-  nationalityId: number
   preferredFoot?: 'LEFT' | 'RIGHT' | 'BOTH'
   position?: Position
   contractStartDate: string

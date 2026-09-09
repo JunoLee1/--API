@@ -8,7 +8,7 @@ const mockPrisma = {
   player: {
     create: jest.fn(),
     update: jest.fn(),
-    findUnique: jest.fn(),
+    findFirst: jest.fn(),
     findMany: jest.fn(),
   },
 };
@@ -96,20 +96,20 @@ describe("PlayerRepository — encrypted field selection on read", () => {
   });
 
   test("findById(id, true) selects encrypted emergency contact fields", async () => {
-    (mockPrisma.player.findUnique as jest.Mock).mockResolvedValue(null);
-    await repo.findById("p1", true);
+    (mockPrisma.player.findFirst as jest.Mock).mockResolvedValue(null);
+    await repo.findById("p1", null, true);
 
-    const selectArg = (mockPrisma.player.findUnique as jest.Mock).mock.calls[0][0].select;
+    const selectArg = (mockPrisma.player.findFirst as jest.Mock).mock.calls[0][0].select;
     expect(selectArg.emergencyContactNameEncrypted).toBe(true);
     expect(selectArg.emergencyContactNameIv).toBe(true);
     expect(selectArg.emergencyContactName).toBeUndefined();
   });
 
   test("findById(id, false) does NOT select emergency contact fields", async () => {
-    (mockPrisma.player.findUnique as jest.Mock).mockResolvedValue(null);
-    await repo.findById("p1", false);
+    (mockPrisma.player.findFirst as jest.Mock).mockResolvedValue(null);
+    await repo.findById("p1", null, false);
 
-    const selectArg = (mockPrisma.player.findUnique as jest.Mock).mock.calls[0][0].select;
+    const selectArg = (mockPrisma.player.findFirst as jest.Mock).mock.calls[0][0].select;
     expect(selectArg.emergencyContactNameEncrypted).toBeUndefined();
   });
 
@@ -146,7 +146,7 @@ describe("PlayerService — decrypt on read", () => {
     };
 
     const service = new PlayerService(mockRepo as any);
-    const result = await service.getPlayerById("p1", true);
+    const result = await service.getPlayerById("p1", null, true);
 
     expect(result.emergencyContactName).toBe("Jane Doe");
     expect((result as any).emergencyContactNameEncrypted).toBeUndefined();
@@ -168,7 +168,7 @@ describe("PlayerService — decrypt on read", () => {
     };
 
     const service = new PlayerService(mockRepo as any);
-    const result = await service.getPlayerById("p1", false);
+    const result = await service.getPlayerById("p1", null, false);
 
     expect((result as any).dateOfBirth).toBe("1998-03-10");
     expect((result as any).emergencyContactName).toBeUndefined();

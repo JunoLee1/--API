@@ -393,7 +393,7 @@ function InfoTab({ prospect, canWrite, onUpdated }: InfoTabProps) {
         </div>
         <div>
           <p className="text-xs text-muted-foreground">국적</p>
-          <p>{prospect.nationality ?? '—'}</p>
+          <p>{prospect.country?.name ?? '—'}</p>
         </div>
         <div>
           <p className="text-xs text-muted-foreground">현소속</p>

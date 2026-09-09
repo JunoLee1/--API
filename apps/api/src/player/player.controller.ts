@@ -71,7 +71,7 @@ export class PlayerController {
       if (q["nationalityId"]) query.nationalityId = Number(q["nationalityId"]);
       if (q["excludeYouth"] === "true") query.excludeYouth = true;
       if (q["teamType"]) query.teamType = q["teamType"] as TeamType;
-      const scopedClubId = user.role === "ADMIN" ? user.clubId : null;
+      const scopedClubId = user.clubId ?? null;
       res.status(200).json(await this.service.getPlayers(query, scopedClubId));
     } catch (err) {
       next(err);
@@ -82,7 +82,7 @@ export class PlayerController {
     try {
       const user = requireUser(req);
       const includePrivate = isAdminLike(user.role) || user.role === "GM" || user.frontOfficeRole === "TD";
-      const player = await this.service.getPlayerById(String(req.params["id"]), includePrivate);
+      const player = await this.service.getPlayerById(String(req.params["id"]), user.clubId, includePrivate);
 
       // RC7: 역할별 PII 마스킹 적용
       const masked = stripPiiFields(
@@ -105,7 +105,7 @@ export class PlayerController {
     try {
       const user = requireUser(req);
       if (!(WRITE_ROLES as readonly string[]).includes(user.role)) throw new AppError(403, "FORBIDDEN");
-      const player = await this.service.createPlayer(req.body, user.id);
+      const player = await this.service.createPlayer(req.body, user);
       res.status(201).json(player);
     } catch (err) {
       next(err);

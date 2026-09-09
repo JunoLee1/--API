@@ -79,6 +79,15 @@ export class MatchService {
     if ((dto.goals ?? 0) > 0 && (dto.shotsOnTarget ?? 0) < (dto.goals ?? 0)) {
       throw new AppError(400, "SHOTS_ON_TARGET_BELOW_GOALS");
     }
+    // 드리블 성공/실패는 시도 초과 불가
+    if (dto.dribblesAttempted != null && dto.dribblesCompleted != null &&
+        dto.dribblesCompleted > dto.dribblesAttempted) {
+      throw new AppError(400, "DRIBBLES_COMPLETED_EXCEEDS_ATTEMPTED");
+    }
+    if (dto.dribblesAttempted != null && dto.dribblesFailed != null &&
+        dto.dribblesFailed > dto.dribblesAttempted) {
+      throw new AppError(400, "DRIBBLES_FAILED_EXCEEDS_ATTEMPTED");
+    }
 
     const existing = await this.repo.findPlayerStats(matchId, dto.playerId);
     const result = existing

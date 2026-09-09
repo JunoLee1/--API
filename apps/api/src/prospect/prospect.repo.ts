@@ -8,7 +8,8 @@ import { CreateProspectVideoEvaluationDto, CreateProspectEvaluationLogDto } from
 const PROSPECT_SELECT = {
   id: true,
   name: true,
-  nationality: true,
+  nationalityId: true,
+  country: { select: { id: true, name: true, code: true } },
   position: true,
   currentTeam: true,
   notes: true,
@@ -57,29 +58,36 @@ export class ProspectRepository {
     return { prospects, squadPlayers };
   }
 
-  findAll(status?: ProspectStatus) {
+  findAll(status?: ProspectStatus, clubId?: number | null) {
     return this.prisma.prospect.findMany({
-      ...(status !== undefined && { where: { status } }),
+      where: {
+        ...(status !== undefined && { status }),
+        ...(clubId != null && { clubId }),
+      },
       select: PROSPECT_SELECT,
       orderBy: { createdAt: "desc" },
     });
   }
 
-  findById(id: number) {
-    return this.prisma.prospect.findUnique({ where: { id }, select: PROSPECT_SELECT });
+  findById(id: number, clubId?: number | null) {
+    return this.prisma.prospect.findFirst({
+      where: { id, ...(clubId != null && { clubId }) },
+      select: PROSPECT_SELECT,
+    });
   }
 
-  create(dto: CreateProspectDto) {
+  create(dto: CreateProspectDto, clubId?: number | null) {
     return this.prisma.prospect.create({
       data: {
         name: dto.name,
-        nationality: dto.nationality ?? null,
+        nationalityId: dto.nationalityId,
         position: dto.position ?? null,
         currentTeam: dto.currentTeam ?? null,
         notes: dto.notes ?? null,
         createdById: dto.createdById ?? null,
         status: dto.status ?? "LONGLIST",
         playStyle: (dto.playStyle as any) ?? null,
+        clubId: clubId ?? null,
       },
       select: PROSPECT_SELECT,
     });
@@ -90,7 +98,7 @@ export class ProspectRepository {
       where: { id },
       data: {
         ...(dto.name !== undefined && { name: dto.name }),
-        ...(dto.nationality !== undefined && { nationality: dto.nationality }),
+        ...(dto.nationalityId !== undefined && { nationalityId: dto.nationalityId }),
         ...(dto.position !== undefined && { position: dto.position }),
         ...(dto.currentTeam !== undefined && { currentTeam: dto.currentTeam }),
         ...(dto.notes !== undefined && { notes: dto.notes }),
@@ -113,7 +121,7 @@ export class ProspectRepository {
   async sign(prospectId: number, dto: SignProspectDto) {
     const prospect = await this.prisma.prospect.findUnique({
       where: { id: prospectId },
-      select: { id: true, status: true, name: true, position: true, playStyle: true },
+      select: { id: true, status: true, name: true, position: true, playStyle: true, nationalityId: true },
     });
     if (!prospect) throw new AppError(404, "PROSPECT_NOT_FOUND");
     if (prospect.status !== "CONTRACT_PENDING") throw new AppError(409, "INVALID_STATUS_TRANSITION");
@@ -131,7 +139,7 @@ export class ProspectRepository {
           position: dto.position ?? prospect.position ?? "STRIKER",
           level: "ROOKIE",
           status: "ACTIVE",
-          nationalityId: dto.nationalityId,
+          ...(prospect.nationalityId != null && { nationalityId: prospect.nationalityId }),
           workPermitStatus: dto.workPermitStatus ?? "NOT_REQUIRED",
           workPermitExpiry: dto.workPermitExpiry ? new Date(dto.workPermitExpiry) : null,
           prospectId: prospectId,

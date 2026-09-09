@@ -59,7 +59,7 @@ interface CreateProspectDialogProps {
 function CreateProspectDialog({ open, onOpenChange, onSaved }: CreateProspectDialogProps) {
   const { t } = useTranslation('contract')
   const [name, setName] = useState('')
-  const [nationality, setNationality] = useState('')
+  const [nationalityId, setNationalityId] = useState<string>('')
   const [position, setPosition] = useState<Position | ''>('')
   const [playStyle, setPlayStyle] = useState<PlayStyle | ''>('')
   const [currentTeam, setCurrentTeam] = useState('')
@@ -80,11 +80,12 @@ function CreateProspectDialog({ open, onOpenChange, onSaved }: CreateProspectDia
   const [confirmOpen, setConfirmOpen] = useState(false)
 
   const doCreate = async () => {
+    if (!nationalityId) { toast.error(t('prospects.form.required')); return }
     setSaving(true)
     try {
       const dto: CreateProspectDto = {
         name: name.trim(),
-        ...(nationality.trim() && { nationality: nationality.trim() }),
+        nationalityId: Number(nationalityId),
         ...(position && { position }),
         ...(currentTeam.trim() && { currentTeam: currentTeam.trim() }),
         ...(notes.trim() && { notes: notes.trim() }),
@@ -171,16 +172,14 @@ function CreateProspectDialog({ open, onOpenChange, onSaved }: CreateProspectDia
             <Input placeholder="선수 이름" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>{t('prospects.form.nationalityLabel')}</Label>
-            <Select value={nationality} onValueChange={setNationality}>
+            <Label>{t('prospects.form.nationalityLabel')} *</Label>
+            <Select value={nationalityId} onValueChange={setNationalityId}>
               <SelectTrigger>
-                <SelectValue placeholder="국적 선택">
-                  {nationality || undefined}
-                </SelectValue>
+                <SelectValue placeholder="국적 선택" />
               </SelectTrigger>
               <SelectContent>
                 {countries.map(c => (
-                  <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                  <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -241,7 +240,7 @@ function CreateProspectDialog({ open, onOpenChange, onSaved }: CreateProspectDia
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t('prospects.form.cancel')}</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? t('prospects.form.saving') : t('prospects.form.create')}</Button>
+          <Button onClick={handleSave} disabled={saving || !nationalityId}>{saving ? t('prospects.form.saving') : t('prospects.form.create')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -260,8 +259,6 @@ interface SignProspectDialogProps {
 
 function SignProspectDialog({ prospect, open, onOpenChange, onSaved }: SignProspectDialogProps) {
   const { t } = useTranslation('contract')
-  const [countries, setCountries] = useState<Country[]>([])
-  const [nationalityId, setNationalityId] = useState<string>('')
   const [dob, setDob] = useState('')
   const [height, setHeight] = useState('')
   const [weight, setWeight] = useState('')
@@ -276,15 +273,8 @@ function SignProspectDialog({ prospect, open, onOpenChange, onSaved }: SignProsp
   const [workPermitExpiry, setWorkPermitExpiry] = useState('')
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    if (!open) return
-    api.get<{ data: Country[] } | Country[]>('/countries')
-      .then((res) => setCountries(Array.isArray(res) ? res : res.data))
-      .catch(() => null)
-  }, [open])
-
   const handleSave = async () => {
-    if (!dob || !height || !weight || !nationalityId || !contractStart || !contractEnd || !salary) {
+    if (!dob || !height || !weight || !contractStart || !contractEnd || !salary) {
       toast.error(t('prospects.signForm.required'))
       return
     }
@@ -294,7 +284,6 @@ function SignProspectDialog({ prospect, open, onOpenChange, onSaved }: SignProsp
         dateOfBirth: dob,
         height: Number(height),
         weight: Number(weight),
-        nationalityId: Number(nationalityId),
         preferredFoot: foot,
         ...(position && { position }),
         contractStartDate: contractStart,
@@ -332,15 +321,6 @@ function SignProspectDialog({ prospect, open, onOpenChange, onSaved }: SignProsp
               <div className="space-y-1.5">
                 <Label>{t('prospects.signForm.dobLabel')} *</Label>
                 <Input type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>{t('prospects.signForm.nationalityLabel')} *</Label>
-                <Select value={nationalityId} onValueChange={setNationalityId}>
-                  <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
-                  <SelectContent>
-                    {countries.map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
               </div>
               <div className="space-y-1.5">
                 <Label>{t('prospects.signForm.heightLabel')} *</Label>
@@ -660,7 +640,7 @@ export function ProspectsPage() {
                   <TableCell className="font-medium">{p.name}</TableCell>
                   <TableCell className="font-mono text-sm">{p.position ? POSITION_LABEL[p.position] : '—'}</TableCell>
                   <TableCell className="text-sm">{p.currentTeam ?? '—'}</TableCell>
-                  <TableCell className="text-sm">{p.nationality ?? '—'}</TableCell>
+                  <TableCell className="text-sm">{p.country?.name ?? '—'}</TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${STATUS_STYLE[p.status]}`}>
                       {t(`prospects.status.${p.status}`)}
