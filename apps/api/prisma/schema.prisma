@@ -1611,6 +1611,8 @@ model SubstitutionEvent {
   toPlayer   Player @relation("SubOn",  fields: [toPlayerId],   references: [id])
 
   @@index([matchId])
+  @@unique([matchId, fromPlayerId])
+  @@unique([matchId, toPlayerId])
 }
 
 model PlayerMatchStats {
