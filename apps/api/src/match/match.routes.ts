@@ -85,4 +85,16 @@ router.get("/:id/lineup", auth, lineupController.getLineup);
 router.put("/:id/lineup", auth, lineupController.saveLineup);
 router.post("/:id/lineup/confirm", auth, lineupController.confirmLineup);
 
+import { MatchSubstitutionRepository } from "./match.substitution.repo";
+import { MatchSubstitutionService } from "./match.substitution.service";
+import { MatchSubstitutionController } from "./match.substitution.controller";
+
+const subRepo = new MatchSubstitutionRepository(getPrisma());
+const subService = new MatchSubstitutionService(subRepo, repo);
+const subController = new MatchSubstitutionController(subService);
+
+router.get("/:id/substitutions",           auth, subController.list);
+router.post("/:id/substitutions",          auth, subController.create);
+router.delete("/:id/substitutions/:subId", auth, subController.delete);
+
 export default router;
