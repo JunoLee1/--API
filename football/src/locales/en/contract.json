@@ -409,6 +409,7 @@
     "noData": "No prospects registered.",
     "status": {
       "LONGLIST": "Longlist",
+      "PRE_SHORTLIST": "Active Review",
       "SHORTLIST": "Shortlist",
       "ACTIVE": "Negotiating",
       "MEDICAL_TEST": "Medical Test",

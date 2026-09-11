@@ -409,6 +409,7 @@
     "noData": "등록된 Prospect가 없습니다.",
     "status": {
       "LONGLIST": "롱리스트",
+      "PRE_SHORTLIST": "적극 검토 중",
       "SHORTLIST": "쇼트리스트",
       "ACTIVE": "협상 중",
       "MEDICAL_TEST": "메디컬 테스트",
