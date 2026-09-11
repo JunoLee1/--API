@@ -76,7 +76,15 @@ export class ProspectRepository {
     });
   }
 
-  create(dto: CreateProspectDto, clubId?: number | null, createdById?: number) {
+  async getClubLeagueCountryIds(clubId: number): Promise<number[]> {
+    const links = await this.prisma.clubLeague.findMany({
+      where: { clubId, league: { isActive: true } },
+      select: { league: { select: { countryId: true } } },
+    });
+    return links.map(l => l.league.countryId).filter((id): id is number => id != null);
+  }
+
+  create(dto: CreateProspectDto, clubId?: number | null, createdById?: number, visaRequired?: boolean) {
     return this.prisma.prospect.create({
       data: {
         name: dto.name,
@@ -88,6 +96,7 @@ export class ProspectRepository {
         status: dto.status ?? "LONGLIST",
         playStyle: (dto.playStyle as any) ?? null,
         clubId: clubId ?? null,
+        ...(visaRequired !== undefined && { visaRequired }),
       },
       select: PROSPECT_SELECT,
     });

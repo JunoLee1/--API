@@ -36,7 +36,16 @@ export class ProspectService {
     if (!dto.nationalityId) throw new AppError(400, "NATIONALITY_REQUIRED");
     const { squadPlayers } = await this.repo.checkDuplicate(dto.name);
     if (squadPlayers.length > 0) throw new AppError(409, "ALREADY_IN_SQUAD");
-    return this.repo.create(dto, actor?.clubId ?? null, actor?.id);
+
+    let visaRequired: boolean | undefined = dto.visaRequired;
+    if (visaRequired === undefined && actor?.clubId && dto.nationalityId) {
+      const leagueCountryIds = await this.repo.getClubLeagueCountryIds(actor.clubId);
+      visaRequired = leagueCountryIds.length > 0
+        ? !leagueCountryIds.includes(dto.nationalityId)
+        : undefined; // 리그 정보 없으면 미설정
+    }
+
+    return this.repo.create(dto, actor?.clubId ?? null, actor?.id, visaRequired);
   }
 
   getAll(status?: ProspectStatus, clubId?: number | null) {
