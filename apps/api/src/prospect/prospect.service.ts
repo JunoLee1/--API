@@ -36,7 +36,7 @@ export class ProspectService {
     if (!dto.nationalityId) throw new AppError(400, "NATIONALITY_REQUIRED");
     const { squadPlayers } = await this.repo.checkDuplicate(dto.name);
     if (squadPlayers.length > 0) throw new AppError(409, "ALREADY_IN_SQUAD");
-    return this.repo.create(dto, actor?.clubId ?? null);
+    return this.repo.create(dto, actor?.clubId ?? null, actor?.id);
   }
 
   getAll(status?: ProspectStatus, clubId?: number | null) {

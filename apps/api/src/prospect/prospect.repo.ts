@@ -76,7 +76,7 @@ export class ProspectRepository {
     });
   }
 
-  create(dto: CreateProspectDto, clubId?: number | null) {
+  create(dto: CreateProspectDto, clubId?: number | null, createdById?: number) {
     return this.prisma.prospect.create({
       data: {
         name: dto.name,
@@ -84,7 +84,7 @@ export class ProspectRepository {
         position: dto.position ?? null,
         currentTeam: dto.currentTeam ?? null,
         notes: dto.notes ?? null,
-        createdById: dto.createdById ?? null,
+        createdById: createdById ?? null,
         status: dto.status ?? "LONGLIST",
         playStyle: (dto.playStyle as any) ?? null,
         clubId: clubId ?? null,
