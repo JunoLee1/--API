@@ -8,7 +8,7 @@ export interface Prospect {
   id: number
   name: string
   nationalityId: number | null
-  country: { id: number; name: string; code: string } | null
+  nationality: { id: number; name: string; code: string } | null
   position: Position | null
   currentTeam: string | null
   notes: string | null
