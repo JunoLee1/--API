@@ -89,6 +89,13 @@ export class TrainingController {
     } catch (err) { next(err) }
   }
 
+  getResultById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const resultId = Number(req.params["resultId"]);
+      res.status(200).json(await this.service.getResultById(resultId));
+    } catch (err) { next(err); }
+  }
+
   correctAttendance = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = requireUser(req);

@@ -209,6 +209,12 @@ export class TrainingService {
     return this.repo.findResults(filters)
   }
 
+  async getResultById(resultId: number) {
+    const result = await this.repo.findResultById(resultId);
+    if (!result) throw new AppError(404, "RESULT_NOT_FOUND");
+    return result;
+  }
+
   async correctAttendance(resultId: number, adminId: number, attendance: string, reason: string) {
     if (!reason?.trim()) throw new AppError(400, "REASON_REQUIRED");
     const result = await this.repo.findResultById(resultId);
