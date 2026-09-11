@@ -161,6 +161,14 @@ export class MatchRepository {
     });
   }
 
+  async findLineupPlayerIds(matchId: number): Promise<string[]> {
+    const lineup = await this.prisma.matchLineup.findUnique({
+      where: { matchId },
+      select: { slots: { select: { playerId: true } } },
+    });
+    return lineup?.slots.map((s) => s.playerId) ?? [];
+  }
+
   async findSubstitutionForPlayer(matchId: number, playerId: string) {
     const [subOff, subOn] = await Promise.all([
       this.prisma.substitutionEvent.findFirst({
@@ -180,6 +188,8 @@ export class MatchRepository {
         playerId: dto.playerId,
         goals: n(dto.goals),
         assists: n(dto.assists),
+        xG: n(dto.xG),
+        xA: n(dto.xA),
         shots: n(dto.shots),
         passesAttempted: n(dto.passesAttempted),
         passesCompleted: n(dto.passesCompleted),
@@ -225,6 +235,8 @@ export class MatchRepository {
       data: {
         goals: n(dto.goals),
         assists: n(dto.assists),
+        xG: n(dto.xG),
+        xA: n(dto.xA),
         shots: n(dto.shots),
         passesAttempted: n(dto.passesAttempted),
         passesCompleted: n(dto.passesCompleted),
