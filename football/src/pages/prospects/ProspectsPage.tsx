@@ -406,7 +406,7 @@ function SignProspectDialog({ prospect, open, onOpenChange, onSaved }: SignProsp
 // ─── ProspectsPage ──────────────────────────────────────────────────────────
 
 export function ProspectsPage() {
-  const { t } = useTranslation('contract')
+  const { t } = useTranslation(['contract', 'player'])
   const { user } = useCurrentUser()
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [loading, setLoading] = useState(true)
@@ -508,7 +508,7 @@ export function ProspectsPage() {
         return canWrite ? (
           <div className="flex gap-1">
             <Button size="sm" variant="outline" className="h-7 text-xs"
-              onClick={() => handleTransition(p.id, 'PRE_SHORTLIST')}>평가 시작</Button>
+              onClick={() => handleTransition(p.id, 'PRE_SHORTLIST')}>{t('prospects.action.startReview')}</Button>
             <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground"
               onClick={() => handleTransition(p.id, 'ARCHIVED')}>{t('prospects.deleteButton')}</Button>
           </div>
@@ -517,7 +517,7 @@ export function ProspectsPage() {
         return canWrite ? (
           <div className="flex gap-1">
             <Button size="sm" variant="outline" className="h-7 text-xs"
-              onClick={() => handleTransition(p.id, 'SHORTLIST')}>쇼트리스트 승격</Button>
+              onClick={() => handleTransition(p.id, 'SHORTLIST')}>{t('prospects.action.promoteShortlist')}</Button>
             <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground"
               onClick={() => handleTransition(p.id, 'ARCHIVED')}>{t('prospects.deleteButton')}</Button>
           </div>
@@ -526,7 +526,7 @@ export function ProspectsPage() {
         return canWrite ? (
           <div className="flex gap-1">
             <Button size="sm" variant="outline" className="h-7 text-xs"
-              onClick={() => handleTransition(p.id, 'ACTIVE')}>협상 시작</Button>
+              onClick={() => handleTransition(p.id, 'ACTIVE')}>{t('prospects.action.startNegotiation')}</Button>
             <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground"
               onClick={() => handleTransition(p.id, 'ARCHIVED')}>{t('prospects.deleteButton')}</Button>
           </div>
@@ -588,19 +588,29 @@ export function ProspectsPage() {
 
       <div className="border-b px-6 py-3 flex items-center gap-3 shrink-0 bg-muted/30">
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as ProspectStatus | 'ALL')}>
-          <SelectTrigger className="w-40 h-8 text-sm bg-background"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-40 h-8 text-sm bg-background">
+            <SelectValue>
+              {statusFilter === 'ALL' ? t('prospects.statusAll') : t(`prospects.status.${statusFilter}`)}
+            </SelectValue>
+          </SelectTrigger>
           <SelectContent>
             {STATUSES.map((st) => (
-              <SelectItem key={st} value={st}>{st === 'ALL' ? '전체' : t(`prospects.status.${st}`)}</SelectItem>
+              <SelectItem key={st} value={st}>
+                {st === 'ALL' ? t('prospects.statusAll') : t(`prospects.status.${st}`)}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={position || 'ALL'} onValueChange={(v) => setPosition(v === 'ALL' ? '' : v as Position)}>
-          <SelectTrigger className="w-40 h-8 text-sm bg-background"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-40 h-8 text-sm bg-background">
+            <SelectValue>
+              {position ? t(`player:position.${position}`) : t('player:positionAll')}
+            </SelectValue>
+          </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">전체 포지션</SelectItem>
+            <SelectItem value="ALL">{t('player:positionAll')}</SelectItem>
             {POSITIONS.map((pos) => (
-              <SelectItem key={pos} value={pos}>{POSITION_LABEL[pos]}</SelectItem>
+              <SelectItem key={pos} value={pos}>{t(`player:position.${pos}`)}</SelectItem>
             ))}
           </SelectContent>
         </Select>

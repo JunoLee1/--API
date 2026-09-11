@@ -407,8 +407,10 @@
     "addButton": "Add Prospect",
     "loadFailed": "Failed to load prospects.",
     "noData": "No prospects registered.",
+    "statusAll": "All",
     "status": {
       "LONGLIST": "Longlist",
+      "PRE_SHORTLIST": "Active Review",
       "SHORTLIST": "Shortlist",
       "ACTIVE": "Negotiating",
       "MEDICAL_TEST": "Medical Test",
@@ -480,6 +482,11 @@
     "deleteFailed": "Failed to delete.",
     "signButton": "Sign Player",
     "editButton": "Edit",
-    "deleteButton": "Delete"
+    "deleteButton": "Delete",
+    "action": {
+      "startReview": "Start Review",
+      "promoteShortlist": "Promote to Shortlist",
+      "startNegotiation": "Start Negotiation"
+    }
   }
 }

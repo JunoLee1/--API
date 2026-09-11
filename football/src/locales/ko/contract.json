@@ -407,8 +407,10 @@
     "addButton": "Prospect 추가",
     "loadFailed": "Prospect 목록을 불러오지 못했습니다.",
     "noData": "등록된 Prospect가 없습니다.",
+    "statusAll": "전체",
     "status": {
       "LONGLIST": "롱리스트",
+      "PRE_SHORTLIST": "적극 검토 중",
       "SHORTLIST": "쇼트리스트",
       "ACTIVE": "협상 중",
       "MEDICAL_TEST": "메디컬 테스트",
@@ -480,6 +482,11 @@
     "deleteFailed": "삭제에 실패했습니다.",
     "signButton": "영입 처리",
     "editButton": "수정",
-    "deleteButton": "삭제"
+    "deleteButton": "삭제",
+    "action": {
+      "startReview": "평가 시작",
+      "promoteShortlist": "쇼트리스트 승격",
+      "startNegotiation": "협상 시작"
+    }
   }
 }

@@ -185,21 +185,21 @@ export const POSITION_ABBR: Record<Position, string> = {
 }
 
 export const POSITION_LABEL: Record<Position, string> = {
-  GOALKEEPER: 'Goalkeeper',
-  STRIKER: 'Striker',
-  SHADOW_STRIKER: 'Shadow Striker',
-  WINGER: 'Winger',
-  CENTRAL_ATTACK_MIDFIELDER: 'CAM',
-  RIGHT_ATTACK_MIDFIELDER: 'RAM',
-  LEFT_ATTACK_MIDFIELDER: 'LAM',
-  CENTRAL_DEFENSIVE_MIDFIELDER: 'CDM',
-  LEFT_DEFENSIVE_MIDFIELDER: 'LDM',
-  RIGHT_DEFENSIVE_MIDFIELDER: 'RDM',
-  CENTER_BACK: 'Center Back',
-  LEFT_WING_BACK: 'LWB',
-  LEFT_FULL_BACK: 'LB',
-  RIGHT_WING_BACK: 'RWB',
-  RIGHT_FULL_BACK: 'RB',
+  GOALKEEPER: '골키퍼',
+  STRIKER: '공격수',
+  SHADOW_STRIKER: '섀도 스트라이커',
+  WINGER: '윙어',
+  CENTRAL_ATTACK_MIDFIELDER: '중앙 공격형 미드필더',
+  RIGHT_ATTACK_MIDFIELDER: '우측 공격형 미드필더',
+  LEFT_ATTACK_MIDFIELDER: '좌측 공격형 미드필더',
+  CENTRAL_DEFENSIVE_MIDFIELDER: '중앙 수비형 미드필더',
+  LEFT_DEFENSIVE_MIDFIELDER: '좌측 수비형 미드필더',
+  RIGHT_DEFENSIVE_MIDFIELDER: '우측 수비형 미드필더',
+  CENTER_BACK: '센터백',
+  LEFT_WING_BACK: '좌측 윙백',
+  LEFT_FULL_BACK: '좌측 풀백',
+  RIGHT_WING_BACK: '우측 윙백',
+  RIGHT_FULL_BACK: '우측 풀백',
 }
 
 export type PositionZone = 'GK' | 'DEF' | 'MID' | 'FWD'
