@@ -481,6 +481,11 @@
     "deleteFailed": "Failed to delete.",
     "signButton": "Sign Player",
     "editButton": "Edit",
-    "deleteButton": "Delete"
+    "deleteButton": "Delete",
+    "action": {
+      "startReview": "Start Review",
+      "promoteShortlist": "Promote to Shortlist",
+      "startNegotiation": "Start Negotiation"
+    }
   }
 }

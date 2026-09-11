@@ -9,7 +9,7 @@ import type {
   VisaEligibility, WorkPermitStatus,
 } from '@/types/prospect'
 import {
-  STATUS_STYLE,
+  STATUS_STYLE, STATUS_LABEL,
 } from '@/types/prospect'
 import type { Position, PlayStyle } from '@/types/player'
 import { POSITION_LABEL, PLAY_STYLE_LABEL, POSITION_PLAY_STYLES } from '@/types/player'
@@ -508,7 +508,7 @@ export function ProspectsPage() {
         return canWrite ? (
           <div className="flex gap-1">
             <Button size="sm" variant="outline" className="h-7 text-xs"
-              onClick={() => handleTransition(p.id, 'PRE_SHORTLIST')}>평가 시작</Button>
+              onClick={() => handleTransition(p.id, 'PRE_SHORTLIST')}>{t('prospects.action.startReview')}</Button>
             <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground"
               onClick={() => handleTransition(p.id, 'ARCHIVED')}>{t('prospects.deleteButton')}</Button>
           </div>
@@ -517,7 +517,7 @@ export function ProspectsPage() {
         return canWrite ? (
           <div className="flex gap-1">
             <Button size="sm" variant="outline" className="h-7 text-xs"
-              onClick={() => handleTransition(p.id, 'SHORTLIST')}>쇼트리스트 승격</Button>
+              onClick={() => handleTransition(p.id, 'SHORTLIST')}>{t('prospects.action.promoteShortlist')}</Button>
             <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground"
               onClick={() => handleTransition(p.id, 'ARCHIVED')}>{t('prospects.deleteButton')}</Button>
           </div>
@@ -526,7 +526,7 @@ export function ProspectsPage() {
         return canWrite ? (
           <div className="flex gap-1">
             <Button size="sm" variant="outline" className="h-7 text-xs"
-              onClick={() => handleTransition(p.id, 'ACTIVE')}>협상 시작</Button>
+              onClick={() => handleTransition(p.id, 'ACTIVE')}>{t('prospects.action.startNegotiation')}</Button>
             <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground"
               onClick={() => handleTransition(p.id, 'ARCHIVED')}>{t('prospects.deleteButton')}</Button>
           </div>
@@ -588,15 +588,23 @@ export function ProspectsPage() {
 
       <div className="border-b px-6 py-3 flex items-center gap-3 shrink-0 bg-muted/30">
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as ProspectStatus | 'ALL')}>
-          <SelectTrigger className="w-40 h-8 text-sm bg-background"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-40 h-8 text-sm bg-background">
+            <SelectValue placeholder="전체">
+              {statusFilter === 'ALL' ? '전체' : STATUS_LABEL[statusFilter as ProspectStatus]}
+            </SelectValue>
+          </SelectTrigger>
           <SelectContent>
             {STATUSES.map((st) => (
-              <SelectItem key={st} value={st}>{st === 'ALL' ? '전체' : t(`prospects.status.${st}`)}</SelectItem>
+              <SelectItem key={st} value={st}>{st === 'ALL' ? '전체' : STATUS_LABEL[st as ProspectStatus]}</SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={position || 'ALL'} onValueChange={(v) => setPosition(v === 'ALL' ? '' : v as Position)}>
-          <SelectTrigger className="w-40 h-8 text-sm bg-background"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-40 h-8 text-sm bg-background">
+            <SelectValue placeholder="전체 포지션">
+              {position ? POSITION_LABEL[position as Position] : '전체 포지션'}
+            </SelectValue>
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">전체 포지션</SelectItem>
             {POSITIONS.map((pos) => (

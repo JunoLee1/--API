@@ -481,6 +481,11 @@
     "deleteFailed": "삭제에 실패했습니다.",
     "signButton": "영입 처리",
     "editButton": "수정",
-    "deleteButton": "삭제"
+    "deleteButton": "삭제",
+    "action": {
+      "startReview": "평가 시작",
+      "promoteShortlist": "쇼트리스트 승격",
+      "startNegotiation": "협상 시작"
+    }
   }
 }
