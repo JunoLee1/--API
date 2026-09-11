@@ -9,7 +9,7 @@ import type {
   VisaEligibility, WorkPermitStatus,
 } from '@/types/prospect'
 import {
-  STATUS_STYLE, STATUS_LABEL,
+  STATUS_STYLE,
 } from '@/types/prospect'
 import type { Position, PlayStyle } from '@/types/player'
 import { POSITION_LABEL, PLAY_STYLE_LABEL, POSITION_PLAY_STYLES } from '@/types/player'
@@ -406,7 +406,7 @@ function SignProspectDialog({ prospect, open, onOpenChange, onSaved }: SignProsp
 // ─── ProspectsPage ──────────────────────────────────────────────────────────
 
 export function ProspectsPage() {
-  const { t } = useTranslation('contract')
+  const { t } = useTranslation(['contract', 'player'])
   const { user } = useCurrentUser()
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [loading, setLoading] = useState(true)
@@ -589,26 +589,28 @@ export function ProspectsPage() {
       <div className="border-b px-6 py-3 flex items-center gap-3 shrink-0 bg-muted/30">
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as ProspectStatus | 'ALL')}>
           <SelectTrigger className="w-40 h-8 text-sm bg-background">
-            <SelectValue placeholder="전체">
-              {statusFilter === 'ALL' ? '전체' : STATUS_LABEL[statusFilter as ProspectStatus]}
+            <SelectValue>
+              {statusFilter === 'ALL' ? t('prospects.statusAll') : t(`prospects.status.${statusFilter}`)}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {STATUSES.map((st) => (
-              <SelectItem key={st} value={st}>{st === 'ALL' ? '전체' : STATUS_LABEL[st as ProspectStatus]}</SelectItem>
+              <SelectItem key={st} value={st}>
+                {st === 'ALL' ? t('prospects.statusAll') : t(`prospects.status.${st}`)}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={position || 'ALL'} onValueChange={(v) => setPosition(v === 'ALL' ? '' : v as Position)}>
           <SelectTrigger className="w-40 h-8 text-sm bg-background">
-            <SelectValue placeholder="전체 포지션">
-              {position ? POSITION_LABEL[position as Position] : '전체 포지션'}
+            <SelectValue>
+              {position ? t(`player:position.${position}`) : t('player:positionAll')}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">전체 포지션</SelectItem>
+            <SelectItem value="ALL">{t('player:positionAll')}</SelectItem>
             {POSITIONS.map((pos) => (
-              <SelectItem key={pos} value={pos}>{POSITION_LABEL[pos]}</SelectItem>
+              <SelectItem key={pos} value={pos}>{t(`player:position.${pos}`)}</SelectItem>
             ))}
           </SelectContent>
         </Select>

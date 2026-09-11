@@ -407,6 +407,7 @@
     "addButton": "Add Prospect",
     "loadFailed": "Failed to load prospects.",
     "noData": "No prospects registered.",
+    "statusAll": "All",
     "status": {
       "LONGLIST": "Longlist",
       "PRE_SHORTLIST": "Active Review",

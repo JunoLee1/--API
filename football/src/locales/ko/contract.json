@@ -407,6 +407,7 @@
     "addButton": "Prospect 추가",
     "loadFailed": "Prospect 목록을 불러오지 못했습니다.",
     "noData": "등록된 Prospect가 없습니다.",
+    "statusAll": "전체",
     "status": {
       "LONGLIST": "롱리스트",
       "PRE_SHORTLIST": "적극 검토 중",
