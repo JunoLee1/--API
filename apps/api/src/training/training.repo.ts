@@ -220,7 +220,7 @@ export class TrainingRepository {
   findResultById(id: number) {
     return this.prisma.trainingResult.findUnique({
       where: { id },
-      select: { id: true, attendance: true, playerId: true, sessionId: true },
+      select: { id: true, attendance: true, playerId: true, sessionId: true, feedback: true, performanceScore: true },
     });
   }
 

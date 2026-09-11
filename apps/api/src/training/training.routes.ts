@@ -15,6 +15,7 @@ const controller = new TrainingController(service);
 
 router.get("/", auth, controller.getSessions);
 router.get("/results", auth, controller.getResults);
+router.get("/results/:resultId", auth, controller.getResultById);
 router.get("/:id", auth, controller.getSessionById);
 router.post("/", auth, controller.createSession);
 router.patch("/:id/approve", auth, controller.approveSession);
