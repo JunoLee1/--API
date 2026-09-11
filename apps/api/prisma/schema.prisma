@@ -682,6 +682,7 @@ enum DepartmentCategory {
   MARKETING
   LEGAL
   MEDIA
+  SCOUTING
 }
 
 enum ContractType {

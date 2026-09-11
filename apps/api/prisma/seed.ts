@@ -53,8 +53,9 @@ async function seedDepartments() {
   await findOrCreate('의무팀',     { parentId: footballOps.id, category: 'PERFORMANCE' });
   await findOrCreate('재활팀',     { parentId: footballOps.id, category: 'PERFORMANCE' });
   await findOrCreate('유소년',     { parentId: footballOps.id, category: 'PERFORMANCE' });
+  await findOrCreate('스카우팅팀', { parentId: footballOps.id, category: 'SCOUTING' });
 
-  console.log('Departments seeded: 경영지원(재무관리·HR), 운영/인프라(시설·장비·의료기기·IT), 선수단 및 기술 부문(코칭·의무·재활·유소년)');
+  console.log('Departments seeded: 경영지원(재무관리·HR), 운영/인프라(시설·장비·의료기기·IT), 선수단 및 기술 부문(코칭·의무·재활·유소년·스카우팅)');
 }
 
 async function seedLeagues() {

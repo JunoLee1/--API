@@ -8,7 +8,12 @@ export class DepartmentRepository {
 
   findAll(clubId?: number | null) {
     return this.prisma.department.findMany({
-      where: { parentId: null, ...(clubId != null && { clubId }) },
+      where: {
+        parentId: null,
+        ...(clubId != null
+          ? { OR: [{ clubId }, { clubId: null }] }
+          : {}),
+      },
       orderBy: { name: "asc" },
       include: { children: { orderBy: { name: "asc" } } },
     });
