@@ -51,7 +51,7 @@ export class VideoAnalysisService {
           jobId,
           videoUrl,
           prospectId,
-          callbackUrl: `${ERP_BASE_URL}/internal/video-analysis/webhook`,
+          callbackUrl: `${ERP_BASE_URL}/api/internal/video-analysis/webhook`,
           webhookSecret: WEBHOOK_SECRET,
         }),
       })
