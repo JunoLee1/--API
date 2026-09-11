@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Pencil } from 'lucide-react'
 import { toast } from 'sonner'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
@@ -14,8 +15,8 @@ import { useRef } from 'react'
 import { prospectApi } from '@/services/prospect.service'
 import type {
   Prospect, ProspectVideoEvaluation, ProspectEvaluationLog,
-  VideoEvalResult, EvaluationLogType, CreateVideoEvaluationDto, CreateEvaluationLogDto,
-  PipelineData,
+  VideoEvalResult, EvaluationLogType, CreateVideoEvaluationDto, UpdateVideoEvaluationDto,
+  CreateEvaluationLogDto, PipelineData,
 } from '@/types/prospect'
 import {
   VIDEO_EVAL_RESULT_LABEL, VIDEO_EVAL_RESULT_STYLE,
@@ -43,6 +44,7 @@ interface VideoEvalDialogProps {
   open: boolean
   onOpenChange: (v: boolean) => void
   onSaved: () => void
+  initialData?: ProspectVideoEvaluation
 }
 
 function applyPipeline(data: PipelineData) {
@@ -55,7 +57,7 @@ function applyPipeline(data: PipelineData) {
   }
 }
 
-function VideoEvalDialog({ prospectId, open, onOpenChange, onSaved }: VideoEvalDialogProps) {
+function VideoEvalDialog({ prospectId, open, onOpenChange, onSaved, initialData }: VideoEvalDialogProps) {
   const [qualityPassed, setQualityPassed] = useState(false)
   const [identifiable, setIdentifiable] = useState(false)
   const [continuity, setContinuity] = useState(false)
@@ -70,18 +72,18 @@ function VideoEvalDialog({ prospectId, open, onOpenChange, onSaved }: VideoEvalD
 
   useEffect(() => {
     if (open) {
-      setQualityPassed(false)
-      setIdentifiable(false)
-      setContinuity(false)
-      setJerseyNumber('')
-      setTotalScore('')
-      setNotes('')
-      setPipelineApplied(null)
+      setQualityPassed(initialData?.qualityPassed ?? false)
+      setIdentifiable(initialData?.identifiable ?? false)
+      setContinuity(initialData?.continuity ?? false)
+      setJerseyNumber(initialData?.jerseyNumber != null ? String(initialData.jerseyNumber) : '')
+      setTotalScore(initialData?.totalScore != null ? String(initialData.totalScore) : '')
+      setNotes(initialData?.notes ?? '')
+      setPipelineApplied(initialData?.pipelineData ?? null)
       setVideoUrl('')
       setAnalysisStatus('idle')
     }
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
-  }, [open])
+  }, [open, initialData])
 
   const handleAnalyzeVideo = async () => {
     if (!videoUrl.trim()) return
@@ -118,16 +120,29 @@ function VideoEvalDialog({ prospectId, open, onOpenChange, onSaved }: VideoEvalD
   const handleSave = async () => {
     setSaving(true)
     try {
-      const dto: CreateVideoEvaluationDto = {
-        qualityPassed,
-        identifiable,
-        continuity,
-        jerseyNumber: jerseyNumber !== '' ? Number(jerseyNumber) : null,
-        totalScore: totalScore !== '' ? Number(totalScore) : null,
-        pipelineData: pipelineApplied ?? null,
-        notes: notes || null,
+      if (initialData) {
+        const dto: UpdateVideoEvaluationDto = {
+          qualityPassed,
+          identifiable,
+          continuity,
+          jerseyNumber: jerseyNumber !== '' ? Number(jerseyNumber) : null,
+          totalScore: totalScore !== '' ? Number(totalScore) : null,
+          pipelineData: pipelineApplied ?? null,
+          notes: notes || null,
+        }
+        await prospectApi.videoEvaluations.update(prospectId, initialData.id, dto)
+      } else {
+        const dto: CreateVideoEvaluationDto = {
+          qualityPassed,
+          identifiable,
+          continuity,
+          jerseyNumber: jerseyNumber !== '' ? Number(jerseyNumber) : null,
+          totalScore: totalScore !== '' ? Number(totalScore) : null,
+          pipelineData: pipelineApplied ?? null,
+          notes: notes || null,
+        }
+        await prospectApi.videoEvaluations.create(prospectId, dto)
       }
-      await prospectApi.videoEvaluations.create(prospectId, dto)
       toast.success('평가가 저장되었습니다')
       onSaved()
       onOpenChange(false)
@@ -142,7 +157,7 @@ function VideoEvalDialog({ prospectId, open, onOpenChange, onSaved }: VideoEvalD
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>비디오 1차 평가</DialogTitle>
+          <DialogTitle>{initialData ? '비디오 평가 수정' : '비디오 1차 평가'}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="rounded border border-dashed p-3 space-y-2 bg-muted/20">
@@ -253,6 +268,7 @@ function EvalTab({ prospect, canWrite }: EvalTabProps) {
   const [loadingEval, setLoadingEval] = useState(true)
   const [loadingLogs, setLoadingLogs] = useState(true)
   const [evalDialogOpen, setEvalDialogOpen] = useState(false)
+  const [editTarget, setEditTarget] = useState<ProspectVideoEvaluation | null>(null)
 
   const [logType, setLogType] = useState<EvaluationLogType>('FIELD_VISIT')
   const [logNote, setLogNote] = useState('')
@@ -321,16 +337,27 @@ function EvalTab({ prospect, canWrite }: EvalTabProps) {
         ) : (
           <div className="space-y-2">
             <div className="rounded border p-3 space-y-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs font-medium ${VIDEO_EVAL_RESULT_STYLE[latest.result]}`}>
-                  {VIDEO_EVAL_RESULT_LABEL[latest.result]}
-                </span>
-                {latest.qualityPassed && <span className="text-xs bg-green-50 text-green-700 border border-green-200 rounded px-1.5 py-0.5">화질 ✓</span>}
-                {!latest.qualityPassed && <span className="text-xs bg-red-50 text-red-700 border border-red-200 rounded px-1.5 py-0.5">화질 ✗</span>}
-                {latest.identifiable && <span className="text-xs bg-green-50 text-green-700 border border-green-200 rounded px-1.5 py-0.5">식별 ✓</span>}
-                {!latest.identifiable && <span className="text-xs bg-red-50 text-red-700 border border-red-200 rounded px-1.5 py-0.5">식별 ✗</span>}
-                {latest.continuity && <span className="text-xs bg-green-50 text-green-700 border border-green-200 rounded px-1.5 py-0.5">연속성 ✓</span>}
-                {!latest.continuity && <span className="text-xs bg-red-50 text-red-700 border border-red-200 rounded px-1.5 py-0.5">연속성 ✗</span>}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs font-medium ${VIDEO_EVAL_RESULT_STYLE[latest.result]}`}>
+                    {VIDEO_EVAL_RESULT_LABEL[latest.result]}
+                  </span>
+                  {latest.qualityPassed && <span className="text-xs bg-green-50 text-green-700 border border-green-200 rounded px-1.5 py-0.5">화질 ✓</span>}
+                  {!latest.qualityPassed && <span className="text-xs bg-red-50 text-red-700 border border-red-200 rounded px-1.5 py-0.5">화질 ✗</span>}
+                  {latest.identifiable && <span className="text-xs bg-green-50 text-green-700 border border-green-200 rounded px-1.5 py-0.5">식별 ✓</span>}
+                  {!latest.identifiable && <span className="text-xs bg-red-50 text-red-700 border border-red-200 rounded px-1.5 py-0.5">식별 ✗</span>}
+                  {latest.continuity && <span className="text-xs bg-green-50 text-green-700 border border-green-200 rounded px-1.5 py-0.5">연속성 ✓</span>}
+                  {!latest.continuity && <span className="text-xs bg-red-50 text-red-700 border border-red-200 rounded px-1.5 py-0.5">연속성 ✗</span>}
+                </div>
+                {canWrite && (
+                  <button
+                    onClick={() => setEditTarget(latest)}
+                    className="text-muted-foreground hover:text-foreground transition-colors ml-2 shrink-0"
+                    aria-label="수정"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
               {(latest.totalScore != null || latest.jerseyNumber != null) && (
                 <p className="text-xs text-muted-foreground">
@@ -357,9 +384,18 @@ function EvalTab({ prospect, canWrite }: EvalTabProps) {
                     <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${VIDEO_EVAL_RESULT_STYLE[ev.result]}`}>
                       {VIDEO_EVAL_RESULT_LABEL[ev.result]}
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground flex-1">
                       {ev.totalScore != null ? `${ev.totalScore}점` : '—'} · {new Date(ev.evaluatedAt).toLocaleDateString('ko-KR')}
                     </span>
+                    {canWrite && (
+                      <button
+                        onClick={() => setEditTarget(ev)}
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                        aria-label="수정"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -428,12 +464,21 @@ function EvalTab({ prospect, canWrite }: EvalTabProps) {
       </div>
 
       {canWrite && (
-        <VideoEvalDialog
-          prospectId={prospect.id}
-          open={evalDialogOpen}
-          onOpenChange={setEvalDialogOpen}
-          onSaved={loadEvals}
-        />
+        <>
+          <VideoEvalDialog
+            prospectId={prospect.id}
+            open={evalDialogOpen}
+            onOpenChange={setEvalDialogOpen}
+            onSaved={loadEvals}
+          />
+          <VideoEvalDialog
+            prospectId={prospect.id}
+            open={editTarget !== null}
+            onOpenChange={(v) => { if (!v) setEditTarget(null) }}
+            onSaved={loadEvals}
+            initialData={editTarget ?? undefined}
+          />
+        </>
       )}
     </div>
   )

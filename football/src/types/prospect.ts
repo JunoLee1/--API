@@ -146,6 +146,17 @@ export interface CreateVideoEvaluationDto {
   notes?: string | null
 }
 
+export interface UpdateVideoEvaluationDto {
+  qualityPassed?: boolean
+  identifiable?: boolean
+  continuity?: boolean
+  jerseyNumber?: number | null
+  totalScore?: number | null
+  scoreData?: Record<string, number> | null
+  pipelineData?: PipelineData | null
+  notes?: string | null
+}
+
 export interface CreateEvaluationLogDto {
   type: EvaluationLogType
   note: string

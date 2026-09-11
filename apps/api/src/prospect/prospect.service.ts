@@ -3,7 +3,7 @@ import { AppError } from "../lib/appError";
 import { getForeignQuota } from "../lib/foreign-quota";
 import { CreateProspectDto, UpdateProspectDto, TransitionProspectStatusDto, SignProspectDto, ProspectMedicalResultDto, CreateProspectNegotiationLogDto } from "./dto/prospect.dto";
 import { ProspectStatus, VideoEvalResult } from "../generated/enums";
-import { CreateProspectVideoEvaluationDto, CreateProspectEvaluationLogDto } from "./dto/video-evaluation.dto";
+import { CreateProspectVideoEvaluationDto, CreateProspectEvaluationLogDto, UpdateProspectVideoEvaluationDto } from "./dto/video-evaluation.dto";
 import { NotificationService } from "../notification/notification.service";
 import { NotificationRepository } from "../notification/notification.repo";
 import { getPrisma } from "../lib/prisma";
@@ -130,6 +130,19 @@ export class ProspectService {
 
   getVideoEvaluations(id: number) {
     return this.repo.getVideoEvaluations(id);
+  }
+
+  async updateVideoEvaluation(prospectId: number, evalId: number, dto: UpdateProspectVideoEvaluationDto, actorClubId?: number | null) {
+    await this.getById(prospectId, actorClubId);
+    const evaluations = await this.repo.getVideoEvaluations(prospectId);
+    const current = evaluations.find((e) => e.id === evalId);
+    if (!current) throw new AppError(404, 'VIDEO_EVAL_NOT_FOUND');
+    const qualityPassed = dto.qualityPassed ?? current.qualityPassed;
+    const identifiable = dto.identifiable ?? current.identifiable;
+    const continuity = dto.continuity ?? current.continuity;
+    const totalScore = dto.totalScore !== undefined ? dto.totalScore : current.totalScore;
+    const result = computeVideoEvalResult(qualityPassed, identifiable, continuity, totalScore);
+    return this.repo.updateVideoEvaluation(prospectId, evalId, dto, result);
   }
 
   async addEvaluationLog(id: number, dto: CreateProspectEvaluationLogDto, evaluatedById: number, actorClubId?: number | null) {

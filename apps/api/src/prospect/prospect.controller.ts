@@ -5,7 +5,7 @@ import { requireUser } from "../lib/authMiddleware";
 import { ProspectService } from "./prospect.service";
 import { ProspectStatus } from "../generated/enums";
 import { TransitionProspectStatusDto, SignProspectDto, ProspectMedicalResultDto, CreateProspectNegotiationLogDto } from "./dto/prospect.dto";
-import { CreateProspectVideoEvaluationDto, CreateProspectEvaluationLogDto } from "./dto/video-evaluation.dto";
+import { CreateProspectVideoEvaluationDto, CreateProspectEvaluationLogDto, UpdateProspectVideoEvaluationDto } from "./dto/video-evaluation.dto";
 
 const canWrite = (role: string, frontOfficeRole: string | null | undefined): boolean =>
   isAdminLike(role) ||
@@ -129,6 +129,21 @@ export class ProspectController {
           Number(req.params["id"]),
           req.body as CreateProspectVideoEvaluationDto,
           user.id,
+          user.clubId,
+        ),
+      );
+    } catch (err) { next(err); }
+  };
+
+  updateVideoEvaluation = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = requireUser(req);
+      if (!canWrite(user.role, user.frontOfficeRole)) throw new AppError(403, 'FORBIDDEN');
+      res.status(200).json(
+        await this.service.updateVideoEvaluation(
+          Number(req.params['id']),
+          Number(req.params['evalId']),
+          req.body as UpdateProspectVideoEvaluationDto,
           user.clubId,
         ),
       );

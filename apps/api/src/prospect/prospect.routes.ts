@@ -39,6 +39,7 @@ router.get("/:id/negotiation-logs", auth, controller.getNegotiationLogs);
 router.post("/:id/negotiation-logs", auth, controller.addNegotiationLog);
 router.get("/:id/video-evaluations", auth, controller.getVideoEvaluations);
 router.post("/:id/video-evaluations", auth, controller.addVideoEvaluation);
+router.patch("/:id/video-evaluations/:evalId", auth, controller.updateVideoEvaluation);
 router.post("/:prospectId/video-analysis", auth, videoAnalysisController.createJob);
 router.get("/:prospectId/video-analysis/:jobId", auth, videoAnalysisController.getJob);
 router.get("/:id/evaluation-logs", auth, controller.getEvaluationLogs);
