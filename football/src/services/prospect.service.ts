@@ -2,7 +2,7 @@ import { api } from './api'
 import type {
   Prospect, CreateProspectDto, UpdateProspectDto, ProspectStatus, SignProspectDto,
   ProspectVideoEvaluation, ProspectEvaluationLog,
-  CreateVideoEvaluationDto, CreateEvaluationLogDto, AcquisitionGateCheckResult,
+  CreateVideoEvaluationDto, UpdateVideoEvaluationDto, CreateEvaluationLogDto, AcquisitionGateCheckResult,
   VideoAnalysisJob,
 } from '@/types/prospect'
 
@@ -40,6 +40,8 @@ export const prospectApi = {
       api.get<ProspectVideoEvaluation[]>(`/prospects/${id}/video-evaluations`),
     create: (id: number, dto: CreateVideoEvaluationDto) =>
       api.post<ProspectVideoEvaluation>(`/prospects/${id}/video-evaluations`, dto),
+    update: (id: number, evalId: number, dto: UpdateVideoEvaluationDto) =>
+      api.patch<ProspectVideoEvaluation>(`/prospects/${id}/video-evaluations/${evalId}`, dto),
   },
 
   evaluationLogs: {

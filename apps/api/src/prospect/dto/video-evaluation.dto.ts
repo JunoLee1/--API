@@ -16,6 +16,17 @@ export interface CreateProspectVideoEvaluationDto {
   notes?: string | null;
 }
 
+export interface UpdateProspectVideoEvaluationDto {
+  qualityPassed?: boolean;
+  identifiable?: boolean;
+  continuity?: boolean;
+  jerseyNumber?: number | null;
+  totalScore?: number | null;
+  scoreData?: Record<string, number> | null;
+  pipelineData?: PipelineData | null;
+  notes?: string | null;
+}
+
 export interface CreateProspectEvaluationLogDto {
   type: 'VIDEO_ANALYSIS' | 'CONSISTENCY' | 'FIELD_VISIT' | 'LEAGUE_LEVEL';
   note: string;

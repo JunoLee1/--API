@@ -8,7 +8,7 @@ export interface Prospect {
   id: number
   name: string
   nationalityId: number | null
-  country: { id: number; name: string; code: string } | null
+  nationality: { id: number; name: string; code: string } | null
   position: Position | null
   currentTeam: string | null
   notes: string | null
@@ -139,6 +139,17 @@ export interface CreateVideoEvaluationDto {
   qualityPassed: boolean
   identifiable: boolean
   continuity: boolean
+  jerseyNumber?: number | null
+  totalScore?: number | null
+  scoreData?: Record<string, number> | null
+  pipelineData?: PipelineData | null
+  notes?: string | null
+}
+
+export interface UpdateVideoEvaluationDto {
+  qualityPassed?: boolean
+  identifiable?: boolean
+  continuity?: boolean
   jerseyNumber?: number | null
   totalScore?: number | null
   scoreData?: Record<string, number> | null

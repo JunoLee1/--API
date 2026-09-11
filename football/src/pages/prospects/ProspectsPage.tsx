@@ -640,7 +640,7 @@ export function ProspectsPage() {
                   <TableCell className="font-medium">{p.name}</TableCell>
                   <TableCell className="font-mono text-sm">{p.position ? POSITION_LABEL[p.position] : '—'}</TableCell>
                   <TableCell className="text-sm">{p.currentTeam ?? '—'}</TableCell>
-                  <TableCell className="text-sm">{p.country?.name ?? '—'}</TableCell>
+                  <TableCell className="text-sm">{p.nationality?.name ?? '—'}</TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs ${STATUS_STYLE[p.status]}`}>
                       {t(`prospects.status.${p.status}`)}

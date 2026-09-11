@@ -3,7 +3,7 @@ import { ProspectStatus, VideoEvalResult, EvaluationLogType } from "../generated
 import { AppError } from "../lib/appError";
 import { encrypt } from "../lib/crypto";
 import { CreateProspectDto, UpdateProspectDto, SignProspectDto, ProspectMedicalResultDto, CreateProspectNegotiationLogDto } from "./dto/prospect.dto";
-import { CreateProspectVideoEvaluationDto, CreateProspectEvaluationLogDto } from "./dto/video-evaluation.dto";
+import { CreateProspectVideoEvaluationDto, CreateProspectEvaluationLogDto, UpdateProspectVideoEvaluationDto } from "./dto/video-evaluation.dto";
 
 const PROSPECT_SELECT = {
   id: true,
@@ -76,7 +76,15 @@ export class ProspectRepository {
     });
   }
 
-  create(dto: CreateProspectDto, clubId?: number | null) {
+  async getClubLeagueCountryIds(clubId: number): Promise<number[]> {
+    const links = await this.prisma.clubLeague.findMany({
+      where: { clubId, league: { isActive: true } },
+      select: { league: { select: { countryId: true } } },
+    });
+    return links.map(l => l.league.countryId).filter((id): id is number => id != null);
+  }
+
+  create(dto: CreateProspectDto, clubId?: number | null, createdById?: number, visaRequired?: boolean) {
     return this.prisma.prospect.create({
       data: {
         name: dto.name,
@@ -84,10 +92,11 @@ export class ProspectRepository {
         position: dto.position ?? null,
         currentTeam: dto.currentTeam ?? null,
         notes: dto.notes ?? null,
-        createdById: dto.createdById ?? null,
+        createdById: createdById ?? null,
         status: dto.status ?? "LONGLIST",
         playStyle: (dto.playStyle as any) ?? null,
         clubId: clubId ?? null,
+        ...(visaRequired !== undefined && { visaRequired }),
       },
       select: PROSPECT_SELECT,
     });
@@ -237,6 +246,34 @@ export class ProspectRepository {
       where: { prospectId },
       orderBy: { evaluatedAt: 'desc' },
       select: { result: true },
+    });
+  }
+
+  async updateVideoEvaluation(
+    prospectId: number,
+    evalId: number,
+    dto: UpdateProspectVideoEvaluationDto,
+    result: VideoEvalResult,
+  ) {
+    const existing = await this.prisma.prospectVideoEvaluation.findFirst({
+      where: { id: evalId, prospectId },
+      select: { id: true },
+    });
+    if (!existing) throw new AppError(404, 'VIDEO_EVAL_NOT_FOUND');
+    return this.prisma.prospectVideoEvaluation.update({
+      where: { id: evalId },
+      data: {
+        ...(dto.qualityPassed !== undefined && { qualityPassed: dto.qualityPassed }),
+        ...(dto.identifiable !== undefined && { identifiable: dto.identifiable }),
+        ...(dto.continuity !== undefined && { continuity: dto.continuity }),
+        ...(dto.jerseyNumber !== undefined && { jerseyNumber: dto.jerseyNumber }),
+        ...(dto.totalScore !== undefined && { totalScore: dto.totalScore }),
+        ...(dto.scoreData !== undefined && { scoreData: dto.scoreData ?? Prisma.DbNull }),
+        ...(dto.pipelineData !== undefined && { pipelineData: dto.pipelineData ?? Prisma.DbNull }),
+        ...(dto.notes !== undefined && { notes: dto.notes }),
+        result,
+      },
+      include: { evaluatedBy: { select: { nickname: true } } },
     });
   }
 
