@@ -87,7 +87,7 @@ export class TrainingRepository {
     const players = await this.prisma.player.findMany({
       where: {
         status: "ACTIVE",
-        ...(teamId ? { teamId } : {}),
+        ...(teamId ? { teamId } : { team: { type: "FIRST_TEAM" } }),
       },
       select: {
         id: true,

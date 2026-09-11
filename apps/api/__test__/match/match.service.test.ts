@@ -14,6 +14,7 @@ const mockRepo = {
   upsertTeamStats: jest.fn(),
   recalculateTeamStats: jest.fn().mockResolvedValue(undefined),
   findSubstitutionForPlayer: jest.fn().mockResolvedValue({ subOff: null, subOn: null }),
+  findLineupPlayerIds: jest.fn().mockResolvedValue([]),
 } as any;
 
 const service = new MatchService(mockRepo);
@@ -406,5 +407,72 @@ describe("MatchService — upsertTeamStats Q_Cross 검증", () => {
     mockRepo.findById.mockResolvedValue({ ...baseMatch, homeScore: null, awayScore: null });
     await service.upsertTeamStats(1, { ...baseDto, oppGoals: 99 });
     expect(mockRepo.upsertTeamStats).toHaveBeenCalled();
+  });
+});
+
+describe("MatchService — upsertPlayerStats 슈팅 역전 검증 + xA (#518)", () => {
+  const baseMatch = { id: 1, extraTime: false };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockRepo.findById.mockResolvedValue(baseMatch);
+    mockRepo.findPlayerStats.mockResolvedValue(null);
+    mockRepo.createPlayerStats.mockResolvedValue({ id: 1 });
+    mockRepo.findSubstitutionForPlayer.mockResolvedValue({ subOff: null, subOn: null });
+    mockRepo.findLineupPlayerIds.mockResolvedValue([]);
+  });
+
+  test("shotsOnTarget > shots → 400 SHOTS_ON_TARGET_EXCEEDS_SHOTS", async () => {
+    await expect(
+      service.upsertPlayerStats(1, { playerId: "p1", shots: 2, shotsOnTarget: 3, minutesPlayed: 90 })
+    ).rejects.toMatchObject({ statusCode: 400, message: "SHOTS_ON_TARGET_EXCEEDS_SHOTS" });
+  });
+
+  test("shots 미기록 상태에서 shotsOnTarget 입력 → 400 SHOTS_ON_TARGET_EXCEEDS_SHOTS", async () => {
+    await expect(
+      service.upsertPlayerStats(1, { playerId: "p1", shotsOnTarget: 2, minutesPlayed: 90 })
+    ).rejects.toMatchObject({ statusCode: 400, message: "SHOTS_ON_TARGET_EXCEEDS_SHOTS" });
+  });
+
+  test("shotsOnTarget === shots → 성공", async () => {
+    await service.upsertPlayerStats(1, { playerId: "p1", shots: 3, shotsOnTarget: 3, minutesPlayed: 90 });
+    expect(mockRepo.createPlayerStats).toHaveBeenCalled();
+  });
+
+  test("xA가 포함된 dto로 createPlayerStats 호출된다", async () => {
+    const dto = { playerId: "p1", xA: 0.7, assists: 1, xG: 0.5, goals: 1, shotsOnTarget: 2, shots: 3, minutesPlayed: 90 };
+    await service.upsertPlayerStats(1, dto);
+    expect(mockRepo.createPlayerStats).toHaveBeenCalledWith(1, expect.objectContaining({ xA: 0.7 }));
+  });
+});
+
+describe("MatchService — upsertPlayerStats 라인업 검증 (#519)", () => {
+  const baseMatch = { id: 1, extraTime: false };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockRepo.findById.mockResolvedValue(baseMatch);
+    mockRepo.findPlayerStats.mockResolvedValue(null);
+    mockRepo.createPlayerStats.mockResolvedValue({ id: 1 });
+    mockRepo.findSubstitutionForPlayer.mockResolvedValue({ subOff: null, subOn: null });
+  });
+
+  test("라인업에 없는 선수 스탯 입력 → 400 PLAYER_NOT_IN_LINEUP", async () => {
+    mockRepo.findLineupPlayerIds.mockResolvedValue(["p2", "p3"]);
+    await expect(
+      service.upsertPlayerStats(1, { playerId: "p1", minutesPlayed: 90 })
+    ).rejects.toMatchObject({ statusCode: 400, message: "PLAYER_NOT_IN_LINEUP" });
+  });
+
+  test("선발 라인업에 있는 선수 → 성공", async () => {
+    mockRepo.findLineupPlayerIds.mockResolvedValue(["p1", "p2"]);
+    await service.upsertPlayerStats(1, { playerId: "p1", minutesPlayed: 90 });
+    expect(mockRepo.createPlayerStats).toHaveBeenCalled();
+  });
+
+  test("라인업 미제출(빈 배열) 시 검증 스킵 → 성공", async () => {
+    mockRepo.findLineupPlayerIds.mockResolvedValue([]);
+    await service.upsertPlayerStats(1, { playerId: "p1", minutesPlayed: 90 });
+    expect(mockRepo.createPlayerStats).toHaveBeenCalled();
   });
 });
