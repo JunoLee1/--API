@@ -4,12 +4,14 @@ import { ContractController } from "./contract.controller";
 import { ContractService } from "./contract.service";
 import { ContractRepository } from "./contract.repo";
 import { WageCapService } from "./wage-cap.service";
+import { NotificationRepository } from "../notification/notification.repo";
 import { getPrisma } from "../lib/prisma";
 
 const router = Router();
 const repo = new ContractRepository(getPrisma());
 const wageCapService = new WageCapService(getPrisma());
-const service = new ContractService(repo, wageCapService);
+const notificationRepo = new NotificationRepository(getPrisma());
+const service = new ContractService(repo, wageCapService, notificationRepo);
 const controller = new ContractController(service);
 
 

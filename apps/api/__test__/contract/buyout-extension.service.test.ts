@@ -24,8 +24,13 @@ const makeWageCap = () => ({
   check: jest.fn().mockResolvedValue({ status: "OK" }),
 });
 
+const makeNotifRepo = () => ({
+  createForGM: jest.fn().mockResolvedValue(undefined),
+  createForTD: jest.fn().mockResolvedValue(undefined),
+});
+
 const makeService = (repoOverrides = {}) =>
-  new ContractService(makeRepo(repoOverrides) as any, makeWageCap() as any);
+  new ContractService(makeRepo(repoOverrides) as any, makeWageCap() as any, makeNotifRepo() as any);
 
 // ─── getActiveBuyout ────────────────────────────────────────────────────────
 

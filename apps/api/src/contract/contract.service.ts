@@ -1,5 +1,6 @@
 import { ContractRepository } from "./contract.repo";
 import { WageCapService } from "./wage-cap.service";
+import { NotificationRepository } from "../notification/notification.repo";
 import { AppError } from "../lib/appError";
 import { writeAuditLog } from "../lib/auditLog";
 import { getPrisma } from "../lib/prisma";
@@ -16,6 +17,7 @@ export class ContractService {
   constructor(
     private repo: ContractRepository,
     private wageCapService: WageCapService,
+    private notificationRepo: NotificationRepository,
   ) {}
 
   getContractsByPlayer(playerId: string) {
@@ -63,6 +65,14 @@ export class ContractService {
       targetId: contract.id,
       detail: { playerId: dto.playerId, salary: dto.salary, startDate: dto.startDate, endDate: dto.endDate },
     });
+    await this.notificationRepo.createForGM(
+      "CONTRACT_CREATED",
+      (locale) => ({
+        title: locale === "ko" ? "계약 생성됨" : "Contract Created",
+        body: locale === "ko" ? `선수 계약이 생성되었습니다.` : `A player contract has been created.`,
+      }),
+      contract.id,
+    );
 
     if (capResult.status === "WARNING") {
       return { ...contract, wageCapWarning: { percentOver: capResult.percentOver } };
@@ -81,6 +91,24 @@ export class ContractService {
       targetId: id,
       detail: { before: contract.status, after: dto.status },
     });
+    await Promise.all([
+      this.notificationRepo.createForGM(
+        "CONTRACT_STATUS_CHANGED",
+        (locale) => ({
+          title: locale === "ko" ? "계약 상태 변경됨" : "Contract Status Changed",
+          body: locale === "ko" ? `계약 상태가 변경되었습니다.` : `A contract status has changed.`,
+        }),
+        id,
+      ),
+      this.notificationRepo.createForTD(
+        "CONTRACT_STATUS_CHANGED",
+        (locale) => ({
+          title: locale === "ko" ? "계약 상태 변경됨" : "Contract Status Changed",
+          body: locale === "ko" ? `계약 상태가 변경되었습니다.` : `A contract status has changed.`,
+        }),
+        id,
+      ),
+    ]);
     return updated;
   }
 
@@ -100,6 +128,14 @@ export class ContractService {
       targetId: contractId,
       detail: { amount: dto.amount },
     });
+    await this.notificationRepo.createForGM(
+      "CONTRACT_BUYOUT_ADDED",
+      (locale) => ({
+        title: locale === "ko" ? "바이아웃 조항 추가됨" : "Buyout Clause Added",
+        body: locale === "ko" ? `계약에 바이아웃 조항이 추가되었습니다.` : `A buyout clause has been added to a contract.`,
+      }),
+      contractId,
+    );
     return buyout;
   }
 
@@ -113,6 +149,14 @@ export class ContractService {
       targetId: contractId,
       detail: { condition: dto.condition, durationMonths: dto.durationMonths },
     });
+    await this.notificationRepo.createForGM(
+      "CONTRACT_EXTENSION_ADDED",
+      (locale) => ({
+        title: locale === "ko" ? "연장옵션 추가됨" : "Extension Option Added",
+        body: locale === "ko" ? `계약에 연장옵션이 추가되었습니다.` : `An extension option has been added to a contract.`,
+      }),
+      contractId,
+    );
     return extension;
   }
 
@@ -126,6 +170,14 @@ export class ContractService {
       targetId: contractId,
       detail: { amount: dto.amount, description: dto.description },
     });
+    await this.notificationRepo.createForGM(
+      "CONTRACT_BONUS_ADDED",
+      (locale) => ({
+        title: locale === "ko" ? "성과보너스 조항 추가됨" : "Performance Bonus Added",
+        body: locale === "ko" ? `계약에 성과보너스 조항이 추가되었습니다.` : `A performance bonus clause has been added to a contract.`,
+      }),
+      contractId,
+    );
     return bonus;
   }
 
