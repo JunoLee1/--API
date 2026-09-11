@@ -63,6 +63,12 @@ export class MatchService {
     const match = await this.repo.findById(matchId);
     if (!match) throw new AppError(404, "MATCH_NOT_FOUND");
 
+    // 라인업이 제출된 경우 해당 선수가 라인업에 있어야 함
+    const lineupPlayerIds = await this.repo.findLineupPlayerIds(matchId);
+    if (lineupPlayerIds.length > 0 && !lineupPlayerIds.includes(dto.playerId)) {
+      throw new AppError(400, "PLAYER_NOT_IN_LINEUP");
+    }
+
     // 키패스가 있으면 패스 시도도 반드시 있어야 함
     if ((dto.keyPasses ?? 0) > 0 && !dto.passesAttempted) {
       throw new AppError(400, "KEY_PASS_REQUIRES_PASSES_ATTEMPTED");
@@ -78,6 +84,10 @@ export class MatchService {
     // 득점이 있으면 유효슈팅 >= 득점
     if ((dto.goals ?? 0) > 0 && (dto.shotsOnTarget ?? 0) < (dto.goals ?? 0)) {
       throw new AppError(400, "SHOTS_ON_TARGET_BELOW_GOALS");
+    }
+    // 유효 슈팅은 전체 슈팅 초과 불가 (shots 미기록 = 0으로 취급)
+    if (dto.shotsOnTarget != null && dto.shotsOnTarget > (dto.shots ?? 0)) {
+      throw new AppError(400, "SHOTS_ON_TARGET_EXCEEDS_SHOTS");
     }
     // 드리블 성공/실패는 시도 초과 불가
     if (dto.dribblesAttempted != null && dto.dribblesCompleted != null &&
