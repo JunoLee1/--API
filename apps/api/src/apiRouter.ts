@@ -13,6 +13,10 @@ import matchRouter from "./match/match.routes";
 import notificationRouter from "./notification/notification.routes";
 import playerRouter from "./player/player.routes";
 import prospectRouter from "./prospect/prospect.routes";
+import { Router as WebhookRouter } from "express";
+import { VideoAnalysisController } from "./prospect/video-analysis.controller";
+import { VideoAnalysisService } from "./prospect/video-analysis.service";
+import { getPrisma } from "./lib/prisma";
 import seasonRouter from "./season/season.routes";
 import tacticalRouter from "./tactical/tactical.routes";
 import trainingRouter from "./training/training.routes";
@@ -102,6 +106,13 @@ apiRouter.use("/matches", matchRouter);
 apiRouter.use("/notifications", notificationRouter);
 apiRouter.use("/players", playerRouter);
 apiRouter.use("/prospects", prospectRouter);
+
+// ML 서비스 콜백 전용 — JWT 인증 없이 webhook secret으로만 검증
+const internalRouter = WebhookRouter();
+const _vaService = new VideoAnalysisService(getPrisma());
+const _vaController = new VideoAnalysisController(_vaService);
+internalRouter.post("/video-analysis/webhook", _vaController.webhook);
+apiRouter.use("/internal", internalRouter);
 apiRouter.use("/seasons", seasonRouter);
 apiRouter.use("/reports", reportRouter);
 apiRouter.use("/medical-expenses", medicalExpenseRouter);

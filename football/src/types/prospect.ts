@@ -90,6 +90,26 @@ export const WORK_PERMIT_LABEL: Record<WorkPermitStatus, string> = {
 export type VideoEvalResult = 'PASS' | 'FAIL' | 'PENDING'
 export type EvaluationLogType = 'VIDEO_ANALYSIS' | 'CONSISTENCY' | 'FIELD_VISIT' | 'LEAGUE_LEVEL'
 
+export type VideoAnalysisStatus = 'PENDING' | 'PROCESSING' | 'DONE' | 'FAILED'
+
+export interface VideoAnalysisJob {
+  id: number
+  prospectId: number
+  videoUrl: string
+  status: VideoAnalysisStatus
+  pipelineData: PipelineData | null
+  errorMessage: string | null
+  createdAt: string
+  completedAt: string | null
+}
+
+export interface PipelineData {
+  detectionConfidence: number
+  trackingScore: number
+  detectedJerseyNumbers: { number: number; confidence: number }[]
+  playerCount?: number
+}
+
 export interface ProspectVideoEvaluation {
   id: number
   prospectId: number
@@ -99,6 +119,7 @@ export interface ProspectVideoEvaluation {
   jerseyNumber: number | null
   totalScore: number | null
   scoreData: Record<string, number> | null
+  pipelineData: PipelineData | null
   result: VideoEvalResult
   notes: string | null
   evaluatedBy: { nickname: string }
@@ -121,6 +142,7 @@ export interface CreateVideoEvaluationDto {
   jerseyNumber?: number | null
   totalScore?: number | null
   scoreData?: Record<string, number> | null
+  pipelineData?: PipelineData | null
   notes?: string | null
 }
 

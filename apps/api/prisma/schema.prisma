@@ -561,6 +561,13 @@ enum VideoEvalResult {
   PENDING
 }
 
+enum VideoAnalysisStatus {
+  PENDING
+  PROCESSING
+  DONE
+  FAILED
+}
+
 enum EvaluationLogType {
   VIDEO_ANALYSIS
   CONSISTENCY
@@ -1949,7 +1956,8 @@ model Prospect {
   createdBy        User?                    @relation("ProspectCreatedBy", fields: [createdById], references: [id])
   club             Club?                    @relation("ProspectClub", fields: [clubId], references: [id])
   negotiationLogs  ProspectNegotiationLog[]
-  videoEvaluations ProspectVideoEvaluation[]
+  videoEvaluations   ProspectVideoEvaluation[]
+  videoAnalysisJobs  VideoAnalysisJob[]
   evaluationLogs   ProspectEvaluationLog[]
 }
 
@@ -1975,6 +1983,7 @@ model ProspectVideoEvaluation {
   jerseyNumber  Int?
   totalScore    Int?
   scoreData     Json?
+  pipelineData  Json?
   result        VideoEvalResult
   notes         String?
   evaluatedById Int
@@ -1982,6 +1991,21 @@ model ProspectVideoEvaluation {
 
   prospect    Prospect @relation(fields: [prospectId], references: [id])
   evaluatedBy User     @relation(fields: [evaluatedById], references: [id])
+
+  @@index([prospectId])
+}
+
+model VideoAnalysisJob {
+  id           Int                 @id @default(autoincrement())
+  prospectId   Int
+  videoUrl     String
+  status       VideoAnalysisStatus @default(PENDING)
+  pipelineData Json?
+  errorMessage String?
+  createdAt    DateTime            @default(now())
+  completedAt  DateTime?
+
+  prospect     Prospect            @relation(fields: [prospectId], references: [id])
 
   @@index([prospectId])
 }

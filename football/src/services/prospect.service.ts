@@ -3,6 +3,7 @@ import type {
   Prospect, CreateProspectDto, UpdateProspectDto, ProspectStatus, SignProspectDto,
   ProspectVideoEvaluation, ProspectEvaluationLog,
   CreateVideoEvaluationDto, CreateEvaluationLogDto, AcquisitionGateCheckResult,
+  VideoAnalysisJob,
 } from '@/types/prospect'
 
 export const prospectApi = {
@@ -50,4 +51,11 @@ export const prospectApi = {
 
   acquisitionGateCheck: (id: number) =>
     api.get<AcquisitionGateCheckResult>(`/prospects/${id}/acquisition-gate-check`),
+
+  videoAnalysis: {
+    create: (prospectId: number, videoUrl: string) =>
+      api.post<VideoAnalysisJob>(`/prospects/${prospectId}/video-analysis`, { videoUrl }),
+    poll: (prospectId: number, jobId: number) =>
+      api.get<VideoAnalysisJob>(`/prospects/${prospectId}/video-analysis/${jobId}`),
+  },
 }

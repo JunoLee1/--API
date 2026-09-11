@@ -10,10 +10,12 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useRef } from 'react'
 import { prospectApi } from '@/services/prospect.service'
 import type {
   Prospect, ProspectVideoEvaluation, ProspectEvaluationLog,
   VideoEvalResult, EvaluationLogType, CreateVideoEvaluationDto, CreateEvaluationLogDto,
+  PipelineData,
 } from '@/types/prospect'
 import {
   VIDEO_EVAL_RESULT_LABEL, VIDEO_EVAL_RESULT_STYLE,
@@ -43,6 +45,16 @@ interface VideoEvalDialogProps {
   onSaved: () => void
 }
 
+function applyPipeline(data: PipelineData) {
+  const topJersey = data.detectedJerseyNumbers.sort((a, b) => b.confidence - a.confidence)[0]
+  return {
+    qualityPassed: data.detectionConfidence >= 0.7,
+    identifiable: (topJersey?.confidence ?? 0) >= 0.8,
+    continuity: data.trackingScore >= 0.8,
+    jerseyNumber: topJersey ? String(topJersey.number) : '',
+  }
+}
+
 function VideoEvalDialog({ prospectId, open, onOpenChange, onSaved }: VideoEvalDialogProps) {
   const [qualityPassed, setQualityPassed] = useState(false)
   const [identifiable, setIdentifiable] = useState(false)
@@ -51,6 +63,10 @@ function VideoEvalDialog({ prospectId, open, onOpenChange, onSaved }: VideoEvalD
   const [totalScore, setTotalScore] = useState('')
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
+  const [pipelineApplied, setPipelineApplied] = useState<PipelineData | null>(null)
+  const [videoUrl, setVideoUrl] = useState('')
+  const [analysisStatus, setAnalysisStatus] = useState<'idle' | 'pending' | 'done' | 'failed'>('idle')
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     if (open) {
@@ -60,8 +76,42 @@ function VideoEvalDialog({ prospectId, open, onOpenChange, onSaved }: VideoEvalD
       setJerseyNumber('')
       setTotalScore('')
       setNotes('')
+      setPipelineApplied(null)
+      setVideoUrl('')
+      setAnalysisStatus('idle')
     }
+    return () => { if (pollRef.current) clearInterval(pollRef.current) }
   }, [open])
+
+  const handleAnalyzeVideo = async () => {
+    if (!videoUrl.trim()) return
+    try { new URL(videoUrl.trim()) } catch {
+      toast.error('올바른 URL 형식이 아닙니다')
+      return
+    }
+    setAnalysisStatus('pending')
+    try {
+      const job = await prospectApi.videoAnalysis.create(prospectId, videoUrl.trim())
+      pollRef.current = setInterval(async () => {
+        try {
+          const updated = await prospectApi.videoAnalysis.poll(prospectId, job.id)
+          if (updated.status === 'DONE' && updated.pipelineData) {
+            clearInterval(pollRef.current!)
+            setAnalysisStatus('done')
+            setPipelineApplied(updated.pipelineData)
+            const suggested = applyPipeline(updated.pipelineData)
+            setQualityPassed(suggested.qualityPassed)
+            setIdentifiable(suggested.identifiable)
+            setContinuity(suggested.continuity)
+            if (suggested.jerseyNumber) setJerseyNumber(suggested.jerseyNumber)
+          } else if (updated.status === 'FAILED') {
+            clearInterval(pollRef.current!)
+            setAnalysisStatus('failed')
+          }
+        } catch { clearInterval(pollRef.current!); setAnalysisStatus('failed') }
+      }, 3000)
+    } catch { setAnalysisStatus('failed') }
+  }
 
   const previewResult = computePreviewResult(qualityPassed, identifiable, continuity, totalScore)
 
@@ -74,6 +124,7 @@ function VideoEvalDialog({ prospectId, open, onOpenChange, onSaved }: VideoEvalD
         continuity,
         jerseyNumber: jerseyNumber !== '' ? Number(jerseyNumber) : null,
         totalScore: totalScore !== '' ? Number(totalScore) : null,
+        pipelineData: pipelineApplied ?? null,
         notes: notes || null,
       }
       await prospectApi.videoEvaluations.create(prospectId, dto)
@@ -94,6 +145,35 @@ function VideoEvalDialog({ prospectId, open, onOpenChange, onSaved }: VideoEvalD
           <DialogTitle>비디오 1차 평가</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
+          <div className="rounded border border-dashed p-3 space-y-2 bg-muted/20">
+            <p className="text-xs font-medium text-muted-foreground">AI 영상 분석 (선택)</p>
+
+            {/* URL 입력 → 자동 분석 */}
+            <div className="flex gap-2">
+              <Input
+                placeholder="영상 URL 입력"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                className="h-8 text-xs flex-1"
+                disabled={analysisStatus === 'pending'}
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 text-xs shrink-0"
+                onClick={handleAnalyzeVideo}
+                disabled={!videoUrl.trim() || analysisStatus === 'pending'}
+              >
+                {analysisStatus === 'pending' ? '분석 중…' : '분석'}
+              </Button>
+            </div>
+            {analysisStatus === 'failed' && <p className="text-xs text-destructive">분석에 실패했습니다</p>}
+            {pipelineApplied && (
+              <p className="text-xs text-green-600">
+                자동 적용됨 — 감지 {Math.round(pipelineApplied.detectionConfidence * 100)}% · 추적 {Math.round(pipelineApplied.trackingScore * 100)}%
+              </p>
+            )}
+          </div>
           <div>
             <p className="text-xs font-medium text-muted-foreground mb-2">Hard Gate (모두 충족 필수)</p>
             <div className="space-y-2">
@@ -252,8 +332,18 @@ function EvalTab({ prospect, canWrite }: EvalTabProps) {
                 {latest.continuity && <span className="text-xs bg-green-50 text-green-700 border border-green-200 rounded px-1.5 py-0.5">연속성 ✓</span>}
                 {!latest.continuity && <span className="text-xs bg-red-50 text-red-700 border border-red-200 rounded px-1.5 py-0.5">연속성 ✗</span>}
               </div>
-              {latest.totalScore != null && (
-                <p className="text-xs text-muted-foreground">총점: {latest.totalScore} / 100</p>
+              {(latest.totalScore != null || latest.jerseyNumber != null) && (
+                <p className="text-xs text-muted-foreground">
+                  {latest.totalScore != null && `총점: ${latest.totalScore} / 100`}
+                  {latest.totalScore != null && latest.jerseyNumber != null && ' · '}
+                  {latest.jerseyNumber != null && `등번호: ${latest.jerseyNumber}`}
+                </p>
+              )}
+              {latest.pipelineData && (
+                <p className="text-xs text-muted-foreground">
+                  AI — 감지 {Math.round(latest.pipelineData.detectionConfidence * 100)}% · 추적 {Math.round(latest.pipelineData.trackingScore * 100)}%
+                  {latest.pipelineData.playerCount != null && ` · ${latest.pipelineData.playerCount}명 감지`}
+                </p>
               )}
               {latest.notes && <p className="text-xs text-muted-foreground">{latest.notes}</p>}
               <p className="text-xs text-muted-foreground">

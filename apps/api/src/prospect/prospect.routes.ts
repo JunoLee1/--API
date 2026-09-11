@@ -3,6 +3,8 @@ import { Router, Request, Response, NextFunction } from "express";
 import { ProspectController } from "./prospect.controller";
 import { ProspectService } from "./prospect.service";
 import { ProspectRepository } from "./prospect.repo";
+import { VideoAnalysisController } from "./video-analysis.controller";
+import { VideoAnalysisService } from "./video-analysis.service";
 import { getPrisma } from "../lib/prisma";
 import { AppError } from "../lib/appError";
 
@@ -10,6 +12,8 @@ const router = Router();
 const repo = new ProspectRepository(getPrisma());
 const service = new ProspectService(repo);
 const controller = new ProspectController(service);
+const videoAnalysisService = new VideoAnalysisService(getPrisma());
+const videoAnalysisController = new VideoAnalysisController(videoAnalysisService);
 
 const canSignProspect = (req: Request, res: Response, next: NextFunction) => {
   const user = req.user!;
@@ -35,6 +39,8 @@ router.get("/:id/negotiation-logs", auth, controller.getNegotiationLogs);
 router.post("/:id/negotiation-logs", auth, controller.addNegotiationLog);
 router.get("/:id/video-evaluations", auth, controller.getVideoEvaluations);
 router.post("/:id/video-evaluations", auth, controller.addVideoEvaluation);
+router.post("/:prospectId/video-analysis", auth, videoAnalysisController.createJob);
+router.get("/:prospectId/video-analysis/:jobId", auth, videoAnalysisController.getJob);
 router.get("/:id/evaluation-logs", auth, controller.getEvaluationLogs);
 router.post("/:id/evaluation-logs", auth, controller.addEvaluationLog);
 router.get("/:id/acquisition-gate-check", auth, controller.checkAcquisitionGate);
