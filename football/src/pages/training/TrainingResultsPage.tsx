@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { trainingApi } from '@/services/training.service'
 import { auditLogApi } from '@/services/admin.service'
@@ -36,6 +37,7 @@ function formatDate(d: string) {
 
 export function TrainingResultsPage() {
   const { t } = useTranslation('training')
+  const navigate = useNavigate()
   const { user } = useCurrentUser()
   const isAdmin = user?.role === 'ADMIN'
   const [filters, setFilters] = useState<TrainingResultFilters>({ from: '', to: '', sessionType: '', nullOnly: false })
@@ -213,7 +215,14 @@ export function TrainingResultsPage() {
               <TableRow key={r.id}>
                 <TableCell className="tabular-nums">{formatDate(r.session.date)}</TableCell>
                 <TableCell>{t(`sessionType.${r.session.sessionType}`) || r.session.sessionType}</TableCell>
-                <TableCell className="font-medium">{r.player.playerName}</TableCell>
+                <TableCell>
+                  <button
+                    className="font-medium hover:underline hover:text-primary text-left"
+                    onClick={() => navigate(`/training/players/${r.player.id}`)}
+                  >
+                    {r.player.playerName}
+                  </button>
+                </TableCell>
                 <TableCell>{r.player.position}</TableCell>
                 <TableCell>
                   {t(`resultsPage.attendanceLabel.${r.attendance}`) || r.attendance}
