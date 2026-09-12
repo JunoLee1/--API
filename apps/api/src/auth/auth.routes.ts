@@ -37,6 +37,10 @@ router.get("/me", auth, controller.me);
 // 언어 설정
 router.patch("/me/language", auth, controller.updateLanguage);
 
+// 개인정보 수정 (본인만)
+router.patch("/me/profile", auth, controller.updateProfile);
+router.patch("/me/password", auth, controller.updatePassword);
+
 // 유저 생성 (ADMIN 전용)
 router.post("/users", auth, controller.createUser);
 

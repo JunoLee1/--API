@@ -78,6 +78,10 @@ export interface UserDto {
   clubId: number | null
   isOutOfOffice: boolean
   language: 'ko' | 'en'
+  homeAddress: string | null
+  passwordChangedAt: string | null
+  team: { id: number; type: string } | null
+  departments: Array<{ role: string; department: { id: number; name: string } }>
 }
 
 export interface TokenPair {

@@ -93,7 +93,7 @@ export class DepartmentService {
   }
 
   async updateMemberRole(deptId: number, userId: number, newRole: DeptRole, requesterId: number, role: string) {
-    await this.assertLeaderOrAdmin(deptId, requesterId, role);
+    if (!isAdminLike(role)) throw new AppError(403, "FORBIDDEN");
     if (userId === requesterId) throw new AppError(403, "SELF_ROLE_CHANGE_FORBIDDEN");
     const existing = await this.repo.findMember(deptId, userId);
     if (!existing) throw new AppError(404, "NOT_MEMBER");

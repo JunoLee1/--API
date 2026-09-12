@@ -14,6 +14,12 @@ export const authApi = {
   updateLanguage: (language: 'ko' | 'en'): Promise<{ ok: boolean }> =>
     api.patch('/auth/me/language', { language }),
 
+  updateProfile: (data: { email?: string; homeAddress?: string | null; phoneNumber?: string }): Promise<{ id: number; email: string; username: string; homeAddress: string | null }> =>
+    api.patch('/auth/me/profile', data),
+
+  updatePassword: (data: { currentPassword: string; newPassword: string; confirmedPassword: string }): Promise<{ ok: boolean }> =>
+    api.patch('/auth/me/password', data),
+
   logout: async () => {
     try {
       await api.post('/auth/logout')
