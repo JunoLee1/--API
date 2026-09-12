@@ -112,6 +112,44 @@ export class AuthService {
     return user;
   }
 
+  async updateProfile(userId: number, dto: { email?: string; homeAddress?: string | null; phoneNumber?: string }) {
+    if (dto.email !== undefined) {
+      if (await this.repo.isEmailTakenByOther(dto.email, userId)) throw new AppError(409, "EMAIL_TAKEN");
+    }
+    let phoneData: { encrypted: string; iv: string; phoneHash: string } | undefined;
+    if (dto.phoneNumber !== undefined) {
+      const phoneDigits = dto.phoneNumber.replace(/\D/g, '');
+      if (!/^\d{10,11}$/.test(phoneDigits)) throw new AppError(400, "INVALID_PHONE_NUMBER");
+      const user = await this.repo.findPasswordHash(userId);
+      if (!user) throw new AppError(404, "USER_NOT_FOUND");
+      if (await this.repo.isPhoneHashTakenByOther(hashPhone(dto.phoneNumber), user.phoneNumberId)) {
+        throw new AppError(409, "PHONE_TAKEN");
+      }
+      phoneData = { ...encrypt(dto.phoneNumber), phoneHash: hashPhone(dto.phoneNumber) };
+    }
+    return this.repo.updateProfile(userId, { email: dto.email, homeAddress: dto.homeAddress, phoneNumber: phoneData });
+  }
+
+  async updatePassword(userId: number, dto: { currentPassword: string; newPassword: string; confirmedPassword: string }) {
+    if (dto.newPassword !== dto.confirmedPassword) throw new AppError(400, "PASSWORD_MISMATCH");
+
+    // 복잡도: 8자 이상, 대문자, 소문자, 숫자, 특수문자 각 1개 이상
+    const pwRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+    if (!pwRegex.test(dto.newPassword)) throw new AppError(400, "INVALID_PASSWORD_FORMAT");
+
+    const user = await this.repo.findPasswordHash(userId);
+    if (!user) throw new AppError(404, "USER_NOT_FOUND");
+
+    if (!(await comparePassword(dto.currentPassword, user.password))) {
+      throw new AppError(401, "INVALID_CURRENT_PASSWORD");
+    }
+    if (await comparePassword(dto.newPassword, user.password)) {
+      throw new AppError(409, "SAME_AS_CURRENT_PASSWORD");
+    }
+
+    return this.repo.updatePassword(userId, await hashPassword(dto.newPassword));
+  }
+
   async blacklistToken(jti: string, expiresAt: Date) {
     await this.repo.blacklistToken(jti, expiresAt);
     // 만료 항목 정리는 fire-and-forget — 실패해도 로그아웃은 성공

@@ -922,8 +922,10 @@ model User {
   dateOfBirth     DateTime
   phoneNumberId   Int              @unique
   nationalityId   Int
-  teamId          Int?
-  clubId          Int?
+  teamId              Int?
+  clubId              Int?
+  homeAddress         String?
+  passwordChangedAt   DateTime?
 
   phoneNumber               PhoneNumber                     @relation(fields: [phoneNumberId], references: [id])
   nationality               Country                         @relation(fields: [nationalityId], references: [id])
