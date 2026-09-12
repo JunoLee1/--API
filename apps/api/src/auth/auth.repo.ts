@@ -37,10 +37,48 @@ export class AuthRepository {
     return this.prisma.phoneNumber.findUnique({ where: { phoneHash }, select: { id: true } });
   }
 
+  isEmailTakenByOther(email: string, excludeUserId: number) {
+    return this.prisma.user.findFirst({ where: { email, id: { not: excludeUserId } }, select: { id: true } });
+  }
+
+  isPhoneHashTakenByOther(phoneHash: string, excludePhoneNumberId: number) {
+    return this.prisma.phoneNumber.findFirst({ where: { phoneHash, id: { not: excludePhoneNumberId } }, select: { id: true } });
+  }
+
+  findPasswordHash(userId: number) {
+    return this.prisma.user.findUnique({ where: { id: userId }, select: { password: true, passwordChangedAt: true, phoneNumberId: true } });
+  }
+
+  async updateProfile(userId: number, data: { email?: string; homeAddress?: string | null; phoneNumber?: { encrypted: string; iv: string; phoneHash: string } }) {
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { phoneNumberId: true } });
+    if (data.phoneNumber) {
+      await this.prisma.phoneNumber.update({
+        where: { id: user.phoneNumberId },
+        data: { encrypted: data.phoneNumber.encrypted, iv: data.phoneNumber.iv, phoneHash: data.phoneNumber.phoneHash },
+      });
+    }
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(data.email !== undefined && { email: data.email }),
+        ...(data.homeAddress !== undefined && { homeAddress: data.homeAddress }),
+      },
+      select: { id: true, email: true, username: true, homeAddress: true },
+    });
+  }
+
+  updatePassword(userId: number, hashedPassword: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword, passwordChangedAt: new Date() },
+      select: { id: true },
+    });
+  }
+
   findById(id: number) {
     return this.prisma.user.findUnique({
       where: { id },
-      select: { id: true, email: true, username: true, nickname: true, role: true, coachingRole: true, frontOfficeRole: true, teamId: true, clubId: true, language: true, isDeleted: true },
+      select: { id: true, email: true, username: true, nickname: true, role: true, coachingRole: true, frontOfficeRole: true, teamId: true, clubId: true, language: true, isDeleted: true, homeAddress: true, passwordChangedAt: true },
     });
   }
 

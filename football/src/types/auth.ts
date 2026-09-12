@@ -78,6 +78,8 @@ export interface UserDto {
   clubId: number | null
   isOutOfOffice: boolean
   language: 'ko' | 'en'
+  homeAddress: string | null
+  passwordChangedAt: string | null
 }
 
 export interface TokenPair {

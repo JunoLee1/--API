@@ -110,6 +110,29 @@ export class AuthController {
     }
   };
 
+  updateProfile = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = this.getAuthenticatedUser(req);
+      const { email, homeAddress, phoneNumber } = req.body as { email?: string; homeAddress?: string | null; phoneNumber?: string };
+      const result = await this.service.updateProfile(id, { email, homeAddress, phoneNumber });
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  updatePassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = this.getAuthenticatedUser(req);
+      const { currentPassword, newPassword, confirmedPassword } = req.body as { currentPassword?: string; newPassword?: string; confirmedPassword?: string };
+      if (!currentPassword || !newPassword || !confirmedPassword) throw new AppError(400, "MISSING_FIELDS");
+      await this.service.updatePassword(id, { currentPassword, newPassword, confirmedPassword });
+      res.json({ ok: true });
+    } catch (err) {
+      next(err);
+    }
+  };
+
   createUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userInfo = this.getAuthenticatedUser(req);
