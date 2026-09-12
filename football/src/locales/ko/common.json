@@ -203,6 +203,7 @@
     "roleLabel": "역할",
     "statusLabel": "상태",
     "outOfOffice": "부재 중",
+    "notSet": "미설정",
     "teamLabel": "소속 팀",
     "departmentsLabel": "소속 부서",
     "editBtn": "내 정보 수정하기",

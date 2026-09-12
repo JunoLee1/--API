@@ -37,6 +37,14 @@ export class AuthRepository {
     return this.prisma.phoneNumber.findUnique({ where: { phoneHash }, select: { id: true } });
   }
 
+  async findPhoneNumber(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { phoneNumber: { select: { encrypted: true, iv: true } } },
+    });
+    return user?.phoneNumber ?? null;
+  }
+
   isEmailTakenByOther(email: string, excludeUserId: number) {
     return this.prisma.user.findFirst({ where: { email, id: { not: excludeUserId } }, select: { id: true } });
   }

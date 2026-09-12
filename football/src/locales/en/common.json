@@ -203,6 +203,7 @@
     "roleLabel": "Role",
     "statusLabel": "Status",
     "outOfOffice": "Out of Office",
+    "notSet": "Not set",
     "teamLabel": "Team",
     "departmentsLabel": "Departments",
     "editBtn": "Edit My Profile",

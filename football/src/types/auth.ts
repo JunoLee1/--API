@@ -80,6 +80,7 @@ export interface UserDto {
   language: 'ko' | 'en'
   homeAddress: string | null
   passwordChangedAt: string | null
+  phone: string | null
   team: { id: number; type: string } | null
   departmentMemberships: Array<{ role: string; department: { id: number; name: string } }>
 }
