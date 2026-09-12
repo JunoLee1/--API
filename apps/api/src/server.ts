@@ -40,6 +40,9 @@ import { startMedicalEmergencyOverdueEscalationJob } from "./jobs/medicalEmergen
 import { startProbationReviewNotifierJob } from "./jobs/probationReviewNotifier";
 
 const app = express();
+app.set('json replacer', (_key: string, value: unknown) =>
+  typeof value === 'bigint' ? Number(value) : value
+);
 
 app.use(cors({ origin: process.env["CLIENT_ORIGIN"], credentials: true }));
 app.use(express.json());

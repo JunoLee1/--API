@@ -248,13 +248,17 @@ export function ContractDetailPage() {
       (user?.frontOfficeRole === 'FINANCE_MANAGER' || user?.frontOfficeRole === 'CONTRACT_MANAGER'))
 
   const load = async () => {
-    if (!id) return
     setLoading(true)
+    if (!id) {
+      setLoading(false)
+      return
+    }
     try {
       const data = await contractApi.get(Number(id))
       setContract(data)
     } catch {
       toast.error(t('contractDetail.loadFailed'))
+      setContract(null)
     } finally {
       setLoading(false)
     }
@@ -301,7 +305,16 @@ export function ContractDetailPage() {
     )
   }
 
-  if (!contract) return null
+  if (!contract) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-3 text-sm text-muted-foreground">
+        <p>{t('contractDetail.loadFailed')}</p>
+        <Button variant="outline" size="sm" onClick={() => void load()}>
+          {t('contractDetail.retry')}
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col h-full">

@@ -3,7 +3,9 @@
     "title": "Contract Management",
     "subtitle": "Select a player to view contracts.",
     "selectPlayer": "Please select a player.",
+    "allPlayers": "All Players",
     "noContracts": "No contracts for {{name}}.",
+    "noContractsAll": "No contracts found.",
     "loadFailed": "Failed to load contracts.",
     "statusChanged": "Contract status updated.",
     "statusChangeFailed": "Failed to update status.",
@@ -14,6 +16,7 @@
       "end": "End Date",
       "salary": "Salary",
       "status": "Status",
+      "player": "Player",
       "changeStatus": "Change Status"
     },
     "createDialog": {
@@ -43,6 +46,7 @@
   "contractDetail": {
     "title": "Contract Detail",
     "loadFailed": "Failed to load contract.",
+    "retry": "Retry",
     "saveFailed": "Failed to save.",
     "cancel": "Cancel",
     "saving": "Saving...",

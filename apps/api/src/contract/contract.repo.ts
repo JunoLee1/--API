@@ -30,6 +30,21 @@ const CONTRACT_DETAIL = {
 export class ContractRepository {
   constructor(private prisma: PrismaClient) {}
 
+  findAll() {
+    return this.prisma.contract.findMany({
+      select: {
+        id: true,
+        startDate: true,
+        endDate: true,
+        salary: true,
+        status: true,
+        managedById: true,
+        player: { select: { id: true, playerName: true } },
+      },
+      orderBy: { startDate: "desc" },
+    });
+  }
+
   findByPlayerId(playerId: string) {
     return this.prisma.contract.findMany({
       where: { playerId },
