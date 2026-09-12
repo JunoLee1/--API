@@ -78,7 +78,18 @@ export class AuthRepository {
   findById(id: number) {
     return this.prisma.user.findUnique({
       where: { id },
-      select: { id: true, email: true, username: true, nickname: true, role: true, coachingRole: true, frontOfficeRole: true, teamId: true, clubId: true, language: true, isDeleted: true, homeAddress: true, passwordChangedAt: true },
+      select: {
+        id: true, email: true, username: true, nickname: true, role: true,
+        coachingRole: true, frontOfficeRole: true, teamId: true, clubId: true,
+        language: true, isDeleted: true, homeAddress: true, passwordChangedAt: true,
+        team: { select: { id: true, type: true } },
+        departments: {
+          select: {
+            role: true,
+            department: { select: { id: true, name: true } },
+          },
+        },
+      },
     });
   }
 
