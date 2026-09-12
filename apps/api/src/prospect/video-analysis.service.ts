@@ -1,4 +1,5 @@
-import { PrismaClient } from '@prisma/client'
+import type { PrismaClient } from '../generated/client'
+import { Prisma } from '../generated/client'
 import type { PipelineData } from './dto/video-evaluation.dto'
 import { validateVideoUrl } from './video-url.validator'
 
@@ -25,12 +26,12 @@ export class VideoAnalysisService {
     })
   }
 
-  async handleWebhook(jobId: number, status: 'DONE' | 'FAILED', data?: PipelineData, errorMessage?: string) {
+  async handleWebhook(jobId: number, status: 'DONE' | 'FAILED', data?: PipelineData , errorMessage?: string) {
     await this.prisma.videoAnalysisJob.update({
       where: { id: jobId },
       data: {
         status,
-        pipelineData: data ?? undefined,
+        ...(data !== undefined && { pipelineData: data as unknown as Prisma.InputJsonValue }),
         errorMessage: errorMessage ?? null,
         completedAt: new Date(),
       },

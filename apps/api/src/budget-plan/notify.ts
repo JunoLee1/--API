@@ -29,7 +29,7 @@ export interface EmailSender {
 export interface NotifyContext {
   seasonId: number;
   reason?: string;
-  deadline?: Date;
+  deadline?: Date | undefined;
   reviewers?: Reviewer[];
 }
 

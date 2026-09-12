@@ -3,6 +3,7 @@ import { AppError } from "../lib/appError";
 import { canReadFinance, canWriteFinance } from "../lib/permissions";
 import { requireUser } from "../lib/authMiddleware";
 import { OperatingExpenseService } from "./operating-expense.service";
+import type { UpdateOperatingExpenseDto } from "./dto/operating-expense.dto";
 
 const canRead = (role: string, foRole: string | null | undefined, deptCategories?: string[]) =>
   canReadFinance(role, foRole, deptCategories) || (role === "FRONT_OFFICE" && foRole === "TD");
@@ -57,8 +58,8 @@ export class OperatingExpenseController {
     try {
       const { id: userId, clubId } = requireUser(req);
       const id = Number(req.params["id"]);
-      const body = req.body as { amount?: number; category?: string; note?: string };
-      const data: { amount?: number; category?: string; note?: string } = {};
+      const body = req.body as UpdateOperatingExpenseDto;
+      const data: UpdateOperatingExpenseDto = {};
       if (body.amount !== undefined) data.amount = body.amount;
       if (body.category !== undefined) data.category = body.category;
       if (body.note !== undefined) data.note = body.note;

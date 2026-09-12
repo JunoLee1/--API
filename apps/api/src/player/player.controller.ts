@@ -258,7 +258,7 @@ export class PlayerController {
         user.role === 'GM' ||
         (user.role === 'FRONT_OFFICE' && (user.frontOfficeRole === 'TD' || user.frontOfficeRole === 'CONTRACT_MANAGER'));
       if (!canUpdate) throw new AppError(403, 'FORBIDDEN');
-      res.json(await this.service.updateWorkPermit(req.params['id']!, req.body, user.clubId));
+      res.json(await this.service.updateWorkPermit(String(req.params['id']), req.body, user.clubId));
     } catch (err) { next(err); }
   };
 
