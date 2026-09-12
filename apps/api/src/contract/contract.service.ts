@@ -20,6 +20,10 @@ export class ContractService {
     private notificationRepo: NotificationRepository,
   ) {}
 
+  getAllContracts() {
+    return this.repo.findAll();
+  }
+
   getContractsByPlayer(playerId: string) {
     return this.repo.findByPlayerId(playerId);
   }

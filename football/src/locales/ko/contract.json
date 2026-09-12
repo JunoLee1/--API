@@ -3,7 +3,9 @@
     "title": "계약 관리",
     "subtitle": "선수를 선택하면 계약 목록이 표시됩니다.",
     "selectPlayer": "선수를 선택해주세요.",
+    "allPlayers": "전체 선수",
     "noContracts": "{{name}}의 계약이 없습니다.",
+    "noContractsAll": "등록된 계약이 없습니다.",
     "loadFailed": "계약 목록을 불러오지 못했습니다.",
     "statusChanged": "계약 상태가 변경됐습니다.",
     "statusChangeFailed": "변경에 실패했습니다.",
@@ -14,6 +16,7 @@
       "end": "계약 종료",
       "salary": "연봉",
       "status": "상태",
+      "player": "선수",
       "changeStatus": "상태 변경"
     },
     "createDialog": {
@@ -43,6 +46,7 @@
   "contractDetail": {
     "title": "계약 상세",
     "loadFailed": "계약 정보를 불러오지 못했습니다.",
+    "retry": "다시 시도",
     "saveFailed": "저장에 실패했습니다.",
     "cancel": "취소",
     "saving": "저장 중...",

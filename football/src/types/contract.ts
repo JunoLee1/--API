@@ -31,6 +31,10 @@ export interface ContractSummary {
   managedById: number | null
 }
 
+export interface ContractSummaryWithPlayer extends ContractSummary {
+  player: { id: string; playerName: string }
+}
+
 export interface ContractDetail extends ContractSummary {
   playerId: string
   signingBonus: number

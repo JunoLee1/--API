@@ -1,6 +1,6 @@
 import { api } from './api'
 import type {
-  ContractSummary, ContractDetail, ContractStatus,
+  ContractSummary, ContractSummaryWithPlayer, ContractDetail, ContractStatus,
   CreateExtensionDto, CreateBonusDto,
 } from '@/types/contract'
 
@@ -9,6 +9,9 @@ export interface ContractCreateResult extends ContractDetail {
 }
 
 export const contractApi = {
+  getAll: () =>
+    api.get<ContractSummaryWithPlayer[]>(`/contracts`),
+
   byPlayer: (playerId: string) =>
     api.get<ContractSummary[]>(`/contracts/player/${playerId}`),
 

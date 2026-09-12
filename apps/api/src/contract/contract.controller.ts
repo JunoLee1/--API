@@ -9,8 +9,17 @@ const WRITE_ROLES = ["ADMIN", "FRONT_OFFICE"] as const;
 export class ContractController {
   constructor(private service: ContractService) {}
 
+  getAll = async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.status(200).json(await this.service.getAllContracts());
+    } catch (err) {
+      next(err);
+    }
+  };
+
   getByPlayer = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log(12)
       res.status(200).json(await this.service.getContractsByPlayer(String(req.params["playerId"])));
     } catch (err) {
       next(err);
@@ -19,6 +28,7 @@ export class ContractController {
 
   getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      //console.log(12)
       res.status(200).json(await this.service.getContractById(Number(req.params["id"])));
     } catch (err) {
       next(err);

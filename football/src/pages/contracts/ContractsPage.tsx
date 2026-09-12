@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { contractApi } from '@/services/contract.service'
 import { computeSigningBonusAnnual } from './lib/signing-bonus'
-import type { ContractSummary, ContractStatus } from '@/types/contract'
+import type { ContractSummary, ContractSummaryWithPlayer, ContractStatus } from '@/types/contract'
 import {
   CONTRACT_STATUS_STYLE,
   formatSalary,
@@ -182,26 +182,38 @@ export function ContractsPage() {
   const navigate = useNavigate()
   const { players, loading: playersLoading } = usePlayers()
   const seniorPlayers = players.filter((p) => p.level !== 'YOUTH')
+  const ALL_PLAYERS = '__all__'
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>('')
   const [contracts, setContracts] = useState<ContractSummary[]>([])
+  const [allContracts, setAllContracts] = useState<ContractSummaryWithPlayer[]>([])
   const [loadingContracts, setLoadingContracts] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
 
-  const canWrite = user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE'
+  const isAllSelected = selectedPlayerId === ALL_PLAYERS
+  const canWrite = !isAllSelected && (user?.role === 'ADMIN' || user?.role === 'FRONT_OFFICE')
   const canChangeStatus = user?.role === 'ADMIN'
 
   const fetchContracts = (pid: string) => {
     setLoadingContracts(true)
-    contractApi
-      .byPlayer(pid)
-      .then(setContracts)
-      .catch(() => toast.error(t('contracts.loadFailed')))
-      .finally(() => setLoadingContracts(false))
+    if (pid === ALL_PLAYERS) {
+      contractApi
+        .getAll()
+        .then(setAllContracts)
+        .catch(() => toast.error(t('contracts.loadFailed')))
+        .finally(() => setLoadingContracts(false))
+    } else {
+      contractApi
+        .byPlayer(pid)
+        .then(setContracts)
+        .catch(() => toast.error(t('contracts.loadFailed')))
+        .finally(() => setLoadingContracts(false))
+    }
   }
 
   const handlePlayerChange = (pid: string) => {
     setSelectedPlayerId(pid)
     setContracts([])
+    setAllContracts([])
     fetchContracts(pid)
   }
 
@@ -235,6 +247,7 @@ export function ContractsPage() {
               <SelectValue placeholder={t('contracts.playerSelectPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value={ALL_PLAYERS}>{t('contracts.allPlayers')}</SelectItem>
               {seniorPlayers.map((p) => (
                 <SelectItem key={p.id} value={p.id} label={p.playerName}>{p.playerName}</SelectItem>
               ))}
@@ -258,14 +271,15 @@ export function ContractsPage() {
           <div className="p-6 space-y-3">
             {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
           </div>
-        ) : contracts.length === 0 ? (
+        ) : (isAllSelected ? allContracts.length === 0 : contracts.length === 0) ? (
           <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-            {t('contracts.noContracts', { name: selectedPlayer?.playerName ?? '' })}
+            {isAllSelected ? t('contracts.noContractsAll') : t('contracts.noContracts', { name: selectedPlayer?.playerName ?? '' })}
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
+                {isAllSelected && <TableHead>{t('contracts.col.player')}</TableHead>}
                 <TableHead>{t('contracts.col.start')}</TableHead>
                 <TableHead>{t('contracts.col.end')}</TableHead>
                 <TableHead>{t('contracts.col.salary')}</TableHead>
@@ -274,8 +288,13 @@ export function ContractsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {contracts.map((c) => (
+              {(isAllSelected ? allContracts : contracts).map((c) => (
                 <TableRow key={c.id} className="cursor-pointer" onClick={() => navigate(`/contracts/${c.id}`)}>
+                  {isAllSelected && (
+                    <TableCell className="font-medium">
+                      {'player' in c ? c.player.playerName : ''}
+                    </TableCell>
+                  )}
                   <TableCell className="tabular-nums">{formatDate(c.startDate)}</TableCell>
                   <TableCell className="tabular-nums">{formatDate(c.endDate)}</TableCell>
                   <TableCell className="tabular-nums font-medium">{formatSalary(c.salary)}</TableCell>

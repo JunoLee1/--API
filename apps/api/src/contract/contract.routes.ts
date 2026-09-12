@@ -6,6 +6,7 @@ import { ContractRepository } from "./contract.repo";
 import { WageCapService } from "./wage-cap.service";
 import { NotificationRepository } from "../notification/notification.repo";
 import { getPrisma } from "../lib/prisma";
+import { Request, Response, NextFunction} from 'express'
 
 const router = Router();
 const repo = new ContractRepository(getPrisma());
@@ -15,6 +16,9 @@ const service = new ContractService(repo, wageCapService, notificationRepo);
 const controller = new ContractController(service);
 
 
+// 전체 계약 목록
+router.get("/", auth, controller.getAll);
+
 // 분석 엔드포인트 (구체적 경로 먼저)
 router.get("/squad-salary-overview", auth, controller.getSquadSalaryOverview);
 router.get("/expiring-with-value", auth, controller.getExpiringContractsWithValue);
@@ -23,13 +27,19 @@ router.get("/salary-benchmark", auth, controller.getSalaryBenchmark);
 router.get("/prospect-summary", auth, controller.getProspectSummary);
 
 // 선수별 계약 목록
-router.get("/player/:playerId", auth, controller.getByPlayer);
+router.get("/player/:playerId", auth, async(req: Request, res: Response, next:NextFunction ) => {
+    console.log(1);
+    await controller.getByPlayer(req, res, next)
+});
 
 // 계약 단건 (바이아웃 + 연장옵션 + 성과보너스 포함)
 router.get("/:id", auth, controller.getById);
 
 // 계약 생성 (ADMIN, FRONT_OFFICE)
-router.post("/", auth, controller.create);
+router.post("/", auth, async (req:Request, res: Response, next: NextFunction) =>{
+    console.log(1)
+    controller.create(req, res, next)
+});
 
 // 계약 상태 변경 ACTIVE→EXPIRED|TERMINATED (ADMIN)
 router.patch("/:id/status", auth, controller.updateStatus);
