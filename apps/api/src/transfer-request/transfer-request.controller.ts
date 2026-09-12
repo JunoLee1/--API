@@ -60,8 +60,8 @@ export class TransferRequestController {
 
   recordMedicalResult = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { role } = req.user!;
-      if (role !== "MEDICAL" && role !== "MEDICAL_DIRECTOR") throw new AppError(403, "FORBIDDEN");
+      const { role, coachingRole } = req.user!;
+      if (role !== "COACHING_STAFF" || (coachingRole !== "MEDICAL" && coachingRole !== "MEDICAL_DIRECTOR")) throw new AppError(403, "FORBIDDEN");
       res.status(200).json(await this.service.recordMedicalResult(Number(req.params["id"]), req.body, req.user!.id));
     } catch (err) { next(err); }
   };

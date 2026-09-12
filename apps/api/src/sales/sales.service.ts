@@ -331,7 +331,6 @@ export class SalesService {
             description: formatLedgerDescription("ledger", "refund", { entryId: originalEntry.id }),
             relatedModule: "SalesRecord",
             relatedId: id,
-            reversalOfId: originalEntry.id,
             createdById: deletedById,
           },
         });

@@ -1,27 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/appError";
-import { isAdminLike } from "../lib/permissions";
+import { canReadProspect as canRead, canWriteProspect as canWrite, canSignProspect as canSign } from "../lib/permissions";
 import { requireUser } from "../lib/authMiddleware";
 import { ProspectService } from "./prospect.service";
 import { ProspectStatus } from "../generated/enums";
 import { TransitionProspectStatusDto, SignProspectDto, ProspectMedicalResultDto, CreateProspectNegotiationLogDto } from "./dto/prospect.dto";
 import { CreateProspectVideoEvaluationDto, CreateProspectEvaluationLogDto, UpdateProspectVideoEvaluationDto } from "./dto/video-evaluation.dto";
-
-const canWrite = (role: string, frontOfficeRole: string | null | undefined): boolean =>
-  isAdminLike(role) ||
-  role === "GM" ||
-  (role === "FRONT_OFFICE" && frontOfficeRole === "SCOUT");
-
-const canRead = (role: string, coachingRole: string | null | undefined, deptCategories?: string[]): boolean =>
-  isAdminLike(role) ||
-  role === "FRONT_OFFICE" ||
-  (role === "COACHING_STAFF" && coachingRole === "HEAD_COACH") ||
-  (deptCategories?.includes('PERFORMANCE') ?? false);
-
-const canSign = (role: string, frontOfficeRole: string | null | undefined): boolean =>
-  isAdminLike(role) ||
-  role === "GM" ||
-  (role === "FRONT_OFFICE" && frontOfficeRole === "CONTRACT_MANAGER");
 
 export class ProspectController {
   constructor(private service: ProspectService) {}

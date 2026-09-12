@@ -437,7 +437,7 @@ export function ProspectsPage() {
   const canSign =
     user?.role === 'ADMIN' ||
     user?.role === 'GM' ||
-    (user?.role === 'FRONT_OFFICE' && user.frontOfficeRole === 'CONTRACT_MANAGER')
+    (user?.role === 'FRONT_OFFICE' && (user.frontOfficeRole === 'CONTRACT_MANAGER' || user.frontOfficeRole === 'TD'))
   const canRead =
     user?.role === 'ADMIN' ||
     user?.role === 'FRONT_OFFICE' ||

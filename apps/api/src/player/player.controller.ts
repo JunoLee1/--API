@@ -259,7 +259,7 @@ export class PlayerController {
         (user.role === 'FRONT_OFFICE' && (user.frontOfficeRole === 'TD' || user.frontOfficeRole === 'CONTRACT_MANAGER'));
       if (!canUpdate) throw new AppError(403, 'FORBIDDEN');
       res.json(await this.service.updateWorkPermit(String(req.params['id']), req.body, user.clubId));
-    } catch (err) { next(err); }
+   } catch (err) { next(err); }
   };
 
   // RC18: PLAYER 본인만 응급연락처 필드 수정 가능

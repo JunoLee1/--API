@@ -140,6 +140,22 @@ export function canApproveMedicalEquipmentLoan(user: {
   return user.departmentCategories?.includes('PERFORMANCE') ?? false;
 }
 
+export const canReadProspect = (role: string, coachingRole?: string | null, deptCategories?: string[]): boolean =>
+  isAdminLike(role) ||
+  role === 'FRONT_OFFICE' ||
+  (role === 'COACHING_STAFF' && coachingRole === 'HEAD_COACH') ||
+  (deptCategories?.includes('PERFORMANCE') ?? false)
+
+export const canWriteProspect = (role: string, frontOfficeRole?: string | null): boolean =>
+  isAdminLike(role) ||
+  role === 'GM' ||
+  (role === 'FRONT_OFFICE' && frontOfficeRole === 'SCOUT')
+
+export const canSignProspect = (role: string, frontOfficeRole?: string | null): boolean =>
+  isAdminLike(role) ||
+  role === 'GM' ||
+  (role === 'FRONT_OFFICE' && (frontOfficeRole === 'TD' || frontOfficeRole === 'CONTRACT_MANAGER'))
+
 export const canReadPerformance = (role: string, coachingRole?: string | null, deptCategories?: string[]): boolean =>
   isAdminLike(role) ||
   role === 'COACHING_STAFF' ||

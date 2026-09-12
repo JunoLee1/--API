@@ -154,7 +154,7 @@ export class TrainingLoadRepository {
       select: {
         id: true,
         status: true,
-        report: {
+        injuryReport: {
           select: {
             rehabLoadPercentage: true,
             allowedActivities: true,

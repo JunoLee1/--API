@@ -1,4 +1,4 @@
-import { AppError } from '../lib/AppError'
+import { AppError } from '../lib/appError'
 
 const ALLOWED_SCHEMES = ['http:', 'https:']
 

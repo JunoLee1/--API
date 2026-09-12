@@ -71,7 +71,7 @@ export class ProspectRepository {
 
   findById(id: number, clubId?: number | null) {
     return this.prisma.prospect.findFirst({
-      where: { id, ...(clubId != null && { clubId }) },
+      where: { id, ...(clubId != null && { clubId }) }, //TODO: 전사 관리자 외 타구단 사람들도 조회 가능 하다면 수정
       select: PROSPECT_SELECT,
     });
   }
@@ -134,7 +134,6 @@ export class ProspectRepository {
     });
     if (!prospect) throw new AppError(404, "PROSPECT_NOT_FOUND");
     if (prospect.status !== "CONTRACT_PENDING") throw new AppError(409, "INVALID_STATUS_TRANSITION");
-
     return this.prisma.$transaction(async (tx) => {
       const encDob = encrypt(new Date(dto.dateOfBirth).toISOString());
       const player = await tx.player.create({
@@ -154,7 +153,7 @@ export class ProspectRepository {
           prospectId: prospectId,
           ...(prospect.playStyle && { playStyle: prospect.playStyle }),
         },
-        select: { id: true },
+        select: { id: true }
       });
 
       await tx.contract.create({
@@ -224,7 +223,7 @@ export class ProspectRepository {
         jerseyNumber: dto.jerseyNumber ?? null,
         totalScore: dto.totalScore ?? null,
         scoreData: dto.scoreData ?? Prisma.DbNull,
-        pipelineData: dto.pipelineData ?? Prisma.DbNull,
+        pipelineData: (dto.pipelineData ?? Prisma.DbNull) as unknown as Prisma.InputJsonValue,
         result,
         notes: dto.notes ?? null,
         evaluatedById,
@@ -269,7 +268,7 @@ export class ProspectRepository {
         ...(dto.jerseyNumber !== undefined && { jerseyNumber: dto.jerseyNumber }),
         ...(dto.totalScore !== undefined && { totalScore: dto.totalScore }),
         ...(dto.scoreData !== undefined && { scoreData: dto.scoreData ?? Prisma.DbNull }),
-        ...(dto.pipelineData !== undefined && { pipelineData: dto.pipelineData ?? Prisma.DbNull }),
+        ...(dto.pipelineData !== undefined && { pipelineData: (dto.pipelineData ?? Prisma.DbNull) as unknown as Prisma.InputJsonValue }),
         ...(dto.notes !== undefined && { notes: dto.notes }),
         result,
       },
