@@ -50,6 +50,7 @@ import { AcquisitionSurveysPage } from '@/pages/acquisition-surveys/AcquisitionS
 import { NotificationsPage } from '@/pages/notifications/NotificationsPage'
 import { MePage } from '@/pages/me/MePage'
 import { UsersPage } from '@/pages/admin/UsersPage'
+import { UserProfilePage } from '@/pages/admin/UserProfilePage'
 import { PartnersPage } from '@/pages/admin/PartnersPage'
 import { TeamsPage } from '@/pages/admin/TeamsPage'
 import { SeasonsPage } from '@/pages/admin/SeasonsPage'
@@ -252,6 +253,7 @@ function App() {
             <Route path="/coaches/:id" element={<CoachDetailPage />} />
             <Route path="/coaching-staff/management" element={<StaffManagementPage />} />
             <Route path="/admin/users" element={<UsersPage />} />
+            <Route path="/admin/users/:id/profile" element={<UserProfilePage />} />
             <Route path="/admin/teams" element={<TeamsPage />} />
             <Route path="/admin/seasons" element={<SeasonsPage />} />
             <Route path="/admin/audit-logs" element={<AuditLogPage />} />

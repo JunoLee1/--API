@@ -16,3 +16,11 @@ export function maskPhone(phone: string | null | undefined): string | null {
   if (!phone) return phone ?? null;
   return phone.replace(/(\d{3})-(\d{3,4})-(\d{4})/, (_, a, _b, c) => `${a}-****-${c}`);
 }
+
+// 서울시 강남구 역삼동 123 → 서울시 강남구 ***
+export function maskAddress(address: string | null | undefined): string | null {
+  if (!address) return address ?? null;
+  const parts = address.split(' ');
+  if (parts.length <= 2) return '***';
+  return `${parts.slice(0, 2).join(' ')} ***`;
+}

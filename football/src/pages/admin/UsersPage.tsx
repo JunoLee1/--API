@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { toast } from 'sonner'
 import { api } from '@/services/api'
@@ -68,6 +69,7 @@ export function UsersPage() {
   const { t } = useTranslation('admin')
   const confirm = useConfirm()
   const { user: currentUser } = useCurrentUser()
+  const navigate = useNavigate()
   const availableRoles = currentUser?.role === 'SUPER_ADMIN' ? SUPER_ADMIN_ROLES : ALL_ROLES
 
   const [users, setUsers] = useState<AdminUserDto[]>([])
@@ -314,7 +316,7 @@ export function UsersPage() {
               ) : users.length === 0 ? (
                 <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">{t('usersPage.noUsers')}</TableCell></TableRow>
               ) : users.map((user) => (
-                <TableRow key={user.id} className={user.isDeleted ? 'opacity-50' : ''}>
+                <TableRow key={user.id} className={`cursor-pointer ${user.isDeleted ? 'opacity-50' : ''}`} onClick={() => navigate(`/admin/users/${user.id}/profile`)}>
                   <TableCell className="font-medium">{user.nickname}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{user.username}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{user.email}</TableCell>
@@ -328,7 +330,7 @@ export function UsersPage() {
                       ? <Badge variant="destructive">{t('usersPage.statusInactive')}</Badge>
                       : <Badge variant="secondary">{t('usersPage.statusActive')}</Badge>}
                   </TableCell>
-                  <TableCell>
+                  <TableCell onClick={e => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-7 w-7">

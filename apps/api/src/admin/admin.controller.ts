@@ -6,6 +6,10 @@ import { Role, CoachingRole, FrontOfficeRole } from "../generated/enums";
 import { hasPermission, Permission, requireSuperAdmin } from "../lib/permissions";
 import { requireUser } from "../lib/authMiddleware";
 import { writeAuditLog } from "../lib/auditLog";
+import { canViewPii } from "../lib/piiAccess";
+import { maskEmail, maskPhone, maskAddress } from "../lib/maskPii";
+import { getPrisma } from "../lib/prisma";
+import { decrypt } from "../lib/crypto";
 
 const requireAdmin = (req: Request): void => {
   const user = requireUser(req);
@@ -44,6 +48,49 @@ export class AdminController {
     } catch (err) {
       next(err);
     }
+  };
+
+  // GET /admin/users/:id/profile — 마스킹 적용 프로필 조회 (로그인 필요, 권한에 따라 마스킹)
+  getUserProfile = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const viewer = requireUser(req);
+      const targetId = Number(req.params["id"]);
+      const prisma = getPrisma();
+
+      const target = await prisma.user.findUnique({
+        where: { id: targetId },
+        select: {
+          id: true, username: true, nickname: true, role: true,
+          coachingRole: true, frontOfficeRole: true,
+          email: true, homeAddress: true,
+          phoneNumber: { select: { encrypted: true, iv: true } },
+          team: { select: { id: true, type: true } },
+          departments: { select: { role: true, department: { select: { id: true, name: true } } } },
+        },
+      });
+      if (!target) throw new AppError(404, "USER_NOT_FOUND");
+
+      const allowed = await canViewPii(prisma, viewer.id, targetId, viewer.role);
+
+      const phone = target.phoneNumber
+        ? decrypt(target.phoneNumber.encrypted, target.phoneNumber.iv)
+        : null;
+
+      res.json({
+        id: target.id,
+        username: target.username,
+        nickname: target.nickname,
+        role: target.role,
+        coachingRole: target.coachingRole,
+        frontOfficeRole: target.frontOfficeRole,
+        team: target.team,
+        departments: target.departments,
+        email:       allowed ? target.email       : maskEmail(target.email),
+        phone:       allowed ? phone               : maskPhone(phone),
+        homeAddress: allowed ? target.homeAddress  : maskAddress(target.homeAddress),
+        masked: !allowed,
+      });
+    } catch (err) { next(err); }
   };
 
   updateRole = async (req: Request, res: Response, next: NextFunction) => {
