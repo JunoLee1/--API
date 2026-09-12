@@ -81,7 +81,7 @@ export interface UserDto {
   homeAddress: string | null
   passwordChangedAt: string | null
   team: { id: number; type: string } | null
-  departments: Array<{ role: string; department: { id: number; name: string } }>
+  departmentMemberships: Array<{ role: string; department: { id: number; name: string } }>
 }
 
 export interface TokenPair {

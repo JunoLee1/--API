@@ -200,11 +200,11 @@ export function MePage() {
                       <dd className="mt-1 font-medium">{user.team.type}</dd>
                     </div>
                   )}
-                  {user.departments.length > 0 && (
+                  {user.departmentMemberships.length > 0 && (
                     <div className="sm:col-span-2">
                       <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-1.5">{t('mePage.departmentsLabel')}</dt>
                       <dd className="flex flex-wrap gap-2">
-                        {user.departments.map(d => (
+                        {user.departmentMemberships.map(d => (
                           <span key={d.department.id} className="inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs font-medium bg-muted">
                             {d.department.name}
                             <span className="text-muted-foreground">· {d.role}</span>

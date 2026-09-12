@@ -83,7 +83,7 @@ export class AuthRepository {
         coachingRole: true, frontOfficeRole: true, teamId: true, clubId: true,
         language: true, isDeleted: true, homeAddress: true, passwordChangedAt: true,
         team: { select: { id: true, type: true } },
-        departments: {
+        departmentMemberships: {
           select: {
             role: true,
             department: { select: { id: true, name: true } },
