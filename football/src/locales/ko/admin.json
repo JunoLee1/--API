@@ -1,6 +1,33 @@
 {
   "title": "관리자",
   "users": "사용자 관리",
+  "userProfile": {
+    "loadFailed": "프로필을 불러오지 못했습니다.",
+    "basicInfo": "기본 정보",
+    "personalInfo": "개인정보",
+    "departments": "소속 부서",
+    "username": "사용자명",
+    "role": "역할",
+    "team": "소속 팀",
+    "email": "이메일",
+    "phone": "휴대폰",
+    "homeAddress": "집주소",
+    "masked": "마스킹됨",
+    "maskedNotice": "열람 권한이 없어 개인정보가 마스킹되어 있습니다.",
+    "requestAccess": "긴급 열람 요청",
+    "requestSent": "열람 요청이 전송됐습니다. 관리자 승인 후 24시간 동안 열람 가능합니다.",
+    "pendingExists": "이미 대기 중인 요청이 있습니다.",
+    "requestFailed": "요청에 실패했습니다.",
+    "requestDialog": {
+      "title": "긴급 개인정보 열람 요청",
+      "desc": "{{name}}의 개인정보(이메일·전화·주소)를 긴급 열람하려는 사유를 입력하세요. 관리자가 검토 후 24시간 임시 열람 권한을 부여합니다.",
+      "reasonLabel": "열람 사유",
+      "reasonPlaceholder": "예: 계약 협상 긴급 연락 필요",
+      "cancel": "취소",
+      "sending": "전송 중...",
+      "submit": "요청 전송"
+    }
+  },
   "roles": "역할 관리",
   "audit": "감사 로그",
   "settings": "설정",

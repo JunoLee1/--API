@@ -13,6 +13,7 @@ const controller = new AdminController(service);
 router.get("/audit-logs", auth, controller.listAuditLogs);
 router.get("/users", auth, controller.listUsers);
 router.get("/players-without-accounts", auth, controller.listPlayersWithoutAccounts);
+router.get("/users/:id/profile", auth, controller.getUserProfile);
 router.get("/users/:id", auth, controller.getUser);
 router.patch("/users/:id/role", auth, controller.updateRole);
 router.patch("/users/:id/demo", auth, controller.setDemoStatus);

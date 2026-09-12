@@ -973,6 +973,9 @@ model User {
   requestedCallups          PlayerCallup[]                  @relation("CallupRequestedBy")
   approvedCallups           PlayerCallup[]                  @relation("CallupApprovedBy")
   loginHistory              LoginHistory[]
+  piiTargetRequests         PiiAccessRequest[] @relation("PiiTargets")
+  piiSentRequests           PiiAccessRequest[] @relation("PiiRequesters")
+  piiReviewedRequests       PiiAccessRequest[] @relation("PiiReviewers")
   recordedMarketValues      MarketValueHistory[]
   guardianPlayers           Player[]                        @relation("GuardianPlayers")
   guardianRegistrations     YouthRegistration[]             @relation("GuardianRegistrations")
@@ -2917,6 +2920,28 @@ model Department {
   defaultAssetKit   DepartmentDefaultAssetKit?
 
   @@unique([name, clubId])
+}
+
+enum PiiAccessStatus {
+  PENDING
+  APPROVED
+  DENIED
+}
+
+model PiiAccessRequest {
+  id           Int             @id @default(autoincrement())
+  targetUserId Int
+  requesterId  Int
+  reason       String
+  status       PiiAccessStatus @default(PENDING)
+  grantedUntil DateTime?
+  createdAt    DateTime        @default(now())
+  reviewedAt   DateTime?
+  reviewedById Int?
+
+  targetUser User  @relation("PiiTargets",    fields: [targetUserId], references: [id])
+  requester  User  @relation("PiiRequesters", fields: [requesterId],  references: [id])
+  reviewedBy User? @relation("PiiReviewers",  fields: [reviewedById], references: [id])
 }
 
 enum DeptRole {

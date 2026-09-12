@@ -1,6 +1,33 @@
 {
   "title": "Admin",
   "users": "User Management",
+  "userProfile": {
+    "loadFailed": "Failed to load profile.",
+    "basicInfo": "Basic Info",
+    "personalInfo": "Personal Info",
+    "departments": "Departments",
+    "username": "Username",
+    "role": "Role",
+    "team": "Team",
+    "email": "Email",
+    "phone": "Phone",
+    "homeAddress": "Home Address",
+    "masked": "Masked",
+    "maskedNotice": "You don't have permission to view this person's personal information.",
+    "requestAccess": "Request Emergency Access",
+    "requestSent": "Access request sent. You will have 24-hour access once approved by an admin.",
+    "pendingExists": "You already have a pending request.",
+    "requestFailed": "Request failed.",
+    "requestDialog": {
+      "title": "Emergency PII Access Request",
+      "desc": "Enter a reason for requesting emergency access to {{name}}'s personal info (email, phone, address). An admin will review and grant 24-hour temporary access.",
+      "reasonLabel": "Reason",
+      "reasonPlaceholder": "e.g. Urgent contact needed for contract negotiation",
+      "cancel": "Cancel",
+      "sending": "Sending...",
+      "submit": "Submit Request"
+    }
+  },
   "roles": "Role Management",
   "audit": "Audit Log",
   "settings": "Settings",
