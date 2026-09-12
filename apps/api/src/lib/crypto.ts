@@ -29,6 +29,15 @@ export function encrypt(text: string): { encrypted: string; iv: string } {
  * if (actor.role !== 'ADMIN' && actor.role !== 'MEDICAL') throw new AppError(403, 'FORBIDDEN');
  * const plainPhone = decrypt(player.phoneEncrypted, player.phoneIv);
  */
+/**
+ * 전화번호 중복 체크용 결정론적 HMAC 해시.
+ * 번호는 숫자만 정규화한 뒤 PHONE_ENCRYPTION_KEY를 재사용해 HMAC-SHA256 계산.
+ */
+export function hashPhone(phoneNumber: string): string {
+  const digits = phoneNumber.replace(/\D/g, '');
+  return crypto.createHmac('sha256', getKey()).update(digits).digest('hex');
+}
+
 export function decrypt(encrypted: string, ivHex: string): string {
   const decipher = crypto.createDecipheriv(ALGORITHM, getKey(), Buffer.from(ivHex, "hex"));
   let decrypted = decipher.update(encrypted, "hex", "utf8");

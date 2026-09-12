@@ -12,7 +12,7 @@ interface CreateUserData {
   frontOfficeRole?: FrontOfficeRole | null;
   dateOfBirth: Date;
   nationalityId: number;
-  phoneNumber: { encrypted: string; iv: string };
+  phoneNumber: { encrypted: string; iv: string; phoneHash: string };
 }
 
 export class AuthRepository {
@@ -31,6 +31,10 @@ export class AuthRepository {
 
   isNicknameTaken(nickname: string) {
     return this.prisma.user.findUnique({ where: { nickname }, select: { id: true } });
+  }
+
+  isPhoneHashTaken(phoneHash: string) {
+    return this.prisma.phoneNumber.findUnique({ where: { phoneHash }, select: { id: true } });
   }
 
   findById(id: number) {
@@ -143,7 +147,7 @@ export class AuthRepository {
 
   async createUser(data: CreateUserData) {
     const phone = await this.prisma.phoneNumber.create({
-      data: { encrypted: data.phoneNumber.encrypted, iv: data.phoneNumber.iv },
+      data: { encrypted: data.phoneNumber.encrypted, iv: data.phoneNumber.iv, phoneHash: data.phoneNumber.phoneHash },
     });
     return this.prisma.user.create({
       data: {

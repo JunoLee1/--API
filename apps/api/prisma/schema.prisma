@@ -898,9 +898,10 @@ model Country {
 }
 
 model PhoneNumber {
-  id        Int    @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   iv        String
   encrypted String
+  phoneHash String? @unique
 
   user User?
 }
