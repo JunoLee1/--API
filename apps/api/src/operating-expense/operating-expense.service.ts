@@ -3,6 +3,7 @@ import { OperatingExpenseRepository } from "./operating-expense.repo";
 import { NotificationRepository } from "../notification/notification.repo";
 import { ExpenseCategoryService } from "../expense-category/expense-category.service";
 import { canReadFinance, canWriteFinance } from "../lib/permissions";
+import type { CreateOperatingExpenseDto, UpdateOperatingExpenseDto } from "./dto/operating-expense.dto";
 
 export const APPROVAL_THRESHOLD = 1_000_000;
 
@@ -28,17 +29,7 @@ export class OperatingExpenseService {
     }));
   }
 
-  async create(data: {
-    seasonId: number;
-    category: string;
-    costType?: "FIXED" | "VARIABLE" | "CONTINGENCY";
-    amount: number;
-    date: string;
-    note?: string;
-    createdById: number;
-    budgetLineId?: number;
-    actorClubId?: number | null;
-  }) {
+  async create(data: CreateOperatingExpenseDto) {
     if (data.amount <= 0) throw new AppError(400, "INVALID_AMOUNT");
     if (!(await this.categoryService.isValidCode(data.category))) {
       throw new AppError(400, "INVALID_CATEGORY");
@@ -241,7 +232,7 @@ export class OperatingExpenseService {
     return updated;
   }
 
-  async update(id: number, userId: number, data: { amount?: number; category?: string; note?: string }, actorClubId?: number | null) {
+  async update(id: number, userId: number, data: UpdateOperatingExpenseDto, actorClubId?: number | null) {
     const expense = await this.repo.findById(id, actorClubId);
     if (!expense || expense.deletedAt) throw new AppError(404, "NOT_FOUND");
     if (expense.paidAt) throw new AppError(409, "ALREADY_PAID");

@@ -9,6 +9,7 @@ export interface CreateProspectDto {
   createdById?: number;
   status?: 'LONGLIST' | 'PRE_SHORTLIST';
   playStyle?: string;
+  visaRequired?: boolean;
 }
 
 export interface UpdateProspectDto {

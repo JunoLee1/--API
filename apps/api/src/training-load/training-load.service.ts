@@ -66,8 +66,8 @@ export class TrainingLoadService {
 
     if (dto.load !== undefined) {
       const activeInjury = await this.repo.findActiveInjuryWithReport(dto.playerId);
-      const rehabLoadPercentage = activeInjury?.report?.rehabLoadPercentage ?? null;
-      const allowedActivities = activeInjury?.report?.allowedActivities ?? null;
+      const rehabLoadPercentage = activeInjury?.injuryReport?.rehabLoadPercentage ?? null;
+      const allowedActivities = activeInjury?.injuryReport?.allowedActivities ?? null;
 
       if (activeInjury) {
         console.warn(`[TrainingLoad] Player ${dto.playerId} has active injury (${activeInjury.status})`);

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { VideoAnalysisService } from './video-analysis.service'
-import { AppError } from '../lib/AppError'
+import { AppError } from '../lib/appError'
 
 const WEBHOOK_SECRET = process.env['WEBHOOK_SECRET'] ?? ''
 

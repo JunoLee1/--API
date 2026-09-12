@@ -77,7 +77,7 @@ export class DepartmentAssetKitController {
 
   private assertCanRead(user: {
     role: string;
-    frontOfficeRole?: string | null;
+    frontOfficeRole?: string | null | undefined;
   }): void {
     if (isAdminLike(user.role)) return;
     if (
@@ -92,7 +92,7 @@ export class DepartmentAssetKitController {
 
   private assertCanWrite(user: {
     role: string;
-    frontOfficeRole?: string | null;
+    frontOfficeRole?: string | null | undefined;
   }): void {
     if (isAdminLike(user.role)) return;
     if (

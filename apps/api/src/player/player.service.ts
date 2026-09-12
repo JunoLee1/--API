@@ -131,7 +131,7 @@ export class PlayerService {
     }
     return this.repo.updateWorkPermit(id, {
       workPermitStatus: dto.workPermitStatus,
-      workPermitExpiry: dto.workPermitExpiry ? new Date(dto.workPermitExpiry) : undefined,
+      ...(dto.workPermitExpiry && { workPermitExpiry: new Date(dto.workPermitExpiry) }),
     });
   }
 
