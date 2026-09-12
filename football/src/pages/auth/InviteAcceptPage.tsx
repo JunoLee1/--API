@@ -96,6 +96,7 @@ export default function InviteAcceptPage() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : ''
       if (msg.includes('NICKNAME_TAKEN')) toast.error(t('inviteAccept.errors.nicknameTaken'))
+      else if (msg.includes('PHONE_TAKEN')) toast.error(t('inviteAccept.errors.phoneTaken'))
       else if (msg.includes('PASSWORD_MISMATCH')) toast.error(t('inviteAccept.errors.passwordMismatch'))
       else if (msg.includes('INVALID_PHONE_NUMBER')) toast.error(t('inviteAccept.errors.invalidPhone'))
       else if (msg.includes('INVITE_EXPIRED')) { setError('expired'); toast.error(t('inviteAccept.errors.expired')) }

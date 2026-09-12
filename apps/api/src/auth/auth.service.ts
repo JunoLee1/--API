@@ -1,7 +1,7 @@
 import { AuthRepository } from "./auth.repo";
 import { AppError } from "../lib/appError";
 import { hashPassword, comparePassword } from "../lib/hash";
-import { encrypt } from "../lib/crypto";
+import { encrypt, hashPhone } from "../lib/crypto";
 import { generateTokens } from "../lib/token";
 import { LoginDto, CreateUserDto } from "../lib/dto";
 import { Role, CoachingRole, FrontOfficeRole } from "../generated/enums";
@@ -35,9 +35,10 @@ export class AuthService {
 
     if (await this.repo.isEmailTaken(dto.email)) throw new AppError(409, "EMAIL_TAKEN");
     if (await this.repo.isNicknameTaken(dto.nickname)) throw new AppError(409, "NICKNAME_TAKEN");
+    if (await this.repo.isPhoneHashTaken(hashPhone(dto.phoneNumber))) throw new AppError(409, "PHONE_TAKEN");
 
     const password = await hashPassword(dto.password);
-    const phoneNumber = encrypt(dto.phoneNumber);
+    const phoneNumber = { ...encrypt(dto.phoneNumber), phoneHash: hashPhone(dto.phoneNumber) };
 
     return this.repo.createUser({
       email: dto.email,
@@ -90,9 +91,10 @@ export class AuthService {
     const invitePhoneDigits = dto.phoneNumber.replace(/\D/g, '');
     if (!/^\d{10,11}$/.test(invitePhoneDigits)) throw new AppError(400, "INVALID_PHONE_NUMBER");
     if (await this.repo.isNicknameTaken(dto.nickname)) throw new AppError(409, "NICKNAME_TAKEN");
+    if (await this.repo.isPhoneHashTaken(hashPhone(dto.phoneNumber))) throw new AppError(409, "PHONE_TAKEN");
 
     const password = await hashPassword(dto.password);
-    const phoneNumber = encrypt(dto.phoneNumber);
+    const phoneNumber = { ...encrypt(dto.phoneNumber), phoneHash: hashPhone(dto.phoneNumber) };
 
     const user = await this.repo.createUser({
       email: invite.email,
