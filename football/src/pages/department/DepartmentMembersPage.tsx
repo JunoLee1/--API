@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
+import { ChevronLeft } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
   departmentApi,
   departmentMemberApi,
+  deptJobTitleApi,
   type Department,
   type DeptRole,
   type Member,
+  type DeptJobTitle,
 } from '@/services/department.service'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -41,7 +44,7 @@ import { isAdminLike } from '@/lib/permissions'
 
 // ---- DeptRole helpers ----
 
-const DEPT_ROLES: DeptRole[] = ['LEADER', 'DEPUTY', 'MANAGER', 'SENIOR', 'MEMBER', 'INTERN']
+const DEPT_ROLES: DeptRole[] = ['DEPT_HEAD', 'LEADER', 'MEMBER', 'INTERN']
 
 // ---- Error code mapping ----
 
@@ -74,6 +77,7 @@ export function DepartmentMembersPage() {
   const [addUserId, setAddUserId] = useState('')
   const [addRole, setAddRole] = useState<DeptRole>('MEMBER')
   const [addSaving, setAddSaving] = useState(false)
+  const [addJobTitleId, setAddJobTitleId] = useState<number | null>(null)
 
   // Head dialog
   const [headOpen, setHeadOpen] = useState(false)
@@ -87,17 +91,25 @@ export function DepartmentMembersPage() {
   const [transferRole, setTransferRole] = useState<DeptRole>('MEMBER')
   const [transferSaving, setTransferSaving] = useState(false)
 
+  // Job title
+  const [jobTitles, setJobTitles] = useState<DeptJobTitle[]>([])
+  const [jobTitleManageOpen, setJobTitleManageOpen] = useState(false)
+  const [newTitleLabel, setNewTitleLabel] = useState('')
+  const [titleSaving, setTitleSaving] = useState(false)
+
   // ---- data fetch ----
   const fetchMembers = async () => {
     try {
-      const [d, ms, ds] = await Promise.all([
+      const [d, ms, ds, jts] = await Promise.all([
         departmentApi.get(deptId),
         departmentMemberApi.list(deptId),
         departmentApi.list(),
+        deptJobTitleApi.list(deptId),
       ])
       setDept(d)
       setMembers(ms)
       setAllDepts(ds)
+      setJobTitles(jts)
     } catch {
       toast.error(t('deptMember.loadFailed'))
     } finally {
@@ -109,10 +121,15 @@ export function DepartmentMembersPage() {
 
   // ---- permission helpers ----
   // Management authority is granted via Department.headId (승인 권한), NOT UserDepartment.role.
-  // LEADER/DEPUTY are 조직도 labels only — they do not confer management rights by themselves.
+  // DEPT_HEAD/LEADER are 조직도 labels only — management rights come from Department.headId.
   const canManage = !!user && (
     isAdminLike(user.role) ||
     dept?.headId === user.id
+  )
+  // 팀장 변경은 관리자/HR만 가능 — 팀장 본인은 불가
+  const canChangeHead = !!user && (
+    isAdminLike(user.role) ||
+    user.departmentCategories?.includes('HR')
   )
 
   const headMember = dept?.headId != null
@@ -128,11 +145,12 @@ export function DepartmentMembersPage() {
     }
     setAddSaving(true)
     try {
-      await departmentMemberApi.add(deptId, uid, addRole)
+      await departmentMemberApi.add(deptId, uid, addRole, addJobTitleId)
       toast.success(t('deptMember.addSuccess'))
       setAddOpen(false)
       setAddUserId('')
       setAddRole('MEMBER')
+      setAddJobTitleId(null)
       void fetchMembers()
     } catch (err) {
       const code = err instanceof Error ? err.message : ''
@@ -144,7 +162,7 @@ export function DepartmentMembersPage() {
 
   // ---- update role inline ----
   const handleRoleChange = async (m: Member, role: DeptRole) => {
-    if (!confirm(t('deptMember.confirmRoleChange', { name: m.user.name, role: roleLabel(role) }))) return
+    if (!confirm(t('deptMember.confirmRoleChange', { name: m.user.nickname, role: roleLabel(role) }))) return
     try {
       await departmentMemberApi.updateRole(deptId, m.userId, role)
       void fetchMembers()
@@ -154,9 +172,20 @@ export function DepartmentMembersPage() {
     }
   }
 
+  // ---- update job title inline ----
+  const handleJobTitleChange = async (m: Member, jobTitleId: number | null) => {
+    try {
+      await departmentMemberApi.updateJobTitle(deptId, m.userId, jobTitleId)
+      void fetchMembers()
+    } catch (err) {
+      const code = err instanceof Error ? err.message : ''
+      toast.error(messageForCode(code, t))
+    }
+  }
+
   // ---- remove ----
   const handleRemove = async (m: Member) => {
-    if (!confirm(t('deptMember.confirmRemove', { name: m.user.name }))) return
+    if (!confirm(t('deptMember.confirmRemove', { name: m.user.nickname }))) return
     try {
       await departmentMemberApi.remove(deptId, m.userId)
       toast.success(t('deptMember.removeSuccess'))
@@ -220,6 +249,32 @@ export function DepartmentMembersPage() {
     }
   }
 
+  // ---- job title management ----
+  const handleCreateJobTitle = async () => {
+    if (!newTitleLabel.trim()) return
+    setTitleSaving(true)
+    try {
+      await deptJobTitleApi.create(deptId, { label: newTitleLabel.trim() })
+      setNewTitleLabel('')
+      void fetchMembers()
+    } catch (err) {
+      const code = err instanceof Error ? err.message : ''
+      toast.error(messageForCode(code, t))
+    } finally {
+      setTitleSaving(false)
+    }
+  }
+
+  const handleDeleteJobTitle = async (titleId: number) => {
+    if (!confirm(t('deptMember.jobTitle.deleteConfirm'))) return
+    try {
+      await deptJobTitleApi.delete(deptId, titleId)
+      void fetchMembers()
+    } catch {
+      toast.error(t('deptMember.jobTitle.deleteConfirm'))
+    }
+  }
+
   // ---- render ----
 
   if (loading) {
@@ -237,6 +292,15 @@ export function DepartmentMembersPage() {
 
   return (
     <div className="p-6 space-y-4">
+      {/* 뒤로 가기 */}
+      <Link
+        to="/admin/department-members"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ChevronLeft className="h-4 w-4" />
+        {t('nav.item.myTeamMembers')}
+      </Link>
+
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
@@ -244,17 +308,24 @@ export function DepartmentMembersPage() {
           <p className="text-sm text-muted-foreground mt-0.5">
             {t('deptMember.head')}:{' '}
             {headMember
-              ? `${headMember.user.name} (${headMember.user.email})`
+              ? `${headMember.user.nickname} (${headMember.user.email})`
               : t('deptMember.noHead')}
           </p>
         </div>
         {canManage && (
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => { setNewHeadUserId(''); setHeadOpen(true) }}>
-              {t('deptMember.changeHead')}
+            {canChangeHead && (
+              <Button variant="outline" size="sm" onClick={() => { setNewHeadUserId(''); setHeadOpen(true) }}>
+                {t('deptMember.changeHead')}
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={() => setJobTitleManageOpen(true)}>
+              {t('deptMember.jobTitle.manage')}
             </Button>
             <Button size="sm" onClick={() => setAddOpen(true)}>
-              {t('deptMember.addMember')}
+              {dept?.headId === user?.id && !isAdminLike(user?.role ?? '')
+                ? t('deptMember.addMemberAsLeader')
+                : t('deptMember.addMember')}
             </Button>
           </div>
         )}
@@ -267,22 +338,24 @@ export function DepartmentMembersPage() {
             <TableRow className="hover:bg-transparent">
               <TableHead>{t('deptMember.col.name')}</TableHead>
               <TableHead>{t('deptMember.col.email')}</TableHead>
+              <TableHead>{t('deptMember.col.dept')}</TableHead>
               <TableHead>{t('deptMember.col.role')}</TableHead>
+              <TableHead>{t('deptMember.jobTitle.label')}</TableHead>
               {canManage && <TableHead className="text-right">{t('deptMember.col.actions')}</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {members.length === 0 && (
               <TableRow>
-                <TableCell colSpan={canManage ? 4 : 3} className="py-8 text-center text-muted-foreground text-sm">
+                <TableCell colSpan={canManage ? 6 : 5} className="py-8 text-center text-muted-foreground text-sm">
                   {t('deptMember.empty')}
                 </TableCell>
               </TableRow>
             )}
             {members.map(m => (
-              <TableRow key={m.userId}>
+              <TableRow key={`${m.userId}-${m.departmentId}`}>
                 <TableCell className="font-medium">
-                  {m.user.name}
+                  {m.user.nickname}
                   {dept?.headId === m.userId && (
                     <Badge variant="secondary" className="ml-2 text-[10px]">
                       {t('deptMember.headBadge')}
@@ -290,6 +363,7 @@ export function DepartmentMembersPage() {
                   )}
                 </TableCell>
                 <TableCell className="text-muted-foreground text-sm">{m.user.email}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{m.department.name}</TableCell>
                 <TableCell>
                   {canManage ? (
                     <Select
@@ -309,6 +383,32 @@ export function DepartmentMembersPage() {
                     </Select>
                   ) : (
                     <span className="text-sm">{roleLabel(m.role)}</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {canManage ? (
+                    <Select
+                      value={m.jobTitleId != null ? String(m.jobTitleId) : ''}
+                      onValueChange={(v) => void handleJobTitleChange(m, v === '' ? null : Number(v))}
+                    >
+                      <SelectTrigger size="sm" className="w-28">
+                        <SelectValue placeholder={t('deptMember.jobTitle.none')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="" label={t('deptMember.jobTitle.none')}>
+                          {t('deptMember.jobTitle.none')}
+                        </SelectItem>
+                        {jobTitles.map(jt => (
+                          <SelectItem key={jt.id} value={String(jt.id)} label={jt.label}>
+                            {jt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      {m.jobTitle?.label ?? '—'}
+                    </span>
                   )}
                 </TableCell>
                 {canManage && (
@@ -369,6 +469,27 @@ export function DepartmentMembersPage() {
                   {DEPT_ROLES.map(r => (
                     <SelectItem key={r} value={r} label={roleLabel(r)}>
                       {roleLabel(r)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t('deptMember.jobTitle.label')}</Label>
+              <Select
+                value={addJobTitleId != null ? String(addJobTitleId) : ''}
+                onValueChange={(v) => setAddJobTitleId(v === '' ? null : Number(v))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('deptMember.jobTitle.none')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="" label={t('deptMember.jobTitle.none')}>
+                    {t('deptMember.jobTitle.none')}
+                  </SelectItem>
+                  {jobTitles.map(jt => (
+                    <SelectItem key={jt.id} value={String(jt.id)} label={jt.label}>
+                      {jt.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -457,6 +578,53 @@ export function DepartmentMembersPage() {
             </Button>
             <Button onClick={() => void handleTransfer()} disabled={transferSaving}>
               {t('deptMember.transfer')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Job title management dialog */}
+      <Dialog open={jobTitleManageOpen} onOpenChange={setJobTitleManageOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('deptMember.jobTitle.manage')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              {jobTitles.length === 0 && (
+                <p className="text-sm text-muted-foreground">{t('deptMember.jobTitle.empty')}</p>
+              )}
+              {jobTitles.map(jt => (
+                <div key={jt.id} className="flex items-center justify-between rounded border px-3 py-2 text-sm">
+                  <span>{jt.label}</span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-destructive"
+                    onClick={() => void handleDeleteJobTitle(jt.id)}
+                  >
+                    {t('deptMember.jobTitle.delete')}
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Input
+                value={newTitleLabel}
+                onChange={(e) => setNewTitleLabel(e.target.value)}
+                placeholder={t('deptMember.jobTitle.labelPlaceholder')}
+              />
+              <Button
+                onClick={() => void handleCreateJobTitle()}
+                disabled={titleSaving || !newTitleLabel.trim()}
+              >
+                {t('deptMember.jobTitle.add')}
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setJobTitleManageOpen(false)}>
+              {t('action.close')}
             </Button>
           </DialogFooter>
         </DialogContent>

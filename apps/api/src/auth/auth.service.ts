@@ -1,7 +1,7 @@
 import { AuthRepository } from "./auth.repo";
 import { AppError } from "../lib/appError";
 import { hashPassword, comparePassword } from "../lib/hash";
-import { encrypt, hashPhone } from "../lib/crypto";
+import { encrypt, hashPhone, decrypt } from "../lib/crypto";
 import { generateTokens } from "../lib/token";
 import { LoginDto, CreateUserDto } from "../lib/dto";
 import { Role, CoachingRole, FrontOfficeRole } from "../generated/enums";
@@ -169,7 +169,9 @@ export class AuthService {
   async me(id: number) {
     const user = await this.repo.findById(id);
     if (!user) throw new AppError(404, "USER_NOT_FOUND");
-    return user;
+    const phoneRaw = await this.repo.findPhoneNumber(id);
+    const phone = phoneRaw ? decrypt(phoneRaw.encrypted, phoneRaw.iv) : null;
+    return { ...user, phone };
   }
 
   async gdprErasure(targetUserId: number, actorId: number) {

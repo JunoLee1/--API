@@ -194,25 +194,37 @@ export function MePage() {
                     <dt className="text-xs text-muted-foreground uppercase tracking-wide">{t('mePage.roleLabel')}</dt>
                     <dd className="mt-1 font-medium">{roleLabel}</dd>
                   </div>
-                  {user.team && (
-                    <div>
-                      <dt className="text-xs text-muted-foreground uppercase tracking-wide">{t('mePage.teamLabel')}</dt>
-                      <dd className="mt-1 font-medium">{user.team.type}</dd>
-                    </div>
-                  )}
-                  {user.departments.length > 0 && (
-                    <div className="sm:col-span-2">
-                      <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-1.5">{t('mePage.departmentsLabel')}</dt>
-                      <dd className="flex flex-wrap gap-2">
-                        {user.departments.map(d => (
-                          <span key={d.department.id} className="inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs font-medium bg-muted">
-                            {d.department.name}
-                            <span className="text-muted-foreground">· {d.role}</span>
-                          </span>
-                        ))}
-                      </dd>
-                    </div>
-                  )}
+                  <div>
+                    <dt className="text-xs text-muted-foreground uppercase tracking-wide">{t('mePage.phoneLabel')}</dt>
+                    <dd className="mt-1 font-medium">{user.phone ?? t('mePage.notSet')}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground uppercase tracking-wide">{t('mePage.clubLabel')}</dt>
+                    <dd className="mt-1 font-medium">{user.club?.name ?? t('mePage.notSet')}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground uppercase tracking-wide">{t('mePage.teamLabel')}</dt>
+                    <dd className="mt-1 font-medium">{user.team?.type ?? (() => {
+                      const leaderMembership = user.departmentMemberships.find(
+                        d => d.role === 'LEADER' || d.role === 'DEPT_HEAD'
+                      ) ?? user.departmentMemberships[0]
+                      return leaderMembership?.department.name ?? t('mePage.notSet')
+                    })()}</dd>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-1.5">{t('mePage.departmentsLabel')}</dt>
+                    <dd className="flex flex-wrap gap-2">
+                      {user.departmentMemberships.length > 0 ? user.departmentMemberships.map(d => (
+                        <span key={d.department.id} className="inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs font-medium bg-muted">
+                          {d.department.name}
+                          <span className="text-muted-foreground">· {t(`deptMember.role.${d.role}`)}</span>
+                          {d.jobTitle && (
+                            <span className="text-muted-foreground">· {d.jobTitle.label}</span>
+                          )}
+                        </span>
+                      )) : <span className="text-muted-foreground text-xs">{t('mePage.notSet')}</span>}
+                    </dd>
+                  </div>
                   {user.homeAddress && (
                     <div className="sm:col-span-2">
                       <dt className="text-xs text-muted-foreground uppercase tracking-wide">{t('mePage.homeAddressLabel')}</dt>

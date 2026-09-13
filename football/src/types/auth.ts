@@ -80,8 +80,14 @@ export interface UserDto {
   language: 'ko' | 'en'
   homeAddress: string | null
   passwordChangedAt: string | null
+  phone: string | null
   team: { id: number; type: string } | null
-  departments: Array<{ role: string; department: { id: number; name: string } }>
+  club: { id: number; name: string } | null
+  departmentMemberships: Array<{
+    role: string;
+    jobTitle: { id: number; label: string } | null;
+    department: { id: number; name: string };
+  }>
 }
 
 export interface TokenPair {
