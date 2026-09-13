@@ -24,4 +24,10 @@ router.delete("/:deptId/members/:userId", auth, controller.removeMember);
 router.post("/:deptId/members/:userId/transfer", auth, controller.transferMember);
 router.patch("/:deptId/head", auth, controller.updateHead);
 
+router.get("/:deptId/job-titles", auth, controller.listJobTitles);
+router.post("/:deptId/job-titles", auth, controller.createJobTitle);
+router.patch("/:deptId/job-titles/:titleId", auth, controller.updateJobTitle);
+router.delete("/:deptId/job-titles/:titleId", auth, controller.deleteJobTitle);
+router.patch("/:deptId/members/:userId/job-title", auth, controller.updateMemberJobTitle);
+
 export default router;
