@@ -204,6 +204,7 @@
     "statusLabel": "Status",
     "outOfOffice": "Out of Office",
     "notSet": "Not set",
+    "clubLabel": "Club",
     "teamLabel": "Team",
     "departmentsLabel": "Departments",
     "editBtn": "Edit My Profile",
@@ -447,7 +448,8 @@
     "noHead": "Not assigned",
     "headBadge": "Head",
     "changeHead": "Change Head",
-    "addMember": "Add Member",
+    "addMember": "Appoint Leader",
+    "addMemberAsLeader": "Add Member",
     "transfer": "Transfer",
     "transferTitle": "Transfer {{name}}",
     "targetDept": "Target Department",
@@ -468,16 +470,27 @@
     "col": {
       "name": "Name",
       "email": "Email",
+      "dept": "Team",
       "role": "Role",
       "actions": "Actions"
     },
     "role": {
-      "LEADER": "Leader",
-      "DEPUTY": "Deputy",
-      "MANAGER": "Manager",
-      "SENIOR": "Senior",
+      "DEPT_HEAD": "Dept. Head",
+      "LEADER": "Team Leader",
       "MEMBER": "Member",
       "INTERN": "Intern"
+    },
+    "jobTitle": {
+      "label": "Job Title",
+      "placeholder": "Select job title",
+      "none": "No title",
+      "add": "Add Job Title",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteConfirm": "Deactivate this job title? Existing members will keep their current title.",
+      "empty": "No job titles defined.",
+      "manage": "Manage Job Titles",
+      "labelPlaceholder": "e.g. Manager, Senior Staff"
     },
     "error": {
       "generic": "Request failed.",

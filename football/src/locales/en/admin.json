@@ -126,7 +126,8 @@
       "createSuccess": "{{name}} account created.",
       "createFailed": "Failed to create.",
       "creating": "Creating...",
-      "create": "Create Account"
+      "create": "Create Account",
+      "departmentLabel": "Department"
     }
   },
   "partnersPage": {

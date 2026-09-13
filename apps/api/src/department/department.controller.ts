@@ -41,10 +41,14 @@ export class DepartmentController {
       const { name, parentId, category } = req.body as { name: string; parentId?: number; category?: string };
       if (typeof name !== "string" || !name.trim()) throw new AppError(400, "NAME_REQUIRED");
 
-      if (!canManage(role)) {
-        if (parentId === undefined) throw new AppError(403, "FORBIDDEN");
+      if (parentId !== undefined) {
         const parent = await this.service.get(parentId);
-        if (parent.headId !== userId) throw new AppError(403, "FORBIDDEN");
+        if (parent.parentId !== null) throw new AppError(400, "DEPT_MAX_DEPTH_EXCEEDED");
+        if (!canManage(role) && !(await this.service.isHead(parentId, userId))) {
+          throw new AppError(403, "FORBIDDEN");
+        }
+      } else if (!canManage(role)) {
+        throw new AppError(403, "FORBIDDEN");
       }
 
       const scopedClubId = role === "SUPER_ADMIN" ? null : (clubId ?? null);
@@ -68,7 +72,8 @@ export class DepartmentController {
 
       if (!canManage(role)) {
         const dept = await this.service.get(Number(req.params["id"]));
-        if (!dept.parentId || dept.parent?.headId !== userId) throw new AppError(403, "FORBIDDEN");
+        if (!dept.parentId) throw new AppError(403, "FORBIDDEN");
+        if (!(await this.service.isHead(dept.parentId, userId))) throw new AppError(403, "FORBIDDEN");
       }
 
       res.json(await this.service.update(Number(req.params["id"]), data, userId));
@@ -91,7 +96,8 @@ export class DepartmentController {
 
       if (!canManage(role)) {
         const dept = await this.service.get(Number(req.params["id"]));
-        if (!dept.parentId || dept.parent?.headId !== userId) throw new AppError(403, "FORBIDDEN");
+        if (!dept.parentId) throw new AppError(403, "FORBIDDEN");
+        if (!(await this.service.isHead(dept.parentId, userId))) throw new AppError(403, "FORBIDDEN");
       }
 
       await this.service.delete(Number(req.params["id"]));
@@ -105,9 +111,9 @@ export class DepartmentController {
 
   listMembers = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id: requesterId, role } = requireUser(req);
+      const user = requireUser(req);
       const deptId = Number(req.params["deptId"]);
-      res.json(await this.service.listMembers(deptId, requesterId, role));
+      res.json(await this.service.listMembers(deptId, { id: user.id, role: user.role, frontOfficeRole: user.frontOfficeRole, deptCategories: user.departmentCategories }));
     } catch (err) {
       next(err);
     }
@@ -115,14 +121,16 @@ export class DepartmentController {
 
   addMember = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id: requesterId, role } = requireUser(req);
+      const user = requireUser(req);
       const deptId = Number(req.params["deptId"]);
-      const { userId, role: memberRole } = req.body as { userId?: unknown; role?: unknown };
+      const { userId, role: memberRole, jobTitleId } = req.body as { userId?: unknown; role?: unknown; jobTitleId?: unknown };
       if (typeof userId !== "number" || !Number.isInteger(userId)) throw new AppError(400, "INVALID_BODY");
       const resolvedRole: DeptRole = (typeof memberRole === "string" && memberRole in DeptRole)
         ? (memberRole as DeptRole)
         : DeptRole.MEMBER;
-      res.status(201).json(await this.service.addMember(deptId, userId, resolvedRole, requesterId, role));
+      const resolvedJobTitleId = typeof jobTitleId === "number" ? jobTitleId : null;
+      const actor = { id: user.id, role: user.role, frontOfficeRole: user.frontOfficeRole, deptCategories: user.departmentCategories };
+      res.status(201).json(await this.service.addMember(deptId, userId, resolvedRole, actor, resolvedJobTitleId));
     } catch (err) {
       next(err);
     }
@@ -130,12 +138,13 @@ export class DepartmentController {
 
   updateMemberRole = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id: requesterId, role } = requireUser(req);
+      const user = requireUser(req);
       const deptId = Number(req.params["deptId"]);
       const userId = Number(req.params["userId"]);
       const { role: newRole } = req.body as { role?: unknown };
       if (typeof newRole !== "string" || !(newRole in DeptRole)) throw new AppError(400, "INVALID_BODY");
-      res.json(await this.service.updateMemberRole(deptId, userId, newRole as DeptRole, requesterId, role));
+      const actor = { id: user.id, role: user.role, frontOfficeRole: user.frontOfficeRole, deptCategories: user.departmentCategories };
+      res.json(await this.service.updateMemberRole(deptId, userId, newRole as DeptRole, actor));
     } catch (err) {
       next(err);
     }
@@ -143,10 +152,11 @@ export class DepartmentController {
 
   removeMember = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id: requesterId, role } = requireUser(req);
+      const user = requireUser(req);
       const deptId = Number(req.params["deptId"]);
       const userId = Number(req.params["userId"]);
-      await this.service.removeMember(deptId, userId, requesterId, role);
+      const actor = { id: user.id, role: user.role, frontOfficeRole: user.frontOfficeRole, deptCategories: user.departmentCategories };
+      await this.service.removeMember(deptId, userId, actor);
       res.status(204).send();
     } catch (err) {
       next(err);
@@ -155,7 +165,7 @@ export class DepartmentController {
 
   transferMember = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id: requesterId, role } = requireUser(req);
+      const user = requireUser(req);
       const fromDeptId = Number(req.params["deptId"]);
       const userId = Number(req.params["userId"]);
       const { toDeptId, role: toRole } = req.body as { toDeptId?: unknown; role?: unknown };
@@ -163,7 +173,8 @@ export class DepartmentController {
       const resolvedToRole: DeptRole = (typeof toRole === "string" && toRole in DeptRole)
         ? (toRole as DeptRole)
         : DeptRole.MEMBER;
-      res.json(await this.service.transferMember(fromDeptId, toDeptId, userId, resolvedToRole, requesterId, role));
+      const actor = { id: user.id, role: user.role, frontOfficeRole: user.frontOfficeRole, deptCategories: user.departmentCategories };
+      res.json(await this.service.transferMember(fromDeptId, toDeptId, userId, resolvedToRole, actor));
     } catch (err) {
       next(err);
     }
@@ -171,15 +182,74 @@ export class DepartmentController {
 
   updateHead = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id: requesterId, role } = requireUser(req);
+      const user = requireUser(req);
       const deptId = Number(req.params["deptId"]);
       const { newHeadId } = req.body as { newHeadId?: unknown };
       if (newHeadId !== null && (typeof newHeadId !== "number" || !Number.isInteger(newHeadId))) {
         throw new AppError(400, "INVALID_BODY");
       }
-      res.json(await this.service.updateHead(deptId, newHeadId as number | null, requesterId, role));
+      const actor = { id: user.id, role: user.role, frontOfficeRole: user.frontOfficeRole, deptCategories: user.departmentCategories };
+      res.json(await this.service.updateHead(deptId, newHeadId as number | null, actor));
     } catch (err) {
       next(err);
     }
+  };
+
+  // ── DeptJobTitle ────────────────────────────────────────────
+
+  listJobTitles = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      requireUser(req);
+      res.json(await this.service.listJobTitles(Number(req.params['deptId'])));
+    } catch (err) { next(err); }
+  };
+
+  createJobTitle = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = requireUser(req);
+      const { label, sortOrder } = req.body as { label?: unknown; sortOrder?: unknown };
+      if (typeof label !== 'string') throw new AppError(400, 'LABEL_REQUIRED');
+      const actor = { id: user.id, role: user.role, frontOfficeRole: user.frontOfficeRole, deptCategories: user.departmentCategories };
+      res.status(201).json(
+        await this.service.createJobTitle(
+          Number(req.params['deptId']),
+          label,
+          typeof sortOrder === 'number' ? sortOrder : undefined,
+          actor,
+        )
+      );
+    } catch (err) { next(err); }
+  };
+
+  updateJobTitle = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = requireUser(req);
+      const data = req.body as { label?: string; sortOrder?: number };
+      const actor = { id: user.id, role: user.role, frontOfficeRole: user.frontOfficeRole, deptCategories: user.departmentCategories };
+      res.json(
+        await this.service.updateJobTitle(Number(req.params['deptId']), Number(req.params['titleId']), data, actor)
+      );
+    } catch (err) { next(err); }
+  };
+
+  deleteJobTitle = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = requireUser(req);
+      const actor = { id: user.id, role: user.role, frontOfficeRole: user.frontOfficeRole, deptCategories: user.departmentCategories };
+      await this.service.deleteJobTitle(Number(req.params['deptId']), Number(req.params['titleId']), actor);
+      res.status(204).send();
+    } catch (err) { next(err); }
+  };
+
+  updateMemberJobTitle = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = requireUser(req);
+      const { jobTitleId } = req.body as { jobTitleId?: unknown };
+      const resolved = jobTitleId === null ? null : (typeof jobTitleId === 'number' ? jobTitleId : null);
+      const actor = { id: user.id, role: user.role, frontOfficeRole: user.frontOfficeRole, deptCategories: user.departmentCategories };
+      res.json(
+        await this.service.updateMemberJobTitle(Number(req.params['deptId']), Number(req.params['userId']), resolved, actor)
+      );
+    } catch (err) { next(err); }
   };
 }

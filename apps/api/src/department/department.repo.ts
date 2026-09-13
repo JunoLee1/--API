@@ -65,11 +65,34 @@ export class DepartmentRepository {
 
   // ── Member CRUD ────────────────────────────────────────────
 
-  findMembers(deptId: number) {
+  async findDescendantIds(deptId: number): Promise<number[]> {
+    const result = await this.prisma.$queryRaw<{ id: number }[]>`
+      WITH RECURSIVE subtree AS (
+        SELECT id FROM "Department" WHERE id = ${deptId}
+        UNION ALL
+        SELECT d.id FROM "Department" d
+        INNER JOIN subtree s ON d."parentId" = s.id
+      )
+      SELECT id FROM subtree
+    `;
+    return result.map(r => r.id);
+  }
+
+  async findMembers(deptId: number) {
+    const ids = await this.findDescendantIds(deptId);
     return this.prisma.userDepartment.findMany({
-      where: { departmentId: deptId },
-      include: { user: true },
-      orderBy: { joinedAt: "asc" },
+      where: { departmentId: { in: ids } },
+      select: {
+        userId: true,
+        departmentId: true,
+        role: true,
+        jobTitleId: true,
+        joinedAt: true,
+        user: { select: { id: true, username: true, nickname: true, email: true, role: true } },
+        department: { select: { id: true, name: true } },
+        jobTitle: { select: { id: true, label: true } },
+      },
+      orderBy: [{ departmentId: "asc" }, { joinedAt: "asc" }],
     });
   }
 
@@ -79,14 +102,41 @@ export class DepartmentRepository {
     });
   }
 
+  isHead(deptId: number, userId: number): Promise<boolean> {
+    return this.prisma.userDepartment.findFirst({
+      where: { departmentId: deptId, userId, role: { in: ['DEPT_HEAD', 'LEADER'] } },
+    }).then(m => m !== null);
+  }
+
+  findHead(deptId: number) {
+    return this.prisma.userDepartment.findFirst({
+      where: { departmentId: deptId, role: { in: ['DEPT_HEAD', 'LEADER'] } },
+    });
+  }
+
+  async setHead(deptId: number, newUserId: number | null, targetRole: DeptRole): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      await tx.userDepartment.updateMany({
+        where: { departmentId: deptId, role: targetRole },
+        data: { role: 'MEMBER' },
+      });
+      if (newUserId !== null) {
+        await tx.userDepartment.update({
+          where: { userId_departmentId: { userId: newUserId, departmentId: deptId } },
+          data: { role: targetRole },
+        });
+      }
+    });
+  }
+
   findUserById(userId: number) {
     return this.prisma.user.findUnique({ where: { id: userId } });
   }
 
-  addMember(deptId: number, userId: number, role: DeptRole, tx?: TxClient) {
+  addMember(deptId: number, userId: number, role: DeptRole, jobTitleId?: number | null, tx?: TxClient) {
     const client = tx ?? this.prisma;
     return client.userDepartment.create({
-      data: { departmentId: deptId, userId, role },
+      data: { departmentId: deptId, userId, role, ...(jobTitleId != null && { jobTitleId }) },
     });
   }
 
@@ -125,6 +175,40 @@ export class DepartmentRepository {
     return client.department.update({
       where: { id: deptId },
       data: { headId: newHeadId },
+    });
+  }
+
+  // ── DeptJobTitle CRUD ──────────────────────────────────────
+
+  findJobTitles(departmentId: number) {
+    return this.prisma.deptJobTitle.findMany({
+      where: { departmentId, isActive: true },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    });
+  }
+
+  createJobTitle(departmentId: number, label: string, sortOrder?: number) {
+    return this.prisma.deptJobTitle.create({
+      data: { departmentId, label, ...(sortOrder !== undefined && { sortOrder }) },
+    });
+  }
+
+  findJobTitleById(id: number) {
+    return this.prisma.deptJobTitle.findUnique({ where: { id } });
+  }
+
+  updateJobTitle(id: number, data: { label?: string; sortOrder?: number }) {
+    return this.prisma.deptJobTitle.update({ where: { id }, data });
+  }
+
+  deactivateJobTitle(id: number) {
+    return this.prisma.deptJobTitle.update({ where: { id }, data: { isActive: false } });
+  }
+
+  updateMemberJobTitle(deptId: number, userId: number, jobTitleId: number | null) {
+    return this.prisma.userDepartment.update({
+      where: { userId_departmentId: { userId, departmentId: deptId } },
+      data: { jobTitleId },
     });
   }
 }

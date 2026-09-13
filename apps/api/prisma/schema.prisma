@@ -2918,6 +2918,7 @@ model Department {
   hiringDispatches  HiringDispatch[]
   onboardingTemplate OnboardingTemplate?
   defaultAssetKit   DepartmentDefaultAssetKit?
+  jobTitles         DeptJobTitle[]
 
   @@unique([name, clubId])
 }
@@ -2945,23 +2946,34 @@ model PiiAccessRequest {
 }
 
 enum DeptRole {
-  LEADER // 신규 - 팀장급 (조직도 label; 승인 권한은 Department.headId)
-  DEPUTY // 신규 - 부팀장 / 대행
-  MANAGER // 기존 - 실무 관리자
-  SENIOR // 신규 - 선임 개별 기여자
-  MEMBER // 기존 - 팀원
-  INTERN // 신규 - 인턴
+  DEPT_HEAD // 부서장
+  LEADER    // 팀장
+  MEMBER    // 팀원
+  INTERN    // 인턴
 }
 
 model UserDepartment {
   userId       Int
   departmentId Int
-  role         DeptRole   @default(MEMBER)
-  joinedAt     DateTime   @default(now())
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  role         DeptRole      @default(MEMBER)
+  jobTitleId   Int?
+  joinedAt     DateTime      @default(now())
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department   Department    @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  jobTitle     DeptJobTitle? @relation(fields: [jobTitleId], references: [id])
 
   @@id([userId, departmentId])
+}
+
+model DeptJobTitle {
+  id           Int              @id @default(autoincrement())
+  departmentId Int
+  label        String
+  sortOrder    Int              @default(0)
+  isActive     Boolean          @default(true)
+  createdAt    DateTime         @default(now())
+  department   Department       @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  members      UserDepartment[]
 }
 
 // ─────────────────────────────────────────────
