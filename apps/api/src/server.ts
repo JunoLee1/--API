@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import { createServer } from "http";
 import path from "path";
 import express from "express";
@@ -39,6 +40,13 @@ import { startOpexPurgeJob } from "./jobs/opexPurge";
 import { startMedicalEmergencyOverdueEscalationJob } from "./jobs/medicalEmergencyOverdueEscalation";
 import { startProbationReviewNotifierJob } from "./jobs/probationReviewNotifier";
 
+Sentry.init({
+  dsn: process.env["SENTRY_DSN"],
+  environment: process.env["NODE_ENV"] ?? "development",
+  enabled: !!process.env["SENTRY_DSN"],
+  tracesSampleRate: 0.2,
+});
+
 const app = express();
 app.set('json replacer', (_key: string, value: unknown) =>
   typeof value === 'bigint' ? Number(value) : value
@@ -71,6 +79,7 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
     res.status(413).json({ code });
     return;
   }
+  Sentry.captureException(err);
   console.error(err);
   res.status(500).json({ code: "INTERNAL_SERVER_ERROR" });
 });
