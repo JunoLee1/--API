@@ -24,20 +24,32 @@ export const departmentApi = {
   delete: (id: number): Promise<void> => api.delete(`/departments/${id}`),
 };
 
-export type DeptRole = "LEADER" | "DEPUTY" | "MANAGER" | "SENIOR" | "MEMBER" | "INTERN";
+export type DeptRole = "DEPT_HEAD" | "LEADER" | "MEMBER" | "INTERN";
 
 export interface Member {
   userId: number;
   departmentId: number;
   role: DeptRole;
+  jobTitleId: number | null;
+  jobTitle: { id: number; label: string } | null;
   joinedAt: string;
-  user: { id: number; name: string; email: string; role: string };
+  user: { id: number; username: string; nickname: string; email: string; role: string };
+  department: { id: number; name: string };
+}
+
+export interface DeptJobTitle {
+  id: number;
+  departmentId: number;
+  label: string;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
 }
 
 export const departmentMemberApi = {
   list: (deptId: number): Promise<Member[]> => api.get(`/departments/${deptId}/members`),
-  add: (deptId: number, userId: number, role?: DeptRole): Promise<void> =>
-    api.post(`/departments/${deptId}/members`, { userId, ...(role && { role }) }),
+  add: (deptId: number, userId: number, role?: DeptRole, jobTitleId?: number | null): Promise<void> =>
+    api.post(`/departments/${deptId}/members`, { userId, ...(role && { role }), ...(jobTitleId != null && { jobTitleId }) }),
   updateRole: (deptId: number, userId: number, role: DeptRole): Promise<void> =>
     api.patch(`/departments/${deptId}/members/${userId}`, { role }),
   remove: (deptId: number, userId: number): Promise<void> =>
@@ -46,4 +58,17 @@ export const departmentMemberApi = {
     api.post(`/departments/${deptId}/members/${userId}/transfer`, { toDeptId, ...(toRole && { toRole }) }),
   updateHead: (deptId: number, newHeadId: number | null): Promise<void> =>
     api.patch(`/departments/${deptId}/head`, { newHeadId }),
+  updateJobTitle: (deptId: number, userId: number, jobTitleId: number | null): Promise<void> =>
+    api.patch(`/departments/${deptId}/members/${userId}/job-title`, { jobTitleId }),
+};
+
+export const deptJobTitleApi = {
+  list: (deptId: number): Promise<DeptJobTitle[]> =>
+    api.get(`/departments/${deptId}/job-titles`),
+  create: (deptId: number, data: { label: string; sortOrder?: number }): Promise<DeptJobTitle> =>
+    api.post(`/departments/${deptId}/job-titles`, data),
+  update: (deptId: number, titleId: number, data: { label?: string; sortOrder?: number }): Promise<DeptJobTitle> =>
+    api.patch(`/departments/${deptId}/job-titles/${titleId}`, data),
+  delete: (deptId: number, titleId: number): Promise<void> =>
+    api.delete(`/departments/${deptId}/job-titles/${titleId}`),
 };

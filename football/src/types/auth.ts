@@ -82,7 +82,12 @@ export interface UserDto {
   passwordChangedAt: string | null
   phone: string | null
   team: { id: number; type: string } | null
-  departmentMemberships: Array<{ role: string; department: { id: number; name: string } }>
+  club: { id: number; name: string } | null
+  departmentMemberships: Array<{
+    role: string;
+    jobTitle: { id: number; label: string } | null;
+    department: { id: number; name: string };
+  }>
 }
 
 export interface TokenPair {
