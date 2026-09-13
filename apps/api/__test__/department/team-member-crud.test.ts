@@ -32,7 +32,7 @@ const fakeParentDept = {
   id: PARENT_DEPT_ID,
   name: "상위부서",
   parentId: null,
-  headId: LEADER_ID, // LEADER_ID is parent head → can appoint head in child
+  headId: LEADER_ID,
   isActive: true,
   children: [],
   parent: null,
@@ -67,6 +67,7 @@ const makeRepo = (overrides: Record<string, jest.Mock> = {}) =>
     getHeadcount: jest.fn(),
     findMembers: jest.fn().mockResolvedValue([]),
     findMember: jest.fn().mockResolvedValue(null),
+    findDescendantIds: jest.fn().mockResolvedValue([DEPT_ID]),
     findUserById: jest.fn().mockResolvedValue(fakeUser),
     addMember: jest.fn().mockResolvedValue(fakeUserDept),
     updateMemberRole: jest.fn().mockResolvedValue(fakeUserDept),
@@ -77,48 +78,54 @@ const makeRepo = (overrides: Record<string, jest.Mock> = {}) =>
     ...overrides,
   } as any);
 
-// ─── assertLeaderOrAdmin ─────────────────────────────────────────────────────
+// ─── listMembers ─────────────────────────────────────────────────────────────
 
-describe("assertLeaderOrAdmin (via listMembers)", () => {
+describe("listMembers", () => {
   test("admin 역할은 통과", async () => {
     const repo = makeRepo();
     const svc = new DepartmentService(repo);
-    await expect(svc.listMembers(DEPT_ID, ADMIN_ID, "ADMIN")).resolves.not.toThrow();
+    await expect(svc.listMembers(DEPT_ID, { id: ADMIN_ID, role: "ADMIN" })).resolves.not.toThrow();
   });
 
   test("SUPER_ADMIN 역할은 통과", async () => {
     const repo = makeRepo();
     const svc = new DepartmentService(repo);
-    await expect(svc.listMembers(DEPT_ID, ADMIN_ID, "SUPER_ADMIN")).resolves.not.toThrow();
+    await expect(svc.listMembers(DEPT_ID, { id: ADMIN_ID, role: "SUPER_ADMIN" })).resolves.not.toThrow();
   });
 
   test("GM 역할은 통과", async () => {
     const repo = makeRepo();
     const svc = new DepartmentService(repo);
-    await expect(svc.listMembers(DEPT_ID, ADMIN_ID, "GM")).resolves.not.toThrow();
+    await expect(svc.listMembers(DEPT_ID, { id: ADMIN_ID, role: "GM" })).resolves.not.toThrow();
   });
 
   test("팀장(headId 일치)은 통과", async () => {
     const repo = makeRepo();
     const svc = new DepartmentService(repo);
-    await expect(svc.listMembers(DEPT_ID, LEADER_ID, "FRONT_OFFICE")).resolves.not.toThrow();
+    // fakeDept.headId === LEADER_ID → ancestor loop 첫 순회에서 통과
+    await expect(svc.listMembers(DEPT_ID, { id: LEADER_ID, role: "FRONT_OFFICE" })).resolves.not.toThrow();
   });
 
-  test("팀장 아닌 일반 역할 → 403 NOT_LEADER", async () => {
-    const repo = makeRepo();
-    const svc = new DepartmentService(repo);
-    await expect(svc.listMembers(DEPT_ID, OTHER_USER_ID, "FRONT_OFFICE")).rejects.toMatchObject({
-      statusCode: 403,
-      code: "NOT_LEADER",
+  test("팀장 아닌 일반 유저 → 403 FORBIDDEN", async () => {
+    const repo = makeRepo({
+      findById: jest.fn()
+        .mockResolvedValueOnce({ ...fakeDept, headId: LEADER_ID })          // 현재 부서 (headId≠OTHER_USER_ID)
+        .mockResolvedValueOnce({ ...fakeDept, parentId: null, headId: LEADER_ID }), // 상위 부서, 루프 종료
     });
+    const svc = new DepartmentService(repo);
+    await expect(
+      svc.listMembers(DEPT_ID, { id: OTHER_USER_ID, role: "FRONT_OFFICE" })
+    ).rejects.toMatchObject({ statusCode: 403, code: "FORBIDDEN" });
   });
 
-  test("부서 없으면 404", async () => {
-    const repo = makeRepo({ findById: jest.fn().mockResolvedValue(null) });
-    const svc = new DepartmentService(repo);
-    await expect(svc.listMembers(DEPT_ID, OTHER_USER_ID, "FRONT_OFFICE")).rejects.toMatchObject({
-      statusCode: 404,
+  test("권한 없으면 403 FORBIDDEN", async () => {
+    const repo = makeRepo({
+      findById: jest.fn().mockResolvedValue(null), // ancestor loop 즉시 종료
     });
+    const svc = new DepartmentService(repo);
+    await expect(
+      svc.listMembers(DEPT_ID, { id: OTHER_USER_ID, role: "FRONT_OFFICE" })
+    ).rejects.toMatchObject({ statusCode: 403, code: "FORBIDDEN" });
   });
 });
 
@@ -130,10 +137,9 @@ describe("addMember", () => {
   test("성공 + audit log 호출", async () => {
     const repo = makeRepo();
     const svc = new DepartmentService(repo);
-    const result = await svc.addMember(DEPT_ID, MEMBER_ID, "MEMBER", LEADER_ID, "FRONT_OFFICE");
+    const result = await svc.addMember(DEPT_ID, MEMBER_ID, "MEMBER", { id: LEADER_ID, role: "FRONT_OFFICE" });
     expect(result).toEqual({ ok: true });
-    expect(repo.addMember).toHaveBeenCalledWith(DEPT_ID, MEMBER_ID, "MEMBER");
-    // fire-and-forget: give microtask queue a tick
+    expect(repo.addMember).toHaveBeenCalledWith(DEPT_ID, MEMBER_ID, "MEMBER", null);
     await Promise.resolve();
     expect(writeAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({ action: "TEAM_MEMBER_ADDED" })
@@ -144,7 +150,7 @@ describe("addMember", () => {
     const repo = makeRepo({ findUserById: jest.fn().mockResolvedValue(null) });
     const svc = new DepartmentService(repo);
     await expect(
-      svc.addMember(DEPT_ID, 9999, "MEMBER", LEADER_ID, "FRONT_OFFICE")
+      svc.addMember(DEPT_ID, 9999, "MEMBER", { id: LEADER_ID, role: "FRONT_OFFICE" })
     ).rejects.toMatchObject({ statusCode: 404, code: "USER_NOT_FOUND" });
   });
 
@@ -152,7 +158,7 @@ describe("addMember", () => {
     const repo = makeRepo({ findMember: jest.fn().mockResolvedValue(fakeUserDept) });
     const svc = new DepartmentService(repo);
     await expect(
-      svc.addMember(DEPT_ID, MEMBER_ID, "MEMBER", LEADER_ID, "FRONT_OFFICE")
+      svc.addMember(DEPT_ID, MEMBER_ID, "MEMBER", { id: LEADER_ID, role: "FRONT_OFFICE" })
     ).rejects.toMatchObject({ statusCode: 400, code: "ALREADY_MEMBER" });
   });
 });
@@ -165,16 +171,16 @@ describe("updateMemberRole", () => {
   test("성공", async () => {
     const repo = makeRepo({ findMember: jest.fn().mockResolvedValue(fakeUserDept) });
     const svc = new DepartmentService(repo);
-    const result = await svc.updateMemberRole(DEPT_ID, MEMBER_ID, "SENIOR", LEADER_ID, "FRONT_OFFICE");
+    const result = await svc.updateMemberRole(DEPT_ID, MEMBER_ID, "MEMBER", { id: ADMIN_ID, role: "ADMIN" });
     expect(result).toEqual({ ok: true });
-    expect(repo.updateMemberRole).toHaveBeenCalledWith(DEPT_ID, MEMBER_ID, "SENIOR");
+    expect(repo.updateMemberRole).toHaveBeenCalledWith(DEPT_ID, MEMBER_ID, "MEMBER");
   });
 
   test("자기 자신 역할 변경 → 403 SELF_ROLE_CHANGE_FORBIDDEN", async () => {
     const repo = makeRepo({ findMember: jest.fn().mockResolvedValue(fakeUserDept) });
     const svc = new DepartmentService(repo);
     await expect(
-      svc.updateMemberRole(DEPT_ID, LEADER_ID, "SENIOR", LEADER_ID, "FRONT_OFFICE")
+      svc.updateMemberRole(DEPT_ID, LEADER_ID, "MEMBER", { id: LEADER_ID, role: "FRONT_OFFICE" })
     ).rejects.toMatchObject({ statusCode: 403, code: "SELF_ROLE_CHANGE_FORBIDDEN" });
   });
 
@@ -182,14 +188,14 @@ describe("updateMemberRole", () => {
     const repo = makeRepo({ findMember: jest.fn().mockResolvedValue(null) });
     const svc = new DepartmentService(repo);
     await expect(
-      svc.updateMemberRole(DEPT_ID, MEMBER_ID, "SENIOR", LEADER_ID, "FRONT_OFFICE")
+      svc.updateMemberRole(DEPT_ID, MEMBER_ID, "MEMBER", { id: ADMIN_ID, role: "ADMIN" })
     ).rejects.toMatchObject({ statusCode: 404, code: "NOT_MEMBER" });
   });
 
   test("audit log 호출", async () => {
     const repo = makeRepo({ findMember: jest.fn().mockResolvedValue(fakeUserDept) });
     const svc = new DepartmentService(repo);
-    await svc.updateMemberRole(DEPT_ID, MEMBER_ID, "SENIOR", LEADER_ID, "FRONT_OFFICE");
+    await svc.updateMemberRole(DEPT_ID, MEMBER_ID, "MEMBER", { id: ADMIN_ID, role: "ADMIN" });
     await Promise.resolve();
     expect(writeAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({ action: "TEAM_MEMBER_ROLE_CHANGED" })
@@ -205,7 +211,7 @@ describe("removeMember", () => {
   test("겸직(2개 이상 부서) → 성공", async () => {
     const repo = makeRepo({ countUserDepartments: jest.fn().mockResolvedValue(2) });
     const svc = new DepartmentService(repo);
-    const result = await svc.removeMember(DEPT_ID, MEMBER_ID, LEADER_ID, "FRONT_OFFICE");
+    const result = await svc.removeMember(DEPT_ID, MEMBER_ID, { id: LEADER_ID, role: "FRONT_OFFICE" });
     expect(result).toEqual({ ok: true });
     expect(repo.removeMember).toHaveBeenCalledWith(DEPT_ID, MEMBER_ID);
   });
@@ -214,7 +220,7 @@ describe("removeMember", () => {
     const repo = makeRepo({ countUserDepartments: jest.fn().mockResolvedValue(1) });
     const svc = new DepartmentService(repo);
     await expect(
-      svc.removeMember(DEPT_ID, MEMBER_ID, LEADER_ID, "FRONT_OFFICE")
+      svc.removeMember(DEPT_ID, MEMBER_ID, { id: LEADER_ID, role: "FRONT_OFFICE" })
     ).rejects.toMatchObject({ statusCode: 400, code: "MUST_TRANSFER" });
   });
 
@@ -222,14 +228,14 @@ describe("removeMember", () => {
     const repo = makeRepo({ countUserDepartments: jest.fn().mockResolvedValue(2) });
     const svc = new DepartmentService(repo);
     await expect(
-      svc.removeMember(DEPT_ID, LEADER_ID, LEADER_ID, "FRONT_OFFICE")
+      svc.removeMember(DEPT_ID, LEADER_ID, { id: LEADER_ID, role: "FRONT_OFFICE" })
     ).rejects.toMatchObject({ statusCode: 403, code: "SELF_REMOVAL_FORBIDDEN" });
   });
 
   test("audit log 호출", async () => {
     const repo = makeRepo({ countUserDepartments: jest.fn().mockResolvedValue(2) });
     const svc = new DepartmentService(repo);
-    await svc.removeMember(DEPT_ID, MEMBER_ID, LEADER_ID, "FRONT_OFFICE");
+    await svc.removeMember(DEPT_ID, MEMBER_ID, { id: LEADER_ID, role: "FRONT_OFFICE" });
     await Promise.resolve();
     expect(writeAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({ action: "TEAM_MEMBER_REMOVED" })
@@ -244,16 +250,14 @@ describe("transferMember", () => {
 
   test("성공 + transferMember($transaction) 호출", async () => {
     const repo = makeRepo({
-      findById: jest.fn().mockResolvedValue({ ...fakeDept, id: DEPT_ID }),
+      findById: jest.fn()
+        .mockResolvedValueOnce(fakeDept)           // assertLeaderOrAdmin → finds DEPT_ID
+        .mockResolvedValueOnce({ ...fakeDept, id: OTHER_DEPT_ID }), // toDept lookup
       transferMember: jest.fn().mockResolvedValue(undefined),
     });
-    // Second call (toDeptId lookup) should also resolve
-    repo.findById
-      .mockResolvedValueOnce(fakeDept)           // assertLeaderOrAdmin → finds DEPT_ID
-      .mockResolvedValueOnce({ ...fakeDept, id: OTHER_DEPT_ID }); // toDept lookup
 
     const svc = new DepartmentService(repo);
-    const result = await svc.transferMember(DEPT_ID, OTHER_DEPT_ID, MEMBER_ID, "MEMBER", LEADER_ID, "FRONT_OFFICE");
+    const result = await svc.transferMember(DEPT_ID, OTHER_DEPT_ID, MEMBER_ID, "MEMBER", { id: LEADER_ID, role: "FRONT_OFFICE" });
     expect(result).toEqual({ ok: true });
     expect(repo.transferMember).toHaveBeenCalledWith(DEPT_ID, OTHER_DEPT_ID, MEMBER_ID, "MEMBER");
   });
@@ -262,7 +266,7 @@ describe("transferMember", () => {
     const repo = makeRepo();
     const svc = new DepartmentService(repo);
     await expect(
-      svc.transferMember(DEPT_ID, OTHER_DEPT_ID, LEADER_ID, "MEMBER", LEADER_ID, "FRONT_OFFICE")
+      svc.transferMember(DEPT_ID, OTHER_DEPT_ID, LEADER_ID, "MEMBER", { id: LEADER_ID, role: "FRONT_OFFICE" })
     ).rejects.toMatchObject({ statusCode: 403, code: "SELF_TRANSFER_FORBIDDEN" });
   });
 
@@ -270,7 +274,7 @@ describe("transferMember", () => {
     const repo = makeRepo();
     const svc = new DepartmentService(repo);
     await expect(
-      svc.transferMember(DEPT_ID, DEPT_ID, MEMBER_ID, "MEMBER", LEADER_ID, "FRONT_OFFICE")
+      svc.transferMember(DEPT_ID, DEPT_ID, MEMBER_ID, "MEMBER", { id: LEADER_ID, role: "FRONT_OFFICE" })
     ).rejects.toMatchObject({ statusCode: 400, code: "SAME_DEPARTMENT" });
   });
 
@@ -282,7 +286,7 @@ describe("transferMember", () => {
     });
     const svc = new DepartmentService(repo);
     await expect(
-      svc.transferMember(DEPT_ID, OTHER_DEPT_ID, MEMBER_ID, "MEMBER", LEADER_ID, "FRONT_OFFICE")
+      svc.transferMember(DEPT_ID, OTHER_DEPT_ID, MEMBER_ID, "MEMBER", { id: LEADER_ID, role: "FRONT_OFFICE" })
     ).rejects.toMatchObject({ statusCode: 404, code: "TARGET_DEPT_NOT_FOUND" });
   });
 
@@ -294,7 +298,7 @@ describe("transferMember", () => {
       transferMember: jest.fn().mockResolvedValue(undefined),
     });
     const svc = new DepartmentService(repo);
-    await svc.transferMember(DEPT_ID, OTHER_DEPT_ID, MEMBER_ID, "MEMBER", LEADER_ID, "FRONT_OFFICE");
+    await svc.transferMember(DEPT_ID, OTHER_DEPT_ID, MEMBER_ID, "MEMBER", { id: LEADER_ID, role: "FRONT_OFFICE" });
     await Promise.resolve();
     expect(writeAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({ action: "TEAM_MEMBER_TRANSFERRED" })
@@ -315,21 +319,21 @@ describe("updateHead", () => {
       findUserById: jest.fn().mockResolvedValue(fakeOtherUser),
     });
     const svc = new DepartmentService(repo);
-    const result = await svc.updateHead(DEPT_ID, OTHER_USER_ID, ADMIN_ID, "ADMIN");
+    const result = await svc.updateHead(DEPT_ID, OTHER_USER_ID, { id: ADMIN_ID, role: "ADMIN" });
     expect(result).toEqual({ ok: true });
     expect(repo.updateHead).toHaveBeenCalledWith(DEPT_ID, OTHER_USER_ID);
   });
 
   test("상위 부서장은 하위 부서 headId 변경 가능", async () => {
-    // LEADER_ID는 fakeParentDept.headId — 따라서 하위 부서(DEPT_ID)의 head를 변경할 수 있다
+    // LEADER_ID는 fakeParentDept.headId — 하위 부서의 headId는 다른 사람으로 설정
     const repo = makeRepo({
       findById: jest.fn()
-        .mockResolvedValueOnce({ ...fakeDept, parentId: PARENT_DEPT_ID }) // dept
-        .mockResolvedValueOnce(fakeParentDept),                            // parent (headId=LEADER_ID)
+        .mockResolvedValueOnce({ ...fakeDept, parentId: PARENT_DEPT_ID, headId: MEMBER_ID }) // 하위 부서 (headId≠LEADER_ID)
+        .mockResolvedValueOnce(fakeParentDept),                                               // 상위 부서 (headId=LEADER_ID)
       findUserById: jest.fn().mockResolvedValue(fakeOtherUser),
     });
     const svc = new DepartmentService(repo);
-    const result = await svc.updateHead(DEPT_ID, OTHER_USER_ID, LEADER_ID, "FRONT_OFFICE");
+    const result = await svc.updateHead(DEPT_ID, OTHER_USER_ID, { id: LEADER_ID, role: "FRONT_OFFICE" });
     expect(result).toEqual({ ok: true });
   });
 
@@ -341,7 +345,7 @@ describe("updateHead", () => {
     });
     const svc = new DepartmentService(repo);
     await expect(
-      svc.updateHead(DEPT_ID, OTHER_USER_ID, MEMBER_ID, "FRONT_OFFICE")
+      svc.updateHead(DEPT_ID, OTHER_USER_ID, { id: MEMBER_ID, role: "FRONT_OFFICE" })
     ).rejects.toMatchObject({ statusCode: 403, code: "FORBIDDEN" });
   });
 
@@ -353,7 +357,7 @@ describe("updateHead", () => {
     });
     const svc = new DepartmentService(repo);
     await expect(
-      svc.updateHead(DEPT_ID, ADMIN_ID, ADMIN_ID, "ADMIN")
+      svc.updateHead(DEPT_ID, ADMIN_ID, { id: ADMIN_ID, role: "ADMIN" })
     ).rejects.toMatchObject({ statusCode: 403, code: "SELF_HEAD_APPOINTMENT_FORBIDDEN" });
   });
 
@@ -363,7 +367,7 @@ describe("updateHead", () => {
     });
     const svc = new DepartmentService(repo);
     await expect(
-      svc.updateHead(DEPT_ID, OTHER_USER_ID, MEMBER_ID, "FRONT_OFFICE")
+      svc.updateHead(DEPT_ID, OTHER_USER_ID, { id: MEMBER_ID, role: "FRONT_OFFICE" })
     ).rejects.toMatchObject({ statusCode: 403, code: "FORBIDDEN" });
   });
 
@@ -373,7 +377,7 @@ describe("updateHead", () => {
       findUserById: jest.fn().mockResolvedValue(fakeOtherUser),
     });
     const svc = new DepartmentService(repo);
-    const result = await svc.updateHead(DEPT_ID, OTHER_USER_ID, ADMIN_ID, "ADMIN");
+    const result = await svc.updateHead(DEPT_ID, OTHER_USER_ID, { id: ADMIN_ID, role: "ADMIN" });
     expect(result).toEqual({ ok: true });
   });
 
@@ -386,7 +390,7 @@ describe("updateHead", () => {
     });
     const svc = new DepartmentService(repo);
     await expect(
-      svc.updateHead(DEPT_ID, OTHER_USER_ID, ADMIN_ID, "ADMIN")
+      svc.updateHead(DEPT_ID, OTHER_USER_ID, { id: ADMIN_ID, role: "ADMIN" })
     ).rejects.toMatchObject({ statusCode: 404, code: "USER_NOT_FOUND" });
   });
 
@@ -398,7 +402,7 @@ describe("updateHead", () => {
       findUserById: jest.fn().mockResolvedValue(fakeOtherUser),
     });
     const svc = new DepartmentService(repo);
-    await svc.updateHead(DEPT_ID, OTHER_USER_ID, ADMIN_ID, "ADMIN");
+    await svc.updateHead(DEPT_ID, OTHER_USER_ID, { id: ADMIN_ID, role: "ADMIN" });
     await Promise.resolve();
     expect(writeAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({ action: "DEPARTMENT_HEAD_CHANGED" })
