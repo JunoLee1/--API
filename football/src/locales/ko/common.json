@@ -204,6 +204,7 @@
     "statusLabel": "상태",
     "outOfOffice": "부재 중",
     "notSet": "미설정",
+    "clubLabel": "소속 구단",
     "teamLabel": "소속 팀",
     "departmentsLabel": "소속 부서",
     "editBtn": "내 정보 수정하기",
@@ -447,7 +448,8 @@
     "noHead": "지정 없음",
     "headBadge": "팀장",
     "changeHead": "팀장 변경",
-    "addMember": "팀원 추가",
+    "addMember": "팀장 임명",
+    "addMemberAsLeader": "팀원 추가",
     "transfer": "이관",
     "transferTitle": "{{name}} 이관",
     "targetDept": "대상 부서",
@@ -468,16 +470,27 @@
     "col": {
       "name": "이름",
       "email": "이메일",
+      "dept": "소속 팀",
       "role": "역할",
       "actions": "작업"
     },
     "role": {
+      "DEPT_HEAD": "부서장",
       "LEADER": "팀장",
-      "DEPUTY": "부팀장",
-      "MANAGER": "책임",
-      "SENIOR": "선임",
       "MEMBER": "팀원",
       "INTERN": "인턴"
+    },
+    "jobTitle": {
+      "label": "직급",
+      "placeholder": "직급 선택",
+      "none": "직급 없음",
+      "add": "직급 추가",
+      "edit": "수정",
+      "delete": "삭제",
+      "deleteConfirm": "이 직급을 비활성화할까요? 기존 팀원의 직급은 유지됩니다.",
+      "empty": "등록된 직급이 없습니다.",
+      "manage": "직급 관리",
+      "labelPlaceholder": "예: 과장, 선임, 수석"
     },
     "error": {
       "generic": "요청에 실패했습니다.",
