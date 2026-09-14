@@ -5,6 +5,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { toast } from 'sonner'
 import { api } from '@/services/api'
 import { adminApi } from '@/services/admin.service'
+import { departmentApi, type Department } from '@/services/department.service'
 import type { AdminUserDto, ListUsersQuery, UpdateUserRoleDto, PlayerWithoutAccountDto } from '@/types/admin'
 import type { Role, CoachingRole, FrontOfficeRole } from '@/types/auth'
 import {
@@ -102,7 +103,9 @@ export function UsersPage() {
   const [cRole, setCRole] = useState<Role>('FRONT_OFFICE')
   const [cCoachingRole, setCCoachingRole] = useState<CoachingRole | ''>('')
   const [cFrontOfficeRole, setCFrontOfficeRole] = useState<FrontOfficeRole | ''>('')
+  const [cDepartmentId, setCDepartmentId] = useState<number | ''>('')
   const [cSaving, setCsaving] = useState(false)
+  const [departments, setDepartments] = useState<Department[]>([])
 
   const fetchUsers = async () => {
     setLoading(true)
@@ -130,6 +133,10 @@ export function UsersPage() {
   }
 
   useEffect(() => { void fetchUsers() }, [filterRole, filterCoachingRole, filterFrontOfficeRole, showDeleted])
+
+  useEffect(() => {
+    departmentApi.list().then(setDepartments).catch(() => {})
+  }, [])
 
   const handleDeactivate = async (user: AdminUserDto) => {
     const ok = await confirm({ title: t('usersPage.deactivateTitle'), description: t('usersPage.deactivateDesc'), confirmText: t('usersPage.deactivateConfirm') })
@@ -227,10 +234,11 @@ export function UsersPage() {
         role: cRole,
         ...(cRole === 'COACHING_STAFF' && cCoachingRole && { coachingRole: cCoachingRole }),
         ...(cRole === 'FRONT_OFFICE' && cFrontOfficeRole && { frontOfficeRole: cFrontOfficeRole }),
+        ...(cDepartmentId && { departmentId: cDepartmentId }),
       })
       toast.success(t('usersPage.createCard.createSuccess'))
       setCEmail(''); setCUsername(''); setCNickname(''); setCPassword('')
-      setCRole('FRONT_OFFICE'); setCCoachingRole(''); setCFrontOfficeRole('')
+      setCRole('FRONT_OFFICE'); setCCoachingRole(''); setCFrontOfficeRole(''); setCDepartmentId('')
       void fetchUsers()
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : t('usersPage.createCard.createFailed'))
@@ -512,6 +520,16 @@ export function UsersPage() {
                       </Select>
                     </div>
                   )}
+                </div>
+                <div className="space-y-1.5">
+                  <Label>{t('usersPage.createCard.departmentLabel')}</Label>
+                  <Select value={cDepartmentId === '' ? '' : String(cDepartmentId)} onValueChange={(v) => setCDepartmentId(v ? Number(v) : '')}>
+                    <SelectTrigger><SelectValue placeholder="부서 선택 (선택)" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">선택 안 함</SelectItem>
+                      {departments.map((d) => <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <Button className="w-full mt-2" onClick={() => void handleCreate()} disabled={cSaving}>
                   {cSaving ? t('usersPage.createCard.creating') : t('usersPage.createCard.create')}
