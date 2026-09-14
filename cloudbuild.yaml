@@ -6,7 +6,7 @@ steps:
       - 'gcr.io/$PROJECT_ID/football-api:$COMMIT_SHA'
       - '-f'
       - 'apps/api/Dockerfile'
-      - '.'
+      - 'apps/api'
 
 images:
   - 'gcr.io/$PROJECT_ID/football-api:$COMMIT_SHA'
