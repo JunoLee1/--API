@@ -79,16 +79,26 @@ async function seedLeagues() {
 }
 
 async function seedDepartmentHeads() {
-  const finance = await prisma.department.findFirstOrThrow({ where: { name: '재무관리', clubId: null } });
-  const hrDept  = await prisma.department.findFirstOrThrow({ where: { name: 'HR', clubId: null } });
+  const deptHeadMap: Record<string, string> = {
+    '경영지원':           'biz.support@club.com',
+    '재무관리':           'finance@club.com',
+    'HR':                 'hr@club.com',
+    '운영/인프라':        'ops.manager@club.com',
+    '시설관리':           'facility.manager@club.com',
+    '선수 장비관리':      'asset@club.com',
+    '의료기기 관리':      'medical.equipment@club.com',
+    'IT 자산관리':        'it.manager@club.com',
+    '선수단 및 기술 부문': 'td@club.com',
+  };
 
-  const financeUser = await prisma.user.findUnique({ where: { email: 'finance@club.com' } });
-  const hrUser      = await prisma.user.findUnique({ where: { email: 'hr@club.com' } });
+  for (const [deptName, email] of Object.entries(deptHeadMap)) {
+    const dept = await prisma.department.findFirst({ where: { name: deptName, clubId: null } });
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!dept || !user) continue;
+    await prisma.department.update({ where: { id: dept.id }, data: { headId: user.id } });
+  }
 
-  await prisma.department.update({ where: { id: finance.id }, data: { headId: financeUser?.id ?? null } });
-  await prisma.department.update({ where: { id: hrDept.id },  data: { headId: hrUser?.id ?? null } });
-
-  console.log('Department heads assigned: 재무관리→finance, HR→hr');
+  console.log('Department heads assigned: 경영지원·재무관리·HR·운영인프라·시설관리·장비관리·의료기기·IT');
 }
 
 async function seedHrSubDepartments() {
@@ -105,8 +115,8 @@ async function seedHrSubDepartments() {
   if (hrUser) {
     await prisma.userDepartment.upsert({
       where: { userId_departmentId: { userId: hrUser.id, departmentId: hrDept.id } },
-      create: { userId: hrUser.id, departmentId: hrDept.id, role: 'MANAGER' },
-      update: { role: 'MANAGER' },
+      create: { userId: hrUser.id, departmentId: hrDept.id, role: 'LEADER' },
+      update: { role: 'LEADER' },
     });
   }
 
@@ -152,6 +162,10 @@ async function seedStaffAccounts() {
   const financeStaffPhone   = await prisma.phoneNumber.create({ data: encryptPhone('010-0000-0020') });
   const facilityMgrPhone    = await prisma.phoneNumber.create({ data: encryptPhone('010-0000-0021') });
   const facilityStaffPhone  = await prisma.phoneNumber.create({ data: encryptPhone('010-0000-0022') });
+  const bizSupportPhone     = await prisma.phoneNumber.create({ data: encryptPhone('010-0000-0023') });
+  const opsManagerPhone     = await prisma.phoneNumber.create({ data: encryptPhone('010-0000-0024') });
+  const medEquipPhone       = await prisma.phoneNumber.create({ data: encryptPhone('010-0000-0025') });
+  const itManagerPhone      = await prisma.phoneNumber.create({ data: encryptPhone('010-0000-0026') });
 
   await prisma.user.upsert({
     where: { email: 'hr.staff@club.com' },
@@ -233,7 +247,110 @@ async function seedStaffAccounts() {
     },
   });
 
-  console.log('✅ Staff accounts seeded: hr.staff, asset.staff, finance.staff, facility.manager, facility.staff / Password1!');
+  await prisma.user.upsert({
+    where: { email: 'biz.support@club.com' },
+    update: { username: '경영지원부서장' },
+    create: {
+      email: 'biz.support@club.com',
+      password: hashed,
+      username: '경영지원부서장',
+      nickname: 'biz-support',
+      role: 'FRONT_OFFICE',
+      frontOfficeRole: 'HR_MANAGER',
+      dateOfBirth: new Date('1983-05-20'),
+      nationalityId: korea.id,
+      phoneNumberId: bizSupportPhone.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'ops.manager@club.com' },
+    update: {},
+    create: {
+      email: 'ops.manager@club.com',
+      password: hashed,
+      username: '운영인프라부서장',
+      nickname: 'ops-manager',
+      role: 'FRONT_OFFICE',
+      frontOfficeRole: 'ASSET_MANAGER',
+      dateOfBirth: new Date('1980-08-14'),
+      nationalityId: korea.id,
+      phoneNumberId: opsManagerPhone.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'medical.equipment@club.com' },
+    update: {},
+    create: {
+      email: 'medical.equipment@club.com',
+      password: hashed,
+      username: '의료기기관리팀장',
+      nickname: 'med-equipment',
+      role: 'FRONT_OFFICE',
+      frontOfficeRole: 'EQUIPMENT_MANAGER',
+      dateOfBirth: new Date('1988-02-27'),
+      nationalityId: korea.id,
+      phoneNumberId: medEquipPhone.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'it.manager@club.com' },
+    update: {},
+    create: {
+      email: 'it.manager@club.com',
+      password: hashed,
+      username: 'IT자산관리팀장',
+      nickname: 'it-manager',
+      role: 'FRONT_OFFICE',
+      frontOfficeRole: 'ASSET_MANAGER',
+      dateOfBirth: new Date('1990-06-03'),
+      nationalityId: korea.id,
+      phoneNumberId: itManagerPhone.id,
+    },
+  });
+
+  // ── 부서 배정 ────────────────────────────────────────────
+  const deptMap: Record<string, { deptName: string; role: 'DEPT_HEAD' | 'LEADER' | 'MEMBER' | 'INTERN' }> = {
+    'hr.staff@club.com':           { deptName: 'HRM (인사관리)', role: 'MEMBER' },
+    'finance.staff@club.com':      { deptName: '재무관리',       role: 'MEMBER' },
+    'asset.staff@club.com':        { deptName: '운영/인프라',    role: 'MEMBER' },
+    'facility.manager@club.com':   { deptName: '시설관리',       role: 'LEADER' },
+    'facility.staff@club.com':     { deptName: '시설관리',       role: 'MEMBER' },
+    'biz.support@club.com':        { deptName: '경영지원',       role: 'DEPT_HEAD' },
+    'ops.manager@club.com':        { deptName: '운영/인프라',    role: 'DEPT_HEAD' },
+    'medical.equipment@club.com':  { deptName: '의료기기 관리',  role: 'LEADER' },
+    'it.manager@club.com':         { deptName: 'IT 자산관리',    role: 'LEADER' },
+    'finance@club.com':            { deptName: '재무관리',        role: 'LEADER' },
+    'asset@club.com':              { deptName: '선수 장비관리',   role: 'LEADER' },
+    'td@club.com':                 { deptName: '선수단 및 기술 부문', role: 'DEPT_HEAD' },
+  };
+  for (const [email, { deptName, role }] of Object.entries(deptMap)) {
+    const user = await prisma.user.findUnique({ where: { email }, select: { id: true } });
+    const dept = await prisma.department.findFirst({ where: { name: deptName, clubId: null } });
+    if (!user || !dept) continue;
+    await prisma.userDepartment.upsert({
+      where: { userId_departmentId: { userId: user.id, departmentId: dept.id } },
+      create: { userId: user.id, departmentId: dept.id, role },
+      update: { role },
+    });
+  }
+
+  // ── 운영/인프라 headId 배정 (신규 계정이 여기서 생성되므로) ──
+  const opsHeadMap: Record<string, string> = {
+    '운영/인프라':   'ops.manager@club.com',
+    '의료기기 관리': 'medical.equipment@club.com',
+    'IT 자산관리':   'it.manager@club.com',
+  };
+  for (const [deptName, email] of Object.entries(opsHeadMap)) {
+    const dept = await prisma.department.findFirst({ where: { name: deptName, clubId: null } });
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!dept || !user) continue;
+    await prisma.department.update({ where: { id: dept.id }, data: { headId: user.id } });
+  }
+
+  console.log('✅ Staff accounts seeded: hr.staff, asset.staff, finance.staff, facility.manager, facility.staff, biz.support, ops.manager, medical.equipment, it.manager / Password1!');
 }
 
 async function seedReports() {
@@ -2797,6 +2914,12 @@ async function main() {
   // ── 운영비 실적 (2025 CLOSED 시즌 12개월 + 2026 부분) ──
   // BudgetHeader/Line APPROVED 승격 + OperatingExpense (부서/팀 매핑) 실적
   await seedOperatingExpenses(admin.id);
+
+  // ── 구단 소속 일괄 배정 (superadmin 제외 모든 @club.com 계정) ──
+  await prisma.user.updateMany({
+    where: { email: { endsWith: '@club.com' }, clubId: null },
+    data: { clubId: fcSeoulClub.id },
+  });
 
   console.log("✅ Seed complete");
   console.log(`   - Countries: 2`);

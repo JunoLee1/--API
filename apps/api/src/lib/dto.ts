@@ -17,4 +17,5 @@ export interface CreateUserDto {
   dateOfBirth: string;
   phoneNumber: string;
   nationalityId: number;
+  departmentId?: number;
 }

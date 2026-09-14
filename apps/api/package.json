@@ -22,6 +22,7 @@
     "@anthropic-ai/sdk": "^0.115.0",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "@sentry/node": "^10.74.0",
     "@types/nodemailer": "^8.0.1",
     "axios": "^1.18.1",
     "bcrypt": "^5.1.1",

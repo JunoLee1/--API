@@ -51,6 +51,7 @@ export class AuthService {
       dateOfBirth: new Date(dto.dateOfBirth),
       nationalityId: dto.nationalityId,
       phoneNumber,
+      ...(dto.departmentId && { departmentId: dto.departmentId }),
     });
   }
 
