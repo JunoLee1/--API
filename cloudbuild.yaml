@@ -10,3 +10,6 @@ steps:
 
 images:
   - 'gcr.io/$PROJECT_ID/football-api:$COMMIT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
