@@ -1,6 +1,6 @@
 import { PrismaClient, Prisma } from "../generated/client";
 
-type MsgFactory = (locale: string) => { title: string; body: string };
+type MsgFactory = (locale?: string) => { title: string; body: string };
 type UserWhere = Prisma.UserWhereInput;
 
 export class NotificationRepository {
@@ -32,7 +32,7 @@ export class NotificationRepository {
         data: users.map((u) => {
           const { title, body } = getMsg(u.language);
           return { userId: u.id, type, title, body, entityId };
-        }) as any,
+        }) as any
       });
     });
   }
@@ -159,7 +159,7 @@ export class NotificationRepository {
   async createForUsers(
     userIds: number[],
     type: string,
-    getMsg: (locale?: string) => { title: string; body: string },
+    getMsg: MsgFactory,
     entityId?: number,
   ) {
     if (userIds.length === 0) return;

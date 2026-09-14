@@ -13,6 +13,7 @@ interface CreateUserData {
   dateOfBirth: Date;
   nationalityId: number;
   phoneNumber: { encrypted: string; iv: string; phoneHash: string };
+  departmentId?: number;
 }
 
 export class AuthRepository {
@@ -91,10 +92,12 @@ export class AuthRepository {
         coachingRole: true, frontOfficeRole: true, teamId: true, clubId: true,
         language: true, isDeleted: true, homeAddress: true, passwordChangedAt: true,
         team: { select: { id: true, type: true } },
+        club: { select: { id: true, name: true } },
         departmentMemberships: {
           select: {
             role: true,
             department: { select: { id: true, name: true } },
+            jobTitle: { select: { id: true, label: true } },
           },
         },
       },
@@ -203,23 +206,29 @@ export class AuthRepository {
   }
 
   async createUser(data: CreateUserData) {
-    const phone = await this.prisma.phoneNumber.create({
-      data: { encrypted: data.phoneNumber.encrypted, iv: data.phoneNumber.iv, phoneHash: data.phoneNumber.phoneHash },
-    });
-    return this.prisma.user.create({
-      data: {
-        email: data.email,
-        password: data.password,
-        username: data.username,
-        nickname: data.nickname,
-        role: data.role,
-        coachingRole: data.coachingRole ?? null,
-        frontOfficeRole: data.frontOfficeRole ?? null,
-        dateOfBirth: data.dateOfBirth,
-        nationalityId: data.nationalityId,
-        phoneNumberId: phone.id,
-      },
-      select: { id: true, email: true, username: true, nickname: true, role: true, coachingRole: true, frontOfficeRole: true },
+    return this.prisma.$transaction(async (tx) => {
+      const phone = await tx.phoneNumber.create({
+        data: { encrypted: data.phoneNumber.encrypted, iv: data.phoneNumber.iv, phoneHash: data.phoneNumber.phoneHash },
+      });
+      const user = await tx.user.create({
+        data: {
+          email: data.email,
+          password: data.password,
+          username: data.username,
+          nickname: data.nickname,
+          role: data.role,
+          coachingRole: data.coachingRole ?? null,
+          frontOfficeRole: data.frontOfficeRole ?? null,
+          dateOfBirth: data.dateOfBirth,
+          nationalityId: data.nationalityId,
+          phoneNumberId: phone.id,
+        },
+        select: { id: true, email: true, username: true, nickname: true, role: true, coachingRole: true, frontOfficeRole: true },
+      });
+      if (data.departmentId) {
+        await tx.userDepartment.create({ data: { userId: user.id, departmentId: data.departmentId } });
+      }
+      return user;
     });
   }
 
