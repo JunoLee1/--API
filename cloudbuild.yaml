@@ -8,6 +8,18 @@ steps:
       - 'apps/api/Dockerfile'
       - 'apps/api'
 
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'football-api'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/football-api:$COMMIT_SHA'
+      - '--region'
+      - 'asia-northeast3'
+      - '--platform'
+      - 'managed'
+
 images:
   - 'gcr.io/$PROJECT_ID/football-api:$COMMIT_SHA'
 
