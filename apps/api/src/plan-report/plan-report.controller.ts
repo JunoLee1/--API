@@ -3,7 +3,6 @@ import type { PlanReportService } from './plan-report.service'
 import { PlanReportRepository } from './plan-report.repo'
 import type { RecruitmentService } from '../recruitment/recruitment.service'
 import { HiringPlanItemStatus } from '../generated/enums'
-import path from 'path'
 
 const HIRING_PLAN_ITEM_STATUSES = Object.values(HiringPlanItemStatus) as string[]
 
@@ -70,7 +69,7 @@ export class PlanReportController {
 
   uploadAttachment = (req: Request, res: Response) => {
     if (!req.file) return res.status(400).json({ error: 'NO_FILE_UPLOADED' })
-    const relativePath = `/uploads/${path.basename(req.file.path)}`
+    const relativePath = (req.file as any).gcsUrl
     res.json({ url: relativePath })
   }
 

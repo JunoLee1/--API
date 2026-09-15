@@ -1,8 +1,7 @@
 import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
 import multer from "multer";
-import path from "path";
-import fs from "fs";
+import { gcsUpload } from "../lib/gcs";
 import { MedicalExpenseController } from "./medical-expense.controller";
 import { MedicalExpenseService } from "./medical-expense.service";
 import { MedicalExpenseRepository } from "./medical-expense.repo";
@@ -17,23 +16,14 @@ const service = new MedicalExpenseService(repo, notifRepo);
 const controller = new MedicalExpenseController(service);
 
 
-const uploadDir = path.join(process.cwd(), "uploads", "medical-expenses");
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadDir),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
-  },
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 } });
 
 router.get("/", auth, controller.list);
-router.post("/", auth, upload.single("file"), controller.create);
+router.post("/", auth, upload.single("file"), gcsUpload('medical-expenses'), controller.create);
 router.get("/:id", auth, controller.get);
-router.patch("/:id", auth, upload.single("file"), controller.update);
+router.patch("/:id", auth, upload.single("file"), gcsUpload('medical-expenses'), controller.update);
 router.post("/:id/submit", auth, controller.submit);
 router.post("/:id/leader-approve", auth, controller.leaderApprove);
 router.post("/:id/leader-reject", auth, controller.leaderReject);

@@ -103,7 +103,7 @@ export class ReportController {
           title,
           content,
           ...(departmentId && { departmentId: Number(departmentId) }),
-          ...(file && { fileUrl: `/uploads/reports/${file.filename}`, fileName: file.originalname }),
+          ...(file && { fileUrl: (file as any).gcsUrl, fileName: file.originalname }),
         }),
       );
     } catch (err) {
@@ -119,7 +119,7 @@ export class ReportController {
         await this.service.update(Number(req.params["id"]), requireUser(req).id, {
           ...(title !== undefined && { title }),
           ...(content !== undefined && { content }),
-          ...(file && { fileUrl: `/uploads/reports/${file.filename}`, fileName: file.originalname }),
+          ...(file && { fileUrl: (file as any).gcsUrl, fileName: file.originalname }),
         }),
       );
     } catch (err) {

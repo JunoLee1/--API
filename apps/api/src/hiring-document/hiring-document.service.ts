@@ -73,7 +73,7 @@ export class HiringDocumentService {
       ...(hasApp && { applicationId: applicationId! }),
       ...(hasDisp && { hiringDispatchId: hiringDispatchId! }),
       docType,
-      fileUrl: `/uploads/hiring-documents/${file.filename}`,
+      fileUrl: (file as any).gcsUrl,
       fileName: file.originalname,
       fileSize: file.size,
       uploadedById: uploaderId,

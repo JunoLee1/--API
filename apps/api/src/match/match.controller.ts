@@ -131,7 +131,7 @@ export class MatchController {
       if (!file) throw new AppError(400, "IMAGE_REQUIRED");
       const result = await this.service.uploadStatSheet(
         Number(req.params["id"]),
-        file.path,
+        file.buffer,
         file.originalname,
       );
       res.status(200).json(result);

@@ -1,8 +1,7 @@
 import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
 import multer from "multer";
-import path from "path";
-import fs from "fs";
+import { gcsUpload } from "../lib/gcs";
 import { TacticalController } from "./tactical.controller";
 import { TacticalService } from "./tactical.service";
 import { TacticalRepository } from "./tactical.repo";
@@ -16,16 +15,7 @@ const service = new TacticalService(repo, notifRepo);
 const controller = new TacticalController(service);
 
 
-const uploadDir = path.join(process.cwd(), "uploads", "tactical-media");
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadDir),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
-  },
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
@@ -54,7 +44,7 @@ router.post("/", auth, controller.create);
 // 라인업 추가
 router.post("/:id/lineup", auth, controller.addLineup);
 // 미디어 추가 (이미지/동영상 멀티파일)
-router.post("/:id/media", auth, upload.array("files", 10), controller.addMedia);
+router.post("/:id/media", auth, upload.array("files", 10), gcsUpload('tactical-media'), controller.addMedia);
 // 전술 분석 수정 (ADMIN, COACHING_STAFF, TACTICAL_ANALYST)
 router.patch("/:id", auth, controller.update);
 // 전술 분석 확정 (ADMIN, HEAD_COACH)

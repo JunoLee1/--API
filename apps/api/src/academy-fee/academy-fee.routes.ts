@@ -9,26 +9,12 @@ import { getPrisma } from "../lib/prisma";
 import { AppError } from "../lib/appError";
 import { canReadHR, canReadFinance, isAdminLike } from "../lib/permissions";
 import multer from "multer";
-import path from "path";
-import fs from "fs";
+import { gcsUpload } from "../lib/gcs";
 
 const router = Router();
 
-const proofUploadDir = path.join(process.cwd(), "uploads", "academy-fee-proofs");
-if (!fs.existsSync(proofUploadDir)) fs.mkdirSync(proofUploadDir, { recursive: true });
-
-const proofStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, proofUploadDir),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    const allowed = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".pdf"];
-    if (!allowed.includes(ext)) return cb(new Error("INVALID_EXTENSION"), "");
-    cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
-  },
-});
-
 const uploadProof = multer({
-  storage: proofStorage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (file.mimetype.startsWith("image/") || file.mimetype === "application/pdf")
@@ -66,18 +52,17 @@ const requireAdminLike = (req: Request, res: Response, next: NextFunction) => {
 router.post("/toss-webhook", express.json(), controller.tossWebhook);
 
 // 학부모 영수증 수령 후 회비 등록 + 증빙 첨부 (SUBMITTED 직생성)
-router.post("/register-with-proof", auth, requireFinance, uploadProof.single("file"), async (req, res, next) => {
-  const cleanup = () => { if (req.file) fs.unlink(req.file.path, () => {}); };
+router.post("/register-with-proof", auth, requireFinance, uploadProof.single("file"), gcsUpload("academy-fee-proofs"), async (req, res, next) => {
   try {
     if (!req.file) return next(new AppError(400, "FILE_REQUIRED"));
     const { playerId, year, month, amount } = req.body;
-    if (!playerId || !year || !month || !amount) { cleanup(); return next(new AppError(400, "MISSING_FIELDS")); }
-    const url = `/uploads/academy-fee-proofs/${req.file.filename}`;
+    if (!playerId || !year || !month || !amount) { return next(new AppError(400, "MISSING_FIELDS")); }
+    const url = (req.file as any).gcsUrl;
     res.json(await service.registerWithProof(
       { playerId, year: Number(year), month: Number(month), amount: Number(amount) },
       url,
     ));
-  } catch (e) { cleanup(); next(e); }
+  } catch (e) { next(e); }
 });
 
 // 유소년 선수 이름 검색 (회비 등록용)
@@ -152,32 +137,30 @@ router.post("/:id/staff-upload-proof", auth, (req, _res, next) => {
     (role === "FRONT_OFFICE" && (frontOfficeRole === "FINANCE_STAFF" || frontOfficeRole === "FINANCE_MANAGER" || frontOfficeRole === "TD"));
   if (!allowed) return next(new AppError(403, "FORBIDDEN"));
   next();
-}, uploadProof.single("file"), async (req, res, next) => {
-  const cleanup = () => { if (req.file) fs.unlink(req.file.path, () => {}); };
+}, uploadProof.single("file"), gcsUpload("academy-fee-proofs"), async (req, res, next) => {
   try {
     if (!req.file) return next(new AppError(400, "FILE_REQUIRED"));
     const feeId = Number(req.params.id);
-    const url = `/uploads/academy-fee-proofs/${req.file.filename}`;
+    const url = (req.file as any).gcsUrl;
     const updated = await service.adminSubmitProof(feeId, { paymentProofUrl: url });
     res.json(updated);
-  } catch (e) { cleanup(); next(e); }
+  } catch (e) { next(e); }
 });
 
 // 학부모: 계좌이체 증빙 파일 업로드 → SUBMITTED
-router.post("/:id/upload-proof", auth, uploadProof.single("file"), async (req, res, next) => {
-  const cleanup = () => { if (req.file) fs.unlink(req.file.path, () => {}); };
+router.post("/:id/upload-proof", auth, uploadProof.single("file"), gcsUpload("academy-fee-proofs"), async (req, res, next) => {
   try {
     const { role, id: userId } = req.user!;
-    if (role !== "GUARDIAN") { cleanup(); return next(new AppError(403, "FORBIDDEN")); }
+    if (role !== "GUARDIAN") { return next(new AppError(403, "FORBIDDEN")); }
     if (!req.file) return next(new AppError(400, "FILE_REQUIRED"));
     const feeId = Number(req.params.id);
     const fee = await service.getById(feeId);
-    if (fee.guardianId !== userId) { cleanup(); return next(new AppError(403, "FORBIDDEN")); }
-    if (["SUBMITTED", "PAID"].includes(fee.status as string)) { cleanup(); return next(new AppError(409, "ALREADY_SUBMITTED")); }
-    const url = `/uploads/academy-fee-proofs/${req.file.filename}`;
+    if (fee.guardianId !== userId) { return next(new AppError(403, "FORBIDDEN")); }
+    if (["SUBMITTED", "PAID"].includes(fee.status as string)) { return next(new AppError(409, "ALREADY_SUBMITTED")); }
+    const url = (req.file as any).gcsUrl;
     const updated = await service.submitPaymentProof(feeId, { paymentProofUrl: url });
     res.json(updated);
-  } catch (e) { cleanup(); next(e); }
+  } catch (e) { next(e); }
 });
 
 export default router;

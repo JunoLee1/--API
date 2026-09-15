@@ -57,7 +57,7 @@ export class MedicalExpenseController {
           ...(injuryId && { injuryId: Number(injuryId) }),
           ...(playerId && { playerId }),
           ...(description && { description }),
-          ...(file && { fileUrl: `/uploads/medical-expenses/${file.filename}`, fileName: file.originalname }),
+          ...(file && { fileUrl: (file as any).gcsUrl, fileName: file.originalname }),
         }),
       );
     } catch (err) {
@@ -78,7 +78,7 @@ export class MedicalExpenseController {
           ...(injuryId !== undefined && { injuryId: injuryId ? Number(injuryId) : null }),
           ...(playerId !== undefined && { playerId: playerId || null }),
           ...(description !== undefined && { description }),
-          ...(file && { fileUrl: `/uploads/medical-expenses/${file.filename}`, fileName: file.originalname }),
+          ...(file && { fileUrl: (file as any).gcsUrl, fileName: file.originalname }),
         }),
       );
     } catch (err) {

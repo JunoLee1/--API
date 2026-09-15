@@ -7,7 +7,7 @@ export function uploadDocument(req: Request, res: Response) {
   return res.status(200).json({
     ok: true,
     filename: req.file.originalname,
-    savedAs: req.file.filename,
+    savedAs: (req.file as any).gcsUrl,
     size: req.file.size,
   });
 }
