@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express'
 import multer from 'multer'
-import path from 'path'
+import { gcsUpload } from '../lib/gcs'
 import { PlanReportController } from './plan-report.controller'
 import { PlanReportService } from './plan-report.service'
 import { PlanReportRepository } from './plan-report.repo'
@@ -22,10 +22,7 @@ const recruitmentService = new RecruitmentService(recruitmentRepo, notifRepo, re
 const controller = new PlanReportController(service, repo, recruitmentService)
 
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: path.join(process.cwd(), 'uploads'),
-    filename: (_req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`),
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
 })
 
@@ -49,7 +46,7 @@ router.post('/:id/submit', auth, controller.submit)
 router.post('/:id/approve', auth, controller.approve)
 router.post('/:id/reject', auth, controller.reject)
 router.post('/:id/result', auth, controller.submitResult)
-router.post('/upload', auth, upload.single('file'), controller.uploadAttachment)
+router.post('/upload', auth, upload.single('file'), gcsUpload('plan-reports'), controller.uploadAttachment)
 router.get('/:id/hiring-items', auth, checkReadHR, controller.listHiringItems)
 router.post('/:id/hiring-items', auth, checkWriteHR, controller.createHiringItem)
 router.patch('/:id/hiring-items/:itemId', auth, checkWriteHR, controller.updateHiringItem)

@@ -83,7 +83,7 @@ export class EmployeeContractService {
     }
 
     const updated = await this.repo.applyIssue(id, {
-      fileUrl: `/uploads/employee-contracts/${file.filename}`,
+      fileUrl: (file as any).gcsUrl,
       fileName: file.originalname,
       issuedById: actorId,
     });
@@ -123,7 +123,7 @@ export class EmployeeContractService {
     }
 
     const updated = await this.repo.applySign(id, {
-      signedFileUrl: `/uploads/employee-contracts/${file.filename}`,
+      signedFileUrl: (file as any).gcsUrl,
       signedFileName: file.originalname,
       signedAt,
       signedConfirmedById: actorId,

@@ -1,9 +1,8 @@
-import fs from "fs";
-import path from "path";
 import { Router } from "express";
 import multer from "multer";
 import { auth } from "../lib/authMiddleware";
 import { getPrisma } from "../lib/prisma";
+import { gcsUpload } from "../lib/gcs";
 import { HiringDocumentController } from "./hiring-document.controller";
 import { HiringDocumentRepository } from "./hiring-document.repo";
 import { HiringDocumentService } from "./hiring-document.service";
@@ -21,19 +20,8 @@ const ALLOWED_MIMES = [
   "image/png",
 ];
 
-const UPLOAD_DIR = path.join(__dirname, "../../uploads/hiring-documents");
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
-    filename: (_req, file, cb) => {
-      // Sanitize but keep original extension so downstream tooling can still
-      // dispatch by MIME. Prefix with timestamp for lexicographic ordering.
-      const safe = file.originalname.replace(/[^a-zA-Z0-9._-]/g, "_");
-      cb(null, `${Date.now()}-${safe}`);
-    },
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB — same ceiling as other HR uploads
   fileFilter: (_req, file, cb) => {
     if (ALLOWED_MIMES.includes(file.mimetype)) cb(null, true);
@@ -50,7 +38,7 @@ const router = Router();
 
 // POST /hiring-documents — multipart upload (docType + applicationId XOR
 // hiringDispatchId in the form body, file in `file` field).
-router.post("/", auth, upload.single("file"), controller.upload);
+router.post("/", auth, upload.single("file"), gcsUpload('hiring-documents', true), controller.upload);
 
 // PATCH /hiring-documents/:id/review — {status, reviewNotes?}
 router.patch("/:id/review", auth, controller.review);

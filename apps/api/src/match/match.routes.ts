@@ -1,8 +1,7 @@
 import { auth } from "../lib/authMiddleware";
 import { Router } from "express";
 import multer from "multer";
-import path from "path";
-import fs from "fs";
+import { gcsUpload } from "../lib/gcs";
 import { MatchController } from "./match.controller";
 import { MatchService } from "./match.service";
 import { MatchRepository } from "./match.repo";
@@ -20,17 +19,8 @@ const service = new MatchService(repo);
 const controller = new MatchController(service);
 
 
-const statSheetUploadDir = path.join(process.cwd(), "uploads", "stat-sheets");
-if (!fs.existsSync(statSheetUploadDir)) fs.mkdirSync(statSheetUploadDir, { recursive: true });
-const statSheetStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, statSheetUploadDir),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
-  },
-});
-const uploadStatSheet = multer({
-  storage: statSheetStorage,
+const upload = multer({
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (file.mimetype.startsWith("image/")) cb(null, true);
@@ -54,7 +44,7 @@ router.post("/", auth, controller.createMatch);
 router.patch("/:id", auth, controller.updateMatch);
 
 // 스탯 시트 OCR 업로드 (ADMIN, COACHING_STAFF)
-router.post("/:id/stat-sheet", auth, uploadStatSheet.single("image"), controller.uploadStatSheet);
+router.post("/:id/stat-sheet", auth, upload.single("image"), gcsUpload('stat-sheets'), controller.uploadStatSheet);
 
 // 선수별 매치 스탯 입력/수정 (ADMIN, COACHING_STAFF)
 router.put("/:id/player-stats", auth, controller.upsertPlayerStats);

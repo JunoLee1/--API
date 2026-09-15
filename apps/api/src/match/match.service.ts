@@ -1,4 +1,3 @@
-import fs from "fs";
 import path from "path";
 import { MatchRepository } from "./match.repo";
 import { AppError } from "../lib/appError";
@@ -204,7 +203,7 @@ export class MatchService {
     await this.repo.recalculateTeamStats(matchId);
   }
 
-  async uploadStatSheet(matchId: number, filePath: string, originalName: string) {
+  async uploadStatSheet(matchId: number, buffer: Buffer, originalName: string) {
     const match = await this.repo.findById(matchId);
     if (!match) throw new AppError(404, "MATCH_NOT_FOUND");
 
@@ -212,8 +211,7 @@ export class MatchService {
       throw new AppError(503, "AI_SERVICE_UNAVAILABLE");
     }
 
-    const imageData = fs.readFileSync(filePath);
-    const base64 = imageData.toString("base64");
+    const base64 = buffer.toString("base64");
     const ext = path.extname(originalName).toLowerCase();
     const mediaType = ext === ".png" ? "image/png" : "image/jpeg";
 
@@ -261,7 +259,6 @@ JSON만 반환하고 다른 텍스트는 포함하지 마세요.`,
       throw new AppError(503, "AI_SERVICE_UNAVAILABLE");
     }
 
-    const relativePath = path.relative(process.cwd(), filePath);
-    return this.repo.updateStatSheet(matchId, statSheetRaw, relativePath);
+    return this.repo.updateStatSheet(matchId, statSheetRaw, originalName);
   }
 }

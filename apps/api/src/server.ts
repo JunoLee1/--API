@@ -1,6 +1,5 @@
 import * as Sentry from "@sentry/node";
 import { createServer } from "http";
-import path from "path";
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -59,7 +58,6 @@ app.use(passport.initialize());
 
 app.get("/api/health", (_req, res) => res.status(200).json({ status: "ok" }));
 app.use("/api", apiRouter);
-app.use("/uploads", auth, express.static(path.join(process.cwd(), "uploads")));
 
 app.use((_req: Request, _res: Response, next: NextFunction) => {
   next(new AppError(404, "NOT_FOUND"));

@@ -74,7 +74,7 @@ export class TacticalController {
       const results = await Promise.all(
         files.map((file) =>
           this.service.addMedia(analysisId, {
-            url: `/uploads/tactical-media/${file.filename}`,
+            url: (file as any).gcsUrl,
             type: file.mimetype.startsWith("video/") ? "video" : "image",
           })
         )
